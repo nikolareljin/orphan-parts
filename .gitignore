@@ -1,0 +1,38 @@
+# secrets and local config
+.env
+.env.*
+!.env.example
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.egg-info/
+build/
+
+# node
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# docs
+site/
+docs/reference/openapi.json
+
+# runtime
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# local tooling
+.local/
+.stamp-*
+.DS_Store
