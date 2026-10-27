@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+# dev: one entry point for running, testing and building Orphan Parts Lens.
+#
+# Usage: ./dev <command> [options]
+#
+# Commands:
+#   setup              check tools, create .env from .env.example if missing
+#   up [--native] [--build] [--with-glimmer]
+#                      start the stack (Docker by default; --native = local venv + nvm)
+#   down               stop the Docker stack
+#   status             show running services and health
+#   logs [service]     follow Docker logs
+#   test [backend|frontend|scripts]
+#                      run the full check suite (default: all three)
+#   lint               ruff, mypy, eslint, tsc
+#   fmt                ruff format, eslint --fix
+#   docs               serve the docs site at :8001 with live reload
+#   docs-build         build the docs site into site/
+#   build              build the production images
+#   version <x.y.z>    set the version in every manifest and start the changelog section
+#   shell <service>    open a shell in a running service
+#   help               this text
+#
+# Flags: -v/--verbose, -d/--debug (set -x)
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/lib.sh
+. "$ROOT/scripts/lib/lib.sh"
+
+BACKEND="$ROOT/backend"
+FRONTEND="$ROOT/frontend"
+BACKEND_PORT="${BACKEND_PORT:-8000}"
+FRONTEND_PORT="${FRONTEND_PORT:-5173}"
+DOCS_PORT="${DOCS_PORT:-8001}"
+
+parse_common_args "${BASH_SOURCE[0]}" "$@"
+set -- "${ARGS[@]+"${ARGS[@]}"}"
+cmd="${1:-help}"
+[[ $# -gt 0 ]] && shift
+
+need_env_file() {
+  if [[ ! -f "$ROOT/.env" ]]; then
+    log_warn ".env not found; copying .env.example (set MODEL_API_KEY or OPL_FAKE_API=1)"
+    cp "$ROOT/.env.example" "$ROOT/.env"
+  fi
+}
+
+cmd_setup() {
+  log_info "platform: $(os_name)"
+  if docker_running; then
+    log_ok "docker: $(docker --version | sed 's/,.*//')"
+    log_ok "compose: $(compose_cmd)"
+  else
+    log_warn "docker is not running; only the native path (./dev up --native) will work"
+  fi
+  if py_find >/dev/null; then log_ok "python: $(py_find)"; else log_warn "python 3.12 not found (needed for --native only)"; fi
+  if has_cmd node; then log_ok "node: $(node --version)"; else log_warn "node not found (needed for --native only)"; fi
+  need_env_file
+  log_ok "ready. next: ./dev up"
+}
+
+cmd_up() {
+  local native=0 build=0 profiles=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --native) native=1 ;;
+      --build) build=1 ;;
+      --with-glimmer) profiles="--profile openweight" ;;
+      *) die "unknown option for up: $1" ;;
+    esac
+    shift
+  done
+  need_env_file
+  if [[ $native -eq 1 ]]; then
+    up_native
+    return
+  fi
+  docker_running || die "docker is not running"
+  ports_check "$BACKEND_PORT" "$FRONTEND_PORT" || die "free the ports above or set BACKEND_PORT/FRONTEND_PORT"
+  local args=(up -d)
+  [[ $build -eq 1 ]] && args+=(--build)
+  # shellcheck disable=SC2086
+  compose $profiles "${args[@]}"
+  wait_http "http://localhost:$BACKEND_PORT/healthz" 90 || { compose logs backend; die "backend did not become healthy"; }
+  log_ok "api  http://localhost:$BACKEND_PORT/docs"
+  log_ok "web  http://localhost:$FRONTEND_PORT"
+}
+
+up_native() {
+  venv_ensure "$BACKEND"
+  node_ensure "$FRONTEND"
+  env_load "$ROOT/.env"
+  ports_check "$BACKEND_PORT" "$FRONTEND_PORT" || die "ports in use"
+  kill_group_on_exit
+  export DATA_DIR="${DATA_DIR:-$ROOT/data}"
+  venv_run "$BACKEND" uvicorn app.main:app --reload --port "$BACKEND_PORT" &
+  VITE_API_URL="http://localhost:$BACKEND_PORT" node_run "$FRONTEND" npm run dev -- --port "$FRONTEND_PORT" &
+  log_ok "api  http://localhost:$BACKEND_PORT/docs"
+  log_ok "web  http://localhost:$FRONTEND_PORT"
+  wait
+}
+
+cmd_down() { compose --profile openweight --profile docs down --remove-orphans "$@"; }
+
+cmd_status() {
+  compose ps
+  if curl -fsS "http://localhost:$BACKEND_PORT/readyz" 2>/dev/null; then echo; else log_warn "backend not answering on :$BACKEND_PORT"; fi
+}
+
+cmd_logs() { compose logs -f "$@"; }
+
+cmd_test() {
+  local what="${1:-all}" failed=0
+  case "$what" in
+    all|scripts) test_scripts || failed=1 ;;
+  esac
+  case "$what" in
+    all|backend) test_backend || failed=1 ;;
+  esac
+  case "$what" in
+    all|frontend) test_frontend || failed=1 ;;
+  esac
+  [[ $failed -eq 0 ]] || die "some checks failed"
+  log_ok "all checks passed"
+}
+
+test_scripts() {
+  log_info "scripts: bash helper tests"
+  bash "$ROOT/scripts/tests/run.sh"
+}
+
+test_backend() {
+  [[ -d "$BACKEND" ]] || { log_warn "backend: not in this tree yet, skipped"; return 0; }
+  log_info "backend: ruff, mypy, pytest"
+  run_in backend sh -c 'ruff check . && ruff format --check . && mypy app && pytest -q'
+}
+
+test_frontend() {
+  [[ -d "$FRONTEND" ]] || { log_warn "frontend: not in this tree yet, skipped"; return 0; }
+  log_info "frontend: eslint, tsc, vitest, build"
+  run_in frontend sh -c 'npm ci --no-audit --no-fund --loglevel=error && npm run lint && npm run typecheck && npm test -- --run && npm run build'
+}
+
+# run_in <service> <cmd...>: inside the Docker service, or natively when NATIVE=1.
+run_in() {
+  local svc="$1"; shift
+  if [[ "${NATIVE:-0}" == "1" ]]; then
+    case "$svc" in
+      backend) venv_ensure "$BACKEND"; venv_run "$BACKEND" "$@" ;;
+      frontend) node_ensure "$FRONTEND"; node_run "$FRONTEND" "$@" ;;
+    esac
+  else
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    compose run --rm --no-deps -e OPL_FAKE_API=1 "$svc" "$@"
+  fi
+}
+
+cmd_lint() {
+  run_in backend sh -c 'ruff check . && ruff format --check . && mypy app'
+  run_in frontend sh -c 'npm ci --no-audit --no-fund --loglevel=error && npm run lint && npm run typecheck'
+}
+
+cmd_fmt() {
+  run_in backend sh -c 'ruff format . && ruff check --fix .'
+  run_in frontend sh -c 'npm ci --no-audit --no-fund --loglevel=error && npm run lint -- --fix'
+}
+
+cmd_docs() {
+  docker_running || die "docker is not running"
+  compose --profile docs up docs
+}
+
+cmd_docs_build() {
+  docker_running || die "docker is not running"
+  compose run --rm --no-deps -e OPL_FAKE_API=1 backend python -m app.openapi_export > "$ROOT/docs/reference/openapi.json"
+  compose --profile docs run --rm docs build --strict
+  log_ok "site/ is ready"
+}
+
+cmd_build() {
+  COMPOSE_EXTRA_FILES="-f docker-compose.prod.yml" compose build "$@"
+}
+
+cmd_version() {
+  local v="${1:-}"
+  [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "usage: ./dev version <major.minor.patch>"
+  local today
+  today="$(date +%Y-%m-%d)"
+  # sed -i needs a suffix on macOS; drop the backups afterwards
+  sed -i.bak "s/^version = \".*\"/version = \"$v\"/" "$BACKEND/pyproject.toml"
+  sed -i.bak "s/^__version__ = \".*\"/__version__ = \"$v\"/" "$BACKEND/app/__init__.py"
+  sed -i.bak "s/^  \"version\": \"[0-9.]*\"/  \"version\": \"$v\"/" "$FRONTEND/package.json"
+  awk -v v="$v" -v d="$today" '{print} /^## Unreleased$/{print ""; print "## " v " - " d}' "$ROOT/CHANGELOG.md" > "$ROOT/CHANGELOG.md.new"
+  mv "$ROOT/CHANGELOG.md.new" "$ROOT/CHANGELOG.md"
+  rm -f "$BACKEND/pyproject.toml.bak" "$BACKEND/app/__init__.py.bak" "$FRONTEND/package.json.bak"
+  run_in frontend sh -c 'npm install --package-lock-only --no-audit --no-fund --loglevel=error' >/dev/null
+  log_ok "version $v set in pyproject.toml, app/__init__.py, package.json, package-lock.json and CHANGELOG.md"
+  echo "  move the Unreleased notes under the new heading, then:"
+  echo "  git switch -c release/$v && git add -A && git commit -m \"chore: release $v\" && git push -u origin release/$v"
+  echo "  open the PR; after it is merged: git switch main && git pull && git tag $v && git push origin $v"
+}
+
+cmd_shell() {
+  local svc="${1:-backend}"
+  compose exec "$svc" sh
+}
+
+case "$cmd" in
+  setup) cmd_setup "$@" ;;
+  up) cmd_up "$@" ;;
+  down) cmd_down "$@" ;;
+  status) cmd_status "$@" ;;
+  logs) cmd_logs "$@" ;;
+  test) cmd_test "$@" ;;
+  lint) cmd_lint "$@" ;;
+  fmt) cmd_fmt "$@" ;;
+  docs) cmd_docs "$@" ;;
+  docs-build) cmd_docs_build "$@" ;;
+  build) cmd_build "$@" ;;
+  version) cmd_version "$@" ;;
+  shell) cmd_shell "$@" ;;
+  help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
+  *) die "unknown command: $cmd (try ./dev help)" 2 ;;
+esac
