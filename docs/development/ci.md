@@ -47,7 +47,8 @@ The tag push triggers the workflow, which:
 4. creates a GitHub release whose notes are that changelog section.
 
 The job uses only `actions/checkout`, the job token, Docker and `gh`; no other actions and no
-stored secrets.
+stored secrets. A repository ruleset lets only the repository admin create, move or delete tags,
+so nobody else can trigger a release.
 
 Only a tag triggers it; no image is built or pushed for pull requests or merges. The images are
 the release artifact: the demo host pulls them, and a tagged version can be run anywhere without
