@@ -1,3 +1,5 @@
+import tempfile
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -57,9 +59,10 @@ def version(settings: SettingsDep) -> Version:
 def _writable(settings: Settings) -> bool:
     try:
         settings.data_dir.mkdir(parents=True, exist_ok=True)
-        probe = settings.data_dir / ".write-probe"
-        probe.write_text("ok")
-        probe.unlink()
+        # A unique probe per call: concurrent checks must not unlink each other's file.
+        with tempfile.NamedTemporaryFile(dir=settings.data_dir, prefix=".write-probe-") as probe:
+            probe.write(b"ok")
+            probe.flush()
         return True
     except OSError:
         return False
