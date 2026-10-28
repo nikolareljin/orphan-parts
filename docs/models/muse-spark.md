@@ -1,6 +1,30 @@
 # Muse Spark
 
-Vision extraction with structured output, tool-calling steps inside the agent, search grounding for part numbers, and the explanations under each verdict. Runs at low reasoning effort for parsing.
+Vision extraction with structured output, tool-calling steps inside the agent, search grounding
+for part numbers, and the explanations under each verdict. Runs at low reasoning effort for
+parsing.
 
-!!! note
-    Not built yet.
+## Label extraction
+
+One call per request, however many photos (up to `MAX_PHOTOS`, default 4):
+
+- **Input.** The instructions describe the job (report only what is printed, confidence per
+  field, leave out unsupported fields). The user message carries the field list from
+  `app/extract/fields.py` and one `input_image` part per photo. Photos are re-encoded first:
+  EXIF applied and dropped, longest side `IMAGE_MAX_PX` (default 1280), JPEG.
+- **Output.** `text.format` is the strict JSON schema of `LabelReading`: `item_type`,
+  `label_text` (a transcription) and a list of `{name, value, unit, confidence}`. The reply is
+  validated back into the model; anything else is a `502` for the caller.
+- **Effort and size.** `reasoning.effort` is `EXTRACT_REASONING_EFFORT` (default `low`),
+  `max_output_tokens` is 800. A 1280 px photo costs about 1,400 input tokens; with the prompt
+  and 300 output tokens a one-photo call is about 0.004 USD at the standard rate.
+- **Operation name** `extract`, which is also the name of the recorded fixture that answers
+  every extraction in fixture mode.
+
+The code path is `app/extract/service.py`; the normalisers in `app/extract/normalize.py` turn the
+printed values into comparable ones, see the [evidence model](../concepts/evidence.md).
+
+```bash
+python -m app.extract photo.jpg          # prints the extraction as JSON
+./dev shell backend                      # then the same inside the container
+```

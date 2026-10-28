@@ -17,6 +17,15 @@ Model API behaviour is tested against `httpx.MockTransport`: the handler plays t
 recording `sleep` captures the backoff delays, and the ledger is inspected after each call. Async
 tests use the `anyio` marker on the asyncio backend.
 
+Feature tests come in three layers. The pure parts (image preparation, normalisers) are tested
+directly. The service is tested twice: against the recorded fixture, and against a mock server
+that captures the request body, so the prompt, the schema and the image parts are pinned. The
+route is tested through the app with multipart uploads, including every error status.
+
+Two conftest fixtures matter here: `recorded_client` serves the fixtures committed under
+`tests/fixtures/api/`, and `client` serves an empty fixture directory, which is how the "no
+recorded answer" path is tested.
+
 ## Frontend
 
 vitest for pure modules under `src/lib/`. Component tests come with the first real pages.
@@ -24,7 +33,7 @@ vitest for pure modules under `src/lib/`. Component tests come with the first re
 ## Scripts
 
 `scripts/tests/run.sh` loads every `test_*.sh`, runs each `test_*` function and counts
-`assert_eq`, `assert_true` and `assert_false`. CI runs it on Linux and macOS.
+`assert_eq`, `assert_true` and `assert_false`.
 
 ## Fixture mode and recorded fixtures
 
@@ -34,3 +43,6 @@ request; a file named after the operation (`extract.json`) answers every request
 operation. Recording is `OPL_RECORD_FIXTURES=1` with a real key: each response is written next to
 its request summary, with inline images replaced by a digest. Details in
 [Model API client](../models/model-api-client.md).
+
+The committed `responses/extract.json` is the answer for a laptop power adapter label; it makes
+the tests, CI and the offline demo work with no key and no network.

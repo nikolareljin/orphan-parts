@@ -22,6 +22,9 @@
 | `./dev version <x.y.z>` | sets the version in every manifest and starts a changelog section |
 | `./dev shell [service]` | shell in a running service |
 
+`python -m app.extract <photo> [<photo> ...]` (inside the backend container or the native venv)
+reads a label and prints the extraction as JSON; fixture mode needs no key.
+
 Flags: `-v` turns on debug logging for the helpers, `-d` adds `set -x`.
 `NATIVE=1 ./dev test` runs the checks on the host instead of in Docker.
 
