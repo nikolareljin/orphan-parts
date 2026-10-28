@@ -1,0 +1,24 @@
+import pytest
+
+from app.config import Settings
+
+
+def test_missing_key_fails_fast_in_live_mode() -> None:
+    with pytest.raises(ValueError, match="MODEL_API_KEY"):
+        Settings(OPL_FAKE_API=False, model_api_key=None, _env_file=None)
+
+
+def test_fixture_mode_needs_no_key() -> None:
+    s = Settings(OPL_FAKE_API=True, _env_file=None)
+    assert s.model_api_mode == "fixture"
+
+
+def test_key_is_never_shown_in_repr() -> None:
+    s = Settings(OPL_FAKE_API=False, model_api_key="not-a-real-key-123", _env_file=None)
+    assert "not-a-real-key-123" not in repr(s)
+    assert s.model_api_mode == "live"
+
+
+def test_cors_origins_split_and_trimmed() -> None:
+    s = Settings(OPL_FAKE_API=True, cors_origins="http://a, http://b ,", _env_file=None)
+    assert s.cors_origin_list == ["http://a", "http://b"]

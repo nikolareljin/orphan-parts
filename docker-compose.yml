@@ -1,0 +1,30 @@
+# Development stack: ./dev up
+# The backend source is bind-mounted and reloads on change.
+name: orphan-parts
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATA_DIR: /data
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+    volumes:
+      - ./backend:/app
+      - app-data:/data
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+
+
+volumes:
+  app-data:
