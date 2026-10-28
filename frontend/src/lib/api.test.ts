@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, api, apiUrl } from './api'
+import { ApiError, api, apiUrl, dataUrlToFile } from './api'
 
 describe('apiUrl', () => {
   it('keeps same-origin paths relative when no base is set', () => {
@@ -8,6 +8,15 @@ describe('apiUrl', () => {
 
   it('adds a leading slash', () => {
     expect(apiUrl('api/version')).toBe('/api/version')
+  })
+})
+
+describe('dataUrlToFile', () => {
+  it('decodes the base64 body and keeps the mime type', async () => {
+    const file = dataUrlToFile('data:image/jpeg;base64,AAE=', 'crop.jpg')
+    expect(file.name).toBe('crop.jpg')
+    expect(file.type).toBe('image/jpeg')
+    expect(new Uint8Array(await file.arrayBuffer())).toEqual(new Uint8Array([0, 1]))
   })
 })
 
@@ -53,6 +62,34 @@ describe('api', () => {
     const form = init?.body as FormData
     const names = form.getAll('photos').map((f) => (f as File).name)
     expect(names).toEqual(['a.jpg', 'b.png'])
+    expect(form.getAll('crops')).toEqual([])
+  })
+
+  it('posts label crops under the crops field', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ item_type: 'adapter', fields: {} }))
+    vi.stubGlobal('fetch', fetchMock)
+    const photo = new File([new Uint8Array([1])], 'a.jpg', { type: 'image/jpeg' })
+    const crop = new File([new Uint8Array([2])], 'label-1.jpg', { type: 'image/jpeg' })
+
+    await api.extract([photo], [crop])
+
+    const form = fetchMock.mock.calls[0][1]?.body as FormData
+    expect(form.getAll('photos').map((f) => (f as File).name)).toEqual(['a.jpg'])
+    expect(form.getAll('crops').map((f) => (f as File).name)).toEqual(['label-1.jpg'])
+  })
+
+  it('posts one photo and the concepts to /api/segment', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ regions: [], overlay: '' }))
+    vi.stubGlobal('fetch', fetchMock)
+    const photo = new File([new Uint8Array([1])], 'a.jpg', { type: 'image/jpeg' })
+
+    await api.segment(photo, ['label', 'opening'])
+
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/segment')
+    const form = init?.body as FormData
+    expect((form.get('photo') as File).name).toBe('a.jpg')
+    expect(form.getAll('concepts')).toEqual(['label', 'opening'])
   })
 
   it('surfaces the API detail text on a 400', async () => {

@@ -1,0 +1,42 @@
+{
+  "endpoint": "/responses",
+  "op": "segment-item",
+  "model": "sam-3.1",
+  "key": "segment-item",
+  "request": {
+    "input": "one input_text part ('the main object') and one input_image part, see app/segment/service.py",
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "model": "sam-3.1"
+  },
+  "response": {
+    "id": "resp_fixture_segment_item",
+    "object": "response",
+    "status": "completed",
+    "model": "sam-3.1",
+    "output": [
+      {
+        "id": "msg_fixture_segment_item",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "<0f>0<|box;x1=40;y1=30;x2=600;y2=450;w=640;h=480;c=0.94|><|mask;x=0;y=0;c=0.94;data=421,561,!!!!%I@n6=UXL/k*-jud=2pZ0R7(U4TxTk`Er[z+XlH=BeW[Zmtdc.nukq&yNCoTpJxBu]-abq97h7ceBL@6vEXsTx@E(f%33W1#5=n8kr7AslUbzFvYKp5o+?DBJzYjoDRbR&ZxiZyT{)EdeN!Dy*]73LRl`wjV@_zqU@`xH9ax`J`]JPOHir!:reG{R{MUKI8tkDz1Va8%%b+$#Kl9[)xu_08=KXvWNNnc#QRho(gQd(P:SCQPpZvB4cr%izA:B#M6@h:[G!0_*vD]Cafin36M!(0KBMMz{$m23[r3QYSTN+O7Yj)G.zd'ob:W$GNBz%L.(u!WH#yAmmMz]p*`[.qhwSDC_YB5zyaO2aej[=p=0a!!!|>"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "images_processed": 1,
+      "total_tokens": 0
+    }
+  },
+  "status": 200
+}

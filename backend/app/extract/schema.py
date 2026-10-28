@@ -43,6 +43,7 @@ class Extraction(BaseModel):
     fields: dict[str, Evidence]
     warnings: list[str]
     photos: int
+    crops: int = 0
     model: str
     from_fixture: bool
     cost_usd: float

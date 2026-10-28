@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     prompt_cache_name: str = "orphan-parts"
     extract_reasoning_effort: str = "low"
     image_max_px: int = 1280
+    segment_max_px: int = 800
     max_photos: int = 4
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
