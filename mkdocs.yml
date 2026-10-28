@@ -1,0 +1,124 @@
+site_name: Orphan Parts Lens
+site_description: Show it, ask it, sell it, or find the one that fits. Evidence-backed answers about used things, on Meta's Muse models.
+site_url: https://nikolareljin.github.io/orphan-parts/
+repo_url: https://github.com/nikolareljin/orphan-parts
+repo_name: nikolareljin/orphan-parts
+edit_uri: edit/main/docs/
+copyright: MIT License
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      toggle:
+        icon: material/weather-night
+        name: dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      toggle:
+        icon: material/weather-sunny
+        name: light mode
+
+plugins:
+  - search
+  - swagger-ui-tag
+  - git-revision-date-localized:
+      enabled: !ENV [DOCS_GIT_DATES, true]
+      fallback_to_build_date: true
+      enable_creation_date: false
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.snippets:
+      base_path: [".", "docs"]
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Start:
+      - Overview: index.md
+      - Quickstart: start/quickstart.md
+      - Demo walkthrough: start/demo.md
+  - Concepts:
+      - How identification works: concepts/identification.md
+      - Evidence model: concepts/evidence.md
+      - Verdict ladder: concepts/verdicts.md
+      - Category profiles: concepts/profiles.md
+  - Guides:
+      - Seller flow: guides/seller.md
+      - Buyer flow: guides/buyer.md
+      - Value an item: guides/value.md
+      - Find and rank: guides/evaluate.md
+      - Search: guides/search.md
+      - Reuse a device: guides/reuse.md
+      - Voice notes and video capture: guides/voice-and-video.md
+      - Marketplace handoff: guides/marketplace.md
+      - Catalog feed and Graph push: guides/catalog.md
+      - WhatsApp and Messenger agent: guides/messaging-agent.md
+      - Android app: guides/android.md
+      - Meta glasses: guides/glasses.md
+      - Creating a new category: guides/new-category.md
+  - Meta models:
+      - Overview: models/index.md
+      - Muse Spark: models/muse-spark.md
+      - Muse Wonder: models/muse-wonder.md
+      - Muse Image: models/muse-image.md
+      - Muse Voice Transcribe: models/muse-voice-transcribe.md
+      - SAM 3.1: models/sam-3-1.md
+      - Muse Glimmer: models/muse-glimmer.md
+      - Muse Spark Open: models/muse-spark-open.md
+      - Model API client: models/model-api-client.md
+      - Providers and routing: models/providers.md
+  - Reference:
+      - HTTP API: reference/http-api.md
+      - Profile schema: reference/profile-schema.md
+      - Configuration: reference/configuration.md
+      - dev CLI: reference/cli.md
+      - Agent tools: reference/agent-tools.md
+      - Data model and storage: reference/data-model.md
+      - Events and progress: reference/events.md
+  - Operations:
+      - Deployment: operations/deployment.md
+      - Demo access: operations/demo-access.md
+      - Observability: operations/observability.md
+      - Security: operations/security.md
+      - Privacy: operations/privacy.md
+      - Troubleshooting: operations/troubleshooting.md
+  - Development:
+      - Architecture: development/architecture.md
+      - Repository layout: development/layout.md
+      - Local development: development/local.md
+      - Testing: development/testing.md
+      - CI and releases: development/ci.md
+      - Code style: development/style.md
+      - Working with Muse Code: development/muse-code.md
+  - Project:
+      - Built during the hackathon: project/hackathon.md
+      - Roadmap: project/roadmap.md
+      - Limitations: project/limitations.md
+      - Changelog: project/changelog.md
+      - License: project/license.md
