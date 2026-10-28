@@ -1,12 +1,33 @@
+<p align="center"><img src="docs/assets/logo.svg" alt="Orphan Parts Lens" width="160"></p>
+
 # Orphan Parts Lens
 
-Orphan Parts Lens helps people identify, evaluate, list and reuse spare parts and used devices
-with Meta's Muse models: photos become an evidence-backed spec, a listing is checked against what
-you need, a Facebook Marketplace draft is written for you, a candidate part is verified for fit,
-and a device you own gets a safe second use.
+Show it, ask it, sell it, or find the one that fits. Evidence-backed answers about used things,
+on Meta's Muse models.
 
-A drawer full of orphan power adapters is the first category. The engine is built around
-category profiles, so any physical part can be added as data.
+**This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
+Everything in it was built during the hackathon; the dated log is in the docs under
+*Project > Built during the hackathon*.
+
+Orphan Parts Lens is an assistant for things you own and things you are about to buy. Point the
+camera at an item, or paste a listing, and ask: What is this? What is it worth, and is it worth
+selling? Does this listing fit what I need, and is it a good deal? What else could this device
+become? The answers come with their evidence: a label it read, a source it cited with a date, or
+a plain "cannot verify". Used tech and spare parts are the first categories; the engine takes any
+item as a data profile.
+
+## Five uses
+
+| Use | You ask | You get |
+|---|---|---|
+| Identify | What is this? | a typed spec with a confidence and a source crop per field, the part number confirmed with citations |
+| Value | What is it worth, is it worth selling? | an estimated resale value from cited comparables, labelled as an estimate, and a plain answer |
+| List | Help me sell it | a Facebook Marketplace-ready draft and the questions still to resolve before posting |
+| Find | I need one that fits | your needs as a profile, candidates ranked against it with a fit score, a deal check from the photos and the text, questions for the seller |
+| Reuse | What else could this become? | safe project ideas with a parts list, manufacturer guidance and local e-waste rules |
+
+On the web, drop photos or paste a listing. On the phone, talk to it and show it the camera; the
+answer is spoken back. Hands-free through Meta glasses later.
 
 Documentation: https://nikolareljin.github.io/orphan-parts/
 
@@ -49,12 +70,12 @@ Changes go through pull requests; releases are SemVer tags that publish images t
 
 | Model | Job |
 |---|---|
-| Muse Spark | reads labels into structured fields, drives the agent, explains verdicts |
-| Muse Wonder | orchestrates the buyer comparison and drafts new category profiles |
-| SAM 3.1 | isolates the part, its label and its connector in photos and video |
-| Muse Voice Transcribe | voice notes from sellers and from WhatsApp |
+| Muse Spark | reads labels and listings into structured fields, ranks candidates, drives the agent, explains verdicts |
+| Muse Wonder | plans the buyer comparison, drafts new category profiles |
+| SAM 3.1 | isolates the item, its label and its connector in photos and video |
+| Muse Voice Transcribe | spoken questions on the phone, voice notes from sellers |
 | Muse Image | background cleanup of the cover photo, always labeled, original kept |
-| Muse Glimmer, Muse Spark Open | open-weight pre-check and alternative extraction provider |
+| Muse Glimmer, Muse Spark Open | on-device pre-check and alternative extraction provider |
 
 Built with Muse Code.
 
@@ -67,10 +88,6 @@ docs/       MkDocs site, published to GitHub Pages
 scripts/    bash helpers used by ./dev
 docker/     images that are not part of backend/ or frontend/
 ```
-
-## Built during the Meta Global AI Developer Hackathon, Oct 27 - Nov 4, 2026
-
-The dated feature log lives in the docs under *Project > Built during the hackathon*.
 
 ## License
 

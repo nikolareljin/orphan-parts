@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg91"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg">
+  <defs
+     id="defs49">
+    <linearGradient
+       id="bgGrad"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#1b2436"
+         id="stop2" />
+      <stop
+         offset="100%"
+         stop-color="#0e131d"
+         id="stop4" />
+    </linearGradient>
+    <linearGradient
+       id="adapterBody"
+       x1="194.82163"
+       y1="130.50688"
+       x2="343.63275"
+       y2="279.318"
+       gradientTransform="scale(0.95086979,1.0516687)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#3b4859"
+         id="stop7" />
+      <stop
+         offset="50%"
+         stop-color="#283240"
+         id="stop9" />
+      <stop
+         offset="100%"
+         stop-color="#19202a"
+         id="stop11" />
+    </linearGradient>
+    <linearGradient
+       id="prongGrad"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="0%">
+      <stop
+         offset="0%"
+         stop-color="#cbd5e1"
+         id="stop14" />
+      <stop
+         offset="50%"
+         stop-color="#f8fafc"
+         id="stop16" />
+      <stop
+         offset="100%"
+         stop-color="#94a3b8"
+         id="stop18" />
+    </linearGradient>
+    <linearGradient
+       id="cableGrad"
+       x1="97.612184"
+       y1="177.53974"
+       x2="97.612184"
+       y2="400.25204"
+       gradientTransform="scale(1.2202806,0.81948365)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#2a3649"
+         id="stop21" />
+      <stop
+         offset="100%"
+         stop-color="#0f172a"
+         id="stop23" />
+    </linearGradient>
+    <linearGradient
+       id="loopGrad"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#00f5d4"
+         id="stop26" />
+      <stop
+         offset="40%"
+         stop-color="#00bbf9"
+         id="stop28" />
+      <stop
+         offset="75%"
+         stop-color="#7b2cbf"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#d946ef"
+         id="stop32" />
+    </linearGradient>
+    <radialGradient
+       id="sparkGlow"
+       cx="50%"
+       cy="50%"
+       r="50%">
+      <stop
+         offset="0%"
+         stop-color="#ffffff"
+         stop-opacity="1"
+         id="stop35" />
+      <stop
+         offset="35%"
+         stop-color="#00f5d4"
+         stop-opacity="0.8"
+         id="stop37" />
+      <stop
+         offset="70%"
+         stop-color="#00bbf9"
+         stop-opacity="0.3"
+         id="stop39" />
+      <stop
+         offset="100%"
+         stop-color="#0e131d"
+         stop-opacity="0"
+         id="stop41" />
+    </radialGradient>
+    <radialGradient
+       id="shadowGlow"
+       cx="50%"
+       cy="50%"
+       r="50%">
+      <stop
+         offset="0%"
+         stop-color="#000000"
+         stop-opacity="0.6"
+         id="stop44" />
+      <stop
+         offset="100%"
+         stop-color="#000000"
+         stop-opacity="0"
+         id="stop46" />
+    </radialGradient>
+    <linearGradient
+       id="cableGrad-3"
+       x1="97.612184"
+       y1="177.53974"
+       x2="97.612184"
+       y2="400.25204"
+       gradientTransform="matrix(1.2202806,0,0,0.81948365,-303.87219,-77.821744)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#2a3649"
+         id="stop21-6" />
+      <stop
+         offset="100%"
+         stop-color="#0f172a"
+         id="stop23-7" />
+    </linearGradient>
+    <linearGradient
+       id="adapterBody-6"
+       x1="194.82163"
+       y1="130.50688"
+       x2="343.63275"
+       y2="279.318"
+       gradientTransform="scale(0.95086979,1.0516687)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#3b4859"
+         id="stop7-2" />
+      <stop
+         offset="50%"
+         stop-color="#283240"
+         id="stop9-9" />
+      <stop
+         offset="100%"
+         stop-color="#19202a"
+         id="stop11-1" />
+    </linearGradient>
+    <linearGradient
+       xlink:href="#prongGrad"
+       id="linearGradient1402"
+       x1="368.40535"
+       y1="70.83502"
+       x2="387.37901"
+       y2="70.83502"
+       gradientTransform="scale(0.63245553,1.5811388)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       xlink:href="#prongGrad"
+       id="linearGradient1404"
+       x1="422.16407"
+       y1="70.83502"
+       x2="441.13773"
+       y2="70.83502"
+       gradientTransform="scale(0.63245553,1.5811388)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <rect
+     x="32"
+     y="32"
+     width="448"
+     height="448"
+     rx="96"
+     ry="96"
+     fill="url(#bgGrad)"
+     stroke="#2d384d"
+     stroke-width="2"
+     id="rect51" />
+  <g
+     id="lens-viewfinder">
+    <circle
+       cx="256"
+       cy="240"
+       r="185"
+       fill="none"
+       stroke="#171f2d"
+       stroke-width="4"
+       id="circle53" />
+    <circle
+       cx="256"
+       cy="240"
+       r="165"
+       fill="none"
+       stroke="#222d3f"
+       stroke-width="14"
+       id="circle55" />
+    <circle
+       cx="256"
+       cy="240"
+       r="165"
+       fill="none"
+       stroke="#00f5d4"
+       stroke-width="2.5"
+       stroke-opacity="0.4"
+       stroke-dasharray="160 30 50 30"
+       id="circle57" />
+    <path
+       d="M 120,240 H 134 M 378,240 H 392 M 256,102 V 116 M 256,364 V 378"
+       stroke="#00f5d4"
+       stroke-width="2.5"
+       stroke-linecap="round"
+       stroke-opacity="0.4"
+       id="path59" />
+  </g>
+  <ellipse
+     cx="256"
+     cy="260"
+     rx="110"
+     ry="100"
+     fill="url(#shadowGlow)"
+     id="ellipse62" />
+  <g
+     id="hardware-adapter"
+     transform="translate(2.1412574,-11.965848)">
+    <path
+       d="m 170,320 c -50,0 -60,-110 -10,-150 40,-30 70,-10 96,-10 24,0 54,-20 94,10 50,40 40,150 -10,150"
+       fill="none"
+       stroke="url(#cableGrad)"
+       stroke-width="16"
+       stroke-linecap="round"
+       id="path64"
+       style="stroke:url(#cableGrad)" />
+    <rect
+       x="233"
+       y="112"
+       width="12"
+       height="30"
+       rx="3"
+       ry="3"
+       fill="url(#prongGrad)"
+       id="rect66"
+       style="fill:url(#linearGradient1402)" />
+    <rect
+       x="267"
+       y="112"
+       width="12"
+       height="30"
+       rx="3"
+       ry="3"
+       fill="url(#prongGrad)"
+       id="rect68"
+       style="fill:url(#linearGradient1404)" />
+    <rect
+       x="186"
+       y="138"
+       width="140"
+       height="155"
+       rx="26"
+       ry="26"
+       fill="url(#adapterBody)"
+       stroke="#475569"
+       stroke-width="1.5"
+       id="rect70"
+       style="fill:url(#adapterBody)" />
+    <rect
+       x="206"
+       y="158"
+       width="100"
+       height="115"
+       rx="14"
+       ry="14"
+       fill="#141a23"
+       fill-opacity="0.5"
+       id="rect72" />
+    <path
+       d="m 238,293 c 0,22 36,22 36,45"
+       fill="none"
+       stroke="#0f172a"
+       stroke-width="14"
+       stroke-linecap="round"
+       id="path74" />
+  </g>
+  <g
+     id="ai-sparkle">
+    <circle
+       cx="256"
+       cy="245"
+       r="50"
+       fill="url(#sparkGlow)"
+       id="circle77" />
+    <path
+       d="M 256,215 Q 256,245 226,245 Q 256,245 256,275 Q 256,245 286,245 Q 256,245 256,215 Z"
+       fill="#ffffff"
+       id="path79" />
+    <path
+       d="M 292,208 Q 292,220 280,220 Q 292,220 292,232 Q 292,220 304,220 Q 292,220 292,208 Z"
+       fill="#00f5d4"
+       opacity="0.9"
+       id="path81" />
+  </g>
+  <ellipse
+     cx="256"
+     cy="280"
+     rx="140"
+     ry="50"
+     fill="url(#shadowGlow)"
+     id="ellipse84" />
+  <g
+     id="infinity-loop">
+    <path
+       d="M 256,270               C 210,210 130,210 130,270               C 130,330 210,330 256,270               C 302,210 382,210 382,270               C 382,330 302,330 256,270 Z"
+       fill="none"
+       stroke="url(#loopGrad)"
+       stroke-width="26"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path86" />
+    <path
+       d="M 256,270               C 210,210 130,210 130,270               C 130,330 210,330 256,270               C 302,210 382,210 382,270               C 382,330 302,330 256,270 Z"
+       fill="none"
+       stroke="#ffffff"
+       stroke-width="3.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       stroke-opacity="0.65"
+       id="path88" />
+  </g>
+  <path
+     d="m 289.18313,320.20665 c 0,35.73293 57.2985,35.73293 57.2985,73.09009"
+     fill="none"
+     stroke="#0f172a"
+     stroke-width="22.5098"
+     stroke-linecap="round"
+     id="path74-0"
+     style="display:inline;opacity:1;mix-blend-mode:screen;fill:#868686;fill-opacity:1" />
+</svg>
