@@ -22,6 +22,8 @@ def prepare(data: bytes, *, max_px: int, max_bytes: int) -> bytes:
     try:
         img = Image.open(BytesIO(data))
         img.load()
+    except Image.DecompressionBombError as exc:
+        raise BadImageError("the photo is too large to decode") from exc
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         raise BadImageError("the file is not an image") from exc
     if img.format not in ALLOWED_FORMATS:

@@ -16,8 +16,8 @@ One call per request, however many photos (up to `MAX_PHOTOS`, default 4):
   `label_text` (a transcription) and a list of `{name, value, unit, confidence}`. The reply is
   validated back into the model; anything else is a `502` for the caller.
 - **Effort and size.** `reasoning.effort` is `EXTRACT_REASONING_EFFORT` (default `low`),
-  `max_output_tokens` is 800. A 1280 px photo costs about 1,400 input tokens; with the prompt
-  and 300 output tokens a one-photo call is about 0.004 USD at the standard rate.
+  `max_output_tokens` is 800. The recorded one-photo call uses 1,480 input and 310 output
+  tokens, about 0.003 USD at the standard rate.
 - **Operation name** `extract`, which is also the name of the recorded fixture that answers
   every extraction in fixture mode.
 

@@ -11,7 +11,7 @@ _RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*[-~to]+\s*(\d+(?:[.,]\d+)?)")
 _MILLI = re.compile(r"(\d+(?:[.,]\d+)?)\s*m[aA]\b")
 # the separator may be x, an asterisk or the multiplication sign
 _TIMES = "x*" + chr(0xD7)
-_BARREL = re.compile(rf"(\d+(?:\.\d+)?)\s*[{_TIMES}]\s*(\d+(?:\.\d+)?)\s*(?:mm)?")
+_BARREL = re.compile(rf"(\d+(?:[.,]\d+)?)\s*[{_TIMES}]\s*(\d+(?:[.,]\d+)?)\s*(?:mm)?")
 _CODE_PREFIX = re.compile(
     r"^(?:P/?N|PART(?: NO\.?| NUMBER)?|MODEL(?: NO\.?)?|MOD\.?)\s*[:#]?\s*", re.I
 )
@@ -60,7 +60,7 @@ def _watts(text: str) -> tuple[str, str]:
 
 def _code(text: str) -> tuple[str, str]:
     code = _CODE_PREFIX.sub("", _clean(text)).upper()
-    return re.sub(r"[^A-Z0-9./-]+", "", code), ""
+    return re.sub(r"[^A-Z0-9./_-]+", "", code), ""
 
 
 def _connector(text: str) -> tuple[str, str]:

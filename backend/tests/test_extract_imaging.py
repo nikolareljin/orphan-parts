@@ -63,3 +63,9 @@ def test_unsupported_format_is_rejected() -> None:
     img.save(buf, "BMP")
     with pytest.raises(BadImageError, match="unsupported image format: BMP"):
         prepare(buf.getvalue(), max_px=1280, max_bytes=12 * MB)
+
+
+def test_huge_pixel_count_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 100)
+    with pytest.raises(BadImageError, match="too large to decode"):
+        prepare(make_photo(640, 480), max_px=1280, max_bytes=12 * MB)
