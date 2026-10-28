@@ -6,9 +6,11 @@ backend/
     main.py           app factory, middleware, routers
     config.py         settings, validated at startup
     api/routes.py     HTTP endpoints
+    model_api/        the Model API client, pricing, spend ledger, recorded fixtures
     ops/              logging, request context, security headers
     openapi_export.py prints the OpenAPI document for the docs site
   tests/
+    fixtures/api/     recorded Model API responses, one JSON file per request or operation
   pyproject.toml      dependencies, ruff, mypy, pytest config
   Dockerfile          dev and prod targets
 

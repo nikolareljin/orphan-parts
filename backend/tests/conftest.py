@@ -14,8 +14,18 @@ from app.main import create_app
 
 
 @pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"
+
+
+@pytest.fixture
 def settings(tmp_path: Path) -> Settings:
-    return Settings(OPL_FAKE_API=True, data_dir=tmp_path / "data", log_format="text")
+    return Settings(
+        OPL_FAKE_API=True,
+        data_dir=tmp_path / "data",
+        fixtures_dir=tmp_path / "fixtures",
+        log_format="text",
+    )
 
 
 @pytest.fixture

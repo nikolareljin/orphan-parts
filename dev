@@ -12,6 +12,7 @@
 #   logs [service]     follow Docker logs
 #   test [backend|frontend|scripts]
 #                      run the full check suite (default: all three)
+#   check-api          confirm the Model API key, the active mode and the spend ledger
 #   lint               ruff, mypy, eslint, tsc
 #   fmt                ruff format, eslint --fix
 #   docs               serve the docs site at :8001 with live reload
@@ -156,6 +157,19 @@ run_in() {
   fi
 }
 
+# Runs with the real .env (not fixture mode): one GET /models, no tokens spent.
+cmd_check_api() {
+  need_env_file
+  if [[ "${NATIVE:-0}" == "1" ]]; then
+    venv_ensure "$BACKEND"
+    env_load "$ROOT/.env"
+    venv_run "$BACKEND" python -m app.model_api check
+  else
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    compose run --rm --no-deps backend python -m app.model_api check
+  fi
+}
+
 cmd_lint() {
   run_in backend sh -c 'ruff check . && ruff format --check . && mypy app'
   run_in frontend sh -c 'npm ci --no-audit --no-fund --loglevel=error && npm run lint && npm run typecheck'
@@ -213,6 +227,7 @@ case "$cmd" in
   status) cmd_status "$@" ;;
   logs) cmd_logs "$@" ;;
   test) cmd_test "$@" ;;
+  check-api) cmd_check_api "$@" ;;
   lint) cmd_lint "$@" ;;
   fmt) cmd_fmt "$@" ;;
   docs) cmd_docs "$@" ;;

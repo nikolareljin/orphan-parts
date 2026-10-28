@@ -25,7 +25,7 @@ export default function App() {
     <main className="shell">
       <header>
         <h1>Orphan Parts Lens</h1>
-        <p className="tagline">Show it, ask it, sell it, or find the one that fits.</p>
+        <p className="tagline">Identify a spare part. Draft the listing. Check the match.</p>
       </header>
 
       <section className="card">
@@ -42,7 +42,10 @@ export default function App() {
             <dd>{status.version.version}</dd>
             <dt>Model API</dt>
             <dd>
-              {status.ready.model_api === 'live' ? 'live' : 'fixture mode (no key, recorded responses)'}
+              {status.ready.model_api === 'fixture'
+                ? 'fixture mode (no key, recorded responses)'
+                : `${status.ready.model_api}, spent $${status.ready.spend_usd.toFixed(2)} of $${status.ready.spend_cap_usd.toFixed(2)}`}
+              {status.ready.paused ? ' (paused: spend cap reached)' : ''}
             </dd>
             <dt>Models</dt>
             <dd>{Object.values(status.version.models).join(', ')}</dd>
@@ -54,7 +57,7 @@ export default function App() {
 
       <section className="card muted">
         <h2>Next</h2>
-        <p>The five flows land here: identify, value, list, find and reuse. Photos or a listing in, an evidence-backed answer out.</p>
+        <p>Seller and buyer flows land here. Photos in, evidence-backed listing or match verdict out.</p>
       </section>
     </main>
   )

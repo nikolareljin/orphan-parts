@@ -4,8 +4,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app import __version__
-from app.api.deps import SettingsDep
+from app.api.deps import LedgerDep, SettingsDep
 from app.config import Settings
+from app.model_api import LedgerSummary
 
 router = APIRouter()
 
@@ -18,6 +19,9 @@ class Readiness(BaseModel):
     status: str
     model_api: str
     data_dir_writable: bool
+    spend_usd: float
+    spend_cap_usd: float
+    paused: bool
 
 
 class Version(BaseModel):
@@ -32,12 +36,15 @@ def healthz() -> Health:
 
 
 @router.get("/readyz", response_model=Readiness, tags=["ops"])
-def readyz(settings: SettingsDep) -> Readiness:
+def readyz(settings: SettingsDep, ledger: LedgerDep) -> Readiness:
     writable = _writable(settings)
     return Readiness(
         status="ok" if writable else "degraded",
         model_api=settings.model_api_mode,
         data_dir_writable=writable,
+        spend_usd=ledger.total_usd,
+        spend_cap_usd=ledger.cap_usd,
+        paused=ledger.paused,
     )
 
 
@@ -54,6 +61,11 @@ def version(settings: SettingsDep) -> Version:
             "sam": settings.model_sam,
         },
     )
+
+
+@router.get("/api/spend", response_model=LedgerSummary, tags=["ops"])
+def spend(ledger: LedgerDep) -> LedgerSummary:
+    return ledger.summary()
 
 
 def _writable(settings: Settings) -> bool:

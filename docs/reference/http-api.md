@@ -10,7 +10,9 @@ The same OpenAPI document is rendered below.
 | Path | Purpose |
 |---|---|
 | `GET /healthz` | process is up |
-| `GET /readyz` | config loaded, Model API mode (`live` or `fixture`), data directory writable |
+| `GET /readyz` | config loaded, Model API mode (`live`, `record` or `fixture`), data directory writable, spend so far against the cap, `paused` once the cap is reached |
 | `GET /api/version` | package version and the configured model IDs |
+| `GET /api/spend` | the spend ledger: total, cap, remaining, calls per model with token counts, live versus fixture calls |
 
-Every response carries `X-Request-ID`. Send your own to have it echoed back and used in the logs.
+Every response carries `X-Request-ID`. Send your own to have it echoed back and used in the logs
+and in the spend ledger.
