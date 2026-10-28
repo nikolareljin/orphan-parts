@@ -6,8 +6,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
+from app.api.extract import router as extract_router
 from app.api.routes import router
 from app.config import Settings, get_settings
+from app.extract import Extractor
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
@@ -23,6 +25,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     client = ModelApiClient(settings, ledger)
     app.state.ledger = ledger
     app.state.model_api = client
+    app.state.extractor = Extractor(settings, client)
     log.info(
         "starting",
         extra={
@@ -46,7 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="Orphan Parts Lens",
         version=__version__,
-        description="Identify, evaluate, list and reuse spare parts and used devices.",
+        description="Show it, ask it, sell it, or find the one that fits.",
         lifespan=lifespan,
     )
     app.state.settings = settings
@@ -60,6 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.add_middleware(RequestContextMiddleware)
     app.include_router(router)
+    app.include_router(extract_router)
     return app
 
 
