@@ -28,7 +28,22 @@ recorded answer" path is tested.
 
 ## Frontend
 
-vitest for pure modules under `src/lib/`. Component tests come with the first real pages.
+vitest for the pure modules under `src/lib/`: the API client against a stubbed `fetch`, the
+formatting helpers. The components are covered end to end in the browser.
+
+## End to end
+
+```bash
+./dev e2e                 # the whole flow in a real browser
+E2E_KEEP=1 ./dev e2e      # leave the stack up afterwards
+E2E_VIDEO=on ./dev e2e    # record every test, not only failures
+```
+
+Playwright runs in its official image against the dev stack with the backend in fixture mode,
+so the browser sees exactly what a user sees and no credit is spent. The runner shares the
+frontend container's network and runs as the host user; results, traces and videos land under
+`e2e/test-results/`. Specs live in `e2e/tests/` and address the page by role and label, the way
+a user does. CI runs the same command in its `e2e` job.
 
 ## Scripts
 

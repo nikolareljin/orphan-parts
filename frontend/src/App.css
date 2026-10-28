@@ -27,7 +27,8 @@ header h1 {
   font-size: 1.05rem;
 }
 
-.card.muted {
+.card.muted,
+.muted {
   color: var(--muted);
 }
 
@@ -48,4 +49,133 @@ dd {
 
 .error {
   color: var(--error);
+}
+
+/* extract form */
+.extract .field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.extract .files {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+  color: var(--muted);
+}
+
+.extract .hint {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.extract button {
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.extract button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* result */
+.result {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.result h3 {
+  margin: 0 0 0.25rem;
+  text-transform: capitalize;
+}
+
+.result .meta {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.warnings {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem 0.5rem 1.75rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+}
+
+table.evidence {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+table.evidence th,
+table.evidence td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+table.evidence thead th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+table.evidence tbody th {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.raw {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.bar {
+  display: inline-block;
+  width: 64px;
+  height: 8px;
+  margin-right: 0.5rem;
+  border-radius: 999px;
+  background: var(--line);
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.result details {
+  margin-top: 0.75rem;
+}
+
+.result pre {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  background: var(--bg);
+  border-radius: 6px;
+  white-space: pre-wrap;
 }

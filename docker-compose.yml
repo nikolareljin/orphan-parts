@@ -13,6 +13,7 @@ services:
     environment:
       DATA_DIR: /data
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      OPL_FAKE_API: ${OPL_FAKE_API:-0}
     volumes:
       - ./backend:/app
       - app-data:/data
@@ -54,6 +55,25 @@ services:
       - .:/src
     ports:
       - "${DOCS_PORT:-8001}:8001"
+
+  # Browser checks: ./dev e2e. Shares the frontend container's network, so localhost:5173 is Vite.
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.64.1-noble
+    profiles: ["e2e"]
+    working_dir: /e2e
+    command: sh -c "npm ci --no-audit --no-fund --loglevel=error && npx playwright test"
+    # runs as the host user so node_modules/ and test-results/ under e2e/ are not owned by root
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    environment:
+      HOME: /tmp
+      CI: "1"
+      E2E_BASE_URL: http://localhost:5173
+      E2E_VIDEO: ${E2E_VIDEO:-retain-on-failure}
+    volumes:
+      - ./e2e:/e2e
+    network_mode: "service:frontend"
+    depends_on:
+      - frontend
 
   # Open-weight path: Muse Glimmer served locally. Started only with ./dev up --with-glimmer.
   glimmer:

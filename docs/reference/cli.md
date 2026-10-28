@@ -13,6 +13,7 @@
 | `./dev status` | `compose ps` plus the readiness response |
 | `./dev logs [service]` | follows logs |
 | `./dev test [backend\|frontend\|scripts]` | the full check suite, in the images |
+| `./dev e2e` | Playwright against the dev stack in fixture mode; `E2E_KEEP=1` leaves the stack running, `E2E_VIDEO=on` records every test |
 | `./dev check-api` | one `GET /models` with the key from `.env`; prints the mode, the reachable models and the spend ledger |
 | `./dev lint` | ruff, mypy, eslint, tsc |
 | `./dev fmt` | ruff format, eslint --fix |

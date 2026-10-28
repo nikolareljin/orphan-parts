@@ -13,6 +13,7 @@
 #   test [backend|frontend|scripts]
 #                      run the full check suite (default: all three)
 #   check-api          confirm the Model API key, the active mode and the spend ledger
+#   e2e                Playwright against the dev stack in fixture mode (E2E_KEEP=1 leaves it up)
 #   lint               ruff, mypy, eslint, tsc
 #   fmt                ruff format, eslint --fix
 #   docs               serve the docs site at :8001 with live reload
@@ -170,6 +171,26 @@ cmd_check_api() {
   fi
 }
 
+# Browser checks against the dev stack in fixture mode: no key, no credits. Playwright runs
+# in its own image sharing the frontend container's network, as the host user so every file it
+# writes under e2e/ is yours.
+cmd_e2e() {
+  need_env_file
+  docker_running || die "docker is not running"
+  export OPL_FAKE_API=1
+  export DOCKER_UID DOCKER_GID
+  DOCKER_UID="$(id -u)"
+  DOCKER_GID="$(id -g)"
+  compose up -d backend frontend
+  wait_http "http://localhost:$BACKEND_PORT/readyz" 90 || { compose logs backend; die "backend not ready"; }
+  wait_http "http://localhost:$FRONTEND_PORT" 180 || { compose logs frontend; die "frontend did not start"; }
+  local rc=0
+  compose --profile e2e run --rm e2e || rc=$?
+  [[ "${E2E_KEEP:-0}" == "1" ]] || compose --profile e2e down --remove-orphans
+  [[ $rc -eq 0 ]] || die "end-to-end checks failed (results under e2e/test-results)"
+  log_ok "end-to-end checks passed"
+}
+
 cmd_lint() {
   run_in backend sh -c 'ruff check . && ruff format --check . && mypy app'
   run_in frontend sh -c 'npm ci --no-audit --no-fund --loglevel=error && npm run lint && npm run typecheck'
@@ -228,6 +249,7 @@ case "$cmd" in
   logs) cmd_logs "$@" ;;
   test) cmd_test "$@" ;;
   check-api) cmd_check_api "$@" ;;
+  e2e) cmd_e2e "$@" ;;
   lint) cmd_lint "$@" ;;
   fmt) cmd_fmt "$@" ;;
   docs) cmd_docs "$@" ;;
