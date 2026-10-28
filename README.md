@@ -6,8 +6,9 @@ Show it, ask it, sell it, or find the one that fits. Evidence-backed answers abo
 on Meta's Muse models.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
-Everything in it was built during the hackathon; the dated log is in the docs under
-*Project > Built during the hackathon*.
+Everything in it was built during the hackathon; the dated log is
+[docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
+on the docs site).
 
 Orphan Parts Lens is an assistant for things you own and things you are about to buy. Point the
 camera at an item, or paste a listing, and ask: What is this? What is it worth, and is it worth
