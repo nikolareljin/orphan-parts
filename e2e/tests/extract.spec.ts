@@ -74,6 +74,36 @@ test('a file that is not a photo is refused with the API message', async ({ page
   await expect(page.getByRole('table', { name: 'Evidence' })).toHaveCount(0)
 })
 
+test('photos past the limit are left out and the form says so', async ({ page }) => {
+  await page.goto('/')
+  const five = Array.from({ length: 5 }, (_, i) => ({
+    name: `photo-${i + 1}.png`,
+    mimeType: 'image/png',
+    buffer: tinyPng(),
+  }))
+  await page.getByLabel('Photos of the label').setInputFiles(five)
+
+  await expect(page.getByText('Only the first 4 are used')).toBeVisible()
+  await expect(page.getByRole('listitem')).toHaveCount(4)
+  await expect(page.getByText('photo-5.png')).toHaveCount(0)
+})
+
+test('a photo over the size limit is refused before it is uploaded', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByText('12 MB each')).toBeVisible()
+  const requests: string[] = []
+  page.on('request', (r) => {
+    if (r.url().includes('/api/extract')) requests.push(r.url())
+  })
+  await page
+    .getByLabel('Photos of the label')
+    .setInputFiles({ name: 'huge.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(13 * 1024 * 1024) })
+  await page.getByRole('button', { name: 'Read the label' }).click()
+
+  await expect(page.getByRole('alert')).toContainText('huge.jpg is 13.0 MB; the limit is 12 MB per photo')
+  expect(requests).toEqual([])
+})
+
 test('the service card reports fixture mode', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByText('fixture mode (no key, recorded responses)')).toBeVisible()

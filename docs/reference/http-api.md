@@ -21,7 +21,7 @@ cap is reached or fixture mode has no recorded answer. The `detail` text is safe
 |---|---|
 | `GET /healthz` | process is up |
 | `GET /readyz` | config loaded, Model API mode (`live`, `record` or `fixture`), data directory writable, spend so far against the cap, `paused` once the cap is reached |
-| `GET /api/version` | package version and the configured model IDs |
+| `GET /api/version` | package version, the configured model IDs and the upload `limits` (`max_photos`, `max_upload_mb`) the web form follows |
 | `GET /api/spend` | the spend ledger: total, cap, remaining, calls per model with token counts, live versus fixture calls |
 
 Every response carries `X-Request-ID`. Send your own to have it echoed back and used in the logs

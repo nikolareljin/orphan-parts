@@ -66,6 +66,15 @@ describe('api', () => {
     expect((err as ApiError).message).toBe('the file is not an image')
   })
 
+  it('joins the messages of a validation error', async () => {
+    const detail = [
+      { loc: ['body', 'photos'], msg: 'Field required', type: 'missing' },
+      { loc: ['body', 'other'], msg: 'Extra inputs are not permitted', type: 'extra_forbidden' },
+    ]
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => Response.json({ detail }, { status: 422 })))
+    await expect(api.extract([])).rejects.toThrow('Field required; Extra inputs are not permitted')
+  })
+
   it('falls back to the status when the error body is not JSON', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => new Response('<html>', { status: 502 })))
     await expect(api.extract([new File(['x'], 'a.jpg')])).rejects.toThrow('/api/extract: HTTP 502')

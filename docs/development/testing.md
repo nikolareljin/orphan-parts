@@ -45,6 +45,11 @@ frontend container's network and runs as the host user; results, traces and vide
 `e2e/test-results/`. Specs live in `e2e/tests/` and address the page by role and label, the way
 a user does. CI runs the same command in its `e2e` job.
 
+The command starts the backend in fixture mode, recreating it if it was running with a key, and
+stops the whole stack afterwards unless `E2E_KEEP=1`; the next `./dev up` brings it back in the
+mode set by `.env`. The Playwright image tag in `docker-compose.yml` and the `@playwright/test`
+version in `e2e/package.json` must match, or the browsers in the image are the wrong build.
+
 ## Scripts
 
 `scripts/tests/run.sh` loads every `test_*.sh`, runs each `test_*` function and counts

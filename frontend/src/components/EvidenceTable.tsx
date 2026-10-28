@@ -4,7 +4,7 @@ import { fieldLabel, orderedFields, percent, usd, withUnit } from '../lib/format
 export default function EvidenceTable({ result }: { result: Extraction }) {
   const rows = orderedFields(result.fields)
   return (
-    <section className="result" aria-live="polite">
+    <section className="result">
       <h3>{result.item_type}</h3>
       <p className="meta">
         {result.model} · {result.photos} {result.photos === 1 ? 'photo' : 'photos'} · {usd(result.cost_usd)}
@@ -13,8 +13,8 @@ export default function EvidenceTable({ result }: { result: Extraction }) {
 
       {result.warnings.length > 0 && (
         <ul className="warnings">
-          {result.warnings.map((w) => (
-            <li key={w}>{w}</li>
+          {result.warnings.map((w, i) => (
+            <li key={`${i}-${w}`}>{w}</li>
           ))}
         </ul>
       )}

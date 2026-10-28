@@ -58,6 +58,7 @@ services:
 
   # Browser checks: ./dev e2e. Shares the frontend container's network, so localhost:5173 is Vite.
   e2e:
+    # the tag must match the @playwright/test version in e2e/package.json
     image: mcr.microsoft.com/playwright:v1.64.1-noble
     profiles: ["e2e"]
     working_dir: /e2e

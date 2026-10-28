@@ -10,10 +10,16 @@ export interface Readiness {
   paused: boolean
 }
 
+export interface Limits {
+  max_photos: number
+  max_upload_mb: number
+}
+
 export interface Version {
   name: string
   version: string
   models: Record<string, string>
+  limits: Limits
 }
 
 export type Source = 'photo' | 'label_crop' | 'grounding_citation' | 'voice_note' | 'user_edit' | 'video_frame'
@@ -59,11 +65,18 @@ async function getJson<T>(path: string): Promise<T> {
   return (await res.json()) as T
 }
 
-// The backend answers errors as {"detail": "..."}; the text is written to be shown.
+// The backend answers errors as {"detail": "..."}; the text is written to be shown. A request
+// the backend could not parse (422) carries one {loc, msg} per problem instead.
 async function detailOf(res: Response, path: string): Promise<string> {
   try {
     const body = (await res.json()) as { detail?: unknown }
     if (typeof body.detail === 'string') return body.detail
+    if (Array.isArray(body.detail)) {
+      const messages = body.detail
+        .map((problem) => (problem as { msg?: unknown }).msg)
+        .filter((msg): msg is string => typeof msg === 'string')
+      if (messages.length > 0) return messages.join('; ')
+    }
   } catch {
     // not JSON: fall through to the generic message
   }

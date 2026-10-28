@@ -31,7 +31,7 @@ export default function App() {
 
       <section className="card">
         <h2>Read a label</h2>
-        <ExtractForm />
+        <ExtractForm limits={status.kind === 'ok' ? status.version.limits : undefined} />
       </section>
 
       <section className="card">
