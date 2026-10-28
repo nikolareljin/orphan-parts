@@ -5,7 +5,7 @@
 | Command | What it does |
 |---|---|
 | `./dev setup` | checks Docker, Python and Node, creates `.env` from `.env.example` if missing |
-| `./dev up` | starts the Docker stack and waits for the backend to be healthy |
+| `./dev up` | starts the Docker stack and waits for the backend to be healthy; with no `MODEL_API_KEY` in `.env` it starts in fixture mode (recorded answers) and says so |
 | `./dev up --build` | rebuilds the images first |
 | `./dev up --with-glimmer` | also starts the local Muse Glimmer server (openweight profile) |
 | `./dev up --native` | runs backend and frontend on the host with a virtualenv and nvm |
