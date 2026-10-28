@@ -7,7 +7,7 @@ token rate so the ledger never under-counts.
 
 import logging
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 log = logging.getLogger("app.model_api.pricing")
 
@@ -34,19 +34,27 @@ SEARCH_QUERY_USD = 2.50 / 1000
 class Usage(BaseModel):
     """Everything a call consumed, in the units the API bills."""
 
-    input_tokens: int = 0
-    cached_tokens: int = 0
-    output_tokens: int = 0
-    reasoning_tokens: int = 0
-    images: int = 0
-    video_frames: int = 0
-    audio_seconds: float = 0.0
-    search_queries: int = 0
+    input_tokens: int = Field(0, ge=0)
+    cached_tokens: int = Field(0, ge=0)
+    output_tokens: int = Field(0, ge=0)
+    reasoning_tokens: int = Field(0, ge=0)
+    images: int = Field(0, ge=0)
+    video_frames: int = Field(0, ge=0)
+    # audio_seconds and search_queries come from the caller, not from the response:
+    # the API reports neither, so a negative value would silently under-count.
+    audio_seconds: float = Field(0.0, ge=0)
+    search_queries: int = Field(0, ge=0)
 
     @classmethod
-    def from_response(cls, usage: dict[str, object] | None, *, search_queries: int = 0) -> "Usage":
+    def from_response(
+        cls,
+        usage: dict[str, object] | None,
+        *,
+        search_queries: int = 0,
+        audio_seconds: float = 0.0,
+    ) -> "Usage":
         if not usage:
-            return cls(search_queries=search_queries)
+            return cls(search_queries=search_queries, audio_seconds=audio_seconds)
         inp = usage.get("input_tokens_details")
         out = usage.get("output_tokens_details")
         return cls(
@@ -57,6 +65,7 @@ class Usage(BaseModel):
             images=_as_int(usage.get("images_processed")),
             video_frames=_as_int(usage.get("video_frames_processed")),
             search_queries=search_queries,
+            audio_seconds=audio_seconds,
         )
 
 

@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
 from app.model_api import (
@@ -239,6 +239,24 @@ async def test_spend_cap_blocks_before_the_request(live: Settings) -> None:
     with pytest.raises(SpendCapError):
         await h.client.respond(model="muse-spark-1.3", input="x")
     assert h.requests == []
+
+
+async def test_voice_call_prices_the_audio_it_transcribed(live: Settings) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json=completed("hello")))
+    result = await h.client.respond(
+        model="muse-voice-transcribe-1.0", input="x", op="transcribe", audio_seconds=1800
+    )
+    assert result.cost_usd == pytest.approx(0.09)
+    (entry,) = h.ledger.entries()
+    assert entry.usage.audio_seconds == 1800
+
+
+async def test_negative_caller_counts_are_rejected(live: Settings) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json=completed("hello")))
+    with pytest.raises(ValidationError):
+        await h.client.respond(model="muse-voice-transcribe-1.0", input="x", audio_seconds=-1)
+    with pytest.raises(ValidationError):
+        await h.client.respond(model="muse-spark-1.3", input="x", search_queries=-1)
 
 
 async def test_incomplete_and_refused_responses_raise(live: Settings) -> None:

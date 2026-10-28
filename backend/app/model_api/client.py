@@ -148,6 +148,7 @@ class ModelApiClient:
         tools: list[dict[str, Any]] | None = None,
         op: str = "respond",
         search_queries: int = 0,
+        audio_seconds: float = 0.0,
     ) -> ModelResponse:
         body: dict[str, Any] = {"model": model, "input": input, "store": False}
         if instructions:
@@ -175,7 +176,9 @@ class ModelApiClient:
         data, from_fixture, attempts, ms = await self._post(RESPONSES, body, op)
         output = data.get("output") or []
         text, refusal = output_text(output)
-        usage = Usage.from_response(data.get("usage"), search_queries=search_queries)
+        usage = Usage.from_response(
+            data.get("usage"), search_queries=search_queries, audio_seconds=audio_seconds
+        )
         usd = 0.0 if from_fixture else cost_usd(model, usage)
         self._record(op, model, RESPONSES, usage, usd, from_fixture, attempts, ms)
         status = str(data.get("status", "completed"))
