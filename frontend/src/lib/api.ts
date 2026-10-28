@@ -3,8 +3,11 @@
 
 export interface Readiness {
   status: 'ok' | 'degraded'
-  model_api: 'live' | 'fixture'
+  model_api: 'live' | 'fixture' | 'record'
   data_dir_writable: boolean
+  spend_usd: number
+  spend_cap_usd: number
+  paused: boolean
 }
 
 export interface Version {

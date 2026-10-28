@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__
 from app.api.routes import router
 from app.config import Settings, get_settings
+from app.model_api import CostLedger, ModelApiClient
 from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
 
@@ -18,9 +19,24 @@ log = logging.getLogger("app")
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings: Settings = app.state.settings
     settings.data_dir.mkdir(parents=True, exist_ok=True)
-    log.info("starting", extra={"version": __version__, "model_api": settings.model_api_mode})
-    yield
-    log.info("stopped")
+    ledger = CostLedger(settings.spend_cap_usd, settings.spend_ledger_path)
+    client = ModelApiClient(settings, ledger)
+    app.state.ledger = ledger
+    app.state.model_api = client
+    log.info(
+        "starting",
+        extra={
+            "version": __version__,
+            "model_api": settings.model_api_mode,
+            "spent_usd": ledger.total_usd,
+            "cap_usd": ledger.cap_usd,
+        },
+    )
+    try:
+        yield
+    finally:
+        await client.aclose()
+        log.info("stopped")
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -30,7 +46,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="Orphan Parts Lens",
         version=__version__,
-        description="Identify spare parts, draft Marketplace listings, verify matches.",
+        description="Identify, evaluate, list and reuse spare parts and used devices.",
         lifespan=lifespan,
     )
     app.state.settings = settings

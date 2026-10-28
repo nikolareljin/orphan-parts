@@ -72,3 +72,9 @@ def test_untrusted_request_id_is_replaced_with_generated_one(client: TestClient)
 def test_writable_probe_is_safe_under_concurrency(settings: Settings) -> None:
     with ThreadPoolExecutor(max_workers=8) as pool:
         assert all(pool.map(_writable, [settings] * 500))
+
+
+def test_model_api_client_is_ready_on_startup(client: TestClient) -> None:
+    state = client.app.state  # type: ignore[attr-defined]
+    assert state.model_api.mode == "fixture"
+    assert state.ledger.cap_usd == 25.0

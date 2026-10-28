@@ -13,6 +13,7 @@
 | `./dev status` | `compose ps` plus the readiness response |
 | `./dev logs [service]` | follows logs |
 | `./dev test [backend\|frontend\|scripts]` | the full check suite, in the images |
+| `./dev check-api` | one `GET /models` with the key from `.env`; prints the mode, the reachable models and the spend ledger |
 | `./dev lint` | ruff, mypy, eslint, tsc |
 | `./dev fmt` | ruff format, eslint --fix |
 | `./dev docs` | serves the docs site at :8001 with live reload |
