@@ -44,9 +44,15 @@ class Usage(BaseModel):
     search_queries: int = 0
 
     @classmethod
-    def from_response(cls, usage: dict[str, object] | None, *, search_queries: int = 0) -> "Usage":
+    def from_response(
+        cls,
+        usage: dict[str, object] | None,
+        *,
+        search_queries: int = 0,
+        audio_seconds: float = 0.0,
+    ) -> "Usage":
         if not usage:
-            return cls(search_queries=search_queries)
+            return cls(search_queries=search_queries, audio_seconds=audio_seconds)
         inp = usage.get("input_tokens_details")
         out = usage.get("output_tokens_details")
         return cls(
@@ -57,6 +63,7 @@ class Usage(BaseModel):
             images=_as_int(usage.get("images_processed")),
             video_frames=_as_int(usage.get("video_frames_processed")),
             search_queries=search_queries,
+            audio_seconds=audio_seconds,
         )
 
 

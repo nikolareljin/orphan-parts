@@ -241,6 +241,16 @@ async def test_spend_cap_blocks_before_the_request(live: Settings) -> None:
     assert h.requests == []
 
 
+async def test_voice_call_prices_the_audio_it_transcribed(live: Settings) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json=completed("hello")))
+    result = await h.client.respond(
+        model="muse-voice-transcribe-1.0", input="x", op="transcribe", audio_seconds=1800
+    )
+    assert result.cost_usd == pytest.approx(0.09)
+    (entry,) = h.ledger.entries()
+    assert entry.usage.audio_seconds == 1800
+
+
 async def test_incomplete_and_refused_responses_raise(live: Settings) -> None:
     incomplete = completed("partial")
     incomplete["status"] = "incomplete"
