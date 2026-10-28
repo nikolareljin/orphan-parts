@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 import uuid
 from collections.abc import Awaitable, Callable
@@ -19,11 +20,22 @@ SECURITY_HEADERS = {
 }
 
 
+_REQUEST_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
+
+
+def _request_id(request: Request) -> str:
+    # The id is echoed into a response header, so only pass through safe values.
+    raw = request.headers.get("x-request-id") or ""
+    if _REQUEST_ID_RE.fullmatch(raw):
+        return raw
+    return uuid.uuid4().hex[:16]
+
+
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        rid = request.headers.get("x-request-id") or uuid.uuid4().hex[:16]
+        rid = _request_id(request)
         token = request_id_var.set(rid)
         started = time.perf_counter()
         try:

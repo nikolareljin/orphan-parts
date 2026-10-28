@@ -34,7 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
-    app.add_middleware(RequestContextMiddleware)
+    # Last added runs first: every response, including CORS preflights, gets an id.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
@@ -42,6 +42,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
         expose_headers=["X-Request-ID"],
     )
+    app.add_middleware(RequestContextMiddleware)
     app.include_router(router)
     return app
 
