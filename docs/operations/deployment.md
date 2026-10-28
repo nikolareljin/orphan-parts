@@ -27,5 +27,10 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 Set `CORS_ORIGINS` to the public origin and give the deployment its own API key with a low
 `SPEND_CAP_USD`.
 
-!!! note
-    The live demo host and its deploy step in the release workflow are not set up yet.
+## Status of the images
+
+Nothing is published until a SemVer tag is pushed; pull requests and merges build nothing.
+The images exist for two reasons: the live demo host pulls them instead of building on the
+host, and anyone can run a tagged version with the two commands above. The demo host is not
+set up yet, so the workflow is kept for that step. After the first release, check the package
+visibility under the repository's packages: the pull commands above need it public.

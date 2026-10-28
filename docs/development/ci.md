@@ -39,13 +39,19 @@ git tag 0.2.0 && git push origin 0.2.0
 
 The tag push triggers the workflow, which:
 
-1. checks that the tag equals the version in the manifests,
-2. builds the production images and pushes them to GHCR as
-   `ghcr.io/<owner>/orphan-parts/backend:0.2.0` and `.../frontend:0.2.0` (plus `latest`),
-3. boots the published backend image and checks `/readyz`,
-4. creates a GitHub release whose notes are the matching changelog section.
+1. checks that the tag equals the version in all three manifests and that `CHANGELOG.md` has a
+   section for it,
+2. builds the production images and boots the backend one with `/readyz` reporting `ok`,
+3. pushes them to GHCR as `ghcr.io/<owner>/orphan-parts/backend:0.2.0` and
+   `.../frontend:0.2.0` (plus `latest`), nothing is pushed if the smoke test fails,
+4. creates a GitHub release whose notes are that changelog section.
 
-Deployments pull those images; see [Deployment](../operations/deployment.md).
+The job uses only `actions/checkout`, the job token, Docker and `gh`; no other actions and no
+stored secrets.
+
+Only a tag triggers it; no image is built or pushed for pull requests or merges. The images are
+the release artifact: the demo host pulls them, and a tagged version can be run anywhere without
+a build. See [Deployment](../operations/deployment.md).
 
 ## `docs.yml`
 

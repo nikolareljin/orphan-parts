@@ -2,6 +2,7 @@ name: release
 
 # Tag a commit on main with a bare SemVer (0.2.0) to publish that version:
 # images go to GHCR, and a GitHub release is created with the matching changelog section.
+# Nothing here runs for pull requests or merges; only a tag push triggers it.
 on:
   push:
     tags: ["[0-9]+.[0-9]+.[0-9]+"]
@@ -19,39 +20,55 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: tag must match the version in the manifests
+      - name: tag must match the version in every manifest
         run: |
           tag="${GITHUB_REF_NAME}"
           py="$(grep -m1 '^version' backend/pyproject.toml | cut -d'"' -f2)"
+          init="$(grep -m1 '^__version__' backend/app/__init__.py | cut -d'"' -f2)"
           js="$(node -p "require('./frontend/package.json').version")"
-          [ "$tag" = "$py" ] && [ "$tag" = "$js" ] || { echo "tag $tag != pyproject $py / package.json $js"; exit 1; }
+          if [ "$tag" != "$py" ] || [ "$tag" != "$init" ] || [ "$tag" != "$js" ]; then
+            echo "tag $tag; pyproject $py; app/__init__.py $init; package.json $js"
+            exit 1
+          fi
 
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: build and push images
+      - name: release notes are the changelog section for this tag
         run: |
-          TAG="${GITHUB_REF_NAME}" docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+          awk -v v="${GITHUB_REF_NAME}" '/^## /{p = index($0, "## " v) == 1} p' CHANGELOG.md > notes.md
+          if ! grep -q . notes.md; then
+            echo "CHANGELOG.md has no '## ${GITHUB_REF_NAME}' section"
+            exit 1
+          fi
+
+      - name: sign in to GHCR with the job token
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: build the production images
+        run: TAG="${GITHUB_REF_NAME}" docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend frontend
+
+      - name: smoke test the backend image before anything is pushed
+        run: |
+          docker run -d --name opl -e OPL_FAKE_API=1 -e DATA_DIR=/data -p 8000:8000 "$IMAGE_PREFIX/backend:${GITHUB_REF_NAME}"
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/healthz >/dev/null 2>&1; then ok=1; break; fi
+            sleep 1
+          done
+          ready="$(curl -fsS http://localhost:8000/readyz || true)"
+          echo "readyz: $ready"
+          docker logs opl 2>&1 | tail -20
+          docker rm -f opl >/dev/null
+          [ "$ok" = 1 ] || { echo "healthz never answered"; exit 1; }
+          echo "$ready" | grep -q '"status":"ok"' || { echo "readyz is not ok"; exit 1; }
+
+      - name: push the images
+        run: |
           for svc in backend frontend; do
             docker tag "$IMAGE_PREFIX/$svc:${GITHUB_REF_NAME}" "$IMAGE_PREFIX/$svc:latest"
             docker push "$IMAGE_PREFIX/$svc:${GITHUB_REF_NAME}"
             docker push "$IMAGE_PREFIX/$svc:latest"
           done
 
-      - name: smoke test the published backend image
-        run: |
-          docker run -d --rm --name opl -e OPL_FAKE_API=1 -p 8000:8000 "$IMAGE_PREFIX/backend:${GITHUB_REF_NAME}"
-          for i in $(seq 1 30); do curl -fsS http://localhost:8000/healthz && break; sleep 1; done
-          curl -fsS http://localhost:8000/readyz
-          docker stop opl
-
-      - name: release notes from the changelog
-        run: awk -v v="${GITHUB_REF_NAME}" '/^## /{p = index($0, "## " v) == 1} p' CHANGELOG.md > notes.md
-
-      - uses: softprops/action-gh-release@v2
-        with:
-          body_path: notes.md
+      - name: create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file notes.md
