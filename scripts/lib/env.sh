@@ -27,6 +27,26 @@ env_load() {
   done < "$file"
 }
 
+# env_get KEY [file]: print one value from a dotenv file without exporting anything.
+# Empty output when the file or the key is missing. Quotes are stripped as in env_load.
+env_get() {
+  local want="$1" file="${2:-$(project_root)/.env}"
+  [[ -f "$file" ]] || return 0
+  local line key value
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    line="${line#export }"
+    key="${line%%=*}"
+    [[ "$key" == "$want" ]] || continue
+    value="${line#*=}"
+    value="${value%\"}"; value="${value#\"}"
+    value="${value%\'}"; value="${value#\'}"
+    printf '%s' "$value"
+    return 0
+  done < "$file"
+}
+
 # env_require VAR [VAR...]: fail if any variable is unset or empty.
 env_require() {
   local name missing=""

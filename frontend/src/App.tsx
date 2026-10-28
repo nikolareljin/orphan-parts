@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ExtractForm from './components/ExtractForm'
 import { api, type Readiness, type Version } from './lib/api'
 import './App.css'
 
@@ -25,8 +26,13 @@ export default function App() {
     <main className="shell">
       <header>
         <h1>Orphan Parts Lens</h1>
-        <p className="tagline">Identify a spare part. Draft the listing. Check the match.</p>
+        <p className="tagline">Show it, ask it, sell it, or find the one that fits.</p>
       </header>
+
+      <section className="card">
+        <h2>Read a label</h2>
+        <ExtractForm limits={status.kind === 'ok' ? status.version.limits : undefined} />
+      </section>
 
       <section className="card">
         <h2>Service</h2>
@@ -53,11 +59,6 @@ export default function App() {
             <dd>{status.ready.data_dir_writable ? 'writable' : 'read-only'}</dd>
           </dl>
         )}
-      </section>
-
-      <section className="card muted">
-        <h2>Next</h2>
-        <p>Seller and buyer flows land here. Photos in, evidence-backed listing or match verdict out.</p>
       </section>
     </main>
   )

@@ -5,7 +5,7 @@
 | Command | What it does |
 |---|---|
 | `./dev setup` | checks Docker, Python and Node, creates `.env` from `.env.example` if missing |
-| `./dev up` | starts the Docker stack and waits for the backend to be healthy |
+| `./dev up` | starts the Docker stack and waits for the backend to be healthy; with no `MODEL_API_KEY` in `.env` it starts in fixture mode (recorded answers) and says so |
 | `./dev up --build` | rebuilds the images first |
 | `./dev up --with-glimmer` | also starts the local Muse Glimmer server (openweight profile) |
 | `./dev up --native` | runs backend and frontend on the host with a virtualenv and nvm |
@@ -13,6 +13,7 @@
 | `./dev status` | `compose ps` plus the readiness response |
 | `./dev logs [service]` | follows logs |
 | `./dev test [backend\|frontend\|scripts]` | the full check suite, in the images |
+| `./dev e2e` | Playwright against the dev stack in fixture mode; `E2E_KEEP=1` leaves the stack running, `E2E_VIDEO=on` records every test |
 | `./dev check-api` | one `GET /models` with the key from `.env`; prints the mode, the reachable models and the spend ledger |
 | `./dev lint` | ruff, mypy, eslint, tsc |
 | `./dev fmt` | ruff format, eslint --fix |

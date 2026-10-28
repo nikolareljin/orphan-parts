@@ -37,7 +37,7 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
 Docker and bash are the only requirements.
 
 ```bash
-cp .env.example .env        # add MODEL_API_KEY, or set OPL_FAKE_API=1 to run without a key
+cp .env.example .env        # add MODEL_API_KEY; without one the stack runs on recorded answers
 ./dev up
 ```
 

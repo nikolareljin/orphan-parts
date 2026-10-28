@@ -27,6 +27,14 @@ def test_version_lists_every_model_id(client: TestClient) -> None:
     assert body["models"]["sam"] == "sam-3.1"
 
 
+def test_version_reports_the_upload_limits(client: TestClient, settings: Settings) -> None:
+    body = client.get("/api/version").json()
+    assert body["limits"] == {
+        "max_photos": settings.max_photos,
+        "max_upload_mb": settings.max_upload_mb,
+    }
+
+
 def test_every_response_carries_request_id_and_security_headers(client: TestClient) -> None:
     r = client.get("/healthz", headers={"X-Request-ID": "abc123"})
     assert r.headers["X-Request-ID"] == "abc123"

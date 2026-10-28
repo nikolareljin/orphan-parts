@@ -21,6 +21,10 @@ frontend/dist/
 frontend/.vite/
 *.tsbuildinfo
 
+# browser checks
+e2e/test-results/
+e2e/playwright-report/
+
 # docs
 site/
 docs/reference/openapi.json

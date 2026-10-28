@@ -15,13 +15,14 @@ Conventional Commits for subjects and PR titles: `feat(extract): read part label
 
 ## `ci.yml`
 
-Runs on every pull request and on pushes to `main`. Three jobs, in parallel:
+Runs on every pull request and on pushes to `main`. Four jobs, in parallel:
 
 | Job | Steps |
 |---|---|
 | backend | ruff, mypy, pytest in fixture mode |
 | frontend | eslint, tsc, vitest, production build |
 | scripts | bash helper tests |
+| e2e | `./dev e2e`: the dev stack in fixture mode plus Playwright in its image; results uploaded on failure |
 
 Concurrent runs on the same ref cancel each other.
 

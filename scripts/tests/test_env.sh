@@ -26,6 +26,20 @@ test_env_load_missing_file_is_fine() {
   assert_true env_load /nonexistent/.env
 }
 
+test_env_get_reads_one_value_without_exporting() {
+  local f
+  f="$(mktemp)"
+  printf '# comment\nFIRST="quoted"\nexport SECOND=2\nEMPTY=\n' > "$f"
+  unset FIRST SECOND EMPTY
+  assert_eq "$(env_get FIRST "$f")" "quoted"
+  assert_eq "$(env_get SECOND "$f")" "2"
+  assert_eq "$(env_get EMPTY "$f")" ""
+  assert_eq "$(env_get MISSING "$f")" ""
+  assert_eq "${FIRST:-unset}" "unset"
+  assert_eq "$(env_get ANY /nonexistent/.env)" ""
+  rm -f "$f"
+}
+
 test_env_require_fails_on_empty() {
   export PRESENT=1 EMPTY=""
   assert_true env_require PRESENT

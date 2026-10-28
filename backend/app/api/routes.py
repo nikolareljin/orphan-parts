@@ -24,10 +24,18 @@ class Readiness(BaseModel):
     paused: bool
 
 
+class Limits(BaseModel):
+    """Upload limits the web form follows, so they are set in one place."""
+
+    max_photos: int
+    max_upload_mb: int
+
+
 class Version(BaseModel):
     name: str
     version: str
     models: dict[str, str]
+    limits: Limits
 
 
 @router.get("/healthz", response_model=Health, tags=["ops"])
@@ -60,6 +68,7 @@ def version(settings: SettingsDep) -> Version:
             "voice": settings.model_voice,
             "sam": settings.model_sam,
         },
+        limits=Limits(max_photos=settings.max_photos, max_upload_mb=settings.max_upload_mb),
     )
 
 
