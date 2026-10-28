@@ -7,7 +7,7 @@ guesses: a value that cannot be parsed is returned trimmed, with the default uni
 import re
 
 _NUMBER = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
-_RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*[-~to]+\s*(\d+(?:[.,]\d+)?)")
+_RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:-|~|to)\s*(\d+(?:[.,]\d+)?)", re.I)
 _MILLI = re.compile(r"(\d+(?:[.,]\d+)?)\s*m[aA]\b")
 # the separator may be x, an asterisk or the multiplication sign
 _TIMES = "x*" + chr(0xD7)

@@ -20,6 +20,10 @@ async def extract(
     extractor: ExtractorDep,
 ) -> Extraction:
     """Read the label on an item into typed fields, each with a confidence and its source."""
+    max_mb = extractor.settings.max_upload_mb
+    if any(photo.size is not None and photo.size > max_mb * 1024 * 1024 for photo in photos):
+        # refuse by the declared size before pulling the body into memory
+        raise HTTPException(status_code=400, detail=f"the photo is larger than {max_mb} MB")
     data = [await photo.read() for photo in photos]
     try:
         return await extractor.extract(data)

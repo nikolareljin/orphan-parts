@@ -2,6 +2,8 @@
 
 import logging
 
+import anyio
+
 from app.config import Settings
 from app.extract.fields import FIELD_BY_NAME, field_guide
 from app.extract.imaging import BadImageError, prepare
@@ -40,7 +42,12 @@ class Extractor:
         if len(photos) > s.max_photos:
             raise BadImageError(f"at most {s.max_photos} photos per request")
         max_bytes = s.max_upload_mb * 1024 * 1024
-        prepared = [prepare(p, max_px=s.image_max_px, max_bytes=max_bytes) for p in photos]
+
+        def prepare_all() -> list[bytes]:
+            return [prepare(p, max_px=s.image_max_px, max_bytes=max_bytes) for p in photos]
+
+        # decoding and re-encoding is CPU work; keep it off the event loop
+        prepared = await anyio.to_thread.run_sync(prepare_all)
         parts = [text_part(prompt()), *(image_part(p, "image/jpeg") for p in prepared)]
         result = await self.client.respond_structured(
             LabelReading,

@@ -57,6 +57,20 @@ def test_extract_requires_the_photos_field(recorded_client: TestClient) -> None:
     assert recorded_client.post("/api/extract").status_code == 422
 
 
+def test_extract_refuses_an_oversized_upload_by_its_size(tmp_path: Path) -> None:
+    settings = Settings(
+        OPL_FAKE_API=True,
+        data_dir=tmp_path / "data",
+        fixtures_dir=tmp_path / "fixtures",
+        max_upload_mb=1,
+        log_format="text",
+    )
+    with TestClient(create_app(settings)) as client:
+        body = upload(client, b"x" * (1024 * 1024 + 1))
+    assert body["_status"] == 400
+    assert body["detail"] == "the photo is larger than 1 MB"
+
+
 def test_extract_answers_503_without_a_recorded_fixture(client: TestClient) -> None:
     body = upload(client, make_photo())
     assert body["_status"] == 503

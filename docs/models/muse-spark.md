@@ -11,7 +11,8 @@ One call per request, however many photos (up to `MAX_PHOTOS`, default 4):
 - **Input.** The instructions describe the job (report only what is printed, confidence per
   field, leave out unsupported fields). The user message carries the field list from
   `app/extract/fields.py` and one `input_image` part per photo. Photos are re-encoded first:
-  EXIF applied and dropped, longest side `IMAGE_MAX_PX` (default 1280), JPEG.
+  EXIF applied and dropped, longest side `IMAGE_MAX_PX` (default 1280), JPEG. JPEG, PNG, WebP
+  and GIF up to 50 megapixels are accepted; HEIC is refused with a message to export as JPEG.
 - **Output.** `text.format` is the strict JSON schema of `LabelReading`: `item_type`,
   `label_text` (a transcription) and a list of `{name, value, unit, confidence}`. The reply is
   validated back into the model; anything else is a `502` for the caller.
