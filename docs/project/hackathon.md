@@ -10,6 +10,5 @@ and links to the commits.
 | Oct 27 | Project scaffold: FastAPI service with validated settings, health and version endpoints, JSON logs with request IDs; React shell; `./dev` runner with its bash helper library; Docker dev and production stacks; CI; this documentation site; release workflow. |
 | Oct 27 | Model API client: retries with backoff, strict structured output, spend cap with a persistent ledger priced from the published rates, fixture and record modes. |
 | Oct 28 | Label extraction with Muse Spark: photos in, typed fields with confidence and provenance out, deterministic normalisers, `POST /api/extract`, a command line, a recorded fixture for offline runs. |
-| Oct 28 | Upload form and evidence table in the web app; Playwright end-to-end checks against the dev stack in fixture mode. |
 | Oct 28 | Segmentation with SAM 3.1: item, label and connector found one concept per call, masks decoded with Meta's parser, overlay and crops rendered, `POST /api/segment`, a command line; the label crop feeds extraction and evidence is sourced `label_crop`. |
 | Oct 28 | Web: upload form and evidence table; Playwright end-to-end checks in Docker (`./dev e2e`) and the `e2e` CI job. |
