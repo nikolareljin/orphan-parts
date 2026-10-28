@@ -1,5 +1,5 @@
 # Development stack: ./dev up
-# The backend source is bind-mounted and reloads on change.
+# Source directories are bind-mounted; the backend reloads on change and Vite serves with HMR.
 name: orphan-parts
 
 services:
@@ -25,6 +25,48 @@ services:
       retries: 6
       start_period: 5s
 
+  frontend:
+    image: node:24-alpine
+    working_dir: /app
+    command: sh -c "npm ci --no-audit --no-fund --loglevel=error && npm run dev"
+    environment:
+      VITE_PROXY_TARGET: http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - frontend-modules:/app/node_modules
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  docs:
+    build: ./docker/docs
+    profiles: ["docs"]
+    working_dir: /src
+    command: serve --dev-addr 0.0.0.0:8001
+    # runs as the host user so site/ is not owned by root
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    environment:
+      HOME: /tmp
+      DOCS_GIT_DATES: ${DOCS_GIT_DATES:-true}
+    volumes:
+      - .:/src
+    ports:
+      - "${DOCS_PORT:-8001}:8001"
+
+  # Open-weight path: Muse Glimmer served locally. Started only with ./dev up --with-glimmer.
+  glimmer:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    profiles: ["openweight"]
+    command: >
+      --model /models/${GLIMMER_GGUF:-muse-glimmer.gguf}
+      --host 0.0.0.0 --port 8080 --ctx-size 8192
+    volumes:
+      - ${GLIMMER_MODELS_DIR:-./data/models}:/models:ro
+    ports:
+      - "${GLIMMER_PORT:-8080}:8080"
 
 volumes:
   app-data:
+  frontend-modules:

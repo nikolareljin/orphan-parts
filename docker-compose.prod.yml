@@ -1,0 +1,34 @@
+# Production override: ./dev build, then
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Built images, no bind mounts, frontend served by nginx which proxies /api to the backend.
+# IMAGE_PREFIX=ghcr.io/<owner>/orphan-parts TAG=0.1.0 pulls a published release instead of building.
+services:
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    image: ${IMAGE_PREFIX:-orphan-parts}/backend:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATA_DIR: /data
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+    volumes:
+      - app-data:/data
+    ports: []
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    image: ${IMAGE_PREFIX:-orphan-parts}/frontend:${TAG:-latest}
+    restart: unless-stopped
+    command: []
+    environment: {}
+    volumes: []
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
