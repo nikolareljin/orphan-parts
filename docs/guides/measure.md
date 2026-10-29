@@ -30,7 +30,8 @@ scale is only valid when it is true.
 - **Refused**: no number, and the checks that failed with what to redo. A capture is refused
   for a short reference (too few pixels per millimetre), marks off the photo or on top of each
   other, a photo whose short side is under the minimum, blur or a featureless patch around any
-  mark, a two-point capture not declared straight on, or a rectangle seen at too steep an angle.
+  mark, a two-point capture not declared straight on, a rectangle seen at too steep an angle, or
+  four corners that lie on one line.
 - **Tolerance**: when the profile's tolerance for the feature is tighter than the capture's
   uncertainty, the result says so and asks for a caliper or ruler reading. Enter it under
   **Add what you know** with *tested* as how you know it. Direct entry is always available.

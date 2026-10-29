@@ -26,6 +26,9 @@ Runs on every pull request and on pushes to `main`. Four jobs, in parallel:
 
 Concurrent runs on the same ref cancel each other.
 
+The `docs` job builds the site with `--strict` on every pull request, the same steps as the
+Pages workflow without the deploy, so a page that no longer builds is caught before `main`.
+
 ## `release.yml`
 
 Versions follow SemVer and live in `backend/pyproject.toml`, `backend/app/__init__.py` and
