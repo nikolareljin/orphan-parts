@@ -1,6 +1,6 @@
 """Shapes of a listing draft: what the model writes, what the rules add, what is stored."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.listing.checklists import Mode, Step
 
@@ -22,11 +22,21 @@ class DraftWriting(BaseModel):
     facts: list[DraftFact]
 
 
+DETAIL_MAX = 200
+
+
 class DraftRequest(BaseModel):
     mode: Mode = "sell"
     holds_data: bool = Field(default=False, description="the item stores accounts or files")
-    pickup: str = ""
-    asking_price: str = Field(default="", description="set by the owner; nothing is suggested here")
+    pickup: str = Field(default="", max_length=DETAIL_MAX)
+    asking_price: str = Field(
+        default="", max_length=DETAIL_MAX, description="set by the owner; nothing is suggested here"
+    )
+
+    @field_validator("pickup", "asking_price")
+    @classmethod
+    def _one_line(cls, value: str) -> str:
+        return " ".join(value.split())
 
 
 class Draft(BaseModel):
@@ -58,5 +68,5 @@ class Draft(BaseModel):
 
 
 class StepChange(BaseModel):
-    key: str
+    key: str = Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")
     done: bool

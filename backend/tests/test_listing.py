@@ -70,6 +70,7 @@ def test_the_brief_holds_only_confirmed_values_and_the_owner_details(
     keys = text.split("Field keys a fact may name: ")[1]
     assert "accessories" in keys and "pickup" in keys
     assert "tests_done" not in keys  # empty, so no line may rest on it
+    assert DraftRequest(pickup="  porch,\n evenings ").pickup == "porch, evenings"
     lines = disclosures(item, DraftRequest(mode="sell", asking_price="$15"))
     assert lines[0] == "Known faults: frayed sleeve near the plug"
     assert lines[1] == "Not tested; sold as is."
@@ -230,6 +231,22 @@ def test_draft_routes(recorded_client: TestClient) -> None:
         == 422
     )
     assert recorded_client.get(f"/api/drafts/{draft['id']}").json()["id"] == draft["id"]
+    assert (
+        recorded_client.post(
+            f"/api/drafts/{draft['id']}/checklist", json={"key": "Not A Key", "done": True}
+        ).status_code
+        == 422
+    )
+    too_long = recorded_client.post(
+        f"/api/items/{item_id}/drafts", json={"mode": "sell", "pickup": "x" * 201}
+    )
+    assert too_long.status_code == 422
+    assert (
+        recorded_client.post(
+            f"/api/items/{item_id}/drafts", json={"mode": "sell", "asking_price": "$" * 201}
+        ).status_code
+        == 422
+    )
     assert [d["id"] for d in recorded_client.get(f"/api/items/{item_id}/drafts").json()] == [
         draft["id"]
     ]

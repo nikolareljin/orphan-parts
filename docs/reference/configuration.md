@@ -32,7 +32,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `INVENTORY_DB_FILE` | `inventory.sqlite3` | | the inventory database, inside `DATA_DIR` |
 | `MEASURE_MIN_SHARPNESS` | `150` | | least edge response (Laplacian variance) around every mark before a capture is measured |
 | `MEASURE_MIN_REFERENCE_PX` | `80` | | least span of the scale reference in pixels |
-| `VOICE_MAX_SECONDS` | `600` | | longest voice note accepted; the transcription service takes ten minutes at most |
+| `VOICE_MAX_SECONDS` | `600` | | longest voice note accepted; the transcription service takes ten minutes at most, and `MAX_UPLOAD_MB` bounds the file first |
 | `MARKETPLACE_CREATE_URL` | `https://www.facebook.com/marketplace/create/item` | | where Open Marketplace sends the owner with the draft copied; nothing is posted by the service |
 | `MEASURE_MIN_IMAGE_PX` | `480` | | least short side of a measurement photo |
 | `MEASURE_MARK_PX` | `1.5` | | marking precision per endpoint the uncertainty is derived from |
