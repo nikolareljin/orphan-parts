@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     image_max_px: int = 1280
     segment_max_px: int = 800
     voice_max_seconds: int = 600
+    price_search_context: str = "low"
+    price_country: str = ""
     marketplace_create_url: str = "https://www.facebook.com/marketplace/create/item"
     max_photos: int = 4
     retention_hours: int = 24

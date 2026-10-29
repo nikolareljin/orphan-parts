@@ -5,6 +5,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## Unreleased
 
 ### Added
+- Price guidance: `POST /api/items/{id}/price` has Muse Spark search the web (search grounding) for listings and sales of the same model and keeps only comparables a search result backs; four figures never merged (asking, sold, what you reported, the model's estimate) each with count, range, typical, source and date; three labelled strategies; weak evidence called weak; whole against parts from the parts' own guidance; `POST /api/items/{id}/price/reports` for a sale you know of; searches counted into the spend ledger. The What is it worth? panel on each item.
 - Sell or give away: `POST /api/items/{id}/drafts` writes a listing draft with Muse Spark from the item's accepted values; the rules append the faults, what was tested, what is included and the price or free pickup, and drop any line that rests on nothing confirmed; a checklist before handover (preparation, photos, data removal when the item holds data) kept per draft; drafts versioned and marked stale when the item changes; copy the draft and open the Marketplace create page. `POST /api/items/{id}/voice` transcribes a WAV note with Muse Voice Transcribe and keeps it as the owner's words. The Prepare to sell or give away panel on each item.
 
 ## 0.1.0 - 2026-10-29

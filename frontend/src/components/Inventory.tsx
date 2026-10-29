@@ -5,6 +5,7 @@ import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, i
 import Assess from './Assess'
 import Listing from './Listing'
 import Measure from './Measure'
+import Value from './Value'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -373,6 +374,8 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
       <Measure item={item} onMeasured={() => void apply(() => api.items.get(item.id))} />
 
       <Assess item={item} />
+
+      <Value item={item} />
 
       <Listing item={item} onChanged={() => void apply(() => api.items.get(item.id))} />
 
