@@ -38,7 +38,10 @@ def test_extract_returns_fields_with_evidence(recorded_client: TestClient) -> No
         "source": "photo",
         "raw": "19.5V",
     }
-    assert body["warnings"] == []
+    assert body["warnings"] == [
+        "the label looks blurred or shows little detail; a closer, steadier photo reads better"
+    ]
+    assert body["enhanced"] is True
 
 
 def test_extract_rejects_a_non_image_with_400(recorded_client: TestClient) -> None:

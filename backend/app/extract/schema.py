@@ -53,6 +53,7 @@ class Extraction(BaseModel):
     warnings: list[str]
     photos: int
     crops: int = 0
+    enhanced: bool = Field(default=False, description="contrast and edges lifted before the read")
     model: str
     from_fixture: bool
     cost_usd: float

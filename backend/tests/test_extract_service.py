@@ -76,7 +76,9 @@ async def test_recorded_fixture_yields_normalised_fields(recorded_settings: Sett
     assert result.fields["connector"].value == "barrel 4.5 x 3 mm"
     assert result.fields["certifications"].value == "UL, CE, FCC"
     assert all(e.source == "photo" for e in result.fields.values())
-    assert result.warnings == []
+    assert result.warnings == [
+        "the label looks blurred or shows little detail; a closer, steadier photo reads better"
+    ]
 
 
 async def test_request_carries_prompt_schema_and_one_image_per_photo(
@@ -115,6 +117,7 @@ async def test_unknown_blank_and_weak_fields_become_warnings(live_settings: Sett
         "ignored a field the label set does not know: 'wattage'",
         "no part or model number was read; add a sharper photo of the label",
         "low confidence: connector",
+        "the label looks blurred or shows little detail; a closer, steadier photo reads better",
     ]
 
 
@@ -161,3 +164,23 @@ def test_assemble_handles_an_empty_reading() -> None:
     assert result.item_type == "unknown item"
     assert result.fields == {}
     assert result.warnings == ["no part or model number was read; add a sharper photo of the label"]
+
+
+async def test_the_read_is_enhanced_unless_told_not_to(live_settings: Settings) -> None:
+    cap = Capture(live_settings, api_response(json.dumps(reading())))
+    result = await cap.extractor.extract([make_photo()])
+    assert result.enhanced is True
+    assert (
+        "the label looks blurred or shows little detail; a closer, steadier photo reads better"
+        in result.warnings
+    )
+    plain = live_settings.model_copy(
+        update={"extract_enhance": False, "extract_blur_threshold": 0.0}
+    )
+    cap = Capture(plain, api_response(json.dumps(reading())))
+    result = await cap.extractor.extract([make_photo()])
+    assert result.enhanced is False
+    assert (
+        "the label looks blurred or shows little detail; a closer, steadier photo reads better"
+        not in result.warnings
+    )
