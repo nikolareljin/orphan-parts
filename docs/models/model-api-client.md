@@ -56,8 +56,9 @@ Transcribe per hour of audio; search grounding per query. A model the table does
 charged at the highest token rate, so the ledger over-counts rather than under-counts.
 
 The response reports tokens, images and video frames. It does not report audio length or
-search queries, so the caller passes those: `respond(..., audio_seconds=len_s)` for a Muse Voice
-Transcribe call and `search_queries=n` for grounded calls. Negative values are rejected.
+search queries, so the caller passes the seconds (`respond(..., audio_seconds=len_s)` for a Muse
+Voice Transcribe call) and the client counts the `web_search_call` items of a grounded answer
+unless the caller passes `search_queries=n` itself. Negative values are rejected.
 
 ## Errors
 

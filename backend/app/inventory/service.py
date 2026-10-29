@@ -345,6 +345,77 @@ class Inventory:
             raise NotFoundError(f"no draft {draft_id}")
         return row
 
+    # price guidance: stored as written, read back with the item's current version beside it
+
+    _GUIDANCE_SELECT = (
+        "SELECT g.*, i.version AS current_item_version FROM price_guidance g"
+        " JOIN items i ON i.id = g.item_id"
+    )
+
+    def add_guidance(self, item_id: int, content: str) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            last = conn.execute(
+                "SELECT MAX(version) FROM price_guidance WHERE item_id = ?", (item_id,)
+            ).fetchone()[0]
+            version = int(last or 0) + 1
+            # written from this item version; asking what it is worth changes nothing about it
+            item_version = int(row["version"])
+            self._event(conn, item_id, f"price guidance written (v{version})", item_version, at)
+            cur = conn.execute(
+                "INSERT INTO price_guidance (item_id, version, item_version, content, at)"
+                " VALUES (?,?,?,?,?)",
+                (item_id, version, item_version, content, at),
+            )
+            return self._guidance(conn, int(cur.lastrowid or 0))
+
+    def guidances(self, item_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            return conn.execute(
+                self._GUIDANCE_SELECT + " WHERE g.item_id = ? ORDER BY g.id", (item_id,)
+            ).fetchall()
+
+    def _guidance(self, conn: sqlite3.Connection, guidance_id: int) -> sqlite3.Row:
+        row: sqlite3.Row | None = conn.execute(
+            self._GUIDANCE_SELECT + " WHERE g.id = ? AND i.deleted_at IS NULL", (guidance_id,)
+        ).fetchone()
+        if row is None:
+            raise NotFoundError(f"no price guidance {guidance_id}")
+        return row
+
+    def add_price_report(
+        self, item_id: int, *, price: float, currency: str, sold_on: str, note: str
+    ) -> sqlite3.Row:
+        """A sale the owner knows of. An event on the item; the item itself is unchanged."""
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            cur = conn.execute(
+                "INSERT INTO price_reports (item_id, price, currency, sold_on, note, at)"
+                " VALUES (?,?,?,?,?,?)",
+                (item_id, price, currency, sold_on, note.strip(), at),
+            )
+            self._event(
+                conn,
+                item_id,
+                f"sale reported: {price:g} {currency} on {sold_on}",
+                int(row["version"]),
+                at,
+            )
+            found: sqlite3.Row = conn.execute(
+                "SELECT * FROM price_reports WHERE id = ?", (int(cur.lastrowid or 0),)
+            ).fetchone()
+            return found
+
+    def price_reports(self, item_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            return conn.execute(
+                "SELECT * FROM price_reports WHERE item_id = ? ORDER BY sold_on, id", (item_id,)
+            ).fetchall()
+
     def delete(self, item_id: int) -> None:
         """Hidden, not erased: the record and its events stay for the audit trail."""
         at = now()

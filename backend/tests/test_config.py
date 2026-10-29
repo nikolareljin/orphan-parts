@@ -22,3 +22,12 @@ def test_key_is_never_shown_in_repr() -> None:
 def test_cors_origins_split_and_trimmed() -> None:
     s = Settings(OPL_FAKE_API=True, cors_origins="http://a, http://b ,", _env_file=None)
     assert s.cors_origin_list == ["http://a", "http://b"]
+
+
+def test_price_settings_are_checked() -> None:
+    with pytest.raises(ValueError, match="PRICE_COUNTRY"):
+        Settings(OPL_FAKE_API=True, price_country="usa", _env_file=None)
+    with pytest.raises(ValueError):
+        Settings(OPL_FAKE_API=True, price_search_context="huge", _env_file=None)
+    s = Settings(OPL_FAKE_API=True, price_country="US", price_search_context="high", _env_file=None)
+    assert (s.price_country, s.price_search_context) == ("US", "high")

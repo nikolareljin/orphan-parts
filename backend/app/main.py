@@ -15,6 +15,7 @@ from app.api.measure import router as measure_router
 from app.api.profiles import router as profiles_router
 from app.api.routes import router
 from app.api.segment import router as segment_router
+from app.api.value import router as value_router
 from app.api.voice import router as voice_router
 from app.config import Settings, get_settings
 from app.extract import Extractor
@@ -27,6 +28,7 @@ from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
 from app.profiles import Profiles
 from app.segment import Segmenter
+from app.value import Valuer
 
 log = logging.getLogger("app")
 
@@ -47,6 +49,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.assessor = Assessor(app.state.profiles, app.state.inventory)
     app.state.lister = Lister(settings, client, app.state.inventory)
     app.state.voice = VoiceNotes(settings, client, app.state.inventory)
+    app.state.valuer = Valuer(settings, client, app.state.inventory)
     log.info(
         "starting",
         extra={
@@ -92,6 +95,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(assess_router)
     app.include_router(drafts_router)
     app.include_router(voice_router)
+    app.include_router(value_router)
     for exc_type, handler in inventory_handlers.items():
         app.add_exception_handler(exc_type, handler)
     return app

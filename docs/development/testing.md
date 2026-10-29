@@ -26,6 +26,13 @@ The inventory is tested at the service level against a temporary SQLite file (pr
 review, versions, components, soft delete, schema version) and through the routes, including a
 reading saved from the recorded extraction answer.
 
+Price guidance is tested against a recorded search-grounded answer (`price`): one search, four
+results, five proposed comparables of which the unbacked one is dropped and said; the four
+figures and their counts; a reported sale counted apart and one in another currency not; whole
+against parts from the parts' own guidance; a live call through a mock server carrying the
+`web_search` tool, the location and the include, with two searches billed; the routes and their
+refusals. Search calls, results and citations are read off a response in isolation.
+
 Listing drafts are tested against the recorded Muse Spark answers (`draft-sell`, `draft-give`):
 facts resting on unconfirmed fields dropped, the disclosures appended, the free title, the
 data steps, a stale draft after the item changes, and a working claim without a recorded test
@@ -65,7 +72,9 @@ Playwright runs in its official image against the dev stack with the backend in 
 so the browser sees exactly what a user sees and no credit is spent. The runner shares the
 frontend container's network and runs as the host user; results, traces and videos land under
 `e2e/test-results/`. Specs live in `e2e/tests/` and address the page by role and label, the way
-a user does. CI runs the same command in its `e2e` job.
+a user does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather
+than the default five: six workers share one backend process, and while the segmentation test
+decodes masks in pure Python every other read waits a second or two.
 
 The command starts the backend in fixture mode, recreating it if it was running with a key, and
 stops the whole stack afterwards unless `E2E_KEEP=1`; the next `./dev up` brings it back in the

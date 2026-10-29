@@ -5,6 +5,10 @@ import { defineConfig } from '@playwright/test'
 export default defineConfig({
   testDir: './tests',
   timeout: 30_000,
+  // Six workers share one backend process; while the segmentation test decodes masks in pure
+  // Python, every other read waits a second or two, and a page that makes several on open
+  // can overrun the default five seconds. The margin is for the harness, not the product.
+  expect: { timeout: 10_000 },
   retries: 0,
   reporter: [['list']],
   outputDir: 'test-results',

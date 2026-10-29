@@ -1,8 +1,28 @@
 # Muse Spark
 
 Vision extraction with structured output, tool-calling steps inside the agent, search grounding
-for part numbers, and the explanations under each verdict. Runs at low reasoning effort for
-parsing.
+for prices and part numbers, and the explanations under each verdict. Runs at low reasoning
+effort for parsing.
+
+## Search grounding
+
+Price guidance is one call with the `web_search` tool and the strict JSON schema of `Findings`
+(comparables with their page, the estimate, the basis, caveats):
+
+- **Request.** `tools: [{"type": "web_search", "search_context_size": PRICE_SEARCH_CONTEXT}]`,
+  with an approximate `user_location` (country from the request or `PRICE_COUNTRY`, city from the
+  request) when one is given, and `include: ["web_search_call.results"]` so the pages the search
+  returned come back with the answer.
+- **Response.** One `web_search_call` item per search, each with its `results` (title, URL,
+  snippet), and `url_citation` annotations on the text. The rules keep a comparable only when
+  its page is among those results or citations: the model proposes, the pages decide.
+- **Billing.** The API reports no search count, so the client counts the `web_search_call`
+  items and records them in the ledger at the published per-query rate, on top of the tokens.
+- **Operation name** `price`, which is also the recorded fixture that answers in fixture mode:
+  one search, four results, five proposed comparables of which one rests on no result.
+
+The code path is `app/value/service.py`; the [value guide](../guides/value.md) shows what the
+four figures mean.
 
 ## Label extraction
 

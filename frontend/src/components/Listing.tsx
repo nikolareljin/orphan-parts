@@ -25,7 +25,10 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
     api.drafts
       .list(item.id)
       .then((list) => {
-        if (!cancelled) setDraft(list.length > 0 ? list[list.length - 1] : null)
+        if (cancelled) return
+        // a draft written meanwhile is newer than anything this list holds
+        const latest = list.length > 0 ? list[list.length - 1] : null
+        setDraft((current) => (latest === null || (current && current.id > latest.id) ? current : latest))
       })
       .catch(() => {
         if (!cancelled) setDraft(null)
