@@ -65,6 +65,7 @@ async def measure_item(
     inventory: InventoryDep,
 ) -> Measurement:
     """The same, stored on the item: an accepted capture proposes an observed value to confirm."""
+    inventory.get(item_id)  # a missing item is a 404 before any image work
     data, spec = await _read(photo, request, measurer)
     try:
         result, prepared = await measurer.measure(data, spec)
