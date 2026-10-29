@@ -33,8 +33,10 @@ fail() { printf 'release-notes: %s\n' "$*" >&2; exit 1; }
 semver='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
 [[ "$version" =~ ^${semver}$ ]] || fail "not an x.y.z version: '$version'"
 
-# The changelog section: from its heading to the next one, heading included.
-section="$(awk -v v="$version" '/^## /{p = index($0, "## " v) == 1} p' "$root/CHANGELOG.md")"
+# The changelog section: from its heading to the next one, heading included. The heading is
+# the whole version, so 0.2.0 does not read the section of 0.2.01.
+heading="^## ${version//./\\.}( |$)"
+section="$(awk -v h="$heading" '/^## /{p = ($0 ~ h)} p' "$root/CHANGELOG.md")"
 [[ -n "$section" ]] || fail "CHANGELOG.md has no '## $version' section"
 grep -q '^- ' <<<"$section" || fail "the '## $version' section of CHANGELOG.md lists nothing"
 

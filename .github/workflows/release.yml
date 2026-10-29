@@ -82,7 +82,8 @@ jobs:
         run: gh release create "$TAG" --title "$TAG" --notes-file notes.md
 
   # The Android app, once it is in the tree: a release APK attached to the release. The job
-  # does nothing until android/gradlew exists; the store upload is a later step.
+  # does nothing until android/gradlew exists; the SDK setup the build needs arrives with the
+  # app, as a step here; the store upload is a later step.
   android:
     needs: publish
     if: hashFiles('android/gradlew') != ''

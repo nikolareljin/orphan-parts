@@ -76,5 +76,8 @@ test_notes_refuse_a_missing_or_empty_section_and_a_bad_version() {
   assert_false ROOT="$dir" bash "$_notes" v0.2.0 2>/dev/null
   printf '# Changelog\n\n## 0.2.0 - 2026-02-01\n\n### Added\n' > "$dir/CHANGELOG.md"
   assert_false ROOT="$dir" bash "$_notes" 0.2.0 2>/dev/null
+  # the heading is the whole version: 0.2.01 is not 0.2.0
+  printf '# Changelog\n\n## 0.2.01 - 2026-02-01\n\n### Added\n- not it\n' > "$dir/CHANGELOG.md"
+  assert_false ROOT="$dir" bash "$_notes" 0.2.0 2>/dev/null
   rm -rf "$dir"
 }

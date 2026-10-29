@@ -12,8 +12,9 @@
 #
 # Environment (from .env, or the shell):
 #   DEPLOY_HOST      user@host the web app runs on; empty = web deploy not set up
-#   DEPLOY_PATH      directory on the host holding the two compose files and .env
-#   DEPLOY_SSH       the ssh command (default: ssh); tests point it at a stand-in
+#   DEPLOY_PATH      absolute directory on the host holding the two compose files and .env
+#   DEPLOY_SSH       the ssh command, options included (default: ssh); tests point it at a
+#                    stand-in, the workflow adds its key and host-key options
 #   IMAGE_PREFIX     where the images are (default: ghcr.io/<owner>/<name> from origin)
 #   ROOT             the repository (default: the parent of this script's directory)
 set -euo pipefail
@@ -64,8 +65,10 @@ deploy_web() {
   fi
   [[ -n "${DEPLOY_PATH:-}" ]] || fail "web: DEPLOY_PATH is not set"
   [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+$ ]] || fail "web: DEPLOY_HOST must be user@host"
-  [[ "$DEPLOY_PATH" =~ ^[A-Za-z0-9._/~-]+$ ]] || fail "web: DEPLOY_PATH holds characters a remote shell would read"
-  local ssh_cmd="${DEPLOY_SSH:-ssh}"
+  [[ "$DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]*$ ]] || fail "web: DEPLOY_PATH must be an absolute path of plain characters"
+  # the ssh command may carry options; split on spaces, as a shell would
+  local -a ssh_cmd
+  read -r -a ssh_cmd <<<"${DEPLOY_SSH:-ssh}"
   # One remote command, every value quoted: the host pulls the release and starts it.
   local remote
   remote="cd $(printf '%q' "$DEPLOY_PATH") && IMAGE_PREFIX=$(printf '%q' "$IMAGE_PREFIX") TAG=$(printf '%q' "$version")"
@@ -73,7 +76,7 @@ deploy_web() {
   remote="$remote && IMAGE_PREFIX=$(printf '%q' "$IMAGE_PREFIX") TAG=$(printf '%q' "$version")"
   remote="$remote docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans"
   say "web: $version to $DEPLOY_HOST:$DEPLOY_PATH"
-  "$ssh_cmd" "$DEPLOY_HOST" "$remote"
+  "${ssh_cmd[@]}" "$DEPLOY_HOST" "$remote"
   say "web: up"
 }
 
