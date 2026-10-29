@@ -25,6 +25,8 @@
 
 `python -m app.extract <photo> [<photo> ...]` (inside the backend container or the native venv)
 reads a label and prints the extraction as JSON; fixture mode needs no key.
+`python -m app.segment <photo> [--concepts item,label] [--out DIR]` prints the regions as JSON
+and, with `--out`, writes `overlay.jpg` and one crop per region.
 
 Flags: `-v` turns on debug logging for the helpers, `-d` adds `set -x`.
 `NATIVE=1 ./dev test` runs the checks on the host instead of in Docker.

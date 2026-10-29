@@ -1,0 +1,42 @@
+{
+  "endpoint": "/responses",
+  "op": "segment-connector",
+  "model": "sam-3.1",
+  "key": "segment-connector",
+  "request": {
+    "input": "one input_text part ('plug or connector at the end of a cable') and one input_image part, see app/segment/service.py",
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "model": "sam-3.1"
+  },
+  "response": {
+    "id": "resp_fixture_segment_connector",
+    "object": "response",
+    "status": "completed",
+    "model": "sam-3.1",
+    "output": [
+      {
+        "id": "msg_fixture_segment_connector",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "<0f>0<|box;x1=560;y1=400;x2=619;y2=469;w=640;h=480;c=0.77|><|mask;x=0;y=0;c=0.77;data=70,60,!!!!!(y:V*YrZH|>"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "images_processed": 1,
+      "total_tokens": 0
+    }
+  },
+  "status": 200
+}

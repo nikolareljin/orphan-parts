@@ -8,7 +8,7 @@ from app.config import Settings
 from app.extract.fields import FIELD_BY_NAME, field_guide
 from app.extract.imaging import BadImageError, prepare
 from app.extract.normalize import normalize
-from app.extract.schema import Evidence, Extraction, LabelReading
+from app.extract.schema import Evidence, Extraction, LabelReading, Source
 from app.model_api import ModelApiClient, ModelResponse, image_part, text_part, user_message
 
 log = logging.getLogger("app.extract")
@@ -26,8 +26,11 @@ INSTRUCTIONS = (
 )
 
 
-def prompt() -> str:
-    return "Read the label on this item. Fields to look for:\n" + field_guide()
+def prompt(crops: int = 0) -> str:
+    text = "Read the label on this item. Fields to look for:\n" + field_guide()
+    if crops:
+        text += f"\nThe last {crops} image(s) are close-up crops of the label found on the item."
+    return text
 
 
 class Extractor:
@@ -35,20 +38,30 @@ class Extractor:
         self.settings = settings
         self.client = client
 
-    async def extract(self, photos: list[bytes]) -> Extraction:
+    async def extract(self, photos: list[bytes], crops: list[bytes] | None = None) -> Extraction:
+        """``crops`` are label crops from segmentation; with them, evidence is sourced
+        ``label_crop`` instead of ``photo``."""
         s = self.settings
+        crops = crops or []
         if not photos:
             raise BadImageError("at least one photo is required")
         if len(photos) > s.max_photos:
             raise BadImageError(f"at most {s.max_photos} photos per request")
+        if len(crops) > s.max_photos:
+            raise BadImageError(f"at most {s.max_photos} crops per request")
         max_bytes = s.max_upload_mb * 1024 * 1024
 
         def prepare_all() -> list[bytes]:
-            return [prepare(p, max_px=s.image_max_px, max_bytes=max_bytes) for p in photos]
+            return [
+                prepare(p, max_px=s.image_max_px, max_bytes=max_bytes) for p in [*photos, *crops]
+            ]
 
         # decoding and re-encoding is CPU work; keep it off the event loop
         prepared = await anyio.to_thread.run_sync(prepare_all)
-        parts = [text_part(prompt()), *(image_part(p, "image/jpeg") for p in prepared)]
+        parts = [
+            text_part(prompt(len(crops))),
+            *(image_part(p, "image/jpeg") for p in prepared),
+        ]
         result = await self.client.respond_structured(
             LabelReading,
             model=s.model_spark,
@@ -58,7 +71,13 @@ class Extractor:
             max_output_tokens=MAX_OUTPUT_TOKENS,
             op="extract",
         )
-        extraction = assemble(result.parsed, result.response, len(photos))
+        extraction = assemble(
+            result.parsed,
+            result.response,
+            len(photos),
+            crops=len(crops),
+            source="label_crop" if crops else "photo",
+        )
         log.info(
             "extracted",
             extra={
@@ -71,7 +90,14 @@ class Extractor:
         return extraction
 
 
-def assemble(reading: LabelReading, response: ModelResponse, photos: int) -> Extraction:
+def assemble(
+    reading: LabelReading,
+    response: ModelResponse,
+    photos: int,
+    *,
+    crops: int = 0,
+    source: Source = "photo",
+) -> Extraction:
     """Keep known fields, normalise them, and say what is weak or missing."""
     fields: dict[str, Evidence] = {}
     warnings: list[str] = []
@@ -88,7 +114,7 @@ def assemble(reading: LabelReading, response: ModelResponse, photos: int) -> Ext
             continue
         value, unit = normalize(spec.normalizer, read.value, default_unit=spec.unit or read.unit)
         fields[name] = Evidence(
-            value=value, unit=unit, confidence=confidence, source="photo", raw=read.value
+            value=value, unit=unit, confidence=confidence, source=source, raw=read.value
         )
     if "part_number" not in fields and "model_number" not in fields:
         warnings.append("no part or model number was read; add a sharper photo of the label")
@@ -101,6 +127,7 @@ def assemble(reading: LabelReading, response: ModelResponse, photos: int) -> Ext
         fields=fields,
         warnings=warnings,
         photos=photos,
+        crops=crops,
         model=response.model,
         from_fixture=response.from_fixture,
         cost_usd=response.cost_usd,

@@ -146,6 +146,7 @@ class ModelApiClient:
         effort: str | None = None,
         max_output_tokens: int | None = None,
         tools: list[dict[str, Any]] | None = None,
+        metadata: dict[str, str] | None = None,
         op: str = "respond",
         search_queries: int = 0,
         audio_seconds: float = 0.0,
@@ -170,6 +171,8 @@ class ModelApiClient:
             body["max_output_tokens"] = max_output_tokens
         if tools:
             body["tools"] = tools
+        if metadata:
+            body["metadata"] = metadata
         if self.settings.prompt_cache_name:
             body["prompt_cache_key"] = self.settings.prompt_cache_name
 

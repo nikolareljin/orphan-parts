@@ -64,5 +64,7 @@ operation. Recording is `OPL_RECORD_FIXTURES=1` with a real key: each response i
 its request summary, with inline images replaced by a digest. Details in
 [Model API client](../models/model-api-client.md).
 
-The committed `responses/extract.json` is the answer for a laptop power adapter label; it makes
-the tests, CI and the offline demo work with no key and no network.
+The committed `responses/extract.json` is the answer for a laptop power adapter label, and
+`responses/segment-<concept>.json` the answers for the item, the label and the connector of one
+photo (the mask payloads are small synthetic shapes in the real wire encoding); together they
+make the tests, CI and the offline demo work with no key and no network.

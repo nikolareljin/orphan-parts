@@ -23,6 +23,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `PROMPT_CACHE_NAME` | `orphan-parts` | | routing key sent with every call for prompt caching |
 | `EXTRACT_REASONING_EFFORT` | `low` | | reasoning effort for label extraction |
 | `IMAGE_MAX_PX` | `1280` | | photos are downscaled to this long edge before upload |
+| `SEGMENT_MAX_PX` | `800` | | the copy SAM 3.1 sees is downscaled to this long edge; boxes are scaled back onto the photo |
 | `MAX_PHOTOS` | `4` | | photos accepted per item |
 | `RETENTION_HOURS` | `24` | | uploaded images are deleted after this many hours |
 | `CORS_ORIGINS` | `http://localhost:5173` | | comma-separated browser origins allowed to call the API |

@@ -38,6 +38,36 @@ export interface Extraction {
   fields: Record<string, Evidence>
   warnings: string[]
   photos: number
+  crops: number
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+}
+
+export interface Box {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+export interface Region {
+  concept: string
+  phrase: string
+  object_id: string
+  box: Box
+  confidence: number | null
+  coverage: number
+  crop: string
+  svg_path: string
+}
+
+export interface Segmentation {
+  width: number
+  height: number
+  regions: Region[]
+  overlay: string
+  warnings: string[]
   model: string
   from_fixture: boolean
   cost_usd: number
@@ -83,16 +113,37 @@ async function detailOf(res: Response, path: string): Promise<string> {
   return `${path}: HTTP ${res.status}`
 }
 
-async function postFiles<T>(path: string, field: string, files: File[]): Promise<T> {
+export type FormPart = [field: string, value: File | string]
+
+async function postForm<T>(path: string, parts: FormPart[]): Promise<T> {
   const form = new FormData()
-  for (const file of files) form.append(field, file, file.name)
+  for (const [field, value] of parts) {
+    if (typeof value === 'string') form.append(field, value)
+    else form.append(field, value, value.name)
+  }
   const res = await fetch(apiUrl(path), { method: 'POST', body: form, headers: { Accept: 'application/json' } })
   if (!res.ok) throw new ApiError(res.status, await detailOf(res, path))
   return (await res.json()) as T
 }
 
+// A data URL from the API back into a File the API can take as an upload.
+export function dataUrlToFile(dataUrl: string, name: string): File {
+  const comma = dataUrl.indexOf(',')
+  const mime = /^data:([^;]+);base64$/.exec(dataUrl.slice(0, comma))?.[1] ?? 'application/octet-stream'
+  const binary = atob(dataUrl.slice(comma + 1))
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return new File([bytes], name, { type: mime })
+}
+
 export const api = {
   readiness: () => getJson<Readiness>('/readyz'),
   version: () => getJson<Version>('/api/version'),
-  extract: (photos: File[]) => postFiles<Extraction>('/api/extract', 'photos', photos),
+  extract: (photos: File[], crops: File[] = []) =>
+    postForm<Extraction>('/api/extract', [
+      ...photos.map((p): FormPart => ['photos', p]),
+      ...crops.map((c): FormPart => ['crops', c]),
+    ]),
+  segment: (photo: File, concepts: string[] = []) =>
+    postForm<Segmentation>('/api/segment', [['photo', photo], ...concepts.map((c): FormPart => ['concepts', c])]),
 }
