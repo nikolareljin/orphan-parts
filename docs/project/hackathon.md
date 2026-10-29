@@ -12,3 +12,4 @@ and links to the commits.
 | Oct 28 | Label extraction with Muse Spark: photos in, typed fields with confidence and provenance out, deterministic normalisers, `POST /api/extract`, a command line, a recorded fixture for offline runs. |
 | Oct 28 | Segmentation with SAM 3.1: item, label and connector found one concept per call, masks decoded with Meta's parser, overlay and crops rendered, `POST /api/segment`, a command line; the label crop feeds extraction and evidence is sourced `label_crop`. |
 | Oct 28 | Web: upload form and evidence table; Playwright end-to-end checks in Docker (`./dev e2e`) and the `e2e` CI job. |
+| Oct 29 | Private inventory: items saved from a reading with every value's provenance and review state, owner values beside observations, intent and availability, separated parts, versions and history, in SQLite under `DATA_DIR`; the My inventory page. |

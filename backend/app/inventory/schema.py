@@ -1,0 +1,127 @@
+"""Shapes of the inventory: what is stored, what the API takes and what it serves."""
+
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+from app.extract.schema import Extraction, Source
+
+# How a value is known. An observation never goes away: a correction sits beside it.
+Provenance = Literal["observed", "owner_reported", "documented", "tested", "estimated"]
+# What the owner means to do with the item.
+Intent = Literal["keep", "build", "sell", "give"]
+# Whether a plan or a listing may count on it.
+Availability = Literal["available", "reserved", "gone"]
+# An observed value is proposed until the owner accepts or rejects it.
+Review = Literal["proposed", "accepted", "rejected"]
+
+FIELD_NAME = r"^[a-z][a-z0-9_]{0,63}$"
+
+
+class Assertion(BaseModel):
+    """One value for one field, with how it is known and whether the owner agreed."""
+
+    id: int
+    field: str
+    value: str
+    unit: str = ""
+    provenance: Provenance
+    confidence: float = Field(ge=0, le=1)
+    source: Source
+    raw: str = ""
+    review: Review
+    at: str
+
+
+class Event(BaseModel):
+    """One change to one item: who, when, what, and the item version it produced."""
+
+    id: int
+    item_id: int
+    at: str
+    actor: str
+    change: str
+    version: int
+
+
+class ItemSummary(BaseModel):
+    """The list view. Location and notes stay on the item page."""
+
+    id: int
+    name: str
+    item_type: str
+    condition: str
+    intent: Intent
+    availability: Availability
+    parent_id: int | None
+    field_count: int
+    version: int
+    updated_at: str
+
+
+class Item(ItemSummary):
+    faults: str
+    tests_done: str
+    accessories: str
+    location: str
+    notes: str
+    created_at: str
+    fields: dict[str, Assertion]
+    assertions: list[Assertion]
+    components: list[int]
+
+
+class ItemCreate(BaseModel):
+    """A new record, from a label reading or by hand. Everything but the type may be empty."""
+
+    extraction: Extraction | None = None
+    name: str = ""
+    item_type: str = ""
+    condition: str = ""
+    faults: str = ""
+    tests_done: str = ""
+    accessories: str = ""
+    location: str = ""
+    notes: str = ""
+    intent: Intent = "keep"
+    availability: Availability = "available"
+    parent_id: int | None = None
+
+
+class ItemPatch(BaseModel):
+    """Fields the owner edits in place. ``version`` makes the write conditional."""
+
+    name: str | None = None
+    item_type: str | None = None
+    condition: str | None = None
+    faults: str | None = None
+    tests_done: str | None = None
+    accessories: str | None = None
+    location: str | None = None
+    notes: str | None = None
+    intent: Intent | None = None
+    availability: Availability | None = None
+    version: int | None = None
+
+
+class FieldCreate(BaseModel):
+    """A value the owner states, tested or looked up. It never replaces an observation."""
+
+    field: str = Field(pattern=FIELD_NAME)
+    value: str = Field(min_length=1)
+    unit: str = ""
+    provenance: Provenance = "owner_reported"
+    raw: str = ""
+
+
+class ReviewChange(BaseModel):
+    review: Review
+
+
+class ComponentCreate(BaseModel):
+    """A removable part separated into its own record under the whole device."""
+
+    name: str = Field(min_length=1)
+    item_type: str = ""
+    condition: str = ""
+    notes: str = ""

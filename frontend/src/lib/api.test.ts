@@ -112,6 +112,44 @@ describe('api', () => {
     await expect(api.extract([])).rejects.toThrow('Field required; Extra inputs are not permitted')
   })
 
+  it('posts an item as JSON and reads the answer', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ id: 7, name: 'adapter' }, { status: 201 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const item = await api.items.create({ item_type: 'adapter', intent: 'sell' })
+    expect(item.id).toBe(7)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/items')
+    expect(init?.method).toBe('POST')
+    expect((init?.headers as Record<string, string>)['Content-Type']).toBe('application/json')
+    expect(JSON.parse(init?.body as string)).toEqual({ item_type: 'adapter', intent: 'sell' })
+  })
+
+  it('patches with the version and reviews an assertion', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ id: 7 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await api.items.update(7, { intent: 'give', version: 3 })
+    await api.items.review(7, 12, 'accepted')
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/items/7')
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('PATCH')
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/items/7/assertions/12/review')
+    expect(JSON.parse(fetchMock.mock.calls[1][1]?.body as string)).toEqual({ review: 'accepted' })
+  })
+
+  it('treats a 204 on delete as done', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => new Response(null, { status: 204 })))
+    await expect(api.items.remove(7)).resolves.toBeUndefined()
+  })
+
+  it('surfaces a version conflict as the API message', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(async () => Response.json({ detail: 'item 7 is at version 2, not 1' }, { status: 409 })),
+    )
+    const err = await api.items.update(7, { intent: 'give', version: 1 }).catch((e: unknown) => e)
+    expect((err as ApiError).status).toBe(409)
+    expect((err as ApiError).message).toBe('item 7 is at version 2, not 1')
+  })
+
   it('falls back to the status when the error body is not JSON', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => new Response('<html>', { status: 502 })))
     await expect(api.extract([new File(['x'], 'a.jpg')])).rejects.toThrow('/api/extract: HTTP 502')

@@ -16,6 +16,28 @@ Errors, for both: `400` for a bad or oversized photo (by upload size or pixel co
 file, too many photos or concepts, `422` when the required file field is missing, `502` when the model answer was incomplete or the Model API failed, `503` when the spend
 cap is reached or fixture mode has no recorded answer. The `detail` text is safe to show.
 
+## Inventory endpoints
+
+JSON in, JSON out. An item carries its `fields` (the current value per field), every
+`assertion` with its `provenance`, `confidence`, `source` and `review` state, the ids of its
+separated `components`, and a `version` that every write increments.
+
+| Path | Purpose |
+|---|---|
+| `POST /api/items` | save an item privately: `extraction` (an answer of `/api/extract`, every field becomes an observed value to confirm) and/or the item's own fields (`name`, `item_type`, `condition`, `faults`, `tests_done`, `accessories`, `location`, `notes`, `intent`, `availability`, `parent_id`); `201` with the item |
+| `GET /api/items` | every item not deleted, newest first, without location and notes |
+| `GET /api/items/{id}` | the item with its assertions and components |
+| `PATCH /api/items/{id}` | change any of the item's own fields; with `version` set, a stale write is refused with `409` |
+| `DELETE /api/items/{id}` | hide the item; `204`; its events stay readable |
+| `POST /api/items/{id}/fields` | an owner value: `field`, `value`, `unit`, `provenance` (`owner_reported`, `documented`, `tested`, `estimated`); accepted as stated, beside any observation |
+| `POST /api/items/{id}/assertions/{aid}/review` | `{"review": "accepted" \| "rejected" \| "proposed"}` for one observed value |
+| `POST /api/items/{id}/components` | separate a part into its own item under this one; the parent's faults note it; `201` with the part |
+| `GET /api/items/{id}/events` | the history: actor, time, change, version |
+
+Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value
+outside the allowed sets (intent, availability, provenance, review) or a field name that is not
+`snake_case`.
+
 ## Operational endpoints
 
 | Path | Purpose |

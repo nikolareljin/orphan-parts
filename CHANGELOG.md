@@ -5,6 +5,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## Unreleased
 
 ### Added
+- Private inventory: `POST /api/items` saves a reading as an item whose observed values are confirmed or rejected one by one; owner values sit beside observations with their provenance; condition, faults, tests, accessories, location, notes, intent and availability; parts separated into their own records; versions, optimistic writes and a per-item history; SQLite under `DATA_DIR`. The My inventory page and Save privately in the web app.
 - Segmentation with SAM 3.1: `POST /api/segment` finds the item, the label and the connector (one concept per call, more on request), decodes the masks with Meta's parser, and returns one region per match with a box, a confidence, a crop and the mask outline, plus the overlay; `python -m app.segment`; recorded fixtures per concept. `POST /api/extract` takes label crops and sources their evidence `label_crop`; the web form finds the label first by default and shows the overlay and the crops.
 - `./dev up` starts in fixture mode when `.env` has no `MODEL_API_KEY`, and shows the backend log when the stack fails to start.
 - Web: upload up to four photos and read the evidence table (value, unit, confidence, source, text as printed), warnings and the label transcription. `GET /api/version` reports the upload limits and the form follows them, refusing an oversized photo before it is sent. Playwright end-to-end checks against the dev stack in fixture mode, `./dev e2e`, and an `e2e` CI job.

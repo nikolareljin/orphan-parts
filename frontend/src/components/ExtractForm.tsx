@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
-import { api, dataUrlToFile, type Extraction, type Limits, type Segmentation } from '../lib/api'
+import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
 import SegmentView from './SegmentView'
@@ -8,17 +8,24 @@ type State =
   | { kind: 'idle' }
   | { kind: 'segmenting' }
   | { kind: 'reading'; segmentation?: Segmentation; note?: string }
-  | { kind: 'done'; segmentation?: Segmentation; note?: string; result: Extraction }
+  | { kind: 'done'; segmentation?: Segmentation; note?: string; result: Extraction; saved?: Item }
   | { kind: 'error'; segmentation?: Segmentation; note?: string; message: string }
 
 function messageOf(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
-export default function ExtractForm({ limits = DEFAULT_LIMITS }: { limits?: Limits }) {
+export default function ExtractForm({
+  limits = DEFAULT_LIMITS,
+  onSaved,
+}: {
+  limits?: Limits
+  onSaved?: (item: Item) => void
+}) {
   const [files, setFiles] = useState<File[]>([])
   const [dropped, setDropped] = useState(0)
   const [findFirst, setFindFirst] = useState(true)
+  const [name, setName] = useState('')
   const [state, setState] = useState<State>({ kind: 'idle' })
 
   const busy = state.kind === 'segmenting' || state.kind === 'reading'
@@ -63,6 +70,18 @@ export default function ExtractForm({ limits = DEFAULT_LIMITS }: { limits?: Limi
     }
   }
 
+  // The reading becomes a private record: observed fields, each still to confirm.
+  async function save() {
+    if (state.kind !== 'done' || state.saved) return
+    try {
+      const saved = await api.items.create({ extraction: state.result, name: name.trim() })
+      setState({ ...state, saved })
+      onSaved?.(saved)
+    } catch (err: unknown) {
+      setState({ kind: 'error', segmentation, note, message: messageOf(err) })
+    }
+  }
+
   return (
     <form className="extract" onSubmit={onSubmit}>
       <label className="field">
@@ -98,7 +117,28 @@ export default function ExtractForm({ limits = DEFAULT_LIMITS }: { limits?: Limi
       <div aria-live="polite">
         {note && <p className="hint">{note}</p>}
         {segmentation && <SegmentView result={segmentation} />}
-        {state.kind === 'done' && <EvidenceTable result={state.result} />}
+        {state.kind === 'done' && (
+          <>
+            <EvidenceTable result={state.result} />
+            <div className="save">
+              {state.saved ? (
+                <p className="meta">
+                  Saved privately as item #{state.saved.id}, {state.saved.name}. Nothing is published.
+                </p>
+              ) : (
+                <>
+                  <label>
+                    <span>Name</span>
+                    <input value={name} onChange={(e) => setName(e.target.value)} placeholder={state.result.item_type} />
+                  </label>
+                  <button type="button" onClick={() => void save()}>
+                    Save privately
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </form>
   )

@@ -29,6 +29,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `CORS_ORIGINS` | `http://localhost:5173` | | comma-separated browser origins allowed to call the API |
 | `DATA_DIR` | `./data` | | uploads, the spend ledger and the SQLite database |
 | `MAX_UPLOAD_MB` | `12` | | upload size limit per file |
+| `INVENTORY_DB_FILE` | `inventory.sqlite3` | | the inventory database, inside `DATA_DIR` |
 | `LOG_FORMAT` | `json` | | `json` or `text` |
 | `LOG_LEVEL` | `INFO` | | Python log level |
 
