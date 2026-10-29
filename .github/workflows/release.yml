@@ -29,24 +29,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: refs/tags/${{ inputs.tag || github.ref_name }}
+          # the notes list the pull requests since the previous release: the history is needed
+          fetch-depth: 0
 
-      - name: tag must match the version in every manifest
+      - name: tag must match VERSION and the version in every manifest
         run: |
+          file="$(tr -d '[:space:]' < VERSION)"
           py="$(grep -m1 '^version' backend/pyproject.toml | cut -d'"' -f2)"
           init="$(grep -m1 '^__version__' backend/app/__init__.py | cut -d'"' -f2)"
           js="$(node -p "require('./frontend/package.json').version")"
-          if [ "$TAG" != "$py" ] || [ "$TAG" != "$init" ] || [ "$TAG" != "$js" ]; then
-            echo "tag $TAG; pyproject $py; app/__init__.py $init; package.json $js"
+          if [ "$TAG" != "$file" ] || [ "$TAG" != "$py" ] || [ "$TAG" != "$init" ] || [ "$TAG" != "$js" ]; then
+            echo "tag $TAG; VERSION $file; pyproject $py; app/__init__.py $init; package.json $js"
             exit 1
           fi
 
-      - name: release notes are the changelog section for this tag
+      - name: release notes, from the changelog section, the pull requests, the compare link and the images
         run: |
-          awk -v v="$TAG" '/^## /{p = index($0, "## " v) == 1} p' CHANGELOG.md > notes.md
-          if ! grep -q . notes.md; then
-            echo "CHANGELOG.md has no '## $TAG' section"
-            exit 1
-          fi
+          git fetch --tags --quiet origin
+          bash scripts/release-notes.sh "$TAG" > notes.md
+          cat notes.md
 
       - name: sign in to GHCR with the job token
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
@@ -81,3 +82,47 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release create "$TAG" --title "$TAG" --notes-file notes.md
+
+  # The Android app, once it is in the tree: a release APK attached to the release. The job
+  # does nothing until android/gradlew exists; the SDK setup the build needs arrives with the
+  # app, as a step here; the store upload is a later step.
+  android:
+    needs: publish
+    if: hashFiles('android/gradlew') != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+      - name: build the release APK
+        run: bash scripts/deploy.sh android --version "$TAG"
+      - name: attach the APK to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          apk="$(find android -path '*/outputs/apk/release/*.apk' | head -1)"
+          cp "$apk" "orphan-parts-$TAG.apk"
+          gh release upload "$TAG" "orphan-parts-$TAG.apk" --clobber
+
+  # The host, once there is one: the repository variable DEPLOY_ENABLED set to true turns this
+  # on, the secrets DEPLOY_HOST (user@host), DEPLOY_PATH and DEPLOY_SSH_KEY say where and how.
+  # The same script a person runs with ./dev deploy, so there is one way to do it.
+  deploy:
+    needs: publish
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+      - name: put the release on the host
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          DEPLOY_SSH="ssh -i $HOME/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+            bash scripts/deploy.sh web --version "$TAG"

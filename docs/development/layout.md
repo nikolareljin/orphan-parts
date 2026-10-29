@@ -24,7 +24,12 @@ frontend/
 
 scripts/
   lib/                bash helper modules used by ./dev
+  release-tag.sh      the version a release branch names, checked before it becomes a tag
+  release-notes.sh    the notes of one release, assembled from the changelog and the history
+  release.sh          tag VERSION on main and push the tag, by hand (./dev release)
+  deploy.sh           put a published release on the host, build the APK (./dev deploy)
   tests/              their tests
+VERSION               the version, the one place it is read from by hand
 
 docker/docs/          image that builds and serves the docs site
 docs/, mkdocs.yml     this site

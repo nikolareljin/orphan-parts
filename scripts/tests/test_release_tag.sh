@@ -11,6 +11,7 @@ _release_repo() {
   printf '__version__ = "%s"\n' "$version" > "$dir/backend/app/__init__.py"
   printf '{\n  "name": "x",\n  "version": "%s"\n}\n' "$version" > "$dir/frontend/package.json"
   printf '# Changelog\n\n## Unreleased\n\n## %s - 2026-01-01\n\n### Added\n- x\n' "$version" > "$dir/CHANGELOG.md"
+  printf '%s\n' "$version" > "$dir/VERSION"
   git -C "$dir" init -q
   git -C "$dir" -c user.name=test -c user.email=test@example.invalid commit -q --allow-empty -m "x"
 }
@@ -58,6 +59,19 @@ test_manifests_and_changelog_must_carry_the_version() {
   assert_eq "$(_release_run "$dir" release/0.2.0)" "0.2.0"
   rm -f "$dir/frontend/package.json"; : > "$dir/frontend/package.json"
   assert_false _release_run "$dir" release/0.2.0
+  rm -rf "$dir"
+}
+
+test_the_version_file_must_agree_when_it_exists() {
+  local dir
+  dir="$(mktemp -d)"
+  _release_repo "$dir" 0.2.0
+  printf '0.2.1\n' > "$dir/VERSION"
+  assert_false _release_run "$dir" release/0.2.0
+  printf ' 0.2.0 \n' > "$dir/VERSION"
+  assert_eq "$(_release_run "$dir" release/0.2.0)" "0.2.0"
+  rm "$dir/VERSION"
+  assert_eq "$(_release_run "$dir" release/0.2.0)" "0.2.0"
   rm -rf "$dir"
 }
 

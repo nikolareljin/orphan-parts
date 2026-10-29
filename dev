@@ -19,7 +19,12 @@
 #   docs               serve the docs site at :8001 with live reload
 #   docs-build         build the docs site into site/
 #   build              build the production images
-#   version <x.y.z>    set the version in every manifest and start the changelog section
+#   version <x.y.z>    set the version in VERSION and every manifest, start the changelog section
+#   release [--dry-run]
+#                      tag VERSION on main and push the tag (the repository admin's command);
+#                      the tag starts the release workflow
+#   deploy [web|android|all] [--version x.y.z]
+#                      put a published release on the host, and build the APK when there is one
 #   shell <service>    open a shell in a running service
 #   help               this text
 #
@@ -236,6 +241,7 @@ cmd_version() {
   local today
   today="$(date +%Y-%m-%d)"
   # sed -i needs a suffix on macOS; drop the backups afterwards
+  printf '%s\n' "$v" > "$ROOT/VERSION"
   sed -i.bak "s/^version = \".*\"/version = \"$v\"/" "$BACKEND/pyproject.toml"
   sed -i.bak "s/^__version__ = \".*\"/__version__ = \"$v\"/" "$BACKEND/app/__init__.py"
   sed -i.bak "s/^  \"version\": \"[0-9.]*\"/  \"version\": \"$v\"/" "$FRONTEND/package.json"
@@ -243,11 +249,16 @@ cmd_version() {
   mv "$ROOT/CHANGELOG.md.new" "$ROOT/CHANGELOG.md"
   rm -f "$BACKEND/pyproject.toml.bak" "$BACKEND/app/__init__.py.bak" "$FRONTEND/package.json.bak"
   run_in frontend sh -c 'npm install --package-lock-only --no-audit --no-fund --loglevel=error' >/dev/null
-  log_ok "version $v set in pyproject.toml, app/__init__.py, package.json, package-lock.json and CHANGELOG.md"
+  log_ok "version $v set in VERSION, pyproject.toml, app/__init__.py, package.json, package-lock.json and CHANGELOG.md"
   echo "  move the Unreleased notes under the new heading, then:"
   echo "  git switch -c release/$v && git add -A && git commit -m \"chore: release $v\" && git push -u origin release/$v"
   echo "  open the PR; once it is merged the merge commit is tagged $v and the release published"
+  echo "  (or, on main after the merge: ./dev release, then ./dev deploy)"
 }
+
+cmd_release() { bash "$ROOT/scripts/release.sh" "$@"; }
+
+cmd_deploy() { bash "$ROOT/scripts/deploy.sh" "$@"; }
 
 cmd_shell() {
   local svc="${1:-backend}"
@@ -269,6 +280,8 @@ case "$cmd" in
   docs-build) cmd_docs_build "$@" ;;
   build) cmd_build "$@" ;;
   version) cmd_version "$@" ;;
+  release) cmd_release "$@" ;;
+  deploy) cmd_deploy "$@" ;;
   shell) cmd_shell "$@" ;;
   help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
   *) die "unknown command: $cmd (try ./dev help)" 2 ;;
