@@ -61,14 +61,14 @@ which still triggers `release.yml`.
 4. creates a GitHub release whose notes are that changelog section.
 
 The jobs use only `actions/checkout`, the job token, Docker and `gh`; no other actions and no
-stored secrets. A repository ruleset lets only the repository admin and the tag workflow create
-tags, and nobody move or delete them; the workflow tags only what the admin merged, so nobody
-else can trigger a release.
+stored secrets. A repository ruleset limits tag creation to the repository admin, plus the tag
+workflow once GitHub Actions is on its bypass list, and lets nobody move or delete a tag; the
+workflow tags only what the admin merged, so nobody else can trigger a release.
 
-Only a tag, or the tag workflow, triggers it; no image is built or pushed for pull requests or
-other merges. The images are
-the release artifact: the demo host pulls them, and a tagged version can be run anywhere without
-a build. See [Deployment](../operations/deployment.md).
+Only a tag, or the tag workflow, triggers it; no image is built or pushed for other pull
+requests or merges. The images are the release artifact: the demo host pulls them, and a
+tagged version can be run anywhere without a build. See
+[Deployment](../operations/deployment.md).
 
 ## `docs.yml`
 
