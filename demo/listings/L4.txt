@@ -1,0 +1,1 @@
+DEMO DATA, a written example. Laptop charger 19.5V 3.3A, centre negative, 4.5 mm plug. Tested, works.

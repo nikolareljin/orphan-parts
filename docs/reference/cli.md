@@ -4,7 +4,8 @@
 
 | Command | What it does |
 |---|---|
-| `./dev setup` | checks Docker, Python and Node, creates `.env` from `.env.example` if missing |
+| `./dev setup [--check] [--android]` | checks Docker, Python, Node and what the app's build needs, creates `.env` from `.env.example` if missing; `--android` installs the JDK and the Android command-line tools; `--check` changes nothing |
+| `./dev phone [--release]` | builds the app, installs it on the connected phone, launches it and prints the pairing code (the stack must be up) |
 | `./dev up` | starts the Docker stack and waits for the backend to be healthy; with no `MODEL_API_KEY` in `.env` it starts in fixture mode (recorded answers) and says so |
 | `./dev up --build` | rebuilds the images first |
 | `./dev up --with-glimmer` | also starts the local Muse Glimmer server (openweight profile) |
@@ -21,12 +22,20 @@
 | `./dev docs-build` | exports the OpenAPI document and builds `site/` |
 | `./dev build` | builds the production images |
 | `./dev version <x.y.z>` | sets the version in every manifest and starts a changelog section |
+| `./dev demo [--keep]` | resets the inventory (`--keep` adds instead) and loads `demo/set.yaml` in fixture mode; the backend is stopped for it and started again |
+| `./dev record-fixtures` | loads the set once with the key from `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`; spends credits once |
+| `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes |
 | `./dev shell [service]` | shell in a running service |
 
 `python -m app.extract <photo> [<photo> ...]` (inside the backend container or the native venv)
 reads a label and prints the extraction as JSON; fixture mode needs no key.
 `python -m app.segment <photo> [--concepts item,label] [--out DIR]` prints the regions as JSON
 and, with `--out`, writes `overlay.jpg` and one crop per region.
+`python -m app.pairing --origin http://192.168.1.20:5173 [--json]` prints the pairing code for
+the phone, with a session when the demo is gated.
+`python -m app.demo <load|record|scrub>` is what the three demo commands run inside the
+container: `load [--set FILE] [--reset]`, `record [--set FILE] [--reset]`,
+`scrub <raw dir> [--out DIR]`.
 
 Flags: `-v` turns on debug logging for the helpers, `-d` adds `set -x`.
 `NATIVE=1 ./dev test` runs the checks on the host instead of in Docker.

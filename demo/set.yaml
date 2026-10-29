@@ -1,0 +1,117 @@
+# The demo set: what the walkthrough is made of. Photos and notes are files beside this one,
+# written by `./dev demo-scrub <raw dir>` (re-encoded, no metadata). `./dev record-fixtures`
+# runs the set once with a key and keeps every model answer; `./dev demo` replays it.
+# A photo named here that is not present is skipped with a note, so the set loads either way.
+title: a drawer of idle things
+currency: USD
+country: US
+
+items:
+  - key: vacuum
+    name: Upright vacuum
+    item_type: vacuum
+    profile: vacuum_attachment
+    intent: build
+    photos: [photos/vac_a.jpg, photos/vac_b.jpg]
+    condition: runs; the crevice tool is missing
+    tests_done: ran for a minute, suction fine
+    fields:
+      wand_outer_diameter: "32"
+  - key: tool_fits
+    name: Crevice tool, the one that fits
+    item_type: crevice tool
+    profile: vacuum_attachment
+    intent: build
+    photos: [photos/vac_tool1_c.jpg]
+    fields:
+      opening_inner_diameter: "32.2"
+  - key: tool_near
+    name: Crevice tool, the near miss
+    item_type: crevice tool
+    profile: vacuum_attachment
+    intent: build
+    photos: [photos/vac_tool2_c.jpg]
+    fields:
+      opening_inner_diameter: "35"
+  - key: laptop_old
+    name: Old laptop
+    item_type: laptop
+    intent: build
+    photos: [photos/laptop1_b.jpg]
+    condition: boots, battery weak
+    tests_done: booted to the desktop
+  - key: laptop_second
+    name: Second laptop, cracked screen
+    item_type: laptop
+    intent: sell
+    photos: [photos/laptop2_b.jpg]
+    faults: screen cracked in one corner
+    draft: sell
+    asking_price: "60"
+    price: true
+  - key: webcam
+    name: USB webcam
+    item_type: webcam
+    intent: build
+    photos: [photos/cam_a.jpg]
+  - key: monitor
+    name: Spare monitor
+    item_type: monitor
+    intent: build
+    condition: works, one HDMI input
+  - key: phone
+    name: Broken phone
+    item_type: phone
+    intent: sell
+    photos: [photos/phone_a.jpg]
+    faults: screen does not light; charges and vibrates
+    holds_data: true
+    draft: sell
+    price: true
+  - key: adapter
+    name: Laptop power adapter
+    item_type: power adapter
+    profile: power_adapter
+    intent: keep
+    photos: [photos/psu1_b.jpg]
+    voice_note: notes/note_adapter.wav
+  - key: keyboard
+    name: USB keyboard
+    item_type: keyboard
+    intent: give
+    photos: [photos/kbd_a.jpg]
+    condition: works, two keycaps loose
+    draft: give
+
+searches:
+  - key: vac_tool
+    need: vacuum
+    title: crevice tool for the upright vacuum
+    max_price: 15
+    listings:
+      - text: "@listings/L1.txt"
+        observed_on: "2026-10-28"
+        asking_price: "9"
+      - text: "@listings/L2.txt"
+        observed_on: "2026-10-28"
+        asking_price: "6"
+  - key: adapter_spare
+    need: adapter
+    title: spare 65 W laptop adapter
+    max_price: 25
+    listings:
+      - text: "@listings/L3.txt"
+        observed_on: "2026-10-27"
+        asking_price: "15"
+      - text: "@listings/L4.txt"
+        observed_on: "2026-10-27"
+        asking_price: "12"
+
+propose:
+  count: 3
+  preferences:
+    interests: a quiet desk for homework; music in the kitchen
+    effort: low
+    skills: [basic computer setup]
+    budget: 50
+    currency: USD
