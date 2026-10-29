@@ -5,11 +5,11 @@ import logging
 import wave
 from io import BytesIO
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.config import Settings
 from app.inventory import Inventory
-from app.inventory.schema import FieldCreate, Item
+from app.inventory.schema import TEXT_MAX, FieldCreate, Item
 from app.model_api import ModelApiClient
 
 log = logging.getLogger("app.voice")
@@ -24,6 +24,10 @@ class BadAudioError(ValueError):
 class VoiceNote(BaseModel):
     transcript: str
     seconds: float
+    cut: bool = Field(
+        default=False,
+        description="the recording said more than the field holds; the first part was kept",
+    )
     field: str
     model: str
     from_fixture: bool
@@ -57,20 +61,24 @@ class VoiceNotes:
                 f"the recording is {seconds:.0f} s; at most {self.settings.voice_max_seconds} s"
             )
         transcript = await self.client.transcribe(audio)
-        if not transcript.text:
+        text = transcript.text
+        if not text:
             raise BadAudioError("nothing was heard in the recording")
+        cut = len(text) > TEXT_MAX
+        if cut:
+            # kept whole words only; the owner can say the rest in another note
+            text = text[:TEXT_MAX].rsplit(" ", 1)[0]
         item = self.inventory.add_field(
-            item_id,
-            FieldCreate(field=FIELD, value=transcript.text, raw=transcript.text),
-            source="voice_note",
+            item_id, FieldCreate(field=FIELD, value=text, raw=text), source="voice_note"
         )
         log.info(
             "voice note",
             extra={"item_id": item_id, "seconds": seconds, "usd": transcript.cost_usd},
         )
         return VoiceNote(
-            transcript=transcript.text,
+            transcript=text,
             seconds=round(seconds, 2),
+            cut=cut,
             field=FIELD,
             model=transcript.model,
             from_fixture=transcript.from_fixture,

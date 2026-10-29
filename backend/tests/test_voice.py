@@ -90,6 +90,28 @@ async def test_a_live_call_is_multipart_and_priced_by_the_seconds_heard(
     assert entry.usage.audio_seconds == 90.0
 
 
+async def test_a_long_note_is_kept_up_to_the_field_bound_and_says_so(
+    live_settings: Settings,
+) -> None:
+    words = " ".join(f"word{i}" for i in range(900))  # well over 4000 characters
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"sessionId": "s", "transcript": words, "audioDurationMs": 500000}
+        )
+
+    inventory = Inventory(live_settings)
+    client = ModelApiClient(
+        live_settings, CostLedger(cap_usd=25.0), transport=httpx.MockTransport(handler)
+    )
+    item = inventory.create(ItemCreate(item_type="kettle"))
+    note = await VoiceNotes(live_settings, client, inventory).note(item.id, silence())
+    assert note.cut is True
+    assert len(note.transcript) <= 4000 and not note.transcript.endswith(" ")
+    assert words.startswith(note.transcript) and note.transcript.split()[-1].startswith("word")
+    assert note.item.fields["condition_notes"].value == note.transcript
+
+
 async def test_limits_before_any_call(recorded_settings: Settings) -> None:
     settings = recorded_settings.model_copy(update={"voice_max_seconds": 2})
     inventory = Inventory(settings)

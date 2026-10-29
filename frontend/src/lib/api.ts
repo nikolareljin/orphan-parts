@@ -277,6 +277,7 @@ export interface Draft {
 export interface VoiceNote {
   transcript: string
   seconds: number
+  cut: boolean
   field: string
   model: string
   from_fixture: boolean

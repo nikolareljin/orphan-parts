@@ -18,6 +18,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [note, setNote] = useState('')
+  const [noteCut, setNoteCut] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -81,6 +82,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
     try {
       const heard = await api.voice(item.id, file)
       setNote(heard.transcript)
+      setNoteCut(heard.cut)
       onChanged()
     } catch (err: unknown) {
       setError(message(err))
@@ -101,6 +103,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
         {note && (
           <p className="hint">
             Heard and kept as your words: <q>{note}</q>
+            {noteCut && ' (longer than the field holds; the first part was kept)'}
           </p>
         )}
       </div>

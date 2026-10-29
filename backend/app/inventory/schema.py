@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from app.extract.schema import Extraction, Source
 
@@ -134,10 +134,10 @@ class FieldCreate(BaseModel):
     """A value the owner states, tested or looked up. It never replaces an observation."""
 
     field: str = Field(pattern=FIELD_NAME)
-    value: str = Field(max_length=VALUE_MAX)
+    value: str = Field(max_length=TEXT_MAX)
     unit: str = Field(default="", max_length=32)
     provenance: Provenance = "owner_reported"
-    raw: str = Field(default="", max_length=VALUE_MAX)
+    raw: str = Field(default="", max_length=TEXT_MAX)
 
     @field_validator("provenance")
     @classmethod
@@ -156,6 +156,14 @@ class FieldCreate(BaseModel):
     @classmethod
     def _trim(cls, value: str) -> str:
         return _trimmed(value)
+
+    @model_validator(mode="after")
+    def _bounded(self) -> "FieldCreate":
+        # a note (a transcribed voice note, say) is prose; any other value is a short reading
+        limit = TEXT_MAX if self.field.endswith("_notes") else VALUE_MAX
+        if len(self.value) > limit or len(self.raw) > limit:
+            raise ValueError(f"{self.field}: at most {limit} characters")
+        return self
 
 
 class ReviewChange(BaseModel):
