@@ -2,33 +2,48 @@
 
 # Orphan Parts Lens
 
-Show it, ask it, sell it, or find the one that fits. Evidence-backed answers about used things,
-on Meta's Muse models.
+Scan what you already own. Decide what it can become. Find the missing piece on Marketplace, or
+prepare what you no longer need for sale or free pickup. Every answer carries its evidence, on
+Meta's Muse models.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
 Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
 on the docs site).
 
-Orphan Parts Lens is an assistant for things you own and things you are about to buy. Point the
-camera at an item, or paste a listing, and ask: What is this? What is it worth, and is it worth
-selling? Does this listing fit what I need, and is it a good deal? What else could this device
-become? The answers come with their evidence: a label it read, a source it cited with a date, or
-a plain "cannot verify". Used tech and spare parts are the first categories; the engine takes any
-item as a data profile.
+Orphan Parts Lens starts from a private inventory of the devices, parts and other things you
+own. A photo of a label becomes a record you confirm field by field. A photo next to a ruler
+becomes a measurement with its method and uncertainty. From there, four paths: keep a catalog,
+build something with what you have, sell, or give away. Facebook Marketplace is the destination
+both ways: the part you are missing, and the listing for what you let go. Nothing is published
+by a scan, nothing is posted or searched on your behalf, and a number without a source says so.
 
-## Five uses
+## Four paths on one inventory
 
-| Use | You ask | You get |
+| Path | What it does | Where it stands |
 |---|---|---|
-| Identify | What is this? | a typed spec with a confidence and a source crop per field, the part number confirmed with citations |
-| Value | What is it worth, is it worth selling? | an estimated resale value from cited comparables, labelled as an estimate, and a plain answer |
-| List | Help me sell it | a Facebook Marketplace-ready draft and the questions still to resolve before posting |
-| Find | I need one that fits | your needs as a profile, candidates ranked against it with a fit score, a deal check from the photos and the text, questions for the seller |
-| Reuse | What else could this become? | safe project ideas with a parts list, manufacturer guidance and local e-waste rules |
+| Catalog | read the label, confirm or reject each value, add what you know, keep condition, faults, tests, parts, intent and availability, measure a feature against a ruler | built |
+| Sell and give away | a preparation checklist, price guidance from sourced comparables with the four figures kept apart, a listing draft that discloses what the rules require, a voice note kept as your words, the Marketplace create page by handoff | built |
+| Find the one that fits | what an item needs, a Marketplace search you run, listings brought back as text, a screenshot or values you know, each assessed by the category's rules and dated, the seller's questions as a message | built |
+| Build and reuse | what you want from a build, project proposals grounded in what you own with every allocation checked against the inventory, items committed to one selected build at a time, a budget across the selected set, missing pieces as searches, a versioned build pack that goes stale when an input changes, the outcome in your words | built |
 
-On the web, drop photos or paste a listing. On the phone, talk to it and show it the camera; the
-answer is spoken back. Hands-free through Meta glasses later.
+Underneath, one engine answers five questions with evidence: Identify, Value, List, Find, Reuse.
+A category is a data file, a profile, that names the fields, the features worth measuring with
+their tolerances, and the rules that decide a fit. Power adapters and vacuum attachments ship as
+profiles, with a generic one for anything else.
+
+## What makes it trustworthy
+
+- **Evidence per value.** Every field says where it came from: the label, a crop, a measurement,
+  a listing, your own word. An observation stays "to confirm" until you accept it.
+- **A ruler, not a guess.** A dimension comes from marks on a photo with a scale reference and
+  explicit geometry; a blurred, oblique or unreferenced capture is refused with the reason.
+- **Rules decide, the model explains.** Does it fit? ends in one verdict from a ladder; an
+  unknown is never a pass, and a conflict is never talked away.
+- **Four price figures, never merged.** Asking, sold, what you reported, and the model's
+  estimate, each with its page and date; weak evidence is called weak.
+- **A demo you can leave running.** An access code, allowances per visitor and per day, a
+  per-address limit, a spend cap and an operator's switch.
 
 Documentation: https://nikolareljin.github.io/orphan-parts/
 
@@ -71,12 +86,10 @@ Changes go through pull requests; a release is a pull request from a `release/x.
 
 | Model | Job |
 |---|---|
-| Muse Spark | reads labels and listings into structured fields, ranks candidates, drives the agent, explains verdicts |
-| Muse Wonder | plans the buyer comparison, drafts new category profiles |
-| SAM 3.1 | isolates the item, its label and its connector in photos and video |
-| Muse Voice Transcribe | spoken questions on the phone, voice notes from sellers |
-| Muse Image | background cleanup of the cover photo, always labeled, original kept |
-| Muse Glimmer, Muse Spark Open | on-device pre-check and alternative extraction provider |
+| Muse Spark | reads labels and listings into structured fields, writes listing drafts, searches the web for prices with citations, proposes projects through tools |
+| SAM 3.1 | isolates the item, its label and its connector in photos |
+| Muse Voice Transcribe | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
+| Muse Wonder, Muse Image, Muse Glimmer, Muse Spark Open | considered, not used in this version; the docs say what for |
 
 Built with Muse Code.
 
@@ -86,7 +99,7 @@ Built with Muse Code.
 backend/    FastAPI service (Python 3.12)
 frontend/   React + Vite app (Node 24)
 docs/       MkDocs site, published to GitHub Pages
-scripts/    bash helpers used by ./dev
+scripts/    bash helpers used by ./dev, the release and deploy scripts
 docker/     images that are not part of backend/ or frontend/
 ```
 
