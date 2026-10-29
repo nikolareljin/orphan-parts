@@ -287,6 +287,16 @@ async def test_a_candidate_needs_its_source(finder: Finder) -> None:
         await finder.add_candidate(search.id, CandidateCreate(source_kind="screenshot"))
     with pytest.raises(FindError, match="at least one value"):
         await finder.add_candidate(search.id, CandidateCreate(source_kind="manual"))
+    finder.update(search.id, SearchPatch(status="closed"))
+    with pytest.raises(FindError, match="closed"):
+        await finder.add_candidate(
+            search.id, CandidateCreate(source_kind="manual", values={"output_voltage": "19.5"})
+        )
+    finder.update(search.id, SearchPatch(status="found"))
+    found = await finder.add_candidate(
+        search.id, CandidateCreate(source_kind="manual", values={"output_voltage": "19.5"})
+    )
+    assert found.state != "withdrawn"
     with pytest.raises(ValueError, match="future"):
         CandidateCreate(text="x", observed_on="2999-01-01")
     with pytest.raises(ValueError, match="real date"):
@@ -337,6 +347,11 @@ def test_find_routes(recorded_client: TestClient) -> None:
     assert recorded_client.post(f"/api/candidates/{candidate['id']}/recheck").status_code == 422
     closed = recorded_client.patch(f"/api/searches/{search['id']}", json={"status": "closed"})
     assert closed.json()["status"] == "closed"
+    refused = recorded_client.post(
+        f"/api/searches/{search['id']}/candidates",
+        data={"request": '{"source_kind": "manual", "values": {"output_voltage": "19.5"}}'},
+    )
+    assert refused.status_code == 422 and "closed" in refused.json()["detail"]
 
     assert recorded_client.post("/api/searches", json={"title": "x"}).status_code == 422
     assert (

@@ -300,15 +300,19 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
           {error}
         </p>
       )}
-      <AddCandidate
-        searchId={id}
-        rules={rules}
-        onAdded={(c) => {
-          load()
-          onChanged()
-          setOpenCandidate(c.id)
-        }}
-      />
+      {search.status === 'closed' ? (
+        <p className="muted">This search is closed; reopen it to bring a listing back.</p>
+      ) : (
+        <AddCandidate
+          searchId={id}
+          rules={rules}
+          onAdded={(c) => {
+            load()
+            onChanged()
+            setOpenCandidate(c.id)
+          }}
+        />
+      )}
       {candidates.length > 0 && (
         <table className="evidence candidates" aria-label="Candidates">
           <thead>

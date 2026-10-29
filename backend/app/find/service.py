@@ -174,6 +174,8 @@ class Finder:
         self, search_id: int, spec: CandidateCreate, screenshot: bytes | None = None
     ) -> Candidate:
         search = self.search(search_id)
+        if search.status == "closed":
+            raise FindError("the search is closed; reopen it to bring a listing back")
         if spec.source_kind == "text" and not spec.text:
             raise FindError("a text candidate needs the listing text")
         if spec.source_kind == "screenshot" and not screenshot:

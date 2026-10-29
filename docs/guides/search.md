@@ -26,7 +26,8 @@ Each candidate goes through [Does it fit?](match.md) against the need as it stan
 a soft rule against it) or **rejected** (`CONFLICT`). A documented candidate is not an installed
 part. **Recheck** runs the same listing against the need after it changed; **Withdraw** retires
 it; **Ask the seller** turns the rules' open questions into a message you can send, written by
-the rules, not by a model. A search is marked found or closed by you.
+the rules, not by a model. A search is marked found or closed by you; a closed one takes no
+listing until it is reopened.
 
 ## From the API
 
