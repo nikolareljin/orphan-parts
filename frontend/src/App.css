@@ -247,3 +247,267 @@ table.evidence tbody th {
   border-radius: 6px;
   white-space: pre-wrap;
 }
+
+/* pages */
+.nav {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.nav button {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nav button[aria-current='page'] {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* save privately */
+.save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.save label,
+.inline label,
+.details label,
+.item .row label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.save input,
+.inline input,
+.inline select,
+.details textarea,
+.item .row select {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+/* inventory */
+table.items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+table.items th,
+table.items td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+table.items thead th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+table.items tbody th {
+  font-weight: 500;
+}
+
+table.items tr.open {
+  background: var(--bg);
+}
+
+.item {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.item h3 {
+  margin: 0 0 0.25rem;
+}
+
+.item h4 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.item .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+  margin-top: 0.75rem;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.inline h4,
+.details h4 {
+  flex-basis: 100%;
+  margin-bottom: 0;
+}
+
+.details {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.details button,
+.inline button,
+.save button,
+.item .danger {
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+  justify-self: start;
+}
+
+.details button:disabled,
+.inline button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.item .danger {
+  background: var(--error);
+}
+
+button.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.events {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+}
+
+/* measure */
+.measure {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.5rem;
+}
+
+.measure .hint {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.measure .kind {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.measure .kind legend {
+  padding: 0 0.25rem;
+  color: var(--muted);
+}
+
+.measure .kind label {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.measure input[type='number'] {
+  width: 7rem;
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+.marking canvas {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.measured {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+}
+
+.measured.refused {
+  border-left-color: var(--error);
+}
+
+.measured .value {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.checks {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.checks li.fail {
+  color: var(--error);
+}
+
+.measure .history {
+  margin-top: 0.75rem;
+}

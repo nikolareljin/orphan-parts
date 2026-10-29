@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 
 from app.config import Settings
 from app.extract.service import Extractor
+from app.inventory.service import Inventory
 from app.model_api import CostLedger, ModelApiClient
 from app.segment.service import Segmenter
 
@@ -38,3 +39,11 @@ LedgerDep = Annotated[CostLedger, Depends(app_ledger)]
 ModelApiDep = Annotated[ModelApiClient, Depends(app_model_api)]
 ExtractorDep = Annotated[Extractor, Depends(app_extractor)]
 SegmenterDep = Annotated[Segmenter, Depends(app_segmenter)]
+
+
+def app_inventory(request: Request) -> Inventory:
+    inventory: Inventory = request.app.state.inventory
+    return inventory
+
+
+InventoryDep = Annotated[Inventory, Depends(app_inventory)]

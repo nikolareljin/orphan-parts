@@ -22,6 +22,10 @@ directly. The service is tested twice: against the recorded fixture, and against
 that captures the request body, so the prompt, the schema and the image parts are pinned. The
 route is tested through the app with multipart uploads, including every error status.
 
+The inventory is tested at the service level against a temporary SQLite file (provenance,
+review, versions, components, soft delete, schema version) and through the routes, including a
+reading saved from the recorded extraction answer.
+
 Two conftest fixtures matter here: `recorded_client` serves the fixtures committed under
 `tests/fixtures/api/`, and `client` serves an empty fixture directory, which is how the "no
 recorded answer" path is tested.

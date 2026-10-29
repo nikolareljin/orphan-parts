@@ -70,6 +70,7 @@ nav:
       - Verdict ladder: concepts/verdicts.md
       - Category profiles: concepts/profiles.md
   - Guides:
+      - My inventory: guides/inventory.md
       - Seller flow: guides/seller.md
       - Buyer flow: guides/buyer.md
       - Value an item: guides/value.md

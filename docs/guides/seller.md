@@ -9,5 +9,6 @@ and the connector in the first photo; the overlay and the crops are shown, and t
 goes to Muse Spark with the photos, so every value is sourced `label_crop`. When the label
 cannot be found first, the photos are read whole and the page says why. The evidence table
 shows every field read with its value, unit, confidence, source and the text as printed, the
-warnings, the label transcription, the model and the cost of the calls. The rest of the flow
-follows.
+warnings, the label transcription, the model and the cost of the calls. **Save privately** turns
+the reading into an item in [My inventory](inventory.md), where each observed value is confirmed
+or corrected before anything is drafted. The rest of the flow follows.
