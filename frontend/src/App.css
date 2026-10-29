@@ -149,6 +149,10 @@ dd {
   border-color: #27ae60;
 }
 
+.region-opening img {
+  border-color: #f1c40f;
+}
+
 /* result */
 .result {
   margin-top: 1.25rem;

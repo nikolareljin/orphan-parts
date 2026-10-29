@@ -1,7 +1,6 @@
 """One segmentation: a photo and a few concepts in, regions with crops and an overlay out."""
 
 import logging
-import re
 from collections.abc import Sequence
 
 import anyio
@@ -9,7 +8,7 @@ import anyio
 from app.config import Settings
 from app.extract.imaging import BadImageError, dimensions, prepare
 from app.model_api import ModelApiClient, image_part, text_part, user_message
-from app.segment.concepts import DEFAULT_CONCEPTS, MAX_CONCEPTS, phrase_for
+from app.segment.concepts import DEFAULT_CONCEPTS, MAX_CONCEPTS, phrase_for, slug_for
 from app.segment.parse import Match, parse_matches
 from app.segment.render import (
     clip,
@@ -26,12 +25,11 @@ log = logging.getLogger("app.segment")
 
 MAX_REGIONS_PER_CONCEPT = 4
 MASK_ENCODING = "one_bit"
-_SLUG = re.compile(r"[^a-z0-9]+")
 
 
 def op_for(concept: str) -> str:
     """Operation name per concept: the ledger line and the fixture file are named after it."""
-    return "segment-" + (_SLUG.sub("-", concept.lower()).strip("-") or "concept")
+    return "segment-" + slug_for(concept)
 
 
 class Segmenter:

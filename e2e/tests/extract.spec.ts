@@ -64,6 +64,7 @@ test('a photo becomes an evidence table', async ({ page }) => {
   await expect(part).toContainText('as printed: P/N OP065-19-333')
 
   await expect(page.getByText('recorded answer')).toBeVisible()
+  await expect(page.getByText('crops')).toHaveCount(0)
   await page.getByText('Label text').click()
   await expect(page.getByText('OUTPUT: 19.5V 3.33A 65W')).toBeVisible()
 })
@@ -90,6 +91,7 @@ test('the label is found first and read from its crop', async ({ page }) => {
   const table = page.getByRole('table', { name: 'Evidence' })
   await expect(table).toBeVisible()
   await expect(table.getByRole('row', { name: /Output voltage/ })).toContainText('label_crop')
+  await expect(page.getByText('2 crops')).toBeVisible()
 })
 
 test('a file that is not a photo is refused with the API message', async ({ page }) => {

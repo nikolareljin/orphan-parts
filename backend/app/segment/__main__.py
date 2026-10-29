@@ -15,6 +15,7 @@ from pathlib import Path
 from app.config import get_settings
 from app.extract.imaging import BadImageError
 from app.model_api import CostLedger, ModelApiClient, ModelApiError
+from app.segment.concepts import slug_for
 from app.segment.schema import Segmentation
 from app.segment.service import Segmenter
 
@@ -35,7 +36,9 @@ def _write(result: Segmentation, out: Path) -> None:
     counts: dict[str, int] = {}
     for region in result.regions:
         counts[region.concept] = counts.get(region.concept, 0) + 1
-        name = f"{region.concept}-{counts[region.concept]}.jpg"
+        # a concept is free text ("../evil" is a valid unknown key): slug it so the crop
+        # stays one file inside the out directory
+        name = f"{slug_for(region.concept)}-{counts[region.concept]}.jpg"
         (out / name).write_bytes(base64.b64decode(region.crop.split(",", 1)[1]))
 
 

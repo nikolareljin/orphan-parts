@@ -5,6 +5,8 @@ Category profiles will carry their own concepts later; until then this table cov
 category and the fallback, and an unknown key is sent as its own phrase.
 """
 
+import re
+
 CONCEPTS: dict[str, str] = {
     "item": "the main object",
     "label": "product label with printed text",
@@ -14,7 +16,13 @@ CONCEPTS: dict[str, str] = {
 
 DEFAULT_CONCEPTS: tuple[str, ...] = ("item", "label", "connector")
 MAX_CONCEPTS = 6
+_SLUG = re.compile(r"[^a-z0-9]+")
 
 
 def phrase_for(key: str) -> str:
     return CONCEPTS.get(key, key)
+
+
+def slug_for(key: str) -> str:
+    """A concept key as one safe path segment: lowercased, ASCII alphanumerics and dashes."""
+    return _SLUG.sub("-", key.lower()).strip("-") or "concept"

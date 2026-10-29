@@ -7,7 +7,9 @@ export default function EvidenceTable({ result }: { result: Extraction }) {
     <section className="result">
       <h3>{result.item_type}</h3>
       <p className="meta">
-        {result.model} · {result.photos} {result.photos === 1 ? 'photo' : 'photos'} · {usd(result.cost_usd)}
+        {result.model} · {result.photos} {result.photos === 1 ? 'photo' : 'photos'}
+        {result.crops > 0 && ` · ${result.crops} ${result.crops === 1 ? 'crop' : 'crops'}`} ·{' '}
+        {usd(result.cost_usd)}
         {result.from_fixture && <span className="badge">recorded answer</span>}
       </p>
 

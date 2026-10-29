@@ -18,15 +18,15 @@ wired in yet.
   (a raster the size of the box, base85 encoded). Meta's `meta-sam-parser` package validates
   the grammar and decodes the masks; `app/segment/parse.py` reduces its records to matches.
   Zero matches is an empty text, which is a valid answer and becomes a warning.
-- **Scaling.** The model sees a copy of the photo at most `SEGMENT_MAX_PX` (default 800)
-  wide: masks come back the size of their box and decoding them is plain Python, so fewer
-  pixels is faster at no cost in boxes. Boxes are reported in the pixels of that copy and are
-  scaled onto the prepared photo, clipped, and at most four matches per concept are kept,
-  ordered by confidence.
+- **Scaling.** The model sees a copy of the photo with its long edge at most
+  `SEGMENT_MAX_PX` (default 800): masks come back the size of their box and decoding them is
+  plain Python, so fewer pixels is faster at no cost in boxes. Boxes are reported in the
+  pixels of that copy and are scaled onto the prepared photo, clipped, and at most four
+  matches per concept are kept, ordered by confidence.
 - **Rendering.** `app/segment/render.py` tints each mask in a colour per concept, outlines the
   box, and cuts a crop with an eight percent margin. Both are returned as data URLs, so the UI
-  needs no second request. The mask outline is also returned as an SVG path in photo pixels for
-  the measurement step.
+  needs no second request. The mask outline is also returned as an SVG path in prepared-photo
+  pixels for the measurement step.
 - **Cost.** 2.50 USD per thousand images; each concept is one image. Fixture mode answers
   from `tests/fixtures/api/responses/segment-<concept>.json`.
 
