@@ -33,9 +33,9 @@ branch="$(git -C "$root" rev-parse --abbrev-ref HEAD)"
 [[ "$branch" == "main" ]] || fail "a release is tagged on main, not on '$branch'"
 [[ -z "$(git -C "$root" status --porcelain)" ]] || fail "the working tree is not clean"
 
-git -C "$root" fetch --quiet --tags origin
+git -C "$root" fetch --quiet --tags origin || fail "could not fetch origin"
 local_head="$(git -C "$root" rev-parse HEAD)"
-remote_head="$(git -C "$root" rev-parse origin/main)"
+remote_head="$(git -C "$root" rev-parse origin/main 2>/dev/null)" || fail "origin has no main branch"
 [[ "$local_head" == "$remote_head" ]] || fail "main is not level with origin/main; pull or push first"
 
 # The same checks the merge workflow runs: format, manifests, changelog, no such tag.

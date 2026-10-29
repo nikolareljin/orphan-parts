@@ -35,12 +35,11 @@ say() { printf 'deploy: %s\n' "$*"; }
 
 # .env is read for the deploy settings only when the shell does not already set them.
 if [[ -f "$root/.env" ]]; then
-  while IFS='=' read -r key value; do
-    case "$key" in
-      DEPLOY_HOST|DEPLOY_PATH|IMAGE_PREFIX)
-        value="${value%\"}"; value="${value#\"}"
-        [[ -n "${!key:-}" ]] || export "$key=$value" ;;
-    esac
+  while IFS= read -r line; do
+    key="${line%%=*}"
+    value="${line#*=}"   # the first = divides; any later one is part of the value
+    value="${value%\"}"; value="${value#\"}"
+    [[ -n "${!key:-}" ]] || export "$key=$value"
   done < <(grep -E '^(DEPLOY_HOST|DEPLOY_PATH|IMAGE_PREFIX)=' "$root/.env" || true)
 fi
 

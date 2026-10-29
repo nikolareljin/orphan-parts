@@ -39,9 +39,10 @@ test_deploy_settings_are_read_from_dot_env_and_checked() {
   local dir
   dir="$(mktemp -d)" || { assert_true false; return; }
   _deploy_tree "$dir"
-  printf 'DEPLOY_HOST=app@host.example\nDEPLOY_PATH=/srv/orphan-parts\n' > "$dir/.env"
+  printf 'DEPLOY_HOST="app@host.example"\nDEPLOY_PATH=/srv/orphan-parts\nIMAGE_PREFIX=registry.example/a=b/img\n' > "$dir/.env"
   assert_true env ROOT="$dir" DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web
   assert_eq "$(sed -n 1p "$dir/ssh.log")" "app@host.example"
+  assert_true grep -q "IMAGE_PREFIX=registry.example/a=b/img TAG=0.2.0" "$dir/ssh.log"  # quotes dropped, a later = kept
   assert_false env ROOT="$dir" DEPLOY_HOST="app@host.example; rm -rf /" DEPLOY_PATH=/srv DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web 2>/dev/null
   assert_false env ROOT="$dir" DEPLOY_HOST=app@host.example DEPLOY_PATH='/srv/$(x)' DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web 2>/dev/null
   assert_false env ROOT="$dir" DEPLOY_HOST=app@host.example DEPLOY_PATH='~/srv' DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web 2>/dev/null
