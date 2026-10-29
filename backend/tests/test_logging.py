@@ -52,3 +52,17 @@ def test_an_unsafe_client_request_id_is_replaced(
     record = next(r for r in caplog.records if r.name == "app.http")
     assert re.fullmatch(r"[0-9a-f]{16}", record.request_id)
     assert res.headers["X-Request-ID"] == record.request_id
+
+
+def test_uvicorn_access_lines_are_silenced_in_favour_of_the_middleware() -> None:
+    from app.ops.logging import configure_logging
+
+    root = logging.getLogger()
+    kept = root.handlers[:]
+    try:
+        configure_logging("json", "INFO")
+        access = logging.getLogger("uvicorn.access")
+        assert access.propagate is False and access.handlers == []
+        assert logging.getLogger("uvicorn.error").propagate is True
+    finally:
+        root.handlers[:] = kept
