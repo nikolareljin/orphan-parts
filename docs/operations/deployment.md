@@ -19,7 +19,10 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ## What runs
 
-- `backend`: `python:3.12-slim`, non-root, uvicorn with two workers, health check on `/healthz`.
+- `backend`: `python:3.12-slim`, non-root, uvicorn with one worker, health check on `/healthz`.
+  One process on purpose: the spend cap is counted in memory per process and the inventory
+  serialises its writes per process, so a second worker would let both drift. The demo load
+  does not need more; the path to more is a shared ledger, not more workers.
 - `frontend`: static build served by nginx, which proxies `/api`, `/healthz`, `/readyz` and
   `/docs` to the backend. Listens on `WEB_PORT` (default 8080).
 - `.env` on the host supplies configuration; nothing is baked into the images.
