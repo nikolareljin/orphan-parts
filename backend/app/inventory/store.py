@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -67,7 +67,22 @@ CREATE TABLE measurements (
 CREATE INDEX measurements_by_item ON measurements (item_id);
 """
 
-MIGRATIONS: dict[int, str] = {1: _SCHEMA, 2: _SCHEMA_V2}
+# version 3: listing drafts, each written from one item version, with its checklist state
+_SCHEMA_V3 = """
+CREATE TABLE drafts (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    mode TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    item_version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    checklist TEXT NOT NULL,
+    at TEXT NOT NULL
+);
+CREATE INDEX drafts_by_item ON drafts (item_id, mode);
+"""
+
+MIGRATIONS: dict[int, str] = {1: _SCHEMA, 2: _SCHEMA_V2, 3: _SCHEMA_V3}
 
 
 class SchemaTooNewError(RuntimeError):

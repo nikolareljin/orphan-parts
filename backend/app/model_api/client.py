@@ -7,6 +7,7 @@ for tests and the offline demo.
 
 import asyncio
 import base64
+import json
 import logging
 import random
 import time
@@ -32,6 +33,7 @@ log = logging.getLogger("app.model_api")
 
 RESPONSES = "/responses"
 MODELS = "/models"
+TRANSCRIBE = "/asr/transcribe"
 
 IMAGE_MIME_TYPES = frozenset(
     {"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/x-icon"}
@@ -81,6 +83,15 @@ class ModelResponse(BaseModel):
 class StructuredResponse[T: BaseModel](BaseModel):
     parsed: T
     response: ModelResponse
+
+
+class Transcript(BaseModel):
+    text: str
+    seconds: float
+    model: str
+    cost_usd: float
+    from_fixture: bool
+    attempts: int
 
 
 def output_text(output: list[dict[str, Any]]) -> tuple[str, str | None]:
@@ -217,6 +228,36 @@ class ModelApiClient:
             ) from exc
         return StructuredResponse[T](parsed=parsed, response=response)
 
+    async def transcribe(
+        self,
+        audio_wav: bytes,
+        *,
+        keywords: list[str] | None = None,
+        op: str = "transcribe",
+    ) -> Transcript:
+        """One recording to text with Muse Voice Transcribe: multipart, WAV only, one turn."""
+        model = self.settings.model_voice
+        body: dict[str, Any] = {"model": model, "audioEncoding": "WAV", "mode": "PUSH_TO_TALK"}
+        if keywords:
+            body["keywords"] = keywords
+        files = {
+            "request": (None, json.dumps(body).encode("utf-8"), "application/json"),
+            "audio": ("note.wav", audio_wav, "audio/wav"),
+        }
+        data, from_fixture, attempts, ms = await self._post(TRANSCRIBE, body, op, files=files)
+        seconds = float(data.get("audioDurationMs") or 0) / 1000.0
+        usage = Usage.from_response(None, audio_seconds=seconds)
+        usd = 0.0 if from_fixture else cost_usd(model, usage)
+        self._record(op, model, TRANSCRIBE, usage, usd, from_fixture, attempts, ms)
+        return Transcript(
+            text=str(data.get("transcript") or "").strip(),
+            seconds=seconds,
+            model=model,
+            cost_usd=usd,
+            from_fixture=from_fixture,
+            attempts=attempts,
+        )
+
     async def list_models(self) -> list[str]:
         if self.mode == "fixture":
             s = self.settings
@@ -242,7 +283,11 @@ class ModelApiClient:
     # -- transport ------------------------------------------------------------
 
     async def _post(
-        self, endpoint: str, body: dict[str, Any], op: str
+        self,
+        endpoint: str,
+        body: dict[str, Any],
+        op: str,
+        files: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], bool, int, float]:
         if self.mode == "fixture":
             fixture = self.fixtures.find(endpoint, body, op)
@@ -258,20 +303,29 @@ class ModelApiClient:
                 )
             return fixture.response, True, 1, 0.0
         self.ledger.require_budget()
-        data, attempts, ms = await self._request("POST", endpoint, body, op)
+        data, attempts, ms = await self._request("POST", endpoint, body, op, files=files)
         if self.mode == "record":
             self.fixtures.save(endpoint, body, op, data)
         return data, False, attempts, ms
 
     async def _request(
-        self, method: str, endpoint: str, body: dict[str, Any] | None, op: str
+        self,
+        method: str,
+        endpoint: str,
+        body: dict[str, Any] | None,
+        op: str,
+        files: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], int, float]:
         started = time.perf_counter()
         max_attempts = self.settings.model_api_max_attempts
         last: ModelApiError | None = None
         for attempt in range(1, max_attempts + 1):
             try:
-                response = await self._http.request(method, endpoint, json=body)
+                if files is None:
+                    response = await self._http.request(method, endpoint, json=body)
+                else:
+                    # multipart: the JSON settings as one part, the media as another
+                    response = await self._http.request(method, endpoint, files=files)
             except httpx.TimeoutException as exc:
                 last = ModelApiError(f"timeout on {op}: {exc}", status=503, attempts=attempt)
             except httpx.HTTPError as exc:

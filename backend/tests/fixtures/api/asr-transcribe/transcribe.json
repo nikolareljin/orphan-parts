@@ -1,0 +1,19 @@
+{
+  "endpoint": "/asr/transcribe",
+  "op": "transcribe",
+  "model": "muse-voice-transcribe-1.0",
+  "key": "fallback-transcribe",
+  "request": {
+    "model": "muse-voice-transcribe-1.0",
+    "audioEncoding": "WAV",
+    "mode": "PUSH_TO_TALK",
+    "audio": "one WAV part, see app/listing/voice.py"
+  },
+  "response": {
+    "sessionId": "fixture-transcribe",
+    "transcript": "Case is scuffed and the sleeve near the plug is frayed. It charges my old laptop fine.",
+    "audioDurationMs": 4200,
+    "turns": []
+  },
+  "status": 200
+}

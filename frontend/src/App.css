@@ -555,3 +555,32 @@ button.link {
   margin: 0.5rem 0 0;
   padding-left: 1.25rem;
 }
+
+/* prepare to sell or give away */
+.listing .draft-text {
+  width: 100%;
+  min-height: 11rem;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.listing .facts li small,
+.listing .steps small {
+  color: var(--muted);
+}
+
+.listing .steps {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.listing .steps li {
+  margin: 0.15rem 0;
+}
+
+.listing .warnings li {
+  color: #b7791f;
+}

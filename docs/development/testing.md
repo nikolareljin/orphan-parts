@@ -26,6 +26,13 @@ The inventory is tested at the service level against a temporary SQLite file (pr
 review, versions, components, soft delete, schema version) and through the routes, including a
 reading saved from the recorded extraction answer.
 
+Listing drafts are tested against the recorded Muse Spark answers (`draft-sell`, `draft-give`):
+facts resting on unconfirmed fields dropped, the disclosures appended, the free title, the
+data steps, a stale draft after the item changes, and a working claim without a recorded test
+flagged through a mock server. Voice notes: the WAV header read, a recorded transcript kept as
+the owner's words, the live multipart request and its pricing by the seconds heard, the
+limits before any call, and the route.
+
 Assessment is tested at three levels: each rule kind in isolation (missing values, normalised
 text, uncertainty that straddles the tolerance), the ladder from a list of checks, and the
 service against inventory items, including a value that came from a stored measurement with

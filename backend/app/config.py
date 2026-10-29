@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     extract_reasoning_effort: str = "low"
     image_max_px: int = 1280
     segment_max_px: int = 800
+    voice_max_seconds: int = 600
+    marketplace_create_url: str = "https://www.facebook.com/marketplace/create/item"
     max_photos: int = 4
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"

@@ -225,6 +225,65 @@ export interface Check {
   backing: Backing | null
 }
 
+export type DraftMode = 'sell' | 'give'
+export type StepGroup = 'prepare' | 'photos' | 'data'
+
+export interface Step {
+  key: string
+  label: string
+  group: StepGroup
+  required: boolean
+  done: boolean
+}
+
+export interface DraftFact {
+  text: string
+  field: string
+}
+
+export interface DraftRequest {
+  mode: DraftMode
+  holds_data: boolean
+  pickup: string
+  asking_price: string
+}
+
+export interface Draft {
+  id: number
+  item_id: number
+  mode: DraftMode
+  version: number
+  item_version: number
+  stale: boolean
+  title: string
+  description: string
+  facts: DraftFact[]
+  uses: string[]
+  keywords: string[]
+  warnings: string[]
+  to_confirm: string[]
+  pickup: string
+  asking_price: string
+  holds_data: boolean
+  checklist: Step[]
+  ready: boolean
+  handoff_url: string
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  at: string
+}
+
+export interface VoiceNote {
+  transcript: string
+  seconds: number
+  field: string
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  item: Item
+}
+
 export interface Assessment {
   profile: string
   verdict: Verdict
@@ -401,6 +460,13 @@ export const api = {
     features: (id: string) => getJson<ProfileFeature[]>(`/api/profiles/${id}/features`),
     rules: (id: string) => getJson<ProfileRule[]>(`/api/profiles/${id}/rules`),
   },
+  drafts: {
+    list: (itemId: number) => getJson<Draft[]>(`/api/items/${itemId}/drafts`),
+    write: (itemId: number, request: DraftRequest) => sendJson<Draft>('POST', `/api/items/${itemId}/drafts`, request),
+    get: (id: number) => getJson<Draft>(`/api/drafts/${id}`),
+    setStep: (id: number, key: string, done: boolean) => sendJson<Draft>('POST', `/api/drafts/${id}/checklist`, { key, done }),
+  },
+  voice: (itemId: number, audio: File) => postForm<VoiceNote>(`/api/items/${itemId}/voice`, [['audio', audio]]),
   assess: (need: Side, candidate: Side) => sendJson<Assessment>('POST', '/api/assess', { need, candidate }),
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [
