@@ -33,7 +33,8 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
     return () => {
       cancelled = true
     }
-  }, [item.id])
+    // the item's version too: an edit after drafting is what makes a draft stale
+  }, [item.id, item.version])
 
   async function write(event: FormEvent) {
     event.preventDefault()

@@ -337,8 +337,9 @@ class Inventory:
             return self._draft(conn, draft_id)
 
     def _draft(self, conn: sqlite3.Connection, draft_id: int) -> sqlite3.Row:
+        # a hidden item's drafts are hidden with it
         row: sqlite3.Row | None = conn.execute(
-            self._DRAFT_SELECT + " WHERE d.id = ?", (draft_id,)
+            self._DRAFT_SELECT + " WHERE d.id = ? AND i.deleted_at IS NULL", (draft_id,)
         ).fetchone()
         if row is None:
             raise NotFoundError(f"no draft {draft_id}")

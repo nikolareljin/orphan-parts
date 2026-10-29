@@ -8,7 +8,16 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
-from app.listing import DraftRequest, Lister, brief, checklist, claims_working, disclosures, ready
+from app.listing import (
+    DraftRequest,
+    Lister,
+    StepChange,
+    brief,
+    checklist,
+    claims_working,
+    disclosures,
+    ready,
+)
 from app.model_api import CostLedger, ModelApiClient
 from tests.conftest import RECORDED_FIXTURES, make_photo
 
@@ -114,6 +123,18 @@ def test_a_claim_of_working_is_read_but_not_its_opposite() -> None:
     assert claims_working("In working order, tested last week")
     assert not claims_working("Not tested; sold as is.")
     assert not claims_working("Never tested, untested, not working as far as I know")
+
+
+async def test_a_hidden_items_drafts_are_hidden_with_it(lister: Lister) -> None:
+    item_id = adapter(lister.inventory)
+    draft = await lister.draft(item_id, DraftRequest(mode="sell"))
+    lister.inventory.delete(item_id)
+    with pytest.raises(LookupError, match="no draft"):
+        lister.get(draft.id)
+    with pytest.raises(LookupError, match="no draft"):
+        lister.set_step(draft.id, StepChange(key="clean", done=True))
+    with pytest.raises(LookupError, match="no item"):
+        lister.drafts(item_id)
 
 
 async def test_a_give_draft_is_free_lists_uses_and_data_steps(lister: Lister) -> None:
