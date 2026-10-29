@@ -4,7 +4,12 @@
 # Usage: ./dev <command> [options]
 #
 # Commands:
-#   setup              check tools, create .env from .env.example if missing
+#   setup [--check] [--android]
+#                      check tools, create .env from .env.example if missing; --android installs
+#                      what the app needs (a JDK, the Android command-line tools and packages);
+#                      --check changes nothing
+#   phone [--release]  build the app, install it on the connected phone, launch it, and print
+#                      the pairing code to scan (the stack must be up)
 #   up [--native] [--build] [--with-glimmer]
 #                      start the stack (Docker by default; --native = local venv + nvm)
 #   down               stop the Docker stack
@@ -25,6 +30,13 @@
 #                      the tag starts the release workflow
 #   deploy [web|android|all] [--version x.y.z]
 #                      put a published release on the host, and build the APK when there is one
+#   android <build|test|release|install|smoke>
+#                      the app: unit tests, the APKs, an install, a smoke run on a device
+#   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
+#                      answers, nothing spent); --keep adds to what is there
+#   record-fixtures    load the set once with the key from .env and keep every model answer
+#                      as a fixture (OPL_RECORD_FIXTURES=1); spends credits once
+#   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata
 #   shell <service>    open a shell in a running service
 #   help               this text
 #
@@ -54,17 +66,62 @@ need_env_file() {
 }
 
 cmd_setup() {
+  local check=0 android=0
+  for arg in "$@"; do
+    case "$arg" in
+      --check) check=1 ;;
+      --android) android=1 ;;
+      *) die "usage: ./dev setup [--check] [--android]" ;;
+    esac
+  done
   log_info "platform: $(os_name)"
   if docker_running; then
     log_ok "docker: $(docker --version | sed 's/,.*//')"
     log_ok "compose: $(compose_cmd)"
   else
-    log_warn "docker is not running; only the native path (./dev up --native) will work"
+    log_warn "docker is not running; install Docker Desktop (macOS, Windows) or Docker Engine (Linux); only the native path (./dev up --native) works without it"
   fi
   if py_find >/dev/null; then log_ok "python: $(py_find)"; else log_warn "python 3.12 not found (needed for --native only)"; fi
-  if has_cmd node; then log_ok "node: $(node --version)"; else log_warn "node not found (needed for --native only)"; fi
-  need_env_file
-  log_ok "ready. next: ./dev up"
+  if has_cmd node; then log_ok "node: $(node --version)"; else log_warn "node not found (needed for --native only; nvm install 24)"; fi
+  if [[ $android -eq 1 && $check -eq 0 ]]; then
+    bash "$ROOT/scripts/setup-android.sh"
+  else
+    bash "$ROOT/scripts/setup-android.sh" --check || log_warn "the app cannot be built yet: ./dev setup --android installs what is missing"
+  fi
+  [[ $check -eq 1 ]] || need_env_file
+  log_ok "ready. next: ./dev up, then ./dev phone"
+}
+
+# The app onto the connected phone, launched, and the pairing code printed: the phone talks to
+# the web app's origin on this machine's address (the web app proxies the API), with a session
+# of its own when the demo is gated.
+cmd_phone() {
+  local release=0
+  [[ "${1:-}" == "--release" ]] && release=1
+  docker_running || die "docker is not running"
+  curl -fsS -m 5 "http://localhost:$BACKEND_PORT/healthz" >/dev/null 2>&1 || die "the stack is not up (or not answering on :$BACKEND_PORT): ./dev up first"
+  if [[ $release -eq 1 ]]; then
+    bash "$ROOT/scripts/android.sh" release
+    local apk
+    apk="$(find "$ROOT/android/app/build/outputs/apk/release" -name '*.apk' | head -1)"
+    bash "$ROOT/scripts/android.sh" install-file "$apk"
+  else
+    bash "$ROOT/scripts/android.sh" install
+  fi
+  bash "$ROOT/scripts/android.sh" launch
+  local address
+  address="$(lan_address)"
+  [[ -n "$address" ]] || die "could not tell this machine's address on the network; set LAN_ADDRESS"
+  api_mode_or_fixture
+  log_info "scan this with the app (Backend tab, Scan to pair):"
+  compose run --rm --no-deps -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
+}
+
+# This machine's address on the local network, for the phone to reach the web app.
+lan_address() {
+  if [[ -n "${LAN_ADDRESS:-}" ]]; then printf '%s\n' "$LAN_ADDRESS"; return; fi
+  if is_macos; then ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true
+  else hostname -I 2>/dev/null | awk '{print $1}' || true; fi
 }
 
 # Without a key the backend refuses to start, by design. Starting the stack to look at it should
@@ -195,6 +252,10 @@ cmd_e2e() {
   need_env_file
   docker_running || die "docker is not running"
   export OPL_FAKE_API=1
+  # the browser checks go through the demo gate, with a code of their own unless .env has one;
+  # the allowances are for people, not for six workers on one address, so they are wide here
+  export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE:-e2e-demo-access-code}"
+  export DEMO_REQUESTS_PER_MINUTE=100000 DEMO_VISITOR_CALLS_PER_HOUR=100000 DEMO_DAILY_CALLS=1000000
   export DOCKER_UID DOCKER_GID
   DOCKER_UID="$(id -u)"
   DOCKER_GID="$(id -g)"
@@ -260,6 +321,43 @@ cmd_release() { bash "$ROOT/scripts/release.sh" "$@"; }
 
 cmd_deploy() { bash "$ROOT/scripts/deploy.sh" "$@"; }
 
+cmd_android() { bash "$ROOT/scripts/android.sh" "$@"; }
+
+# The set is loaded through the backend's own code against the stack's data volume, so the
+# backend is stopped for the reset and started again after; nothing else is touched.
+cmd_demo() {
+  local reset="--reset"
+  [[ "${1:-}" == "--keep" ]] && reset=""
+  docker_running || die "docker is not running"
+  local was_up=0
+  compose ps --status running backend 2>/dev/null | grep -q backend && was_up=1
+  [[ $was_up -eq 0 ]] || compose stop backend >/dev/null
+  # shellcheck disable=SC2086
+  compose run --rm --no-deps -e OPL_FAKE_API=1 backend python -m app.demo load --set /demo/set.yaml $reset
+  [[ $was_up -eq 0 ]] || compose start backend >/dev/null
+  log_ok "demo set loaded"
+}
+
+cmd_record_fixtures() {
+  need_env_file
+  docker_running || die "docker is not running"
+  grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "record-fixtures needs MODEL_API_KEY in .env"
+  local was_up=0
+  compose ps --status running backend 2>/dev/null | grep -q backend && was_up=1
+  [[ $was_up -eq 0 ]] || compose stop backend >/dev/null
+  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 backend python -m app.demo record --set /demo/set.yaml --reset
+  [[ $was_up -eq 0 ]] || compose start backend >/dev/null
+  log_ok "fixtures recorded under backend/tests/fixtures/api; review and commit them"
+}
+
+cmd_demo_scrub() {
+  local raw="${1:?usage: ./dev demo-scrub <raw dir>}"
+  [[ -d "$raw" ]] || die "demo-scrub: $raw is not a directory"
+  docker_running || die "docker is not running"
+  compose run --rm --no-deps -e OPL_FAKE_API=1 -v "$(cd "$raw" && pwd):/raw:ro" backend python -m app.demo scrub /raw --out /demo/photos
+  log_ok "scrubbed copies under demo/photos; move any WAV note to demo/notes"
+}
+
 cmd_shell() {
   local svc="${1:-backend}"
   compose exec "$svc" sh
@@ -282,6 +380,11 @@ case "$cmd" in
   version) cmd_version "$@" ;;
   release) cmd_release "$@" ;;
   deploy) cmd_deploy "$@" ;;
+  android) cmd_android "$@" ;;
+  phone) cmd_phone "$@" ;;
+  demo) cmd_demo "$@" ;;
+  record-fixtures) cmd_record_fixtures "$@" ;;
+  demo-scrub) cmd_demo_scrub "$@" ;;
   shell) cmd_shell "$@" ;;
   help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
   *) die "unknown command: $cmd (try ./dev help)" 2 ;;

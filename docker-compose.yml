@@ -14,8 +14,13 @@ services:
       DATA_DIR: /data
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       OPL_FAKE_API: ${OPL_FAKE_API:-0}
+      DEMO_ACCESS_CODE: ${DEMO_ACCESS_CODE:-}
+      DEMO_REQUESTS_PER_MINUTE: ${DEMO_REQUESTS_PER_MINUTE:-120}
+      DEMO_VISITOR_CALLS_PER_HOUR: ${DEMO_VISITOR_CALLS_PER_HOUR:-20}
+      DEMO_DAILY_CALLS: ${DEMO_DAILY_CALLS:-300}
     volumes:
       - ./backend:/app
+      - ./demo:/demo
       - app-data:/data
     ports:
       - "${BACKEND_PORT:-8000}:8000"
@@ -70,6 +75,7 @@ services:
       CI: "1"
       E2E_BASE_URL: http://localhost:5173
       E2E_VIDEO: ${E2E_VIDEO:-retain-on-failure}
+      E2E_ACCESS_CODE: ${DEMO_ACCESS_CODE:-}
     volumes:
       - ./e2e:/e2e
     network_mode: "service:frontend"

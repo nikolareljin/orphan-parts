@@ -39,11 +39,24 @@ class Settings(BaseSettings):
     marketplace_create_url: str = "https://www.facebook.com/marketplace/create/item"
     marketplace_search_url: str = "https://www.facebook.com/marketplace/search/"
     candidate_days: int = 14
+    # the demo gate: empty code = no gate (a machine of your own); set it on any host others reach
+    demo_access_code: SecretStr | None = None
+    demo_session_hours: int = 12
+    demo_visitor_calls_per_hour: int = 20
+    demo_daily_calls: int = 300
+    demo_code_attempts: int = 5
+    demo_requests_per_minute: int = 120
+    demo_paused: bool = False
+    demo_trust_proxy: bool = False
+    demo_cookie_secure: bool = False
     max_photos: int = 4
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
     data_dir: Path = Path("./data")
     max_upload_mb: int = 12
+    extract_enhance: bool = True
+    extract_blur_threshold: float = 150.0
+    max_clip_mb: int = 60
     inventory_db_file: str = "inventory.sqlite3"
     # measurement captures: what a photo must give before a number is computed from it
     measure_min_sharpness: float = 150.0
@@ -67,6 +80,18 @@ class Settings(BaseSettings):
             raise ValueError("PRICE_COUNTRY must be a two-letter ISO 3166-1 code, or empty")
         if self.candidate_days < 1:
             raise ValueError("CANDIDATE_DAYS must be at least 1")
+        for name in (
+            "demo_session_hours",
+            "demo_visitor_calls_per_hour",
+            "demo_daily_calls",
+            "demo_code_attempts",
+            "demo_requests_per_minute",
+        ):
+            if getattr(self, name) < 1:
+                raise ValueError(f"{name.upper()} must be at least 1")
+        code = self.demo_access_code.get_secret_value() if self.demo_access_code else ""
+        if code and len(code) < 12:
+            raise ValueError("DEMO_ACCESS_CODE must be at least 12 characters")
         return self
 
     @property

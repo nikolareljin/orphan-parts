@@ -8,6 +8,13 @@ export interface Readiness {
   spend_usd: number
   spend_cap_usd: number
   paused: boolean
+  demo: {
+    gated: boolean
+    paused: boolean
+    daily_used: number
+    daily_cap: number
+    visitor_cap_per_hour: number
+  }
 }
 
 export interface Limits {
@@ -501,10 +508,159 @@ export interface Measurement extends MeasureResult {
   at: string
 }
 
+// Build and reuse: what the owner wants, what may be proposed, and projects with their items.
+export type Effort = 'low' | 'medium' | 'high'
+export type Purchase = 'used' | 'new' | 'either'
+export type ProjectStatus = 'proposed' | 'shortlisted' | 'selected' | 'building' | 'done' | 'abandoned'
+
+export interface Preferences {
+  interests: string
+  effort: Effort
+  skills: string[]
+  tools: string
+  opens_devices: boolean
+  budget: number | null
+  currency: string
+  radius_km: number | null
+  purchase: Purchase
+}
+
+export interface TemplateSummary {
+  id: string
+  label: string
+  goal: string
+  effort: Effort
+  requirements: string[]
+}
+
+export interface Allocation {
+  item_id: number
+  item_name: string
+  requirement: string
+  committed: boolean
+  why: string
+}
+
+export interface Requirement {
+  key: string
+  label: string
+  kind: 'item' | 'capability'
+  blocking: boolean
+  state: 'pass' | 'unknown'
+  item_id: number | null
+  search_id: number | null
+  profile: string
+}
+
+export interface Outcome {
+  configuration: string
+  test: string
+  tested_on: string
+  working: boolean
+  limitations: string
+  recorded_at: string
+  shared: boolean
+}
+
+export type OutcomeCreate = Pick<Outcome, 'configuration' | 'test' | 'tested_on' | 'working' | 'limitations'>
+
+export interface Pack {
+  id: number
+  project_id: number
+  version: number
+  digest: string
+  stale: boolean
+  markdown: string
+  created_at: string
+}
+
+export interface Project {
+  id: number
+  template: string
+  title: string
+  status: ProjectStatus
+  version: number
+  result: string
+  requirements: Requirement[]
+  allocations: Allocation[]
+  effort: Effort
+  skills: string[]
+  spend_estimate: number
+  currency: string
+  unknowns: string[]
+  sources: string[]
+  steps: string[]
+  safety: string[]
+  dropped: string[]
+  progress: boolean[]
+  outcome: Outcome | null
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Budget {
+  budget: number | null
+  currency: string
+  committed_spend: number
+  remaining: number | null
+  selected: number
+}
+
+export interface ProjectList {
+  projects: Project[]
+  budget: Budget
+}
+
+export interface Conflict {
+  item_id: number
+  item_name: string
+  project_id: number
+  project_title: string
+}
+
+// Captures from the phone: kept as sent, read into an item on request.
+export type CaptureStatus = 'received' | 'processed' | 'failed'
+
+export interface Capture {
+  id: number
+  status: CaptureStatus
+  note: string
+  name: string
+  find_label: boolean
+  photos: number
+  clip: boolean
+  clip_bytes: number
+  audio: boolean
+  audio_seconds: number
+  item_id: number | null
+  error: string
+  model: string
+  cost_usd: number
+  created_at: string
+  processed_at: string
+}
+
+export interface Access {
+  gated: boolean
+  granted: boolean
+  token: string
+  expires_at: number
+}
+
+// A 401 means the session is gone: the shell is told, so it asks for the code again.
+export const ACCESS_REQUIRED_EVENT = 'opl-access-required'
+function noteStatus(status: number): void {
+  if (status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event(ACCESS_REQUIRED_EVENT))
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly body: unknown = undefined,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -519,7 +675,10 @@ export function apiUrl(path: string): string {
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(apiUrl(path), { headers: { Accept: 'application/json' } })
-  if (!res.ok) throw new ApiError(res.status, `${path}: HTTP ${res.status}`)
+  if (!res.ok) {
+    noteStatus(res.status)
+    throw new ApiError(res.status, `${path}: HTTP ${res.status}`)
+  }
   return (await res.json()) as T
 }
 
@@ -550,15 +709,22 @@ async function postForm<T>(path: string, parts: FormPart[]): Promise<T> {
     else form.append(field, value, value.name)
   }
   const res = await fetch(apiUrl(path), { method: 'POST', body: form, headers: { Accept: 'application/json' } })
-  if (!res.ok) throw new ApiError(res.status, await detailOf(res, path))
+  if (!res.ok) {
+    noteStatus(res.status)
+    throw new ApiError(res.status, await detailOf(res, path))
+  }
   return (await res.json()) as T
 }
 
-async function sendJson<T>(method: 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<T> {
+async function sendJson<T>(method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   const res = await fetch(apiUrl(path), { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
-  if (!res.ok) throw new ApiError(res.status, await detailOf(res, path))
+  if (!res.ok) {
+    noteStatus(res.status)
+    const answer = res.clone()
+    throw new ApiError(res.status, await detailOf(res, path), await answer.json().catch(() => undefined))
+  }
   if (res.status === 204) return undefined as T
   return (await res.json()) as T
 }
@@ -574,6 +740,11 @@ export function dataUrlToFile(dataUrl: string, name: string): File {
 }
 
 export const api = {
+  access: {
+    status: () => getJson<Access>('/api/access'),
+    grant: (code: string) => sendJson<Access>('POST', '/api/access', { code }),
+    leave: () => sendJson<Access>('DELETE', '/api/access'),
+  },
   readiness: () => getJson<Readiness>('/readyz'),
   version: () => getJson<Version>('/api/version'),
   extract: (photos: File[], crops: File[] = []) =>
@@ -636,6 +807,41 @@ export const api = {
     recheck: (id: number) => sendJson<Candidate>('POST', `/api/candidates/${id}/recheck`),
     withdraw: (id: number) => sendJson<Candidate>('POST', `/api/candidates/${id}/withdraw`),
     questions: (id: number) => getJson<SellerQuestions>(`/api/candidates/${id}/questions`),
+  },
+  build: {
+    preferences: () => getJson<Preferences>('/api/preferences'),
+    setPreferences: (prefs: Preferences) => sendJson<Preferences>('PUT', '/api/preferences', prefs),
+    templates: () => getJson<TemplateSummary[]>('/api/templates'),
+    propose: (count: number, note: string) => sendJson<Project[]>('POST', '/api/projects/propose', { count, note }),
+    projects: () => getJson<ProjectList>('/api/projects'),
+    project: (id: number) => getJson<Project>(`/api/projects/${id}`),
+    shortlist: (id: number) => sendJson<Project>('POST', `/api/projects/${id}/shortlist`),
+    select: (id: number, take = false) => sendJson<Project>('POST', `/api/projects/${id}/select`, { take }),
+    abandon: (id: number) => sendJson<Project>('POST', `/api/projects/${id}/abandon`),
+    advance: (id: number, to: 'building' | 'done') => sendJson<Project>('POST', `/api/projects/${id}/advance/${to}`),
+    searchFor: (id: number, key: string) => sendJson<Project>('POST', `/api/projects/${id}/requirements/${key}/search`),
+    fill: (id: number, key: string, itemId: number) =>
+      sendJson<Project>('POST', `/api/projects/${id}/requirements/${key}/fill`, { item_id: itemId, why: '' }),
+    writePack: (id: number) => sendJson<Pack>('POST', `/api/projects/${id}/pack`),
+    packs: (id: number) => getJson<Pack[]>(`/api/projects/${id}/packs`),
+    packUrl: (packId: number) => apiUrl(`/api/packs/${packId}.md`),
+    setProgress: (id: number, step: number, done: boolean) => sendJson<Project>('POST', `/api/projects/${id}/progress`, { step, done }),
+    recordOutcome: (id: number, outcome: OutcomeCreate) => sendJson<Project>('POST', `/api/projects/${id}/outcome`, outcome),
+    setShared: (id: number, shared: boolean) => sendJson<Project>('POST', `/api/projects/${id}/outcome/share`, { shared }),
+    shareText: (id: number) => getJson<{ text: string }>(`/api/projects/${id}/outcome/share`),
+  },
+  pair: {
+    svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}`),
+    get: (origin: string) => getJson<{ url: string; gated: boolean; token: string; expires_at: number }>(`/api/pair?origin=${encodeURIComponent(origin)}`),
+  },
+  captures: {
+    list: () => getJson<{ captures: Capture[] }>('/api/captures'),
+    get: (id: number) => getJson<Capture>(`/api/captures/${id}`),
+    process: (id: number) => sendJson<Capture>('POST', `/api/captures/${id}/process`),
+    remove: (id: number) => sendJson<void>('DELETE', `/api/captures/${id}`),
+    photoUrl: (id: number, n: number) => apiUrl(`/api/captures/${id}/photos/${n}`),
+    clipUrl: (id: number) => apiUrl(`/api/captures/${id}/clip`),
+    noteUrl: (id: number) => apiUrl(`/api/captures/${id}/note`),
   },
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [

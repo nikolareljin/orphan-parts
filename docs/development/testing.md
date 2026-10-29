@@ -26,6 +26,35 @@ The inventory is tested at the service level against a temporary SQLite file (pr
 review, versions, components, soft delete, schema version) and through the routes, including a
 reading saved from the recorded extraction answer.
 
+The demo gate is tested at the service level (the sliding allowance and when to come back, the
+daily count, which calls spend, sessions signed, bound to the code and ending) and through the
+app (nothing gated without a code; every page 401 with one and the open paths open; the right
+code as a cookie and as a bearer token, a wrong one refused and limited; leaving; the hourly and
+daily allowances on calls that spend; the operator's switch refusing only what spends; the
+per-address limit with the open paths exempt; the forwarded address trusted only when told to;
+the settings checked). Playwright runs behind the gate: one session from a global setup for
+every test, and `access.spec.ts` starts without one.
+
+Build and reuse is tested with a recorded two-step tool loop (`propose-1`, `propose-2`): the
+templates load and are checked (a repeated key, no blocking requirement, a file named
+otherwise refused); the tools show only what a build may use; the proposal built on an item
+nobody has is dropped and an allocation of the wrong kind is dropped and said; nothing usable
+refused before any call; selection commits and reserves, a second build wanting the same item
+is a conflict until it takes it, abandoning releases, advancing in order and not before every blocking requirement is filled;
+a requirement filled by hand with an item of the right kind, and the wrong kind, a gone item,
+a filled requirement and a project that is over refused; a missing requirement becomes a search
+under the budget left and the item bought from it marks the search found; the build pack
+written from what stands (the items' accepted values in, a serial number, a location and a note
+out, the search with its top price, the budget line, the tools, the steps with progress, the
+limits), refused before selection, stale once an item on it or the budget changed and the next
+writing the next version; progress on a selected project and an unknown step refused; the
+outcome recorded only while building, a failed test keeping it building and a working one
+marking it done with the items still reserved, the dates real and past, blank text refused; the
+share text redacted and refused until shared; the routes with the Markdown file and its
+headers; the loop replayed statelessly through a
+mock server (the brief, the output items and one result per call, two ledger entries) and a
+loop that never answers refused; the routes and their refusals.
+
 Missing items are tested with a recorded listing reading (`listing-text`): the handoff link,
 the ladder onto the states, the seller message; a search from an item or from values with its
 refusals; a text candidate read, assessed and dated, with a rule key kept as read and an unknown
@@ -100,6 +129,46 @@ pushed to a bare origin), and the deploy (the one remote command, with a stand-i
 that records it; what is not set up skipped or refused).
 
 ## Fixture mode and recorded fixtures
+
+The Android app has unit tests on the JVM (`./dev android test`): the client's requests as
+they go on the wire (the access call and the bearer token it keeps, the photo and the
+recording as multipart, the item with the whole reading, the error text read off a 422), the
+multipart framing, the WAV header and sizes, and the settings' URL. The smoke run
+(`./dev android smoke`) installs the debug APK on the connected phone or a headless emulator
+(`ANDROID_AVD`), launches the app, confirms its activity is on screen and keeps a screenshot;
+`scripts/tests/test_android.sh` checks that script with stand-ins for gradlew and adb.
+
+Enhancement is tested on synthetic images: a stretched, sharpened copy keeps the size and
+stays a JPEG; printed text scores far above its blurred copy and a flat patch; a reading of a
+flat photo carries the blur warning and the `enhanced` flag, and none of either with
+`EXTRACT_ENHANCE=0` and the threshold at zero.
+
+Pairing is tested in isolation (a session only when gated, verified by the gate; the origin
+kept as given and anything but a scheme, a host and a port refused; the SVG and the terminal
+block) and through the routes (open without a gate, 401 behind one until a session, the
+phone's token working as a bearer header); the command line's answers. The Android setup
+script is tested with stand-ins for java, curl, sdkmanager and the package manager: what
+`--check` reports and that it runs nothing, an old JDK sent to the package manager, the
+packages installed after the licences, a download refused on its checksum.
+
+Captures are tested on bundles made in the test (a synthetic photo, a WAV, the head of an MP4):
+a bundle kept as sent with the photos re-encoded on arrival and read into an item with the
+transcript and the line, processed once only, deleted with its files while the item stays; a
+capture without photos still an item; every refusal (an empty bundle, five photos, a bad photo,
+a clip of the wrong kind, an audio file that is not a WAV, a clip beyond the limit); a failed reading
+recorded with the media kept; the label found first through a mock server; the multipart
+route, the media routes and their 404s; and the paths in the OpenAPI document.
+
+The demo set (`demo/set.yaml`, `python -m app.demo`) is tested on a set written into a temporary
+directory: the set checked (repeated keys, a search needing an item that is not there, a search
+without an item or a profile, five photos refused, an empty file allowed); the scrub (metadata
+gone, the long side shrunk, a PNG as a JPEG, a WAV copied, other files left out with a note, the
+raw directory untouched); a load in fixture mode (items, the reading's values accepted, an
+owner value beside them, a voice note kept, drafts, guidance, searches with candidates from a
+file and from text, the proposals, the counts and the skipped line); record mode through a mock
+server writing one fixture keyed by the request digest; the reset removing only the inventory
+file; the command line's answers; and the committed set naming only files under `demo/` with
+every written listing labelled as demo data.
 
 `OPL_FAKE_API=1` makes the Model API client serve recorded responses from
 `backend/tests/fixtures/api/<endpoint>/`. A file named after the request digest matches one exact

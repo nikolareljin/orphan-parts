@@ -6,18 +6,23 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
+from app.api.access import router as access_router
 from app.api.assess import router as assess_router
+from app.api.captures import router as captures_router
 from app.api.drafts import router as drafts_router
 from app.api.extract import router as extract_router
 from app.api.find import router as find_router
 from app.api.items import error_handlers as inventory_handlers
 from app.api.items import router as items_router
 from app.api.measure import router as measure_router
+from app.api.pair import router as pair_router
 from app.api.profiles import router as profiles_router
+from app.api.projects import router as projects_router
 from app.api.routes import router
 from app.api.segment import router as segment_router
 from app.api.value import router as value_router
 from app.api.voice import router as voice_router
+from app.captures import Captures
 from app.config import Settings, get_settings
 from app.extract import Extractor
 from app.find import Finder
@@ -26,9 +31,11 @@ from app.listing import Lister, VoiceNotes
 from app.match import Assessor
 from app.measure import Measurer
 from app.model_api import CostLedger, ModelApiClient
+from app.ops.gate import Gate, GateMiddleware
 from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
 from app.profiles import Profiles
+from app.projects import Planner, Templates
 from app.segment import Segmenter
 from app.value import Valuer
 
@@ -60,6 +67,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.extractor,
         app.state.assessor,
     )
+    app.state.captures = Captures(
+        settings, app.state.inventory, app.state.extractor, app.state.segmenter, app.state.voice
+    )
+    app.state.templates = Templates()
+    app.state.planner = Planner(
+        settings, client, app.state.inventory, app.state.templates, app.state.finder
+    )
     log.info(
         "starting",
         extra={
@@ -87,7 +101,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
-    # Last added runs first: every response, including CORS preflights, gets an id.
+    app.state.gate = Gate(settings)
+    # Last added runs first: the gate runs inside the request context, so a refusal carries
+    # the request id and the security headers like any other answer.
+    app.add_middleware(GateMiddleware, gate=app.state.gate)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
@@ -97,6 +114,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.add_middleware(RequestContextMiddleware)
     app.include_router(router)
+    app.include_router(access_router)
+    app.include_router(pair_router)
     app.include_router(extract_router)
     app.include_router(segment_router)
     app.include_router(items_router)
@@ -107,6 +126,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(voice_router)
     app.include_router(value_router)
     app.include_router(find_router)
+    app.include_router(projects_router)
+    app.include_router(captures_router)
     for exc_type, handler in inventory_handlers.items():
         app.add_exception_handler(exc_type, handler)
     return app

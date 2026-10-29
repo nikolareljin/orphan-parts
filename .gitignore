@@ -41,3 +41,5 @@ backend/data/
 .local/
 .stamp-*
 .DS_Store
+# the browser checks' session through the demo gate
+e2e/.auth/

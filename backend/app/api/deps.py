@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
+from app.captures.service import Captures
 from app.config import Settings
 from app.extract.service import Extractor
 from app.find.service import Finder
@@ -11,7 +12,9 @@ from app.listing.voice import VoiceNotes
 from app.match.service import Assessor
 from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
+from app.ops.gate import Gate
 from app.profiles import Profiles
+from app.projects.service import Planner
 from app.segment.service import Segmenter
 from app.value.service import Valuer
 
@@ -108,3 +111,27 @@ def app_finder(request: Request) -> Finder:
 
 
 FinderDep = Annotated[Finder, Depends(app_finder)]
+
+
+def app_gate(request: Request) -> Gate:
+    gate: Gate = request.app.state.gate
+    return gate
+
+
+GateDep = Annotated[Gate, Depends(app_gate)]
+
+
+def app_planner(request: Request) -> Planner:
+    planner: Planner = request.app.state.planner
+    return planner
+
+
+PlannerDep = Annotated[Planner, Depends(app_planner)]
+
+
+def app_captures(request: Request) -> Captures:
+    captures: Captures = request.app.state.captures
+    return captures
+
+
+CapturesDep = Annotated[Captures, Depends(app_captures)]

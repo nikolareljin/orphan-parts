@@ -38,11 +38,13 @@ The same runs from the release workflow when the repository variable `DEPLOY_ENA
 and the secrets `DEPLOY_HOST`, `DEPLOY_PATH` and `DEPLOY_SSH_KEY` (a private key the host
 accepts) are set; until then that job does not run.
 
-**Android.** When an app is in the tree (`android/gradlew`), `./dev deploy android` builds the
-release APK and says where it is, and the workflow attaches it to the release as
-`orphan-parts-<version>.apk`. Publishing it to the store is a later step: it needs a developer
-account, a signing key and a service account, none of which are in this repository; the APK
-on the release is the artifact that step will take.
+**Android.** `./dev deploy android` builds the release APK and says where it is, and the
+workflow attaches it to the release as `orphan-parts-<version>.apk`. It is signed with the
+release key when the keystore settings are given ([Android app](../guides/android.md)) and
+with the debug key otherwise. The app is pointed at this host's URL and the access code on its
+first page. Publishing it to the store is a later step: it needs a developer account, the
+signing key and a service account, none of which are in this repository; the APK on the
+release is the artifact that step will take.
 
 ## What runs
 
@@ -57,7 +59,10 @@ on the release is the artifact that step will take.
 - `.env` on the host supplies configuration; nothing is baked into the images.
 
 Set `CORS_ORIGINS` to the public origin and give the deployment its own API key with a low
-`SPEND_CAP_USD`.
+`SPEND_CAP_USD`. On any host other people can reach, set `DEMO_ACCESS_CODE` (twelve characters
+at least) and, on https, `DEMO_COOKIE_SECURE=1`; the production compose file already tells the
+backend to trust the address nginx forwards. See [Demo access](demo-access.md) for the
+allowances and the operator's switch.
 
 ## Status of the images
 
