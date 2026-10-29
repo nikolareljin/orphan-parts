@@ -28,6 +28,7 @@ scripts/
 
 docker/docs/          image that builds and serves the docs site
 docs/, mkdocs.yml     this site
+overrides/            the theme override: the share metadata every page carries
 .github/workflows/    ci.yml (checks), release.yml (tags to GHCR + GitHub release), docs.yml (Pages)
 dev                   command runner
 docker-compose.yml    development stack

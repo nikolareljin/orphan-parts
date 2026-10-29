@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{#- What a shared link shows: the page title, the site description and one card image. -#}
+{% block extrahead %}
+  {% set at_home = page and page.url in ["", "index.html", "./"] %}
+  {% set share_title = config.site_name %}
+  {% if page and page.title and not at_home %}
+    {% set share_title = page.title ~ " · " ~ config.site_name %}
+  {% endif %}
+  {% set share_description = config.site_description %}
+  {% if page and page.meta and page.meta.description %}
+    {% set share_description = page.meta.description %}
+  {% endif %}
+  {% set share_image = config.site_url ~ "assets/social.jpg" %}
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="{{ config.site_name }}" />
+  <meta property="og:title" content="{{ share_title }}" />
+  <meta property="og:description" content="{{ share_description }}" />
+  <meta property="og:url" content="{{ page.canonical_url }}" />
+  <meta property="og:image" content="{{ share_image }}" />
+  <meta property="og:image:width" content="1456" />
+  <meta property="og:image:height" content="720" />
+  <meta property="og:image:alt" content="{{ config.site_name }}: {{ share_description }}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ share_title }}" />
+  <meta name="twitter:description" content="{{ share_description }}" />
+  <meta name="twitter:image" content="{{ share_image }}" />
+{% endblock %}
