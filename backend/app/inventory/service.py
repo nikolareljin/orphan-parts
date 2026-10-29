@@ -30,6 +30,9 @@ EDITABLE = (
     "intent",
     "availability",
 )
+# One fixed statement per editable column: nothing from a request ever shapes the SQL.
+_SET_ONE = "UPDATE items SET <column> = ?, version = ?, updated_at = ? WHERE id = ?"
+SET_COLUMN = {k: _SET_ONE.replace("<column>", k) for k in EDITABLE}
 
 
 class NotFoundError(LookupError):
@@ -164,12 +167,8 @@ class Inventory:
             if not changed:
                 return self._item(conn, item_id)
             version = int(row["version"]) + 1
-            assignments = ", ".join(f"{k} = ?" for k in changed)
-            # column names come from EDITABLE, never from the request
-            conn.execute(
-                f"UPDATE items SET {assignments}, version = ?, updated_at = ? WHERE id = ?",
-                (*[data[k] for k in changed], version, at, item_id),
-            )
+            for k in changed:
+                conn.execute(SET_COLUMN[k], (data[k], version, at, item_id))
             self._event(conn, item_id, "changed " + ", ".join(changed), version, at)
             return self._item(conn, item_id)
 

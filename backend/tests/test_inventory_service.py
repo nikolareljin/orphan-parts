@@ -199,3 +199,12 @@ def test_store_survives_a_restart_and_refuses_a_newer_schema(settings: Settings)
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION + 1}")
     with pytest.raises(SchemaTooNewError):
         Store(settings.inventory_db_path)
+
+
+def test_every_editable_column_has_its_fixed_update_statement() -> None:
+    from app.inventory.service import EDITABLE, SET_COLUMN
+
+    assert tuple(SET_COLUMN) == EDITABLE
+    for column, sql in SET_COLUMN.items():
+        assert sql.startswith(f"UPDATE items SET {column} = ?, version = ?")
+        assert "<column>" not in sql
