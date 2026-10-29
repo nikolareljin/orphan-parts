@@ -4,6 +4,9 @@
 
 _deploy="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/deploy.sh"
 
+# Only a directory mktemp made is removed: never an empty path, never anything else.
+_deploy_cleanup() { [[ -n "${1:-}" && -d "$1" && "$1" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$1"; }
+
 # A tree with a VERSION, an origin and a stand-in ssh that writes what it was told to a file.
 _deploy_tree() {
   local dir="$1"
@@ -18,7 +21,7 @@ _deploy_tree() {
 
 test_web_runs_one_quoted_remote_command_with_the_release_tag() {
   local dir
-  dir="$(mktemp -d)"
+  dir="$(mktemp -d)" || { assert_true false; return; }
   _deploy_tree "$dir"
   assert_true env ROOT="$dir" DEPLOY_HOST=app@host.example DEPLOY_PATH=/srv/orphan-parts DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web
   assert_eq "$(sed -n 1p "$dir/ssh.log")" "app@host.example"
@@ -29,12 +32,12 @@ test_web_runs_one_quoted_remote_command_with_the_release_tag() {
   # --version and IMAGE_PREFIX win over VERSION and the origin
   assert_true env ROOT="$dir" DEPLOY_HOST=app@host.example DEPLOY_PATH=/srv/x IMAGE_PREFIX=registry.example/img DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web --version 0.3.0
   assert_true grep -q "IMAGE_PREFIX=registry.example/img TAG=0.3.0" "$dir/ssh.log"
-  rm -rf "$dir"
+  _deploy_cleanup "$dir"
 }
 
 test_deploy_settings_are_read_from_dot_env_and_checked() {
   local dir
-  dir="$(mktemp -d)"
+  dir="$(mktemp -d)" || { assert_true false; return; }
   _deploy_tree "$dir"
   printf 'DEPLOY_HOST=app@host.example\nDEPLOY_PATH=/srv/orphan-parts\n' > "$dir/.env"
   assert_true env ROOT="$dir" DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web
@@ -44,12 +47,12 @@ test_deploy_settings_are_read_from_dot_env_and_checked() {
   assert_false env ROOT="$dir" DEPLOY_HOST=app@host.example DEPLOY_PATH='~/srv' DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web 2>/dev/null
   assert_false env ROOT="$dir" DEPLOY_HOST=app@host.example DEPLOY_PATH='srv/x' DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web 2>/dev/null
   assert_false env ROOT="$dir" DEPLOY_HOST=app@host.example DEPLOY_PATH=/srv DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" web --version v1 2>/dev/null
-  rm -rf "$dir"
+  _deploy_cleanup "$dir"
 }
 
 test_what_is_not_set_up_is_skipped_for_all_and_refused_by_name() {
   local dir out
-  dir="$(mktemp -d)"
+  dir="$(mktemp -d)" || { assert_true false; return; }
   _deploy_tree "$dir"
   out="$(env ROOT="$dir" DEPLOY_HOST= DEPLOY_SSH="$dir/bin/ssh" bash "$_deploy" all 2>&1)"
   assert_true grep -q 'web: DEPLOY_HOST is not set; skipped' <<<"$out"
@@ -57,5 +60,5 @@ test_what_is_not_set_up_is_skipped_for_all_and_refused_by_name() {
   assert_false env ROOT="$dir" DEPLOY_HOST= bash "$_deploy" web 2>/dev/null
   assert_false env ROOT="$dir" bash "$_deploy" android 2>/dev/null
   assert_false env ROOT="$dir" bash "$_deploy" elsewhere 2>/dev/null
-  rm -rf "$dir"
+  _deploy_cleanup "$dir"
 }

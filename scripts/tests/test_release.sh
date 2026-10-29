@@ -7,6 +7,9 @@ _release_tag_script="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/release-ta
 
 _rel_git() { git -c user.name=test -c user.email=test@example.invalid "$@"; }
 
+# Only a directory mktemp made is removed: never an empty path, never anything else.
+_rel_cleanup() { [[ -n "${1:-}" && -d "$1" && "$1" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$1"; }
+
 # A clone of a bare origin, with every manifest at the version and the scripts in place.
 _rel_repo() {
   local dir="$1" version="$2" bare="$1.origin"
@@ -24,19 +27,21 @@ _rel_repo() {
 }
 
 test_a_dry_run_passes_every_check_and_tags_nothing() {
-  local dir out
-  dir="$(mktemp -d)/repo"
+  local base dir out
+  base="$(mktemp -d)" || { assert_true false; return; }
+  dir="$base/repo"
   _rel_repo "$dir" 0.2.0
   out="$(ROOT="$dir" bash "$_release" --dry-run 2>&1)"
   assert_true grep -q 'version 0.2.0, on main' <<<"$out"
   assert_true grep -q 'dry run: nothing tagged' <<<"$out"
   assert_eq "$(git -C "$dir" tag -l)" ""
-  rm -rf "$(dirname "$dir")"
+  _rel_cleanup "$base"
 }
 
 test_a_release_tags_head_and_pushes_the_tag() {
-  local dir
-  dir="$(mktemp -d)/repo"
+  local base dir
+  base="$(mktemp -d)" || { assert_true false; return; }
+  dir="$base/repo"
   _rel_repo "$dir" 0.2.0
   assert_true env ROOT="$dir" bash "$_release"
   assert_eq "$(git -C "$dir" tag -l)" "0.2.0"
@@ -44,12 +49,13 @@ test_a_release_tags_head_and_pushes_the_tag() {
   assert_eq "$(git -C "$dir" rev-parse 0.2.0^{commit})" "$(git -C "$dir" rev-parse HEAD)"
   # a second time: the tag exists, here and on origin
   assert_false env ROOT="$dir" bash "$_release" --dry-run 2>/dev/null
-  rm -rf "$(dirname "$dir")"
+  _rel_cleanup "$base"
 }
 
 test_a_release_refuses_a_branch_a_dirty_tree_and_a_stale_main() {
-  local dir
-  dir="$(mktemp -d)/repo"
+  local base dir
+  base="$(mktemp -d)" || { assert_true false; return; }
+  dir="$base/repo"
   _rel_repo "$dir" 0.2.0
   git -C "$dir" switch -q -c feat/x
   assert_false env ROOT="$dir" bash "$_release" --dry-run 2>/dev/null
@@ -61,12 +67,13 @@ test_a_release_refuses_a_branch_a_dirty_tree_and_a_stale_main() {
   assert_false env ROOT="$dir" bash "$_release" --dry-run 2>/dev/null
   _rel_git -C "$dir" push -q origin main
   assert_true env ROOT="$dir" bash "$_release" --dry-run
-  rm -rf "$(dirname "$dir")"
+  _rel_cleanup "$base"
 }
 
 test_a_release_refuses_a_version_the_manifests_do_not_carry() {
-  local dir
-  dir="$(mktemp -d)/repo"
+  local base dir
+  base="$(mktemp -d)" || { assert_true false; return; }
+  dir="$base/repo"
   _rel_repo "$dir" 0.2.0
   printf '0.3.0\n' > "$dir/VERSION"
   _rel_git -C "$dir" commit -q -am "chore: bump VERSION only" && _rel_git -C "$dir" push -q origin main
@@ -74,5 +81,5 @@ test_a_release_refuses_a_version_the_manifests_do_not_carry() {
   rm "$dir/VERSION"
   _rel_git -C "$dir" commit -q -am "chore: no VERSION" && _rel_git -C "$dir" push -q origin main
   assert_false env ROOT="$dir" bash "$_release" --dry-run 2>/dev/null
-  rm -rf "$(dirname "$dir")"
+  _rel_cleanup "$base"
 }

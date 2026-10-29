@@ -6,6 +6,9 @@ _notes="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/release-notes.sh"
 
 _notes_git() { git -c user.name=test -c user.email=test@example.invalid "$@"; }
 
+# Only a directory mktemp made is removed: never an empty path, never anything else.
+_notes_cleanup() { [[ -n "${1:-}" && -d "$1" && "$1" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$1"; }
+
 # A repository with two releases: 0.1.0 tagged, then two pull requests merged, then 0.2.0.
 _notes_repo() {
   local dir="$1"
@@ -31,7 +34,7 @@ _notes_merge() {
 
 test_notes_hold_the_four_parts() {
   local dir out
-  dir="$(mktemp -d)"
+  dir="$(mktemp -d)" || { assert_true false; return; }
   _notes_repo "$dir"
   out="$(ROOT="$dir" bash "$_notes" 0.2.0)"
   assert_true grep -q '^## 0.2.0 - 2026-02-01' <<<"$out"
@@ -43,34 +46,34 @@ test_notes_hold_the_four_parts() {
   assert_true grep -q '^https://github.com/someone/thing/compare/0.1.0...0.2.0$' <<<"$out"
   assert_true grep -q 'ghcr.io/someone/thing/backend:0.2.0' <<<"$out"
   assert_true grep -q 'ghcr.io/someone/thing/frontend:0.2.0' <<<"$out"
-  rm -rf "$dir"
+  _notes_cleanup "$dir"
 }
 
 test_the_first_release_has_nothing_to_compare_with() {
   local dir out
-  dir="$(mktemp -d)"
+  dir="$(mktemp -d)" || { assert_true false; return; }
   _notes_repo "$dir"
   out="$(ROOT="$dir" bash "$_notes" 0.1.0)"
   assert_true grep -q '^- one$' <<<"$out"
   assert_true grep -q 'The first release' <<<"$out"
   assert_false grep -q '/compare/' <<<"$out"
-  rm -rf "$dir"
+  _notes_cleanup "$dir"
 }
 
 test_the_previous_release_can_be_named_and_the_repository_given() {
   local dir out
-  dir="$(mktemp -d)"
+  dir="$(mktemp -d)" || { assert_true false; return; }
   _notes_repo "$dir"
   git -C "$dir" remote remove origin
   out="$(GITHUB_REPOSITORY= ROOT="$dir" bash "$_notes" 0.2.0 --repo other/name --previous 0.1.0)"
   assert_true grep -q '^https://github.com/other/name/compare/0.1.0...0.2.0$' <<<"$out"
   assert_false ROOT="$dir" bash "$_notes" 0.2.0 2>/dev/null   # no origin, no --repo
-  rm -rf "$dir"
+  _notes_cleanup "$dir"
 }
 
 test_notes_refuse_a_missing_or_empty_section_and_a_bad_version() {
   local dir
-  dir="$(mktemp -d)"
+  dir="$(mktemp -d)" || { assert_true false; return; }
   _notes_repo "$dir"
   assert_false ROOT="$dir" bash "$_notes" 0.3.0 2>/dev/null
   assert_false ROOT="$dir" bash "$_notes" v0.2.0 2>/dev/null
@@ -79,5 +82,5 @@ test_notes_refuse_a_missing_or_empty_section_and_a_bad_version() {
   # the heading is the whole version: 0.2.01 is not 0.2.0
   printf '# Changelog\n\n## 0.2.01 - 2026-02-01\n\n### Added\n- not it\n' > "$dir/CHANGELOG.md"
   assert_false ROOT="$dir" bash "$_notes" 0.2.0 2>/dev/null
-  rm -rf "$dir"
+  _notes_cleanup "$dir"
 }
