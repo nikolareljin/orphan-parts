@@ -15,7 +15,9 @@ written in. No model takes part.
   A value that came from a [measurement](measure.md) carries its uncertainty into the check.
 
 Needed values are written in the candidate's terms: for a vacuum tool, the needed
-`opening_inner_diameter` is the wand's outer diameter.
+`opening_inner_diameter` is the wand's outer diameter. A side can be an item and values at
+once; a written value replaces the item's for that key. Numbers are compared in the rule's
+unit: a candidate value recorded in another unit stays unknown and asks for the right one.
 
 ## Rules
 

@@ -2,12 +2,14 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.inventory.schema import Provenance, Review
 from app.profiles import RuleKind
 
 Status = Literal["pass", "fail", "unknown"]
+MAX_VALUES = 100
+MAX_VALUE_LEN = 500
 # The ladder. CONFLICT and EXACT_MATCH are decided by the rules alone; the two in the middle say
 # how much of the evidence is there; INSUFFICIENT_INFO is a request for evidence, not a verdict
 # on the part.
@@ -21,11 +23,22 @@ class Side(BaseModel):
 
     ``values`` are keyed by rule key and written in the candidate's terms: for a vacuum the
     needed ``opening_inner_diameter`` is the wand's outer diameter. A unit in the text is fine
-    (``19.5 V``). ``profile`` is taken from an item when it has one."""
+    (``19.5 V``). ``profile`` is taken from an item when it has one. With both an item and
+    values, a written value replaces the item's for that key."""
 
     item_id: int | None = None
     values: dict[str, str] = {}
     profile: str = ""
+
+    @field_validator("values")
+    @classmethod
+    def _bounded(cls, values: dict[str, str]) -> dict[str, str]:
+        if len(values) > MAX_VALUES:
+            raise ValueError(f"at most {MAX_VALUES} values")
+        for key, value in values.items():
+            if len(key) > 64 or len(value) > MAX_VALUE_LEN:
+                raise ValueError(f"value for {key[:64]!r} is too long")
+        return values
 
 
 class AssessRequest(BaseModel):

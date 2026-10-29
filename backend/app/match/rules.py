@@ -77,6 +77,12 @@ def _equal(rule: Rule, need: Reading, cand: Reading) -> dict[str, str]:
 
 
 def _numeric(rule: Rule, need: Reading, cand: Reading) -> dict[str, str]:
+    if rule.unit and cand.unit and cand.unit.strip().lower() != rule.unit.lower():
+        return {
+            "status": "unknown",
+            "basis": f"the candidate's value is in {cand.unit.strip()}, the rule compares"
+            f" {rule.unit}; enter it in {rule.unit}",
+        }
     n, c = number(need.value), number(cand.value)
     if n is None:
         return {"status": "unknown", "basis": f"no number in the required value {need.value!r}"}

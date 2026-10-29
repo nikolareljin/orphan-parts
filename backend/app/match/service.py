@@ -86,7 +86,10 @@ class Assessor:
         for m in self.inventory.measurements(side.item_id):
             if m.assertion_id is not None and m.uncertainty_mm is not None:
                 uncertainty[m.assertion_id] = m.uncertainty_mm
+        # a value written in beside an item is the owner's explicit word: it wins
         for key, a in current_fields(item.assertions).items():
+            if key in readings:
+                continue
             readings[key] = Reading(
                 value=a.value,
                 unit=a.unit,

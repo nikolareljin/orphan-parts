@@ -197,3 +197,37 @@ def test_the_profile_must_come_from_somewhere(assessor: Assessor) -> None:
         assessor.assess(AssessRequest(need=Side(values={"a": "1"}), candidate=Side()))
     with pytest.raises(AssessError, match="no profile 'toaster'"):
         assessor.assess(AssessRequest(need=Side(profile="toaster"), candidate=Side()))
+
+
+def test_a_written_value_replaces_the_items_own(assessor: Assessor) -> None:
+    need = laptop(assessor.inventory)
+    inv = assessor.inventory
+    adapter = inv.create(ItemCreate(item_type="power adapter"))
+    inv.add_field(adapter.id, FieldCreate(field="output_voltage", value="12"))
+    corrected = assessor.assess(
+        AssessRequest(
+            need=Side(item_id=need),
+            candidate=Side(item_id=adapter.id, values={"output_voltage": "19.5"}),
+        )
+    )
+    volts = {c.key: c for c in corrected.checks}["output_voltage"]
+    assert volts.status == "pass" and volts.observed == "19.5" and volts.backing is None
+
+
+def test_a_value_in_another_unit_stays_unknown(assessor: Assessor) -> None:
+    need = laptop(assessor.inventory)
+    inv = assessor.inventory
+    adapter = inv.create(ItemCreate(item_type="power adapter"))
+    inv.add_field(adapter.id, FieldCreate(field="output_voltage", value="19500", unit="mV"))
+    result = assessor.assess(
+        AssessRequest(need=Side(item_id=need), candidate=Side(item_id=adapter.id))
+    )
+    volts = {c.key: c for c in result.checks}["output_voltage"]
+    assert volts.status == "unknown" and "in mV" in volts.basis
+
+
+def test_values_written_in_are_bounded() -> None:
+    with pytest.raises(ValueError, match="at most 100"):
+        Side(values={f"k{i}": "1" for i in range(101)})
+    with pytest.raises(ValueError, match="too long"):
+        Side(values={"output_voltage": "9" * 501})
