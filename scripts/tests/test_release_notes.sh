@@ -67,7 +67,13 @@ test_the_previous_release_can_be_named_and_the_repository_given() {
   git -C "$dir" remote remove origin
   out="$(GITHUB_REPOSITORY= ROOT="$dir" bash "$_notes" 0.2.0 --repo other/name --previous 0.1.0)"
   assert_true grep -q '^https://github.com/other/name/compare/0.1.0...0.2.0$' <<<"$out"
-  assert_false ROOT="$dir" bash "$_notes" 0.2.0 2>/dev/null   # no origin, no --repo
+  assert_false env GITHUB_REPOSITORY= ROOT="$dir" bash "$_notes" 0.2.0 2>/dev/null   # no origin, no --repo
+  # the workflow's variable serves a checkout without a remote, and never outranks the origin
+  out="$(GITHUB_REPOSITORY=ci/fallback ROOT="$dir" bash "$_notes" 0.2.0)"
+  assert_true grep -q 'ghcr.io/ci/fallback/backend:0.2.0' <<<"$out"
+  git -C "$dir" remote add origin git@github.com:someone/thing.git
+  out="$(GITHUB_REPOSITORY=ci/fallback ROOT="$dir" bash "$_notes" 0.2.0)"
+  assert_true grep -q 'ghcr.io/someone/thing/backend:0.2.0' <<<"$out"
   _notes_cleanup "$dir"
 }
 

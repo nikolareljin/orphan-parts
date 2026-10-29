@@ -9,7 +9,7 @@
 #
 # The previous release is the highest tag below the version, unless --previous names one; with
 # no tag before it, the notes say so and the pull requests are those of the whole history.
-# The repository comes from --repo, GITHUB_REPOSITORY, or the origin remote.
+# The repository comes from --repo, else the origin remote, else GITHUB_REPOSITORY.
 #
 # Environment:
 #   ROOT   the repository (default: the parent of this script's directory)
@@ -17,7 +17,7 @@ set -euo pipefail
 
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 version="${1:-}"
-repo="${GITHUB_REPOSITORY:-}"
+repo=""
 previous=""
 shift $(( $# > 0 ? 1 : 0 ))
 while [[ $# -gt 0 ]]; do
@@ -40,10 +40,13 @@ section="$(awk -v h="$heading" '/^## /{p = ($0 ~ h)} p' "$root/CHANGELOG.md")"
 [[ -n "$section" ]] || fail "CHANGELOG.md has no '## $version' section"
 grep -q '^- ' <<<"$section" || fail "the '## $version' section of CHANGELOG.md lists nothing"
 
+# The checkout's own origin first: the notes belong to the repository they are run in. The
+# workflow variable is the fallback for a checkout without a remote.
 if [[ -z "$repo" ]]; then
   origin="$(git -C "$root" config --get remote.origin.url 2>/dev/null || true)"
   repo="${origin%.git}"
   repo="${repo#*github.com[:/]}"
+  [[ "$repo" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || repo="${GITHUB_REPOSITORY:-}"
 fi
 [[ "$repo" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || fail "no owner/name for the repository; pass --repo"
 
