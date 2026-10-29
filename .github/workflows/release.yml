@@ -104,6 +104,8 @@ jobs:
           fi
       - name: build the release APK
         if: steps.app.outputs.present == 'true'
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
         run: bash scripts/deploy.sh android --version "$TAG"
       - name: attach the APK to the release
         if: steps.app.outputs.present == 'true'

@@ -6,6 +6,7 @@ backend/
     main.py           app factory, middleware, routers
     config.py         settings, validated at startup
     api/routes.py     HTTP endpoints
+    demo/             the demo set loaded through the services, recorded once, replayed
     model_api/        the Model API client, pricing, spend ledger, recorded fixtures
     ops/              logging, request context, security headers
     openapi_export.py prints the OpenAPI document for the docs site
@@ -22,8 +23,23 @@ frontend/
   Dockerfile          build + nginx
   nginx.conf          static files, API proxy
 
+android/
+  app/src/main/kotlin/com/orphanparts/lens/
+    api/              the backend by its paths: transport, multipart, client
+    audio/            hold-to-talk recording, WAV framing
+    ui/               the three pages: backend, capture, talk
+  app/src/test/       unit tests on the JVM
+  build.gradle.kts, settings.gradle.kts, gradlew
+
+demo/
+  set.yaml            the demo set: items, searches, listings, the proposal brief
+  photos/, notes/     scrubbed photos and WAV notes (written by ./dev demo-scrub)
+  listings/           written listing examples, labelled as demo data
+
 scripts/
   lib/                bash helper modules used by ./dev
+  android.sh          the app's tests, APKs, install, launch and smoke run (./dev android, ./dev phone)
+  setup-android.sh    the JDK and the Android command-line tools, installed when missing (./dev setup --android)
   release-tag.sh      the version a release branch names, checked before it becomes a tag
   release-notes.sh    the notes of one release, assembled from the changelog and the history
   release.sh          tag VERSION on main and push the tag, by hand (./dev release)
@@ -34,7 +50,7 @@ VERSION               the version, the one place it is read from by hand
 docker/docs/          image that builds and serves the docs site
 docs/, mkdocs.yml     this site
 overrides/            the theme override: the share metadata every page carries
-.github/workflows/    ci.yml (checks), tag-release.yml (merged release/x.y.z -> tag), release.yml (tags to GHCR + GitHub release), docs.yml (Pages)
+.github/workflows/    ci.yml (checks), android.yml (the app's checks), tag-release.yml (merged release/x.y.z -> tag), release.yml (tags to GHCR + GitHub release + APK), docs.yml (Pages)
 dev                   command runner
 docker-compose.yml    development stack
 docker-compose.prod.yml
