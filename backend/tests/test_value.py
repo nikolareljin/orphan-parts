@@ -81,17 +81,29 @@ def test_only_a_comparable_a_page_backs_is_kept() -> None:
     out = output_with(["https://example.org/listings/one/"], ["HTTPS://www.example.org/cited"])
     found = [
         comparable(),
-        comparable(source_url="https://example.org/cited", price=30),
+        comparable(source_url="https://example.org/cited?ref=search#top", price=30),
         comparable(source_url="https://example.org/nowhere", price=40),
         comparable(price=0),
         comparable(currency="EUR", price=19),
     ]
     kept, dropped, caveats = backed(found, out, "USD")
-    assert [c.price for c in kept] == [20.0, 30.0]
+    assert [c.price for c in kept] == [20.0, 30.0]  # a query string or fragment is the same page
     assert dropped == 3
     assert kept[0].observed  # the day it was seen, when the page gave no date
     assert any("rest on no search result" in c for c in caveats)
+    assert any("carried no price" in c for c in caveats)
     assert any("another currency" in c for c in caveats)
+    assert not any("no web search" in c or "no pages" in c for c in caveats)
+
+
+def test_no_search_or_no_pages_is_said_as_the_reason() -> None:
+    kept, dropped, caveats = backed([comparable()], [], "USD")
+    assert kept == [] and dropped == 1
+    assert caveats[0] == "the model made no web search, so nothing it wrote can be backed"
+    searched_nothing = [{"type": "web_search_call", "status": "completed", "results": []}]
+    _, _, caveats = backed([comparable()], searched_nothing, "USD")
+    assert caveats[0] == "the search returned no pages, so nothing the model wrote can be backed"
+    assert backed([], [], "USD") == ([], 0, [])
 
 
 def test_quantities_and_strategies_come_from_figures_that_exist() -> None:

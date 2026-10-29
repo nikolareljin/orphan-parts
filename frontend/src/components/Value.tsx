@@ -92,7 +92,7 @@ export default function Value({ item }: { item: Item }) {
             <span>City</span>
             <input value={city} maxLength={80} placeholder="for local results" onChange={(e) => setCity(e.target.value)} />
           </label>
-          <button type="submit" disabled={busy}>
+          <button type="submit" disabled={busy || currency.length !== 3}>
             {busy ? 'Working…' : 'Price guidance'}
           </button>
         </div>

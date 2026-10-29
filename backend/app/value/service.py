@@ -10,7 +10,14 @@ from typing import Any
 from app.config import Settings
 from app.inventory import Inventory
 from app.inventory.schema import Item
-from app.model_api import ModelApiClient, citations, search_results, text_part, user_message
+from app.model_api import (
+    ModelApiClient,
+    citations,
+    search_results,
+    searches,
+    text_part,
+    user_message,
+)
 from app.value.schema import (
     Comparable,
     Findings,
@@ -69,12 +76,16 @@ def brief(item: Item, known: dict[str, str], request: PriceRequest) -> str:
 
 
 def _norm_url(url: str) -> str:
+    """The page without scheme, www, query, fragment or trailing slash: the same page, however
+    the model or the search wrote it."""
     u = url.strip().lower()
     for prefix in ("https://", "http://"):
         if u.startswith(prefix):
             u = u[len(prefix) :]
     if u.startswith("www."):
         u = u[4:]
+    for sep in ("?", "#"):
+        u = u.split(sep, 1)[0]
     return u.rstrip("/")
 
 
@@ -89,24 +100,35 @@ def backed(
     dropped = 0
     caveats: list[str] = []
     other_currency = 0
+    no_price = 0
     for c in found:
-        if _norm_url(c.source_url) not in pages or c.price <= 0:
+        if c.price <= 0:
+            no_price += 1
+            continue
+        if _norm_url(c.source_url) not in pages:
             dropped += 1
             continue
         if c.currency.upper() != currency:
             other_currency += 1
             continue
         kept.append(c.model_copy(update={"observed": c.observed or today(), "currency": currency}))
+    made = searches(output)
+    if made == 0 and found:
+        caveats.append("the model made no web search, so nothing it wrote can be backed")
+    elif not pages and found:
+        caveats.append("the search returned no pages, so nothing the model wrote can be backed")
     if dropped:
         caveats.append(
             f"{dropped} line(s) the model wrote rest on no search result and were left out"
         )
+    if no_price:
+        caveats.append(f"{no_price} line(s) carried no price and were left out")
     if other_currency:
         caveats.append(
             f"{other_currency} comparable(s) in another currency were left out;"
             " nothing is converted"
         )
-    return kept, dropped + other_currency, caveats
+    return kept, dropped + other_currency + no_price, caveats
 
 
 def quantity(kind: Kind, prices: list[float], currency: str, basis: str) -> Quantity:
