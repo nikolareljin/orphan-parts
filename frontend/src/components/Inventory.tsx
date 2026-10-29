@@ -4,6 +4,7 @@ import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Listing from './Listing'
+import Modal from './Modal'
 import Measure from './Measure'
 import Value from './Value'
 
@@ -12,9 +13,9 @@ function message(err: unknown): string {
 }
 
 // The owner's items. ``refresh`` changes when something was saved elsewhere on the page.
-export default function Inventory({ refresh }: { refresh: number }) {
+export default function Inventory({ refresh, openId: wanted = null }: { refresh: number; openId?: number | null }) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
-  const [openId, setOpenId] = useState<number | null>(null)
+  const [openId, setOpenId] = useState<number | null>(wanted)
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -29,6 +30,11 @@ export default function Inventory({ refresh }: { refresh: number }) {
   useEffect(() => {
     void load()
   }, [load, refresh])
+
+  // an item opened from elsewhere (the inbox) is shown as soon as it is asked for
+  useEffect(() => {
+    if (wanted !== null) setOpenId(wanted)
+  }, [wanted, refresh])
 
   return (
     <section className="inventory">
@@ -68,8 +74,8 @@ export default function Inventory({ refresh }: { refresh: number }) {
                 <td>{availabilityLabel(s.availability)}</td>
                 <td>{whenText(s.updated_at)}</td>
                 <td>
-                  <button type="button" className="link" onClick={() => setOpenId(s.id === openId ? null : s.id)}>
-                    {s.id === openId ? 'Close' : 'Open'}
+                  <button type="button" className="link" onClick={() => setOpenId(s.id)}>
+                    Open
                   </button>
                 </td>
               </tr>
@@ -78,15 +84,17 @@ export default function Inventory({ refresh }: { refresh: number }) {
         </table>
       )}
       {openId !== null && (
-        <ItemPanel
-          key={openId}
-          id={openId}
-          onChanged={() => void load()}
-          onClosed={() => {
-            setOpenId(null)
-            void load()
-          }}
-        />
+        <Modal title={`Item #${openId}`} onClose={() => setOpenId(null)}>
+          <ItemPanel
+            key={openId}
+            id={openId}
+            onChanged={() => void load()}
+            onClosed={() => {
+              setOpenId(null)
+              void load()
+            }}
+          />
+        </Modal>
       )}
     </section>
   )
