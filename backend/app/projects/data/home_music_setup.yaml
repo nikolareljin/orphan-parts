@@ -1,0 +1,34 @@
+id: home_music_setup
+label: Home music setup
+goal: Play music in one room from a device you own, through a speaker or an amplifier you own.
+result: a source device feeding a speaker or an amplifier, with the volume where it is wanted
+effort: low
+skills: []
+opens_devices: false
+typical_cost: {low: 0, high: 25, currency: USD}
+requirements:
+  - key: source
+    label: A device that plays music (an old phone, a tablet, a laptop, a streamer)
+    kind: item
+    item_types: [phone, tablet, laptop, streamer, player]
+    blocking: true
+  - key: output
+    label: A speaker or an amplifier with speakers
+    kind: item
+    item_types: [speaker, amplifier, receiver, soundbar]
+    blocking: true
+    profile: generic_item
+  - key: link
+    label: The link between the two (Bluetooth, a 3.5 mm or RCA cable, or an adapter)
+    kind: capability
+    item_types: [cable, adapter, aux]
+    blocking: false
+    profile: generic_item
+steps:
+  - Pair over Bluetooth if both sides have it; otherwise run a cable from the headphone output to the speaker's input.
+  - Keep the source plugged in and set its screen to stay off while playing.
+  - Set the source volume high and the speaker's volume where you want it, so the signal stays clean.
+safety:
+  - An amplifier that hums, smells hot or has a damaged mains lead is not for use until it is checked.
+sources:
+  - the speaker or amplifier maker's manual for the inputs it has

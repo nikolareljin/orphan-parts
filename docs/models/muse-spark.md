@@ -24,6 +24,21 @@ Price guidance is one call with the `web_search` tool and the strict JSON schema
 The code path is `app/value/service.py`; the [value guide](../guides/value.md) shows what the
 four figures mean.
 
+## Tool calling
+
+A project proposal is a loop of calls with function tools and the strict JSON schema of
+`ProposalSet`. The tools are `list_inventory` (the items a build may count on, with their
+fields), `template_catalog` (the projects that may be proposed, with what each requires) and
+`item_details` (one item in full, by id). Each step is stateless: the request carries the
+brief, every output item the model wrote so far and one `function_call_output` per
+`function_call`, matched by `call_id`, since nothing is stored on the server. The loop ends
+with the first answer that calls no tool, parsed against the schema, or fails after four
+steps. The rules then keep only the allocations the inventory backs. Operation names
+`propose-1`, `propose-2` and so on, one per step, which are also the recorded fixtures: the
+first step calls two tools, the second answers with three proposals of which one rests on an
+item nobody has. The code path is `app/projects/service.py` and the loop itself is
+`respond_with_tools` in the [client](model-api-client.md).
+
 ## Listing text
 
 A pasted listing is read with one call and the strict JSON schema of `ListingReading`: the

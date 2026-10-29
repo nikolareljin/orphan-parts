@@ -1,0 +1,56 @@
+{
+  "endpoint": "/responses",
+  "op": "propose-2",
+  "model": "muse-spark-1.3",
+  "key": "fallback-propose-2",
+  "request": {
+    "instructions": "project proposal instructions, see app/projects/service.py",
+    "input": "the brief, the tool calls and their results; step 2 of the tool loop",
+    "model": "muse-spark-1.3",
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ProposalSet",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_propose_2",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_propose_2",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "msg_fixture_propose_2",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "{\"proposals\": [{\"template\": \"homework_workstation\", \"title\": \"Homework desk from the old laptop and the spare monitor\", \"result\": \"the old laptop driving the spare monitor at the desk, with the keyboard you have\", \"allocations\": [{\"requirement\": \"laptop\", \"item_id\": 0, \"item_name\": \"Old laptop\", \"why\": \"it boots and holds a charge; the screen is small but works\"}, {\"requirement\": \"monitor\", \"item_id\": 0, \"item_name\": \"Spare monitor\", \"why\": \"an HDMI input the laptop can drive\"}, {\"requirement\": \"keyboard\", \"item_id\": 0, \"item_name\": \"USB keyboard\", \"why\": \"listed as working\"}], \"missing\": [\"video_cable\", \"mouse\"], \"effort\": \"low\", \"spend_estimate\": 12, \"unknowns\": [\"whether the laptop's HDMI output still works; test it before buying a cable\"]}, {\"template\": \"vacuum_restored\", \"title\": \"The upright vacuum back to work\", \"result\": \"the vacuum cleaning again with a crevice tool that seats on its wand\", \"allocations\": [{\"requirement\": \"vacuum\", \"item_id\": 0, \"item_name\": \"Upright vacuum\", \"why\": \"runs; only the tool is missing\"}], \"missing\": [\"attachment\"], \"effort\": \"low\", \"spend_estimate\": 10, \"unknowns\": [\"the wand's outer diameter, measured against a ruler\"]}, {\"template\": \"home_music_setup\", \"title\": \"Kitchen music from a phone\", \"result\": \"an old phone playing to a speaker\", \"allocations\": [{\"requirement\": \"source\", \"item_id\": 0, \"item_name\": \"Phone nobody has\", \"why\": \"invented\"}], \"missing\": [\"output\"], \"effort\": \"low\", \"spend_estimate\": 0, \"unknowns\": []}]}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 2400,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 520,
+      "output_tokens_details": {
+        "reasoning_tokens": 80
+      },
+      "total_tokens": 2920
+    }
+  },
+  "status": 200
+}

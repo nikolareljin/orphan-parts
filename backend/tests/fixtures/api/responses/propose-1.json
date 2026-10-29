@@ -1,0 +1,60 @@
+{
+  "endpoint": "/responses",
+  "op": "propose-1",
+  "model": "muse-spark-1.3",
+  "key": "fallback-propose-1",
+  "request": {
+    "instructions": "project proposal instructions, see app/projects/service.py",
+    "input": "the brief; step 1 of the tool loop",
+    "model": "muse-spark-1.3",
+    "tools": "list_inventory, template_catalog, item_details",
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ProposalSet",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_propose_1",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_propose_1",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "fc_fixture_1",
+        "type": "function_call",
+        "status": "completed",
+        "call_id": "call_fixture_1",
+        "name": "list_inventory",
+        "arguments": "{}"
+      },
+      {
+        "id": "fc_fixture_2",
+        "type": "function_call",
+        "status": "completed",
+        "call_id": "call_fixture_2",
+        "name": "template_catalog",
+        "arguments": "{}"
+      }
+    ],
+    "usage": {
+      "input_tokens": 900,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 60,
+      "output_tokens_details": {
+        "reasoning_tokens": 20
+      },
+      "total_tokens": 960
+    }
+  },
+  "status": 200
+}

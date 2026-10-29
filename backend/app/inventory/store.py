@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 8
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -131,12 +131,71 @@ CREATE TABLE candidates (
 CREATE INDEX candidates_by_search ON candidates (search_id);
 """
 
+# version 6: the owner's preferences, projects proposed from templates, and the items
+# allocated to them, exploratory or committed
+_SCHEMA_V6 = """
+CREATE TABLE preferences (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    content TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE projects (
+    id INTEGER PRIMARY KEY,
+    template TEXT NOT NULL,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE allocations (
+    id INTEGER PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES projects(id),
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    requirement TEXT NOT NULL,
+    why TEXT NOT NULL,
+    committed INTEGER NOT NULL,
+    at TEXT NOT NULL
+);
+CREATE INDEX allocations_by_item ON allocations (item_id);
+CREATE INDEX allocations_by_project ON allocations (project_id);
+"""
+
+# version 7: build packs, one document per writing, with the digest of its inputs
+_SCHEMA_V7 = """
+CREATE TABLE packs (
+    id INTEGER PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES projects(id),
+    version INTEGER NOT NULL,
+    digest TEXT NOT NULL,
+    markdown TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX packs_by_project ON packs (project_id);
+"""
+
+# version 8: captures from the phone, kept until processed and deleted
+_SCHEMA_V8 = """
+CREATE TABLE captures (
+    id INTEGER PRIMARY KEY,
+    status TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    processed_at TEXT,
+    deleted_at TEXT
+);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
     3: _SCHEMA_V3,
     4: _SCHEMA_V4,
     5: _SCHEMA_V5,
+    6: _SCHEMA_V6,
+    7: _SCHEMA_V7,
+    8: _SCHEMA_V8,
 }
 
 

@@ -45,6 +45,18 @@ answer = await client.respond_structured(Label, model=settings.model_spark, inpu
 answer.parsed.part_number
 ```
 
+With tools, the client runs the loop and answers each call through a handler you pass:
+
+```python
+answer = await client.respond_with_tools(
+    ProposalSet, model=settings.model_spark, input=..., tools=TOOLS, handle=planner.tool, op="propose"
+)
+```
+
+Every step resends the input, the output items so far and one `function_call_output` per
+call (stateless replay); each step is its own ledger entry, `propose-1`, `propose-2` and so
+on, and its own fixture.
+
 `op` names the operation in the ledger and selects the fallback fixture (see below).
 
 ## Pricing

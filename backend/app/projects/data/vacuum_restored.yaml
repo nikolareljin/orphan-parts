@@ -1,0 +1,28 @@
+id: vacuum_restored
+label: Vacuum restored with a fitting tool
+goal: Put a vacuum back to work that only lacks an attachment, with a tool that fits its wand or hose.
+result: the vacuum with a tool that seats on its wand, cleaning a visible patch
+effort: low
+skills: []
+opens_devices: false
+typical_cost: {low: 5, high: 25, currency: USD}
+requirements:
+  - key: vacuum
+    label: A vacuum that works, missing or with a damaged attachment
+    kind: item
+    item_types: [vacuum]
+    blocking: true
+  - key: attachment
+    label: A non-powered tool whose opening fits the wand or hose
+    kind: item
+    item_types: [attachment, tool, nozzle, crevice, brush]
+    blocking: true
+    profile: vacuum_attachment
+steps:
+  - Measure the wand's outer diameter against a ruler on the item page, so the search has a number to check candidates against.
+  - Find a tool whose opening is within tolerance and whose insertion depth reaches the stop; a dimension match alone is not a fit, the seat and the latch count too.
+  - Seat the tool, run the vacuum, and check that it holds under pull.
+safety:
+  - A powered head needs documented electrical compatibility; no dimension establishes that.
+sources:
+  - the vacuum maker's parts list for the wand's fitting

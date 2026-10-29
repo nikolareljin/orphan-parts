@@ -1,0 +1,39 @@
+id: external_monitor_workaround
+label: Laptop with a broken screen as a desktop
+goal: Keep using a laptop whose screen is cracked or dark, by running it on an external monitor.
+result: the laptop booting and working on an external monitor, lid closed or open
+effort: medium
+skills: [basic computer setup]
+opens_devices: false
+typical_cost: {low: 0, high: 80, currency: USD}
+requirements:
+  - key: laptop
+    label: A laptop that still boots, with a bad screen
+    kind: item
+    item_types: [laptop, notebook]
+    blocking: true
+  - key: monitor
+    label: An external monitor
+    kind: item
+    item_types: [monitor, display, screen, tv]
+    blocking: true
+    profile: generic_item
+  - key: video_cable
+    label: A cable or an adapter from the laptop's video output to the monitor
+    kind: item
+    item_types: [cable, hdmi, displayport, adapter]
+    blocking: true
+    profile: generic_item
+  - key: input
+    label: A keyboard and a mouse, if the laptop's are also broken
+    kind: item
+    item_types: [keyboard, mouse]
+    blocking: false
+steps:
+  - Connect the monitor before powering on; most laptops show the firmware screen on it.
+  - In the system settings, make the external monitor the only or the main display.
+  - If the laptop sleeps when the lid closes, change that setting or keep the lid open.
+safety:
+  - A screen with exposed glass edges is taped over before the laptop is handled.
+sources:
+  - the laptop maker's page on external displays and on closing the lid while docked
