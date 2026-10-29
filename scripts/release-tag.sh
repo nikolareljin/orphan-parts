@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # release-tag.sh <branch>: the version a release branch names, checked before it becomes a tag.
 #
-#   release/0.2.0 prints 0.2.0 when the version is x.y.z, every manifest carries it, the
-#   changelog has its section, and no tag of that name exists. Existing tags are never moved:
+#   release/0.2.0 prints 0.2.0 when the version is x.y.z, VERSION and every manifest carry
+#   it, the changelog has its section, and no tag of that name exists. Existing tags are never moved:
 #   a version that is tagged already is refused, whatever it points at.
 #
 # Environment:
@@ -30,6 +30,11 @@ init="$(grep -m1 '^__version__ = ' "$root/backend/app/__init__.py" | cut -d'"' -
 js="$(grep -m1 '"version"' "$root/frontend/package.json" | sed -E 's/.*"version": *"([^"]+)".*/\1/' || true)"
 if [[ "$tag" != "$py" || "$tag" != "$init" || "$tag" != "$js" ]]; then
   fail "branch names $tag; pyproject $py; app/__init__.py $init; package.json $js"
+fi
+# VERSION is the one place the version is read from by hand; it has to agree with the rest.
+if [[ -f "$root/VERSION" ]]; then
+  file="$(tr -d '[:space:]' < "$root/VERSION")"
+  [[ "$tag" == "$file" ]] || fail "branch names $tag; VERSION says ${file:-nothing}"
 fi
 
 grep -qE "^## ${tag//./\\.}( |$)" "$root/CHANGELOG.md" \

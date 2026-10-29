@@ -5,6 +5,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## Unreleased
 
 ### Added
+- Releases by hand and in full: `VERSION` is the one place the version is read from, and `./dev version` writes it with the manifests; `./dev release` tags `VERSION` on a clean, level `main` and pushes the tag, which only the repository admin may do; the release workflow assembles the release notes from the changelog section, the pull requests merged since the previous release, the compare link and the images, and carries two jobs that stay inert until there is something for them: a release APK when an Android app is in the tree, and a deploy to the host when the repository variable `DEPLOY_ENABLED` and the host secrets are set; `./dev deploy` does the same from a machine.
 - Sell or give away: `POST /api/items/{id}/drafts` writes a listing draft with Muse Spark from the item's accepted values; the rules append the faults, what was tested, what is included and the price or free pickup, and drop any line that rests on nothing confirmed; a checklist before handover (preparation, photos, data removal when the item holds data) kept per draft; drafts versioned and marked stale when the item changes; copy the draft and open the Marketplace create page. `POST /api/items/{id}/voice` transcribes a WAV note with Muse Voice Transcribe and keeps it as the owner's words. The Prepare to sell or give away panel on each item.
 
 ## 0.1.0 - 2026-10-29
