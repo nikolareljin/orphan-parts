@@ -5,6 +5,8 @@ from fastapi import Depends, Request
 from app.config import Settings
 from app.extract.service import Extractor
 from app.inventory.service import Inventory
+from app.listing.service import Lister
+from app.listing.voice import VoiceNotes
 from app.match.service import Assessor
 from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
@@ -72,3 +74,19 @@ def app_assessor(request: Request) -> Assessor:
 
 
 AssessorDep = Annotated[Assessor, Depends(app_assessor)]
+
+
+def app_lister(request: Request) -> Lister:
+    lister: Lister = request.app.state.lister
+    return lister
+
+
+ListerDep = Annotated[Lister, Depends(app_lister)]
+
+
+def app_voice(request: Request) -> VoiceNotes:
+    voice: VoiceNotes = request.app.state.voice
+    return voice
+
+
+VoiceDep = Annotated[VoiceNotes, Depends(app_voice)]

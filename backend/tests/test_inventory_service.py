@@ -267,3 +267,13 @@ def test_free_text_has_a_bound() -> None:
     with pytest.raises(ValueError):
         FieldCreate(field="colour", value="v" * 501)
     assert ItemCreate(notes="n" * 4000).notes
+
+
+def test_a_note_field_takes_prose_and_any_other_field_a_short_value() -> None:
+    assert FieldCreate(field="condition_notes", value="w " * 1500).value
+    with pytest.raises(ValueError, match="at most 4000 characters"):
+        FieldCreate(field="condition_notes", value="w " * 2500)
+    with pytest.raises(ValueError, match="at most 500 characters"):
+        FieldCreate(field="output_voltage", value="9" * 501)
+    with pytest.raises(ValueError, match="at most 500 characters"):
+        FieldCreate(field="output_voltage", value="9", raw="9" * 501)

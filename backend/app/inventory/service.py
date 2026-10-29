@@ -5,6 +5,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from app.config import Settings
+from app.extract.schema import Source
 from app.inventory.schema import (
     Assertion,
     ComponentCreate,
@@ -180,7 +181,7 @@ class Inventory:
             self._event(conn, item_id, "changed " + ", ".join(changed), version, at)
             return self._item(conn, item_id)
 
-    def add_field(self, item_id: int, spec: FieldCreate) -> Item:
+    def add_field(self, item_id: int, spec: FieldCreate, *, source: Source = "user_edit") -> Item:
         """The owner's value for a field, accepted as stated, beside whatever was observed."""
         at = now()
         with self.store.connect() as conn:
@@ -195,7 +196,7 @@ class Inventory:
                     spec.unit.strip(),
                     spec.provenance,
                     1.0,
-                    "user_edit",
+                    source,
                     spec.raw,
                     "accepted",
                     at,
@@ -291,6 +292,58 @@ class Inventory:
             if found is None:
                 raise NotFoundError(f"item {item_id} has no measurement {measurement_id}")
             return bytes(found["photo"])
+
+    # listing drafts: stored as written, read back with the item's current version beside them
+
+    _DRAFT_SELECT = (
+        "SELECT d.*, i.version AS current_item_version FROM drafts d"
+        " JOIN items i ON i.id = d.item_id"
+    )
+
+    def add_draft(self, item_id: int, mode: str, content: str, checklist: str) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            last = conn.execute(
+                "SELECT MAX(version) FROM drafts WHERE item_id = ? AND mode = ?", (item_id, mode)
+            ).fetchone()[0]
+            version = int(last or 0) + 1
+            # written from this item version; writing a draft changes nothing about the item,
+            # so the version stays and another draft does not make this one stale
+            item_version = int(row["version"])
+            self._event(conn, item_id, f"{mode} draft written (v{version})", item_version, at)
+            cur = conn.execute(
+                "INSERT INTO drafts (item_id, mode, version, item_version, content, checklist, at)"
+                " VALUES (?,?,?,?,?,?,?)",
+                (item_id, mode, version, item_version, content, checklist, at),
+            )
+            return self._draft(conn, int(cur.lastrowid or 0))
+
+    def drafts(self, item_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            return conn.execute(
+                self._DRAFT_SELECT + " WHERE d.item_id = ? ORDER BY d.id", (item_id,)
+            ).fetchall()
+
+    def draft(self, draft_id: int) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            return self._draft(conn, draft_id)
+
+    def set_checklist(self, draft_id: int, checklist: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            self._draft(conn, draft_id)
+            conn.execute("UPDATE drafts SET checklist = ? WHERE id = ?", (checklist, draft_id))
+            return self._draft(conn, draft_id)
+
+    def _draft(self, conn: sqlite3.Connection, draft_id: int) -> sqlite3.Row:
+        # a hidden item's drafts are hidden with it
+        row: sqlite3.Row | None = conn.execute(
+            self._DRAFT_SELECT + " WHERE d.id = ? AND i.deleted_at IS NULL", (draft_id,)
+        ).fetchone()
+        if row is None:
+            raise NotFoundError(f"no draft {draft_id}")
+        return row
 
     def delete(self, item_id: int) -> None:
         """Hidden, not erased: the record and its events stay for the audit trail."""

@@ -3,6 +3,7 @@ import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, 
 import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
+import Listing from './Listing'
 import Measure from './Measure'
 
 function message(err: unknown): string {
@@ -77,6 +78,7 @@ export default function Inventory({ refresh }: { refresh: number }) {
       )}
       {openId !== null && (
         <ItemPanel
+          key={openId}
           id={openId}
           onChanged={() => void load()}
           onClosed={() => {
@@ -371,6 +373,8 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
       <Measure item={item} onMeasured={() => void apply(() => api.items.get(item.id))} />
 
       <Assess item={item} />
+
+      <Listing item={item} onChanged={() => void apply(() => api.items.get(item.id))} />
 
       <div className="row">
         <button type="button" className="link" onClick={() => void showEvents()}>

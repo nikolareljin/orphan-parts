@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.assess import router as assess_router
+from app.api.drafts import router as drafts_router
 from app.api.extract import router as extract_router
 from app.api.items import error_handlers as inventory_handlers
 from app.api.items import router as items_router
@@ -14,9 +15,11 @@ from app.api.measure import router as measure_router
 from app.api.profiles import router as profiles_router
 from app.api.routes import router
 from app.api.segment import router as segment_router
+from app.api.voice import router as voice_router
 from app.config import Settings, get_settings
 from app.extract import Extractor
 from app.inventory import Inventory
+from app.listing import Lister, VoiceNotes
 from app.match import Assessor
 from app.measure import Measurer
 from app.model_api import CostLedger, ModelApiClient
@@ -42,6 +45,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)
     app.state.assessor = Assessor(app.state.profiles, app.state.inventory)
+    app.state.lister = Lister(settings, client, app.state.inventory)
+    app.state.voice = VoiceNotes(settings, client, app.state.inventory)
     log.info(
         "starting",
         extra={
@@ -85,6 +90,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(profiles_router)
     app.include_router(measure_router)
     app.include_router(assess_router)
+    app.include_router(drafts_router)
+    app.include_router(voice_router)
     for exc_type, handler in inventory_handlers.items():
         app.add_exception_handler(exc_type, handler)
     return app
