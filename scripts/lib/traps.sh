@@ -34,11 +34,12 @@ _rm_tmp_dirs() {
 # variable. It assigns rather than prints: inside $(...) the cleanup would be registered in a
 # subshell and run the moment that subshell ends, taking the directory with it.
 tmp_dir() {
-  local d
-  d="$(mktemp -d "${TMPDIR:-/tmp}/opl.XXXXXX")"
+  # the local has an unlikely name: it must not shadow the caller's variable
+  local _tmp_dir_made
+  _tmp_dir_made="$(mktemp -d "${TMPDIR:-/tmp}/opl.XXXXXX")"
   (( ${#_tmp_dirs[@]} )) || on_exit _rm_tmp_dirs
-  _tmp_dirs+=("$d")
-  printf -v "$1" '%s' "$d"
+  _tmp_dirs+=("$_tmp_dir_made")
+  printf -v "$1" '%s' "$_tmp_dir_made"
 }
 
 _kill_jobs() {
