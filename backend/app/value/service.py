@@ -244,7 +244,8 @@ class Valuer:
         findings = result.parsed
         output = result.response.output
         kept, dropped, caveats = backed(findings.comparables, output, request.currency)
-        caveats = [c.strip()[:CAVEAT_MAX] for c in findings.caveats if c.strip()][:CAVEATS_MAX] + caveats
+        said = [c.strip()[:CAVEAT_MAX] for c in findings.caveats if c.strip()]
+        caveats = said[:CAVEATS_MAX] + caveats
         seen = today()
         asking = quantity(
             "asking",
