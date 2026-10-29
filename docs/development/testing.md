@@ -26,6 +26,12 @@ The inventory is tested at the service level against a temporary SQLite file (pr
 review, versions, components, soft delete, schema version) and through the routes, including a
 reading saved from the recorded extraction answer.
 
+Assessment is tested at three levels: each rule kind in isolation (missing values, normalised
+text, uncertainty that straddles the tolerance), the ladder from a list of checks, and the
+service against inventory items, including a value that came from a stored measurement with
+its uncertainty; the route covers both sides as items and as values, the profile's rules
+endpoint and every error status.
+
 Measurement is tested on synthetic photos with known geometry (`tests/measure_images.py`): a
 ruler bar of 400 px for 100 mm and an opening of 140 px, sharp and blurred; the geometry
 module against a known projective transform; every refusal reason; the routes including a

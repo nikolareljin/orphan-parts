@@ -511,3 +511,47 @@ button.link {
 .measure .history {
   margin-top: 0.75rem;
 }
+
+/* does it fit */
+.assess .needed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.verdict {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid var(--muted);
+  background: var(--card);
+}
+
+.verdict strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.verdict.fits {
+  border-color: #27ae60;
+}
+
+.verdict.conflict {
+  border-color: var(--error);
+}
+
+.verdict.unsure {
+  border-color: #f1c40f;
+}
+
+.checks-table td.fail {
+  color: var(--error);
+}
+
+.checks-table td.pass {
+  color: #27ae60;
+}
+
+.assess .questions {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
