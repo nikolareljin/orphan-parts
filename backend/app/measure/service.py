@@ -137,7 +137,14 @@ class Measurer:
         px_per_mm: float | None = None
         basis = "no number: the capture was refused"
         if accepted:
-            value, uncertainty, px_per_mm, basis = self._compute(ref, points, ref_px, feature_px)
+            try:
+                value, uncertainty, px_per_mm, basis = self._compute(
+                    ref, points, ref_px, feature_px
+                )
+            except ValueError as exc:
+                # four corners on one line, or a point the transform sends to infinity
+                checks.append(Check(name="geometry", passed=False, detail=str(exc)))
+                accepted = False
 
         feature = self.profiles.feature(request.profile, request.feature)
         tolerance = feature.tolerance_mm if feature else None

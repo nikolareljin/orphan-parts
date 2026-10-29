@@ -192,3 +192,40 @@ async def test_measure_prepares_the_photo_and_returns_it(measurer: Measurer) -> 
     result, prepared = await measurer.measure(ruler_photo(), two_point_request())
     assert result.accepted
     assert prepared[:2] == b"\xff\xd8"
+
+
+def test_corners_on_one_line_are_refused_not_crashed(measurer: Measurer) -> None:
+    # four sharp marks along the ruler, equal sides, but all on one line
+    flat = [{"x": x, "y": 400} for x in (100, 300, 500, 300)]
+    request = MeasureRequest.model_validate(
+        {
+            "feature": "width",
+            "image": {"width": 640, "height": 480},
+            "reference": {
+                "kind": "rectangle",
+                "corners": flat,
+                "width_mm": 85.6,
+                "height_mm": 53.98,
+            },
+            "points": [{"x": 200, "y": 200}, {"x": 340, "y": 200}],
+        }
+    )
+    result = measurer.compute(ruler_photo(), request)
+    assert result.accepted is False and result.value_mm is None
+    geometry_check = next(c for c in result.checks if c.name == "geometry")
+    assert geometry_check.passed is False
+    assert "unique transform" in result.redo
+
+
+def test_marks_and_lengths_must_be_finite() -> None:
+    def body(points: str, length: str) -> str:
+        return (
+            '{"feature":"w","image":{"width":640,"height":480},'
+            '"reference":{"kind":"two_point","points":' + points + ',"length_mm":' + length + "},"
+            '"points":[{"x":1,"y":1},{"x":2,"y":2}],"straight_on":true}'
+        )
+
+    with pytest.raises(ValueError):
+        MeasureRequest.model_validate_json(body('[{"x":NaN,"y":1},{"x":2,"y":2}]', "100"))
+    with pytest.raises(ValueError):
+        MeasureRequest.model_validate_json(body('[{"x":1,"y":1},{"x":2,"y":2}]', "Infinity"))

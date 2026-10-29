@@ -14,6 +14,11 @@ export function markLabel(index: number, kind: ReferenceKind): string {
   return `F${index - refCount + 1}`
 }
 
+// The feature to start from when the profile changes: its first one, else a key of your own.
+export function defaultFeatureKey(features: { key: string }[]): string {
+  return features[0]?.key ?? '__other'
+}
+
 export function nextInstruction(count: number, kind: ReferenceKind): string {
   const refCount = kind === 'two_point' ? 2 : 4
   if (count < refCount) {

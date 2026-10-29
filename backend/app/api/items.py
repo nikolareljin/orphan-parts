@@ -1,9 +1,9 @@
 from collections.abc import Callable
 
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
-from app.api.deps import InventoryDep
+from app.api.deps import InventoryDep, ProfilesDep
 from app.inventory import (
     ComponentCreate,
     Event,
@@ -16,6 +16,7 @@ from app.inventory import (
     ReviewChange,
     VersionConflictError,
 )
+from app.profiles import Profiles, UnknownProfileError
 
 router = APIRouter(prefix="/api/items", tags=["inventory"])
 
@@ -35,9 +36,22 @@ error_handlers: dict[type[Exception], Handler] = {
 }
 
 
+def _known_profile(profile: str | None, profiles: Profiles) -> None:
+    """An item's profile is one that ships, or none."""
+    if not profile:
+        return
+    try:
+        profiles.get(profile)
+    except UnknownProfileError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+
+
 @router.post("", response_model=Item, status_code=status.HTTP_201_CREATED)
-def create_item(spec: ItemCreate, inventory: InventoryDep) -> Item:
+def create_item(spec: ItemCreate, inventory: InventoryDep, profiles: ProfilesDep) -> Item:
     """Save an item privately, from a label reading or by hand. Nothing is published."""
+    _known_profile(spec.profile, profiles)
     return inventory.create(spec)
 
 
@@ -53,8 +67,11 @@ def get_item(item_id: int, inventory: InventoryDep) -> Item:
 
 
 @router.patch("/{item_id}", response_model=Item)
-def update_item(item_id: int, patch: ItemPatch, inventory: InventoryDep) -> Item:
+def update_item(
+    item_id: int, patch: ItemPatch, inventory: InventoryDep, profiles: ProfilesDep
+) -> Item:
     """Edit the item in place. With ``version`` set, a stale write is refused with 409."""
+    _known_profile(patch.profile, profiles)
     return inventory.update(item_id, patch)
 
 

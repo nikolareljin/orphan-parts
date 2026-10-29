@@ -7,9 +7,12 @@ from pydantic import BaseModel, Field
 FEATURE_KEY = r"^[a-z][a-z0-9_]{0,63}$"
 
 
+Finite = Field(allow_inf_nan=False)
+
+
 class Point(BaseModel):
-    x: float
-    y: float
+    x: float = Finite
+    y: float = Finite
 
 
 class ImageSize(BaseModel):
@@ -24,8 +27,8 @@ class TwoPointReference(BaseModel):
 
     kind: Literal["two_point"] = "two_point"
     points: list[Point] = Field(min_length=2, max_length=2)
-    length_mm: float = Field(gt=0)
-    tolerance_mm: float = Field(ge=0, default=0.5)
+    length_mm: float = Field(gt=0, allow_inf_nan=False)
+    tolerance_mm: float = Field(ge=0, default=0.5, allow_inf_nan=False)
 
 
 class RectangleReference(BaseModel):
@@ -34,9 +37,9 @@ class RectangleReference(BaseModel):
 
     kind: Literal["rectangle"] = "rectangle"
     corners: list[Point] = Field(min_length=4, max_length=4)
-    width_mm: float = Field(gt=0)
-    height_mm: float = Field(gt=0)
-    tolerance_mm: float = Field(ge=0, default=0.2)
+    width_mm: float = Field(gt=0, allow_inf_nan=False)
+    height_mm: float = Field(gt=0, allow_inf_nan=False)
+    tolerance_mm: float = Field(ge=0, default=0.2, allow_inf_nan=False)
 
 
 Reference = Annotated[TwoPointReference | RectangleReference, Field(discriminator="kind")]

@@ -50,8 +50,9 @@ missing an item it refers to.
 ## Storage
 
 One SQLite file, `INVENTORY_DB_FILE` inside `DATA_DIR`, in WAL mode with a versioned schema.
-Three tables: items, assertions (one row per value with its provenance, confidence, source and
-review state) and events (one row per change with the version it produced). Postgres and object
+Four tables: items, assertions (one row per value with its provenance, confidence, source and
+review state), events (one row per change with the version it produced) and measurements (each
+capture with its result and the prepared photo it was made on). Postgres and object
 storage are the documented path after the hackathon; the service layer is the only place that
 knows SQL.
 

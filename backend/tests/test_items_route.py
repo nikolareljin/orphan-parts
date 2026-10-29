@@ -139,3 +139,15 @@ def test_null_and_observed_through_the_routes(client: TestClient) -> None:
     assert client.post(f"/api/items/{item_id}/fields", json=fake).status_code == 422
     long = client.post("/api/items", json={"item_type": "x" * 201})
     assert long.status_code == 422
+
+
+def test_a_profile_must_be_one_that_ships(client: TestClient) -> None:
+    for profile in ("toaster", "Bad Id"):
+        unknown = client.post("/api/items", json={"item_type": "x", "profile": profile})
+        assert unknown.status_code == 422
+    item = create(client, item_type="x", profile="power_adapter")
+    assert item["profile"] == "power_adapter"
+    bad = client.patch(f"/api/items/{item['id']}", json={"profile": "toaster"})
+    assert bad.status_code == 422 and "no profile 'toaster'" in bad.json()["detail"]
+    none = client.patch(f"/api/items/{item['id']}", json={"profile": ""})
+    assert none.status_code == 200 and none.json()["profile"] == ""

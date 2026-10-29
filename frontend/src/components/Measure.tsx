@@ -3,6 +3,7 @@ import { api, type Item, type Measurement, type MeasureResult, type Point, type 
 import { whenText } from '../lib/inventory'
 import {
   buildRequest,
+  defaultFeatureKey,
   fitScale,
   formatMm,
   markLabel,
@@ -47,6 +48,7 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
     let cancelled = false
     if (!item.profile) {
       setFeatures([])
+      setFeatureKey('__other')
       return
     }
     api.profiles
@@ -54,7 +56,7 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
       .then((list) => {
         if (cancelled) return
         setFeatures(list)
-        setFeatureKey((k) => k || list[0]?.key || '')
+        setFeatureKey(defaultFeatureKey(list))
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(message(err))

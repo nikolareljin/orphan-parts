@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildRequest, fitScale, formatMm, markLabel, marksNeeded, methodLabel, nextInstruction, toPhoto } from './measure'
+import { buildRequest, defaultFeatureKey, fitScale, formatMm, markLabel, marksNeeded, methodLabel, nextInstruction, toPhoto } from './measure'
 
 const spec = { kind: 'two_point' as const, length_mm: 100, width_mm: 0, height_mm: 0, tolerance_mm: 0.5 }
 const image = { width: 640, height: 480 }
@@ -61,5 +61,12 @@ describe('formatting', () => {
     expect(formatMm({ value_mm: 35.04, uncertainty_mm: 1.1875 })).toBe('35.0 ± 1.19 mm')
     expect(formatMm({ value_mm: null, uncertainty_mm: null })).toBe('no number')
     expect(methodLabel('two_point_scale')).toBe('two-point scale')
+  })
+})
+
+describe('defaultFeatureKey', () => {
+  it('starts from the first feature of the profile, else a key of your own', () => {
+    expect(defaultFeatureKey([{ key: 'opening_inner_diameter' }, { key: 'insertion_depth' }])).toBe('opening_inner_diameter')
+    expect(defaultFeatureKey([])).toBe('__other')
   })
 })
