@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import ExtractForm from './components/ExtractForm'
+import Find from './components/Find'
 import Inventory from './components/Inventory'
 import { api, type Readiness, type Version } from './lib/api'
 import './App.css'
 
 type Status = { kind: 'loading' } | { kind: 'ok'; ready: Readiness; version: Version } | { kind: 'error'; message: string }
-type View = 'read' | 'inventory'
+type View = 'read' | 'inventory' | 'find'
 
 export default function App() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
@@ -42,6 +43,9 @@ export default function App() {
           >
             My inventory
           </button>
+          <button type="button" aria-current={view === 'find' ? 'page' : undefined} onClick={() => setView('find')}>
+            Find a part
+          </button>
         </nav>
       </header>
 
@@ -62,6 +66,13 @@ export default function App() {
         <section className="card">
           <h2>My inventory</h2>
           <Inventory refresh={saved} />
+        </section>
+      )}
+
+      {view === 'find' && (
+        <section className="card">
+          <h2>Find a part</h2>
+          <Find />
         </section>
       )}
 

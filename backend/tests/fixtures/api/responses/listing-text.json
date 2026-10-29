@@ -1,0 +1,59 @@
+{
+  "endpoint": "/responses",
+  "op": "listing-text",
+  "model": "muse-spark-1.3",
+  "key": "fallback-listing-text",
+  "request": {
+    "instructions": "listing text reading instructions, see app/find/service.py",
+    "input": "one text part: the pasted listing and the field names, see app/find/service.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ListingReading",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_listing-text",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_listing_text",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "msg_fixture_listing_text",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "{\"title\": \"Orbital 65W laptop charger 19.5V, works\", \"asking_price\": \"15\", \"currency\": \"USD\", \"location\": \"Astoria\", \"included\": \"power cord\", \"fields\": [{\"name\": \"brand\", \"value\": \"Orbital\", \"unit\": \"\", \"confidence\": 0.95}, {\"name\": \"model_number\", \"value\": \"OP065-19-333\", \"unit\": \"\", \"confidence\": 0.9}, {\"name\": \"output_voltage\", \"value\": \"19.5\", \"unit\": \"V\", \"confidence\": 0.95}, {\"name\": \"output_current\", \"value\": \"3.34\", \"unit\": \"A\", \"confidence\": 0.9}, {\"name\": \"polarity\", \"value\": \"center positive\", \"unit\": \"\", \"confidence\": 0.8}, {\"name\": \"connector\", \"value\": \"barrel 4.5 x 3.0 mm\", \"unit\": \"\", \"confidence\": 0.85}, {\"name\": \"plug_outer_diameter\", \"value\": \"4.5\", \"unit\": \"mm\", \"confidence\": 0.8}, {\"name\": \"plug_inner_diameter\", \"value\": \"3.0\", \"unit\": \"mm\", \"confidence\": 0.8}, {\"name\": \"colour\", \"value\": \"black\", \"unit\": \"\", \"confidence\": 0.9}]}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 640,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 210,
+      "output_tokens_details": {
+        "reasoning_tokens": 30
+      },
+      "total_tokens": 850
+    }
+  },
+  "status": 200
+}

@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -105,7 +105,39 @@ CREATE TABLE price_reports (
 CREATE INDEX price_reports_by_item ON price_reports (item_id);
 """
 
-MIGRATIONS: dict[int, str] = {1: _SCHEMA, 2: _SCHEMA_V2, 3: _SCHEMA_V3, 4: _SCHEMA_V4}
+# version 5: missing-item searches run by handoff, and the candidates brought back for them
+_SCHEMA_V5 = """
+CREATE TABLE searches (
+    id INTEGER PRIMARY KEY,
+    need_item_id INTEGER REFERENCES items(id),
+    profile TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    status TEXT NOT NULL,
+    handoff_url TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE candidates (
+    id INTEGER PRIMARY KEY,
+    search_id INTEGER NOT NULL REFERENCES searches(id),
+    source_kind TEXT NOT NULL,
+    observed_on TEXT NOT NULL,
+    state TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    assessed_at TEXT NOT NULL
+);
+CREATE INDEX candidates_by_search ON candidates (search_id);
+"""
+
+MIGRATIONS: dict[int, str] = {
+    1: _SCHEMA,
+    2: _SCHEMA_V2,
+    3: _SCHEMA_V3,
+    4: _SCHEMA_V4,
+    5: _SCHEMA_V5,
+}
 
 
 class SchemaTooNewError(RuntimeError):

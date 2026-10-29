@@ -26,6 +26,13 @@ The inventory is tested at the service level against a temporary SQLite file (pr
 review, versions, components, soft delete, schema version) and through the routes, including a
 reading saved from the recorded extraction answer.
 
+Missing items are tested with a recorded listing reading (`listing-text`): the handoff link,
+the ladder onto the states, the seller message; a search from an item or from values with its
+refusals; a text candidate read, assessed and dated, with a rule key kept as read and an unknown
+name dropped; typed values as the owner's word and a conflict rejected; a screenshot through the
+extractor; a recheck after the need changed and a withdrawal; a candidate without its source
+refused; the routes with multipart requests and every refusal.
+
 Price guidance is tested against a recorded search-grounded answer (`price`): one search, four
 results, five proposed comparables of which the unbacked one is dropped and said; the four
 figures and their counts; a reported sale counted apart and one in another currency not; whole

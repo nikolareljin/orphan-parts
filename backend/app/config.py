@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     price_search_context: Literal["low", "medium", "high"] = "low"
     price_country: str = ""
     marketplace_create_url: str = "https://www.facebook.com/marketplace/create/item"
+    marketplace_search_url: str = "https://www.facebook.com/marketplace/search/"
+    candidate_days: int = 14
     max_photos: int = 4
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"

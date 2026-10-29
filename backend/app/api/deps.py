@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 
 from app.config import Settings
 from app.extract.service import Extractor
+from app.find.service import Finder
 from app.inventory.service import Inventory
 from app.listing.service import Lister
 from app.listing.voice import VoiceNotes
@@ -99,3 +100,11 @@ def app_valuer(request: Request) -> Valuer:
 
 
 ValuerDep = Annotated[Valuer, Depends(app_valuer)]
+
+
+def app_finder(request: Request) -> Finder:
+    finder: Finder = request.app.state.finder
+    return finder
+
+
+FinderDep = Annotated[Finder, Depends(app_finder)]

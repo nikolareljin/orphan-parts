@@ -24,6 +24,17 @@ Price guidance is one call with the `web_search` tool and the strict JSON schema
 The code path is `app/value/service.py`; the [value guide](../guides/value.md) shows what the
 four figures mean.
 
+## Listing text
+
+A pasted listing is read with one call and the strict JSON schema of `ListingReading`: the
+title, the asking price and currency, the place and what is included as written, and the
+fields the text supports with a confidence each. The field names offered are the label fields
+plus the search profile's rule keys, so a plug diameter a seller wrote can be read; the
+instructions say to leave out anything the seller did not state. Known fields pass through the
+same normalisers as a label reading; a rule key the label set does not know is kept as read;
+any other name is dropped. Operation name `listing-text`, which is also the recorded fixture.
+The code path is `app/find/service.py`.
+
 ## Label extraction
 
 One call per request, however many photos (up to `MAX_PHOTOS`, default 4):

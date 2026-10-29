@@ -38,6 +38,10 @@ class Extractor:
         self.settings = settings
         self.client = client
 
+    def field_names(self) -> list[str]:
+        """The field names a reading may use, as the label set defines them."""
+        return list(FIELD_BY_NAME)
+
     async def extract(self, photos: list[bytes], crops: list[bytes] | None = None) -> Extraction:
         """``crops`` are label crops from segmentation; with them, evidence is sourced
         ``label_crop`` instead of ``photo``."""

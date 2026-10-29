@@ -416,6 +416,95 @@ class Inventory:
                 "SELECT * FROM price_reports WHERE item_id = ? ORDER BY sold_on, id", (item_id,)
             ).fetchall()
 
+    # missing-item searches and their candidates; a search may name the item it is for
+
+    _SEARCH_SELECT = (
+        "SELECT s.*, (SELECT COUNT(*) FROM candidates c WHERE c.search_id = s.id)"
+        " AS candidate_count FROM searches s"
+    )
+
+    def add_search(
+        self, *, need_item_id: int | None, profile: str, title: str, content: str, handoff_url: str
+    ) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            if need_item_id is not None:
+                row = self._row(conn, need_item_id)
+                self._event(conn, need_item_id, f"search opened: {title}", int(row["version"]), at)
+            cur = conn.execute(
+                "INSERT INTO searches (need_item_id, profile, title, content, status, handoff_url,"
+                " created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                (need_item_id, profile, title, content, "open", handoff_url, at, at),
+            )
+            return self._search(conn, int(cur.lastrowid or 0))
+
+    def searches(self) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            return conn.execute(self._SEARCH_SELECT + " ORDER BY s.id DESC").fetchall()
+
+    def search(self, search_id: int) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            return self._search(conn, search_id)
+
+    def update_search(self, search_id: int, status: str, content: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            self._search(conn, search_id)
+            conn.execute(
+                "UPDATE searches SET status = ?, content = ?, updated_at = ? WHERE id = ?",
+                (status, content, now(), search_id),
+            )
+            return self._search(conn, search_id)
+
+    def _search(self, conn: sqlite3.Connection, search_id: int) -> sqlite3.Row:
+        row: sqlite3.Row | None = conn.execute(
+            self._SEARCH_SELECT + " WHERE s.id = ?", (search_id,)
+        ).fetchone()
+        if row is None:
+            raise NotFoundError(f"no search {search_id}")
+        return row
+
+    def add_candidate(
+        self, search_id: int, source_kind: str, observed_on: str, state: str, content: str
+    ) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            self._search(conn, search_id)
+            cur = conn.execute(
+                "INSERT INTO candidates (search_id, source_kind, observed_on, state, content,"
+                " created_at, assessed_at) VALUES (?,?,?,?,?,?,?)",
+                (search_id, source_kind, observed_on, state, content, at, at),
+            )
+            conn.execute("UPDATE searches SET updated_at = ? WHERE id = ?", (at, search_id))
+            return self._candidate(conn, int(cur.lastrowid or 0))
+
+    def candidates(self, search_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            self._search(conn, search_id)
+            return conn.execute(
+                "SELECT * FROM candidates WHERE search_id = ? ORDER BY id", (search_id,)
+            ).fetchall()
+
+    def candidate(self, candidate_id: int) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            return self._candidate(conn, candidate_id)
+
+    def update_candidate(self, candidate_id: int, state: str, content: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            self._candidate(conn, candidate_id)
+            conn.execute(
+                "UPDATE candidates SET state = ?, content = ?, assessed_at = ? WHERE id = ?",
+                (state, content, now(), candidate_id),
+            )
+            return self._candidate(conn, candidate_id)
+
+    def _candidate(self, conn: sqlite3.Connection, candidate_id: int) -> sqlite3.Row:
+        row: sqlite3.Row | None = conn.execute(
+            "SELECT * FROM candidates WHERE id = ?", (candidate_id,)
+        ).fetchone()
+        if row is None:
+            raise NotFoundError(f"no candidate {candidate_id}")
+        return row
+
     def delete(self, item_id: int) -> None:
         """Hidden, not erased: the record and its events stay for the audit trail."""
         at = now()
