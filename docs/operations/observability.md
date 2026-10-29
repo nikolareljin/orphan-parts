@@ -18,5 +18,7 @@ the delay and the error. Reaching the cap logs a warning and `GET /readyz` turns
 
 `DATA_DIR/model_api_spend.jsonl` holds one JSON line per call (timestamp, request ID, operation,
 model, endpoint, usage, price, fixture flag, attempts, duration). The file survives restarts, so
-the cap is cumulative for the deployment, not per process. `GET /api/spend` summarises it per
-model. Delete the file to reset the total.
+the cap is cumulative for the deployment, not per start: the backend reads it once at startup
+and keeps the running total in memory from there, which is why production runs one backend
+process (see [Deployment](deployment.md)). `GET /api/spend` summarises it per model. Delete the
+file to reset the total.

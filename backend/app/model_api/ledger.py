@@ -46,7 +46,9 @@ class LedgerSummary(BaseModel):
 
 
 class CostLedger:
-    """Thread-safe running total. Entries are appended to a JSON-lines file when a path is set."""
+    """Thread-safe running total, kept by one process. Entries are appended to a JSON-lines file
+    when a path is set and read back once at startup; the file is the record, the total is not
+    shared between processes, so the service runs one."""
 
     def __init__(self, cap_usd: float, path: Path | None = None) -> None:
         self.cap_usd = cap_usd
