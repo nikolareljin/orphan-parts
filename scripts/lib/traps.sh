@@ -5,32 +5,40 @@ _on_exit_fns=()
 _tmp_dirs=()
 
 # on_exit <function>: call the function when the script exits, in reverse registration order.
-# A function name, not a command string: nothing is re-parsed by the shell at exit.
+# A function name, not a command string: nothing is re-parsed by the shell at exit, and a name
+# that is not a function is refused here rather than ignored at exit.
 on_exit() {
-  _on_exit_fns=("$1" "${_on_exit_fns[@]}")
+  if ! declare -F -- "$1" >/dev/null 2>&1; then
+    echo "on_exit: not a function: $1" >&2
+    return 1
+  fi
+  # the empty-array expansion is spelled out for bash 3.2 under set -u
+  _on_exit_fns=("$1" ${_on_exit_fns[@]+"${_on_exit_fns[@]}"})
   trap '_run_on_exit' EXIT
 }
 
 _run_on_exit() {
   local status=$? fn
-  for fn in "${_on_exit_fns[@]}"; do
+  for fn in ${_on_exit_fns[@]+"${_on_exit_fns[@]}"}; do
     "$fn" || true
   done
   return $status
 }
 
 _rm_tmp_dirs() {
-  (( ${#_tmp_dirs[@]} )) && rm -rf -- "${_tmp_dirs[@]}"
+  (( ${#_tmp_dirs[@]} )) && rm -rf -- ${_tmp_dirs[@]+"${_tmp_dirs[@]}"}
   _tmp_dirs=()
 }
 
-# tmp_dir: create a temp dir that is removed on exit, print its path.
+# tmp_dir <variable>: create a temp dir that is removed on exit and put its path in the
+# variable. It assigns rather than prints: inside $(...) the cleanup would be registered in a
+# subshell and run the moment that subshell ends, taking the directory with it.
 tmp_dir() {
   local d
   d="$(mktemp -d "${TMPDIR:-/tmp}/opl.XXXXXX")"
   (( ${#_tmp_dirs[@]} )) || on_exit _rm_tmp_dirs
   _tmp_dirs+=("$d")
-  echo "$d"
+  printf -v "$1" '%s' "$d"
 }
 
 _kill_jobs() {
