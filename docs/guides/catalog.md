@@ -1,6 +1,8 @@
-# Catalog feed and Graph push
+# Catalog feed
 
-Export one part or a batch as a Meta catalog product feed for Commerce Manager. Optional push to a catalog through the Graph API with your own catalog ID and token.
-
-!!! note
-    Not built yet.
+Not in this version. What exists is the listing draft on each item, with every fact resting on
+a confirmed field, the disclosures the rules append, and the handoff to the Marketplace create
+page ([Marketplace handoff](marketplace.md)). A catalog export would take the same drafts and
+write them in a product feed's columns; nothing of that is built, and no catalog id or token
+is read by the service. It stays on the [roadmap](../project/roadmap.md) with the other
+channels.
