@@ -13,6 +13,8 @@ wired in yet.
   `input_image` part (the prepared photo as a JPEG data URL). `metadata` asks for
   `include_confidence` and the `one_bit` mask encoding, which is the smaller payload. One
   concept per call; the default set is item, label and connector, so a photo costs three calls.
+  The calls are in flight together, so the wait is the slowest of them, not their sum, and a
+  failed one fails the request with its own error.
 - **Output.** Plain text in a line grammar: a frame marker, then one record per match with a
   box token (`x1, y1, x2, y2` inclusive, plus the image size the model saw) and a mask token
   (a raster the size of the box, base85 encoded). Meta's `meta-sam-parser` package validates

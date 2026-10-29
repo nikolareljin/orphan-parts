@@ -70,7 +70,7 @@ test('a photo becomes an evidence table', async ({ page }) => {
 })
 
 test('the label is found first and read from its crop', async ({ page }) => {
-  // the recorded masks are decoded in pure Python, one concept after another: slow under load
+  // the recorded masks are decoded in pure Python: slow under load
   test.slow()
   await page.goto('/')
   await page
@@ -92,6 +92,25 @@ test('the label is found first and read from its crop', async ({ page }) => {
   await expect(table).toBeVisible()
   await expect(table.getByRole('row', { name: /Output voltage/ })).toContainText('label_crop')
   await expect(page.getByText('2 crops')).toBeVisible()
+})
+
+test('when the label cannot be found first, the photos are read whole and the page says why', async ({ page }) => {
+  await page.route('**/api/segment', (route) =>
+    route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'the model is busy' }) }),
+  )
+  await page.goto('/')
+  await page
+    .getByLabel('Photos of the label')
+    .setInputFiles({ name: 'adapter.png', mimeType: 'image/png', buffer: greyPng() })
+  await expect(page.getByLabel(findFirst)).toBeChecked()
+  await page.getByRole('button', { name: 'Read the label' }).click()
+
+  const table = page.getByRole('table', { name: 'Evidence' })
+  await expect(table).toBeVisible()
+  await expect(page.getByText(/could not be found first/)).toContainText('the model is busy')
+  await expect(table.getByRole('row', { name: /Output voltage/ })).toContainText('photo')
+  await expect(page.getByRole('img', { name: 'Photo with the found regions drawn over it' })).toHaveCount(0)
+  await expect(page.getByRole('alert')).toHaveCount(0)
 })
 
 test('a file that is not a photo is refused with the API message', async ({ page }) => {

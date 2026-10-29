@@ -3,7 +3,7 @@ import { percent, usd } from '../lib/format'
 
 export default function SegmentView({ result }: { result: Segmentation }) {
   return (
-    <section className="segments" aria-live="polite">
+    <section className="segments">
       <p className="meta">
         {result.model} · {result.regions.length} {result.regions.length === 1 ? 'region' : 'regions'} ·{' '}
         {usd(result.cost_usd)}

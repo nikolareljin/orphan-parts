@@ -7,9 +7,13 @@ import SegmentView from './SegmentView'
 type State =
   | { kind: 'idle' }
   | { kind: 'segmenting' }
-  | { kind: 'reading'; segmentation?: Segmentation }
-  | { kind: 'done'; segmentation?: Segmentation; result: Extraction }
-  | { kind: 'error'; segmentation?: Segmentation; message: string }
+  | { kind: 'reading'; segmentation?: Segmentation; note?: string }
+  | { kind: 'done'; segmentation?: Segmentation; note?: string; result: Extraction }
+  | { kind: 'error'; segmentation?: Segmentation; note?: string; message: string }
+
+function messageOf(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
 
 export default function ExtractForm({ limits = DEFAULT_LIMITS }: { limits?: Limits }) {
   const [files, setFiles] = useState<File[]>([])
@@ -19,6 +23,7 @@ export default function ExtractForm({ limits = DEFAULT_LIMITS }: { limits?: Limi
 
   const busy = state.kind === 'segmenting' || state.kind === 'reading'
   const segmentation = 'segmentation' in state ? state.segmentation : undefined
+  const note = 'note' in state ? state.note : undefined
 
   function onPick(event: ChangeEvent<HTMLInputElement>) {
     const picked = takePhotos(Array.from(event.target.files ?? []), limits.max_photos)
@@ -36,18 +41,25 @@ export default function ExtractForm({ limits = DEFAULT_LIMITS }: { limits?: Limi
       return
     }
     let segmentation: Segmentation | undefined
+    let note: string | undefined
     try {
       if (findFirst) {
         setState({ kind: 'segmenting' })
-        segmentation = await api.segment(files[0])
+        try {
+          segmentation = await api.segment(files[0])
+        } catch (err: unknown) {
+          // the photos are still readable whole; say what was skipped and why
+          note = `The label could not be found first (${messageOf(err)}), so the photos were read whole.`
+        }
       }
-      setState({ kind: 'reading', segmentation })
+      setState({ kind: 'reading', segmentation, note })
       const crops = (segmentation?.regions ?? [])
         .filter((r) => r.concept === 'label')
+        .slice(0, limits.max_photos)
         .map((r, i) => dataUrlToFile(r.crop, `label-${i + 1}.jpg`))
-      setState({ kind: 'done', segmentation, result: await api.extract(files, crops) })
+      setState({ kind: 'done', segmentation, note, result: await api.extract(files, crops) })
     } catch (err: unknown) {
-      setState({ kind: 'error', segmentation, message: err instanceof Error ? err.message : String(err) })
+      setState({ kind: 'error', segmentation, note, message: messageOf(err) })
     }
   }
 
@@ -84,6 +96,7 @@ export default function ExtractForm({ limits = DEFAULT_LIMITS }: { limits?: Limi
       )}
       {/* the live region stays mounted, so results landing in it are announced */}
       <div aria-live="polite">
+        {note && <p className="hint">{note}</p>}
         {segmentation && <SegmentView result={segmentation} />}
         {state.kind === 'done' && <EvidenceTable result={state.result} />}
       </div>

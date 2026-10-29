@@ -7,7 +7,7 @@ import anyio
 
 from app.config import Settings
 from app.extract.imaging import BadImageError, dimensions, prepare
-from app.model_api import ModelApiClient, image_part, text_part, user_message
+from app.model_api import ModelApiClient, ModelResponse, image_part, text_part, user_message
 from app.segment.concepts import DEFAULT_CONCEPTS, MAX_CONCEPTS, phrase_for, slug_for
 from app.segment.parse import Match, parse_matches
 from app.segment.render import (
@@ -26,10 +26,20 @@ log = logging.getLogger("app.segment")
 MAX_REGIONS_PER_CONCEPT = 4
 MASK_ENCODING = "one_bit"
 
+Answer = tuple[ModelResponse, list[Match], list[str]]
+
 
 def op_for(concept: str) -> str:
     """Operation name per concept: the ledger line and the fixture file are named after it."""
     return "segment-" + slug_for(concept)
+
+
+def _leaf(exc: BaseException) -> BaseException:
+    """The first plain exception inside a group: one failed concept fails the request with
+    the error it had, not with a wrapper the routes do not know."""
+    while isinstance(exc, BaseExceptionGroup):
+        exc = exc.exceptions[0]
+    return exc
 
 
 class Segmenter:
@@ -54,32 +64,47 @@ class Segmenter:
         small = await anyio.to_thread.run_sync(
             lambda: prepare(prepared, max_px=s.segment_max_px, max_bytes=max_bytes)
         )
+        seen = dimensions(small)
+        image = image_part(small, "image/jpeg")
+        answers: dict[int, Answer] = {}
+
+        async def ask(index: int, key: str) -> None:
+            response = await self.client.respond(
+                model=s.model_sam,
+                input=[user_message(text_part(phrase_for(key)), image)],
+                op=op_for(key),
+                metadata={"include_confidence": "true", "mask_encoding": MASK_ENCODING},
+            )
+            # decoding the masks is CPU work; keep it off the event loop
+            matches, problems = await anyio.to_thread.run_sync(parse_matches, response.text)
+            answers[index] = (response, matches, problems)
+
+        # one call per concept, all in flight together: the wait is the slowest call, not the sum
+        try:
+            async with anyio.create_task_group() as group:
+                for index, key in enumerate(keys):
+                    group.start_soon(ask, index, key)
+        except BaseExceptionGroup as failed:
+            raise _leaf(failed) from None
 
         found: list[tuple[str, str, Match]] = []
         warnings: list[str] = []
         cost = 0.0
         from_fixture = True
         model = s.model_sam
-        for key in keys:
-            phrase = phrase_for(key)
-            response = await self.client.respond(
-                model=s.model_sam,
-                input=[user_message(text_part(phrase), image_part(small, "image/jpeg"))],
-                op=op_for(key),
-                metadata={"include_confidence": "true", "mask_encoding": MASK_ENCODING},
-            )
-            matches, problems = parse_matches(response.text)
+        for index, key in enumerate(keys):
+            response, matches, problems = answers[index]
             warnings.extend(f"{key}: {p}" for p in problems)
             if not matches:
                 warnings.append(f"no {key} found")
             matches.sort(key=lambda m: -(m.confidence if m.confidence is not None else 0.0))
-            found.extend((key, phrase, m) for m in matches[:MAX_REGIONS_PER_CONCEPT])
+            found.extend((key, phrase_for(key), m) for m in matches[:MAX_REGIONS_PER_CONCEPT])
             cost += response.cost_usd
             from_fixture = from_fixture and response.from_fixture
             model = response.model
 
         def build() -> tuple[list[Region], str]:
-            return assemble(prepared, width, height, found)
+            return assemble(prepared, width, height, found, seen=seen)
 
         regions, overlay_url = await anyio.to_thread.run_sync(build)
         result = Segmentation(
@@ -105,14 +130,25 @@ class Segmenter:
 
 
 def assemble(
-    photo: bytes, width: int, height: int, found: list[tuple[str, str, Match]]
+    photo: bytes,
+    width: int,
+    height: int,
+    found: list[tuple[str, str, Match]],
+    *,
+    seen: tuple[int, int] | None = None,
 ) -> tuple[list[Region], str]:
-    """Scale every match onto the prepared photo, render its crop and the shared overlay."""
+    """Scale every match onto the prepared photo, render its crop and the shared overlay.
+
+    Boxes are in the pixels of the copy the model saw. Each match names that size; ``seen``
+    is the size of the copy that was sent, used when a match does not."""
     regions: list[Region] = []
     layers = []
     for concept, phrase, m in found:
-        sx = width / m.source_width if m.source_width else 1.0
-        sy = height / m.source_height if m.source_height else 1.0
+        seen_width, seen_height = seen or (0, 0)
+        source_width = m.source_width or seen_width
+        source_height = m.source_height or seen_height
+        sx = width / source_width if source_width else 1.0
+        sy = height / source_height if source_height else 1.0
         raw = Box(left=m.left, top=m.top, right=m.right, bottom=m.bottom)
         box = clip(scale_box(raw, sx, sy), width, height)
         if box.width <= 0 or box.height <= 0:
