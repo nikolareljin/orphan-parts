@@ -31,3 +31,5 @@ def test_price_settings_are_checked() -> None:
         Settings(OPL_FAKE_API=True, price_search_context="huge", _env_file=None)
     s = Settings(OPL_FAKE_API=True, price_country="US", price_search_context="high", _env_file=None)
     assert (s.price_country, s.price_search_context) == ("US", "high")
+    with pytest.raises(ValueError, match="CANDIDATE_DAYS"):
+        Settings(OPL_FAKE_API=True, candidate_days=0, _env_file=None)

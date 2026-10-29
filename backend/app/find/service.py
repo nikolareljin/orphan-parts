@@ -110,8 +110,9 @@ class Finder:
     def create(self, spec: SearchCreate) -> Search:
         profile = spec.profile
         if spec.need_item_id is not None:
+            # the item's profile decides; a profile in the request fills in when it has none
             item = self.inventory.get(spec.need_item_id)
-            profile = profile or item.profile
+            profile = item.profile or profile
         if not profile:
             raise FindError("no profile: give one, or a need item that has one")
         try:

@@ -65,6 +65,8 @@ class Settings(BaseSettings):
             raise ValueError("SPEND_CAP_USD must not be negative")
         if self.price_country and not re.fullmatch(r"[A-Z]{2}", self.price_country):
             raise ValueError("PRICE_COUNTRY must be a two-letter ISO 3166-1 code, or empty")
+        if self.candidate_days < 1:
+            raise ValueError("CANDIDATE_DAYS must be at least 1")
         return self
 
     @property

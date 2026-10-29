@@ -242,11 +242,12 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
     load()
   }, [load])
 
+  const profile = search?.profile ?? ''
   useEffect(() => {
-    if (!search) return
+    if (!profile) return
     let cancelled = false
     api.profiles
-      .rules(search.profile)
+      .rules(profile)
       .then((list) => {
         if (!cancelled) setRules(list)
       })
@@ -254,7 +255,8 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
     return () => {
       cancelled = true
     }
-  }, [search])
+    // the profile, not the search object: a reload of the search is not a change of rules
+  }, [profile])
 
   async function setStatus(status: Search['status']) {
     try {

@@ -160,6 +160,9 @@ def test_a_search_takes_its_profile_from_the_item_and_names_the_handoff(finder: 
     assert [s.id for s in finder.searches()] == [search.id]
     closed = finder.update(search.id, SearchPatch(status="closed", notes="found one elsewhere"))
     assert closed.status == "closed" and closed.notes == "found one elsewhere"
+    # the item's profile decides, whatever the request says beside it
+    other = finder.create(SearchCreate(need_item_id=need, title="x", profile="vacuum_attachment"))
+    assert other.profile == "power_adapter"
 
 
 def test_a_search_without_a_profile_or_with_an_unknown_one_is_refused(finder: Finder) -> None:
@@ -343,6 +346,10 @@ def test_find_routes(recorded_client: TestClient) -> None:
         == 422
     )
     assert recorded_client.get("/api/searches/999").status_code == 404
+    assert (
+        recorded_client.post("/api/searches", json={"title": "x", "need_item_id": 999}).status_code
+        == 404
+    )
     assert recorded_client.get("/api/candidates/999").status_code == 404
     bad = recorded_client.post(
         f"/api/searches/{search['id']}/candidates", data={"request": json.dumps({"text": ""})}
