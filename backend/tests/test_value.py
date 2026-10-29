@@ -143,8 +143,9 @@ def adapter(inventory: Inventory) -> int:
 def test_the_brief_holds_confirmed_values_the_place_and_the_currency(settings: Settings) -> None:
     inventory = Inventory(settings)
     item = inventory.get(adapter(inventory))
-    text = brief(item, {"output_voltage": "19.5 V"}, PriceRequest(currency="EUR", city="Lyon"))
-    assert "currency: EUR" in text and "market: Lyon" in text
+    request = PriceRequest(currency="EUR", city=" Lyon \n 3e ")
+    text = brief(item, {"output_voltage": "19.5 V"}, request)
+    assert "currency: EUR" in text and "market: Lyon 3e" in text
     assert "- output_voltage: 19.5 V" in text
     assert "faults: frayed sleeve near the plug" in text
 
@@ -280,6 +281,8 @@ def test_price_routes(recorded_client: TestClient) -> None:
     for bad in (
         {"price": 0, "sold_on": "2026-09-30"},
         {"price": 5, "sold_on": "yesterday"},
+        {"price": 5, "sold_on": "2026-13-45"},
+        {"price": 5, "sold_on": "2999-01-01"},
         {"price": 5, "sold_on": "2026-09-30", "currency": "usd"},
         {"price": 5, "sold_on": "2026-09-30", "note": "n" * 201},
     ):

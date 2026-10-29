@@ -168,7 +168,7 @@ def strategies(asking: Quantity, estimate: Quantity, weak: bool) -> list[Strateg
             name="quick_sale",
             label="Quick sale",
             price=quick,
-            note="under the lowest asking price seen; expect the first serious buyer" + tail,
+            note="the lowest figure, asked or estimated; expect the first serious buyer" + tail,
         ),
         Strategy(
             name="typical",

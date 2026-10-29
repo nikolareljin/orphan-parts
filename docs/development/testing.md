@@ -72,7 +72,9 @@ Playwright runs in its official image against the dev stack with the backend in 
 so the browser sees exactly what a user sees and no credit is spent. The runner shares the
 frontend container's network and runs as the host user; results, traces and videos land under
 `e2e/test-results/`. Specs live in `e2e/tests/` and address the page by role and label, the way
-a user does. CI runs the same command in its `e2e` job.
+a user does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather
+than the default five: six workers share one backend process, and while the segmentation test
+decodes masks in pure Python every other read waits a second or two.
 
 The command starts the backend in fixture mode, recreating it if it was running with a key, and
 stops the whole stack afterwards unless `E2E_KEEP=1`; the next `./dev up` brings it back in the

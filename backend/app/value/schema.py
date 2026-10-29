@@ -1,8 +1,9 @@
 """Shapes of price guidance: what the model found, what the owner reported, what is shown."""
 
+from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 CURRENCY = r"^[A-Z]{3}$"
 DATE = r"^\d{4}-\d{2}-\d{2}$"
@@ -46,6 +47,11 @@ class PriceRequest(BaseModel):
     country: str = Field(default="", pattern=COUNTRY, description="ISO 3166-1, for local results")
     city: str = Field(default="", max_length=80)
 
+    @field_validator("city")
+    @classmethod
+    def _one_line(cls, value: str) -> str:
+        return " ".join(value.split())
+
 
 class PriceReportCreate(BaseModel):
     """A sale the owner knows of: theirs, or one they saw happen. Never mixed with the rest."""
@@ -54,6 +60,18 @@ class PriceReportCreate(BaseModel):
     currency: str = Field(default="USD", pattern=CURRENCY)
     sold_on: str = Field(pattern=DATE)
     note: str = Field(default="", max_length=NOTE_MAX)
+
+    @field_validator("sold_on")
+    @classmethod
+    def _a_day_that_was(cls, value: str) -> str:
+        # a real calendar day, and not one still to come: a sale is something that happened
+        try:
+            day = date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("sold_on must be a real date, YYYY-MM-DD") from exc
+        if day > datetime.now(UTC).date():
+            raise ValueError("sold_on cannot be in the future")
+        return value
 
 
 class PriceReport(BaseModel):
