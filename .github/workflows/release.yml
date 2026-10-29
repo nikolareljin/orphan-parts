@@ -59,7 +59,7 @@ jobs:
         run: |
           docker run -d --name opl -e OPL_FAKE_API=1 -e DATA_DIR=/data -p 8000:8000 "$IMAGE_PREFIX/backend:$TAG"
           ok=0
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -fsS http://localhost:8000/healthz >/dev/null 2>&1; then ok=1; break; fi
             sleep 1
           done
@@ -84,19 +84,29 @@ jobs:
         run: gh release create "$TAG" --title "$TAG" --notes-file notes.md
 
   # The Android app, once it is in the tree: a release APK attached to the release. The job
-  # does nothing until android/gradlew exists; the SDK setup the build needs arrives with the
-  # app, as a step here; the store upload is a later step.
+  # checks out the tag and does nothing more until android/gradlew exists (a job-level test
+  # of the tree is not possible, so the steps test it); the store upload is a later step.
   android:
     needs: publish
-    if: hashFiles('android/gradlew') != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: refs/tags/${{ inputs.tag || github.ref_name }}
+      - name: is there an app
+        id: app
+        run: |
+          if [ -f android/gradlew ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "no app in this tree; nothing to build"
+          fi
       - name: build the release APK
+        if: steps.app.outputs.present == 'true'
         run: bash scripts/deploy.sh android --version "$TAG"
       - name: attach the APK to the release
+        if: steps.app.outputs.present == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
