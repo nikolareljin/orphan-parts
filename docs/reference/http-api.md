@@ -36,9 +36,26 @@ separated `components`, and a `version` that every write increments.
 
 Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value
 outside the allowed sets (intent, availability, provenance, review), a field name that is not
-`snake_case`, a blank name, part name or value, an owner value claiming to be `observed`, or text
+`snake_case`, a blank name, part name or value, an owner value claiming to be `observed`, a
+`profile` that is not one that ships, or text
 over its bound (names 200 characters, values 500, details 4000). A key sent as `null` in a
 `PATCH` means not given.
+
+## Measurement and profile endpoints
+
+| Path | Purpose |
+|---|---|
+| `POST /api/measure` | multipart `photo` and `request` (JSON: `feature`, `profile`, `image` size as marked, `reference` of kind `two_point` with `points` and `length_mm` or `rectangle` with `corners`, `width_mm` and `height_mm`, each with a `tolerance_mm`, the feature `points`, `straight_on`): the result with `accepted`, `value_mm`, `uncertainty_mm`, `method`, `basis`, every `check` with `passed`, `detail` and `blocking`, `redo` when refused, `px_per_mm`, the marks scaled to the stored photo, `tolerance_mm` and `needs_direct_reading` when the profile names the feature. Nothing is stored |
+| `POST /api/items/{id}/measurements` | the same, stored on the item; an accepted capture proposes an observed value (source `measurement`) to confirm; `201` with the measurement (`id`, `assertion_id`, `at`) |
+| `GET /api/items/{id}/measurements` | every capture on the item, accepted or refused |
+| `GET /api/items/{id}/measurements/{mid}/photo` | the prepared JPEG the marks refer to |
+| `GET /api/profiles` | the shipped category profiles with their feature counts |
+| `GET /api/profiles/{id}` | one profile |
+| `GET /api/profiles/{id}/features` | the features worth measuring, each with `key`, `label`, `unit`, `tolerance_mm` and `how` |
+
+Errors: `400` for a bad photo, `404` for an unknown item, measurement or profile, `422` for a
+`request` that does not parse, a profile that does not exist, or a feature key that is not
+`snake_case`.
 
 ## Operational endpoints
 

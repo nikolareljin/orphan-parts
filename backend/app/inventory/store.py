@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -52,6 +52,23 @@ CREATE TABLE events (
 CREATE INDEX events_by_item ON events (item_id);
 """
 
+# version 2: the item's category profile, and measurements with the photo they were made on
+_SCHEMA_V2 = """
+ALTER TABLE items ADD COLUMN profile TEXT NOT NULL DEFAULT '';
+CREATE TABLE measurements (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    assertion_id INTEGER REFERENCES assertions(id),
+    feature TEXT NOT NULL,
+    result TEXT NOT NULL,
+    photo BLOB NOT NULL,
+    at TEXT NOT NULL
+);
+CREATE INDEX measurements_by_item ON measurements (item_id);
+"""
+
+MIGRATIONS: dict[int, str] = {1: _SCHEMA, 2: _SCHEMA_V2}
+
 
 class SchemaTooNewError(RuntimeError):
     pass
@@ -66,13 +83,14 @@ class Store:
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as conn:
             found = int(conn.execute("PRAGMA user_version").fetchone()[0])
-            if found == 0:
-                conn.executescript(_SCHEMA)
-                conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
-            elif found > SCHEMA_VERSION:
+            if found > SCHEMA_VERSION:
                 raise SchemaTooNewError(
                     f"{path} has schema version {found}; this build knows {SCHEMA_VERSION}"
                 )
+            # each step is one script; a file at version N gets steps N+1 onwards
+            for version in range(found + 1, SCHEMA_VERSION + 1):
+                conn.executescript(MIGRATIONS[version])
+                conn.execute(f"PRAGMA user_version = {version}")
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:

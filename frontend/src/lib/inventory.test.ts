@@ -20,6 +20,7 @@ const item = (assertions: Assertion[]): Item => ({
   id: 1,
   name: 'adapter',
   item_type: 'adapter',
+  profile: '',
   condition: '',
   intent: 'keep',
   availability: 'available',

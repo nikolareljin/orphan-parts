@@ -26,6 +26,11 @@ The inventory is tested at the service level against a temporary SQLite file (pr
 review, versions, components, soft delete, schema version) and through the routes, including a
 reading saved from the recorded extraction answer.
 
+Measurement is tested on synthetic photos with known geometry (`tests/measure_images.py`): a
+ruler bar of 400 px for 100 mm and an opening of 140 px, sharp and blurred; the geometry
+module against a known projective transform; every refusal reason; the routes including a
+capture stored on an item and the proposed value it leaves.
+
 Two conftest fixtures matter here: `recorded_client` serves the fixtures committed under
 `tests/fixtures/api/`, and `client` serves an empty fixture directory, which is how the "no
 recorded answer" path is tested.

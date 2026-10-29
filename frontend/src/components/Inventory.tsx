@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { api, type Item, type ItemEvent, type ItemSummary, type Provenance } from '../lib/api'
+import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import Measure from './Measure'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -93,6 +94,22 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
   const [error, setError] = useState('')
   const [details, setDetails] = useState({ condition: '', faults: '', tests_done: '', accessories: '', location: '', notes: '' })
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [profiles, setProfiles] = useState<ProfileSummary[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    api.profiles
+      .list()
+      .then((list) => {
+        if (!cancelled) setProfiles(list)
+      })
+      .catch(() => {
+        if (!cancelled) setProfiles([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -244,6 +261,20 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
             ))}
           </select>
         </label>
+        <label>
+          <span>Profile</span>
+          <select
+            value={item.profile}
+            onChange={(e) => void apply(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
+          >
+            <option value="">none yet</option>
+            {profiles.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <h4>
@@ -335,6 +366,8 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
       {item.components.length > 0 && (
         <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
       )}
+
+      <Measure item={item} onMeasured={() => void apply(() => api.items.get(item.id))} />
 
       <div className="row">
         <button type="button" className="link" onClick={() => void showEvents()}>

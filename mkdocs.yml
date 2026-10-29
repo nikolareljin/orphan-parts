@@ -71,6 +71,7 @@ nav:
       - Category profiles: concepts/profiles.md
   - Guides:
       - My inventory: guides/inventory.md
+      - Measure a feature: guides/measure.md
       - Seller flow: guides/seller.md
       - Buyer flow: guides/buyer.md
       - Value an item: guides/value.md

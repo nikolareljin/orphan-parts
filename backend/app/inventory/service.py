@@ -1,5 +1,6 @@
 """Inventory operations. Every write bumps the item version and records an event."""
 
+import json
 import sqlite3
 from datetime import UTC, datetime
 
@@ -16,11 +17,13 @@ from app.inventory.schema import (
     Review,
 )
 from app.inventory.store import Store
+from app.measure.schema import Measurement, MeasureResult
 
 OWNER = "owner"
 EDITABLE = (
     "name",
     "item_type",
+    "profile",
     "condition",
     "faults",
     "tests_done",
@@ -221,6 +224,74 @@ class Inventory:
             self._event(conn, item_id, f"{found['field']} {review}", version, at)
             return self._item(conn, item_id)
 
+    def add_measurement(self, item_id: int, result: MeasureResult, photo: bytes) -> Measurement:
+        """Store the capture with its result. An accepted one proposes an observed value on the
+        item; a refused one is kept too, so the unusable-capture rate is on record."""
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            assertion_id: int | None = None
+            if (
+                result.accepted
+                and result.value_mm is not None
+                and result.uncertainty_mm is not None
+            ):
+                raw = (
+                    f"{result.value_mm:.1f} ± {result.uncertainty_mm:.2f} mm"
+                    f" ({result.method.replace('_', ' ')})"
+                )
+                cur = conn.execute(
+                    "INSERT INTO assertions (item_id, field, value, unit, provenance, confidence,"
+                    " source, raw, review, at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    (
+                        item_id,
+                        result.feature,
+                        f"{result.value_mm:.1f}",
+                        "mm",
+                        "observed",
+                        1.0,
+                        "measurement",
+                        raw,
+                        "proposed",
+                        at,
+                    ),
+                )
+                assertion_id = int(cur.lastrowid or 0)
+                change = f"{result.feature} measured: {raw}"
+            else:
+                change = f"{result.feature} capture refused: {result.redo}"
+            cur = conn.execute(
+                "INSERT INTO measurements (item_id, assertion_id, feature, result, photo, at)"
+                " VALUES (?,?,?,?,?,?)",
+                (item_id, assertion_id, result.feature, result.model_dump_json(), photo, at),
+            )
+            measurement_id = int(cur.lastrowid or 0)
+            version = self._bump(conn, row, at)
+            self._event(conn, item_id, change, version, at)
+            return self._measurement(conn, item_id, measurement_id)
+
+    def measurements(self, item_id: int) -> list[Measurement]:
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            ids = [
+                int(r["id"])
+                for r in conn.execute(
+                    "SELECT id FROM measurements WHERE item_id = ? ORDER BY id", (item_id,)
+                ).fetchall()
+            ]
+            return [self._measurement(conn, item_id, mid) for mid in ids]
+
+    def measurement_photo(self, item_id: int, measurement_id: int) -> bytes:
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            found = conn.execute(
+                "SELECT photo FROM measurements WHERE id = ? AND item_id = ?",
+                (measurement_id, item_id),
+            ).fetchone()
+            if found is None:
+                raise NotFoundError(f"item {item_id} has no measurement {measurement_id}")
+            return bytes(found["photo"])
+
     def delete(self, item_id: int) -> None:
         """Hidden, not erased: the record and its events stay for the audit trail."""
         at = now()
@@ -239,12 +310,13 @@ class Inventory:
         self, conn: sqlite3.Connection, spec: ItemCreate, *, name: str, item_type: str, at: str
     ) -> int:
         cur = conn.execute(
-            "INSERT INTO items (name, item_type, condition, faults, tests_done, accessories,"
-            " location, notes, intent, availability, parent_id, version, created_at, updated_at)"
-            " VALUES (?,?,?,?,?,?,?,?,?,?,?,1,?,?)",
+            "INSERT INTO items (name, item_type, profile, condition, faults, tests_done,"
+            " accessories, location, notes, intent, availability, parent_id, version,"
+            " created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1,?,?)",
             (
                 name,
                 item_type,
+                spec.profile,
                 spec.condition,
                 spec.faults,
                 spec.tests_done,
@@ -285,11 +357,30 @@ class Inventory:
             (item_id, at, OWNER, change, version),
         )
 
+    def _measurement(
+        self, conn: sqlite3.Connection, item_id: int, measurement_id: int
+    ) -> Measurement:
+        found = conn.execute(
+            "SELECT id, item_id, assertion_id, result, at FROM measurements"
+            " WHERE id = ? AND item_id = ?",
+            (measurement_id, item_id),
+        ).fetchone()
+        if found is None:
+            raise NotFoundError(f"item {item_id} has no measurement {measurement_id}")
+        return Measurement(
+            **json.loads(found["result"]),
+            id=found["id"],
+            item_id=found["item_id"],
+            assertion_id=found["assertion_id"],
+            at=found["at"],
+        )
+
     def _summary(self, row: sqlite3.Row) -> ItemSummary:
         return ItemSummary(
             id=row["id"],
             name=row["name"],
             item_type=row["item_type"],
+            profile=row["profile"],
             condition=row["condition"],
             intent=row["intent"],
             availability=row["availability"],
@@ -319,6 +410,7 @@ class Inventory:
             id=row["id"],
             name=row["name"],
             item_type=row["item_type"],
+            profile=row["profile"],
             condition=row["condition"],
             faults=row["faults"],
             tests_done=row["tests_done"],

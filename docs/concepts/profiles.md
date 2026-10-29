@@ -15,5 +15,10 @@ The first photo is classified into a profile automatically, or the user picks on
 See [Creating a new category](../guides/new-category.md) and the
 [profile schema](../reference/profile-schema.md).
 
-!!! note
-    Not built yet.
+## Built so far
+
+Three profiles ship as YAML under `backend/app/profiles/data/`, loaded and validated at startup:
+`vacuum_attachment`, `power_adapter` and `generic_item`. Each names its **features**: the
+dimensions that decide fit, with a tolerance in millimetres and how to capture each one; the
+[measurement](../guides/measure.md) step reads them. Fields, prompts, matcher rules and listing
+templates join the same files next. The model never edits a profile.

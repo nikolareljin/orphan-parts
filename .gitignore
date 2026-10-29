@@ -30,7 +30,8 @@ site/
 docs/reference/openapi.json
 
 # runtime
-data/
+/data/
+backend/data/
 *.db
 *.sqlite
 *.sqlite3

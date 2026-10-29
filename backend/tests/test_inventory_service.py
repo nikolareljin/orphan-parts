@@ -15,7 +15,7 @@ from app.inventory import (
     VersionConflictError,
     current_fields,
 )
-from app.inventory.store import SCHEMA_VERSION, SchemaTooNewError, Store
+from app.inventory.store import MIGRATIONS, SCHEMA_VERSION, SchemaTooNewError, Store
 
 
 def reading(**fields: tuple[str, str, float]) -> Extraction:
@@ -199,6 +199,26 @@ def test_store_survives_a_restart_and_refuses_a_newer_schema(settings: Settings)
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION + 1}")
     with pytest.raises(SchemaTooNewError):
         Store(settings.inventory_db_path)
+
+
+def test_a_version_one_file_is_upgraded_in_place(settings: Settings) -> None:
+    path = settings.inventory_db_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        conn.executescript(MIGRATIONS[1])
+        conn.execute("PRAGMA user_version = 1")
+        conn.execute(
+            "INSERT INTO items (name, item_type, intent, availability, created_at, updated_at)"
+            " VALUES ('old', 'old', 'keep', 'available', 't', 't')"
+        )
+    Store(path)
+    with sqlite3.connect(path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+        columns = {r[1] for r in conn.execute("PRAGMA table_info(items)")}
+        assert "profile" in columns
+        tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        assert "measurements" in tables
+    assert [s.profile for s in Inventory(settings).list_items()] == [""]
 
 
 def test_every_editable_column_has_its_fixed_update_statement() -> None:
