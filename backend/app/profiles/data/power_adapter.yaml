@@ -21,3 +21,49 @@ features:
     tolerance_mm: 0.5
     how: >
       Side photo with the ruler along the plug: mark the tip and the collar.
+rules:
+  - key: part_number
+    label: Part number
+    kind: equal
+    hard: false
+    identity: true
+    question: What is the part number (P/N) printed on the label?
+  - key: model_number
+    label: Model number
+    kind: equal
+    hard: false
+    identity: true
+    question: What is the model number printed on the label?
+  - key: output_voltage
+    label: Output voltage
+    kind: within
+    unit: V
+    tolerance_pct: 5
+    question: What output voltage is printed on the label, for example 19.5 V?
+  - key: output_current
+    label: Output current
+    kind: at_least
+    unit: A
+    question: What output current is printed on the label, for example 3.33 A?
+  - key: polarity
+    label: Polarity
+    kind: equal
+    question: Is the centre of the plug positive or negative? The symbol is next to the output rating.
+  - key: connector
+    label: Connector
+    kind: equal
+    hard: false
+    question: What plug does it have, for example barrel 5.5 x 2.5 mm or USB-C?
+  - key: plug_outer_diameter
+    label: Plug outer diameter
+    kind: within
+    question: What is the outer diameter of the plug, measured with a caliper?
+  - key: plug_inner_diameter
+    label: Plug inner diameter
+    kind: within
+    question: What is the inner diameter of the plug, measured with a caliper?
+  - key: plug_length
+    label: Plug length
+    kind: within
+    hard: false
+    question: How long is the plug from the tip to the collar?

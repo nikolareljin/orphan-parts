@@ -72,6 +72,7 @@ nav:
   - Guides:
       - My inventory: guides/inventory.md
       - Measure a feature: guides/measure.md
+      - Does it fit?: guides/match.md
       - Seller flow: guides/seller.md
       - Buyer flow: guides/buyer.md
       - Value an item: guides/value.md

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import ProfilesDep
-from app.profiles import Feature, Profile, ProfileSummary, UnknownProfileError
+from app.profiles import Feature, Profile, ProfileSummary, Rule, UnknownProfileError
 
 router = APIRouter(prefix="/api/profiles", tags=["profiles"])
 
@@ -25,5 +25,14 @@ def profile_features(profile_id: str, profiles: ProfilesDep) -> list[Feature]:
     """The dimensions worth measuring for this kind of item, with their tolerances."""
     try:
         return profiles.get(profile_id).features
+    except UnknownProfileError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/{profile_id}/rules", response_model=list[Rule])
+def profile_rules(profile_id: str, profiles: ProfilesDep) -> list[Rule]:
+    """What a candidate is checked against for this kind of item, hard rules and soft ones."""
+    try:
+        return profiles.get(profile_id).rules
     except UnknownProfileError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

@@ -17,3 +17,19 @@ features:
     label: Depth
     tolerance_mm: 2.0
     how: Photograph from the side with the ruler; mark front and back.
+rules:
+  - key: width
+    label: Width
+    kind: at_most
+    hard: false
+    question: How wide is it?
+  - key: height
+    label: Height
+    kind: at_most
+    hard: false
+    question: How tall is it?
+  - key: depth
+    label: Depth
+    kind: at_most
+    hard: false
+    question: How deep is it?
