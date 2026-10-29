@@ -21,23 +21,27 @@ SECURITY_HEADERS = {
 
 
 _REQUEST_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
-
-
-def _request_id(request: Request) -> str:
-    # The id is echoed into a response header, so only pass through safe values.
-    raw = request.headers.get("x-request-id") or ""
-    if _REQUEST_ID_RE.fullmatch(raw):
-        return raw
-    return uuid.uuid4().hex[:16]
+_NOT_REQUEST_ID = r"[^A-Za-z0-9_-]"
+# What a request contributes to a log line is printable ASCII, cut to a length: a path
+# cannot carry a line break or an escape sequence into the log.
+_NOT_PRINTABLE = r"[^\x20-\x7e]"
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        rid = _request_id(request)
+        # A client's id is echoed into a response header and the log, so it is taken only
+        # when it is plain ASCII word characters; the sub is a no-op after the match.
+        raw = request.headers.get("x-request-id") or ""
+        if _REQUEST_ID_RE.fullmatch(raw):
+            rid = re.sub(_NOT_REQUEST_ID, "", raw)
+        else:
+            rid = uuid.uuid4().hex[:16]
         token = request_id_var.set(rid)
         started = time.perf_counter()
+        method = re.sub(_NOT_PRINTABLE, "?", request.method)[:16]
+        path = re.sub(_NOT_PRINTABLE, "?", request.url.path)[:512]
         try:
             response = await call_next(request)
             response.headers["X-Request-ID"] = rid
@@ -45,13 +49,13 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 response.headers.setdefault(key, value)
             log.info(
                 "%s %s -> %s",
-                request.method,
-                request.url.path,
+                method,
+                path,
                 response.status_code,
                 extra={
                     "request_id": rid,
-                    "method": request.method,
-                    "path": request.url.path,
+                    "method": method,
+                    "path": path,
                     "status": response.status_code,
                     "ms": round((time.perf_counter() - started) * 1000, 1),
                 },

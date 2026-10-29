@@ -45,7 +45,7 @@ macOS as well as Linux:
 | `node.sh` | `node_ensure`, `node_run` |
 | `docker.sh` | `compose_cmd`, `compose`, `wait_http`, `docker_running` |
 | `ports.sh` | `port_who`, `port_free`, `ports_check` |
-| `traps.sh` | `on_exit`, `tmp_dir`, `kill_group_on_exit` |
+| `traps.sh` | `on_exit <function>`, `tmp_dir <variable>`, `kill_group_on_exit` |
 | `help.sh` | `script_help`, `parse_common_args` |
 
 Tests live in `scripts/tests/` and run with `bash scripts/tests/run.sh`.
