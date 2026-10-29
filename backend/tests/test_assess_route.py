@@ -75,6 +75,12 @@ def test_assess_errors(client: TestClient) -> None:
     assert gone.status_code == 404
     bad = client.post("/api/assess", json={"need": {"item_id": "x"}, "candidate": {}})
     assert bad.status_code == 422
+    item = create(client, item_type="laptop", profile="power_adapter")
+    same = client.post(
+        "/api/assess", json={"need": {"item_id": item}, "candidate": {"item_id": item}}
+    )
+    assert same.status_code == 422
+    assert "same item" in same.json()["detail"]
     assert client.get("/api/profiles/toaster/rules").status_code == 404
 
 

@@ -523,7 +523,7 @@ button.link {
   margin-top: 0.75rem;
   padding: 0.6rem 0.8rem;
   border-left: 4px solid var(--muted);
-  background: var(--panel, transparent);
+  background: var(--card);
 }
 
 .verdict strong {

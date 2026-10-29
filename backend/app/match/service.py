@@ -49,6 +49,8 @@ class Assessor:
         self.inventory = inventory
 
     def assess(self, request: AssessRequest) -> Assessment:
+        if request.need.item_id is not None and request.need.item_id == request.candidate.item_id:
+            raise AssessError("the need and the candidate are the same item")
         need, need_profile = self._readings(request.need)
         cand, cand_profile = self._readings(request.candidate)
         profile_id = (
@@ -112,6 +114,8 @@ def questions_for(rules: list[Rule], checks: list[Check], cand: dict[str, Readin
     for c in checks:
         if c.status != "unknown" or not c.needed:
             continue
+        if "required value" in c.basis:
+            continue  # the need's own value is at fault; the seller cannot answer that
         rule = by_key[c.key]
         if c.key in cand and "not precise enough" in c.basis:
             out.append(

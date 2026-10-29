@@ -214,6 +214,28 @@ def test_a_written_value_replaces_the_items_own(assessor: Assessor) -> None:
     assert volts.status == "pass" and volts.observed == "19.5" and volts.backing is None
 
 
+def test_an_item_is_not_assessed_against_itself(assessor: Assessor) -> None:
+    need = laptop(assessor.inventory)
+    with pytest.raises(AssessError, match="same item"):
+        assessor.assess(AssessRequest(need=Side(item_id=need), candidate=Side(item_id=need)))
+
+
+def test_a_fault_in_the_needed_value_asks_the_seller_nothing(assessor: Assessor) -> None:
+    result = assessor.assess(
+        AssessRequest(
+            need=Side(
+                profile="power_adapter",
+                values={"output_current": "3330 mA", "output_voltage": "see label"},
+            ),
+            candidate=Side(values={"output_current": "4.62", "output_voltage": "19.5"}),
+        )
+    )
+    by_key = {c.key: c for c in result.checks}
+    assert by_key["output_current"].status == "unknown"
+    assert by_key["output_voltage"].status == "unknown"
+    assert result.questions == []
+
+
 def test_a_value_in_another_unit_stays_unknown(assessor: Assessor) -> None:
     need = laptop(assessor.inventory)
     inv = assessor.inventory
