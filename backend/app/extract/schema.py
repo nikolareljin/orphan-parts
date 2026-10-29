@@ -14,6 +14,8 @@ Source = Literal[
     "video_frame",
     "measurement",
     "document",
+    "listing_text",
+    "screenshot",
 ]
 
 

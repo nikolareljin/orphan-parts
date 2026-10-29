@@ -13,8 +13,9 @@ Evidence(value, unit, confidence, source, raw)
   the model with the photo. `measurement` is a dimension computed from marks on a photo with a
   scale reference. `voice_note` is the owner's spoken note, transcribed by Muse Voice
   Transcribe and kept as their own words. `user_edit` is a value the owner typed.
-  `grounding_citation`, `video_frame` and `document` arrive with grounding, video and cited
-  documents.
+  `listing_text` is a value read from a pasted listing and `screenshot` one read from a
+  screenshot of it, on a candidate rather than on an owned item. `grounding_citation`,
+  `video_frame` and `document` arrive with grounding, video and cited documents.
 - `raw`: the text as it was read, before normalisation, so the user can check the clean-up.
 
 The evidence table in the UI, the listing generator and the matcher all consume this one shape, so

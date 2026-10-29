@@ -136,7 +136,7 @@ export default function Assess({ item }: { item: Item }) {
   )
 }
 
-function Result({ result }: { result: Assessment }) {
+export function Result({ result }: { result: Assessment }) {
   return (
     <div className={`verdict ${verdictTone(result.verdict)}`} role="status">
       <strong>{verdictLabel(result.verdict)}</strong>

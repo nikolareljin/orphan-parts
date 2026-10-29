@@ -35,6 +35,8 @@ stops the service with a clear message instead of failing on the first user requ
 | `VOICE_MAX_SECONDS` | `600` | | longest voice note accepted; the transcription service takes ten minutes at most, and `MAX_UPLOAD_MB` bounds the file first |
 | `PRICE_SEARCH_CONTEXT` | `low` | | how much of each page the search hands the model: `low`, `medium` or `high`; more costs tokens and time |
 | `PRICE_COUNTRY` | | | ISO 3166-1 country for local price results when the request names none |
+| `MARKETPLACE_SEARCH_URL` | `https://www.facebook.com/marketplace/search/` | | the search page a request's handoff link opens, with the request's words and top price; the owner runs it |
+| `CANDIDATE_DAYS` | `14` | | how long a candidate's observation is trusted before it is too old |
 | `MARKETPLACE_CREATE_URL` | `https://www.facebook.com/marketplace/create/item` | | where Open Marketplace sends the owner with the draft copied; nothing is posted by the service |
 | `MEASURE_MIN_IMAGE_PX` | `480` | | least short side of a measurement photo |
 | `MEASURE_MARK_PX` | `1.5` | | marking precision per endpoint the uncertainty is derived from |

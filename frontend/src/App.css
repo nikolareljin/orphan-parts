@@ -609,3 +609,63 @@ button.link {
   margin: 0.25rem 0 0.5rem;
   padding-left: 1.25rem;
 }
+
+/* find a part */
+.find .new-search,
+.find .add-candidate {
+  margin: 0.5rem 0 1rem;
+}
+
+.find .wide {
+  display: block;
+}
+
+.find .wide textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.find .search-panel {
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.find .candidate {
+  border-left: 4px solid var(--muted);
+  padding-left: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.badge.state.fits {
+  background: #27ae60;
+  color: #fff;
+}
+
+.badge.state.conflict {
+  background: var(--error);
+  color: #fff;
+}
+
+.badge.state.unsure {
+  background: #f1c40f;
+  color: #1b1f24;
+}
+
+.badge.state.muted {
+  background: var(--line);
+}
+
+.find .seller-note textarea {
+  width: 100%;
+  min-height: 7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  display: block;
+  margin: 0.25rem 0 0.5rem;
+}

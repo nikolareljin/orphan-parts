@@ -364,6 +364,72 @@ export interface PriceReport {
   at: string
 }
 
+export type SearchStatus = 'open' | 'found' | 'closed'
+export type SourceKind = 'text' | 'screenshot' | 'manual'
+export type CandidateState = 'unassessed' | 'needs_evidence' | 'conflicting' | 'documented' | 'rejected' | 'withdrawn'
+
+export interface SearchCreate {
+  need_item_id: number | null
+  profile: string
+  title: string
+  spec: Record<string, string>
+  max_price: number | null
+  currency: string
+  radius_km: number | null
+}
+
+export interface Search {
+  id: number
+  need_item_id: number | null
+  profile: string
+  title: string
+  spec: Record<string, string>
+  radius_km: number | null
+  max_price: number | null
+  currency: string
+  budget_left: number | null
+  notes: string
+  status: SearchStatus
+  handoff_url: string
+  candidates: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Candidate {
+  id: number
+  search_id: number
+  source_kind: SourceKind
+  observed_on: string
+  expires_on: string
+  expired: boolean
+  asking_price: string
+  currency: string
+  location: string
+  included_parts: string
+  url: string
+  title: string
+  text: string
+  note: string
+  fields: Record<string, Evidence>
+  warnings: string[]
+  assessment: Assessment | null
+  state: CandidateState
+  questions: string[]
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  created_at: string
+  assessed_at: string
+}
+
+export interface SellerQuestions {
+  candidate_id: number
+  subject: string
+  message: string
+  questions: string[]
+}
+
 export interface Assessment {
   profile: string
   verdict: Verdict
@@ -555,6 +621,22 @@ export const api = {
     reports: (itemId: number) => getJson<PriceReport[]>(`/api/items/${itemId}/price/reports`),
   },
   assess: (need: Side, candidate: Side) => sendJson<Assessment>('POST', '/api/assess', { need, candidate }),
+  find: {
+    searches: () => getJson<Search[]>('/api/searches'),
+    create: (spec: SearchCreate) => sendJson<Search>('POST', '/api/searches', spec),
+    get: (id: number) => getJson<Search>(`/api/searches/${id}`),
+    patch: (id: number, patch: { status?: SearchStatus; notes?: string }) => sendJson<Search>('PATCH', `/api/searches/${id}`, patch),
+    candidates: (id: number) => getJson<Candidate[]>(`/api/searches/${id}/candidates`),
+    addCandidate: (id: number, request: Record<string, unknown>, screenshot: File | null) =>
+      postForm<Candidate>(`/api/searches/${id}/candidates`, [
+        ['request', JSON.stringify(request)],
+        ...(screenshot ? ([['screenshot', screenshot]] as FormPart[]) : []),
+      ]),
+    candidate: (id: number) => getJson<Candidate>(`/api/candidates/${id}`),
+    recheck: (id: number) => sendJson<Candidate>('POST', `/api/candidates/${id}/recheck`),
+    withdraw: (id: number) => sendJson<Candidate>('POST', `/api/candidates/${id}/withdraw`),
+    questions: (id: number) => getJson<SellerQuestions>(`/api/candidates/${id}/questions`),
+  },
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [
       ['photo', photo],
