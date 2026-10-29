@@ -34,3 +34,13 @@ A segmentation result is the other half of the evidence: one region per match wi
 (item, label, connector), its box on the prepared photo, the model's confidence, how much of
 the box the mask covers, the crop, and the mask outline. The overlay drawn over the photo is
 the same data rendered, so what the user sees is what the next step read.
+
+## Provenance in the inventory
+
+Saved privately, each evidence row becomes an assertion on the item with a **provenance**:
+`observed` for a value read from a photo or a crop, `owner_reported`, `documented`, `tested` or
+`estimated` for values that arrive later. An observed value is `proposed` until the owner accepts
+or rejects it. A correction never replaces an observation: the owner's value is added beside it
+and becomes the current one, and both keep their source, their confidence and their time. The
+item's `fields` are the current value per field, chosen as the latest accepted assertion, else the
+latest proposed one; rejected ones never show but are never erased.

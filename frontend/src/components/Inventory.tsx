@@ -1,0 +1,444 @@
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { api, type Item, type ItemEvent, type ItemSummary, type Provenance } from '../lib/api'
+import { fieldLabel, percent, withUnit } from '../lib/format'
+import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+
+function message(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
+
+// The owner's items. ``refresh`` changes when something was saved elsewhere on the page.
+export default function Inventory({ refresh }: { refresh: number }) {
+  const [items, setItems] = useState<ItemSummary[] | null>(null)
+  const [openId, setOpenId] = useState<number | null>(null)
+  const [error, setError] = useState('')
+
+  const load = useCallback(async () => {
+    try {
+      setItems(await api.items.list())
+      setError('')
+    } catch (err: unknown) {
+      setError(message(err))
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load, refresh])
+
+  return (
+    <section className="inventory">
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {items === null && !error && <p className="muted">Loading…</p>}
+      {items !== null && items.length === 0 && (
+        <p className="muted">Nothing saved yet. Read a label, then save it privately.</p>
+      )}
+      {items !== null && items.length > 0 && (
+        <table className="items" aria-label="Items">
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Fields</th>
+              <th scope="col">Intent</th>
+              <th scope="col">Availability</th>
+              <th scope="col">Updated</th>
+              <th scope="col">
+                <span className="visually-hidden">Open</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((s) => (
+              <tr key={s.id} className={s.id === openId ? 'open' : undefined}>
+                <th scope="row">
+                  {s.name}
+                  {s.parent_id !== null && <span className="muted"> (part of #{s.parent_id})</span>}
+                  {s.item_type !== s.name && <span className="raw">{s.item_type}</span>}
+                </th>
+                <td>{s.field_count}</td>
+                <td>{intentLabel(s.intent)}</td>
+                <td>{availabilityLabel(s.availability)}</td>
+                <td>{whenText(s.updated_at)}</td>
+                <td>
+                  <button type="button" className="link" onClick={() => setOpenId(s.id === openId ? null : s.id)}>
+                    {s.id === openId ? 'Close' : 'Open'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {openId !== null && (
+        <ItemPanel
+          id={openId}
+          onChanged={() => void load()}
+          onClosed={() => {
+            setOpenId(null)
+            void load()
+          }}
+        />
+      )}
+    </section>
+  )
+}
+
+function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => void; onClosed: () => void }) {
+  const [item, setItem] = useState<Item | null>(null)
+  const [events, setEvents] = useState<ItemEvent[] | null>(null)
+  const [error, setError] = useState('')
+  const [details, setDetails] = useState({ condition: '', faults: '', tests_done: '', accessories: '', location: '', notes: '' })
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    setItem(null)
+    setEvents(null)
+    setConfirmDelete(false)
+    api.items
+      .get(id)
+      .then((it) => {
+        if (cancelled) return
+        setItem(it)
+        setDetails({
+          condition: it.condition,
+          faults: it.faults,
+          tests_done: it.tests_done,
+          accessories: it.accessories,
+          location: it.location,
+          notes: it.notes,
+        })
+        setError('')
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(message(err))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  function show(next: Item) {
+    setItem(next)
+    setDetails({
+      condition: next.condition,
+      faults: next.faults,
+      tests_done: next.tests_done,
+      accessories: next.accessories,
+      location: next.location,
+      notes: next.notes,
+    })
+    setEvents(null)
+  }
+
+  // Every change goes through here: the item is replaced by the server's answer, the list reloads.
+  // A write refused because the item changed in between reloads it instead of overwriting.
+  async function apply(action: () => Promise<Item>) {
+    try {
+      show(await action())
+      setError('')
+      onChanged()
+    } catch (err: unknown) {
+      if (isConflict(err)) {
+        try {
+          show(await api.items.get(id))
+          setError(`${message(err)}. The item was reloaded; make the change again if it still applies.`)
+          return
+        } catch {
+          // fall through to the original message
+        }
+      }
+      setError(message(err))
+    }
+  }
+
+  async function showEvents() {
+    try {
+      setEvents(await api.items.events(id))
+    } catch (err: unknown) {
+      setError(message(err))
+    }
+  }
+
+  async function remove() {
+    try {
+      await api.items.remove(id)
+      onClosed()
+    } catch (err: unknown) {
+      setError(message(err))
+    }
+  }
+
+  if (item === null) {
+    return (
+      <div className="item">
+        {error ? (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        ) : (
+          <p className="muted">Loading item #{id}…</p>
+        )}
+      </div>
+    )
+  }
+
+  const fields = Object.values(item.fields)
+  const toConfirm = proposedCount(item)
+  const detailsChanged = (Object.keys(details) as (keyof typeof details)[]).some((k) => details[k] !== item[k])
+
+  return (
+    <article className="item" aria-label={`Item ${item.name}`}>
+      <h3>
+        {item.name} <span className="badge">#{item.id}</span>
+      </h3>
+      <p className="meta">
+        {item.item_type} · version {item.version} · saved {whenText(item.created_at)}
+        {item.parent_id !== null && <> · part of item #{item.parent_id}</>}
+      </p>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="row">
+        <label>
+          <span>Intent</span>
+          <select
+            value={item.intent}
+            onChange={(e) =>
+              void apply(() =>
+                api.items.update(item.id, { intent: e.target.value as Item['intent'], version: item.version }),
+              )
+            }
+          >
+            {INTENTS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Availability</span>
+          <select
+            value={item.availability}
+            onChange={(e) =>
+              void apply(() =>
+                api.items.update(item.id, {
+                  availability: e.target.value as Item['availability'],
+                  version: item.version,
+                }),
+              )
+            }
+          >
+            {AVAILABILITIES.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <h4>
+        Fields
+        {toConfirm > 0 && <span className="badge">{toConfirm} to confirm</span>}
+      </h4>
+      {fields.length === 0 ? (
+        <p className="muted">No fields yet.</p>
+      ) : (
+        <table className="evidence" aria-label="Fields">
+          <thead>
+            <tr>
+              <th scope="col">Field</th>
+              <th scope="col">Value</th>
+              <th scope="col">Known from</th>
+              <th scope="col">Review</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fields.map((a) => (
+              <tr key={a.id}>
+                <th scope="row">{fieldLabel(a.field)}</th>
+                <td>
+                  {withUnit(a)}
+                  {a.raw && a.raw !== a.value && <span className="raw"> as printed: {a.raw}</span>}
+                </td>
+                <td>
+                  {provenanceLabel(a.provenance)}
+                  {a.provenance === 'observed' && <span className="raw">{percent(a.confidence)} confidence</span>}
+                </td>
+                <td>
+                  {reviewLabel(a.review)}
+                  {a.review === 'proposed' && (
+                    <span className="actions">
+                      <button type="button" className="link" onClick={() => void apply(() => api.items.review(item.id, a.id, 'accepted'))}>
+                        Accept
+                      </button>
+                      <button type="button" className="link" onClick={() => void apply(() => api.items.review(item.id, a.id, 'rejected'))}>
+                        Reject
+                      </button>
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <AddField onAdd={(spec) => apply(() => api.items.addField(item.id, spec))} />
+
+      <form
+        className="details"
+        onSubmit={(e: FormEvent) => {
+          e.preventDefault()
+          void apply(() => api.items.update(item.id, { ...details, version: item.version }))
+        }}
+      >
+        <h4>Details</h4>
+        {(
+          [
+            ['condition', 'Condition'],
+            ['faults', 'Known faults'],
+            ['tests_done', 'Tests done'],
+            ['accessories', 'Included accessories'],
+            ['location', 'Where it is (stays private)'],
+            ['notes', 'Notes (stay private)'],
+          ] as const
+        ).map(([key, label]) => (
+          <label key={key}>
+            <span>{label}</span>
+            <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+          </label>
+        ))}
+        <button type="submit" disabled={!detailsChanged}>
+          Save details
+        </button>
+      </form>
+
+      <AddComponent
+        onAdd={(spec) =>
+          apply(async () => {
+            // the part is its own record; this page stays on the whole and shows what left
+            await api.items.addComponent(item.id, spec)
+            return api.items.get(item.id)
+          })
+        }
+      />
+      {item.components.length > 0 && (
+        <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
+      )}
+
+      <div className="row">
+        <button type="button" className="link" onClick={() => void showEvents()}>
+          History
+        </button>
+        {confirmDelete ? (
+          <button type="button" className="danger" onClick={() => void remove()}>
+            Yes, delete item #{item.id}
+          </button>
+        ) : (
+          <button type="button" className="link" onClick={() => setConfirmDelete(true)}>
+            Delete
+          </button>
+        )}
+      </div>
+      {events !== null && (
+        <ol className="events" aria-label="History">
+          {events.map((ev) => (
+            <li key={ev.id}>
+              <span className="muted">{whenText(ev.at)}</span> {ev.change}
+            </li>
+          ))}
+        </ol>
+      )}
+    </article>
+  )
+}
+
+function AddField({ onAdd }: { onAdd: (spec: { field: string; value: string; unit: string; provenance: Provenance }) => Promise<void> }) {
+  const [field, setField] = useState('')
+  const [value, setValue] = useState('')
+  const [unit, setUnit] = useState('')
+  const [provenance, setProvenance] = useState<Provenance>('owner_reported')
+  const name = field.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+  return (
+    <form
+      className="inline"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault()
+        if (!name || !value.trim()) return
+        void onAdd({ field: name, value: value.trim(), unit: unit.trim(), provenance }).then(() => {
+          setField('')
+          setValue('')
+          setUnit('')
+        })
+      }}
+    >
+      <h4>Add what you know</h4>
+      <label>
+        <span>Field</span>
+        <input value={field} onChange={(e) => setField(e.target.value)} placeholder="colour" />
+      </label>
+      <label>
+        <span>Value</span>
+        <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="black" />
+      </label>
+      <label>
+        <span>Unit</span>
+        <input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="" />
+      </label>
+      <label>
+        <span>Known from</span>
+        <select value={provenance} onChange={(e) => setProvenance(e.target.value as Provenance)}>
+          {PROVENANCES.filter((p) => p.value !== 'observed').map((p) => (
+            <option key={p.value} value={p.value}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button type="submit" disabled={!name || !value.trim()}>
+        Add field
+      </button>
+    </form>
+  )
+}
+
+function AddComponent({ onAdd }: { onAdd: (spec: { name: string; condition: string }) => Promise<void> }) {
+  const [name, setName] = useState('')
+  const [condition, setCondition] = useState('')
+  return (
+    <form
+      className="inline"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault()
+        if (!name.trim()) return
+        void onAdd({ name: name.trim(), condition: condition.trim() }).then(() => {
+          setName('')
+          setCondition('')
+        })
+      }}
+    >
+      <h4>Separate a part</h4>
+      <label>
+        <span>Part</span>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="power cable" />
+      </label>
+      <label>
+        <span>Part condition</span>
+        <input value={condition} onChange={(e) => setCondition(e.target.value)} placeholder="works" />
+      </label>
+      <button type="submit" disabled={!name.trim()}>
+        Separate
+      </button>
+    </form>
+  )
+}

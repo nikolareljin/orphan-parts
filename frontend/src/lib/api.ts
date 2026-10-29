@@ -73,6 +73,86 @@ export interface Segmentation {
   cost_usd: number
 }
 
+// Inventory: how a value is known, what the owner means to do, whether a plan may count on it.
+export type Provenance = 'observed' | 'owner_reported' | 'documented' | 'tested' | 'estimated'
+export type Intent = 'keep' | 'build' | 'sell' | 'give'
+export type Availability = 'available' | 'reserved' | 'gone'
+export type Review = 'proposed' | 'accepted' | 'rejected'
+
+export interface Assertion {
+  id: number
+  field: string
+  value: string
+  unit: string
+  provenance: Provenance
+  confidence: number
+  source: Source
+  raw: string
+  review: Review
+  at: string
+}
+
+export interface ItemSummary {
+  id: number
+  name: string
+  item_type: string
+  condition: string
+  intent: Intent
+  availability: Availability
+  parent_id: number | null
+  field_count: number
+  version: number
+  updated_at: string
+}
+
+export interface Item extends ItemSummary {
+  faults: string
+  tests_done: string
+  accessories: string
+  location: string
+  notes: string
+  created_at: string
+  fields: Record<string, Assertion>
+  assertions: Assertion[]
+  components: number[]
+}
+
+export type ItemDetails = Pick<
+  Item,
+  'name' | 'item_type' | 'condition' | 'faults' | 'tests_done' | 'accessories' | 'location' | 'notes' | 'intent' | 'availability'
+>
+
+export interface ItemCreate extends Partial<ItemDetails> {
+  extraction?: Extraction
+  parent_id?: number | null
+}
+
+export type ItemPatch = Partial<ItemDetails> & { version?: number }
+
+export interface FieldCreate {
+  field: string
+  value: string
+  unit?: string
+  provenance?: Provenance
+  raw?: string
+}
+
+export interface ComponentCreate {
+  name: string
+  item_type?: string
+  condition?: string
+  notes?: string
+}
+
+export interface ItemEvent {
+  id: number
+  item_id: number
+  at: string
+  actor: string
+  change: string
+  version: number
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -126,6 +206,15 @@ async function postForm<T>(path: string, parts: FormPart[]): Promise<T> {
   return (await res.json()) as T
 }
 
+async function sendJson<T>(method: 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const res = await fetch(apiUrl(path), { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
+  if (!res.ok) throw new ApiError(res.status, await detailOf(res, path))
+  if (res.status === 204) return undefined as T
+  return (await res.json()) as T
+}
+
 // A data URL from the API back into a File the API can take as an upload.
 export function dataUrlToFile(dataUrl: string, name: string): File {
   const comma = dataUrl.indexOf(',')
@@ -146,4 +235,16 @@ export const api = {
     ]),
   segment: (photo: File, concepts: string[] = []) =>
     postForm<Segmentation>('/api/segment', [['photo', photo], ...concepts.map((c): FormPart => ['concepts', c])]),
+  items: {
+    list: () => getJson<ItemSummary[]>('/api/items'),
+    get: (id: number) => getJson<Item>(`/api/items/${id}`),
+    create: (spec: ItemCreate) => sendJson<Item>('POST', '/api/items', spec),
+    update: (id: number, patch: ItemPatch) => sendJson<Item>('PATCH', `/api/items/${id}`, patch),
+    remove: (id: number) => sendJson<void>('DELETE', `/api/items/${id}`),
+    addField: (id: number, spec: FieldCreate) => sendJson<Item>('POST', `/api/items/${id}/fields`, spec),
+    review: (id: number, assertionId: number, review: Review) =>
+      sendJson<Item>('POST', `/api/items/${id}/assertions/${assertionId}/review`, { review }),
+    addComponent: (id: number, spec: ComponentCreate) => sendJson<Item>('POST', `/api/items/${id}/components`, spec),
+    events: (id: number) => getJson<ItemEvent[]>(`/api/items/${id}/events`),
+  },
 }

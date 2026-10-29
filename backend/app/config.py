@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     data_dir: Path = Path("./data")
     max_upload_mb: int = 12
+    inventory_db_file: str = "inventory.sqlite3"
 
     log_format: str = "json"
     log_level: str = "INFO"
@@ -65,6 +66,10 @@ class Settings(BaseSettings):
     @property
     def spend_ledger_path(self) -> Path:
         return self.data_dir / self.spend_ledger_file
+
+    @property
+    def inventory_db_path(self) -> Path:
+        return self.data_dir / self.inventory_db_file
 
 
 @lru_cache
