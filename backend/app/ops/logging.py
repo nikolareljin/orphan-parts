@@ -44,7 +44,12 @@ def configure_logging(fmt: str, level: str) -> None:
     root.handlers[:] = [handler]
     root.setLevel(level.upper())
     # uvicorn installs its own handlers; route them through ours so every line has a request id
-    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+    for name in ("uvicorn", "uvicorn.error"):
         lg = logging.getLogger(name)
         lg.handlers[:] = []
         lg.propagate = True
+    # the request middleware is the access log, with the method and path made printable;
+    # uvicorn's own access line would repeat each request with the raw path
+    access = logging.getLogger("uvicorn.access")
+    access.handlers[:] = []
+    access.propagate = False
