@@ -287,6 +287,14 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
         {search.max_price !== null && ` · top price ${search.max_price} ${search.currency}`}
         {search.radius_km !== null && ` · within ${search.radius_km} km`}
       </p>
+      {Object.keys(search.spec).length > 0 && (
+        <p className="meta" aria-label="Needed values">
+          Needs:{' '}
+          {Object.entries(search.spec)
+            .map(([k, v]) => `${k.replace(/_/g, ' ')} ${v}`)
+            .join(', ')}
+        </p>
+      )}
       {error && (
         <p className="error" role="alert">
           {error}

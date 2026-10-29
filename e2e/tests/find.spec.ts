@@ -57,7 +57,7 @@ test('a search from an item hands off to Marketplace and a listing brought back 
   await expect(panel).toContainText('closed')
 })
 
-test('a search from values written in refuses nothing it can assess and asks for the rest', async ({ page }) => {
+test('a search from values written in rejects a listing that conflicts with them', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Find a part' }).click()
   const form = page.getByRole('form', { name: 'New search' })
@@ -67,6 +67,7 @@ test('a search from values written in refuses nothing it can assess and asks for
   await form.getByRole('button', { name: 'Start the search' }).click()
 
   const panel = page.getByRole('article', { name: `Search 12 V adapter ${stamp}` })
+  await expect(panel.getByLabel('Needed values')).toContainText('output voltage 12')
   const bring = panel.getByRole('form', { name: 'Bring a listing back' })
   await bring.getByRole('textbox', { name: 'Listing text' }).fill(LISTING)
   await bring.getByRole('button', { name: 'Assess it' }).click()
