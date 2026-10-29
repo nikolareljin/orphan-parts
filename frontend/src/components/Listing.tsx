@@ -175,8 +175,8 @@ function DraftView({
       <textarea className="draft-text" readOnly aria-label="Draft text" value={draftText(draft)} />
       {draft.facts.length > 0 && (
         <ul className="facts" aria-label="Facts">
-          {draft.facts.map((f) => (
-            <li key={`${f.field}:${f.text}`}>
+          {draft.facts.map((f, i) => (
+            <li key={`${i}:${f.field}`}>
               {f.text} <small>from {f.field.replace(/_/g, ' ')}</small>
             </li>
           ))}
@@ -187,8 +187,8 @@ function DraftView({
       )}
       {draft.warnings.length > 0 && (
         <ul className="warnings" aria-label="Before posting">
-          {draft.warnings.map((w) => (
-            <li key={w}>{w}</li>
+          {draft.warnings.map((w, i) => (
+            <li key={`${i}:${w.slice(0, 24)}`}>{w}</li>
           ))}
         </ul>
       )}
