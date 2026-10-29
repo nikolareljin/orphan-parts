@@ -65,6 +65,8 @@ export default function Assess({ item }: { item: Item }) {
     }
   }
 
+  const whoseRules = needItemId === null ? '' : rulesNote(item.profile, others.find((o) => o.id === needItemId)?.profile)
+
   if (!item.profile) {
     return (
       <section className="assess" aria-label="Does it fit?">
@@ -97,9 +99,7 @@ export default function Assess({ item }: { item: Item }) {
             </select>
           </label>
         </div>
-        {needItemId !== null && rulesNote(item.profile, others.find((o) => o.id === needItemId)?.profile) && (
-          <p className="hint">{rulesNote(item.profile, others.find((o) => o.id === needItemId)?.profile)}</p>
-        )}
+        {whoseRules && <p className="hint">{whoseRules}</p>}
         {needItemId === null && (
           <div className="needed">
             {rules.map((rule) => (
