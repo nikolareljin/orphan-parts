@@ -29,21 +29,25 @@ export function statusLabel(status: CheckStatus): string {
 
 // What the rule allows, as a short hint next to its name.
 export function ruleHint(rule: ProfileRule): string {
-  const unit = rule.unit ? ` ${rule.unit}` : ''
   switch (rule.kind) {
     case 'equal':
       return rule.identity ? 'same, makes it exact' : 'same'
-    case 'within': {
-      const parts: string[] = []
-      if (rule.tolerance !== null) parts.push(`±${rule.tolerance}${unit}`)
-      if (rule.tolerance_pct !== null) parts.push(`±${rule.tolerance_pct}%`)
-      return parts.join(' or ')
-    }
+    case 'within':
+      return slack(rule).map((s) => `±${s}`).join(' or ')
     case 'at_least':
-      return rule.tolerance ? `at least, ${rule.tolerance}${unit} slack` : 'at least'
+      return slack(rule).length ? `at least, ${slack(rule).join(' or ')} slack` : 'at least'
     case 'at_most':
-      return rule.tolerance ? `at most, ${rule.tolerance}${unit} slack` : 'at most'
+      return slack(rule).length ? `at most, ${slack(rule).join(' or ')} slack` : 'at most'
   }
+}
+
+// The allowances a numeric rule names; the larger of the two applies.
+function slack(rule: ProfileRule): string[] {
+  const unit = rule.unit ? ` ${rule.unit}` : ''
+  const parts: string[] = []
+  if (rule.tolerance) parts.push(`${rule.tolerance}${unit}`)
+  if (rule.tolerance_pct) parts.push(`${rule.tolerance_pct}%`)
+  return parts
 }
 
 // Which profile's rules decide: the needed item's when it has one, else this item's.

@@ -76,6 +76,15 @@ def test_a_file_whose_id_does_not_match_its_name_is_refused(tmp_path: Path) -> N
         Profiles(tmp_path)
 
 
+def test_a_feature_is_measured_in_millimetres(tmp_path: Path) -> None:
+    (tmp_path / "kettle.yaml").write_text(
+        "id: kettle\nlabel: Kettle\nfeatures:\n"
+        "  - {key: spout, label: Spout, unit: cm, tolerance_mm: 1, how: mark it}\n"
+    )
+    with pytest.raises(ValueError, match="unit"):
+        Profiles(tmp_path)
+
+
 def test_a_feature_needs_a_positive_tolerance(tmp_path: Path) -> None:
     (tmp_path / "kettle.yaml").write_text(
         "id: kettle\nlabel: Kettle\nfeatures:\n"

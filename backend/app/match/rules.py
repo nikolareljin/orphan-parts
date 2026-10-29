@@ -118,7 +118,7 @@ def _numeric(rule: Rule, need: Reading, cand: Reading) -> dict[str, str]:
             f" off by {_fmt(d)}{unit}"
         )
     else:
-        slack = rule.tolerance or 0.0
+        slack = allowance(rule, n)
         if rule.kind == "at_least":
             floor = n - slack
             status = "pass" if c - u >= floor else "fail" if c + u < floor else "unknown"

@@ -12,7 +12,7 @@ description: >                 # optional
 features:                      # dimensions worth measuring
   - key: opening_inner_diameter   # snake_case
     label: Opening inner diameter
-    unit: mm                      # default mm
+    unit: mm                      # always mm: a measurement is computed in millimetres
     tolerance_mm: 0.5             # what a match may allow; must be positive
     how: >                        # how to photograph and mark it
       Photograph the opening straight on with a ruler across it ...

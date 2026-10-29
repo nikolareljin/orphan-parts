@@ -88,6 +88,13 @@ def test_at_least_and_at_most_use_the_tolerance_as_slack() -> None:
     width = rule("at_most", key="width", label="Width", unit="mm", tolerance=2)
     assert evaluate(width, Reading("100"), Reading("101.5")).status == "pass"
     assert evaluate(width, Reading("100"), Reading("103")).status == "fail"
+    # a percentage counts as slack too, the larger of the two
+    loose = rule("at_least", key="output_current", label="Current", unit="A", tolerance_pct=5)
+    assert evaluate(loose, Reading("3.33"), Reading("3.2")).status == "pass"
+    assert evaluate(loose, Reading("3.33"), Reading("3.1")).status == "fail"
+    both = rule("at_most", key="width", label="Width", unit="mm", tolerance=2, tolerance_pct=5)
+    assert evaluate(both, Reading("100"), Reading("104.5")).status == "pass"
+    assert evaluate(both, Reading("100"), Reading("105.5")).status == "fail"
 
 
 def test_equal_compares_normalised_text() -> None:

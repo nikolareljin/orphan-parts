@@ -35,6 +35,8 @@ describe('rule hints', () => {
     expect(ruleHint(rule({ kind: 'equal', identity: true, unit: '' }))).toBe('same, makes it exact')
     expect(ruleHint(rule({ kind: 'at_least', unit: 'A' }))).toBe('at least')
     expect(ruleHint(rule({ kind: 'at_most', tolerance: 2, unit: 'mm' }))).toBe('at most, 2 mm slack')
+    expect(ruleHint(rule({ kind: 'at_least', tolerance_pct: 5, unit: 'A' }))).toBe('at least, 5% slack')
+    expect(ruleHint(rule({ kind: 'at_most', tolerance: 2, tolerance_pct: 5, unit: 'mm' }))).toBe('at most, 2 mm or 5% slack')
     expect(inputLabel(rule({}))).toBe('Output voltage (V)')
     expect(inputLabel(rule({ unit: '' }))).toBe('Output voltage')
   })

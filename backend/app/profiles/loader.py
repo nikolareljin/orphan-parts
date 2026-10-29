@@ -18,7 +18,8 @@ class Feature(BaseModel):
 
     key: str = Field(pattern=KEY)
     label: str
-    unit: str = "mm"
+    # a measurement is computed and stored in millimetres, as is the tolerance
+    unit: Literal["mm"] = "mm"
     tolerance_mm: float = Field(gt=0)
     how: str
 
