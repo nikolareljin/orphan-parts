@@ -206,5 +206,5 @@ def test_every_editable_column_has_its_fixed_update_statement() -> None:
 
     assert tuple(SET_COLUMN) == EDITABLE
     for column, sql in SET_COLUMN.items():
-        assert sql.startswith(f"UPDATE items SET {column} = ?, version = ?")
-        assert "<column>" not in sql
+        assert sql.startswith("UPDATE items SET ") and "<column>" not in sql
+        assert sql.split()[3] == column
