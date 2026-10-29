@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
+from app.api.assess import router as assess_router
 from app.api.extract import router as extract_router
 from app.api.items import error_handlers as inventory_handlers
 from app.api.items import router as items_router
@@ -16,6 +17,7 @@ from app.api.segment import router as segment_router
 from app.config import Settings, get_settings
 from app.extract import Extractor
 from app.inventory import Inventory
+from app.match import Assessor
 from app.measure import Measurer
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.logging import configure_logging
@@ -39,6 +41,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.inventory = Inventory(settings)
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)
+    app.state.assessor = Assessor(app.state.profiles, app.state.inventory)
     log.info(
         "starting",
         extra={
@@ -81,6 +84,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(items_router)
     app.include_router(profiles_router)
     app.include_router(measure_router)
+    app.include_router(assess_router)
     for exc_type, handler in inventory_handlers.items():
         app.add_exception_handler(exc_type, handler)
     return app

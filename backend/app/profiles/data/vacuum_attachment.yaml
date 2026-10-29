@@ -33,3 +33,34 @@ features:
     tolerance_mm: 1.0
     how: >
       Side view with the ruler: mark the lip and the centre of the latch catch or button.
+rules:
+  - key: model_number
+    label: Model number
+    kind: equal
+    hard: false
+    identity: true
+    question: Is there a model number moulded into the tool?
+  - key: opening_inner_diameter
+    label: Opening inner diameter
+    kind: within
+    question: What is the inner diameter of the opening at its widest point, with a ruler or caliper?
+  - key: opening_outer_diameter
+    label: Opening outer diameter
+    kind: within
+    hard: false
+    question: What is the outer diameter of the lip?
+  - key: insertion_depth
+    label: Insertion depth
+    kind: at_least
+    hard: false
+    question: How deep is the sleeve a wand slides into, from the lip to the stop?
+  - key: outer_diameter_at_depth
+    label: Outer diameter at the insertion depth
+    kind: within
+    hard: false
+    question: What is the outer diameter of the sleeve at the stop?
+  - key: latch_position
+    label: Latch position from the lip
+    kind: within
+    hard: false
+    question: How far from the lip is the latch catch or button?

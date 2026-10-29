@@ -177,6 +177,64 @@ export interface ProfileSummary {
   id: string
   label: string
   feature_count: number
+  rule_count: number
+}
+
+export type RuleKind = 'equal' | 'within' | 'at_least' | 'at_most'
+
+export interface ProfileRule {
+  key: string
+  label: string
+  kind: RuleKind
+  unit: string
+  hard: boolean
+  identity: boolean
+  tolerance: number | null
+  tolerance_pct: number | null
+  question: string
+}
+
+export type CheckStatus = 'pass' | 'fail' | 'unknown'
+export type Verdict = 'EXACT_MATCH' | 'COMPATIBLE_LIKELY' | 'VISUALLY_SIMILAR' | 'CONFLICT' | 'INSUFFICIENT_INFO'
+
+export interface Side {
+  item_id?: number
+  values?: Record<string, string>
+  profile?: string
+}
+
+export interface Backing {
+  provenance: Provenance
+  review: Review
+  source: string
+  uncertainty: number | null
+  at: string
+}
+
+export interface Check {
+  key: string
+  label: string
+  kind: RuleKind
+  hard: boolean
+  identity: boolean
+  status: CheckStatus
+  needed: string
+  observed: string
+  unit: string
+  basis: string
+  backing: Backing | null
+}
+
+export interface Assessment {
+  profile: string
+  verdict: Verdict
+  summary: string
+  checks: Check[]
+  questions: string[]
+  missing: string[]
+  to_confirm: string[]
+  need_item: number | null
+  candidate_item: number | null
 }
 
 export interface ProfileFeature {
@@ -341,7 +399,9 @@ export const api = {
   profiles: {
     list: () => getJson<ProfileSummary[]>('/api/profiles'),
     features: (id: string) => getJson<ProfileFeature[]>(`/api/profiles/${id}/features`),
+    rules: (id: string) => getJson<ProfileRule[]>(`/api/profiles/${id}/rules`),
   },
+  assess: (need: Side, candidate: Side) => sendJson<Assessment>('POST', '/api/assess', { need, candidate }),
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [
       ['photo', photo],

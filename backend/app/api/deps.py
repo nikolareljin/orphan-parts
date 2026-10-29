@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from app.config import Settings
 from app.extract.service import Extractor
 from app.inventory.service import Inventory
+from app.match.service import Assessor
 from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
 from app.profiles import Profiles
@@ -63,3 +64,11 @@ def app_measurer(request: Request) -> Measurer:
 
 ProfilesDep = Annotated[Profiles, Depends(app_profiles)]
 MeasurerDep = Annotated[Measurer, Depends(app_measurer)]
+
+
+def app_assessor(request: Request) -> Assessor:
+    assessor: Assessor = request.app.state.assessor
+    return assessor
+
+
+AssessorDep = Annotated[Assessor, Depends(app_assessor)]

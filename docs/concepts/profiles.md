@@ -20,5 +20,8 @@ See [Creating a new category](../guides/new-category.md) and the
 Three profiles ship as YAML under `backend/app/profiles/data/`, loaded and validated at startup:
 `vacuum_attachment`, `power_adapter` and `generic_item`. Each names its **features**: the
 dimensions that decide fit, with a tolerance in millimetres and how to capture each one; the
-[measurement](../guides/measure.md) step reads them. Fields, prompts, matcher rules and listing
-templates join the same files next. The model never edits a profile.
+[measurement](../guides/measure.md) step reads them. Each also names its **rules**: what a
+candidate is checked against, hard or soft, with the kind of comparison, the tolerance and the
+question to ask when a value is unknown; [Does it fit?](../guides/match.md) applies them and the
+[verdict ladder](verdicts.md) reads the result. Fields, prompts and listing templates join the
+same files next. The model never edits a profile.
