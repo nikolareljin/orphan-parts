@@ -1,6 +1,6 @@
 # CI and releases
 
-Two workflows in `.github/workflows/`, kept as small as they can be. No personal tokens anywhere.
+The workflows in `.github/workflows/`, kept as small as they can be. No personal tokens anywhere.
 
 ## Branch and pull request flow
 
@@ -29,19 +29,29 @@ Concurrent runs on the same ref cancel each other.
 The `docs` job builds the site with `--strict` on every pull request, the same steps as the
 Pages workflow without the deploy, so a page that no longer builds is caught before `main`.
 
-## `release.yml`
+## `tag-release.yml` and `release.yml`
 
 Versions follow SemVer and live in `backend/pyproject.toml`, `backend/app/__init__.py` and
 `frontend/package.json`. Tags are bare versions, no `v` prefix.
 
 ```bash
 ./dev version 0.2.0      # bumps every manifest and opens a changelog section
-# move the Unreleased notes under the new heading, open the release PR, merge it
-git switch main && git pull
-git tag 0.2.0 && git push origin 0.2.0
+# move the Unreleased notes under the new heading, open the pull request from release/0.2.0,
+# merge it: the merge commit is tagged 0.2.0 and the release is published
 ```
 
-The tag push triggers the workflow, which:
+`tag-release.yml` runs when a pull request from a `release/x.y.z` branch is merged into `main`.
+`scripts/release-tag.sh` reads the version off the branch name and refuses anything that is
+not `x.y.z`, a version that differs from any manifest, a changelog without its section, and a
+version that is tagged already: an existing tag is never moved or deleted. Then the merge commit
+gets the tag and the publish job calls `release.yml`. A pull request closed without a merge, or
+from any other branch, does nothing. The tag is pushed with the job token, which on its own
+does not start tag-triggered workflows; that is why `release.yml` is called rather than waited
+for. The ruleset that limits tag creation has to list GitHub Actions as a bypass actor, or the
+push is refused and the tag is pushed by hand (`git tag 0.2.0 && git push origin 0.2.0`),
+which still triggers `release.yml`.
+
+`release.yml`, called with the tag or triggered by a tag push:
 
 1. checks that the tag equals the version in all three manifests and that `CHANGELOG.md` has a
    section for it,
@@ -50,11 +60,13 @@ The tag push triggers the workflow, which:
    `.../frontend:0.2.0` (plus `latest`), nothing is pushed if the smoke test fails,
 4. creates a GitHub release whose notes are that changelog section.
 
-The job uses only `actions/checkout`, the job token, Docker and `gh`; no other actions and no
-stored secrets. A repository ruleset lets only the repository admin create, move or delete tags,
-so nobody else can trigger a release.
+The jobs use only `actions/checkout`, the job token, Docker and `gh`; no other actions and no
+stored secrets. A repository ruleset lets only the repository admin and the tag workflow create
+tags, and nobody move or delete them; the workflow tags only what the admin merged, so nobody
+else can trigger a release.
 
-Only a tag triggers it; no image is built or pushed for pull requests or merges. The images are
+Only a tag, or the tag workflow, triggers it; no image is built or pushed for pull requests or
+other merges. The images are
 the release artifact: the demo host pulls them, and a tagged version can be run anywhere without
 a build. See [Deployment](../operations/deployment.md).
 

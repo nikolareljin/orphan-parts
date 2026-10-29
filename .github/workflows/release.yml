@@ -1,11 +1,18 @@
 name: release
 
-# Tag a commit on main with a bare SemVer (0.2.0) to publish that version:
-# images go to GHCR, and a GitHub release is created with the matching changelog section.
-# Nothing here runs for pull requests or merges; only a tag push triggers it.
+# Publishes one version: images go to GHCR, and a GitHub release is created with the matching
+# changelog section. Two ways in: the tag-release workflow calls it after tagging the merge of
+# a release/x.y.z pull request, or a bare SemVer tag (0.2.0) is pushed by hand. Nothing here
+# runs for pull requests or merges on their own.
 on:
   push:
     tags: ["[0-9]+.[0-9]+.[0-9]+"]
+  workflow_call:
+    inputs:
+      tag:
+        description: the tag to publish, already on the repository
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -13,29 +20,31 @@ permissions:
 
 env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
 
       - name: tag must match the version in every manifest
         run: |
-          tag="${GITHUB_REF_NAME}"
           py="$(grep -m1 '^version' backend/pyproject.toml | cut -d'"' -f2)"
           init="$(grep -m1 '^__version__' backend/app/__init__.py | cut -d'"' -f2)"
           js="$(node -p "require('./frontend/package.json').version")"
-          if [ "$tag" != "$py" ] || [ "$tag" != "$init" ] || [ "$tag" != "$js" ]; then
-            echo "tag $tag; pyproject $py; app/__init__.py $init; package.json $js"
+          if [ "$TAG" != "$py" ] || [ "$TAG" != "$init" ] || [ "$TAG" != "$js" ]; then
+            echo "tag $TAG; pyproject $py; app/__init__.py $init; package.json $js"
             exit 1
           fi
 
       - name: release notes are the changelog section for this tag
         run: |
-          awk -v v="${GITHUB_REF_NAME}" '/^## /{p = index($0, "## " v) == 1} p' CHANGELOG.md > notes.md
+          awk -v v="$TAG" '/^## /{p = index($0, "## " v) == 1} p' CHANGELOG.md > notes.md
           if ! grep -q . notes.md; then
-            echo "CHANGELOG.md has no '## ${GITHUB_REF_NAME}' section"
+            echo "CHANGELOG.md has no '## $TAG' section"
             exit 1
           fi
 
@@ -43,11 +52,11 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: build the production images
-        run: TAG="${GITHUB_REF_NAME}" docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend frontend
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend frontend
 
       - name: smoke test the backend image before anything is pushed
         run: |
-          docker run -d --name opl -e OPL_FAKE_API=1 -e DATA_DIR=/data -p 8000:8000 "$IMAGE_PREFIX/backend:${GITHUB_REF_NAME}"
+          docker run -d --name opl -e OPL_FAKE_API=1 -e DATA_DIR=/data -p 8000:8000 "$IMAGE_PREFIX/backend:$TAG"
           ok=0
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8000/healthz >/dev/null 2>&1; then ok=1; break; fi
@@ -63,12 +72,12 @@ jobs:
       - name: push the images
         run: |
           for svc in backend frontend; do
-            docker tag "$IMAGE_PREFIX/$svc:${GITHUB_REF_NAME}" "$IMAGE_PREFIX/$svc:latest"
-            docker push "$IMAGE_PREFIX/$svc:${GITHUB_REF_NAME}"
+            docker tag "$IMAGE_PREFIX/$svc:$TAG" "$IMAGE_PREFIX/$svc:latest"
+            docker push "$IMAGE_PREFIX/$svc:$TAG"
             docker push "$IMAGE_PREFIX/$svc:latest"
           done
 
       - name: create the GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file notes.md
+        run: gh release create "$TAG" --title "$TAG" --notes-file notes.md

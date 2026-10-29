@@ -245,7 +245,7 @@ cmd_version() {
   log_ok "version $v set in pyproject.toml, app/__init__.py, package.json, package-lock.json and CHANGELOG.md"
   echo "  move the Unreleased notes under the new heading, then:"
   echo "  git switch -c release/$v && git add -A && git commit -m \"chore: release $v\" && git push -u origin release/$v"
-  echo "  open the PR; after it is merged: git switch main && git pull && git tag $v && git push origin $v"
+  echo "  open the PR; once it is merged the merge commit is tagged $v and the release published"
 }
 
 cmd_shell() {
