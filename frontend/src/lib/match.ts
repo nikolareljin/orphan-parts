@@ -46,6 +46,12 @@ export function ruleHint(rule: ProfileRule): string {
   }
 }
 
+// Which profile's rules decide: the needed item's when it has one, else this item's.
+export function rulesNote(candidateProfile: string, needProfile: string | undefined): string {
+  if (!needProfile || needProfile === candidateProfile) return ''
+  return `The needed item's profile (${needProfile}) decides the rules, not this item's (${candidateProfile}).`
+}
+
 export function inputLabel(rule: ProfileRule): string {
   return rule.unit ? `${rule.label} (${rule.unit})` : rule.label
 }

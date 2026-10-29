@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ProfileRule } from './api'
-import { inputLabel, needSide, ruleHint, statusLabel, verdictLabel, verdictTone } from './match'
+import { inputLabel, needSide, ruleHint, rulesNote, statusLabel, verdictLabel, verdictTone } from './match'
 
 const rule = (over: Partial<ProfileRule>): ProfileRule => ({
   key: 'output_voltage',
@@ -47,5 +47,14 @@ describe('needSide', () => {
       profile: 'power_adapter',
       values: { output_voltage: '19.5' },
     })
+  })
+})
+
+describe('rulesNote', () => {
+  it('says so only when the needed item carries a different profile', () => {
+    expect(rulesNote('power_adapter', 'power_adapter')).toBe('')
+    expect(rulesNote('power_adapter', '')).toBe('')
+    expect(rulesNote('power_adapter', undefined)).toBe('')
+    expect(rulesNote('power_adapter', 'vacuum_attachment')).toContain('vacuum_attachment')
   })
 })

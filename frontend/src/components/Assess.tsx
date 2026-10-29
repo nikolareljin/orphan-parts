@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Assessment, type Item, type ItemSummary, type ProfileRule } from '../lib/api'
-import { inputLabel, needSide, ruleHint, statusLabel, verdictLabel, verdictTone } from '../lib/match'
+import { inputLabel, needSide, ruleHint, rulesNote, statusLabel, verdictLabel, verdictTone } from '../lib/match'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -97,6 +97,9 @@ export default function Assess({ item }: { item: Item }) {
             </select>
           </label>
         </div>
+        {needItemId !== null && rulesNote(item.profile, others.find((o) => o.id === needItemId)?.profile) && (
+          <p className="hint">{rulesNote(item.profile, others.find((o) => o.id === needItemId)?.profile)}</p>
+        )}
         {needItemId === null && (
           <div className="needed">
             {rules.map((rule) => (
@@ -133,7 +136,9 @@ function Result({ result }: { result: Assessment }) {
   return (
     <div className={`verdict ${verdictTone(result.verdict)}`} role="status">
       <strong>{verdictLabel(result.verdict)}</strong>
-      <span className="muted">{result.summary}</span>
+      <span className="muted">
+        {result.summary} · rules of {result.profile}
+      </span>
       <table className="evidence checks-table" aria-label="Checks">
         <thead>
           <tr>
