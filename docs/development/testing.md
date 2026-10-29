@@ -68,7 +68,8 @@ version in `e2e/package.json` must match, or the browsers in the image are the w
 ## Scripts
 
 `scripts/tests/run.sh` loads every `test_*.sh`, runs each `test_*` function and counts
-`assert_eq`, `assert_true` and `assert_false`.
+`assert_eq`, `assert_true` and `assert_false`. One file reads the backend Dockerfile and pins
+the production command to one worker without reload.
 
 ## Fixture mode and recorded fixtures
 
