@@ -7,6 +7,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## 0.1.0 - 2026-10-29
 
 ### Added
+- Release on merge: a pull request from `release/x.y.z` merged into `main` tags the merge commit and publishes the images and the GitHub release, after the version is checked against every manifest and the changelog; an existing tag is never moved.
 - Assessment: `POST /api/assess` checks a candidate against what is needed, rule by rule from the profile (`GET /api/profiles/{id}/rules`): pass, fail or unknown, never a guess; measured values carry their uncertainty into the check; one verdict from the ladder (`EXACT_MATCH`, `COMPATIBLE_LIKELY`, `VISUALLY_SIMILAR`, `CONFLICT`, `INSUFFICIENT_INFO`); a question for every unknown on the candidate's side. The Does it fit? panel on each item.
 - Measurement: `POST /api/measure` and `POST /api/items/{id}/measurements` compute a dimension from marks on a photo with a scale reference (two points of known length, or four corners of a known rectangle through a homography), refuse captures that are blurred, short on reference, off the photo, too small or not straight on, and report the uncertainty with its basis; profile features with tolerances in `GET /api/profiles`; accepted captures are proposed on the item as observed values. The marking canvas under each item.
 - Docs site: every page carries share metadata (title, description, one card image), so a link pasted into a chat or a post shows the project card.

@@ -34,6 +34,8 @@ test_other_branch_names_are_refused() {
   assert_false _release_run "$dir" feat/topic
   assert_false _release_run "$dir" release/v0.2.0
   assert_false _release_run "$dir" release/0.2
+  assert_false _release_run "$dir" release/0.2.0.1
+  assert_false _release_run "$dir" release/01.2.0
   assert_false _release_run "$dir" "release/0.2.0 "
   assert_false _release_run "$dir" ""
   rm -rf "$dir"
@@ -48,6 +50,13 @@ test_manifests_and_changelog_must_carry_the_version() {
   assert_false _release_run "$dir" release/0.2.0
   printf '__version__ = "0.2.0"\n' > "$dir/backend/app/__init__.py"
   printf '# Changelog\n\n## Unreleased\n\n### Added\n- x\n' > "$dir/CHANGELOG.md"
+  assert_false _release_run "$dir" release/0.2.0
+  # a dot in the version is a dot, and the heading is the whole version
+  printf '# Changelog\n\n## 0x2y0 - 2026-01-01\n\n## 0.2.0.1 - 2026-01-01\n' > "$dir/CHANGELOG.md"
+  assert_false _release_run "$dir" release/0.2.0
+  printf '# Changelog\n\n## 0.2.0\n' > "$dir/CHANGELOG.md"
+  assert_eq "$(_release_run "$dir" release/0.2.0)" "0.2.0"
+  rm -f "$dir/frontend/package.json"; : > "$dir/frontend/package.json"
   assert_false _release_run "$dir" release/0.2.0
   rm -rf "$dir"
 }

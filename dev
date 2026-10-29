@@ -231,7 +231,8 @@ cmd_build() {
 
 cmd_version() {
   local v="${1:-}"
-  [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "usage: ./dev version <major.minor.patch>"
+  [[ "$v" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] \
+    || die "usage: ./dev version <major.minor.patch>, no leading zeros, no prefix"
   local today
   today="$(date +%Y-%m-%d)"
   # sed -i needs a suffix on macOS; drop the backups afterwards
