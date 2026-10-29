@@ -308,8 +308,9 @@ class Inventory:
                 "SELECT MAX(version) FROM drafts WHERE item_id = ? AND mode = ?", (item_id, mode)
             ).fetchone()[0]
             version = int(last or 0) + 1
-            # the draft belongs to the item version its own event produces
-            item_version = self._bump(conn, row, at)
+            # written from this item version; writing a draft changes nothing about the item,
+            # so the version stays and another draft does not make this one stale
+            item_version = int(row["version"])
             self._event(conn, item_id, f"{mode} draft written (v{version})", item_version, at)
             cur = conn.execute(
                 "INSERT INTO drafts (item_id, mode, version, item_version, content, checklist, at)"

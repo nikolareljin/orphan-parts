@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
-from app.listing import DraftRequest, Lister, brief, checklist, disclosures, ready
+from app.listing import DraftRequest, Lister, brief, checklist, claims_working, disclosures, ready
 from app.model_api import CostLedger, ModelApiClient
 from tests.conftest import RECORDED_FIXTURES, make_photo
 
@@ -58,6 +58,9 @@ def test_the_brief_holds_only_confirmed_values_and_the_owner_details(
     assert "polarity" not in text.split("Field keys")[0]  # only what was passed as known
     assert "faults: frayed sleeve near the plug" in text
     assert "asking price: (the owner sets it)" in text
+    keys = text.split("Field keys a fact may name: ")[1]
+    assert "accessories" in keys and "pickup" in keys
+    assert "tests_done" not in keys  # empty, so no line may rest on it
     lines = disclosures(item, DraftRequest(mode="sell", asking_price="$15"))
     assert lines[0] == "Known faults: frayed sleeve near the plug"
     assert lines[1] == "Not tested; sold as is."
@@ -80,7 +83,8 @@ async def test_a_sell_draft_keeps_confirmed_facts_and_adds_the_disclosures(
     item_id = adapter(lister.inventory)
     draft = await lister.draft(item_id, DraftRequest(mode="sell", asking_price="$15"))
     assert draft.from_fixture is True and draft.cost_usd == 0.0
-    assert draft.version == 1 and draft.item_version == 4 and draft.stale is False
+    assert draft.version == 1 and draft.item_version == 3 and draft.stale is False
+    assert lister.inventory.get(item_id).version == 3  # writing a draft is not a change
     assert draft.title.startswith("Orbital 65 W laptop power adapter")
     # the recorded text rests two lines on fields this item does not confirm: both are dropped
     assert [f.field for f in draft.facts] == ["output_voltage", "polarity"]
@@ -99,6 +103,17 @@ async def test_a_sell_draft_keeps_confirmed_facts_and_adds_the_disclosures(
     again = await lister.draft(item_id, DraftRequest(mode="sell"))
     assert again.version == 2 and again.stale is False
     assert [d.version for d in lister.drafts(item_id)] == [1, 2]
+    # another draft, in the other mode, does not make this one stale
+    free = await lister.draft(item_id, DraftRequest(mode="give"))
+    assert free.version == 1 and lister.get(again.id).stale is False
+
+
+def test_a_claim_of_working_is_read_but_not_its_opposite() -> None:
+    assert claims_working("Works perfectly.")
+    assert claims_working("Charger, fully functional")
+    assert claims_working("In working order, tested last week")
+    assert not claims_working("Not tested; sold as is.")
+    assert not claims_working("Never tested, untested, not working as far as I know")
 
 
 async def test_a_give_draft_is_free_lists_uses_and_data_steps(lister: Lister) -> None:

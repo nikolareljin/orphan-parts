@@ -78,6 +78,7 @@ export default function Inventory({ refresh }: { refresh: number }) {
       )}
       {openId !== null && (
         <ItemPanel
+          key={openId}
           id={openId}
           onChanged={() => void load()}
           onClosed={() => {

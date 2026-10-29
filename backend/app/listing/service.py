@@ -18,7 +18,10 @@ log = logging.getLogger("app.listing")
 MAX_OUTPUT_TOKENS = 700
 # Details of the item the model may rest a line on, beside the confirmed fields.
 DETAIL_KEYS = ("name", "item_type", "condition", "faults", "tests_done", "accessories", "pickup")
-_CLAIMS_WORKING = re.compile(r"\b(works|working|fully functional|tested|in working order)\b", re.I)
+# a claim of a test or a working state; "not tested" and "never tested" are the opposite
+_CLAIMS_WORKING = re.compile(
+    r"(?<!not )(?<!never )\b(works|working|fully functional|tested|in working order)\b", re.I
+)
 
 INSTRUCTIONS = {
     "sell": (
@@ -39,6 +42,19 @@ INSTRUCTIONS = {
 }
 
 
+def claims_working(text: str) -> bool:
+    """Whether the text says the item works or was tested, other than to say it was not."""
+    return _CLAIMS_WORKING.search(text) is not None
+
+
+def fact_keys(item: Item, known: dict[str, str], request: DraftRequest) -> list[str]:
+    """The keys a fact may rest on: the confirmed fields and the details that are not empty."""
+    details = [k for k in DETAIL_KEYS if k != "pickup" and getattr(item, k, None)]
+    if request.pickup:
+        details.append("pickup")
+    return [*known, *details]
+
+
 def brief(item: Item, known: dict[str, str], request: DraftRequest) -> str:
     """What the model is told: confirmed values and the owner's details, nothing else."""
     lines = [f"Mode: {request.mode}", f"name: {item.name}", f"item_type: {item.item_type}"]
@@ -51,7 +67,7 @@ def brief(item: Item, known: dict[str, str], request: DraftRequest) -> str:
     lines.extend(f"- {k}: {v}" for k, v in known.items())
     if not known:
         lines.append("- (none confirmed yet)")
-    lines.append("Field keys a fact may name: " + ", ".join([*known, *DETAIL_KEYS]))
+    lines.append("Field keys a fact may name: " + ", ".join(fact_keys(item, known, request)))
     return "\n".join(lines)
 
 
@@ -98,16 +114,14 @@ class Lister:
         )
         writing = result.parsed
         warnings: list[str] = []
-        allowed = set(known) | {k for k in DETAIL_KEYS if getattr(item, k, "") or k == "pickup"}
-        if not request.pickup:
-            allowed.discard("pickup")
+        allowed = set(fact_keys(item, known, request))
         facts: list[DraftFact] = []
         for fact in writing.facts:
             if fact.field in allowed and fact.text.strip():
                 facts.append(DraftFact(text=fact.text.strip(), field=fact.field))
             else:
                 warnings.append(f"left out a line that rested on nothing confirmed: {fact.text!r}")
-        if not item.tests_done and _CLAIMS_WORKING.search(writing.description + writing.title):
+        if not item.tests_done and claims_working(writing.title + "\n" + writing.description):
             warnings.append(
                 "the text claims a test or a working state that is not recorded; record what"
                 " was tested under Details, or edit the text before posting"

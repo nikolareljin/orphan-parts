@@ -2,7 +2,7 @@
 
 from app.listing.checklists import Mode, Step, checklist, ready
 from app.listing.schema import Draft, DraftFact, DraftRequest, DraftWriting, StepChange
-from app.listing.service import Lister, brief, disclosures
+from app.listing.service import Lister, brief, claims_working, disclosures, fact_keys
 from app.listing.voice import BadAudioError, VoiceNote, VoiceNotes, wav_seconds
 
 __all__ = [
@@ -19,7 +19,9 @@ __all__ = [
     "VoiceNotes",
     "brief",
     "checklist",
+    "claims_working",
     "disclosures",
+    "fact_keys",
     "ready",
     "wav_seconds",
 ]
