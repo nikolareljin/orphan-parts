@@ -10,7 +10,7 @@ theme:
   name: material
   logo: assets/logo.svg
   favicon: assets/logo.svg
-  custom_dir: docs/overrides
+  custom_dir: overrides
   features:
     - navigation.tabs
     - navigation.sections
