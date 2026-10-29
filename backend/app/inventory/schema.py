@@ -16,6 +16,9 @@ Availability = Literal["available", "reserved", "gone"]
 Review = Literal["proposed", "accepted", "rejected"]
 
 FIELD_NAME = r"^[a-z][a-z0-9_]{0,63}$"
+NAME_MAX = 200
+VALUE_MAX = 500
+TEXT_MAX = 4000
 
 
 class Assertion(BaseModel):
@@ -75,14 +78,14 @@ class ItemCreate(BaseModel):
     """A new record, from a label reading or by hand. Everything but the type may be empty."""
 
     extraction: Extraction | None = None
-    name: str = ""
-    item_type: str = ""
-    condition: str = ""
-    faults: str = ""
-    tests_done: str = ""
-    accessories: str = ""
-    location: str = ""
-    notes: str = ""
+    name: str = Field(default="", max_length=NAME_MAX)
+    item_type: str = Field(default="", max_length=NAME_MAX)
+    condition: str = Field(default="", max_length=TEXT_MAX)
+    faults: str = Field(default="", max_length=TEXT_MAX)
+    tests_done: str = Field(default="", max_length=TEXT_MAX)
+    accessories: str = Field(default="", max_length=TEXT_MAX)
+    location: str = Field(default="", max_length=TEXT_MAX)
+    notes: str = Field(default="", max_length=TEXT_MAX)
     intent: Intent = "keep"
     availability: Availability = "available"
     parent_id: int | None = None
@@ -105,14 +108,14 @@ def _named(value: str | None, info: ValidationInfo) -> str | None:
 class ItemPatch(BaseModel):
     """Fields the owner edits in place. ``version`` makes the write conditional."""
 
-    name: str | None = None
-    item_type: str | None = None
-    condition: str | None = None
-    faults: str | None = None
-    tests_done: str | None = None
-    accessories: str | None = None
-    location: str | None = None
-    notes: str | None = None
+    name: str | None = Field(default=None, max_length=NAME_MAX)
+    item_type: str | None = Field(default=None, max_length=NAME_MAX)
+    condition: str | None = Field(default=None, max_length=TEXT_MAX)
+    faults: str | None = Field(default=None, max_length=TEXT_MAX)
+    tests_done: str | None = Field(default=None, max_length=TEXT_MAX)
+    accessories: str | None = Field(default=None, max_length=TEXT_MAX)
+    location: str | None = Field(default=None, max_length=TEXT_MAX)
+    notes: str | None = Field(default=None, max_length=TEXT_MAX)
     intent: Intent | None = None
     availability: Availability | None = None
     version: int | None = None
@@ -127,10 +130,18 @@ class FieldCreate(BaseModel):
     """A value the owner states, tested or looked up. It never replaces an observation."""
 
     field: str = Field(pattern=FIELD_NAME)
-    value: str
-    unit: str = ""
+    value: str = Field(max_length=VALUE_MAX)
+    unit: str = Field(default="", max_length=32)
     provenance: Provenance = "owner_reported"
-    raw: str = ""
+    raw: str = Field(default="", max_length=VALUE_MAX)
+
+    @field_validator("provenance")
+    @classmethod
+    def _not_observed(cls, value: Provenance) -> Provenance:
+        # an observation comes from a photo through the reader; the owner states, tests or cites
+        if value == "observed":
+            raise ValueError("provenance must say how you know it, not 'observed'")
+        return value
 
     @field_validator("value")
     @classmethod
@@ -150,10 +161,10 @@ class ReviewChange(BaseModel):
 class ComponentCreate(BaseModel):
     """A removable part separated into its own record under the whole device."""
 
-    name: str
-    item_type: str = ""
-    condition: str = ""
-    notes: str = ""
+    name: str = Field(max_length=NAME_MAX)
+    item_type: str = Field(default="", max_length=NAME_MAX)
+    condition: str = Field(default="", max_length=TEXT_MAX)
+    notes: str = Field(default="", max_length=TEXT_MAX)
 
     @field_validator("name")
     @classmethod

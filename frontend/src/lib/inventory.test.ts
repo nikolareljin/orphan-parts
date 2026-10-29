@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Assertion, Item } from './api'
 import { ApiError } from './api'
-import { intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from './inventory'
+import { availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from './inventory'
 
 const assertion = (id: number, review: Assertion['review']): Assertion => ({
   id,
@@ -43,6 +43,7 @@ describe('labels', () => {
     expect(provenanceLabel('owner_reported')).toBe('stated by the owner')
     expect(provenanceLabel('observed')).toBe('observed on a photo')
     expect(intentLabel('build')).toBe('Use in a build')
+    expect(availabilityLabel('reserved')).toBe('Reserved')
     expect(reviewLabel('proposed')).toBe('to confirm')
     expect(reviewLabel('accepted')).toBe('accepted')
   })

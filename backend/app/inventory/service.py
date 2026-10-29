@@ -155,7 +155,12 @@ class Inventory:
     # changes
 
     def update(self, item_id: int, patch: ItemPatch) -> Item:
-        data = patch.model_dump(exclude_unset=True, exclude={"version"})
+        # a key sent as null means "not given", never "set to nothing"
+        data = {
+            k: v
+            for k, v in patch.model_dump(exclude_unset=True, exclude={"version"}).items()
+            if v is not None
+        }
         at = now()
         with self.store.connect() as conn:
             row = self._row(conn, item_id)

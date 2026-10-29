@@ -226,3 +226,24 @@ def test_blank_names_and_values_are_refused(inventory: Inventory) -> None:
         ComponentCreate(name=" ")
     part = ComponentCreate(name=" cable ", item_type="  ")
     assert (part.name, part.item_type) == ("cable", "")
+
+
+def test_a_null_in_a_patch_means_not_given(inventory: Inventory) -> None:
+    item = inventory.create(ItemCreate(item_type="hub", condition="works"))
+    same = inventory.update(item.id, ItemPatch.model_validate({"condition": None, "notes": None}))
+    assert (same.condition, same.version) == ("works", 1)
+
+
+def test_an_owner_value_cannot_claim_to_be_observed() -> None:
+    with pytest.raises(ValueError, match="not 'observed'"):
+        FieldCreate(field="colour", value="black", provenance="observed")
+
+
+def test_free_text_has_a_bound() -> None:
+    with pytest.raises(ValueError):
+        ItemCreate(item_type="x" * 201)
+    with pytest.raises(ValueError):
+        ItemPatch(notes="n" * 4001)
+    with pytest.raises(ValueError):
+        FieldCreate(field="colour", value="v" * 501)
+    assert ItemCreate(notes="n" * 4000).notes

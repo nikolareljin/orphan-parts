@@ -25,6 +25,10 @@ export function provenanceLabel(p: Provenance): string {
   return PROVENANCES.find((x) => x.value === p)?.label ?? p
 }
 
+export function availabilityLabel(a: Availability): string {
+  return AVAILABILITIES.find((x) => x.value === a)?.label ?? a
+}
+
 export function intentLabel(i: Intent): string {
   return INTENTS.find((x) => x.value === i)?.label ?? i
 }

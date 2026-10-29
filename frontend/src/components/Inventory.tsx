@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -61,7 +61,7 @@ export default function Inventory({ refresh }: { refresh: number }) {
                 </th>
                 <td>{s.field_count}</td>
                 <td>{intentLabel(s.intent)}</td>
-                <td>{s.availability}</td>
+                <td>{availabilityLabel(s.availability)}</td>
                 <td>{whenText(s.updated_at)}</td>
                 <td>
                   <button type="button" className="link" onClick={() => setOpenId(s.id === openId ? null : s.id)}>

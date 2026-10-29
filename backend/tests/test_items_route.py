@@ -128,3 +128,14 @@ def test_blank_edits_are_422(client: TestClient) -> None:
     assert client.post(f"/api/items/{item_id}/fields", json=blank).status_code == 422
     assert client.post(f"/api/items/{item_id}/components", json={"name": " "}).status_code == 422
     assert client.get(f"/api/items/{item_id}").json()["version"] == 1
+
+
+def test_null_and_observed_through_the_routes(client: TestClient) -> None:
+    item = create(client, item_type="hub", condition="works")
+    item_id = item["id"]
+    res = client.patch(f"/api/items/{item_id}", json={"condition": None})
+    assert res.status_code == 200 and res.json()["condition"] == "works"
+    fake = {"field": "colour", "value": "black", "provenance": "observed"}
+    assert client.post(f"/api/items/{item_id}/fields", json=fake).status_code == 422
+    long = client.post("/api/items", json={"item_type": "x" * 201})
+    assert long.status_code == 422

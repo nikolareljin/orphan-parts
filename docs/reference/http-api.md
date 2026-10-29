@@ -36,7 +36,9 @@ separated `components`, and a `version` that every write increments.
 
 Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value
 outside the allowed sets (intent, availability, provenance, review), a field name that is not
-`snake_case`, or a blank name, part name or value.
+`snake_case`, a blank name, part name or value, an owner value claiming to be `observed`, or text
+over its bound (names 200 characters, values 500, details 4000). A key sent as `null` in a
+`PATCH` means not given.
 
 ## Operational endpoints
 
