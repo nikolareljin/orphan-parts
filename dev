@@ -231,7 +231,8 @@ cmd_build() {
 
 cmd_version() {
   local v="${1:-}"
-  [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "usage: ./dev version <major.minor.patch>"
+  [[ "$v" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] \
+    || die "usage: ./dev version <major.minor.patch>, no leading zeros, no prefix"
   local today
   today="$(date +%Y-%m-%d)"
   # sed -i needs a suffix on macOS; drop the backups afterwards
@@ -245,7 +246,7 @@ cmd_version() {
   log_ok "version $v set in pyproject.toml, app/__init__.py, package.json, package-lock.json and CHANGELOG.md"
   echo "  move the Unreleased notes under the new heading, then:"
   echo "  git switch -c release/$v && git add -A && git commit -m \"chore: release $v\" && git push -u origin release/$v"
-  echo "  open the PR; after it is merged: git switch main && git pull && git tag $v && git push origin $v"
+  echo "  open the PR; once it is merged the merge commit is tagged $v and the release published"
 }
 
 cmd_shell() {

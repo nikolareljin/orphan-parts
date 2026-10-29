@@ -46,7 +46,7 @@ cp .env.example .env        # add MODEL_API_KEY; without one the stack runs on r
 - Docs site: `./dev docs` then http://localhost:8001
 
 `./dev test` runs the whole check suite inside the same images CI uses. `./dev help` lists every command.
-Changes go through pull requests; releases are SemVer tags that publish images to GHCR.
+Changes go through pull requests; a release is a pull request from a `release/x.y.z` branch whose merge becomes the tag that publishes images to GHCR.
 
 ## Set up
 

@@ -76,7 +76,8 @@ version in `e2e/package.json` must match, or the browsers in the image are the w
 
 `scripts/tests/run.sh` loads every `test_*.sh`, runs each `test_*` function and counts
 `assert_eq`, `assert_true` and `assert_false`. One file reads the backend Dockerfile and pins
-the production command to one worker without reload.
+the production command to one worker without reload; another runs the release-tag check
+against throwaway repositories: branch names, manifests, changelog sections, an existing tag.
 
 ## Fixture mode and recorded fixtures
 
