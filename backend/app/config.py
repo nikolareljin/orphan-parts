@@ -1,6 +1,7 @@
 from functools import lru_cache
+import re
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -33,7 +34,7 @@ class Settings(BaseSettings):
     image_max_px: int = 1280
     segment_max_px: int = 800
     voice_max_seconds: int = 600
-    price_search_context: str = "low"
+    price_search_context: Literal["low", "medium", "high"] = "low"
     price_country: str = ""
     marketplace_create_url: str = "https://www.facebook.com/marketplace/create/item"
     max_photos: int = 4
@@ -60,6 +61,8 @@ class Settings(BaseSettings):
             raise ValueError("MODEL_API_MAX_ATTEMPTS must be at least 1")
         if self.spend_cap_usd < 0:
             raise ValueError("SPEND_CAP_USD must not be negative")
+        if self.price_country and not re.fullmatch(r"[A-Z]{2}", self.price_country):
+            raise ValueError("PRICE_COUNTRY must be a two-letter ISO 3166-1 code, or empty")
         return self
 
     @property

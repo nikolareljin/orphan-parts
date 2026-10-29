@@ -96,6 +96,17 @@ def test_only_a_comparable_a_page_backs_is_kept() -> None:
     assert not any("no web search" in c or "no pages" in c for c in caveats)
 
 
+def test_one_comparable_per_page_and_the_models_text_is_cut() -> None:
+    out = output_with(["https://example.org/listings/one"])
+    found = [
+        comparable(title="x" * 500, condition="y" * 500),
+        comparable(price=25, source_url="https://example.org/listings/one#other"),
+    ]
+    kept, dropped, _ = backed(found, out, "USD")
+    assert len(kept) == 1 and dropped == 1
+    assert len(kept[0].title) == 200 and len(kept[0].condition) == 200
+
+
 def test_no_search_or_no_pages_is_said_as_the_reason() -> None:
     kept, dropped, caveats = backed([comparable()], [], "USD")
     assert kept == [] and dropped == 1

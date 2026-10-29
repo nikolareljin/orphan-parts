@@ -36,6 +36,10 @@ log = logging.getLogger("app.value")
 
 MAX_OUTPUT_TOKENS = 900
 WEAK_BELOW = 3
+# what the model writes is shown as it is, so it is cut, not trusted
+TEXT_MAX = 200
+CAVEAT_MAX = 300
+CAVEATS_MAX = 8
 DETAIL_KEYS = ("condition", "faults", "tests_done", "accessories")
 
 INSTRUCTIONS = (
@@ -101,17 +105,33 @@ def backed(
     caveats: list[str] = []
     other_currency = 0
     no_price = 0
+    seen_pages: set[str] = set()
     for c in found:
         if c.price <= 0:
             no_price += 1
             continue
-        if _norm_url(c.source_url) not in pages:
+        page = _norm_url(c.source_url)
+        if page not in pages:
             dropped += 1
             continue
         if c.currency.upper() != currency:
             other_currency += 1
             continue
-        kept.append(c.model_copy(update={"observed": c.observed or today(), "currency": currency}))
+        if page in seen_pages:
+            dropped += 1  # one comparable per page: a second line from it is the same listing
+            continue
+        seen_pages.add(page)
+        kept.append(
+            c.model_copy(
+                update={
+                    "observed": c.observed or today(),
+                    "currency": currency,
+                    "title": c.title.strip()[:TEXT_MAX],
+                    "condition": c.condition.strip()[:TEXT_MAX],
+                    "source_title": c.source_title.strip()[:TEXT_MAX],
+                }
+            )
+        )
     made = searches(output)
     if made == 0 and found:
         caveats.append("the model made no web search, so nothing it wrote can be backed")
@@ -224,7 +244,7 @@ class Valuer:
         findings = result.parsed
         output = result.response.output
         kept, dropped, caveats = backed(findings.comparables, output, request.currency)
-        caveats = [c.strip() for c in findings.caveats if c.strip()] + caveats
+        caveats = [c.strip()[:CAVEAT_MAX] for c in findings.caveats if c.strip()][:CAVEATS_MAX] + caveats
         seen = today()
         asking = quantity(
             "asking",
@@ -302,7 +322,13 @@ class Valuer:
         return self.assemble(row)
 
     def guidances(self, item_id: int) -> list[Guidance]:
-        return [self.assemble(r) for r in self.inventory.guidances(item_id)]
+        rows = self.inventory.guidances(item_id)
+        if not rows:
+            return []
+        # the parts comparison is the item's, not each guidance's: computed once, from the latest
+        latest = json.loads(rows[-1]["content"])
+        parts = self.parts(item_id, latest)
+        return [self.assemble(r, parts=parts) for r in rows]
 
     def report(self, item_id: int, spec: PriceReportCreate) -> PriceReport:
         row = self.inventory.add_price_report(
@@ -317,15 +343,17 @@ class Valuer:
     def reports(self, item_id: int) -> list[PriceReport]:
         return [PriceReport(**dict(r)) for r in self.inventory.price_reports(item_id)]
 
-    def assemble(self, row: Any) -> Guidance:
+    def assemble(self, row: Any, *, parts: PartsComparison | None = None) -> Guidance:
         content = json.loads(row["content"])
+        if parts is None:
+            parts = self.parts(int(row["item_id"]), content)
         return Guidance(
             id=int(row["id"]),
             item_id=int(row["item_id"]),
             version=int(row["version"]),
             item_version=int(row["item_version"]),
             stale=int(row["item_version"]) != int(row["current_item_version"]),
-            parts=self.parts(int(row["item_id"]), content),
+            parts=parts,
             at=row["at"],
             **content,
         )
