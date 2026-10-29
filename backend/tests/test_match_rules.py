@@ -1,7 +1,7 @@
 import pytest
 
 from app.match import Reading, evaluate
-from app.match.rules import allowance, normal, number
+from app.match.rules import allowance, normal, number, unit_of
 from app.profiles import Rule
 
 
@@ -15,6 +15,33 @@ def test_number_reads_the_first_number_with_either_decimal_mark() -> None:
     assert number("19.5 V") == 19.5
     assert number("19,5V") == 19.5
     assert number("centre positive") is None
+
+
+def test_unit_of_reads_the_recorded_unit_or_the_one_written_after_the_number() -> None:
+    assert unit_of(Reading("19.5", unit="V")) == "V"
+    assert unit_of(Reading("19.5 V")) == "V"
+    assert unit_of(Reading("3300mA")) == "mA"
+    assert unit_of(Reading("4.5 mm (caliper)")) == "mm"
+    assert unit_of(Reading("4.5")) == ""
+    assert unit_of(Reading("35 (about)")) == ""
+
+
+def test_a_value_in_another_unit_on_either_side_is_not_compared() -> None:
+    amps = rule("at_least", key="output_current", label="Output current", unit="A")
+    # 3300 mA would pass as 3300 A; it must not
+    written = evaluate(amps, Reading("3.33 A"), Reading("3300 mA"))
+    assert written.status == "unknown"
+    assert "in mA" in written.basis and "enter it in A" in written.basis
+    recorded = evaluate(amps, Reading("3.33"), Reading("3300", unit="mA"))
+    assert recorded.status == "unknown"
+    needed = evaluate(amps, Reading("3330 mA"), Reading("4.62"))
+    assert needed.status == "unknown" and "required value is in mA" in needed.basis
+    # the rule's own unit, in any case, is fine; so is no unit at all
+    assert evaluate(amps, Reading("3.33 a"), Reading("4.62A")).status == "pass"
+    assert evaluate(amps, Reading("3.33"), Reading("4.62")).status == "pass"
+    # a rule without a unit compares bare numbers whatever is written after them
+    bare = rule("at_least", key="count", label="Count", unit="")
+    assert evaluate(bare, Reading("2 pcs"), Reading("3 pcs")).status == "pass"
 
 
 def test_normal_uses_the_field_normaliser_and_lower_case() -> None:

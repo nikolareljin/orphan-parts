@@ -9,6 +9,8 @@ from app.match.schema import Backing, Check, Status
 from app.profiles import Rule
 
 _NUMBER = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
+# the unit written right after the first number: "19.5 V", "3300mA", "4.5 mm (caliper)"
+_UNIT_AFTER = re.compile(r"[-+]?\d+(?:[.,]\d+)?\s*([A-Za-zµΩ°%]+)")
 
 
 @dataclass(frozen=True)
@@ -25,6 +27,14 @@ def number(text: str) -> float | None:
     """The first number in the text, or None."""
     m = _NUMBER.search(text)
     return float(m.group(0).replace(",", ".")) if m else None
+
+
+def unit_of(reading: Reading) -> str:
+    """The unit the reading is in: the one recorded with it, else the one written in the text."""
+    if reading.unit.strip():
+        return reading.unit.strip()
+    m = _UNIT_AFTER.search(reading.value)
+    return m.group(1) if m else ""
 
 
 def normal(key: str, text: str) -> str:
@@ -77,12 +87,15 @@ def _equal(rule: Rule, need: Reading, cand: Reading) -> dict[str, str]:
 
 
 def _numeric(rule: Rule, need: Reading, cand: Reading) -> dict[str, str]:
-    if rule.unit and cand.unit and cand.unit.strip().lower() != rule.unit.lower():
-        return {
-            "status": "unknown",
-            "basis": f"the candidate's value is in {cand.unit.strip()}, the rule compares"
-            f" {rule.unit}; enter it in {rule.unit}",
-        }
+    # a number in another unit is not compared: 19500 mV is not 19500 V
+    for side, reading in (("required", need), ("candidate's", cand)):
+        unit = unit_of(reading)
+        if rule.unit and unit and unit.lower() != rule.unit.lower():
+            return {
+                "status": "unknown",
+                "basis": f"the {side} value is in {unit}, the rule compares {rule.unit};"
+                f" enter it in {rule.unit}",
+            }
     n, c = number(need.value), number(cand.value)
     if n is None:
         return {"status": "unknown", "basis": f"no number in the required value {need.value!r}"}

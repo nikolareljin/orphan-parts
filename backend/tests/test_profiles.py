@@ -60,6 +60,9 @@ def test_rule_files_are_checked(tmp_path: Path) -> None:
     write("  - {key: lid, label: Lid, kind: equal, tolerance: 1}\n")
     with pytest.raises(ValueError, match="equal takes no tolerance"):
         Profiles(tmp_path)
+    write("  - {key: lid, label: Lid, kind: equal, tolerance_pct: 0}\n")
+    with pytest.raises(ValueError, match="equal takes no tolerance"):
+        Profiles(tmp_path)
     write("  - {key: lid, label: Lid, kind: bigger}\n")
     with pytest.raises(ValueError):
         Profiles(tmp_path)

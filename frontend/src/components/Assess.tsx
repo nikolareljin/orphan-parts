@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Assessment, type Item, type ItemSummary, type ProfileRule } from '../lib/api'
+import { provenanceLabel } from '../lib/inventory'
 import { inputLabel, needSide, ruleHint, rulesNote, statusLabel, verdictLabel, verdictTone } from '../lib/match'
 
 function message(err: unknown): string {
@@ -18,7 +19,10 @@ export default function Assess({ item }: { item: Item }) {
 
   useEffect(() => {
     let cancelled = false
+    // another profile means other rules: what was typed for the old ones no longer applies
     setResult(null)
+    setValues({})
+    setError('')
     if (!item.profile) {
       setRules([])
       return
@@ -161,7 +165,7 @@ function Result({ result }: { result: Assessment }) {
                 {c.backing && (
                   <small className="muted">
                     {' '}
-                    {c.backing.provenance.replace('_', ' ')}
+                    {provenanceLabel(c.backing.provenance)}
                     {c.backing.review === 'proposed' && ', to confirm'}
                     {c.backing.uncertainty !== null && ` ±${c.backing.uncertainty}`}
                   </small>

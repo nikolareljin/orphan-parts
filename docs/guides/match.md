@@ -17,7 +17,8 @@ written in. No model takes part.
 Needed values are written in the candidate's terms: for a vacuum tool, the needed
 `opening_inner_diameter` is the wand's outer diameter. A side can be an item and values at
 once; a written value replaces the item's for that key. Numbers are compared in the rule's
-unit: a candidate value recorded in another unit stays unknown and asks for the right one.
+unit: a value on either side recorded or written in another unit (`3300 mA` against a rule in
+amps) stays unknown and asks for the right one.
 
 ## Rules
 

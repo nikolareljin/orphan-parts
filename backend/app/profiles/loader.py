@@ -75,7 +75,9 @@ class Profile(BaseModel):
                     rule.unit = feature.unit
             if rule.kind == "within" and rule.tolerance is None and rule.tolerance_pct is None:
                 raise ValueError(f"rule {rule.key!r} of {self.id!r}: within needs a tolerance")
-            if rule.kind == "equal" and (rule.tolerance is not None or rule.tolerance_pct):
+            if rule.kind == "equal" and (
+                rule.tolerance is not None or rule.tolerance_pct is not None
+            ):
                 raise ValueError(f"rule {rule.key!r} of {self.id!r}: equal takes no tolerance")
         return self
 
