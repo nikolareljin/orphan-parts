@@ -584,3 +584,28 @@ button.link {
 .listing .warnings li {
   color: #b7791f;
 }
+
+/* what is it worth */
+.value .quantities td:nth-child(2) {
+  text-align: right;
+}
+
+.value .weak {
+  color: #b7791f;
+}
+
+.value .badge.kind {
+  text-transform: none;
+}
+
+.value .badge.kind.sold {
+  background: #27ae60;
+  color: #fff;
+}
+
+.value .strategies,
+.value .comparables,
+.value .reports {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.25rem;
+}

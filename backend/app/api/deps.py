@@ -12,6 +12,7 @@ from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
 from app.profiles import Profiles
 from app.segment.service import Segmenter
+from app.value.service import Valuer
 
 
 def app_settings(request: Request) -> Settings:
@@ -90,3 +91,11 @@ def app_voice(request: Request) -> VoiceNotes:
 
 
 VoiceDep = Annotated[VoiceNotes, Depends(app_voice)]
+
+
+def app_valuer(request: Request) -> Valuer:
+    valuer: Valuer = request.app.state.valuer
+    return valuer
+
+
+ValuerDep = Annotated[Valuer, Depends(app_valuer)]

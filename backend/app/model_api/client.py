@@ -110,6 +110,43 @@ def output_text(output: list[dict[str, Any]]) -> tuple[str, str | None]:
     return "".join(chunks), refusal
 
 
+def searches(output: list[dict[str, Any]]) -> int:
+    """How many web searches the response made: one per web_search_call item."""
+    return sum(1 for item in output if item.get("type") == "web_search_call")
+
+
+def search_results(output: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """The pages the searches returned (with ``include: web_search_call.results``)."""
+    found: list[dict[str, str]] = []
+    for item in output:
+        if item.get("type") != "web_search_call":
+            continue
+        results = item.get("results") or (item.get("action") or {}).get("sources") or []
+        for r in results:
+            if isinstance(r, dict) and r.get("url"):
+                found.append(
+                    {
+                        "url": str(r["url"]),
+                        "title": str(r.get("title") or ""),
+                        "snippet": str(r.get("snippet") or ""),
+                    }
+                )
+    return found
+
+
+def citations(output: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """The url_citation annotations on the text, in order."""
+    found: list[dict[str, str]] = []
+    for item in output:
+        if item.get("type") != "message":
+            continue
+        for part in item.get("content") or []:
+            for a in part.get("annotations") or []:
+                if isinstance(a, dict) and a.get("type") == "url_citation" and a.get("url"):
+                    found.append({"url": str(a["url"]), "title": str(a.get("title") or "")})
+    return found
+
+
 # --- client ------------------------------------------------------------------
 
 
@@ -157,6 +194,7 @@ class ModelApiClient:
         effort: str | None = None,
         max_output_tokens: int | None = None,
         tools: list[dict[str, Any]] | None = None,
+        include: list[str] | None = None,
         metadata: dict[str, str] | None = None,
         op: str = "respond",
         search_queries: int = 0,
@@ -182,6 +220,8 @@ class ModelApiClient:
             body["max_output_tokens"] = max_output_tokens
         if tools:
             body["tools"] = tools
+        if include:
+            body["include"] = include
         if metadata:
             body["metadata"] = metadata
         if self.settings.prompt_cache_name:
@@ -190,8 +230,12 @@ class ModelApiClient:
         data, from_fixture, attempts, ms = await self._post(RESPONSES, body, op)
         output = data.get("output") or []
         text, refusal = output_text(output)
+        # The API reports no search count in usage; every web_search_call item is one query,
+        # so the bill is read off the output unless the caller already knows the count.
         usage = Usage.from_response(
-            data.get("usage"), search_queries=search_queries, audio_seconds=audio_seconds
+            data.get("usage"),
+            search_queries=search_queries or searches(output),
+            audio_seconds=audio_seconds,
         )
         usd = 0.0 if from_fixture else cost_usd(model, usage)
         self._record(op, model, RESPONSES, usage, usd, from_fixture, attempts, ms)

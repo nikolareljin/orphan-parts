@@ -1,0 +1,118 @@
+{
+  "endpoint": "/responses",
+  "op": "price",
+  "model": "muse-spark-1.3",
+  "key": "fallback-price",
+  "request": {
+    "instructions": "price guidance instructions, see app/value/service.py",
+    "input": "one text part: the brief, see app/value/service.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "low"
+      }
+    ],
+    "include": [
+      "web_search_call.results"
+    ],
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "Findings",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_price",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_price",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "ws_fixture_price_1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Orbital 65W laptop power adapter 19.5V 3.33A used price"
+        },
+        "results": [
+          {
+            "type": "web_search_result",
+            "title": "Orbital 65W 19.5V laptop charger, used, tested",
+            "url": "https://example.org/listings/orbital-65w-19-5v-charger-used",
+            "snippet": "Orbital 65W 19.5V 3.33A laptop power adapter, works, light wear. $18."
+          },
+          {
+            "type": "web_search_result",
+            "title": "Orbital 65 W adapter OP065 with cable",
+            "url": "https://example.org/listings/orbital-op065-adapter-with-cable",
+            "snippet": "Genuine Orbital 65 W adapter, OP065-19-333, cable included. Asking $22."
+          },
+          {
+            "type": "web_search_result",
+            "title": "Lot: two Orbital laptop chargers",
+            "url": "https://example.org/listings/lot-two-orbital-chargers",
+            "snippet": "Two Orbital 65W chargers, one with a frayed sleeve. $25 for both."
+          },
+          {
+            "type": "web_search_result",
+            "title": "Sold: Orbital 65W power adapter",
+            "url": "https://example.org/sold/orbital-65w-power-adapter-2026-10",
+            "snippet": "Sold for $15 on 2026-10-20. Orbital 65W 19.5V, scuffed, working."
+          }
+        ]
+      },
+      {
+        "id": "msg_fixture_price",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://example.org/listings/orbital-65w-19-5v-charger-used",
+                "title": "Orbital 65W 19.5V laptop charger, used, tested",
+                "start_index": 0,
+                "end_index": 40
+              },
+              {
+                "type": "url_citation",
+                "url": "https://example.org/sold/orbital-65w-power-adapter-2026-10",
+                "title": "Sold: Orbital 65W power adapter",
+                "start_index": 41,
+                "end_index": 80
+              }
+            ],
+            "text": "{\"comparables\": [{\"kind\": \"asking\", \"title\": \"Orbital 65W 19.5V laptop charger, used, tested\", \"price\": 18, \"currency\": \"USD\", \"condition\": \"light wear, works\", \"observed\": \"\", \"source_url\": \"https://example.org/listings/orbital-65w-19-5v-charger-used\", \"source_title\": \"Orbital 65W 19.5V laptop charger, used, tested\"}, {\"kind\": \"asking\", \"title\": \"Orbital 65 W adapter OP065 with cable\", \"price\": 22, \"currency\": \"USD\", \"condition\": \"with cable\", \"observed\": \"2026-10-27\", \"source_url\": \"https://example.org/listings/orbital-op065-adapter-with-cable\", \"source_title\": \"Orbital 65 W adapter OP065 with cable\"}, {\"kind\": \"asking\", \"title\": \"Lot: two Orbital laptop chargers\", \"price\": 12.5, \"currency\": \"USD\", \"condition\": \"one frayed, lot of two, per unit\", \"observed\": \"\", \"source_url\": \"https://example.org/listings/lot-two-orbital-chargers\", \"source_title\": \"Lot: two Orbital laptop chargers\"}, {\"kind\": \"sold\", \"title\": \"Sold: Orbital 65W power adapter\", \"price\": 15, \"currency\": \"USD\", \"condition\": \"scuffed, working\", \"observed\": \"2026-10-20\", \"source_url\": \"https://example.org/sold/orbital-65w-power-adapter-2026-10\", \"source_title\": \"Sold: Orbital 65W power adapter\"}, {\"kind\": \"asking\", \"title\": \"Orbital charger on a forum\", \"price\": 30, \"currency\": \"USD\", \"condition\": \"new in box\", \"observed\": \"\", \"source_url\": \"https://example.org/forum/orbital-charger-new-in-box\", \"source_title\": \"Orbital charger on a forum\"}], \"estimate_low\": 12, \"estimate_high\": 22, \"estimate_typical\": 17, \"currency\": \"USD\", \"basis\": \"three current listings and one recent sale of the same 65 W model in used condition\", \"caveats\": [\"a frayed sleeve lowers what buyers pay; say so in the listing\", \"the lot price was split per unit\"]}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 2120,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 520,
+      "output_tokens_details": {
+        "reasoning_tokens": 60
+      },
+      "total_tokens": 2640
+    }
+  },
+  "status": 200
+}

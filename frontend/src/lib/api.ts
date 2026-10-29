@@ -285,6 +285,85 @@ export interface VoiceNote {
   item: Item
 }
 
+export type PriceKind = 'asking' | 'sold' | 'reported' | 'estimate'
+
+export interface Comparable {
+  kind: 'asking' | 'sold'
+  title: string
+  price: number
+  currency: string
+  condition: string
+  observed: string
+  source_url: string
+  source_title: string
+}
+
+export interface Quantity {
+  kind: PriceKind
+  label: string
+  count: number
+  low: number | null
+  high: number | null
+  typical: number | null
+  currency: string
+  basis: string
+}
+
+export interface Strategy {
+  name: 'quick_sale' | 'typical' | 'patient'
+  label: string
+  price: number | null
+  note: string
+}
+
+export interface PartsComparison {
+  components: number
+  priced: number
+  sum_typical: number | null
+  whole_typical: number | null
+  note: string
+}
+
+export interface Guidance {
+  id: number
+  item_id: number
+  version: number
+  item_version: number
+  stale: boolean
+  currency: string
+  quantities: Quantity[]
+  comparables: Comparable[]
+  dropped: number
+  sources: { url: string; title: string; observed: string }[]
+  estimate_label: 'estimate'
+  strategies: Strategy[]
+  weak: boolean
+  weak_reason: string
+  caveats: string[]
+  parts: PartsComparison | null
+  searches: number
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  at: string
+}
+
+export interface PriceRequest {
+  currency: string
+  country: string
+  city: string
+}
+
+export interface PriceReport {
+  id: number
+  item_id: number
+  price: number
+  currency: string
+  sold_on: string
+  note: string
+  at: string
+}
+
 export interface Assessment {
   profile: string
   verdict: Verdict
@@ -468,6 +547,13 @@ export const api = {
     setStep: (id: number, key: string, done: boolean) => sendJson<Draft>('POST', `/api/drafts/${id}/checklist`, { key, done }),
   },
   voice: (itemId: number, audio: File) => postForm<VoiceNote>(`/api/items/${itemId}/voice`, [['audio', audio]]),
+  value: {
+    guide: (itemId: number, request: PriceRequest) => sendJson<Guidance>('POST', `/api/items/${itemId}/price`, request),
+    history: (itemId: number) => getJson<Guidance[]>(`/api/items/${itemId}/price`),
+    report: (itemId: number, spec: { price: number; currency: string; sold_on: string; note: string }) =>
+      sendJson<PriceReport>('POST', `/api/items/${itemId}/price/reports`, spec),
+    reports: (itemId: number) => getJson<PriceReport[]>(`/api/items/${itemId}/price/reports`),
+  },
   assess: (need: Side, candidate: Side) => sendJson<Assessment>('POST', '/api/assess', { need, candidate }),
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [

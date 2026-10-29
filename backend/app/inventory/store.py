@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -82,7 +82,30 @@ CREATE TABLE drafts (
 CREATE INDEX drafts_by_item ON drafts (item_id, mode);
 """
 
-MIGRATIONS: dict[int, str] = {1: _SCHEMA, 2: _SCHEMA_V2, 3: _SCHEMA_V3}
+# version 4: price guidance per item version, and sales the owner reports, kept apart
+_SCHEMA_V4 = """
+CREATE TABLE price_guidance (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    version INTEGER NOT NULL,
+    item_version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    at TEXT NOT NULL
+);
+CREATE INDEX price_guidance_by_item ON price_guidance (item_id);
+CREATE TABLE price_reports (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    price REAL NOT NULL,
+    currency TEXT NOT NULL,
+    sold_on TEXT NOT NULL,
+    note TEXT NOT NULL,
+    at TEXT NOT NULL
+);
+CREATE INDEX price_reports_by_item ON price_reports (item_id);
+"""
+
+MIGRATIONS: dict[int, str] = {1: _SCHEMA, 2: _SCHEMA_V2, 3: _SCHEMA_V3, 4: _SCHEMA_V4}
 
 
 class SchemaTooNewError(RuntimeError):
