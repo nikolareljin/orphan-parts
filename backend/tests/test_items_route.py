@@ -118,3 +118,13 @@ def test_openapi_documents_the_inventory(client: TestClient) -> None:
     assert "post" in paths["/api/items/{item_id}/components"]
     assert "post" in paths["/api/items/{item_id}/assertions/{assertion_id}/review"]
     assert "get" in paths["/api/items/{item_id}/events"]
+
+
+def test_blank_edits_are_422(client: TestClient) -> None:
+    item = create(client, item_type="hub")
+    item_id = item["id"]
+    assert client.patch(f"/api/items/{item_id}", json={"name": "  "}).status_code == 422
+    blank = {"field": "colour", "value": " "}
+    assert client.post(f"/api/items/{item_id}/fields", json=blank).status_code == 422
+    assert client.post(f"/api/items/{item_id}/components", json={"name": " "}).status_code == 422
+    assert client.get(f"/api/items/{item_id}").json()["version"] == 1

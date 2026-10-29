@@ -8,7 +8,7 @@ type State =
   | { kind: 'idle' }
   | { kind: 'segmenting' }
   | { kind: 'reading'; segmentation?: Segmentation; note?: string }
-  | { kind: 'done'; segmentation?: Segmentation; note?: string; result: Extraction; saved?: Item }
+  | { kind: 'done'; segmentation?: Segmentation; note?: string; result: Extraction; saved?: Item; saveError?: string }
   | { kind: 'error'; segmentation?: Segmentation; note?: string; message: string }
 
 function messageOf(err: unknown): string {
@@ -71,14 +71,15 @@ export default function ExtractForm({
   }
 
   // The reading becomes a private record: observed fields, each still to confirm.
+  // A failed save keeps the reading on the page: it was paid for, and can be saved again.
   async function save() {
     if (state.kind !== 'done' || state.saved) return
     try {
       const saved = await api.items.create({ extraction: state.result, name: name.trim() })
-      setState({ ...state, saved })
+      setState({ ...state, saved, saveError: undefined })
       onSaved?.(saved)
     } catch (err: unknown) {
-      setState({ kind: 'error', segmentation, note, message: messageOf(err) })
+      setState({ ...state, saveError: messageOf(err) })
     }
   }
 
@@ -134,6 +135,11 @@ export default function ExtractForm({
                   <button type="button" onClick={() => void save()}>
                     Save privately
                   </button>
+                  {state.saveError && (
+                    <p className="error" role="alert">
+                      {state.saveError}
+                    </p>
+                  )}
                 </>
               )}
             </div>

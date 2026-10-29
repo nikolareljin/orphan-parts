@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, intentLabel, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -122,23 +122,36 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
     }
   }, [id])
 
+  function show(next: Item) {
+    setItem(next)
+    setDetails({
+      condition: next.condition,
+      faults: next.faults,
+      tests_done: next.tests_done,
+      accessories: next.accessories,
+      location: next.location,
+      notes: next.notes,
+    })
+    setEvents(null)
+  }
+
   // Every change goes through here: the item is replaced by the server's answer, the list reloads.
+  // A write refused because the item changed in between reloads it instead of overwriting.
   async function apply(action: () => Promise<Item>) {
     try {
-      const next = await action()
-      setItem(next)
-      setDetails({
-        condition: next.condition,
-        faults: next.faults,
-        tests_done: next.tests_done,
-        accessories: next.accessories,
-        location: next.location,
-        notes: next.notes,
-      })
-      setEvents(null)
+      show(await action())
       setError('')
       onChanged()
     } catch (err: unknown) {
+      if (isConflict(err)) {
+        try {
+          show(await api.items.get(id))
+          setError(`${message(err)}. The item was reloaded; make the change again if it still applies.`)
+          return
+        } catch {
+          // fall through to the original message
+        }
+      }
       setError(message(err))
     }
   }

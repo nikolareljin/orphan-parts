@@ -35,8 +35,8 @@ separated `components`, and a `version` that every write increments.
 | `GET /api/items/{id}/events` | the history: actor, time, change, version |
 
 Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value
-outside the allowed sets (intent, availability, provenance, review) or a field name that is not
-`snake_case`.
+outside the allowed sets (intent, availability, provenance, review), a field name that is not
+`snake_case`, or a blank name, part name or value.
 
 ## Operational endpoints
 

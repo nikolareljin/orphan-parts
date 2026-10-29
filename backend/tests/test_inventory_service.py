@@ -208,3 +208,21 @@ def test_every_editable_column_has_its_fixed_update_statement() -> None:
     for column, sql in SET_COLUMN.items():
         assert sql.startswith("UPDATE items SET ") and "<column>" not in sql
         assert sql.split()[3] == column
+
+
+def test_blank_names_and_values_are_refused(inventory: Inventory) -> None:
+    item = inventory.create(ItemCreate(item_type="  USB hub  ", name="   "))
+    assert (item.name, item.item_type) == ("USB hub", "USB hub")
+    with pytest.raises(ValueError, match="name"):
+        ItemPatch(name="   ")
+    with pytest.raises(ValueError, match="item_type"):
+        ItemPatch(item_type="")
+    assert ItemPatch(name="  Hub  ").name == "Hub"
+    with pytest.raises(ValueError, match="value"):
+        FieldCreate(field="colour", value="   ")
+    assert FieldCreate(field="colour", value=" black ", unit=" ").value == "black"
+    assert FieldCreate(field="colour", value="black", unit=" mm ").unit == "mm"
+    with pytest.raises(ValueError, match="name"):
+        ComponentCreate(name=" ")
+    part = ComponentCreate(name=" cable ", item_type="  ")
+    assert (part.name, part.item_type) == ("cable", "")

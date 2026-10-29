@@ -125,3 +125,42 @@ test('deleting asks twice and then hides the item', async ({ page, request }) =>
   await expect(panel).toHaveCount(0)
   await expect(items.getByRole('row', { name: phone })).toHaveCount(0)
 })
+
+test('a write refused because the item changed in between reloads the item', async ({ page, request }) => {
+  const lamp = `desk lamp ${stamp}`
+  const id = await createItem(request, { item_type: lamp })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'My inventory' }).click()
+  await page.getByRole('table', { name: 'Items' }).getByRole('row', { name: lamp }).getByRole('button', { name: 'Open' }).click()
+  const panel = page.getByRole('article', { name: `Item ${lamp}` })
+  await expect(panel).toContainText('version 1')
+
+  // changed elsewhere while the page is open
+  const elsewhere = await request.patch(`/api/items/${id}`, { data: { condition: 'flickers', version: 1 } })
+  expect(elsewhere.status()).toBe(200)
+
+  await panel.getByLabel('Intent').selectOption('give')
+  await expect(panel.getByRole('alert')).toContainText('The item was reloaded')
+  await expect(panel).toContainText('version 2')
+  await expect(panel.getByRole('textbox', { name: 'Condition', exact: true })).toHaveValue('flickers')
+  await expect(panel.getByLabel('Intent')).toHaveValue('keep')
+})
+
+test('a failed save keeps the reading on the page', async ({ page }) => {
+  await page.route('**/api/items', (route) =>
+    route.request().method() === 'POST'
+      ? route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'the database is busy' }) })
+      : route.continue(),
+  )
+  await page.goto('/')
+  await page
+    .getByLabel('Photos of the label')
+    .setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: greyPng() })
+  await page.getByLabel('Find the label first with SAM 3.1, then read the crop').uncheck()
+  await page.getByRole('button', { name: 'Read the label' }).click()
+  await expect(page.getByRole('table', { name: 'Evidence' })).toBeVisible()
+  await page.getByRole('button', { name: 'Save privately' }).click()
+  await expect(page.getByRole('alert')).toContainText('the database is busy')
+  await expect(page.getByRole('table', { name: 'Evidence' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Save privately' })).toBeVisible()
+})

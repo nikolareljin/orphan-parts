@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from app.extract.schema import Extraction, Source
 
@@ -88,6 +88,20 @@ class ItemCreate(BaseModel):
     parent_id: int | None = None
 
 
+def _trimmed(value: str) -> str:
+    return " ".join(value.split())
+
+
+def _named(value: str | None, info: ValidationInfo) -> str | None:
+    """A name is trimmed and, when given, never blank."""
+    if value is None:
+        return None
+    value = _trimmed(value)
+    if not value:
+        raise ValueError(f"{info.field_name} must not be blank")
+    return value
+
+
 class ItemPatch(BaseModel):
     """Fields the owner edits in place. ``version`` makes the write conditional."""
 
@@ -103,15 +117,30 @@ class ItemPatch(BaseModel):
     availability: Availability | None = None
     version: int | None = None
 
+    @field_validator("name", "item_type")
+    @classmethod
+    def _names(cls, value: str | None, info: ValidationInfo) -> str | None:
+        return _named(value, info)
+
 
 class FieldCreate(BaseModel):
     """A value the owner states, tested or looked up. It never replaces an observation."""
 
     field: str = Field(pattern=FIELD_NAME)
-    value: str = Field(min_length=1)
+    value: str
     unit: str = ""
     provenance: Provenance = "owner_reported"
     raw: str = ""
+
+    @field_validator("value")
+    @classmethod
+    def _value(cls, value: str, info: ValidationInfo) -> str:
+        return _named(value, info) or ""
+
+    @field_validator("unit", "raw")
+    @classmethod
+    def _trim(cls, value: str) -> str:
+        return _trimmed(value)
 
 
 class ReviewChange(BaseModel):
@@ -121,7 +150,17 @@ class ReviewChange(BaseModel):
 class ComponentCreate(BaseModel):
     """A removable part separated into its own record under the whole device."""
 
-    name: str = Field(min_length=1)
+    name: str
     item_type: str = ""
     condition: str = ""
     notes: str = ""
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, value: str, info: ValidationInfo) -> str:
+        return _named(value, info) or ""
+
+    @field_validator("item_type")
+    @classmethod
+    def _type(cls, value: str) -> str:
+        return _trimmed(value)

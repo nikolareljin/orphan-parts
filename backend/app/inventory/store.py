@@ -77,12 +77,13 @@ class Store:
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
         """A connection inside a transaction: committed on success, rolled back on error."""
-        conn = sqlite3.connect(self.path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
-        conn.execute("PRAGMA journal_mode = WAL")
-        try:
-            with self._lock, conn:
-                yield conn
-        finally:
-            conn.close()
+        with self._lock:
+            conn = sqlite3.connect(self.path)
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.execute("PRAGMA journal_mode = WAL")
+            try:
+                with conn:
+                    yield conn
+            finally:
+                conn.close()

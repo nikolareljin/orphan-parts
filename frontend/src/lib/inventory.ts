@@ -1,4 +1,4 @@
-import type { Availability, Intent, Item, Provenance, Review } from './api'
+import { ApiError, type Availability, type Intent, type Item, type Provenance, type Review } from './api'
 
 export const INTENTS: { value: Intent; label: string }[] = [
   { value: 'keep', label: 'Keep' },
@@ -44,4 +44,9 @@ export function whenText(iso: string): string {
   if (Number.isNaN(d.getTime())) return iso
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+// A write the API refused because the item changed since the page last saw it.
+export function isConflict(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 409
 }

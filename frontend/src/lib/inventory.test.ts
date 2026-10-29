@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Assertion, Item } from './api'
-import { intentLabel, proposedCount, provenanceLabel, reviewLabel, whenText } from './inventory'
+import { ApiError } from './api'
+import { intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from './inventory'
 
 const assertion = (id: number, review: Assertion['review']): Assertion => ({
   id,
@@ -61,5 +62,13 @@ describe('whenText', () => {
 
   it('leaves text it cannot parse alone', () => {
     expect(whenText('soon')).toBe('soon')
+  })
+})
+
+describe('isConflict', () => {
+  it('is true only for a 409 from the API', () => {
+    expect(isConflict(new ApiError(409, 'item 1 is at version 3, not 2'))).toBe(true)
+    expect(isConflict(new ApiError(404, 'no item 9'))).toBe(false)
+    expect(isConflict(new Error('offline'))).toBe(false)
   })
 })
