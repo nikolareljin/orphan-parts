@@ -1,0 +1,35 @@
+id: vacuum_attachment
+label: Vacuum attachment
+description: >
+  A non-powered tool that fits the wand or hose of a vacuum cleaner. Fit is decided by the
+  opening and the insertion geometry; a powered head also needs documented electrical
+  compatibility, which no dimension can establish.
+features:
+  - key: opening_inner_diameter
+    label: Opening inner diameter
+    tolerance_mm: 0.5
+    how: >
+      Photograph the opening straight on with a ruler lying across it in the same plane.
+      Mark the ruler over a known length, then the inner edges of the opening at its widest span.
+  - key: opening_outer_diameter
+    label: Opening outer diameter
+    tolerance_mm: 0.5
+    how: >
+      Same photo as the inner diameter: mark the outer edges of the lip across the widest span.
+  - key: insertion_depth
+    label: Insertion depth
+    tolerance_mm: 1.0
+    how: >
+      Photograph the tool from the side with the ruler along the insertion sleeve. Mark the lip
+      and the stop where a wand would seat.
+  - key: outer_diameter_at_depth
+    label: Outer diameter at the insertion depth
+    tolerance_mm: 0.5
+    how: >
+      Side view with the ruler: mark the outer edges of the sleeve at the stop. Compared with the
+      lip it gives the taper.
+  - key: latch_position
+    label: Latch position from the lip
+    tolerance_mm: 1.0
+    how: >
+      Side view with the ruler: mark the lip and the centre of the latch catch or button.

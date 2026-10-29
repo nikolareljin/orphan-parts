@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     data_dir: Path = Path("./data")
     max_upload_mb: int = 12
     inventory_db_file: str = "inventory.sqlite3"
+    # measurement captures: what a photo must give before a number is computed from it
+    measure_min_sharpness: float = 150.0
+    measure_min_reference_px: int = 80
+    measure_min_image_px: int = 480
+    measure_mark_px: float = 1.5
 
     log_format: str = "json"
     log_level: str = "INFO"

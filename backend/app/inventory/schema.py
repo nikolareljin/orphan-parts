@@ -53,6 +53,7 @@ class ItemSummary(BaseModel):
     id: int
     name: str
     item_type: str
+    profile: str
     condition: str
     intent: Intent
     availability: Availability
@@ -80,6 +81,7 @@ class ItemCreate(BaseModel):
     extraction: Extraction | None = None
     name: str = Field(default="", max_length=NAME_MAX)
     item_type: str = Field(default="", max_length=NAME_MAX)
+    profile: str = Field(default="", max_length=NAME_MAX)
     condition: str = Field(default="", max_length=TEXT_MAX)
     faults: str = Field(default="", max_length=TEXT_MAX)
     tests_done: str = Field(default="", max_length=TEXT_MAX)
@@ -110,6 +112,7 @@ class ItemPatch(BaseModel):
 
     name: str | None = Field(default=None, max_length=NAME_MAX)
     item_type: str | None = Field(default=None, max_length=NAME_MAX)
+    profile: str | None = Field(default=None, max_length=NAME_MAX)
     condition: str | None = Field(default=None, max_length=TEXT_MAX)
     faults: str | None = Field(default=None, max_length=TEXT_MAX)
     tests_done: str | None = Field(default=None, max_length=TEXT_MAX)

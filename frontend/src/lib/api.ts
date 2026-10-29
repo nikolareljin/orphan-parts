@@ -22,7 +22,15 @@ export interface Version {
   limits: Limits
 }
 
-export type Source = 'photo' | 'label_crop' | 'grounding_citation' | 'voice_note' | 'user_edit' | 'video_frame'
+export type Source =
+  | 'photo'
+  | 'label_crop'
+  | 'grounding_citation'
+  | 'voice_note'
+  | 'user_edit'
+  | 'video_frame'
+  | 'measurement'
+  | 'document'
 
 export interface Evidence {
   value: string
@@ -96,6 +104,7 @@ export interface ItemSummary {
   id: number
   name: string
   item_type: string
+  profile: string
   condition: string
   intent: Intent
   availability: Availability
@@ -119,7 +128,17 @@ export interface Item extends ItemSummary {
 
 export type ItemDetails = Pick<
   Item,
-  'name' | 'item_type' | 'condition' | 'faults' | 'tests_done' | 'accessories' | 'location' | 'notes' | 'intent' | 'availability'
+  | 'name'
+  | 'item_type'
+  | 'profile'
+  | 'condition'
+  | 'faults'
+  | 'tests_done'
+  | 'accessories'
+  | 'location'
+  | 'notes'
+  | 'intent'
+  | 'availability'
 >
 
 export interface ItemCreate extends Partial<ItemDetails> {
@@ -151,6 +170,72 @@ export interface ItemEvent {
   actor: string
   change: string
   version: number
+}
+
+// Profiles and measurements: what to measure for a kind of item, and a number from a photo.
+export interface ProfileSummary {
+  id: string
+  label: string
+  feature_count: number
+}
+
+export interface ProfileFeature {
+  key: string
+  label: string
+  unit: string
+  tolerance_mm: number
+  how: string
+}
+
+export interface Point {
+  x: number
+  y: number
+}
+
+export type Reference =
+  | { kind: 'two_point'; points: Point[]; length_mm: number; tolerance_mm?: number }
+  | { kind: 'rectangle'; corners: Point[]; width_mm: number; height_mm: number; tolerance_mm?: number }
+
+export interface MeasureRequest {
+  feature: string
+  profile: string | null
+  image: { width: number; height: number }
+  reference: Reference
+  points: Point[]
+  straight_on: boolean
+}
+
+export interface Check {
+  name: string
+  passed: boolean
+  detail: string
+  blocking: boolean
+}
+
+export interface MeasureResult {
+  accepted: boolean
+  feature: string
+  profile: string | null
+  method: 'two_point_scale' | 'homography'
+  unit: 'mm'
+  value_mm: number | null
+  uncertainty_mm: number | null
+  basis: string
+  checks: Check[]
+  redo: string | null
+  px_per_mm: number | null
+  image: { width: number; height: number }
+  reference: Reference
+  points: Point[]
+  tolerance_mm: number | null
+  needs_direct_reading: boolean | null
+}
+
+export interface Measurement extends MeasureResult {
+  id: number
+  item_id: number
+  assertion_id: number | null
+  at: string
 }
 
 export class ApiError extends Error {
@@ -246,5 +331,20 @@ export const api = {
       sendJson<Item>('POST', `/api/items/${id}/assertions/${assertionId}/review`, { review }),
     addComponent: (id: number, spec: ComponentCreate) => sendJson<Item>('POST', `/api/items/${id}/components`, spec),
     events: (id: number) => getJson<ItemEvent[]>(`/api/items/${id}/events`),
+    measurements: (id: number) => getJson<Measurement[]>(`/api/items/${id}/measurements`),
+    measure: (id: number, photo: File, request: MeasureRequest) =>
+      postForm<Measurement>(`/api/items/${id}/measurements`, [
+        ['photo', photo],
+        ['request', JSON.stringify(request)],
+      ]),
   },
+  profiles: {
+    list: () => getJson<ProfileSummary[]>('/api/profiles'),
+    features: (id: string) => getJson<ProfileFeature[]>(`/api/profiles/${id}/features`),
+  },
+  measure: (photo: File, request: MeasureRequest) =>
+    postForm<MeasureResult>('/api/measure', [
+      ['photo', photo],
+      ['request', JSON.stringify(request)],
+    ]),
 }

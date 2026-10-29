@@ -36,6 +36,12 @@ from a broken phone, the cable from a charger. The part gets the parent's intent
 back; the parent's faults note what left, so a later plan does not count on a whole device that
 is no longer whole.
 
+## Measuring
+
+Under **Measure a feature** a dimension is taken from a photo with a scale reference and, when
+accepted, proposed on the item as an observed value with source `measurement`. The method, the
+checks and the uncertainty are in [Measure a feature](measure.md).
+
 ## Deleting
 
 Delete hides the item from the list. The record and its history stay, so an event log is never

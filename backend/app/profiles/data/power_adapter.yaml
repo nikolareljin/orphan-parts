@@ -1,0 +1,23 @@
+id: power_adapter
+label: Power adapter
+description: >
+  An external power supply with a barrel or proprietary plug. Electrical fields come from the
+  label; the plug dimensions decide whether it reaches the socket at all, and their tolerance is
+  tighter than a photo supports, so a caliper reading is the usual path.
+features:
+  - key: plug_outer_diameter
+    label: Plug outer diameter
+    tolerance_mm: 0.1
+    how: >
+      End-on photo of the plug with a ruler beside it in the same plane, or a caliper reading
+      entered directly.
+  - key: plug_inner_diameter
+    label: Plug inner diameter
+    tolerance_mm: 0.1
+    how: >
+      Same end-on photo: mark the inner edges of the barrel, or enter a caliper reading.
+  - key: plug_length
+    label: Plug length
+    tolerance_mm: 0.5
+    how: >
+      Side photo with the ruler along the plug: mark the tip and the collar.

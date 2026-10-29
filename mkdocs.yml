@@ -10,6 +10,7 @@ theme:
   name: material
   logo: assets/logo.svg
   favicon: assets/logo.svg
+  custom_dir: docs/overrides
   features:
     - navigation.tabs
     - navigation.sections
@@ -70,6 +71,7 @@ nav:
       - Category profiles: concepts/profiles.md
   - Guides:
       - My inventory: guides/inventory.md
+      - Measure a feature: guides/measure.md
       - Seller flow: guides/seller.md
       - Buyer flow: guides/buyer.md
       - Value an item: guides/value.md

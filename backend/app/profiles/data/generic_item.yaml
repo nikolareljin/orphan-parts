@@ -1,0 +1,19 @@
+id: generic_item
+label: Any item
+description: >
+  The fallback for anything without a profile of its own: overall size, so a plan knows whether
+  it fits where it is meant to go.
+features:
+  - key: width
+    label: Width
+    tolerance_mm: 2.0
+    how: Photograph the item straight on with a ruler beside it; mark its left and right edges.
+  - key: height
+    label: Height
+    tolerance_mm: 2.0
+    how: >
+      Same photo: mark the top and bottom edges.
+  - key: depth
+    label: Depth
+    tolerance_mm: 2.0
+    how: Photograph from the side with the ruler; mark front and back.

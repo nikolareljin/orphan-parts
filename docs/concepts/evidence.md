@@ -10,8 +10,9 @@ Evidence(value, unit, confidence, source, raw)
 - `confidence`: 0 to 1, from the model's structured output or from the matcher's rule.
 - `source`: where the value came from. `photo` is a value read from a whole photo;
   `label_crop` is a value read when the label was found first by SAM 3.1 and its crop went to
-  the model with the photo. `grounding_citation`, `voice_note`, `user_edit` and `video_frame`
-  arrive with grounding, voice notes, editing and video.
+  the model with the photo. `measurement` is a dimension computed from marks on a photo with a
+  scale reference. `grounding_citation`, `voice_note`, `user_edit`, `video_frame` and
+  `document` arrive with grounding, voice notes, editing, video and cited documents.
 - `raw`: the text as it was read, before normalisation, so the user can check the clean-up.
 
 The evidence table in the UI, the listing generator and the matcher all consume this one shape, so

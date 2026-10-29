@@ -6,7 +6,14 @@ from pydantic import BaseModel, Field
 
 # Where a value came from. Segmentation, grounding, voice and video add their own later.
 Source = Literal[
-    "photo", "label_crop", "grounding_citation", "voice_note", "user_edit", "video_frame"
+    "photo",
+    "label_crop",
+    "grounding_citation",
+    "voice_note",
+    "user_edit",
+    "video_frame",
+    "measurement",
+    "document",
 ]
 
 
