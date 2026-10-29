@@ -37,6 +37,19 @@ The backend reloads on source changes and the frontend has hot module replacemen
 Runs the bash helper tests, then ruff, mypy and pytest in the backend image, then eslint, tsc,
 vitest and a production build in the frontend image. CI runs the same steps.
 
+## 4. The phone
+
+```bash
+./dev setup --check      # what the app's build needs: a JDK 17 or later, the Android command-line tools
+./dev setup --android    # installs what is missing (Linux with apt, macOS with Homebrew; Windows: WSL)
+./dev phone              # builds the app, installs it on the connected phone, launches it, prints the pairing code
+```
+
+The phone must have USB debugging on and have accepted this computer (the prompt on the
+phone the first time). In the app, **Scan to pair** reads the code: it carries this machine's
+address on the network and, when the demo is gated, a session of its own; the phone and the
+laptop have to be on the same network. [Android app](../guides/android.md).
+
 ## Without Docker
 
 ```bash
