@@ -1,0 +1,52 @@
+id: arcade_table
+label: Arcade coffee table
+goal: A coffee table that plays the arcade and console games of the eighties and nineties, built around a laptop or a tablet you already own, with joysticks on the edge.
+result: a low table with a screen under glass, two joysticks and buttons, a laptop or tablet inside running an emulator front end
+effort: high
+skills: [basic computer setup, basic woodwork, basic wiring]
+opens_devices: true
+typical_cost: {low: 40, high: 180, currency: USD}
+requirements:
+  - key: brain
+    label: A laptop or a tablet that runs the games
+    kind: item
+    item_types: [laptop, notebook, tablet, mini pc, desktop]
+    blocking: true
+  - key: screen
+    label: A screen that lies flat under the glass, or the laptop's own
+    kind: item
+    item_types: [monitor, display, screen, tablet, laptop, notebook]
+    blocking: false
+  - key: controls
+    label: Two joysticks and buttons on a USB encoder, or two gamepads
+    kind: item
+    item_types: [joystick, gamepad, controller, arcade encoder]
+    blocking: true
+  - key: table
+    label: A coffee table or a box with room for the screen and the controls
+    kind: item
+    item_types: [table, coffee table, cabinet, box]
+    blocking: true
+    profile: generic_item
+  - key: glass
+    label: A sheet of glass or acrylic the size of the top
+    kind: item
+    item_types: [glass, acrylic, sheet]
+    blocking: false
+  - key: speakers
+    label: Small speakers, or the laptop's own
+    kind: item
+    item_types: [speaker, speakers, soundbar]
+    blocking: false
+steps:
+  - Install an emulator front end on the laptop or tablet and add the games you own; check they run with a keyboard first.
+  - Cut the table top to take the screen flat and the controls on the near edge; leave a vent for the laptop's fan.
+  - Wire the joysticks and buttons to the USB encoder and map them in the front end.
+  - Fit the screen, lay the glass, fix the controls; route one power cable out of the table.
+  - Play one game from start to a high score before closing the table for good.
+safety:
+  - A laptop inside a closed table needs air; leave the vent open and keep the fan intake clear.
+  - Glass edges are cut; have them ground or use acrylic.
+sources:
+  - the emulator front end's setup guide
+  - the USB encoder's wiring sheet

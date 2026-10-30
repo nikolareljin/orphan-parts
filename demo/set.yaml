@@ -83,6 +83,80 @@ items:
     condition: works, two keycaps loose
     draft: give
 
+  # the owner's shelf (Oct 31): old laptops, memory, tablets, monitors, mice, switches, a
+  # phone with a broken screen, and the frappé maker whose agitator wore out
+  - key: laptop_third
+    name: Third laptop, works
+    item_type: laptop
+    intent: build
+    condition: works; slow; 8 GB RAM; HDMI out
+    tests_done: booted, ran a browser for an hour
+  - key: ram_sticks
+    name: Four RAM modules, DDR3 SO-DIMM
+    item_type: ram module
+    intent: build
+    condition: untested; from two laptops of the same age
+  - key: tablet_one
+    name: Android tablet, 10 inch
+    item_type: tablet
+    intent: build
+    condition: works; battery holds a day
+    tests_done: charged, browser works
+  - key: tablet_two
+    name: Android tablet, 8 inch, old
+    item_type: tablet
+    intent: sell
+    condition: works; slow
+    draft: sell
+    price: true
+  - key: monitor_two
+    name: Second monitor, 24 inch
+    item_type: monitor
+    intent: build
+    condition: works; HDMI and VGA
+  - key: mouse_one
+    name: USB mouse
+    item_type: mouse
+    intent: build
+  - key: mouse_two
+    name: Wireless mouse, no dongle
+    item_type: mouse
+    intent: give
+    faults: the USB receiver is missing
+    draft: give
+  - key: switch_one
+    name: Network switch, 8 ports
+    item_type: network switch
+    intent: build
+    condition: works; gigabit
+  - key: switch_two
+    name: Network switch, 5 ports
+    item_type: network switch
+    intent: sell
+    draft: sell
+    price: true
+  - key: s8
+    name: Samsung S8, broken screen
+    item_type: phone
+    intent: build
+    faults: screen cracked and dark in one third; touch works; camera works
+    holds_data: true
+    condition: charges and boots
+  - key: frappe_agitator
+    name: Frappé maker agitator, worn
+    item_type: blender agitator
+    profile: blender_agitator
+    intent: keep
+    faults: the plastic around the two tabs is worn; the rod wobbles in the drive and the disc no longer spins true
+    condition: the base runs; the rod no longer mixes
+    fields:
+      rod_diameter: "4"
+      tab_span: "9"
+      tab_width: "2.5"
+      tab_length: "8"
+      rod_length: "150"
+      material: "plastic"
+
 searches:
   - key: vac_tool
     need: vacuum
@@ -102,11 +176,16 @@ searches:
         asking_price: "15"
       - text: "@listings/L4.txt"
         asking_price: "12"
+  - key: metal_agitator
+    need: frappe_agitator
+    title: all-metal agitator rod for the frappé maker, 4 mm rod, two tabs 9 mm across
+    max_price: 20
+    listings: []
 
 propose:
   count: 3
   preferences:
-    interests: a quiet desk for homework; music in the kitchen
+    interests: a quiet desk for homework; music in the kitchen; home automation; an arcade table for the living room; a smart mirror in the hall; a home server for the photos
     effort: low
     skills: [basic computer setup]
     budget: 50
