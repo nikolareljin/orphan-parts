@@ -4,10 +4,19 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Security
+- No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
+
+### Changed
+- `.env.example` lists every name the hosted deploy and the planned second model route use (Modal, Cloudflare, the host's key, code, cap and mode; Baseten and Fireworks), with empty values and where to get each; `./dev deploy hosted` reads them from `.env` when the shell does not set them.
+
 ### Changed
 - The docs site tells the story: how it fits together (one clickable diagram and two paths through the demo set), lessons learned, next steps (the roadmap folded into it) and the pitch.
 ### Added
 - The evaluation loop: `./dev eval` (`python -m app.eval run`) loads the demo set as the demo does and scores it by the rules into `eval/` (a report as JSON and Markdown, two charts): values read per item against an `expect:` block in `demo/set.yaml`, fit verdicts between items, proposals written against kept, stub answers and spend; `export` writes `train.jsonl` from the accepted reads, `diff` compares two reports; the guide *Training and improving the reads* says where the rules and the prompts live and what fine-tuning Muse Spark Open would take.
+
+### Fixed
+- A release merge whose tag the ruleset refuses now fails with the exact command an admin runs to tag the merge commit, in the run summary, instead of an opaque rule violation.
 
 ## 0.2.0 - 2026-10-30
 

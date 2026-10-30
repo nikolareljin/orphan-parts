@@ -1,3 +1,13 @@
 node_modules
 dist
 .vite
+# never into an image: environment files (Vite would bake VITE_* values into the bundle),
+# test output, logs and git state
+.env
+.env.*
+!.env.example
+coverage
+test-results
+playwright-report
+*.log
+.git
