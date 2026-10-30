@@ -107,7 +107,10 @@ smoke() {
   say "launching $activity"
   "$adb" shell am start -W -n "$activity" >/dev/null
   local waited=0
-  until "$adb" shell dumpsys activity activities 2>/dev/null | grep -q "$activity"; do
+  # the output is read whole, then searched: grep -q closing the pipe early would fail the
+  # pipeline under pipefail and the loop would never see the app
+  local shown=""
+  until shown="$("$adb" shell dumpsys activity activities 2>/dev/null || true)" && grep -q "$activity" <<<"$shown"; do
     sleep 1
     waited=$((waited + 1))
     [[ $waited -lt 30 ]] || fail "the app did not come on screen in 30 s"
@@ -126,7 +129,7 @@ case "$what" in
     gradle assembleRelease
     apk="$(find "$app/app/build/outputs/apk/release" -name '*.apk' 2>/dev/null | head -1 || true)"
     [[ -n "$apk" ]] || fail "no release APK after the build"
-    if [[ -n "${KEYSTORE_PATH:-}" || -f "$app/keystore.properties" ]]; then
+    if [[ -n "${KEYSTORE_PATH:-}" ]] || grep -qs '^KEYSTORE_PATH=' "$app/keystore.properties"; then
       say "$apk (release key)"
     else
       say "$apk (debug key: installs, not for a store)"

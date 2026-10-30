@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     data_dir: Path = Path("./data")
     max_upload_mb: int = 12
     max_clip_mb: int = 60
+    max_captures: int = 200
     inventory_db_file: str = "inventory.sqlite3"
     # measurement captures: what a photo must give before a number is computed from it
     measure_min_sharpness: float = 150.0

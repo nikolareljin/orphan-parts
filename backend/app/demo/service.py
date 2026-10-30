@@ -5,6 +5,7 @@ match on the request digest holds for the files in the set."""
 
 import logging
 import shutil
+import wave
 from pathlib import Path
 
 import yaml
@@ -42,12 +43,25 @@ def load_set(path: Path) -> DemoSet:
 
 def scrub(raw_dir: Path, out_dir: Path, notes_dir: Path | None = None) -> list[str]:
     """Raw photos re-encoded without any metadata, long side at most SCRUB_MAX_PX, as JPEGs
-    under out_dir; WAV notes copied as they are into notes_dir (out_dir when none is given);
-    anything else left behind with a note. The raw directory is never written to."""
+    under out_dir; WAV notes rewritten as the sound alone (the header and the frames; a
+    recorder's or an editor's own chunks dropped) into notes_dir (out_dir when none is given);
+    anything else left behind with a note. Two sources that would land on one name get
+    numbered. The raw directory is never written to."""
     out_dir.mkdir(parents=True, exist_ok=True)
     notes_dir = notes_dir or out_dir
     notes_dir.mkdir(parents=True, exist_ok=True)
     notes: list[str] = []
+    written: set[Path] = set()
+
+    def free(folder: Path, stem: str, suffix: str) -> Path:
+        target = folder / f"{stem}{suffix}"
+        n = 1
+        while target in written:
+            n += 1
+            target = folder / f"{stem}-{n}{suffix}"
+        written.add(target)
+        return target
+
     for src in sorted(p for p in raw_dir.iterdir() if p.is_file()):
         suffix = src.suffix.lower()
         if suffix in PHOTO_SUFFIXES:
@@ -56,11 +70,23 @@ def scrub(raw_dir: Path, out_dir: Path, notes_dir: Path | None = None) -> list[s
             except BadImageError as exc:
                 notes.append(f"{src.name}: {exc}")
                 continue
-            (out_dir / f"{src.stem}.jpg").write_bytes(data)
-            notes.append(f"{src.name} -> {src.stem}.jpg ({len(data) // 1024} KB, no metadata)")
+            target = free(out_dir, src.stem, ".jpg")
+            target.write_bytes(data)
+            notes.append(f"{src.name} -> {target.name} ({len(data) // 1024} KB, no metadata)")
         elif suffix in NOTE_SUFFIXES:
-            shutil.copyfile(src, notes_dir / src.name)
-            notes.append(f"{src.name} -> {notes_dir.name}/{src.name} (copied)")
+            target = free(notes_dir, src.stem, ".wav")
+            try:
+                with wave.open(str(src), "rb") as sound:
+                    params = sound.getparams()
+                    frames = sound.readframes(sound.getnframes())
+                with wave.open(str(target), "wb") as clean:
+                    clean.setparams(params)
+                    clean.writeframes(frames)
+            except (wave.Error, EOFError, OSError) as exc:
+                written.discard(target)
+                notes.append(f"{src.name}: not a WAV file that reads: {exc}")
+                continue
+            notes.append(f"{src.name} -> {notes_dir.name}/{target.name} (the sound alone)")
         else:
             notes.append(f"{src.name}: not a photo or a WAV note; left out")
     return notes
@@ -92,6 +118,7 @@ class Loader:
     async def run(self, demo: DemoSet, base: Path) -> Outcome:
         out = Outcome(mode=self.settings.model_api_mode)
         self.currency, self.country = demo.currency, demo.country
+        stubs_before = self.client.fixture_fallbacks
         ids: dict[str, int] = {}
         for item in demo.items:
             item_id = await self.load_item(item, base, out)
@@ -106,7 +133,7 @@ class Loader:
                 created = self.finder.create(
                     SearchCreate(
                         need_item_id=need_id,
-                        profile=search.profile if need_id is None else "",
+                        profile=search.profile,
                         title=search.title,
                         spec=search.spec,
                         max_price=search.max_price,
@@ -124,7 +151,11 @@ class Loader:
                     if not file.is_file():
                         out.skipped.append(f"search {search.key} listing {n}: {file.name} missing")
                         continue
-                    text = file.read_text(encoding="utf-8")
+                    try:
+                        text = file.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError) as exc:
+                        out.skipped.append(f"search {search.key} listing {n}: {file.name}: {exc}")
+                        continue
                 try:
                     candidate = await self.finder.add_candidate(
                         created.id,
@@ -142,8 +173,8 @@ class Loader:
                 out.candidates += 1
                 out.cost_usd += candidate.cost_usd
         if demo.propose is not None:
-            self.planner.set_preferences(demo.propose.preferences)
             try:
+                self.planner.set_preferences(demo.propose.preferences)
                 projects = await self.planner.propose(
                     ProposeRequest(count=demo.propose.count, note=demo.propose.note)
                 )
@@ -152,7 +183,11 @@ class Loader:
             else:
                 out.projects += len(projects)
                 out.cost_usd += sum(p.cost_usd for p in projects)
-        log.info("demo set loaded", extra={"mode": out.mode, "items": out.items})
+        out.stub_answers = self.client.fixture_fallbacks - stubs_before
+        log.info(
+            "demo set loaded",
+            extra={"mode": out.mode, "items": out.items, "stub_answers": out.stub_answers},
+        )
         return out
 
     async def load_item(self, item: DemoItem, base: Path, out: Outcome) -> int | None:
@@ -162,7 +197,10 @@ class Loader:
             if not file.is_file():
                 out.skipped.append(f"{item.key}: photo {name} missing")
                 continue
-            photos.append(file.read_bytes())
+            try:
+                photos.append(file.read_bytes())
+            except OSError as exc:
+                out.skipped.append(f"{item.key}: photo {name}: {exc}")
         try:
             spec = ItemCreate(
                 name=item.name,
@@ -191,12 +229,19 @@ class Loader:
                 out.cost_usd += reading.cost_usd
         if not spec.item_type:
             spec = spec.model_copy(update={"item_type": "item"})
-        created = self.inventory.create(spec)
+        try:
+            created = self.inventory.create(spec)
+        except ValueError as exc:
+            out.skipped.append(f"{item.key}: {exc}")
+            return None
         out.items += 1
         if item.accept_all:
             for assertion in created.assertions:
                 if assertion.review == "proposed":
-                    self.inventory.review(created.id, assertion.id, "accepted")
+                    try:
+                        self.inventory.review(created.id, assertion.id, "accepted")
+                    except (ValueError, LookupError) as exc:
+                        out.skipped.append(f"{item.key}: accepting {assertion.field}: {exc}")
         for field, value in item.fields.items():
             try:
                 self.inventory.add_field(created.id, FieldCreate(field=field, value=value))
@@ -209,7 +254,7 @@ class Loader:
             else:
                 try:
                     note = await self.voice.note(created.id, file.read_bytes())
-                except (ValueError, ModelApiError) as exc:
+                except (OSError, ValueError, ModelApiError) as exc:
                     out.skipped.append(f"{item.key}: voice note: {exc}")
                 else:
                     out.voice_notes += 1

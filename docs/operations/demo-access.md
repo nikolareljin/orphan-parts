@@ -33,8 +33,8 @@ the floor under all of them.
 everything else working; `/readyz` reports it under `demo`, apart from the spend cap's own
 `paused`. The spend cap (`SPEND_CAP_USD`) still ends calls on its own when reached.
 
-**The set, at no cost.** The public demo is the recorded set (`./dev demo`, [Demo
-walkthrough](../start/demo.md)): with `OPL_FAKE_API=1` on the host nothing is sent to the
+**The set, at no cost.** The public demo is the recorded set (`./dev demo` on the machine
+that runs the stack, [Demo walkthrough](../start/demo.md)): with `OPL_FAKE_API=1` on the host nothing is sent to the
 models and nothing is spent, whoever visits. Live mode is a window the operator opens, with
 `SPEND_CAP_USD` set to the amount they accept for it; the ledger survives restarts, so the cap
 counts across them.

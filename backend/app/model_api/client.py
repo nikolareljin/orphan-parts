@@ -166,6 +166,9 @@ class ModelApiClient:
         self.ledger = ledger
         self.fixtures = fixtures or FixtureStore(settings.fixtures_dir)
         self.mode = settings.model_api_mode
+        # how many fixture answers came from an operation's stub rather than a recording of
+        # the exact request: a demo set loaded on stubs is not the demo set
+        self.fixture_fallbacks = 0
         self._sleep = sleep
         self._rng = rng or random.Random()
         self._key = settings.model_api_key.get_secret_value() if settings.model_api_key else ""
@@ -290,6 +293,7 @@ class ModelApiClient:
         the tool results, since nothing is stored on the server. Ends with the strict answer."""
         items = list(input)
         last: ModelResponse | None = None
+        spent = 0.0
         for step in range(1, max_steps + 1):
             response = await self.respond(
                 model=model,
@@ -301,6 +305,7 @@ class ModelApiClient:
                 **kwargs,
             )
             last = response
+            spent += response.cost_usd
             calls = response.tool_calls
             if not calls:
                 try:
@@ -310,7 +315,10 @@ class ModelApiClient:
                         f"output did not match {model_cls.__name__}: {exc}",
                         attempts=response.attempts,
                     ) from exc
-                return StructuredResponse[T](parsed=parsed, response=response)
+                # the answer carries what the whole loop cost, every step counted once
+                return StructuredResponse[T](
+                    parsed=parsed, response=response.model_copy(update={"cost_usd": spent})
+                )
             items = items + list(response.output)
             for call in calls:
                 try:
@@ -400,10 +408,18 @@ class ModelApiClient:
     ) -> tuple[dict[str, Any], bool, int, float]:
         """body goes on the wire; key, when given, is what names the fixture instead."""
         keyed = body if key is None else key
+        if self.mode == "record":
+            # a recording already on disk for this exact request is replayed, not bought
+            # again: a run that stopped half-way is resumed at no cost for what it has
+            kept = self.fixtures.find(endpoint, keyed, op)
+            if kept is not None and kept.key == request_key(endpoint, keyed) and kept.status < 400:
+                return kept.response, True, 1, 0.0
         if self.mode == "fixture":
             fixture = self.fixtures.find(endpoint, keyed, op)
             if fixture is None:
                 raise FixtureMissingError(endpoint, request_key(endpoint, keyed), op)
+            if fixture.key != request_key(endpoint, keyed):
+                self.fixture_fallbacks += 1
             if fixture.status >= 400:
                 err = fixture.response.get("error") or {}
                 raise ModelApiError(

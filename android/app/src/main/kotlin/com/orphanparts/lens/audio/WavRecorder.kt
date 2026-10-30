@@ -50,7 +50,13 @@ class WavRecorder(private val maxSeconds: Int = 60) {
                 }
                 while (running.get() && pcm.size() < maxBytes) {
                     val n = record.read(buffer, 0, buffer.size)
-                    if (n > 0) pcm.write(buffer, 0, n)
+                    if (n > 0) {
+                        pcm.write(buffer, 0, n)
+                    } else if (n < 0) {
+                        // the record never started, or the audio service went away: said, not spun on
+                        problem = "the microphone stopped (code $n)"
+                        running.set(false)
+                    }
                 }
             } finally {
                 try {

@@ -285,11 +285,15 @@ _start_backend_again() {
   [[ $_backend_was_up -eq 0 ]] || compose start backend >/dev/null
 }
 stop_backend_for_run() {
-  compose ps --status running backend 2>/dev/null | grep -q backend && _backend_was_up=1
-  if [[ $_backend_was_up -eq 1 ]]; then
-    compose stop backend >/dev/null
-    on_exit _start_backend_again
-  fi
+  # whatever the container is doing (running, restarting after a crash, paused), it is stopped
+  # before the inventory file is replaced under it; started again afterwards if it was up
+  local state
+  state="$(compose ps -a --format '{{.State}}' backend 2>/dev/null || true)"
+  [[ -n "$state" ]] || return 0
+  compose stop backend >/dev/null 2>&1 || true
+  case "$state" in
+    running|restarting) _backend_was_up=1; on_exit _start_backend_again ;;
+  esac
 }
 
 cmd_demo() {

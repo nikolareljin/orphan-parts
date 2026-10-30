@@ -101,7 +101,8 @@ test('preferences are kept, proposals come from the inventory, and selection com
   const share = again.getByRole('textbox', { name: 'Share text' })
   await expect(share).toHaveValue(/Built from: hdmi cable, keyboard, laptop, monitor\./)
   await expect(share).toHaveValue(/a full homework session/)
-  await expect(share).not.toHaveValue(/Old laptop/)
+  await expect(share).toHaveValue(/Homework desk from the laptop and the monitor/)
+  await expect(share).not.toHaveValue(/old laptop/i)
 
   // the project opens in a dialog; the page behind waits until it is closed
   await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
