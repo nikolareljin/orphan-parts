@@ -71,3 +71,22 @@ test_env_set_replaces_or_appends_one_line_and_touches_nothing_else() {
   assert_eq "$(stat -c %a "$dir/dup.env" 2>/dev/null || stat -f %Lp "$dir/dup.env")" "600"
   [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
 }
+
+test_env_set_replaces_an_indented_key_and_makes_new_files_private() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  printf 'A=1\n  DEMO_ACCESS_CODE=old\n\texport OTHER=x\n' > "$dir/.env"
+  assert_eq "$(env_get DEMO_ACCESS_CODE "$dir/.env")" "old"
+  env_set DEMO_ACCESS_CODE new "$dir/.env"
+  assert_eq "$(tr '\n' '|' < "$dir/.env")" "A=1|DEMO_ACCESS_CODE=new|$(printf '\t')export OTHER=x|"
+  env_set OTHER y "$dir/.env"
+  assert_eq "$(env_get OTHER "$dir/.env")" "y"
+  assert_eq "$(grep -c OTHER "$dir/.env")" "1"
+  env_set FIRST one "$dir/made.env"
+  assert_eq "$(stat -c %a "$dir/made.env" 2>/dev/null || stat -f %Lp "$dir/made.env")" "600"
+  chmod 644 "$dir/.env"; env_set A 2 "$dir/.env"
+  assert_eq "$(stat -c %a "$dir/.env" 2>/dev/null || stat -f %Lp "$dir/.env")" "644"
+  # the temporary file is made beside the target and gone afterwards
+  assert_eq "$(find "$dir" -name '.env.*' | wc -l | tr -d ' ')" "0"
+  [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
+}

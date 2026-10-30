@@ -393,8 +393,19 @@ cmd_demo() {
   log_ok "demo set loaded"
 }
 
+# Compose reads DEMO_ACCESS_CODE from the shell before .env: one exported there would win over
+# the value the gate writes, and the backend would start with another code than the one printed.
+_gate_shell_check() {
+  local want="$1"
+  [[ -n "${DEMO_ACCESS_CODE+x}" ]] || return 0
+  [[ -n "$want" && "$DEMO_ACCESS_CODE" == "$want" ]] && return 0
+  [[ -z "$want" && -z "$DEMO_ACCESS_CODE" ]] && return 0
+  die "DEMO_ACCESS_CODE is set in this shell and overrides .env for the backend: unset DEMO_ACCESS_CODE, then run ./dev gate again"
+}
+
 cmd_gate() {
   local what="${1:-}" label="phone" days=7 code
+  [[ -n "${CI:-}" ]] && die "gate is for this machine only, never CI"
   shift || true
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -411,17 +422,21 @@ cmd_gate() {
       ;;
     off)
       need_env_file
+      _gate_shell_check ""
       env_set DEMO_ACCESS_CODE "" "$ROOT/.env"
-      if docker_running && compose up -d backend >/dev/null 2>&1; then
+      # a running backend is recreated with the change; a stopped one is left stopped
+      if docker_running && [[ -n "$(compose ps --status running -q backend 2>/dev/null)" ]]; then
+        compose up -d backend >/dev/null
         log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env, the backend restarted"
       else
-        log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env (the backend was not restarted)"
+        log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env; the backend is not running, the change applies on the next ./dev up"
       fi
       ;;
     on)
       need_env_file
       docker_running || die "docker is not running"
       code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
+      _gate_shell_check "$code"
       if [[ -z "$code" ]]; then
         # 24 characters from the system's randomness, letters and digits only, easy to type;
         # made in the backend's own image, so the host needs no Python
@@ -435,10 +450,24 @@ cmd_gate() {
       compose up -d backend >/dev/null
       wait_http "http://localhost:$BACKEND_PORT/readyz" 60 || { compose logs --tail 20 backend; die "the backend did not come back (its log is above)"; }
       printf '\naccess code (the master, for you):     %s\n' "$code"
-      local issued
-      issued="$(compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys issue --label "$label" --days "$days" 2>&1)" \
-        || die "no code issued for $label: ${issued##*$'\n'} (./dev keys list; ./dev keys revoke $label, or another --label)"
-      printf 'issued code (for %s, %s days):    %s\n' "$label" "$days" "$(printf '%s\n' "$issued" | head -1 | sed 's/.*: //')"
+      # the code is the stdout line "<label>: <code>" (the label as the backend keeps it, trimmed);
+      # stderr (compose's own lines, the expiry note) is kept apart and shown only on failure
+      local issued line issued_code="" work
+      label="${label#"${label%%[![:space:]]*}"}"; label="${label%"${label##*[![:space:]]}"}"
+      tmp_dir work
+      if ! issued="$(compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys issue --label "$label" --days "$days" 2>"$work/stderr")"; then
+        cat -- "$work/stderr" >&2
+        die "no code issued for $label (./dev keys list; ./dev keys revoke $label, or another --label)"
+      fi
+      while IFS= read -r line; do
+        line="${line%$'\r'}"
+        if [[ "$line" == "$label: "* ]]; then issued_code="${line#"$label: "}"; break; fi
+      done <<< "$issued"
+      if [[ -z "$issued_code" ]]; then
+        cat -- "$work/stderr" >&2
+        die "no line \"$label: <code>\" in the answer of app.keys issue; ./dev keys list shows whether a code for $label was issued"
+      fi
+      printf 'issued code (for %s, %s days):    %s\n' "$label" "$days" "$issued_code"
       printf '\nOn the web app: Sign in with the code, then Pair the phone shows the QR code.\n'
       printf 'On the phone: Backend tab, type the address and the code, or Scan to pair.\n'
       printf './dev gate show prints the master again; ./dev gate off turns the gate off.\n'
