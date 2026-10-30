@@ -57,10 +57,16 @@ import java.io.File
 const val MAX_PHOTOS = 4
 const val CLIP_SECONDS = 30
 
-/** The system camera, recording a clip of at most CLIP_SECONDS into the file given. */
+/** The largest clip the backend takes (MAX_CLIP_MB), less a margin for the container's own bytes. */
+const val CLIP_MAX_BYTES = 56L * 1024 * 1024
+
+/** The system camera, recording a clip of at most CLIP_SECONDS and CLIP_MAX_BYTES into the file
+ * given: the camera stops at whichever comes first, so a high-quality clip is not refused later. */
 class ShortClip : ActivityResultContracts.CaptureVideo() {
     override fun createIntent(context: Context, input: Uri): Intent =
-        super.createIntent(context, input).putExtra(MediaStore.EXTRA_DURATION_LIMIT, CLIP_SECONDS)
+        super.createIntent(context, input)
+            .putExtra(MediaStore.EXTRA_DURATION_LIMIT, CLIP_SECONDS)
+            .putExtra(MediaStore.EXTRA_SIZE_LIMIT, CLIP_MAX_BYTES)
 }
 
 /** One capture: photos, a clip, a spoken note and a line, sent together. The backend keeps
@@ -109,8 +115,13 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val bytes = withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)?.use { it.readBytes() } }
-            clip = bytes
-            status = if (bytes == null) "The clip could not be read." else "Clip ready (${bytes.size / 1024} KB)."
+            if (bytes != null && bytes.size > CLIP_MAX_BYTES) {
+                clip = null
+                status = "The clip is ${bytes.size / 1024 / 1024} MB, more than the backend takes; record a shorter one."
+            } else {
+                clip = bytes
+                status = if (bytes == null) "The clip could not be read." else "Clip ready (${bytes.size / 1024} KB)."
+            }
         }
     }
 

@@ -21,8 +21,12 @@ export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void
     }
   }, [])
 
+  // loaded on arrival and every 15 s while the page is open: a capture sent from the phone
+  // shows up without a click; Refresh is there for the impatient
   useEffect(() => {
     void load()
+    const timer = window.setInterval(() => void load(), 15_000)
+    return () => window.clearInterval(timer)
   }, [load])
 
   async function act(id: number, call: () => Promise<unknown>) {
@@ -44,7 +48,10 @@ export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void
     <div className="inbox">
       <p className="muted">
         Captures arrive from the phone app: photos, a short clip, a spoken note and a line. <strong>Read it</strong> turns one into an item in your
-        inventory, with every value marked as observed and the note kept as your words. Nothing here leaves this backend until you read it.
+        inventory, with every value marked as observed and the note kept as your words. Nothing here leaves this backend until you read it.{' '}
+        <button type="button" className="link" onClick={() => void load()}>
+          Refresh
+        </button>
       </p>
       {error && (
         <p className="error" role="alert">
@@ -73,8 +80,8 @@ export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void
                 {c.note && <p>“{c.note}”</p>}
                 {c.clip && <video controls preload="metadata" src={api.captures.clipUrl(c.id)} aria-label={`Capture ${c.id} clip`} />}
                 {c.audio && <audio controls preload="metadata" src={api.captures.noteUrl(c.id)} aria-label={`Capture ${c.id} note`} />}
-                {c.status === 'failed' && (
-                  <p className="error" role="alert">
+                {c.error && (
+                  <p className={c.status === 'failed' ? 'error' : 'muted'} role={c.status === 'failed' ? 'alert' : undefined}>
                     {c.error}
                   </p>
                 )}

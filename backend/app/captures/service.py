@@ -48,6 +48,7 @@ class Captures:
         self.segmenter = segmenter
         self.voice = voice
         self.root = settings.data_dir / "captures"
+        self._busy: set[int] = set()  # captures being read right now, one read each
 
     def folder(self, capture_id: int) -> Path:
         return self.root / str(capture_id)
@@ -103,13 +104,19 @@ class Captures:
         }
         row = self.inventory.add_capture(json.dumps(content))
         folder = self.folder(int(row["id"]))
-        folder.mkdir(parents=True, exist_ok=True)
-        for n, data in enumerate(prepared, 1):
-            (folder / f"photo-{n}.jpg").write_bytes(data)
-        if clip is not None:
-            (folder / "clip.mp4").write_bytes(clip)
-        if audio is not None:
-            (folder / "note.wav").write_bytes(audio)
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+            for n, data in enumerate(prepared, 1):
+                (folder / f"photo-{n}.jpg").write_bytes(data)
+            if clip is not None:
+                (folder / "clip.mp4").write_bytes(clip)
+            if audio is not None:
+                (folder / "note.wav").write_bytes(audio)
+        except OSError:
+            # no row without its files: the capture is taken back and the caller hears why
+            shutil.rmtree(folder, ignore_errors=True)
+            self.inventory.delete_capture(int(row["id"]))
+            raise
         log.info(
             "capture",
             extra={"capture_id": int(row["id"]), "photos": len(prepared), "clip": clip is not None},
@@ -139,6 +146,8 @@ class Captures:
     def delete(self, capture_id: int) -> None:
         """The files go and the row is hidden; an item made from it stays."""
         self.inventory.capture(capture_id)
+        if capture_id in self._busy:
+            raise CaptureError("being read right now; delete it once that is done")
         folder = self.folder(capture_id)
         if folder.is_dir() and folder.parent == self.root:
             shutil.rmtree(folder)
@@ -154,6 +163,15 @@ class Captures:
         content = json.loads(row["content"])
         if content["item_id"] is not None:
             raise CaptureError("already processed; the item is there")
+        if capture_id in self._busy:
+            raise CaptureError("being read right now; the item will be there in a moment")
+        self._busy.add(capture_id)
+        try:
+            return await self._process(capture_id, content)
+        finally:
+            self._busy.discard(capture_id)
+
+    async def _process(self, capture_id: int, content: dict[str, Any]) -> Capture:
         folder = self.folder(capture_id)
         photos = [
             (folder / f"photo-{n}.jpg").read_bytes()
@@ -162,6 +180,9 @@ class Captures:
         ]
         model, cost = "", 0.0
         try:
+            missing = int(content["photos"]) - len(photos)
+            if missing:
+                raise CaptureError(f"{missing} photo(s) missing on disk; send the capture again")
             spec = ItemCreate(name=content["name"] or "", notes=content["note"])
             if photos:
                 crops: list[bytes] = []
@@ -184,6 +205,17 @@ class Captures:
                     }
                 )
             item = self.inventory.create(spec)
+        except (ModelApiError, BadImageError, ValueError) as exc:
+            content["error"] = str(exc)[:500]
+            self.inventory.update_capture(capture_id, "failed", json.dumps(content))
+            raise
+        # the item is linked first: a recording that cannot be kept is said on the capture,
+        # the item stays, and the reading is not paid for twice
+        content.update(
+            {"item_id": item.id, "error": "", "model": model, "cost_usd": round(cost, 6)}
+        )
+        self.inventory.update_capture(capture_id, "processed", json.dumps(content))
+        try:
             if content["audio"] and (folder / "note.wav").is_file():
                 note = await self.voice.note(item.id, (folder / "note.wav").read_bytes())
                 cost += note.cost_usd
@@ -194,13 +226,9 @@ class Captures:
                     item.id,
                     ItemPatch(notes=(content["note"] + "\n" + line).strip()),
                 )
-        except (ModelApiError, BadImageError, BadAudioError, ValueError) as exc:
-            content["error"] = str(exc)[:500]
-            self.inventory.update_capture(capture_id, "failed", json.dumps(content))
-            raise
-        content.update(
-            {"item_id": item.id, "error": "", "model": model, "cost_usd": round(cost, 6)}
-        )
+        except (ModelApiError, BadAudioError, ValueError) as exc:
+            content["error"] = f"the item is there; the note was not kept: {exc}"[:500]
+        content.update({"model": model, "cost_usd": round(cost, 6)})
         updated = self.inventory.update_capture(capture_id, "processed", json.dumps(content))
         log.info("capture processed", extra={"capture_id": capture_id, "item_id": item.id})
         return self.capture_of(updated)
