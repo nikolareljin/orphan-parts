@@ -50,7 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** The web app's look, on the phone: the same seven colours in light and dark
+/** The web app's look, on the phone: the same seven colors in light and dark
  * (frontend/src/index.css), panels with a hairline border, one scale of buttons, pills for
  * status, a quiet service line at the foot. Nothing here is a new library. */
 object Tokens {
@@ -87,7 +87,7 @@ object Tokens {
 
 /** A status line that says something failed is shown in the error tone. */
 fun soundsLikeAFailure(text: String): Boolean =
-    listOf("Could not", "Not reachable", "Nothing heard", "That code", "Scan cancelled").any { text.startsWith(it) }
+    listOf("Could not", "Not reachable", "Nothing heard", "That code", "Scan canceled").any { text.startsWith(it) }
 
 fun scheme(p: Tokens.Palette, dark: Boolean): ColorScheme {
     val base = if (dark) darkColorScheme() else lightColorScheme()
@@ -134,7 +134,7 @@ fun OrphanPartsTheme(content: @Composable () -> Unit) {
     )
 }
 
-/** A card as the web app draws them: the card colour, a hairline border, rounded corners. */
+/** A card as the web app draws them: the card color, a hairline border, rounded corners. */
 @Composable
 fun Panel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Surface(
@@ -166,7 +166,7 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean 
     ) { Text(text) }
 }
 
-/** Outlined in the accent on the card colour: every other action. */
+/** Outlined in the accent on the card color: every other action. */
 @Composable
 fun SecondaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
@@ -185,7 +185,7 @@ fun SecondaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolea
     ) { Text(text) }
 }
 
-/** Text fields with the line colour at rest and the accent when focused. */
+/** Text fields with the line color at rest and the accent when focused. */
 @Composable
 fun fieldColors(): TextFieldColors {
     val colors = MaterialTheme.colorScheme
@@ -208,17 +208,17 @@ enum class Tone { Quiet, Accent, Error }
 @Composable
 fun Pill(text: String, tone: Tone = Tone.Quiet) {
     val colors = MaterialTheme.colorScheme
-    val colour = when (tone) {
+    val color = when (tone) {
         Tone.Quiet -> colors.onSurfaceVariant
         Tone.Accent -> colors.primary
         Tone.Error -> colors.error
     }
     Text(
         text,
-        color = colour,
+        color = color,
         style = MaterialTheme.typography.labelMedium,
         modifier = Modifier
-            .border(1.dp, if (tone == Tone.Quiet) colors.outline else colour, RoundedCornerShape(999.dp))
+            .border(1.dp, if (tone == Tone.Quiet) colors.outline else color, RoundedCornerShape(999.dp))
             .padding(horizontal = 9.dp, vertical = 3.dp),
     )
 }
