@@ -87,26 +87,35 @@ render() {  # render <svg> <png> <px>
   [[ -s "$2" ]] || fail "inkscape wrote nothing to $2"
 }
 
-# crop() edits the logo in four places, each of which has to be there exactly once: the
-# viewBox, the frame, the end of the defs, and the end of the document. The frame is the one
+# crop() edits the logo in four places, each of which has to be there exactly once: the root's
+# viewBox, the end of the defs, the frame, and the end of the document. The defs close at the
+# top level before the frame, so the bled ground goes under the artwork; the frame is the one
 # '  <rect' line, then attribute lines only, closed by '     id="rect51" />', so the range that
-# drops it takes nothing else. A logo saved another way is refused before anything is written,
-# instead of coming out broken, uncropped or with a shape of it dropped.
-# occurrences, not lines: a second </defs> on the same line counts
+# drops it takes nothing else. The logo is read as Inkscape saves it, with LF line endings. A
+# logo saved another way is refused before anything is written, instead of coming out broken,
+# uncropped, covered or with a shape of it dropped.
+
+# Occurrences, not lines: a second </defs> on the same line counts.
 matches() { { grep -a -o -- "$1" "$2" || true; } | wc -l | tr -d ' '; }
 count() { matches "$1" "$logo"; }
+line_of() { grep -n -- "$1" "$logo" | cut -d: -f1; }
 frame_fits() {
-  local open close
-  open="$(grep -n -- '^  <rect$' "$logo" | cut -d: -f1)"
-  close="$(grep -n -- '^     id="rect51" />$' "$logo" | cut -d: -f1)"
-  [[ -n "$open" && -n "$close" ]] && (( open < close )) &&
-    ! sed -n "$((open + 1)),$((close - 1))p" "$logo" | grep -qv '^     [a-z-]*="[^"]*"$'
+  local defs open close
+  defs="$(line_of '^  </defs>$')"
+  open="$(line_of '^  <rect$')"
+  close="$(line_of '^     id="rect51" />$')"
+  [[ -n "$defs" && -n "$open" && -n "$close" ]] && (( defs < open && open < close )) &&
+    { (( close == open + 1 )) ||
+      ! sed -n "$((open + 1)),$((close - 1))p" "$logo" |
+        grep -qv '^     [A-Za-z_][A-Za-z0-9_.:-]*="[^"]*"$'; }
 }
 logo_fits() {
-  [[ "$(count 'viewBox="0 0 512 512"')" == 1 && "$(count '^  <rect$')" == 1 &&
-     "$(count 'id="rect51"')" == 1 && "$(count '</defs>')" == 1 && "$(count '</svg>')" == 1 ]] &&
+  [[ "$(count 'viewBox="0 0 512 512"')" == 1 && "$(count '^   viewBox="0 0 512 512"$')" == 1 &&
+     "$(count '^  <rect$')" == 1 && "$(count 'id="rect51"')" == 1 &&
+     "$(count '</defs>')" == 1 && "$(count '</svg>')" == 1 ]] &&
     frame_fits ||
-    fail "$logo is not shaped as crop() expects (one viewBox, one frame '  <rect' of attributes ending at id=\"rect51\", one </defs>, one </svg>); update crop()"
+    fail "$logo is not shaped as crop() expects (the root's viewBox, one </defs> before the" \
+      "frame, one frame '  <rect' of attributes ending at id=\"rect51\", one </svg>); update crop()"
 }
 
 # A crop is used only when its edits took: the new viewBox once, the frame gone, the bled ground

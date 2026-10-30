@@ -111,7 +111,8 @@ STUB
 # Each way a logo can stop fitting the crop's edits is refused before anything is written, with
 # the line that says which: the logo's shape (the frame's id renamed; its close moved before its
 # open; a second id="rect51"; another shape folded into the frame; a second shape at the frame's
-# indent; the viewBox changed; a second </defs>; a second </svg>), or the crop (two bled grounds;
+# indent; the viewBox changed; a second </defs>; a second </svg>; the defs closing after the frame;
+# the only viewBox not the root's), or the crop (two bled grounds;
 # not well-formed, checked with python3, so skipped without it).
 _app_icon_refused() {  # _app_icon_refused <sed edit> <expected line>
   local dir
@@ -135,7 +136,9 @@ test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
     's|^  <rect$|  <rect\n     id="extra" />\n  <rect|' \
     's/viewBox="0 0 512 512"/viewBox="0 0 512 512.0"/' \
     's|</defs>|</defs><defs></defs>|' \
-    's|</svg>|<svg></svg></svg>|'; do
+    's|</svg>|<svg></svg></svg>|' \
+    '/^  <\/defs>$/d; s|^     id="rect51" />$|     id="rect51" />\n  </defs>|' \
+    's/^   viewBox="0 0 512 512"$/   width="512"/; s|^  </defs>$|    <pattern viewBox="0 0 512 512" />\n  </defs>|'; do
     _app_icon_refused "$edit" "$shape"
   done
   _app_icon_refused 's|^  </defs>$|  </defs>\n  <rect fill="url(#bgGrad)" />|' 'did not take'
@@ -144,13 +147,17 @@ test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
   fi
 }
 
-test_app_icon_takes_a_logo_with_a_trailing_blank_line() {
-  local dir
-  dir="$(mktemp -d)" || { assert_true false; return; }
-  _app_icon_tree "$dir"
-  printf '\n' >> "$dir/docs/assets/logo.svg"
-  assert_true env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
-  _app_icon_cleanup "$dir"
+# What an Inkscape save can add is taken: a trailing blank line, a namespaced attribute on the
+# frame.
+test_app_icon_takes_a_logo_saved_again() {
+  local dir edit
+  for edit in '$a\\' 's/^     id="rect51" \/>$/     inkscape:label="frame"\n     id="rect51" \/>/'; do
+    dir="$(mktemp -d)" || { assert_true false; return; }
+    _app_icon_tree "$dir"
+    sed -i "$edit" "$dir/docs/assets/logo.svg"
+    assert_true env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+    _app_icon_cleanup "$dir"
+  done
 }
 
 # A render that fails half-way (the fourth call, the first hdpi one) leaves every icon and the
