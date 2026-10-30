@@ -6,8 +6,8 @@ The pipeline is the same for sellers and buyers:
 flowchart LR
     P[Photos / video / voice] --> S[Segment<br/>SAM 3.1]
     S --> E[Extract<br/>Muse Spark, structured output]
-    E --> G[Ground<br/>part number lookup with citations]
-    G --> D{Draft or compare}
+    E --> C[Confirm<br/>the owner, per value]
+    C --> D{Draft or compare}
     D -->|seller| L[Listing draft]
     D -->|buyer| M[Deterministic matcher + explanation]
 ```
@@ -20,13 +20,14 @@ flowchart LR
    into the fields the field set defines, with a confidence and a source per field. Built:
    `POST /api/extract`, see [Muse Spark](../models/muse-spark.md) and the
    [evidence model](evidence.md).
-3. **Ground.** The part number, when one was read, is looked up with search grounding. Citations
-   are kept and shown.
-4. **Draft or compare.** Sellers get a listing draft. Buyers get a verdict per candidate from the
-   rule-driven matcher, explained by the model but never overridden by it.
+3. **Confirm.** Saved privately, every observed value waits for the owner to accept or reject
+   it; the owner's own values sit beside the observations with their provenance. Search
+   grounding is used where a page can back a figure: price guidance keeps only the comparables
+   a search result backs ([Value an item](../guides/value.md)).
+4. **Draft or compare.** Sellers get a listing draft written from confirmed values only. Buyers
+   get a verdict per candidate from the rule-driven matcher, explained by the model but never
+   overridden by it.
 
-The agent that runs these steps decides what to do next: ask for a second photo when the label
-was unreadable, skip grounding when there is no part number, run candidate checks in parallel.
-
-!!! note
-    Segment and extract are built. Ground and the agent are next.
+Each step is one call the owner makes; nothing runs on its own. When the label cannot be found
+first, the photos are read whole and the page says so; when a value is unknown, it stays
+unknown and becomes a question.

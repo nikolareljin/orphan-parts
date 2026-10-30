@@ -5,16 +5,17 @@ Model IDs are configuration, never literals in code (see [Configuration](../refe
 
 | Model | ID (default) | Used for |
 |---|---|---|
-| Muse Spark | `muse-spark-1.3` | structured extraction from label crops, listing-screenshot parsing, candidate ranking and deal checks, agent steps, explanations, search grounding |
-| Muse Wonder | `muse-wonder-1.0` | orchestrating the buyer comparison, drafting category profiles |
-| Muse Image | `muse-image-1.0` | cover-photo background cleanup |
-| Muse Voice Transcribe | `muse-voice-transcribe-1.0` | spoken questions on the phone, voice notes |
-| SAM 3.1 | `sam-3.1` | segmentation of part, label and connector; video tracking |
-| Muse Glimmer | local, open weights | privacy-first usability pre-check before upload, offline fallback |
-| Muse Spark Open | partner-hosted, open weights | alternative extraction provider |
+| [Muse Spark](muse-spark.md) | `muse-spark-1.3` | label extraction with structured output, listing text read into fields, price guidance with search grounding, listing drafts, project proposals through a tool-calling loop |
+| [SAM 3.1](sam-3-1.md) | `sam-3.1` | the item, the label and the connector found in a photo, one concept per call; the label crop feeds extraction |
+| [Muse Voice Transcribe](muse-voice-transcribe.md) | `muse-voice-transcribe-1.0` | voice notes kept as the owner's words, from the web and from the phone |
+
+Considered and not used in this version, each with its own page saying so:
+[Muse Wonder](muse-wonder.md), [Muse Image](muse-image.md), [Muse Glimmer](muse-glimmer.md),
+[Muse Spark Open](muse-spark-open.md); there is one provider ([Providers and routing](providers.md)).
 
 Each model page covers its job in the app, the exact request shape, the settings that affect it,
-cost notes and failure modes.
+cost notes and failure modes. The rules decide and the model proposes, everywhere: a verdict, a
+price, a listing line or a project allocation is kept only where the evidence backs it.
 
 ## Fixture mode
 
