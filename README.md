@@ -52,7 +52,11 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
 
 ## On a phone in five steps
 
-1. **Install the app** on an Android 8.0 or newer phone. On the phone, open the
+1. **Install the app** on an Android 8.0 or newer phone. The QR code, scanned with the phone's
+   camera, or `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
+   opened on the phone, downloads the newest release's APK.
+   <img src="docs/assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140">
+   Or, on the phone, open the
    [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest), tap the APK
    and open it, with installing from the browser allowed (**Allow from this source**); if Play
    Protect warns, **More details**, **Install anyway**. Or over a USB cable, with **USB

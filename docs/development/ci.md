@@ -80,7 +80,15 @@ laptop: `bash scripts/scan-image.sh <image>...`.
    `.../frontend:0.2.0` (plus `latest`), nothing is pushed if the smoke test fails,
 5. creates a GitHub release with those notes,
 6. then `android` builds the release APK with `scripts/deploy.sh android` and attaches it to
-   the release as `orphan-parts-<version>.apk`, and `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host when the repository variable
+   the release twice, as `orphan-parts-<version>.apk` (the name the release page and the
+   install scripts use) and as `orphan-parts.apk`, so that
+   `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
+   is always the newest release's APK. The QR code in the docs, `docs/assets/apk-qr.svg`,
+   carries that address and is regenerated only if the address changes, with the backend's
+   `segno`:
+   `docker compose run --rm --no-deps backend python -c "import segno; segno.make('https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk', error='m').save('/app/apk-qr.svg', scale=4, border=4, dark='#000', light='#fff')" && mv backend/apk-qr.svg docs/assets/apk-qr.svg`
+   (black modules on a white quiet zone, so it scans on a dark page too).
+   Last, `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host when the repository variable
    `DEPLOY_ENABLED` is `true` and the secrets `DEPLOY_HOST` (`user@host`), `DEPLOY_PATH` and
    `DEPLOY_SSH_KEY` are set. See [Deployment](../operations/deployment.md).
 

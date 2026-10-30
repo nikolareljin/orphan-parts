@@ -125,9 +125,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Twice under two names: orphan-parts-<version>.apk is what the install scripts and
+          # the release page name; orphan-parts.apk keeps one fixed address,
+          # releases/latest/download/orphan-parts.apk, that the QR code in the docs points at.
           apk="$(find android -path '*/outputs/apk/release/*.apk' | head -1)"
           cp "$apk" "orphan-parts-$TAG.apk"
-          gh release upload "$TAG" "orphan-parts-$TAG.apk" --clobber
+          cp "$apk" "orphan-parts.apk"
+          gh release upload "$TAG" "orphan-parts-$TAG.apk" "orphan-parts.apk" --clobber
 
   # The host, once there is one: the repository variable DEPLOY_ENABLED set to true turns this
   # on, the secrets DEPLOY_HOST (user@host), DEPLOY_PATH and DEPLOY_SSH_KEY say where and how.

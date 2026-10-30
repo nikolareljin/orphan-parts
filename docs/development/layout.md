@@ -62,6 +62,8 @@ VERSION               the version, the one place it is read from by hand
 
 docker/docs/          image that builds and serves the docs site
 docs/, mkdocs.yml     this site
+  assets/             the logo, the flow diagram, the stylesheet, and apk-qr.svg, the QR code
+                      that opens the newest release's APK (development/ci.md says how it is made)
 overrides/            the theme override: the share metadata every page carries
 .github/workflows/    ci.yml (checks), android.yml (the app's checks), tag-release.yml (merged release/x.y.z -> tag), release.yml (tags to GHCR + GitHub release + APK), deploy.yml (the hosted demo on Modal and Cloudflare Pages), docs.yml (Pages)
 dev                   command runner
