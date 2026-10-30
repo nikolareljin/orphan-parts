@@ -1,7 +1,9 @@
 name: android
 
 # The app's checks, only when the app or its script changed: the unit tests on the JVM and the
-# debug APK. The runner has a JDK and the Android SDK; nothing is installed.
+# debug APK. The runner has the Android SDK and several JDKs; nothing is installed. Gradle runs
+# on the runner's JDK 17 (21 when 17 is absent): its default JDK is newer than Gradle accepts,
+# and the runner's own variables are read in the shell, not through the env context.
 on:
   pull_request:
     paths:
@@ -30,8 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: unit tests and the debug APK
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
         run: |
+          export JAVA_HOME="${JAVA_HOME_17_X64:-${JAVA_HOME_21_X64:-}}"
+          [ -n "$JAVA_HOME" ] || { echo "the runner has no JDK 17 or 21"; exit 1; }
           bash scripts/android.sh test
           bash scripts/android.sh build
