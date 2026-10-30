@@ -87,7 +87,7 @@ tagged version can be run anywhere without a build. See
 ## `android.yml`
 
 The app's checks, only when `android/`, `scripts/android.sh` or `VERSION` changed: the unit
-tests on the JVM and the debug APK, with the JDK and the SDK the runner already has. The
+tests on the JVM and the debug APK, on the runner's JDK 17 and the SDK it already has. The
 smoke run on a device is a local step (`./dev android smoke`), not a CI one.
 
 ## `docs.yml`
