@@ -15,7 +15,7 @@ function Clip({ id }: { id: number }) {
   if (unplayable) {
     return (
       <p className="muted">
-        This browser cannot play the clip of capture #{id} ({unplayable === 'codec' ? 'a codec it lacks' : 'the file did not load'}).{' '}
+        This browser cannot play the clip of capture #{id} ({unplayable === 'codec' ? 'a codec it lacks' : 'it could not be loaded or played here'}).{' '}
         <a href={url} download={`capture-${id}.mp4`}>
           Download it
         </a>
@@ -30,9 +30,10 @@ function Clip({ id }: { id: number }) {
       src={url}
       aria-label={`Capture ${id} clip`}
       onError={(e) => {
-        // 3 and 4: the browser could not decode it or does not support it; anything else is the fetch
+        // 3 is a decode failure (a codec it lacks); 4 is unsupported or, in most browsers, a
+        // file that did not arrive at all, so it is not blamed on a codec
         const code = e.currentTarget.error?.code
-        setUnplayable(code === 3 || code === 4 ? 'codec' : 'load')
+        setUnplayable(code === 3 ? 'codec' : 'load')
       }}
     />
   )

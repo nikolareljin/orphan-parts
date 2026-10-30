@@ -48,6 +48,10 @@ read -r -a npm_cmd <<<"${NPM:-npm}"
 read -r -a curl_cmd <<<"${CURL:-curl}"
 project="${PAGES_PROJECT:-orphan-parts}"
 api_url="${API_URL:-}"
+# the dotenv the secret step writes holds the key and the code: gone when the script ends,
+# however it ends (a failure, an interrupt, a normal end)
+secret_file=""
+trap '[[ -n "$secret_file" ]] && rm -f -- "$secret_file"' EXIT
 
 need_modal() {
   command -v "${modal_cmd[0]}" >/dev/null 2>&1 \
@@ -65,9 +69,8 @@ step_secret() {
   done
   local file
   file="$(mktemp)" || fail "secret: no temporary file"
+  secret_file="$file"
   chmod 600 "$file"
-  # the key and the code are in this file: gone when the step ends, however it ends
-  trap 'rm -f -- "$file"' RETURN
   # single quotes: the dotenv reader keeps the value as it is (no $expansion, no escapes)
   {
     printf "MODEL_API_KEY='%s'\n" "${MODEL_API_KEY_DEMO:-}"

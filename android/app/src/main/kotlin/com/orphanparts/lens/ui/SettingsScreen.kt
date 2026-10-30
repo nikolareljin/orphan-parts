@@ -50,13 +50,13 @@ suspend fun check(baseUrl: String, code: String, token: String = ""): String = w
         code.isBlank() && token.isNotBlank() -> try {
             if (client.accessGranted()) "$line Paired: the session works until it ends." else "The pairing has ended; scan the code again. $line"
         } catch (e: Exception) {
-            "The pairing could not be checked: ${describe(e)} $line"
+            "The pairing could not be checked: ${describe(e)}. $line"
         }
         code.isBlank() -> "$line Type the code to send anything."
         else -> try {
             if (client.access(code)) "$line The code opens it." else "The code is refused. $line"
         } catch (e: ApiException) {
-            "The code is refused: ${describe(e)} $line"
+            "The code is refused: ${describe(e)}. $line"
         }
     }
 }

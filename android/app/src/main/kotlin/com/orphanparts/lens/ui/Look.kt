@@ -269,7 +269,7 @@ fun HoldButton(
             .background(if (holding) colors.error else colors.primary, MaterialTheme.shapes.large)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
-                stateDescription = if (holding) active else idle
+                stateDescription = if (holding) "listening" else "ready"
             }
             .pointerInput(key) {
                 awaitEachGesture {
