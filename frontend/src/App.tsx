@@ -179,6 +179,10 @@ export default function App() {
             {demoText(status.ready, !demo) && <span>{demoText(status.ready, !demo)}</span>}
             <details className="pair">
               <summary>Pair the phone</summary>
+              {demo ? (
+                <p className="muted">The phone pairs with a session of yours: sign in with the code first.</p>
+              ) : (
+              <>
               <p>
                 In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code. It carries this address
                 {status.ready.demo.gated ? ' and a session of its own; the access code stays here.' : '.'}
@@ -196,6 +200,8 @@ export default function App() {
                   the phone). Open the web app at the computer's network address and pair from there, or run{' '}
                   <code>./dev phone</code>, which prints a code with that address.
                 </p>
+              )}
+              </>
               )}
             </details>
           </>

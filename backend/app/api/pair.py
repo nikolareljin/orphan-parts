@@ -10,7 +10,8 @@ router = APIRouter(prefix="/api", tags=["ops"])
 def _pairing(request: Request, origin: str, gate: GateDep, api: str = "") -> Pairing:
     session = gate.verify(gate.token_of(request)) if gate.enabled else None
     try:
-        return pairing(origin, gate, api, kid=session.kid if session is not None else 0)
+        kid, stamp = (session.kid, session.stamp) if session is not None else (0, "")
+        return pairing(origin, gate, api, kid=kid, stamp=stamp)
     except BadOriginError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)

@@ -54,10 +54,10 @@ def grant_access(
     found = gate.which_key(body.code)
     if found is None:
         raise HTTPException(status_code=401, detail="that is not the access code")
-    which, kid = found
+    which, kid, stamp = found
     gate.attempts.forget(ip)
-    log.info("session opened", extra={"code": which})
-    token, expires_at = gate.issue(kid=kid)
+    log.info("session opened", extra={"label": which})
+    token, expires_at = gate.issue(kid=kid, stamp=stamp)
     response.set_cookie(
         COOKIE,
         token,

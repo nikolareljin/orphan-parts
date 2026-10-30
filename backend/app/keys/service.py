@@ -106,12 +106,17 @@ class AccessKeys:
             row = conn.execute("SELECT * FROM access_keys WHERE id = ?", (row["id"],)).fetchone()
         return _key_of(row)
 
-    def revoked(self, kid: int) -> bool:
-        """Whether the record is revoked, or not there at all (one indexed read; the gate
-        asks on every request carrying the record's id)."""
+    def stamp(self, kid: int) -> str | None:
+        """The record's issue time when it stands unrevoked, else None (one indexed read; the
+        gate asks on every request carrying the record's id, and signs the time into the
+        session so that a record with the same id after a reset is another record)."""
         with self.store.connect() as conn:
-            row = conn.execute("SELECT revoked_at FROM access_keys WHERE id = ?", (kid,)).fetchone()
-        return row is None or row["revoked_at"] is not None
+            row = conn.execute(
+                "SELECT created_at, revoked_at FROM access_keys WHERE id = ?", (kid,)
+            ).fetchone()
+        if row is None or row["revoked_at"] is not None:
+            return None
+        return str(row["created_at"])
 
     def match(self, code: str) -> AccessKey | None:
         """The current record this code belongs to, or None. Every record is compared, in

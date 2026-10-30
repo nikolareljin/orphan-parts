@@ -85,6 +85,7 @@ def test_sessions_are_signed_bound_to_the_code_and_end(tmp_path: Path) -> None:
     assert session is not None and session.live is True
     assert gate.verify(token, now=4600.0) is None  # ended
     sid, exp, door, kid, sig = token.split(".")
+    assert not Gate.needs_record(token) and Gate.needs_record(f"{sid}.{exp}.{door}.3.{sig}")
     assert door == "1" and kid == "0"
     assert gate.verify(f"{sid}.{exp}.{door}.{kid}.{'0' * 32}", now=1000.0) is None  # tampered
     assert gate.verify(f"{sid}.{int(exp) + 9999}.{door}.{kid}.{sig}", now=1000.0) is None
@@ -215,6 +216,21 @@ def test_leaving_clears_the_cookie(gated: TestClient) -> None:
         "Max-Age=0" in gone.headers["set-cookie"] or "expires" in gone.headers["set-cookie"].lower()
     )
     assert gated.get("/api/items").status_code == 403  # the demo visitor again
+
+
+def test_a_record_with_the_same_id_after_a_reset_is_a_stranger(tmp_path: Path) -> None:
+    from app.inventory.store import Store
+
+    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    gate = Gate(gated_settings(tmp_path), keys)
+    _, record = keys.issue("judges", 7)
+    token, _ = gate.issue(kid=record.id, stamp=record.created_at)
+    assert gate.verify(token) is not None
+    # the same id, issued at another time (the inventory reset and the code reissued)
+    other, _ = gate.issue(kid=record.id, stamp="2026-01-01T00:00:00+00:00")
+    assert gate.verify(other) is None
+    keys.revoke("judges")
+    assert gate.verify(token) is None
 
 
 def test_the_demo_visitor_never_reads_an_item_through_assess(gated: TestClient) -> None:

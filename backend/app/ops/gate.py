@@ -135,14 +135,15 @@ class DailyAllowance:
 
 class Session:
     """Who a current token stands for: its id, whether it opens the live door, and the issued
-    record it came from (0 for the master code or the demo)."""
+    record it came from (0 and an empty stamp for the master code or the demo)."""
 
-    __slots__ = ("kid", "live", "sid")
+    __slots__ = ("kid", "live", "sid", "stamp")
 
-    def __init__(self, sid: str, live: bool, kid: int = 0) -> None:
+    def __init__(self, sid: str, live: bool, kid: int = 0, stamp: str = "") -> None:
         self.sid = sid
         self.live = live
         self.kid = kid
+        self.stamp = stamp
 
 
 class Gate:
@@ -170,16 +171,16 @@ class Gate:
 
     # --- the code and the session ------------------------------------------
 
-    def which_key(self, given: str) -> tuple[str, int] | None:
-        """What this code is: (``master``, 0) for the configured one, (label, id) for an
-        issued record, None for anything else. The master is checked first and the
-        records always, so a miss takes as long as a hit."""
+    def which_key(self, given: str) -> tuple[str, int, str] | None:
+        """What this code is: (``master``, 0, '') for the configured one, (label, id, issued
+        at) for an issued record, None for anything else. The master is checked first and
+        the records always, so a miss takes as long as a hit."""
         digest = hashlib.sha256(given.encode("utf-8")).digest()
         master = self.enabled and hmac.compare_digest(digest, self._code_digest)
         record = self.keys.match(given) if self.enabled and self.keys is not None else None
         if master:
-            return "master", 0
-        return (record.label, record.id) if record is not None else None
+            return "master", 0, ""
+        return (record.label, record.id, record.created_at) if record is not None else None
 
     def which_code(self, given: str) -> str | None:
         """The name of the code this is, or None."""
@@ -189,20 +190,27 @@ class Gate:
     def code_matches(self, given: str) -> bool:
         return self.which_code(given) is not None
 
-    def _sign(self, sid: str, exp: int, live: bool, kid: int) -> str:
-        text = f"{sid}.{exp}.{int(live)}.{kid}".encode()
+    def _sign(self, sid: str, exp: int, live: bool, kid: int, stamp: str) -> str:
+        text = f"{sid}.{exp}.{int(live)}.{kid}.{stamp}".encode()
         return hmac.new(self._key, text, hashlib.sha256).hexdigest()[:32]
 
     def issue(
-        self, now: float | None = None, *, live: bool = True, kid: int = 0
+        self, now: float | None = None, *, live: bool = True, kid: int = 0, stamp: str = ""
     ) -> tuple[str, int]:
         """A session token and when it ends: ``sid.expiry.door.key.signature``, nothing
         stored. The door is ``1`` for a session opened with a code; the key is the issued
-        record's id, so revoking the record ends the sessions it opened, and ``0`` for the
-        master code."""
+        record's id and its issue time is signed in, so revoking the record ends the
+        sessions it opened and a record with the same id after a reset is a stranger;
+        ``0`` for the master code."""
         exp = int((time.time() if now is None else now) + self.session_seconds)
         sid = secrets.token_urlsafe(16)
-        return f"{sid}.{exp}.{int(live)}.{kid}.{self._sign(sid, exp, live, kid)}", exp
+        sig = self._sign(sid, exp, live, kid, stamp)
+        return f"{sid}.{exp}.{int(live)}.{kid}.{sig}", exp
+
+    @staticmethod
+    def needs_record(token: str) -> bool:
+        """Whether verifying this token reads a record (a token from an issued code)."""
+        return bool(_TOKEN_RE.match(token)) and token.split(".")[3] != "0"
 
     def verify(self, token: str, now: float | None = None) -> Session | None:
         """The session when the token is ours and current, else None."""
@@ -214,11 +222,16 @@ class Gate:
             return None
         live = door == "1"
         kid = int(kid_text)
-        if not hmac.compare_digest(sig, self._sign(sid, exp, live, kid)):
+        stamp = ""
+        if kid:
+            # the record must stand, and be the one the session was opened with
+            found = self.keys.stamp(kid) if self.keys is not None else None
+            if found is None:
+                return None
+            stamp = found
+        if not hmac.compare_digest(sig, self._sign(sid, exp, live, kid, stamp)):
             return None
-        if kid and (self.keys is None or self.keys.revoked(kid)):
-            return None  # the issued code this session came from is gone
-        return Session(sid, live, kid)
+        return Session(sid, live, kid, stamp)
 
     # --- who is asking ---------------------------------------------------
 
@@ -267,7 +280,11 @@ class GateMiddleware(BaseHTTPMiddleware):
         visitor, live = ip, True
         if gate.enabled:
             # a token from an issued code is checked against its record: a read, off the loop
-            session = await asyncio.to_thread(gate.verify, gate.token_of(request))
+            given = gate.token_of(request)
+            if gate.needs_record(given):
+                session = await asyncio.to_thread(gate.verify, given)
+            else:
+                session = gate.verify(given)
             if session is None:
                 live = False
             else:

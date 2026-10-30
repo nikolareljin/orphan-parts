@@ -29,6 +29,7 @@ async function selectAndCommit(panel: Locator): Promise<void> {
 }
 
 test('preferences are kept, proposals come from the inventory, and selection commits the items', async ({ page, request }) => {
+  test.slow() // a whole project's life in one run: proposals, selection, the pack, the outcome, the share
   await household(request)
   await page.goto('/')
   await page.getByRole('button', { name: 'Build and reuse' }).click()
