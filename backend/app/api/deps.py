@@ -15,6 +15,7 @@ from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import Gate
 from app.photos import ItemPhotos
+from app.picture import Pictures
 from app.profiles import Profiles
 from app.projects.service import Planner
 from app.segment.service import Segmenter
@@ -145,6 +146,14 @@ def app_photos(request: Request) -> ItemPhotos:
 
 
 PhotosDep = Annotated[ItemPhotos, Depends(app_photos)]
+
+
+def app_pictures(request: Request) -> Pictures:
+    pictures: Pictures = request.app.state.pictures
+    return pictures
+
+
+PicturesDep = Annotated[Pictures, Depends(app_pictures)]
 
 
 def app_decider(request: Request) -> Decider:

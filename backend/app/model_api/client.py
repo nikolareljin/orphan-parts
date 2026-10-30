@@ -36,6 +36,8 @@ log = logging.getLogger("app.model_api")
 RESPONSES = "/responses"
 MODELS = "/models"
 TRANSCRIBE = "/asr/transcribe"
+IMAGES = "/images/generations"
+JPEG_MAGIC = b"\xff\xd8\xff"
 
 IMAGE_MIME_TYPES = frozenset(
     {"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/x-icon"}
@@ -91,6 +93,18 @@ class Transcript(BaseModel):
     text: str
     seconds: float
     model: str
+    cost_usd: float
+    from_fixture: bool
+    attempts: int
+
+
+class PictureResult(BaseModel):
+    """One generated image, decoded; priced per image, the tokens kept for the record."""
+
+    data: bytes
+    model: str
+    revised_prompt: str
+    usage: Usage
     cost_usd: float
     from_fixture: bool
     attempts: int
@@ -399,6 +413,47 @@ class ModelApiClient:
             text=str(data.get("transcript") or "").strip(),
             seconds=seconds,
             model=model,
+            cost_usd=usd,
+            from_fixture=from_fixture,
+            attempts=attempts,
+        )
+
+    async def picture(self, prompt: str, *, op: str = "picture") -> PictureResult:
+        """One image with Muse Image: a JPEG, square, drawn without the model's own refinement
+        pass (``reasoning_strength`` low), handed back decoded. Called on a click, never by
+        itself."""
+        if (twin := self._for_request()) is not None:
+            return await twin.picture(prompt, op=op)
+        model = self.settings.model_image
+        body: dict[str, Any] = {
+            "model": model,
+            "prompt": prompt,
+            "n": 1,
+            "size": "1024x1024",
+            "response_format": "b64_json",
+            "output_format": "jpeg",
+            "reasoning_strength": "low",
+        }
+        data, from_fixture, attempts, ms = await self._post(IMAGES, body, op)
+        images = [item for item in data.get("data") or [] if isinstance(item, dict)]
+        first = images[0] if images else {}
+        encoded = first.get("b64_json")
+        try:
+            image = base64.b64decode(encoded, validate=True) if isinstance(encoded, str) else b""
+        except ValueError:
+            image = b""
+        # one image asked for, one billed, whatever the answer held
+        usage = Usage.from_response(data.get("usage")).model_copy(update={"images": 1})
+        usd = 0.0 if from_fixture else cost_usd(model, usage)
+        self._record(op, model, IMAGES, usage, usd, from_fixture, attempts, ms)
+        # a JPEG was asked for: anything else is kept nowhere, though the call is charged
+        if not image.startswith(JPEG_MAGIC):
+            raise IncompleteResponseError("the answer carried no image", attempts=attempts)
+        return PictureResult(
+            data=image,
+            model=model,
+            revised_prompt=str(first.get("revised_prompt") or ""),
+            usage=usage,
             cost_usd=usd,
             from_fixture=from_fixture,
             attempts=attempts,

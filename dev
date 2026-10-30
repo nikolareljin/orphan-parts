@@ -295,6 +295,8 @@ cmd_e2e() {
   # the allowances are for people, not for six workers on one address, so they are wide here
   export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE:-e2e-demo-access-code}"
   export DEMO_REQUESTS_PER_MINUTE=100000 DEMO_VISITOR_CALLS_PER_HOUR=100000 DEMO_DAILY_CALLS=1000000
+  # pictures on, answered by the recorded stub like every other call here
+  export PICTURE_ENABLED=1
   export DOCKER_UID DOCKER_GID
   DOCKER_UID="$(id -u)"
   DOCKER_GID="$(id -g)"

@@ -117,6 +117,25 @@ test('intent, an owner value, a separated part and the history', async ({ page, 
   await expect(history).toContainText(`component separated: ${cable}`)
 })
 
+test('a picture of what the item could become is drawn on a click and labeled as drawn', async ({ page, request }) => {
+  const laptop = `old laptop ${stamp}`
+  await createItem(request, { item_type: laptop, condition: 'scuffed lid' })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'My inventory' }).click()
+  const items = page.getByRole('table', { name: 'Items' })
+  await items.getByRole('row', { name: laptop }).getByRole('button', { name: 'Open' }).click()
+  const panel = page.getByRole('article', { name: `Item ${laptop}` })
+  const drawn = panel.getByRole('region', { name: 'What it could look like' })
+  await drawn.getByLabel('as a').fill('a bedside lamp')
+  await drawn.getByRole('button', { name: 'Draw it' }).click()
+  await expect(drawn.getByRole('img', { name: 'Illustrative picture 1: a bedside lamp' })).toBeVisible()
+  await expect(drawn).toContainText('Drawn as: a bedside lamp')
+  await expect(drawn).toContainText('not a photo of the item')
+  await expect(drawn).toContainText('recorded answer, nothing spent')
+  // a picture is never one of the photos
+  await expect(panel).toContainText('No photo kept with this item.')
+})
+
 test('deleting asks twice and then hides the item', async ({ page, request }) => {
   const phone = `broken phone ${stamp}`
   await createItem(request, { item_type: phone, intent: 'give' })

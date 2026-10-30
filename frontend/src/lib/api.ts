@@ -29,6 +29,8 @@ export interface Version {
   version: string
   models: Record<string, string>
   limits: Limits
+  // whether the item dialog may draw a picture of what an item could become (PICTURE_ENABLED)
+  pictures: boolean
 }
 
 export type Source =
@@ -177,6 +179,22 @@ export interface ComponentCreate {
 // How many photos are kept with an item; each is at /api/items/{id}/photos/{n}, 1 first.
 export interface PhotoCount {
   count: number
+}
+
+// A picture of what the item could become, drawn by Muse Image on a click and kept beside the
+// photos, never as one of them; at /api/items/{id}/pictures/{n}. Illustrative, not evidence.
+export interface Picture {
+  n: number
+  use: string
+  model: string
+  cost_usd: number
+  from_fixture: boolean
+  created_at: string
+}
+
+export interface PictureList {
+  enabled: boolean
+  pictures: Picture[]
 }
 
 export interface ItemEvent {
@@ -905,6 +923,9 @@ export const api = {
     events: (id: number) => getJson<ItemEvent[]>(`/api/items/${id}/events`),
     photos: (id: number) => getJson<PhotoCount>(`/api/items/${id}/photos`),
     photoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/photos/${n}`),
+    pictures: (id: number) => getJson<PictureList>(`/api/items/${id}/pictures`),
+    drawPicture: (id: number, use: string) => sendJson<Picture>('POST', `/api/items/${id}/picture`, { use }),
+    pictureUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/pictures/${n}`),
     addPhotos: (id: number, photos: File[]) =>
       postForm<PhotoCount>(
         `/api/items/${id}/photos`,

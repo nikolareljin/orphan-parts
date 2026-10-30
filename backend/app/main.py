@@ -18,6 +18,7 @@ from app.api.items import router as items_router
 from app.api.measure import router as measure_router
 from app.api.pair import router as pair_router
 from app.api.photos import router as photos_router
+from app.api.picture import router as picture_router
 from app.api.profiles import router as profiles_router
 from app.api.projects import router as projects_router
 from app.api.routes import router
@@ -39,6 +40,7 @@ from app.ops.gate import Gate, GateMiddleware
 from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
 from app.photos import ItemPhotos
+from app.picture import Pictures
 from app.profiles import Profiles
 from app.projects import Planner, Templates
 from app.segment import Segmenter
@@ -130,6 +132,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.planner = Planner(
         settings, client, app.state.inventory, app.state.templates, app.state.finder
     )
+    app.state.pictures = Pictures(settings, client, app.state.inventory, app.state.templates)
+
     app.state.decider = Decider(
         settings,
         client,
@@ -186,6 +190,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(segment_router)
     app.include_router(items_router)
     app.include_router(photos_router)
+    app.include_router(picture_router)
     app.include_router(profiles_router)
     app.include_router(measure_router)
     app.include_router(assess_router)

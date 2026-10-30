@@ -112,7 +112,8 @@ E2E_VIDEO=on ./dev e2e    # record every test, not only failures
 ```
 
 Playwright runs in its official image against the dev stack with the backend in fixture mode,
-so the browser sees exactly what a user sees and no credit is spent. The runner shares the
+so the browser sees exactly what a user sees and no credit is spent; `PICTURE_ENABLED` is on for
+the run, so the item dialog draws its picture from the recorded stub. The runner shares the
 frontend container's network and runs as the host user; results, traces and videos land under
 `e2e/test-results/`. Specs live in `e2e/tests/` and address the page by role and label, the way
 a user does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather

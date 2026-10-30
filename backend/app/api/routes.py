@@ -51,6 +51,9 @@ class Version(BaseModel):
     version: str
     models: dict[str, str]
     limits: Limits
+    pictures: bool = Field(
+        default=False, description="whether the item dialog may draw a picture (PICTURE_ENABLED)"
+    )
 
 
 @router.get("/healthz", response_model=Health, tags=["ops"])
@@ -104,6 +107,7 @@ def version(settings: SettingsDep) -> Version:
             max_upload_mb=settings.max_upload_mb,
             max_clip_mb=settings.max_clip_mb,
         ),
+        pictures=settings.picture_enabled,
     )
 
 

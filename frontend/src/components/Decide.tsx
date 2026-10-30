@@ -158,7 +158,11 @@ export default function Decide({
           </dd>
 
           <dt>What it could look like</dt>
-          <dd className="muted">Picture: coming.</dd>
+          <dd>
+            <button type="button" className="link" onClick={() => document.querySelector('section.picture')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+              See picture controls above
+            </button>
+          </dd>
 
           <dt>Decision</dt>
           <dd>

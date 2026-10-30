@@ -8,6 +8,7 @@ import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
 import Measure from './Measure'
+import Picture from './Picture'
 import Value from './Value'
 
 function message(err: unknown): string {
@@ -19,10 +20,12 @@ export default function Inventory({
   refresh,
   openId: wanted = null,
   onOpened,
+  demo = false,
 }: {
   refresh: number
   openId?: number | null
   onOpened?: () => void
+  demo?: boolean
 }) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(wanted)
@@ -102,6 +105,7 @@ export default function Inventory({
           <ItemPanel
             key={openId}
             id={openId}
+            demo={demo}
             onChanged={() => void load()}
             onClosed={() => {
               setOpenId(null)
@@ -114,7 +118,7 @@ export default function Inventory({
   )
 }
 
-function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => void; onClosed: () => void }) {
+function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolean; onChanged: () => void; onClosed: () => void }) {
   const [item, setItem] = useState<Item | null>(null)
   const [events, setEvents] = useState<ItemEvent[] | null>(null)
   const [error, setError] = useState('')
@@ -255,6 +259,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         {item.parent_id !== null && <> · part of item #{item.parent_id}</>}
       </p>
       <ItemPhotos id={item.id} />
+      <Picture item={item} demo={demo} />
       {error && (
         <p className="error" role="alert">
           {error}
@@ -426,7 +431,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
             checked={item.public}
             onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
           />{' '}
-          Public in the demo (what it is and its photos; never the location or the notes)
+          Public in the demo (what it is, its photos and drawn pictures; never the location or the notes)
         </label>
         <button type="button" className="link" onClick={() => void showEvents()}>
           History
