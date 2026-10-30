@@ -5,7 +5,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## Unreleased
 
 ### Security
-- No credential or personal data ships in an image: `.env` files, local data and logs are kept out of both build contexts, and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
+- No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
 
 ### Changed
 - The docs site tells the story: how it fits together (one clickable diagram and two paths through the demo set), lessons learned, next steps (the roadmap folded into it) and the pitch.
