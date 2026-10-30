@@ -43,7 +43,7 @@ java_major() {
 installer() {
   if [[ -n "${INSTALLER:-}" ]]; then "$INSTALLER" "$@"; return; fi
   if is_macos; then brew install "$@"
-  elif has_cmd apt-get; then sudo apt-get install -y "$@"
+  elif has_cmd apt-get; then sudo apt-get update -q && sudo apt-get install -y "$@"
   else fail "install $* with your package manager, then run again"
   fi
 }
@@ -55,7 +55,18 @@ else
   if [[ $check_only -eq 1 ]]; then log_warn "java: a JDK 17 or later is missing"; missing=1
   else
     say "installing a JDK 17"
-    if is_macos; then installer openjdk@17; else installer openjdk-17-jdk; fi
+    if is_macos; then
+      installer openjdk@17
+      # Homebrew keeps the JDK keg-only, off PATH; the build is pointed at it by JAVA_HOME
+      brew_home="$(brew --prefix openjdk@17 2>/dev/null)/libexec/openjdk.jdk/Contents/Home"
+      if [[ -x "$brew_home/bin/java" ]]; then
+        export JAVA_HOME="$brew_home"
+        java_cmd="$brew_home/bin/java"
+        say "JAVA_HOME=$brew_home (put that in your shell profile for the next run)"
+      fi
+    else
+      installer openjdk-17-jdk
+    fi
     has_cmd "$java_cmd" && [[ "$(java_major)" -ge 17 ]] || fail "java still not found after the install; put it on PATH"
     log_ok "java: $("$java_cmd" -version 2>&1 | head -1)"
   fi

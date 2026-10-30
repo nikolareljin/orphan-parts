@@ -37,6 +37,8 @@ def test_the_pairing_carries_a_session_only_when_gated(settings: Settings, tmp_p
     found = pairing("https://demo.example", gate)
     assert found.gated and found.token and found.expires_at > 0
     assert gate.verify(found.token) is not None
+    # an IPv6 host in brackets is an origin too
+    assert pairing("http://[fd00::2]:5173", open_gate).url == "http://[fd00::2]:5173"
     for bad in (
         "demo.example",
         "http://demo.example/api",

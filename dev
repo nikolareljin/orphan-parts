@@ -103,18 +103,26 @@ cmd_phone() {
   [[ "${1:-}" == "--release" ]] && release=1
   docker_running || die "docker is not running"
   curl -fsS -m 5 "http://localhost:$BACKEND_PORT/healthz" >/dev/null 2>&1 || die "the stack is not up (or not answering on :$BACKEND_PORT): ./dev up first"
+  # one device for every step: picked here once, so several phones are asked about once
+  local picked
+  picked="$(bash "$ROOT/scripts/android.sh" serial 2>/dev/null || true)"
+  [[ -z "$picked" ]] || export ANDROID_SERIAL="$picked"
   if [[ $release -eq 1 ]]; then
     bash "$ROOT/scripts/android.sh" release
     local apk
-    apk="$(find "$ROOT/android/app/build/outputs/apk/release" -name '*.apk' | head -1)"
+    apk="$(find "$ROOT/android/app/build/outputs/apk/release" -name '*.apk' | head -1 || true)"
     bash "$ROOT/scripts/android.sh" install-file "$apk"
   else
+    bash "$ROOT/scripts/android.sh" build
     bash "$ROOT/scripts/android.sh" install
   fi
   bash "$ROOT/scripts/android.sh" launch
   local address
   address="$(lan_address)"
   [[ -n "$address" ]] || die "could not tell this machine's address on the network; set LAN_ADDRESS"
+  if [[ "$(os_name)" == wsl ]]; then
+    log_warn "under WSL this is the WSL address; the phone needs the Windows host's address on the Wi-Fi, so set LAN_ADDRESS to that and forward port $FRONTEND_PORT"
+  fi
   api_mode_or_fixture
   log_info "scan this with the app (Backend tab, Scan to pair):"
   compose run --rm --no-deps -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
