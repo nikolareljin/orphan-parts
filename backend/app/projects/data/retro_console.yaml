@@ -1,0 +1,37 @@
+id: retro_console
+label: Retro console on the TV
+goal: The games of the eighties and nineties on the living-room TV, from a tablet, a phone or a laptop you no longer use, with a gamepad.
+result: a small box behind the TV running an emulator front end, two gamepads, the TV as the screen
+effort: low
+skills: [basic computer setup]
+opens_devices: false
+typical_cost: {low: 0, high: 50, currency: USD}
+requirements:
+  - key: brain
+    label: A laptop, a tablet or a phone that runs the games
+    kind: item
+    item_types: [laptop, notebook, tablet, phone, smartphone, mini pc]
+    blocking: true
+  - key: screen
+    label: A TV or a monitor with an HDMI input
+    kind: item
+    item_types: [tv, television, monitor, display, screen]
+    blocking: true
+  - key: controls
+    label: One or two gamepads, USB or Bluetooth
+    kind: part
+    item_types: [gamepad, controller, joystick]
+    blocking: true
+  - key: cable
+    label: The cable or adapter between the device and the TV
+    kind: part
+    item_types: [cable, hdmi, adapter, usb-c adapter]
+    blocking: true
+steps:
+  - Install an emulator front end on the device and add the games you own.
+  - Connect the device to the TV; on a phone or tablet, a USB-C to HDMI adapter, or cast if the TV takes it.
+  - Pair the gamepads and map the buttons in the front end.
+  - Set the TV to game mode if it has one, and play from the couch.
+safety: []
+sources:
+  - the emulator front end's setup guide

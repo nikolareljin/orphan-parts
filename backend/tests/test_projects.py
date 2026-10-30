@@ -418,7 +418,7 @@ def test_project_routes(recorded_client: TestClient) -> None:
     )
     assert saved.status_code == 200 and saved.json()["budget"] == 30
     assert recorded_client.put("/api/preferences", json={"effort": "heroic"}).status_code == 422
-    assert len(recorded_client.get("/api/templates").json()) == 5
+    assert len(recorded_client.get("/api/templates").json()) == 10
 
     proposed = recorded_client.post("/api/projects/propose", json={"count": 3})
     assert proposed.status_code == 201, proposed.text

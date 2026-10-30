@@ -20,6 +20,7 @@
 | `./dev fmt` | ruff format, eslint --fix |
 | `./dev docs` | serves the docs site at :8001 with live reload |
 | `./dev docs-build` | exports the OpenAPI document and builds `site/` |
+| `scripts/scan-security.sh [--json] [<ref>]` | gitleaks over the history reachable from the ref and foxguard over the tracked files at it, checked out clean so nothing uncommitted is scanned; `--json` writes `scan/*.json` and prints the counts |
 | `./dev build` | builds the production images |
 | `./dev version <x.y.z>` | sets the version in every manifest and starts a changelog section |
 | `./dev release [--dry-run]` | tags `VERSION` on `main` and pushes the tag (the repository admin's command); the tag starts the release workflow |
