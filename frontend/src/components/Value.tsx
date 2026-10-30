@@ -8,7 +8,8 @@ function message(err: unknown): string {
 }
 
 // What it is worth: four quantities kept apart, each with its pages and dates. You set the price.
-export default function Value({ item }: { item: Item }) {
+// `onGuided` is told when a new guidance is written, so a panel that reads it can read it again.
+export default function Value({ item, onGuided }: { item: Item; onGuided?: () => void }) {
   const [guide, setGuide] = useState<Guidance | null>(null)
   const [reports, setReports] = useState<PriceReport[]>([])
   const [currency, setCurrency] = useState('USD')
@@ -50,6 +51,7 @@ export default function Value({ item }: { item: Item }) {
     setError('')
     try {
       setGuide(await api.value.guide(item.id, { currency, country, city }))
+      onGuided?.()
     } catch (err: unknown) {
       setError(message(err))
     } finally {

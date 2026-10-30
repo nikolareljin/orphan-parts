@@ -50,6 +50,17 @@ same normalisers as a label reading; a rule key the label set does not know is k
 any other name is dropped. Operation name `listing-text`, which is also the recorded fixture.
 The code path is `app/find/service.py`.
 
+## Uses
+
+What an item is good for is one call with the strict JSON schema of `UsesWriting`: up to three
+uses, each with a title, what it would do, what else it needs, the effort and one thing to check
+first. The brief carries the item's accepted values (none that identifies it or its owner), its
+condition, faults, tests and accessories, the owner's preferences and the project templates the
+rules already found it fills. The answer is shown as the model's proposals: each text is trimmed
+and cut to 200 characters, at most six needs and three uses are kept, and a use without a title
+is dropped. Operation name `uses`, which is also the recorded fixture: three uses for a laptop.
+The code path is `app/decide/service.py`; see [Decide what it becomes](../guides/decide.md).
+
 ## Label extraction
 
 One call per request, however many photos (up to `MAX_PHOTOS`, default 4):

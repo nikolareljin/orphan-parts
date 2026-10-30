@@ -1,0 +1,59 @@
+{
+  "endpoint": "/responses",
+  "op": "uses",
+  "model": "muse-spark-1.3",
+  "key": "fallback-uses",
+  "request": {
+    "instructions": "uses instructions, see app/decide/service.py",
+    "input": "one text part: the brief, see app/decide/service.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "UsesWriting",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_uses",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_uses",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "msg_fixture_uses",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "{\"uses\": [{\"title\": \"Homework workstation with a bigger screen\", \"what_it_does\": \"Drives an external monitor, a keyboard and a mouse for schoolwork at a desk, with the laptop lid closed.\", \"needs\": [\"an external monitor\", \"an HDMI or USB-C cable the two share\", \"a keyboard and a mouse\"], \"effort\": \"low\", \"note\": \"Check that the video port works; the tests done do not say.\"}, {\"title\": \"Small home server for backups\", \"what_it_does\": \"Runs a lightweight Linux and keeps a copy of the family's files on an external drive, on the network.\", \"needs\": [\"an external drive for the copies\", \"an Ethernet cable to the router\"], \"effort\": \"medium\", \"note\": \"A battery that no longer holds a charge is fine here; a fan that does not spin is not.\"}, {\"title\": \"Spare machine for a relative\", \"what_it_does\": \"A browser, email and video calls for someone who needs no more than that.\", \"needs\": [\"a fresh install with the previous owner's data removed\", \"its charger\"], \"effort\": \"low\", \"note\": \"Say what is slow or broken before handing it over.\"}]}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 620,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 290,
+      "output_tokens_details": {
+        "reasoning_tokens": 30
+      },
+      "total_tokens": 910
+    }
+  },
+  "status": 200
+}
