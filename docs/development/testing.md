@@ -138,6 +138,14 @@ multipart framing, the WAV header and sizes, and the settings' URL. The smoke ru
 (`ANDROID_AVD`), launches the app, confirms its activity is on screen and keeps a screenshot;
 `scripts/tests/test_android.sh` checks that script with stand-ins for gradlew and adb.
 
+Pairing is tested in isolation (a session only when gated, verified by the gate; the origin
+kept as given and anything but a scheme, a host and a port refused; the SVG and the terminal
+block) and through the routes (open without a gate, 401 behind one until a session, the
+phone's token working as a bearer header); the command line's answers. The Android setup
+script is tested with stand-ins for java, curl, sdkmanager and the package manager: what
+`--check` reports and that it runs nothing, an old JDK sent to the package manager, the
+packages installed after the licences, a download refused on its checksum.
+
 Captures are tested on bundles made in the test (a synthetic photo, a WAV, the head of an MP4):
 a bundle kept as sent with the photos re-encoded on arrival and read into an item with the
 transcript and the line, processed once only, deleted with its files while the item stays; a

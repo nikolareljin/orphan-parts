@@ -15,6 +15,7 @@ from app.api.find import router as find_router
 from app.api.items import error_handlers as inventory_handlers
 from app.api.items import router as items_router
 from app.api.measure import router as measure_router
+from app.api.pair import router as pair_router
 from app.api.profiles import router as profiles_router
 from app.api.projects import router as projects_router
 from app.api.routes import router
@@ -114,6 +115,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestContextMiddleware)
     app.include_router(router)
     app.include_router(access_router)
+    app.include_router(pair_router)
     app.include_router(extract_router)
     app.include_router(segment_router)
     app.include_router(items_router)

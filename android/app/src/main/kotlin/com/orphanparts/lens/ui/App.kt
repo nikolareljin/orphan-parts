@@ -40,7 +40,7 @@ fun App() {
     var sent by remember { mutableStateOf(0) }
 
     // one client per settings: the session token it holds belongs to that backend and code
-    val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode) }
+    val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode, settings.token) }
 
     MaterialTheme(colorScheme = Scheme) {
         Scaffold { inner ->

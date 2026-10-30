@@ -6,10 +6,11 @@ import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** The client with the demo code: a session is opened once, and again after a 401. A
- * connection that breaks is opened again too: a stale token on an upload can end the
- * connection before the 401 is read, and the next call must not fail the same way. */
-class Session(val client: Client, private val accessCode: String) {
+/** The client and what opens the backend: a session from the pairing when there is one, the
+ * demo code otherwise. A session is opened once, and again after a 401. A connection that
+ * breaks is opened again too: a stale token on an upload can end the connection before the
+ * 401 is read, and the next call must not fail the same way. */
+class Session(val client: Client, private val accessCode: String, private val pairedToken: String = "") {
     private var opened = false
 
     suspend fun <T> call(block: (Client) -> T): T = withContext(Dispatchers.IO) {
@@ -19,7 +20,7 @@ class Session(val client: Client, private val accessCode: String) {
         } catch (e: ApiException) {
             if (e.status != 401) throw e
             opened = false
-            open()
+            open(afterRefusal = true)
             block(client)
         } catch (e: IOException) {
             opened = false
@@ -27,8 +28,12 @@ class Session(val client: Client, private val accessCode: String) {
         }
     }
 
-    private fun open() {
-        if (accessCode.isNotBlank()) client.access(accessCode)
+    private fun open(afterRefusal: Boolean = false) {
+        when {
+            pairedToken.isNotBlank() && !afterRefusal -> client.useToken(pairedToken)
+            accessCode.isNotBlank() -> client.access(accessCode)
+            pairedToken.isNotBlank() -> throw ApiException(401, "the pairing has ended; scan the code again")
+        }
         opened = true
     }
 }

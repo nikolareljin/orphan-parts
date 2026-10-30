@@ -7,11 +7,16 @@
 #            KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD, or android/keystore.properties),
 #            with the debug key otherwise
 #   install  the debug APK onto the connected device or the running emulator
+#   install-file <apk>  any APK onto the device (./dev phone --release uses it)
+#   launch   start the app on the device
 #   smoke    install, launch, confirm the app is on screen, keep a screenshot, stop it
 #
 # Environment:
 #   ANDROID_HOME     the SDK (default: ~/Android/Sdk when it exists)
-#   ANDROID_SERIAL   which device, when several are connected (adb reads it)
+#   ANDROID_SERIAL   which device, when several are connected; without it, one connected
+#                    device is used, and several are offered as a numbered list to pick from
+#                    (with `dialog` when it is installed and there is a terminal)
+#   ANDROID_PICK     the number to pick without asking (tests, scripts)
 #   ANDROID_AVD      an emulator to boot headless for the smoke run when no device is connected;
 #                    it is stopped afterwards
 #   SMOKE_OUT        where the screenshot goes (default: android/app/build/smoke)
@@ -23,8 +28,8 @@ set -euo pipefail
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 what="${1:-}"
 case "$what" in
-  build|test|release|install|smoke) ;;
-  *) printf 'android: usage: android.sh <build|test|release|install|smoke>\n' >&2; exit 2 ;;
+  build|test|release|install|install-file|launch|smoke|serial) ;;
+  *) printf 'android: usage: android.sh <build|test|release|install|install-file <apk>|launch|smoke|serial>\n' >&2; exit 2 ;;
 esac
 
 fail() { printf 'android: %s\n' "$*" >&2; exit 1; }
@@ -47,6 +52,8 @@ fi
 package="com.orphanparts.lens"
 activity="$package/.MainActivity"
 debug_apk="$app/app/build/outputs/apk/debug/app-debug.apk"
+ALLOW_URL="https://nikolareljin.github.io/orphan-parts/guides/android/#allow-the-phone"
+serial="${ANDROID_SERIAL:-}"
 
 gradle() { (cd "$app" && "$gradlew" --quiet "$@"); }
 
@@ -57,10 +64,65 @@ build_debug() {
   say "$debug_apk"
 }
 
-# The first device adb lists as ready; empty when there is none.
-device() {
-  "$adb" devices 2>/dev/null | awk 'NR > 1 && $2 == "device" { print $1; exit }'
+# Every device adb lists: "serial state model" per line (model when adb says it).
+devices_table() {
+  "$adb" devices -l 2>/dev/null | awk 'NR > 1 && NF >= 2 {
+    model = "";
+    for (i = 3; i <= NF; i++) if ($i ~ /^model:/) { model = substr($i, 7) }
+    print $1, $2, (model == "" ? "-" : model)
+  }'
 }
+
+# The device every adb call goes to: the one chosen, the one connected, or the one picked.
+device() {
+  if [[ -n "$serial" ]]; then printf '%s\n' "$serial"; return; fi
+  devices_table | awk '$2 == "device" { print $1; exit }'
+}
+
+# Choose the device when there are several; say what to do when there is none.
+pick_device() {
+  local ready unauthorized count
+  ready="$(devices_table | awk '$2 == "device"')"
+  unauthorized="$(devices_table | awk '$2 == "unauthorized" { print $1 }')"
+  if [[ -n "$serial" ]]; then
+    grep -q "^$serial device" <<<"$ready" || fail "ANDROID_SERIAL=$serial is not a connected, allowed device"
+    return 0
+  fi
+  count="$(grep -c "" <<<"$ready")"
+  [[ -n "$ready" ]] || count=0
+  if [[ $count -eq 0 ]]; then
+    if [[ -n "$unauthorized" ]]; then
+      fail "the phone ($unauthorized) is connected but has not allowed this computer: unlock it and accept the USB debugging prompt, then run again. How to turn it on: $ALLOW_URL"
+    fi
+    return 1
+  fi
+  if [[ $count -eq 1 ]]; then
+    serial="$(awk '{print $1}' <<<"$ready")"
+    return 0
+  fi
+  local n=0 line choice
+  if [[ -n "${ANDROID_PICK:-}" ]]; then
+    choice="$ANDROID_PICK"
+  elif has_tty && command -v dialog >/dev/null 2>&1; then
+    local items=()
+    while IFS= read -r line; do n=$((n + 1)); items+=("$n" "$(awk '{print $1 " (" $3 ")"}' <<<"$line")"); done <<<"$ready"
+    choice="$(dialog --stdout --title "Which phone?" --menu "Install the app on:" 15 60 "$count" "${items[@]}")" || fail "no device chosen"
+  elif has_tty; then
+    say "several devices are connected:"
+    while IFS= read -r line; do n=$((n + 1)); printf '  %d) %s\n' "$n" "$(awk '{print $1 " (" $3 ")"}' <<<"$line")"; done <<<"$ready"
+    printf 'android: which one? [1-%d] ' "$count" > /dev/tty
+    read -r choice < /dev/tty
+  else
+    fail "several devices are connected; set ANDROID_SERIAL to one of: $(awk '{printf "%s ", $1}' <<<"$ready")"
+  fi
+  [[ "$choice" =~ ^[0-9]+$ && $choice -ge 1 && $choice -le $count ]] || fail "not a number between 1 and $count"
+  serial="$(sed -n "${choice}p" <<<"$ready" | awk '{print $1}')"
+  say "using $serial"
+}
+
+# a terminal to ask on: stdin, or a controlling terminal that opens (a readable /dev/tty node
+# is not one without a session behind it)
+has_tty() { [[ -z "${ANDROID_NO_TTY:-}" ]] && { [[ -t 0 ]] || ( : </dev/tty ) 2>/dev/null; }; }
 
 booted="" # the emulator this run started, to stop at the end
 stop_emulator() {
@@ -71,8 +133,8 @@ stop_emulator() {
 }
 
 ensure_device() {
-  if [[ -n "$(device)" ]]; then return 0; fi
-  [[ -n "${ANDROID_AVD:-}" ]] || fail "no device connected and ANDROID_AVD is not set; connect a phone with USB debugging on, or name an emulator"
+  if pick_device; then return 0; fi
+  [[ -n "${ANDROID_AVD:-}" ]] || fail "no device connected and ANDROID_AVD is not set; connect a phone with USB debugging on (how: $ALLOW_URL), or name an emulator"
   [[ -n "${ANDROID_HOME:-}" && -x "$ANDROID_HOME/emulator/emulator" ]] || fail "no emulator under ANDROID_HOME"
   say "booting the emulator $ANDROID_AVD"
   local log="${TMPDIR:-/tmp}/orphan-parts-emulator.log"
@@ -90,6 +152,7 @@ ensure_device() {
     waited=$((waited + 3))
     [[ $waited -lt 240 ]] || fail "the emulator did not finish booting in 240 s"
   done
+  serial="$(devices_table | awk '$2 == "device" { print $1; exit }')"
   say "emulator ready after ${waited} s"
 }
 
@@ -97,7 +160,7 @@ install_debug() {
   [[ -f "$debug_apk" ]] || build_debug
   ensure_device
   say "installing on $(device)"
-  "$adb" install -r "$debug_apk" >/dev/null
+  "$adb" -s "$(device)" install -r "$debug_apk" >/dev/null
 }
 
 smoke() {
@@ -105,19 +168,19 @@ smoke() {
   local out="${SMOKE_OUT:-$app/app/build/smoke}"
   mkdir -p "$out"
   say "launching $activity"
-  "$adb" shell am start -W -n "$activity" >/dev/null
+  "$adb" -s "$(device)" shell am start -W -n "$activity" >/dev/null
   local waited=0
   # the output is read whole, then searched: grep -q closing the pipe early would fail the
   # pipeline under pipefail and the loop would never see the app
   local shown=""
-  until shown="$("$adb" shell dumpsys activity activities 2>/dev/null || true)" && grep -q "$activity" <<<"$shown"; do
+  until shown="$("$adb" -s "$(device)" shell dumpsys activity activities 2>/dev/null || true)" && grep -q "$activity" <<<"$shown"; do
     sleep 1
     waited=$((waited + 1))
     [[ $waited -lt 30 ]] || fail "the app did not come on screen in 30 s"
   done
-  "$adb" exec-out screencap -p > "$out/smoke.png"
+  "$adb" -s "$(device)" exec-out screencap -p > "$out/smoke.png"
   [[ -s "$out/smoke.png" ]] || fail "the screenshot is empty"
-  "$adb" shell am force-stop "$package" >/dev/null 2>&1 || true
+  "$adb" -s "$(device)" shell am force-stop "$package" >/dev/null 2>&1 || true
   say "on screen; screenshot at $out/smoke.png"
 }
 
@@ -136,5 +199,24 @@ case "$what" in
     fi
     ;;
   install) install_debug; say "installed" ;;
+  serial)
+    # the device picked once, for a caller that runs several steps: empty when none is
+    # connected. Only the serial goes to stdout; the list and the choice go to stderr, so a
+    # caller capturing the answer gets the serial and nothing else
+    if pick_device >&2; then printf '%s\n' "$serial"; fi
+    ;;
+  install-file)
+    apk="${2:?install-file needs the APK path}"
+    [[ -f "$apk" ]] || fail "no APK at $apk"
+    ensure_device
+    say "installing $apk on $(device)"
+    "$adb" -s "$(device)" install -r "$apk" >/dev/null
+    say "installed"
+    ;;
+  launch)
+    ensure_device
+    "$adb" -s "$(device)" shell am start -W -n "$activity" >/dev/null
+    say "launched $activity"
+    ;;
   smoke) smoke ;;
 esac
