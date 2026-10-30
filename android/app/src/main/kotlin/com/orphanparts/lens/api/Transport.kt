@@ -15,14 +15,16 @@ interface Transport {
 }
 
 /** A reading can take the backend a minute on its own (the model's limit is 60 s), so the
- * phone waits longer than that before it gives up and the backend spends for nothing. */
-class HttpTransport(private val timeoutMs: Int = 120_000) : Transport {
+ * phone waits longer than that for an answer before it gives up and the backend spends for
+ * nothing; a connection that does not open is given up on quickly, so a wrong address is
+ * said in seconds. */
+class HttpTransport(private val readMs: Int = 120_000, private val connectMs: Int = 10_000) : Transport {
     override fun send(method: String, url: String, headers: Map<String, String>, body: ByteArray?): HttpResponse {
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
-            connection.connectTimeout = timeoutMs
-            connection.readTimeout = timeoutMs
+            connection.connectTimeout = connectMs
+            connection.readTimeout = readMs
             connection.setRequestProperty("Accept", "application/json")
             for ((name, value) in headers) connection.setRequestProperty(name, value)
             if (body != null) {
