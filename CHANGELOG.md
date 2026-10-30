@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Fixed
+- A release merge whose tag the ruleset refuses now fails with the exact command an admin runs to tag the merge commit, in the run summary, instead of an opaque rule violation.
+
 ### Changed
 - The docs site tells the story: how it fits together (one clickable diagram and two paths through the demo set), lessons learned, next steps (the roadmap folded into it) and the pitch.
 ### Added

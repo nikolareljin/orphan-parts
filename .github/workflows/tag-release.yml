@@ -7,8 +7,9 @@ name: tag-release
 #
 # The tag is pushed with the job token, so it does not fire the release workflow's tag trigger
 # by itself; the publish job calls that workflow directly. The repository ruleset that limits
-# tag creation has to let GitHub Actions through, otherwise the push is refused and the tag
-# is pushed by hand instead.
+# tag creation has to let GitHub Actions through, otherwise the push is refused and the job
+# fails with the exact command an admin runs (in the run summary); the admin's tag push then
+# starts the release workflow through its own tag trigger.
 on:
   pull_request:
     types: [closed]
@@ -38,11 +39,33 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: tag the merge commit
+        id: push
         env:
           TAG: ${{ steps.check.outputs.tag }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           git tag "$TAG"
-          git push origin "refs/tags/$TAG"
+          if git push origin "refs/tags/$TAG" 2> push.err; then
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cat push.err >&2
+          # the tag ruleset lets only the admin create tags: the job token is refused (GH013).
+          # Say what the admin runs; the release workflow then starts from that tag push.
+          {
+            echo "## The tag $TAG was not pushed"
+            echo
+            echo "The repository's tag ruleset refuses tag creation by the workflow token."
+            echo "An admin pushes it, and the release workflow runs from that push:"
+            echo
+            echo '```bash'
+            echo "git fetch origin && git tag $TAG $SHA && git push origin $TAG"
+            echo '```'
+            echo
+            echo "Or let GitHub Actions create tags (not move or delete them) in the ruleset."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error title=tag not pushed::the tag ruleset refused the workflow token; an admin runs: git tag $TAG $SHA && git push origin $TAG (see the run summary)"
+          exit 1
 
   publish:
     needs: tag
