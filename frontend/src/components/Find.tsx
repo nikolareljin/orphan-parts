@@ -4,6 +4,7 @@ import { usd } from '../lib/format'
 import { SOURCES, candidateRequest, seenText, sourceLabel, stateLabel, stateTone, statusLabel } from '../lib/find'
 import { inputLabel, ruleHint } from '../lib/match'
 import { Result } from './Assess'
+import Modal from './Modal'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -69,7 +70,11 @@ export default function Find() {
           </tbody>
         </table>
       )}
-      {openId !== null && <SearchPanel key={openId} id={openId} onChanged={load} onClosed={() => setOpenId(null)} />}
+      {openId !== null && (
+        <Modal title={`Search #${openId}`} onClose={() => setOpenId(null)}>
+          <SearchPanel key={openId} id={openId} onChanged={load} onClosed={() => setOpenId(null)} />
+        </Modal>
+      )}
     </div>
   )
 }

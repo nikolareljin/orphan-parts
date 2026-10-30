@@ -104,6 +104,9 @@ test('preferences are kept, proposals come from the inventory, and selection com
   await expect(share).toHaveValue(/Homework desk from the laptop and the monitor/)
   await expect(share).not.toHaveValue(/old laptop/i)
 
+  // the project opens in a dialog; the page behind waits until it is closed
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.getByRole('button', { name: 'Find a part' }).click()
   await expect(page.getByRole('table', { name: 'Searches' })).toContainText('A cable between the two')
 })
@@ -117,6 +120,8 @@ test('an item committed to one build is a conflict for another until it is moved
   await expect(propose).toContainText(/proposed/)
   const first = page.getByRole('article', { name: /Project Homework desk/ })
   await selectAndCommit(first)
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
 
   await propose.getByRole('button', { name: 'Propose' }).click()
   await expect(propose).toContainText(/proposed/)

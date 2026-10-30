@@ -154,7 +154,7 @@ test('a photo over the size limit is refused before it is uploaded', async ({ pa
   expect(requests.filter((u) => u.includes('/api/extract') || u.includes('/api/segment'))).toEqual([])
 })
 
-test('the service card reports fixture mode', async ({ page }) => {
+test('the service line reports fixture mode', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByText('fixture mode (no key, recorded responses)')).toBeVisible()
+  await expect(page.getByRole('contentinfo')).toContainText('fixture mode (nothing spent)')
 })

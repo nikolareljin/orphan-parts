@@ -4,6 +4,7 @@ import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Listing from './Listing'
+import Modal from './Modal'
 import Measure from './Measure'
 import Value from './Value'
 
@@ -12,7 +13,15 @@ function message(err: unknown): string {
 }
 
 // The owner's items. ``refresh`` changes when something was saved elsewhere on the page.
-export default function Inventory({ refresh, openId: wanted = null }: { refresh: number; openId?: number | null }) {
+export default function Inventory({
+  refresh,
+  openId: wanted = null,
+  onOpened,
+}: {
+  refresh: number
+  openId?: number | null
+  onOpened?: () => void
+}) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(wanted)
   const [error, setError] = useState('')
@@ -30,10 +39,14 @@ export default function Inventory({ refresh, openId: wanted = null }: { refresh:
     void load()
   }, [load, refresh])
 
-  // an item opened from elsewhere (the inbox) is shown as soon as it is asked for
+  // an item opened from elsewhere (the inbox) is shown as soon as it is asked for, once:
+  // the ask is handed back as taken, so the next visit to the page does not reopen it
   useEffect(() => {
-    if (wanted !== null) setOpenId(wanted)
-  }, [wanted, refresh])
+    if (wanted !== null) {
+      setOpenId(wanted)
+      onOpened?.()
+    }
+  }, [wanted, refresh, onOpened])
 
   return (
     <section className="inventory">
@@ -73,8 +86,8 @@ export default function Inventory({ refresh, openId: wanted = null }: { refresh:
                 <td>{availabilityLabel(s.availability)}</td>
                 <td>{whenText(s.updated_at)}</td>
                 <td>
-                  <button type="button" className="link" onClick={() => setOpenId(s.id === openId ? null : s.id)}>
-                    {s.id === openId ? 'Close' : 'Open'}
+                  <button type="button" className="link" onClick={() => setOpenId(s.id)}>
+                    Open
                   </button>
                 </td>
               </tr>
@@ -83,15 +96,17 @@ export default function Inventory({ refresh, openId: wanted = null }: { refresh:
         </table>
       )}
       {openId !== null && (
-        <ItemPanel
-          key={openId}
-          id={openId}
-          onChanged={() => void load()}
-          onClosed={() => {
-            setOpenId(null)
-            void load()
-          }}
-        />
+        <Modal title={`Item #${openId}`} onClose={() => setOpenId(null)}>
+          <ItemPanel
+            key={openId}
+            id={openId}
+            onChanged={() => void load()}
+            onClosed={() => {
+              setOpenId(null)
+              void load()
+            }}
+          />
+        </Modal>
       )}
     </section>
   )
