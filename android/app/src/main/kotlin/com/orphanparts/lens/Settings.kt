@@ -30,9 +30,10 @@ fun reachableFromAPhone(url: String): Boolean {
     // a name the URI class will not call a host (an underscore in it) is still a host
     val host = (parsed.host ?: parsed.authority?.substringBefore(':'))?.lowercase() ?: return false
     if (host.isEmpty() || host == "localhost" || host.endsWith(".localhost")) return false
-    // an address literal in any spelling (brackets, zeros, mapped, decimal): the address itself
-    // says whether it is loopback or unspecified; a name is never resolved here
-    val literal = host.startsWith("[") || host.all { it.isDigit() || it == '.' }
+    // an address literal (a dotted quad, or IPv6 in brackets in any spelling): the address itself
+    // says whether it is loopback or unspecified. Anything else is a name, and a name is never
+    // resolved here: the Check on the Backend tab says whether it answers
+    val literal = host.startsWith("[") || Regex("""\d{1,3}(\.\d{1,3}){3}""").matches(host)
     if (literal) {
         val address = try { InetAddress.getByName(host.trim('[', ']')) } catch (_: Exception) { return false }
         return !address.isLoopbackAddress && !address.isAnyLocalAddress
