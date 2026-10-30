@@ -32,6 +32,7 @@ def test_version_reports_the_upload_limits(client: TestClient, settings: Setting
     assert body["limits"] == {
         "max_photos": settings.max_photos,
         "max_upload_mb": settings.max_upload_mb,
+        "max_clip_mb": settings.max_clip_mb,
     }
 
 

@@ -23,6 +23,7 @@ async function createLaptop(request: APIRequestContext, name: string): Promise<n
 }
 
 test('a search from an item hands off to Marketplace and a listing brought back is assessed', async ({ page, request }) => {
+  test.slow() // the listing is read and assessed while five other workers keep the one backend busy
   const name = `Laptop needing adapter ${stamp}`
   const laptopId = await createLaptop(request, name)
   await page.goto('/')
