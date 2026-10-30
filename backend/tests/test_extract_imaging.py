@@ -114,3 +114,10 @@ def test_enhance_keeps_the_size_and_sharpness_tells_text_from_blur() -> None:
     assert dimensions(better) == (640, 480)
     assert better[:2] == b"\xff\xd8"  # a JPEG
     assert better != sharp.getvalue()
+    # the copy the model reads is encoded once, and scored before the help
+    from app.extract.imaging import read_copy
+
+    helped, score = read_copy(blurred.getvalue(), max_px=1280, max_bytes=MB, enhance=True)
+    plain, same = read_copy(blurred.getvalue(), max_px=1280, max_bytes=MB, enhance=False)
+    assert score == same == sharpness(blurred.getvalue())
+    assert helped != plain and dimensions(helped) == (640, 480)

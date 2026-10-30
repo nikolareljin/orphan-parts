@@ -22,7 +22,8 @@ brought back (written examples labelled as such), and the proposal brief. Three 
 accepted, drafts, guidance, searches with their candidates and the proposals in place, so
 every take and every visitor starts from the same screen. Once the fixtures for the set are
 recorded, the demo spends nothing: the service line at the foot of every page says *fixture mode (nothing spent)*.
-A photo not in the set gets the recorded answer for that operation, which is why the public
+The fixtures are keyed on what is sent, so a change to `EXTRACT_ENHANCE` or `IMAGE_MAX_PX` means
+recording again. A photo not in the set gets the recorded answer for that operation, which is why the public
 demo is the set, not an open reader. The set loads with whatever files are present; a photo
 named but missing is skipped with a note.
 

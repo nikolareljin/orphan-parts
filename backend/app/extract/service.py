@@ -6,7 +6,7 @@ import anyio
 
 from app.config import Settings
 from app.extract.fields import FIELD_BY_NAME, field_guide
-from app.extract.imaging import BadImageError, enhance, prepare, sharpness
+from app.extract.imaging import BadImageError, read_copy
 from app.extract.normalize import normalize
 from app.extract.schema import Evidence, Extraction, LabelReading, Source
 from app.model_api import ModelApiClient, ModelResponse, image_part, text_part, user_message
@@ -56,20 +56,23 @@ class Extractor:
         max_bytes = s.max_upload_mb * 1024 * 1024
 
         def prepare_all() -> tuple[list[bytes], float]:
-            ready = [
-                prepare(p, max_px=s.image_max_px, max_bytes=max_bytes) for p in [*photos, *crops]
-            ]
-            # what the model reads: the crops when there are any, the photos otherwise; the
-            # sharpest of them decides the blur warning
-            read = ready[len(photos) :] if crops else ready
-            score = max(sharpness(p) for p in read)
-            if s.extract_enhance:
-                ready = (
-                    [*ready[: len(photos)], *(enhance(c) for c in ready[len(photos) :])]
-                    if crops
-                    else [enhance(p) for p in ready]
+            # what the model reads: the crops when there are any, the photos otherwise; those
+            # are enhanced when asked, and the sharpest of them (before any help) decides the
+            # blur warning; the rest go as taken
+            ready: list[bytes] = []
+            scores: list[float] = []
+            for n, p in enumerate([*photos, *crops]):
+                is_read = n >= len(photos) if crops else True
+                data, score = read_copy(
+                    p,
+                    max_px=s.image_max_px,
+                    max_bytes=max_bytes,
+                    enhance=is_read and s.extract_enhance,
                 )
-            return ready, score
+                ready.append(data)
+                if is_read:
+                    scores.append(score)
+            return ready, max(scores)
 
         # decoding and re-encoding is CPU work; keep it off the event loop
         prepared, score = await anyio.to_thread.run_sync(prepare_all)

@@ -11,11 +11,14 @@ Tests and the offline demo read them; ``OPL_RECORD_FIXTURES=1`` writes them.
 
 import hashlib
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+log = logging.getLogger(__name__)
 
 _DATA_URL = re.compile(r"^data:([\w./+-]+);base64,(.*)$", re.DOTALL)
 _SAFE = re.compile(r"[^a-z0-9_.-]+")
@@ -66,9 +69,15 @@ class FixtureStore:
 
     def find(self, endpoint: str, body: dict[str, Any], op: str) -> Fixture | None:
         key = request_key(endpoint, body)
-        for candidate in (self.path_for(endpoint, key), self.path_for(endpoint, op)):
-            if candidate.is_file():
-                return Fixture.model_validate_json(candidate.read_text(encoding="utf-8"))
+        exact = self.path_for(endpoint, key)
+        if exact.is_file():
+            return Fixture.model_validate_json(exact.read_text(encoding="utf-8"))
+        fallback = self.path_for(endpoint, op)
+        if fallback.is_file():
+            # said in the log: a recorded set that stops matching (a photo changed, or what is
+            # sent of it, as EXTRACT_ENHANCE does) answers from here without an error
+            log.info("fixture by operation", extra={"op": op, "endpoint": endpoint, "key": key})
+            return Fixture.model_validate_json(fallback.read_text(encoding="utf-8"))
         return None
 
     def save(

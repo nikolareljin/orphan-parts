@@ -23,6 +23,11 @@ def _is_heif(data: bytes) -> bool:
 def prepare(data: bytes, *, max_px: int, max_bytes: int) -> bytes:
     """Re-encode one photo: EXIF orientation applied, longest side at most ``max_px``,
     RGB JPEG without any metadata. Raises ``BadImageError`` for anything else."""
+    return _encode(_decode(data, max_px=max_px, max_bytes=max_bytes))
+
+
+def _decode(data: bytes, *, max_px: int, max_bytes: int) -> Image.Image:
+    """The photo checked, upright, RGB and bounded, still in memory."""
     if not data:
         raise BadImageError("the photo is empty")
     if len(data) > max_bytes:
@@ -49,9 +54,21 @@ def prepare(data: bytes, *, max_px: int, max_bytes: int) -> bytes:
     upright = ImageOps.exif_transpose(img) or img
     rgb = upright.convert("RGB")
     rgb.thumbnail((max_px, max_px))
+    return rgb
+
+
+def _encode(img: Image.Image) -> bytes:
     out = BytesIO()
-    rgb.save(out, "JPEG", quality=JPEG_QUALITY, optimize=True)
+    img.save(out, "JPEG", quality=JPEG_QUALITY, optimize=True)
     return out.getvalue()
+
+
+def read_copy(data: bytes, *, max_px: int, max_bytes: int, enhance: bool) -> tuple[bytes, float]:
+    """The copy the model reads, and the sharpness of the photo before any help: decoded once,
+    enhanced in memory when asked, encoded once, so sharpening never works on JPEG artifacts."""
+    img = _decode(data, max_px=max_px, max_bytes=max_bytes)
+    score = sharpness_of(img)
+    return _encode(_enhanced(img) if enhance else img), score
 
 
 def dimensions(data: bytes) -> tuple[int, int]:
@@ -65,24 +82,29 @@ _LAPLACIAN = ImageFilter.Kernel((3, 3), (0, 1, 0, 1, -4, 1, 0, 1, 0), scale=1, o
 SHARPNESS_PX = 512
 
 
-def sharpness(data: bytes) -> float:
+def sharpness_of(img: Image.Image) -> float:
     """How much edge there is in a photo: the variance of its Laplacian on a copy at most
     SHARPNESS_PX wide. Printed text scores in the hundreds and above; a blurred label, or a
     patch with nothing on it, in the tens."""
+    gray = img.convert("L")
+    gray.thumbnail((SHARPNESS_PX, SHARPNESS_PX))
+    return float(ImageStat.Stat(gray.filter(_LAPLACIAN)).var[0])
+
+
+def sharpness(data: bytes) -> float:
     with Image.open(BytesIO(data)) as img:
-        gray = img.convert("L")
-        gray.thumbnail((SHARPNESS_PX, SHARPNESS_PX))
-        return float(ImageStat.Stat(gray.filter(_LAPLACIAN)).var[0])
+        return sharpness_of(img)
 
 
-def enhance(data: bytes) -> bytes:
+def _enhanced(img: Image.Image) -> Image.Image:
     """The same photo with its contrast stretched (the darkest and lightest half-percent
     clipped) and its edges sharpened a little, so faint print on a label reads better. Only
     what goes to the model is changed; what is kept is the photo as taken."""
+    stretched = ImageOps.autocontrast(img.convert("RGB"), cutoff=0.5, preserve_tone=True)
+    return stretched.filter(ImageFilter.UnsharpMask(radius=2, percent=120, threshold=3))
+
+
+def enhance(data: bytes) -> bytes:
+    """``_enhanced`` on an encoded photo, for a caller that holds bytes."""
     with Image.open(BytesIO(data)) as img:
-        rgb = img.convert("RGB")
-        stretched = ImageOps.autocontrast(rgb, cutoff=0.5, preserve_tone=True)
-        sharper = stretched.filter(ImageFilter.UnsharpMask(radius=2, percent=120, threshold=3))
-        out = BytesIO()
-        sharper.save(out, "JPEG", quality=JPEG_QUALITY, optimize=True)
-        return out.getvalue()
+        return _encode(_enhanced(img))
