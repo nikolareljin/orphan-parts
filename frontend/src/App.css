@@ -66,10 +66,9 @@ dialog.modal {
   border-radius: 12px;
   background: var(--card);
   color: var(--fg);
-  /* a deep, soft shadow in two layers and a hairline ring, so the panel stands clear of the
-     darkened page behind it */
+  /* a deep, soft shadow in two layers, so the panel stands clear of the darkened page behind
+     it (a dark ring would vanish against the dark backdrop; dark mode adds a light one) */
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.08),
     0 12px 28px rgba(0, 0, 0, 0.28),
     0 40px 90px rgba(0, 0, 0, 0.45);
 }
