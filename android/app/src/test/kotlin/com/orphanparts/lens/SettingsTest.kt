@@ -60,6 +60,8 @@ class ReachableTest {
         assertTrue(reachableFromAPhone("http://192.168.1.20:5183"))
         assertTrue(reachableFromAPhone("http://[2001:db8::1]:5183"))
         assertFalse(reachableFromAPhone("http://[::1]:5183"))
+        assertFalse(reachableFromAPhone("http://[::ffff:127.0.0.1]:5183"))
+        assertTrue(reachableFromAPhone("http://my_laptop:5183"))
         assertFalse(reachableFromAPhone("http://127.0.0.2:5183"))
         assertFalse(reachableFromAPhone("http://0.0.0.0:5183"))
         assertFalse(reachableFromAPhone("http://app.localhost:5183"))

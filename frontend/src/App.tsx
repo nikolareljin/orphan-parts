@@ -7,12 +7,13 @@ import Inventory from './components/Inventory'
 import Modal from './components/Modal'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
 
-// what the pairing code carries: the API's origin when the web app is served elsewhere, else this page's
-const pairOrigin = apiBase || (typeof window !== 'undefined' ? window.location.origin : '')
 import { reachableFromAPhone } from './lib/pairing'
 import { demoText } from './lib/access'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
+
+// what the pairing code carries: the API's origin when the web app is served elsewhere, else this page's
+const pairOrigin = apiBase || (typeof window !== 'undefined' ? window.location.origin : '')
 
 type Status = { kind: 'loading' } | { kind: 'ok'; ready: Readiness; version: Version } | { kind: 'error'; message: string }
 
