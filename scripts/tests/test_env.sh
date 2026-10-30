@@ -62,5 +62,12 @@ test_env_set_replaces_or_appends_one_line_and_touches_nothing_else() {
   assert_eq "$(tail -1 "$dir/.env")" "NEW_NAME=value"
   env_set FIRST one "$dir/none.env"
   assert_eq "$(cat "$dir/none.env")" "FIRST=one"
+  # a second line for the same key is dropped, a key that is a prefix of another untouched
+  printf 'DEMO_ACCESS_CODE=a\nDEMO_ACCESS_CODE_HOSTED=keep\nDEMO_ACCESS_CODE=b\n' > "$dir/dup.env"
+  env_set DEMO_ACCESS_CODE c "$dir/dup.env"
+  assert_eq "$(tr '\n' '|' < "$dir/dup.env")" "DEMO_ACCESS_CODE=c|DEMO_ACCESS_CODE_HOSTED=keep|"
+  # the file's mode is kept, and no temporary file stays behind
+  chmod 600 "$dir/dup.env"; env_set DEMO_ACCESS_CODE d "$dir/dup.env"
+  assert_eq "$(stat -c %a "$dir/dup.env" 2>/dev/null || stat -f %Lp "$dir/dup.env")" "600"
   [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
 }

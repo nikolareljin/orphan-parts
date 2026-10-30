@@ -410,25 +410,35 @@ cmd_gate() {
       printf 'access code (the master, this machine): %s\n' "$code"
       ;;
     off)
+      need_env_file
       env_set DEMO_ACCESS_CODE "" "$ROOT/.env"
-      docker_running && compose up -d backend >/dev/null 2>&1 || true
-      log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env, the backend restarted"
+      if docker_running && compose up -d backend >/dev/null 2>&1; then
+        log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env, the backend restarted"
+      else
+        log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env (the backend was not restarted)"
+      fi
       ;;
     on)
+      need_env_file
       docker_running || die "docker is not running"
       code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
       if [[ -z "$code" ]]; then
-        # 24 characters from the system's randomness, letters and digits only, easy to type
-        code="$(python3 -c 'import secrets,string; a=string.ascii_lowercase+string.digits; print("".join(secrets.choice(a) for _ in range(24)))')"
+        # 24 characters from the system's randomness, letters and digits only, easy to type;
+        # made in the backend's own image, so the host needs no Python
+        code="$(compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -c 'import secrets,string; a=string.ascii_lowercase+string.digits; print("".join(secrets.choice(a) for _ in range(24)))' | tr -d '\r\n')"
+        [[ ${#code} -eq 24 ]] || die "no code could be made (is the backend image built? ./dev up --build)"
         env_set DEMO_ACCESS_CODE "$code" "$ROOT/.env"
         log_info "a master access code was written to .env (git-ignored)"
       fi
+      [[ ${#code} -ge 12 ]] || die "DEMO_ACCESS_CODE in .env is shorter than 12 characters; the backend refuses it (./dev gate off, then on again)"
       # the backend reads .env on start: recreated so the gate is on from its next answer
       compose up -d backend >/dev/null
-      wait_http "http://localhost:$BACKEND_PORT/readyz" 60 || die "the backend did not come back"
+      wait_http "http://localhost:$BACKEND_PORT/readyz" 60 || { compose logs --tail 20 backend; die "the backend did not come back (its log is above)"; }
       printf '\naccess code (the master, for you):     %s\n' "$code"
-      printf 'issued code (for %s, %s days):' "$label" "$days"
-      compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys issue --label "$label" --days "$days" 2>/dev/null | sed 's/^[^:]*:/   /'
+      local issued
+      issued="$(compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys issue --label "$label" --days "$days" 2>&1)" \
+        || die "no code issued for $label: ${issued##*$'\n'} (./dev keys list; ./dev keys revoke $label, or another --label)"
+      printf 'issued code (for %s, %s days):    %s\n' "$label" "$days" "$(printf '%s\n' "$issued" | head -1 | sed 's/.*: //')"
       printf '\nOn the web app: Sign in with the code, then Pair the phone shows the QR code.\n'
       printf 'On the phone: Backend tab, type the address and the code, or Scan to pair.\n'
       printf './dev gate show prints the master again; ./dev gate off turns the gate off.\n'

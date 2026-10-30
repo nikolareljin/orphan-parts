@@ -47,22 +47,27 @@ env_get() {
   done < "$file"
 }
 
-# env_set KEY VALUE [file]: write one value into a dotenv file, replacing the key's line when
-# there is one (the first, comments untouched) or appending it. The value is written as it is;
-# a value with spaces or # should be quoted by the caller. Nothing else in the file changes.
+# env_set KEY VALUE [file]: write one value into a dotenv file: the key's line replaced where it
+# stands (a second line for the same key is dropped, since Compose would read the last one),
+# or appended when there is none; comments and every other line untouched, the file's inode
+# and mode kept. The value is written as it is; a value with spaces or # should be quoted by
+# the caller.
 env_set() {
-  local key="$1" value="$2" file="${3:-$(project_root)/.env}" tmp done=0 line
+  local key="$1" value="$2" file="${3:-$(project_root)/.env}" tmp done=0 line rc
   [[ -f "$file" ]] || : > "$file"
   tmp="$(mktemp)" || return 1
   while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ $done -eq 0 && "${line#export }" == "$key="* ]]; then
+    if [[ "${line#export }" == "$key="* ]]; then
+      [[ $done -eq 1 ]] && continue
       printf '%s=%s\n' "$key" "$value" >> "$tmp"; done=1
     else
       printf '%s\n' "$line" >> "$tmp"
     fi
   done < "$file"
   [[ $done -eq 1 ]] || printf '%s=%s\n' "$key" "$value" >> "$tmp"
-  cat "$tmp" > "$file" && rm -f "$tmp"
+  cat "$tmp" > "$file"; rc=$?
+  rm -f -- "$tmp"
+  return $rc
 }
 
 # env_require VAR [VAR...]: fail if any variable is unset or empty.
