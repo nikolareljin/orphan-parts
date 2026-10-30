@@ -49,3 +49,6 @@ backend/data/
 e2e/.auth/
 # security scan reports (scripts/scan-security.sh --json)
 scan/
+
+# video takes and renders
+/video/out/

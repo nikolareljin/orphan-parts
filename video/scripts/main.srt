@@ -1,0 +1,195 @@
+1
+00:00:00,000 --> 00:00:03,395
+One missing part can interrupt a favorite
+routine.
+
+2
+00:00:03,515 --> 00:00:06,910
+Meanwhile, useful electronics sit in
+drawers because we
+
+3
+00:00:07,030 --> 00:00:10,001
+don't know what to do with them.
+
+4
+00:00:10,121 --> 00:00:13,940
+Orphan Parts Lens starts with two
+questions: what do
+
+5
+00:00:14,060 --> 00:00:17,880
+you have, and what do you want to
+accomplish?
+
+6
+00:00:18,000 --> 00:00:23,545
+I use this older Hamilton Beach drink
+mixer to make frappé coffee.
+
+7
+00:00:23,665 --> 00:00:26,437
+Finding a replacement mixing component
+means
+
+8
+00:00:26,557 --> 00:00:28,867
+understanding more than its appearance.
+
+9
+00:00:28,987 --> 00:00:33,146
+I photograph the appliance, its label, and
+the component.
+
+10
+00:00:33,266 --> 00:00:38,810
+The app helps identify what information is
+missing and what needs checking.
+
+11
+00:00:38,930 --> 00:00:44,013
+It starts with a replacement part; a donor
+appliance, or another
+
+12
+00:00:44,133 --> 00:00:49,215
+device that produces the result I want, is
+the next step.
+
+13
+00:00:49,335 --> 00:00:54,880
+The useful answer includes the evidence
+and questions needed before I buy.
+
+14
+00:00:55,000 --> 00:00:59,005
+The same approach applies to my unused
+electronics.
+
+15
+00:00:59,125 --> 00:01:03,130
+I catalog my laptops, monitors, tablets,
+and accessories.
+
+16
+00:01:03,250 --> 00:01:07,755
+Then I explain my interests, budget, and
+experience, so
+
+17
+00:01:07,875 --> 00:01:11,880
+the suggestions fit both my equipment and
+me.
+
+18
+00:01:12,000 --> 00:01:18,192
+Perhaps I want a home automation server, a
+smart mirror, or a tabletop arcade.
+
+19
+00:01:18,312 --> 00:01:20,081
+I choose the arcade.
+
+20
+00:01:20,201 --> 00:01:23,739
+The plan identifies which existing
+components could be
+
+21
+00:01:23,859 --> 00:01:27,397
+reused, what needs testing, and what is
+missing.
+
+22
+00:01:27,517 --> 00:01:31,940
+Marketplace becomes a starting point for
+finding those missing pieces
+
+23
+00:01:32,060 --> 00:01:36,483
+locally: the app opens the search, and I
+run it.
+
+24
+00:01:36,603 --> 00:01:41,910
+The build pack collects the items, the
+steps, and the safety notes.
+
+25
+00:01:42,030 --> 00:01:46,895
+A connection diagram and an assembly
+preview, shown here as concept
+
+26
+00:01:47,015 --> 00:01:51,880
+previews, would explain how the computer,
+display, and controls work together.
+
+27
+00:01:52,000 --> 00:01:56,073
+The next step is a plan that adapts.
+
+28
+00:01:56,193 --> 00:02:00,265
+If I choose a different display, the app
+
+29
+00:02:00,385 --> 00:02:04,458
+should reconsider the connections,
+enclosure dimensions, and instructions.
+
+30
+00:02:04,578 --> 00:02:09,669
+That is the direction shown in this
+concept preview: a
+
+31
+00:02:09,789 --> 00:02:14,880
+downloadable build package, including
+designs for suitable brackets or housings.
+
+32
+00:02:15,000 --> 00:02:19,047
+This would be useful because it connects a
+
+33
+00:02:19,167 --> 00:02:22,707
+practical goal with things people already
+own.
+
+34
+00:02:22,828 --> 00:02:27,380
+It could help avoid unsuitable purchases,
+uncover worthwhile reuse
+
+35
+00:02:27,500 --> 00:02:31,547
+projects, and make secondhand parts easier
+to evaluate.
+
+36
+00:02:31,667 --> 00:02:35,713
+Each confirmed result could also become
+useful evidence
+
+37
+00:02:35,833 --> 00:02:39,880
+for the next person facing the same
+problem.
+
+38
+00:02:40,000 --> 00:02:42,856
+Orphan Parts Lens.
+
+39
+00:02:42,976 --> 00:02:44,880
+Find replacements.
+
+40
+00:02:45,000 --> 00:02:46,904
+Discover reuse.
+
+41
+00:02:47,024 --> 00:02:49,880
+Build something useful.
+

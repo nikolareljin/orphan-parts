@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <title>Tabletop arcade: where the parts go (concept preview)</title>
+  <desc>Top view and side section of an arcade coffee table: screen under glass, control panel on the near edge, laptop with a vent, power strip with one cable out. Not to scale.</desc>
+  <rect width="1920" height="1080" fill="#0b0f17"/>
+  <text x="96" y="100" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="46" font-weight="600" fill="#f8fafc" text-anchor="start">Tabletop arcade: where the parts go</text>
+  <rect x="96" y="120" width="120" height="6" rx="3" fill="#00f5d4"/>
+  <text x="96" y="165" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#94a3b8" text-anchor="start">Not to scale. Every size is a name until it is measured: W, D, H from the table, S from the screen you choose.</text>
+  <rect x="1434" y="62" width="390" height="54" rx="27" fill="none" stroke="#d946ef" stroke-width="2.5"/>
+  <text x="1629" y="97" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#d946ef" text-anchor="middle">CONCEPT PREVIEW, NOT BUILT</text>
+  <text x="96" y="240" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="600" fill="#f8fafc" text-anchor="start">Top view</text>
+  <rect x="96" y="270" width="880" height="560" rx="18" fill="#1b2436" stroke="#cbd5e1" stroke-width="3"/>
+  <rect x="246" y="320" width="580" height="340" rx="6" fill="#0b0f17" stroke="#00bbf9" stroke-width="3"/>
+  <text x="536" y="480" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#00bbf9" text-anchor="middle">screen under glass</text>
+  <text x="536" y="515" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="middle">S: the chosen display's outer size</text>
+  <rect x="126" y="700" width="820" height="110" rx="10" fill="none" stroke="#d946ef" stroke-width="2.5" stroke-dasharray="12 8"/>
+  <circle cx="250" cy="755" r="22" fill="none" stroke="#f8fafc" stroke-width="3"/><circle cx="250" cy="755" r="7" fill="#f8fafc"/>
+  <circle cx="320" cy="755" r="15" fill="none" stroke="#00f5d4" stroke-width="3"/>
+  <circle cx="370" cy="755" r="15" fill="none" stroke="#00f5d4" stroke-width="3"/>
+  <circle cx="420" cy="755" r="15" fill="none" stroke="#00f5d4" stroke-width="3"/>
+  <circle cx="650" cy="755" r="22" fill="none" stroke="#f8fafc" stroke-width="3"/><circle cx="650" cy="755" r="7" fill="#f8fafc"/>
+  <circle cx="720" cy="755" r="15" fill="none" stroke="#00f5d4" stroke-width="3"/>
+  <circle cx="770" cy="755" r="15" fill="none" stroke="#00f5d4" stroke-width="3"/>
+  <circle cx="820" cy="755" r="15" fill="none" stroke="#00f5d4" stroke-width="3"/>
+  <text x="250" y="800" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#94a3b8" text-anchor="middle">player 1</text>
+  <text x="650" y="800" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#94a3b8" text-anchor="middle">player 2</text>
+  <text x="536" y="845" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#d946ef" text-anchor="middle">near edge: control panel (missing parts)</text>
+  <text x="960" y="560" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="end">vent</text>
+  <path d="M 976,520 v 80" stroke="#cbd5e1" stroke-width="10" stroke-dasharray="6 6"/>
+  <text x="536" y="300" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="600" fill="#f8fafc" text-anchor="middle">W</text>
+  <text x="80" y="560" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="600" fill="#f8fafc" text-anchor="end">D</text>
+  <text x="1100" y="240" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="600" fill="#f8fafc" text-anchor="start">Side section</text>
+  <rect x="1100" y="300" width="720" height="16" fill="#00bbf9" fill-opacity="0.35" stroke="#00bbf9" stroke-width="2"/>
+  <text x="1830" y="296" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#00bbf9" text-anchor="end">glass or acrylic, edges ground</text>
+  <rect x="1100" y="316" width="720" height="420" fill="none" stroke="#cbd5e1" stroke-width="3"/>
+  <rect x="1200" y="322" width="520" height="40" rx="4" fill="#0b0f17" stroke="#00bbf9" stroke-width="2.5"/>
+  <text x="1460" y="349" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#00bbf9" text-anchor="middle">display, face up</text>
+  <rect x="1250" y="470" width="300" height="24" rx="4" fill="#1b2436" stroke="#f8fafc" stroke-width="2.5"/>
+  <text x="1400" y="462" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#f8fafc" text-anchor="middle">laptop on a shelf, lid open or closed per its settings</text>
+  <path d="M 1560,482 h 160" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="8 6"/>
+  <text x="1715" y="515" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#cbd5e1" text-anchor="end">air out</text>
+  <rect x="1130" y="680" width="200" height="40" rx="4" fill="#1b2436" stroke="#d946ef" stroke-width="2.5"/>
+  <text x="1230" y="706" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#d946ef" text-anchor="middle">power strip</text>
+  <path d="M 1130,700 h -60 v 80" stroke="#d946ef" stroke-width="5" fill="none"/>
+  <text x="1080" y="800" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#d946ef" text-anchor="start">one cable out</text>
+  <rect x="1600" y="660" width="160" height="60" rx="6" fill="#1b2436" stroke="#cbd5e1" stroke-width="2.5"/>
+  <text x="1680" y="697" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#cbd5e1" text-anchor="middle">speakers</text>
+  <path d="M 1100,316 l -60,0 l 0,140 l 60,0" stroke="#d946ef" stroke-width="2.5" stroke-dasharray="10 6" fill="none"/>
+  <text x="1035" y="392" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="400" fill="#d946ef" text-anchor="end">panel</text>
+  <text x="1850" y="530" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="600" fill="#f8fafc" text-anchor="start">H</text>
+  <text x="96" y="960" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#94a3b8" text-anchor="start">Safety lines from the template: a laptop inside a closed table needs air, so leave the vent open and the fan intake clear;</text>
+  <text x="96" y="995" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#94a3b8" text-anchor="start">glass edges are cut, so have them ground or use acrylic. This layout is an illustration, not a measured or tested design.</text>
+</svg>
