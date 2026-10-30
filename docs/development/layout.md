@@ -49,6 +49,7 @@ demo/
 scripts/
   lib/                bash helper modules used by ./dev
   android.sh          the app's tests, APKs, install, launch and smoke run (./dev android, ./dev phone)
+  app-icon.sh         the launcher icon PNGs and the web header's mark, cut from docs/assets/logo.svg
   setup-android.sh    the JDK and the Android command-line tools, installed when missing (./dev setup --android)
   release-tag.sh      the version a release branch names, checked before it becomes a tag
   release-notes.sh    the notes of one release, assembled from the changelog and the history
