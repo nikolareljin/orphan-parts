@@ -2,6 +2,7 @@ package com.orphanparts.lens
 
 import android.content.Context
 import org.json.JSONObject
+import java.net.InetAddress
 import java.net.URI
 
 /** Where the backend is and what opens it: the demo code, or a session the pairing gave;
@@ -28,11 +29,15 @@ fun reachableFromAPhone(url: String): Boolean {
     val parsed = try { URI(url) } catch (_: Exception) { return false }
     // a name the URI class will not call a host (an underscore in it) is still a host
     val host = (parsed.host ?: parsed.authority?.substringBefore(':'))?.lowercase() ?: return false
-    return host.isNotEmpty() &&
-        host !in setOf("localhost", "[::1]", "0.0.0.0", "[::]", "[::ffff:7f00:1]") &&
-        !host.startsWith("127.") &&
-        !host.startsWith("[::ffff:127.") &&
-        !host.endsWith(".localhost")
+    if (host.isEmpty() || host == "localhost" || host.endsWith(".localhost")) return false
+    // an address literal in any spelling (brackets, zeros, mapped, decimal): the address itself
+    // says whether it is loopback or unspecified; a name is never resolved here
+    val literal = host.startsWith("[") || host.all { it.isDigit() || it == '.' }
+    if (literal) {
+        val address = try { InetAddress.getByName(host.trim('[', ']')) } catch (_: Exception) { return false }
+        return !address.isLoopbackAddress && !address.isAnyLocalAddress
+    }
+    return true
 }
 
 /** Whether a pairing code (one of ours: it says `gated`) was refused only because it points

@@ -7,15 +7,15 @@ function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
-// The clip as sent. A browser that cannot decode it (a codec it lacks) says so and offers
-// the file instead of a blank player.
+// The clip as sent. A browser that cannot play it says why it could not (a codec it lacks,
+// or the file did not arrive) and offers the file instead of a blank player.
 function Clip({ id }: { id: number }) {
-  const [unplayable, setUnplayable] = useState(false)
+  const [unplayable, setUnplayable] = useState<'' | 'codec' | 'load'>('')
   const url = api.captures.clipUrl(id)
   if (unplayable) {
     return (
       <p className="muted">
-        This browser cannot play the clip of capture #{id} (a codec it lacks).{' '}
+        This browser cannot play the clip of capture #{id} ({unplayable === 'codec' ? 'a codec it lacks' : 'the file did not load'}).{' '}
         <a href={url} download={`capture-${id}.mp4`}>
           Download it
         </a>
@@ -23,7 +23,19 @@ function Clip({ id }: { id: number }) {
       </p>
     )
   }
-  return <video controls preload="metadata" src={url} aria-label={`Capture ${id} clip`} onError={() => setUnplayable(true)} />
+  return (
+    <video
+      controls
+      preload="metadata"
+      src={url}
+      aria-label={`Capture ${id} clip`}
+      onError={(e) => {
+        // 3 and 4: the browser could not decode it or does not support it; anything else is the fetch
+        const code = e.currentTarget.error?.code
+        setUnplayable(code === 3 || code === 4 ? 'codec' : 'load')
+      }}
+    />
+  )
 }
 
 // What the phone sent: photos, a clip, a spoken note, a line. Read into an item on request.
