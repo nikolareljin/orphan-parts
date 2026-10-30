@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -36,6 +35,8 @@ import androidx.exifinterface.media.ExifInterface
 import com.orphanparts.lens.api.Extraction
 import com.orphanparts.lens.api.SavedItem
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
@@ -49,7 +50,9 @@ private const val MAX_SIDE = 1600
 @Composable
 fun CaptureScreen(session: Session, onSaved: (SavedItem) -> Unit) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    // a scope of the screen's own, not of its composition: a save in flight lands, and is said,
+    // even when the person switches tabs before the answer (a second save would duplicate it)
+    val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
     // kept across a process death while the camera app is in front, so the result still lands
     var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var jpeg by remember { mutableStateOf<ByteArray?>(null) }
@@ -65,7 +68,17 @@ fun CaptureScreen(session: Session, onSaved: (SavedItem) -> Unit) {
         val uri = photoUri?.let(Uri::parse)
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val prepared = withContext(Dispatchers.IO) { prepare(context.contentResolver.openInputStream(uri)?.use { it.readBytes() }) }
+            // a photo the phone cannot open or decode (gone, refused, too large for memory) is
+            // said on the screen, never a crash
+            val prepared = withContext(Dispatchers.IO) {
+                try {
+                    prepare(context.contentResolver.openInputStream(uri)?.use { it.readBytes() })
+                } catch (e: Exception) {
+                    null
+                } catch (e: OutOfMemoryError) {
+                    null
+                }
+            }
             jpeg = prepared?.first
             preview = prepared?.second
             extraction = null

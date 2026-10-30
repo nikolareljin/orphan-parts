@@ -133,7 +133,7 @@ class Requirement(BaseModel):
     profile: str
 
 
-class OutcomeCreate(BaseModel):
+class OutcomeBase(BaseModel):
     """What was built and how it was tested: the owner's record, in their words."""
 
     configuration: str = Field(min_length=1, max_length=TEXT_MAX)
@@ -157,17 +157,28 @@ class OutcomeCreate(BaseModel):
 
     @field_validator("tested_on")
     @classmethod
-    def _a_day_that_was(cls, value: str) -> str:
+    def _a_real_day(cls, value: str) -> str:
         try:
-            day = date.fromisoformat(value)
+            date.fromisoformat(value)
         except ValueError as exc:
             raise ValueError("tested_on must be a real date, YYYY-MM-DD") from exc
-        if day > datetime.now(UTC).date():
+        return value
+
+
+class OutcomeCreate(OutcomeBase):
+    """The record as sent: a day that has happened, by the clock of the host."""
+
+    @field_validator("tested_on")
+    @classmethod
+    def _a_day_that_was(cls, value: str) -> str:
+        if date.fromisoformat(value) > datetime.now(UTC).date():
             raise ValueError("tested_on cannot be in the future")
         return value
 
 
-class Outcome(OutcomeCreate):
+class Outcome(OutcomeBase):
+    """The record as kept: read back as written, whatever the clock says since."""
+
     recorded_at: str
     shared: bool = False
 

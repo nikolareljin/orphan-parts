@@ -12,6 +12,7 @@ import {
   missing,
   money,
   numberOrNull,
+  numberProblem,
   packLabel,
   progressText,
   skillsFromText,
@@ -136,6 +137,12 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
   async function save(event: FormEvent) {
     event.preventDefault()
     if (busy) return
+    const problem = numberProblem(budget, 'The budget') ?? numberProblem(radius, 'The radius')
+    if (problem) {
+      setError(problem)
+      setSaved(false)
+      return
+    }
     setBusy(true)
     setError('')
     setSaved(false)
@@ -366,8 +373,10 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
     loadPacks()
   }, [loadPacks])
 
-  async function act(call: () => Promise<Project>) {
-    if (busy) return
+  // Every change goes through here; it says whether the server took it, so a control shown
+  // ahead of the answer can go back to what the project says.
+  async function act(call: () => Promise<Project>): Promise<boolean> {
+    if (busy) return false
     setBusy(true)
     setError('')
     setConflicts([])
@@ -375,9 +384,11 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
       setProject(await call())
       onChanged()
       loadPacks()
+      return true
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 409) setConflicts(conflictsOf(err.body))
       else setError(message(err))
+      return false
     } finally {
       setBusy(false)
     }
@@ -524,9 +535,12 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
                     checked={stepDone({ progress: ticks }, i)}
                     disabled={busy || project.status === 'done'}
                     onChange={(e) => {
+                      const before = ticks
                       const next = project.steps.map((_, n) => (n === i ? e.target.checked : stepDone({ progress: ticks }, n)))
                       setTicks(next)
-                      void act(() => api.build.setProgress(id, i, e.target.checked))
+                      void act(() => api.build.setProgress(id, i, e.target.checked)).then((ok) => {
+                        if (!ok) setTicks(before)
+                      })
                     }}
                   />{' '}
                   {s}
@@ -620,7 +634,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
 
 
 // What was built and how it was tested, in the owner's words; working marks the project done.
-function OutcomeSection({ project, busy, onAct }: { project: Project; busy: boolean; onAct: (call: () => Promise<Project>) => Promise<void> }) {
+function OutcomeSection({ project, busy, onAct }: { project: Project; busy: boolean; onAct: (call: () => Promise<Project>) => Promise<boolean> }) {
   const [configuration, setConfiguration] = useState(project.outcome?.configuration ?? '')
   const [test, setTest] = useState(project.outcome?.test ?? '')
   const [testedOn, setTestedOn] = useState(project.outcome?.tested_on ?? todayIso())
@@ -645,7 +659,9 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
     api.build
       .shareText(project.id)
       .then((t) => {
-        if (!cancelled) setShareText(t.text)
+        if (cancelled) return
+        setShareText(t.text)
+        setShareError('')
       })
       .catch((err: unknown) => {
         if (!cancelled) setShareError(message(err))
@@ -708,8 +724,11 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
               checked={shareOn}
               disabled={busy}
               onChange={(e) => {
-                setShareOn(e.target.checked)
-                void onAct(() => api.build.setShared(project.id, e.target.checked))
+                const wanted = e.target.checked
+                setShareOn(wanted)
+                void onAct(() => api.build.setShared(project.id, wanted)).then((ok) => {
+                  if (!ok) setShareOn(!wanted)
+                })
               }}
             />
             <span>Share the outcome: the kinds of items, the result, the set-up, the test and the limits; no names, values, places or prices</span>

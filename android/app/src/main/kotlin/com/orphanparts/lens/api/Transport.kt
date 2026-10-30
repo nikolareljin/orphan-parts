@@ -14,7 +14,9 @@ interface Transport {
     fun send(method: String, url: String, headers: Map<String, String>, body: ByteArray?): HttpResponse
 }
 
-class HttpTransport(private val timeoutMs: Int = 60_000) : Transport {
+/** A reading can take the backend a minute on its own (the model's limit is 60 s), so the
+ * phone waits longer than that before it gives up and the backend spends for nothing. */
+class HttpTransport(private val timeoutMs: Int = 120_000) : Transport {
     override fun send(method: String, url: String, headers: Map<String, String>, body: ByteArray?): HttpResponse {
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
