@@ -138,6 +138,17 @@ multipart framing, the WAV header and sizes, and the settings' URL. The smoke ru
 (`ANDROID_AVD`), launches the app, confirms its activity is on screen and keeps a screenshot;
 `scripts/tests/test_android.sh` checks that script with stand-ins for gradlew and adb.
 
+The demo set (`demo/set.yaml`, `python -m app.demo`) is tested on a set written into a temporary
+directory: the set checked (repeated keys, a search needing an item that is not there, a search
+without an item or a profile, five photos refused, an empty file allowed); the scrub (metadata
+gone, the long side shrunk, a PNG as a JPEG, a WAV copied, other files left out with a note, the
+raw directory untouched); a load in fixture mode (items, the reading's values accepted, an
+owner value beside them, a voice note kept, drafts, guidance, searches with candidates from a
+file and from text, the proposals, the counts and the skipped line); record mode through a mock
+server writing one fixture keyed by the request digest; the reset removing only the inventory
+file; the command line's answers; and the committed set naming only files under `demo/` with
+every written listing labelled as demo data.
+
 `OPL_FAKE_API=1` makes the Model API client serve recorded responses from
 `backend/tests/fixtures/api/<endpoint>/`. A file named after the request digest matches one exact
 request; a file named after the operation (`extract.json`) answers every request for that

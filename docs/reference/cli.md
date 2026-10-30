@@ -21,12 +21,18 @@
 | `./dev docs-build` | exports the OpenAPI document and builds `site/` |
 | `./dev build` | builds the production images |
 | `./dev version <x.y.z>` | sets the version in every manifest and starts a changelog section |
+| `./dev demo [--keep]` | resets the inventory (`--keep` adds instead) and loads `demo/set.yaml` in fixture mode; the backend is stopped for it and started again |
+| `./dev record-fixtures [--keep]` | resets the inventory (`--keep` adds instead) and loads the set once with the key from `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`; spends credits once; the backend is stopped for it and started again however the run ends |
+| `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes into `demo/notes/` |
 | `./dev shell [service]` | shell in a running service |
 
 `python -m app.extract <photo> [<photo> ...]` (inside the backend container or the native venv)
 reads a label and prints the extraction as JSON; fixture mode needs no key.
 `python -m app.segment <photo> [--concepts item,label] [--out DIR]` prints the regions as JSON
 and, with `--out`, writes `overlay.jpg` and one crop per region.
+`python -m app.demo <load|record|scrub>` is what the three demo commands run inside the
+container: `load [--set FILE] [--reset]`, `record [--set FILE] [--reset]`,
+`scrub <raw dir> [--out DIR]`.
 
 Flags: `-v` turns on debug logging for the helpers, `-d` adds `set -x`.
 `NATIVE=1 ./dev test` runs the checks on the host instead of in Docker.

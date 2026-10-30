@@ -12,6 +12,7 @@ backend/
                       one package per feature: schema, service, data
     inventory/        the SQLite store, its migrations and the item service
     profiles/         the category profiles as data, and their loader
+    demo/             the demo set loaded through the services, recorded once, replayed
     model_api/        the Model API client, pricing, spend ledger, recorded fixtures
     ops/              logging, request context, security headers, the demo gate
     openapi_export.py prints the OpenAPI document for the docs site
@@ -36,6 +37,11 @@ android/
     ui/               the three pages: backend, capture, talk
   app/src/test/       unit tests on the JVM
   build.gradle.kts, settings.gradle.kts, gradlew
+
+demo/
+  set.yaml            the demo set: items, searches, listings, the proposal brief
+  photos/, notes/     scrubbed photos and WAV notes (written by ./dev demo-scrub)
+  listings/           written listing examples, labelled as demo data
 
 scripts/
   lib/                bash helper modules used by ./dev

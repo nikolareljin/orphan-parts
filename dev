@@ -27,6 +27,14 @@
 #                      put a published release on the host, and build the APK when there is one
 #   android <build|test|release|install|smoke>
 #                      the app: unit tests, the APKs, an install, a smoke run on a device
+#   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
+#                      answers, nothing spent); --keep adds to what is there
+#   record-fixtures [--keep]
+#                      reset the inventory and load the set once with the key from .env,
+#                      keeping every model answer as a fixture (OPL_RECORD_FIXTURES=1);
+#                      spends credits once; --keep adds to what is there
+#   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
+#                      WAV notes copied into demo/notes/
 #   shell <service>    open a shell in a running service
 #   help               this text
 #
@@ -268,6 +276,57 @@ cmd_deploy() { bash "$ROOT/scripts/deploy.sh" "$@"; }
 
 cmd_android() { bash "$ROOT/scripts/android.sh" "$@"; }
 
+# The set is loaded through the backend's own code against the stack's data volume, so the
+# backend is stopped for the reset and started again after; nothing else is touched.
+# The loaders have the data volume to themselves: a running backend is stopped for the run and
+# started again however the run ends, so a failed load does not leave the stack down.
+_backend_was_up=0
+_start_backend_again() {
+  [[ $_backend_was_up -eq 0 ]] || compose start backend >/dev/null
+}
+stop_backend_for_run() {
+  # whatever the container is doing (running, restarting after a crash, paused), it is stopped
+  # before the inventory file is replaced under it; started again afterwards if it was up
+  # the service's own container, not a one-off left by a compose run
+  local state
+  state="$(compose ps -a --format '{{.Name}} {{.State}}' backend 2>/dev/null | awk '$1 ~ /-backend-[0-9]+$/ {print $2; exit}' || true)"
+  [[ -n "$state" ]] || return 0
+  compose stop backend >/dev/null 2>&1 || true
+  case "$state" in
+    running|restarting) _backend_was_up=1; on_exit _start_backend_again ;;
+  esac
+}
+
+cmd_demo() {
+  local reset="--reset"
+  [[ "${1:-}" == "--keep" ]] && reset=""
+  docker_running || die "docker is not running"
+  stop_backend_for_run
+  # shellcheck disable=SC2086
+  compose run --rm --no-deps -e OPL_FAKE_API=1 backend python -m app.demo load --set /demo/set.yaml $reset
+  log_ok "demo set loaded"
+}
+
+cmd_record_fixtures() {
+  local reset="--reset"
+  [[ "${1:-}" == "--keep" ]] && reset=""
+  need_env_file
+  docker_running || die "docker is not running"
+  grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "record-fixtures needs MODEL_API_KEY in .env"
+  stop_backend_for_run
+  # shellcheck disable=SC2086
+  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 backend python -m app.demo record --set /demo/set.yaml $reset
+  log_ok "fixtures recorded under backend/tests/fixtures/api; review and commit them"
+}
+
+cmd_demo_scrub() {
+  local raw="${1:?usage: ./dev demo-scrub <raw dir>}"
+  [[ -d "$raw" ]] || die "demo-scrub: $raw is not a directory"
+  docker_running || die "docker is not running"
+  compose run --rm --no-deps -e OPL_FAKE_API=1 -v "$(cd "$raw" && pwd):/raw:ro" backend python -m app.demo scrub /raw --out /demo/photos --notes /demo/notes
+  log_ok "scrubbed copies under demo/photos, WAV notes under demo/notes"
+}
+
 cmd_shell() {
   local svc="${1:-backend}"
   compose exec "$svc" sh
@@ -291,6 +350,9 @@ case "$cmd" in
   release) cmd_release "$@" ;;
   deploy) cmd_deploy "$@" ;;
   android) cmd_android "$@" ;;
+  demo) cmd_demo "$@" ;;
+  record-fixtures) cmd_record_fixtures "$@" ;;
+  demo-scrub) cmd_demo_scrub "$@" ;;
   shell) cmd_shell "$@" ;;
   help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
   *) die "unknown command: $cmd (try ./dev help)" 2 ;;

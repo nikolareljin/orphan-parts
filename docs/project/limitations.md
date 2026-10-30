@@ -13,4 +13,7 @@
   `INSUFFICIENT_INFO`; a candidate's observation is trusted for a limited time.
 - The demo's allowances and counts live in one process and start over with it; the spend cap on
   disk is the floor.
+- The public demo answers from recorded responses for its own set: a photo of your own gets the
+  recorded answer for that operation, not a reading of your label. Live mode is a setting the
+  operator turns on for a window, with the cap set to what they accept to spend.
 - Human review is required before anything is posted, bought or sold.
