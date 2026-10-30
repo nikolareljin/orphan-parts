@@ -1017,3 +1017,22 @@ button.link {
 .find .row h3 {
   margin: 0;
 }
+
+footer.service .pair {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+footer.service .pair summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+footer.service .pair img {
+  display: block;
+  margin: 0.5rem 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem;
+}

@@ -149,6 +149,17 @@ export default function App() {
             <span>{Object.values(status.version.models).join(', ')}</span>
             <span>{status.ready.data_dir_writable ? 'storage writable' : 'storage read-only'}</span>
             {demoText(status.ready) && <span>{demoText(status.ready)}</span>}
+            <details className="pair">
+              <summary>Pair the phone</summary>
+              <p>
+                In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code. It carries this address
+                {status.ready.demo.gated ? ' and a session of its own; the access code stays here.' : '.'}
+              </p>
+              <img src={api.pair.svgUrl(window.location.origin)} alt="Pairing code for the phone" width="220" height="220" />
+              <p className="muted">
+                Or type <code>{window.location.origin}</code> into the app.
+              </p>
+            </details>
           </>
         )}
       </footer>

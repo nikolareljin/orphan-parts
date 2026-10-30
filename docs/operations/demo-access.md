@@ -33,6 +33,11 @@ the floor under all of them.
 everything else working; `/readyz` reports it under `demo`, apart from the spend cap's own
 `paused`. The spend cap (`SPEND_CAP_USD`) still ends calls on its own when reached.
 
+**The phone.** *Pair the phone* at the foot of every page shows a QR code with this web
+origin and, when gated, a session for the phone (`GET /api/pair.svg`); the code needs a
+session to reach, so only someone already in can hand the phone one, and the access code
+itself is never in the QR. The phone's session ends like any other, after `DEMO_SESSION_HOURS`.
+
 **The set, at no cost.** The public demo is the recorded set (`./dev demo`, [Demo
 walkthrough](../start/demo.md)): with `OPL_FAKE_API=1` on the host nothing is sent to the
 models and nothing is spent, whoever visits. Live mode is a window the operator opens, with

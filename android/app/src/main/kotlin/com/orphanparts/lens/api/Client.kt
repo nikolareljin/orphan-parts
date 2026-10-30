@@ -47,6 +47,11 @@ class ApiException(val status: Int, message: String) : Exception(message)
  * with every call as a bearer header, since the phone keeps no cookies. */
 class Client(private val baseUrl: String, private val transport: Transport, private var token: String = "") {
 
+    /** A session from the pairing, used instead of the code. */
+    fun useToken(given: String) {
+        token = given
+    }
+
     fun readiness(): Readiness {
         val json = get("/readyz")
         val demo = json.optJSONObject("demo")

@@ -38,7 +38,8 @@ demo/
 
 scripts/
   lib/                bash helper modules used by ./dev
-  android.sh          the app's tests, APKs, install and smoke run (./dev android)
+  android.sh          the app's tests, APKs, install, launch and smoke run (./dev android, ./dev phone)
+  setup-android.sh    the JDK and the Android command-line tools, installed when missing (./dev setup --android)
   release-tag.sh      the version a release branch names, checked before it becomes a tag
   release-notes.sh    the notes of one release, assembled from the changelog and the history
   release.sh          tag VERSION on main and push the tag, by hand (./dev release)

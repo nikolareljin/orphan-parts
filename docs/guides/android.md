@@ -6,11 +6,14 @@ backend does the work; the app talks to it and nothing else.
 
 ## Built so far
 
-**Backend.** The first page asks where the backend is (the dev stack on your network, say
-`http://192.168.1.20:8000`, or the demo host) and, when the demo is gated, the access code.
-**Check** reads `/readyz` and says whether the backend answers, which Model API mode it is in
-and whether the gate is on. Both values stay in the app's private storage on the phone. The
-session the code opens is kept in memory and opened again after a 401.
+**Backend.** The first page is where the backend is. **Scan to pair** reads the code the web
+app shows under *Pair the phone* (at the foot of every page) or the one `./dev phone` prints:
+it carries the web app's address (the web app proxies the API, so one address serves both)
+and, when the demo is gated, a session of its own, so the access code never leaves the
+server. The address and the code can also be typed. **Check** reads `/readyz` and says whether
+the backend answers, which Model API mode it is in and whether the gate is on. What is kept
+stays in the app's private storage; a session from the pairing ends on its own, and the app
+says to scan again.
 
 **Capture.** One session per thing: photos through the system camera app (so the app asks for
 no camera permission; four per capture), a clip of at most 30 seconds through the same app,
@@ -31,6 +34,9 @@ what was kept. The item is the one a capture was read into, or any other from th
 ## Building and running it
 
 ```bash
+./dev setup --android    # a JDK and the Android command-line tools, installed when missing
+./dev phone              # build, install on the connected phone, launch, print the pairing code
+./dev phone --release    # the same with the release build
 ./dev android test       # the unit tests, on the JVM
 ./dev android build      # the debug APK
 ./dev android install    # onto the connected phone (USB debugging on) or the running emulator
@@ -38,7 +44,12 @@ what was kept. The item is the one a capture was read into, or any other from th
 ./dev android release    # the release APK, with the release key when one is given
 ```
 
-The build needs a JDK 17 or later and the Android SDK (`ANDROID_HOME`, or `~/Android/Sdk`);
+`./dev setup --check` says what is missing without installing; `./dev setup --android`
+installs a JDK 17 (apt or Homebrew) and the Android command-line tools from Google's archive,
+their checksum checked, with `platform-tools`, `platforms;android-35` and
+`build-tools;35.0.0`, under `ANDROID_HOME` (default `~/Android/Sdk`). On Windows, use WSL.
+A phone that has not yet accepted this computer is said as such: unlock it and accept the
+USB debugging prompt. The build needs a JDK 17 or later and the Android SDK (`ANDROID_HOME`, or `~/Android/Sdk`);
 `ANDROID_AVD=<name>` lets the smoke run boot a headless emulator when no phone is connected.
 The release APK is signed with the release key when `KEYSTORE_PATH`, `KEYSTORE_PASSWORD`,
 `KEY_ALIAS` and `KEY_PASSWORD` are set (or `android/keystore.properties`, which is ignored by
@@ -47,6 +58,26 @@ The version is the repository's `VERSION`; each release attaches `orphan-parts-<
 
 The app allows plain HTTP, because the dev stack on a home network answers that way; the
 demo host answers over HTTPS.
+
+## Allow the phone
+
+`./dev phone` installs over USB, which the phone has to allow once:
+
+1. On the phone, open **Settings**, then **About phone** (on some phones **About phone**, then
+   **Software information**), and tap **Build number** seven times; the phone says you are now
+   a developer.
+2. Back in **Settings**, open **Developer options** (under **System** on some phones) and turn
+   on **USB debugging**.
+3. Connect the phone with a cable that carries data (some only charge). On the phone, choose
+   **File transfer** if it asks what the connection is for.
+4. The phone shows **Allow USB debugging?** with this computer's key: tick **Always allow
+   from this computer** and tap **Allow**. Until then `./dev phone` says the phone has not
+   allowed this computer and stops.
+5. If the phone asks to allow installing apps over USB (some makers add this under Developer
+   options as **Install via USB**), allow that too.
+
+With several phones connected, `./dev phone` lists them and asks which one; `ANDROID_SERIAL`
+picks one without asking. The emulator is a device like any other once it is running.
 
 ## Not yet
 

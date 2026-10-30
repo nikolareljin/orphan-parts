@@ -830,6 +830,10 @@ export const api = {
     setShared: (id: number, shared: boolean) => sendJson<Project>('POST', `/api/projects/${id}/outcome/share`, { shared }),
     shareText: (id: number) => getJson<{ text: string }>(`/api/projects/${id}/outcome/share`),
   },
+  pair: {
+    svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}`),
+    get: (origin: string) => getJson<{ url: string; gated: boolean; token: string; expires_at: number }>(`/api/pair?origin=${encodeURIComponent(origin)}`),
+  },
   captures: {
     list: () => getJson<{ captures: Capture[] }>('/api/captures'),
     get: (id: number) => getJson<Capture>(`/api/captures/${id}`),
