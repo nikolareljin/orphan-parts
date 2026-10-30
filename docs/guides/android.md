@@ -49,7 +49,8 @@ installs a JDK 17 (apt or Homebrew) and the Android command-line tools from Goog
 their checksum checked, with `platform-tools`, `platforms;android-35` and
 `build-tools;35.0.0`, under `ANDROID_HOME` (default `~/Android/Sdk`). On Windows, use WSL.
 A phone that has not yet accepted this computer is said as such: unlock it and accept the
-USB debugging prompt. The build needs a JDK 17 or later and the Android SDK (`ANDROID_HOME`, or `~/Android/Sdk`);
+USB debugging prompt. The build needs a JDK 17 or 21 (Gradle 8.13 refuses a newer one) and the Android SDK
+(`ANDROID_HOME`, or `~/Android/Sdk`);
 `ANDROID_AVD=<name>` lets the smoke run boot a headless emulator when no phone is connected.
 The release APK is signed with the release key when `KEYSTORE_PATH`, `KEYSTORE_PASSWORD`,
 `KEY_ALIAS` and `KEY_PASSWORD` are set (or `android/keystore.properties`, which is ignored by

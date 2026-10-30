@@ -78,10 +78,11 @@ fun CapturesScreen(session: Session, refresh: Int, onItem: (Int) -> Unit) {
                             scope.launch {
                                 try {
                                     session.call { it.processCapture(c.id) }
-                                    load()
                                 } catch (e: Exception) {
                                     status = "Capture #${c.id}: ${describe(e)}"
                                 } finally {
+                                    // the list again either way: a failed read is recorded on the capture
+                                    load()
                                     busyId = null
                                 }
                             }

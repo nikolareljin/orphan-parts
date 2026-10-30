@@ -60,6 +60,7 @@ dialog.modal {
   width: min(900px, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
   padding: 0;
+  overflow: hidden; /* the body scrolls; the dialog itself has no bar of its own */
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--card);
@@ -130,7 +131,7 @@ body.has-dialog {
 }
 
 /* one scale of buttons: filled for the action, outlined for the rest, a link for the small ones */
-button:not(.link):not(.modal-close):not(.nav button) {
+button:not(.link):not(.modal-close):not(.nav button):not(.danger) {
   font: inherit;
   border-radius: 8px;
   padding: 0.5rem 0.95rem;
@@ -140,14 +141,14 @@ button:not(.link):not(.modal-close):not(.nav button) {
   color: #fff;
 }
 
-button:not(.link):not(.modal-close):not(.nav button):disabled {
+button:not(.link):not(.modal-close):not(.nav button):not(.danger):disabled {
   opacity: 0.55;
   cursor: default;
 }
 
-form button[type='button']:not(.link):not(.modal-close),
-.actions button:not(:first-child):not(.link),
-.row button[type='button']:not(.link):not(:first-of-type) {
+form button[type='button']:not(.link):not(.modal-close):not(.danger),
+.actions button:not(:first-child):not(.link):not(.danger),
+.row button[type='button']:not(.link):not(:first-of-type):not(.danger) {
   background: var(--card);
   color: var(--accent);
 }

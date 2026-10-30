@@ -39,6 +39,9 @@ async def create_capture(
             detail=[{"loc": ["body", "request", *e["loc"]], "msg": e["msg"]} for e in exc.errors()],
         ) from exc
     s = captures.settings
+    if photos is not None and len(photos) > s.max_photos:
+        # refused before a byte of them is read
+        raise _refused(CaptureError(f"at most {s.max_photos} photos per capture"))
     photo_cap, clip_cap = s.max_upload_mb * 1024 * 1024, s.max_clip_mb * 1024 * 1024
     for upload in photos or []:
         if upload.size is not None and upload.size > photo_cap:

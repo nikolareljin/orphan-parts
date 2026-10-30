@@ -112,7 +112,7 @@ export default function App() {
       {open && view === 'inventory' && (
         <section className="card">
           <h2>My inventory</h2>
-          <Inventory refresh={saved} openId={openItem} />
+          <Inventory refresh={saved} openId={openItem} onOpened={() => setOpenItem(null)} />
         </section>
       )}
 

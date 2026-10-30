@@ -21,23 +21,28 @@ startup and refuses to open a file written by a newer version.
 | `projects` | v6 | `template`, `title`, `status`, `version`, `content` (requirements, result, effort, spend, unknowns, steps, progress, the outcome) |
 | `allocations` | v6 | an item on a project for a requirement, `committed` or exploratory, with `why` |
 | `packs` | v7 | build packs: `version` per project, `digest` of the inputs, the `markdown` |
+| `captures` | v8 | what the phone sent in one go: `status` (received, processed, failed), `content` (the line, the name, the counts, the item it became, the error), times; the media under `DATA_DIR/captures/<id>/` |
 
 `content` columns hold JSON validated by the Pydantic models of the owning package; the
 shape of each is the one the [HTTP API](http-api.md) returns.
 
 ## What is kept, and for how long
 
-- An uploaded photo is read in memory and dropped with the request; the only photo kept is the
-  one a measurement was made on, with that measurement, on the item. Photos are re-encoded on
-  ingest, so no metadata is ever stored.
-- A voice recording is sent for transcription and dropped; the transcript stays on the item.
+- A photo sent to a reading route (`/api/extract`, `/api/segment`) is read in memory and dropped
+  with the request; the photo a measurement was made on is kept with the measurement, on the
+  item. Photos are re-encoded on ingest, so no metadata is ever stored.
+- A capture from the phone is kept as sent, re-encoded photos, the clip and the WAV note, under
+  `DATA_DIR/captures/<id>/`, until the capture is deleted; the item read from it stays.
+- A voice recording sent to `/api/items/{id}/voice` is transcribed and dropped; the transcript
+  stays on the item. A capture's note stays with the capture.
 - Assertions, events and drafts are never rewritten: a correction is a new row beside the old
   one, and a hidden item keeps its history.
 - The spend ledger is appended to and survives restarts; delete the file to reset the total.
-- `RETENTION_HOURS` is a setting without a job behind it yet: nothing is purged on a timer,
-  because nothing but the measurement photos is retained.
+- `RETENTION_HOURS` is a setting without a job behind it yet: nothing is purged on a timer;
+  captures are deleted by hand, from the Inbox.
 
 ## Backups
 
-Stop the stack, copy `DATA_DIR`, start it again. The file is plain SQLite and opens with any
-client; the measurement photos are JPEG blobs inside it.
+Stop the stack, copy `DATA_DIR`, start it again. The database is plain SQLite and opens with any
+client; the measurement photos are JPEG blobs inside it, and the captures' media are files
+beside it under `captures/`.

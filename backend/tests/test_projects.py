@@ -27,6 +27,7 @@ from app.projects import (
     UnknownTemplateError,
     fits,
 )
+from app.projects import pack as packs
 from tests.conftest import RECORDED_FIXTURES
 
 pytestmark = pytest.mark.anyio
@@ -239,13 +240,32 @@ async def test_selection_commits_items_once_and_reserves_them(planner: Planner) 
     with pytest.raises(ProjectsError, match="filled already"):
         planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
     assert planner.advance(vacuum.id, "building").status == "building"
+    # a project moves one way: a build is not shortlisted again
+    with pytest.raises(ProjectsError, match="a building project cannot be changed"):
+        planner.shortlist(vacuum.id)
     assert planner.advance(vacuum.id, "done").status == "done"
     with pytest.raises(ProjectsError, match="is over"):
         planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
+    for change in (planner.abandon, planner.select, planner.shortlist):
+        with pytest.raises(ProjectsError, match="a done project cannot be changed"):
+            change(vacuum.id)
     with pytest.raises(ProjectsError):
         planner.advance(desk.id, "building")
     with pytest.raises(ProjectsError):
         planner.advance(vacuum.id, "flying")
+
+
+async def test_a_deleted_item_leaves_its_project_open(planner: Planner) -> None:
+    ids = household(planner.inventory)
+    planner.set_preferences(Preferences(budget=20))
+    desk, _vacuum = await planner.propose(ProposeRequest())
+    planner.select(desk.id)
+    planner.inventory.delete(ids["Old laptop"])
+    project = planner.project(desk.id)
+    assert all(a.item_name != "Old laptop" for a in project.allocations)
+    assert next(r for r in project.requirements if r.key == "laptop").state == "unknown"
+    # the project is still the owner's to change: nothing 404s on the item that is gone
+    assert planner.abandon(desk.id).status == "abandoned"
 
 
 async def test_a_missing_requirement_becomes_a_search_under_the_budget_left(
@@ -468,9 +488,25 @@ async def test_the_build_pack_is_written_from_what_stands_and_goes_stale(planner
     assert planner.packs_of(desk.id)[0].stale
     second = planner.write_pack(desk.id)
     assert second.version == 2 and not second.stale and "one dead key" in second.markdown
-    # the budget is an input too
+    # the budget is an input too, and so are the tools and what other projects take of it
     planner.set_preferences(Preferences(budget=80))
     assert planner.pack(second.id).stale
+    third = planner.write_pack(desk.id)
+    assert not third.stale
+    planner.set_preferences(Preferences(budget=80, tools="pliers"))
+    assert planner.pack(third.id).stale
+    fourth = planner.write_pack(desk.id)
+    assert "## Tools" in fourth.markdown and not fourth.stale
+    other = next(p for p in projects if p.id != desk.id)
+    planner.select(other.id)
+    assert planner.pack(fourth.id).stale
+
+
+def test_money_is_written_plainly() -> None:
+    assert packs.money(1500000.0) == "1500000"
+    assert packs.money(123456.78) == "123456.78"
+    assert packs.money(12.0) == "12"
+    assert packs.money(0.5) == "0.5"
 
 
 async def test_progress_and_the_outcome_record(planner: Planner) -> None:
@@ -503,6 +539,9 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
         vacuum.id, record.model_copy(update={"working": True, "limitations": ""})
     )
     assert done.status == "done" and done.outcome is not None and done.outcome.working
+    # a finished project keeps its record: a failed test is not recorded on it afterwards
+    with pytest.raises(ProjectsError, match="being built"):
+        planner.record_outcome(vacuum.id, record)
     assert planner.inventory.get(tool.id).availability == "reserved"
     pack = planner.write_pack(vacuum.id)
     assert "## Outcome" in pack.markdown and "Tested 2026-10-28: working" in pack.markdown
@@ -512,9 +551,12 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
     shared = planner.set_share(vacuum.id, ShareChange(shared=True))
     assert shared.outcome is not None and shared.outcome.shared
     text = planner.share_text(vacuum.id)
-    assert text.startswith(vacuum.title) and "Built from: crevice tool, vacuum." in text
+    # the title was written from the item's name; the kind stands where the name was
+    assert text.startswith("The vacuum back to work")
+    assert "Built from: crevice tool, vacuum." in text
     assert "ran it over the stairs" in text and "(working)" in text
-    assert "Upright vacuum" not in text and "Narrow tool" not in text
+    assert "upright vacuum" not in text.lower() and "narrow tool" not in text.lower()
+    assert "vacuum" in text.lower()
     planner.set_share(vacuum.id, ShareChange(shared=False))
     with pytest.raises(ProjectsError, match="not shared"):
         planner.share_text(vacuum.id)
