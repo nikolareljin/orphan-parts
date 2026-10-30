@@ -4,6 +4,7 @@ numbers, locations and notes never go in."""
 
 import hashlib
 import json
+import re
 from datetime import UTC, datetime
 
 from app.find.schema import Candidate, Search
@@ -26,14 +27,32 @@ def shown_fields(item: Item) -> list[tuple[str, str]]:
     return out
 
 
-def digest_for(project: Project, items: list[Item], prefs: Preferences) -> str:
-    """What the pack rests on: the project as it stands, each item at its version, the budget."""
+def money(amount: float) -> str:
+    """A sum as people write it: no exponent, at most two decimals, no trailing zeros."""
+    return f"{amount:.2f}".rstrip("0").rstrip(".") or "0"
+
+
+def digest_for(
+    project: Project,
+    items: list[Item],
+    prefs: Preferences,
+    budget: Budget,
+    searches: dict[int, tuple[Search, list[Candidate]]],
+) -> str:
+    """What the pack rests on: the project as it stands, each item at its version, the budget
+    and what the other selected projects take of it, the tools, the candidates of its searches."""
     parts = {
         "project": project.version,
         "requirements": [(r.key, r.state, r.item_id, r.search_id) for r in project.requirements],
         "allocations": [(a.item_id, a.requirement, a.committed) for a in project.allocations],
         "items": sorted((i.id, i.version) for i in items),
-        "budget": (prefs.budget, prefs.currency),
+        "budget": (prefs.budget, prefs.currency, budget.committed_spend, budget.remaining),
+        "tools": prefs.tools,
+        "candidates": sorted(
+            (sid, c.id, c.state, c.asking_price)
+            for sid, (_search, candidates) in searches.items()
+            for c in candidates
+        ),
     }
     return hashlib.sha256(json.dumps(parts, sort_keys=True).encode("utf-8")).hexdigest()[:16]
 
@@ -97,7 +116,7 @@ def render(
             documented = [c for c in candidates if c.state == "documented"]
             line += f". Search: {search.title}"
             if search.max_price is not None:
-                line += f", top price {search.max_price:g} {search.currency}"
+                line += f", top price {money(search.max_price)} {search.currency}"
             line += f"; {len(candidates)} candidate(s), {len(documented)} documented"
             for c in documented:
                 seen = f" seen {c.observed_on}" if c.observed_on else ""
@@ -108,13 +127,13 @@ def render(
         "",
         "## Costs",
         "",
-        f"Expected spending for this project: {project.spend_estimate:g} {project.currency}, as"
-        f" estimated on {project.created_at[:10]}.",
+        f"Expected spending for this project: {money(project.spend_estimate)}"
+        f" {project.currency}, as estimated on {project.created_at[:10]}.",
     ]
     if budget.budget is not None:
         lines.append(
-            f"Across the selected projects: {budget.committed_spend:g} of {budget.budget:g}"
-            f" {budget.currency}, {budget.remaining:g} left."
+            f"Across the selected projects: {money(budget.committed_spend)} of"
+            f" {money(budget.budget)} {budget.currency}, {money(budget.remaining or 0)} left."
         )
     if prefs.tools:
         lines += ["", "## Tools", "", prefs.tools]
@@ -160,6 +179,16 @@ def render(
     return "\n".join(lines)
 
 
+def without_names(text: str, items: list[Item]) -> str:
+    """The item's kind where its name was: the title and the result were written from the
+    names, and the names are the owner's."""
+    for item in sorted(items, key=lambda i: -len(i.name)):
+        if len(item.name) < 3:
+            continue
+        text = re.sub(re.escape(item.name), item.item_type or "an item", text, flags=re.I)
+    return text
+
+
 def share_text(project: Project, items: list[Item]) -> str:
     """The outcome for other people: what was built, from what kinds of things, how it was
     tested and what it cannot do. No item names, ids, values, places or prices."""
@@ -168,10 +197,10 @@ def share_text(project: Project, items: list[Item]) -> str:
     kinds = sorted({(i.item_type or "item").lower() for i in items})
     o = project.outcome
     lines = [
-        project.title,
+        without_names(project.title, items),
         "",
         f"Built from: {', '.join(kinds) or 'items on hand'}.",
-        f"Result: {project.result}",
+        f"Result: {without_names(project.result, items)}",
         f"Set up: {o.configuration}",
         f"Tested {o.tested_on}: {o.test} ({'working' if o.working else 'not working'})",
     ]

@@ -124,7 +124,7 @@ case "$what" in
   release)
     say "building the release APK"
     gradle assembleRelease
-    apk="$(find "$app/app/build/outputs/apk/release" -name '*.apk' 2>/dev/null | head -1)"
+    apk="$(find "$app/app/build/outputs/apk/release" -name '*.apk' 2>/dev/null | head -1 || true)"
     [[ -n "$apk" ]] || fail "no release APK after the build"
     if [[ -n "${KEYSTORE_PATH:-}" || -f "$app/keystore.properties" ]]; then
       say "$apk (release key)"

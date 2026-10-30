@@ -21,8 +21,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.orphanparts.lens.Settings
+import com.orphanparts.lens.api.ApiException
+import com.orphanparts.lens.api.Client
+import com.orphanparts.lens.api.HttpTransport
 import com.orphanparts.lens.normalizeBaseUrl
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/** What is typed is what is checked: the backend's open readiness path first, then the code
+ * against the gate when there is one, each with its own line. */
+suspend fun check(baseUrl: String, code: String): String = withContext(Dispatchers.IO) {
+    val client = Client(baseUrl, HttpTransport())
+    val ready = try {
+        client.readiness()
+    } catch (e: Exception) {
+        return@withContext "Not reachable: ${describe(e)}"
+    }
+    val gate = if (ready.gated) "gated" else "open"
+    val line = "Backend ${ready.status}, Model API ${ready.modelApi}, demo $gate."
+    when {
+        !ready.gated -> line
+        code.isBlank() -> "$line Type the code to send anything."
+        else -> try {
+            if (client.access(code)) "$line The code opens it." else "$line The code is refused."
+        } catch (e: ApiException) {
+            "$line The code is refused: ${describe(e)}"
+        }
+    }
+}
 
 @Composable
 fun SettingsScreen(settings: Settings, session: Session, onSaved: (Settings) -> Unit) {
@@ -61,18 +88,12 @@ fun SettingsScreen(settings: Settings, session: Session, onSaved: (Settings) -> 
             }) { Text("Save") }
             Spacer(Modifier.width(8.dp))
             OutlinedButton(
-                enabled = settings.ready,
+                enabled = url.isNotBlank(),
                 onClick = {
                     status = "Checking…"
-                    scope.launch {
-                        status = try {
-                            val ready = session.call { it.readiness() }
-                            val gate = if (ready.gated) "gated" else "open"
-                            "Backend ${ready.status}, Model API ${ready.modelApi}, demo $gate."
-                        } catch (e: Exception) {
-                            "Not reachable: ${describe(e)}"
-                        }
-                    }
+                    val typedUrl = normalizeBaseUrl(url)
+                    val typedCode = code
+                    scope.launch { status = check(typedUrl, typedCode) }
                 },
             ) { Text("Check") }
         }
