@@ -160,8 +160,8 @@ accepts) are set; until then that job does not run.
 **Android.** `./dev deploy android` builds the release APK and says where it is, and the
 workflow attaches it to the release as `orphan-parts-<version>.apk` and, the same file, as
 `orphan-parts.apk`, the fixed name behind
-`https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`. It is signed with the
-release key when the keystore settings are given ([Android app](../guides/android.md)) and
+`https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`. It is
+signed with the release key when the keystore settings are given ([Android app](../guides/android.md)) and
 with the debug key otherwise. The app is pointed at this host's URL and the access code on its
 first page. Publishing it to the store is a later step: it needs a developer account, the
 signing key and a service account, none of which are in this repository; the APK on the

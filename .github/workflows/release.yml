@@ -93,7 +93,9 @@ jobs:
       - name: create the GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "$TAG" --title "$TAG" --notes-file notes.md
+        # not the latest yet: releases/latest/download/orphan-parts.apk would answer 404 until
+        # the android job attached the APK; that job marks it
+        run: gh release create "$TAG" --title "$TAG" --notes-file notes.md --latest=false
 
   # The Android app, once it is in the tree: a release APK attached to the release. The job
   # checks out the tag and does nothing more until android/gradlew exists (a job-level test
@@ -125,13 +127,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Twice under two names: orphan-parts-<version>.apk is what the install scripts and
-          # the release page name; orphan-parts.apk keeps one fixed address,
-          # releases/latest/download/orphan-parts.apk, that the QR code in the docs points at.
+          # Twice under two names: orphan-parts-<version>.apk is what the release page names;
+          # orphan-parts.apk keeps one fixed address, releases/latest/download/orphan-parts.apk,
+          # that the QR code in the docs points at. The versioned one first, so it stays the
+          # first asset the install scripts find.
           apk="$(find android -path '*/outputs/apk/release/*.apk' | head -1)"
           cp "$apk" "orphan-parts-$TAG.apk"
           cp "$apk" "orphan-parts.apk"
-          gh release upload "$TAG" "orphan-parts-$TAG.apk" "orphan-parts.apk" --clobber
+          gh release upload "$TAG" "orphan-parts-$TAG.apk" --clobber
+          gh release upload "$TAG" "orphan-parts.apk" --clobber
+      - name: mark the release the latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # only the highest version: a run for an older tag leaves the latest where it is
+          highest="$(gh release list --limit 100 --json tagName --jq '.[].tagName' | sort -V | tail -1)"
+          if [ "$highest" = "$TAG" ]; then
+            gh release edit "$TAG" --latest
+          else
+            echo "$TAG is not the highest release ($highest); the latest stays"
+          fi
 
   # The host, once there is one: the repository variable DEPLOY_ENABLED set to true turns this
   # on, the secrets DEPLOY_HOST (user@host), DEPLOY_PATH and DEPLOY_SSH_KEY say where and how.

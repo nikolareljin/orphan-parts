@@ -15,12 +15,12 @@ link: [How it fits together](project/flow.md). Trying it on a phone: the
 
 1. **Install the app** on an Android 8.0 or newer phone. The QR code, scanned with the phone's
    camera, or `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
-   opened on the phone, downloads the newest release's APK.
-   <img src="assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140">
+   opened on the phone, downloads the newest release's APK.<br>
+   <img src="assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140"><br>
    Or, on the phone, open the
-   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest), tap the APK
-   and open it, with installing from the browser allowed (**Allow from this source**); if Play
-   Protect warns, **More details**, **Install anyway**. Or over a USB cable, with **USB
+   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) and tap either
+   APK. Open the download with installing from the browser allowed (**Allow from this
+   source**); if Play Protect warns, **More details**, **Install anyway**. Or over a USB cable, with **USB
    debugging** on in **Developer options**: from a clone, `scripts/phone-install.sh` on the
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
