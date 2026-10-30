@@ -1,11 +1,18 @@
-/* The tabs bar under the header: a mid gray instead of the palette's light blue.
-   The tab text keeps Material's white and its opacity rules: the active or
-   hovered tab is full white (5.45:1 on #5f6b77, 7.59:1 on #4b5560), the others
-   are white at 70% opacity (3.62:1 and 4.71:1; on the blue it was 2.29:1). */
+/* Keep every tab readable in both themes; weight marks the active page. */
 [data-md-color-scheme="default"] .md-tabs {
   background-color: #5f6b77;
 }
 
 [data-md-color-scheme="slate"] .md-tabs {
   background-color: #4b5560;
+}
+
+[data-md-color-scheme="default"] .md-tabs__link,
+[data-md-color-scheme="slate"] .md-tabs__link {
+  color: #fff;
+  opacity: 1;
+}
+
+.md-tabs__item--active .md-tabs__link {
+  font-weight: 700;
 }
