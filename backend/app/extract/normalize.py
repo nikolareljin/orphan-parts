@@ -133,47 +133,12 @@ _PLASTICS = frozenset(
 )
 # a word before a material that says it is not that material: "non-metal", "no plastic"
 _NOT_BEFORE = frozenset(("non", "no", "not", "without"))
-# a word that says the material is only part of it or only on the surface
-_PARTIAL = frozenset(
-    (
-        "maybe",
-        "possibly",
-        "probably",
-        "unknown",
-        "unconfirmed",
-        "unsure",
-        "or",
-        "wood",
-        "wooden",
-        "glass",
-        "ceramic",
-        "bamboo",
-        "carbon",
-        "fiberglass",
-        "mostly",
-        "partly",
-        "partially",
-        "part",
-        "mainly",
-        "coated",
-        "coating",
-        "plating",
-        "painted",
-        "colored",
-        "coloured",
-        "core",
-        "tip",
-        "handle",
-        "insert",
-        "sleeve",
-        "reinforced",
-        "plated",
-        "finish",
-        "look",
-        "effect",
-        "style",
-        "imitation",
-        "faux",
+# Only simple material declarations establish the whole part's material.
+_MATERIAL_WORDS = (
+    _METALS
+    | _PLASTICS
+    | frozenset(
+        ("all", "solid", "throughout", "die", "cast", "bpa", "lead", "free", "non", "stick")
     )
 )
 
@@ -197,7 +162,7 @@ def _material(text: str) -> tuple[str, str]:
         if before in _NOT_BEFORE or after == "free":
             return low, ""
         found.add(kind)
-    if len(found) == 1 and not _PARTIAL.intersection(words):
+    if len(found) == 1 and set(words) <= _MATERIAL_WORDS and "?" not in low:
         return found.pop(), ""
     return low, ""
 

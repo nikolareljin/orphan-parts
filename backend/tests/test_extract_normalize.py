@@ -71,6 +71,8 @@ from app.extract import FIELDS, field_guide, normalize
         ("material", "steel core", ("steel core", "")),
         ("material", "metal coating", ("metal coating", "")),
         ("material", "plastic handle", ("plastic handle", "")),
+        ("material", "not made of metal", ("not made of metal", "")),
+        ("material", "metal?", ("metal?", "")),
         ("material", "possibly metal", ("possibly metal", "")),
         ("material", "steel or aluminum", ("steel or aluminum", "")),
         ("material", "metal (unconfirmed)", ("metal (unconfirmed)", "")),
