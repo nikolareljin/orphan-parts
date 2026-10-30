@@ -125,7 +125,7 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
         Text("Capture a thing", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Photos of the item and its label, a short clip if it moves or makes a sound, and what you know about it, said or typed. Send it, and the backend reads it into your inventory.",
+            "Photos of the item and its label (tap the label in the camera to focus on it, fill the frame), a short clip if it moves or makes a sound, and what you know about it, said or typed. Send it, and the backend reads it into your inventory.",
             style = MaterialTheme.typography.bodyMedium,
         )
         Spacer(Modifier.height(12.dp))

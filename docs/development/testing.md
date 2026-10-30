@@ -138,6 +138,11 @@ multipart framing, the WAV header and sizes, and the settings' URL. The smoke ru
 (`ANDROID_AVD`), launches the app, confirms its activity is on screen and keeps a screenshot;
 `scripts/tests/test_android.sh` checks that script with stand-ins for gradlew and adb.
 
+Enhancement is tested on synthetic images: a stretched, sharpened copy keeps the size and
+stays a JPEG; printed text scores far above its blurred copy and a flat patch; a reading of a
+flat photo carries the blur warning and the `enhanced` flag, and none of either with
+`EXTRACT_ENHANCE=0` and the threshold at zero.
+
 Pairing is tested in isolation (a session only when gated, verified by the gate; the origin
 kept as given and anything but a scheme, a host and a port refused; the SVG and the terminal
 block) and through the routes (open without a gate, 401 behind one until a session, the

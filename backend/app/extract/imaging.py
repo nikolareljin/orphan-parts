@@ -2,7 +2,7 @@
 
 from io import BytesIO
 
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageFilter, ImageOps, ImageStat, UnidentifiedImageError
 
 ALLOWED_FORMATS = frozenset({"JPEG", "PNG", "WEBP", "GIF"})
 JPEG_QUALITY = 85
@@ -58,3 +58,31 @@ def dimensions(data: bytes) -> tuple[int, int]:
     with Image.open(BytesIO(data)) as img:
         width, height = img.size
         return int(width), int(height)
+
+
+# A 3x3 Laplacian; edges push it off the 128 offset, blur flattens it.
+_LAPLACIAN = ImageFilter.Kernel((3, 3), (0, 1, 0, 1, -4, 1, 0, 1, 0), scale=1, offset=128)
+SHARPNESS_PX = 512
+
+
+def sharpness(data: bytes) -> float:
+    """How much edge there is in a photo: the variance of its Laplacian on a copy at most
+    SHARPNESS_PX wide. Printed text scores in the hundreds and above; a blurred label, or a
+    patch with nothing on it, in the tens."""
+    with Image.open(BytesIO(data)) as img:
+        gray = img.convert("L")
+        gray.thumbnail((SHARPNESS_PX, SHARPNESS_PX))
+        return float(ImageStat.Stat(gray.filter(_LAPLACIAN)).var[0])
+
+
+def enhance(data: bytes) -> bytes:
+    """The same photo with its contrast stretched (the darkest and lightest half-percent
+    clipped) and its edges sharpened a little, so faint print on a label reads better. Only
+    what goes to the model is changed; what is kept is the photo as taken."""
+    with Image.open(BytesIO(data)) as img:
+        rgb = img.convert("RGB")
+        stretched = ImageOps.autocontrast(rgb, cutoff=0.5, preserve_tone=True)
+        sharper = stretched.filter(ImageFilter.UnsharpMask(radius=2, percent=120, threshold=3))
+        out = BytesIO()
+        sharper.save(out, "JPEG", quality=JPEG_QUALITY, optimize=True)
+        return out.getvalue()

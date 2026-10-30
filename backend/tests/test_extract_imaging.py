@@ -91,3 +91,26 @@ def test_big_jpeg_is_still_downscaled_exactly() -> None:
     # the reduced-scale decode must not change the final size
     out = prepare(make_photo(6000, 4000), max_px=1280, max_bytes=12 * MB)
     assert dimensions(out) == (1280, 853)
+
+
+def test_enhance_keeps_the_size_and_sharpness_tells_text_from_blur() -> None:
+    from PIL import Image, ImageDraw, ImageFilter
+
+    from app.extract.imaging import dimensions, enhance, sharpness
+
+    img = Image.new("RGB", (640, 480), (230, 230, 230))
+    draw = ImageDraw.Draw(img)
+    for i in range(12):
+        draw.text((20, 20 + i * 35), "OUTPUT 19.5V 3.33A MODEL OP065-19-333", fill=(20, 20, 20))
+    sharp = BytesIO()
+    img.save(sharp, "JPEG")
+    blurred = BytesIO()
+    img.filter(ImageFilter.GaussianBlur(4)).save(blurred, "JPEG")
+    assert sharpness(sharp.getvalue()) > 300 > sharpness(blurred.getvalue())
+    flat = BytesIO()
+    Image.new("RGB", (300, 200), (200, 200, 200)).save(flat, "JPEG")
+    assert sharpness(flat.getvalue()) < 150
+    better = enhance(sharp.getvalue())
+    assert dimensions(better) == (640, 480)
+    assert better[:2] == b"\xff\xd8"  # a JPEG
+    assert better != sharp.getvalue()
