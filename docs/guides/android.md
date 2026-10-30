@@ -31,6 +31,14 @@ the backend transcribes it with Muse Voice Transcribe and keeps it as your words
 The transcript comes back on screen and is read aloud with the phone's own speech, so you hear
 what was kept. The item is the one a capture was read into, or any other from the inventory.
 
+**The look.** The app draws itself in the web app's colors: the same seven tones in light
+and dark (the page, the text, the muted text, the cards, the hairlines, the accent and the
+error tone), following the phone's dark mode as the web app follows the browser's; the header
+with the mark and the name, the pages as tabs underlined by the accent, bordered panels, one
+scale of buttons (filled for the action, outlined for the rest), pills for status, and the
+service line at the foot saying where the backend is and whether it answers with recorded
+answers or the live models. A unit test keeps the palette equal to the web app's stylesheet.
+
 ## Building and running it
 
 ```bash

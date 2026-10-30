@@ -44,3 +44,30 @@ class PairingTest {
         assertNull(pairingFrom("", current))
     }
 }
+
+class ReachableTest {
+    @Test
+    fun a_pairing_code_that_points_at_localhost_is_refused_and_said() {
+        val current = Settings("", "", "")
+        assertNull(pairingFrom("""{"url":"http://localhost:5183","gated":false,"token":""}""", current))
+        assertNull(pairingFrom("""{"url":"http://127.0.0.1:8000","gated":false,"token":""}""", current))
+        assertTrue(pointsAtLocalhost("""{"url":"http://localhost:5183","gated":false,"token":""}"""))
+        assertTrue(pointsAtLocalhost("""{"url":"http://127.0.0.2:5183","gated":true,"token":"t"}"""))
+        assertFalse(pointsAtLocalhost("""{"url":"http://192.168.1.20:5183","gated":false,"token":""}"""))
+        assertFalse(pointsAtLocalhost("""{"url":"http://localhost:5183"}""")) // not a pairing code
+        assertFalse(pointsAtLocalhost("not json"))
+        assertTrue(reachableFromAPhone("https://orphan-parts.pages.dev"))
+        assertTrue(reachableFromAPhone("http://192.168.1.20:5183"))
+        assertTrue(reachableFromAPhone("http://[2001:db8::1]:5183"))
+        assertFalse(reachableFromAPhone("http://[::1]:5183"))
+        assertFalse(reachableFromAPhone("http://[::ffff:127.0.0.1]:5183"))
+        assertFalse(reachableFromAPhone("http://[0:0:0:0:0:0:0:1]:5183"))
+        assertTrue(reachableFromAPhone("http://127.1:5183")) // not a dotted quad: a name, checked later
+        assertFalse(reachableFromAPhone("http://[::]:5183"))
+        assertTrue(reachableFromAPhone("http://my_laptop:5183"))
+        assertFalse(reachableFromAPhone("http://127.0.0.2:5183"))
+        assertFalse(reachableFromAPhone("http://0.0.0.0:5183"))
+        assertFalse(reachableFromAPhone("http://app.localhost:5183"))
+        assertFalse(reachableFromAPhone("not a url"))
+    }
+}

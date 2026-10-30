@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- The web app's page colors (frontend/src/index.css), so the window and the status bar
+         match the Compose theme from the first frame; the dark set is in values-night. -->
     <style name="Theme.OrphanParts" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#1F4E5F</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#F6F7F9</item>
+        <item name="android:statusBarColor">#F6F7F9</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

@@ -6,6 +6,38 @@ function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
+// The clip as sent. A browser that cannot play it says why it could not (a codec it lacks,
+// or the file did not arrive) and offers the file instead of a blank player.
+function Clip({ id }: { id: number }) {
+  const [unplayable, setUnplayable] = useState<'' | 'codec' | 'load'>('')
+  const url = api.captures.clipUrl(id)
+  if (unplayable) {
+    return (
+      <p className="muted">
+        This browser cannot play the clip of capture #{id} ({unplayable === 'codec' ? 'a codec it lacks' : 'it could not be loaded or played here'}).{' '}
+        <a href={url} download={`capture-${id}.mp4`}>
+          Download it
+        </a>
+        .
+      </p>
+    )
+  }
+  return (
+    <video
+      controls
+      preload="metadata"
+      src={url}
+      aria-label={`Capture ${id} clip`}
+      onError={(e) => {
+        // 3 is a decode failure (a codec it lacks); 4 is unsupported or, in most browsers, a
+        // file that did not arrive at all, so it is not blamed on a codec
+        const code = e.currentTarget.error?.code
+        setUnplayable(code === 3 ? 'codec' : 'load')
+      }}
+    />
+  )
+}
+
 // What the phone sent: photos, a clip, a spoken note, a line. Read into an item on request.
 export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void }) {
   const [captures, setCaptures] = useState<Capture[] | null>(null)
@@ -78,7 +110,7 @@ export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void
                 </div>
                 <p className="meta">{captureSummary(c)}</p>
                 {c.note && <p>“{c.note}”</p>}
-                {c.clip && <video controls preload="metadata" src={api.captures.clipUrl(c.id)} aria-label={`Capture ${c.id} clip`} />}
+                {c.clip && <Clip id={c.id} />}
                 {c.audio && <audio controls preload="metadata" src={api.captures.noteUrl(c.id)} aria-label={`Capture ${c.id} note`} />}
                 {c.error && (
                   <p className={c.status === 'failed' ? 'error' : 'muted'} role={c.status === 'failed' ? 'alert' : undefined}>

@@ -63,6 +63,13 @@ function mp4(): Buffer {
   return Buffer.concat([head, Buffer.alloc(512)])
 }
 
+// What the tests send is removed again: the inbox is the owner's, and a stub clip with no
+// video track would otherwise stay there as a capture that cannot play.
+const created: number[] = []
+test.afterEach(async ({ request }) => {
+  for (const id of created.splice(0)) await request.delete(`/api/captures/${id}`)
+})
+
 async function sendCapture(request: APIRequestContext, note: string): Promise<number> {
   const res = await request.post('/api/captures', {
     multipart: {
@@ -73,7 +80,9 @@ async function sendCapture(request: APIRequestContext, note: string): Promise<nu
     },
   })
   expect(res.status()).toBe(201)
-  return ((await res.json()) as { id: number }).id
+  const id = ((await res.json()) as { id: number }).id
+  created.push(id)
+  return id
 }
 
 test('a capture from the phone is listed, read into an item and opened', async ({ page, request }) => {

@@ -5,16 +5,12 @@ import android.content.pm.PackageManager
 import android.speech.tts.TextToSpeech
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -25,10 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -56,8 +48,8 @@ fun TalkScreen(session: Session, lastItemId: Int?) {
     }
     var status by remember { mutableStateOf("") }
     var transcript by remember { mutableStateOf("") }
-    var holding by remember { mutableStateOf(false) }
     var speaker by remember { mutableStateOf<TextToSpeech?>(null) }
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
 
     val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         allowed = granted
@@ -94,74 +86,81 @@ fun TalkScreen(session: Session, lastItemId: Int?) {
 
     Column {
         Text("Say it about an item", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             "Hold the button and talk: what it is, what is wrong with it, what you tested. The backend writes it down as your words and the phone reads it back.",
             style = MaterialTheme.typography.bodyMedium,
+            color = muted,
         )
         Spacer(Modifier.height(12.dp))
-        val current = items.firstOrNull { it.id == itemId }
-        Text(
-            when {
-                current != null -> "Item #${current.id}: ${current.name} (${current.itemType})"
-                itemId != null -> "Item #$itemId"
-                else -> "No item yet: capture one first."
-            },
-            style = MaterialTheme.typography.titleMedium,
-        )
-        if (items.size > 1) {
-            OutlinedButton(onClick = {
-                val index = items.indexOfFirst { it.id == itemId }
-                itemId = items[(index + 1).mod(items.size)].id
-            }) { Text("Next item") }
-        }
-        Spacer(Modifier.height(16.dp))
-        if (!allowed) {
-            Button(onClick = { askPermission.launch(Manifest.permission.RECORD_AUDIO) }) { Text("Allow the microphone") }
-        } else {
-            val colors = MaterialTheme.colorScheme
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .background(if (holding) colors.secondary else colors.primary, MaterialTheme.shapes.large)
-                    .semantics { role = Role.Button }
-                    .pointerInput(itemId) {
-                    detectTapGestures(
-                        onPress = {
-                            val id = itemId ?: return@detectTapGestures
-                            holding = true
+        Panel {
+            val current = items.firstOrNull { it.id == itemId }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    when {
+                        current != null -> "Item #${current.id}: ${current.name}"
+                        itemId != null -> "Item #$itemId"
+                        else -> "No item yet: capture one first."
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                if (current != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Pill(current.itemType.replace('_', ' '))
+                }
+            }
+            if (items.size > 1) {
+                Spacer(Modifier.height(8.dp))
+                SecondaryButton("Next item") {
+                    val index = items.indexOfFirst { it.id == itemId }
+                    itemId = items[(index + 1).mod(items.size)].id
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            if (!allowed) {
+                PrimaryButton("Allow the microphone") { askPermission.launch(Manifest.permission.RECORD_AUDIO) }
+            } else {
+                HoldButton(
+                    idle = "Hold to talk",
+                    active = "Listening… release when done",
+                    key = itemId,
+                    onStart = {
+                        if (itemId == null) {
+                            false
+                        } else {
                             status = "Listening…"
                             recorder.start()
-                            tryAwaitRelease()
-                            holding = false
-                            val wav = recorder.stop()
-                            if (wav == null) {
-                                status = recorder.problem?.let { "Nothing heard: $it." } ?: "Nothing heard."
-                            } else {
-                                status = "Writing it down (${"%.1f".format(recorder.seconds())} s)…"
-                                scope.launch {
-                                    try {
-                                        val note = session.call { it.voiceNote(id, wav) }
-                                        transcript = note.transcript
-                                        status = (if (note.cut) "Kept, cut at the limit. " else "Kept as your words. ") + "Heard by ${note.model}."
-                                        speaker?.speak(note.transcript, TextToSpeech.QUEUE_FLUSH, null, "note")
-                                    } catch (e: Exception) {
-                                        status = "Could not keep it: ${describe(e)}"
-                                    }
+                            true
+                        }
+                    },
+                    onStop = {
+                        val id = itemId
+                        val wav = recorder.stop()
+                        if (wav == null || id == null) {
+                            status = recorder.problem?.let { "Nothing heard: $it." } ?: "Nothing heard."
+                        } else {
+                            status = "Writing it down (${"%.1f".format(recorder.seconds())} s)…"
+                            scope.launch {
+                                try {
+                                    val note = session.call { it.voiceNote(id, wav) }
+                                    transcript = note.transcript
+                                    status = (if (note.cut) "Kept, cut at the limit. " else "Kept as your words. ") + "Heard by ${note.model}."
+                                    speaker?.speak(note.transcript, TextToSpeech.QUEUE_FLUSH, null, "note")
+                                } catch (e: Exception) {
+                                    status = "Could not keep it: ${describe(e)}"
                                 }
                             }
-                        },
-                    )
-                },
-            ) { Text(if (holding) "Listening… release when done" else "Hold to talk", color = colors.onPrimary) }
-        }
-        Spacer(Modifier.height(12.dp))
-        Text(status, style = MaterialTheme.typography.bodyMedium)
-        if (transcript.isNotBlank()) {
-            Spacer(Modifier.height(8.dp))
-            Text("“$transcript”", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    },
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            StatusLine(status)
+            if (transcript.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text("“$transcript”", style = MaterialTheme.typography.bodyLarge)
+            }
         }
     }
 }
