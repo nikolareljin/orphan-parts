@@ -390,8 +390,12 @@ cmd_keys() {
   if [[ "$1" == "--hosted" ]]; then
     # the hosted demo's inventory lives on the Modal volume: the same command runs there
     shift
-    command -v modal >/dev/null 2>&1 || die "the modal command is not installed (pip install modal)"
-    modal run deploy/modal_app.py::keys --args "$*"
+    local modal_cmd args=""
+    read -r -a modal_cmd <<<"${MODAL:-modal}"
+    command -v "${modal_cmd[0]}" >/dev/null 2>&1 || die "the modal command is not installed (pip install modal)"
+    # every word quoted for the shell the function splits them with, so a label with a space holds
+    args="$(printf '%q ' "$@")"
+    "${modal_cmd[@]}" run "$ROOT/deploy/modal_app.py::keys" --args "$args"
     return
   fi
   docker_running || die "docker is not running"
