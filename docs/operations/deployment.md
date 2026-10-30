@@ -27,7 +27,8 @@ the workflow publishes its images, and then the host pulls them:
 ./dev deploy web --version 0.2.0
 ```
 
-The host needs Docker, a directory holding `docker-compose.yml`, `docker-compose.prod.yml` and
+The host needs Docker with Compose 2.24 or later (the production file keeps the dev file's bind
+mounts out with `!override`), a directory holding `docker-compose.yml`, `docker-compose.prod.yml` and
 its own `.env`, and SSH access for the user in `DEPLOY_HOST`. `.env` here (or the shell) names
 it: `DEPLOY_HOST=user@host`, `DEPLOY_PATH=/srv/orphan-parts`, and `IMAGE_PREFIX` when the images
 are not under `ghcr.io/<owner>/<name>`. The deploy runs one command on the host: pull the

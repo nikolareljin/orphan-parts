@@ -14,7 +14,10 @@ brought back (written examples labelled as such), and the proposal brief. Three 
 
 ```bash
 ./dev demo-scrub ~/raw-photos   # re-encoded copies into demo/photos/, WAV notes into demo/notes/
-./dev record-fixtures           # with a key: the inventory reset, one run, every answer kept
+./dev record-fixtures           # with a key: the inventory reset, one run, every answer kept;
+                                # a run that stopped half-way picks up where it was (what is
+                                # recorded is replayed, not bought again) and fails when a part
+                                # of the set was skipped; delete a fixture file to record it afresh
 ./dev demo                      # the inventory reset and the set loaded, in fixture mode
 ```
 
