@@ -168,6 +168,21 @@ body.has-dialog {
   cursor: zoom-out;
 }
 
+@media (max-width: 600px) {
+  .item-photos .photo img {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+.image-pending {
+  display: inline-block;
+  width: 96px;
+  height: 96px;
+  border-radius: 6px;
+  background: var(--line);
+}
+
 .item-photos .photo.open img {
   width: 100%;
   height: auto;

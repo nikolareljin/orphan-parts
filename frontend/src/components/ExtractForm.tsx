@@ -131,9 +131,16 @@ export default function ExtractForm({
             <EvidenceTable result={state.result} />
             <div className="save">
               {state.saved ? (
-                <p className="meta">
-                  Saved privately as item #{state.saved.id}, {state.saved.name}. Nothing is published.
-                </p>
+                <>
+                  <p className="meta">
+                    Saved privately as item #{state.saved.id}, {state.saved.name}. Nothing is published.
+                  </p>
+                  {state.saveError && (
+                    <p className="error" role="alert">
+                      {state.saveError}
+                    </p>
+                  )}
+                </>
               ) : (
                 <>
                   <label>

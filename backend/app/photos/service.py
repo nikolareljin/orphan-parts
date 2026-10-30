@@ -6,6 +6,7 @@ taken in, at most ``MAX_PHOTOS`` per item."""
 from __future__ import annotations
 
 import logging
+import re
 import shutil
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from app.extract.imaging import prepare
 from app.inventory.service import Inventory, NotFoundError
 
 log = logging.getLogger("app.photos")
+PHOTO_NAME = re.compile(r"photo-(\d+)\.jpg")
 
 
 class PhotoError(ValueError):
@@ -33,7 +35,12 @@ class ItemPhotos:
         folder = self.folder(item_id)
         if not folder.is_dir():
             return []
-        return sorted(folder.glob("photo-*.jpg"), key=lambda p: int(p.stem.split("-")[1]))
+        found = []
+        for path in folder.iterdir():
+            match = PHOTO_NAME.fullmatch(path.name)
+            if match and path.is_file():
+                found.append((int(match.group(1)), path))
+        return [path for _, path in sorted(found)]
 
     def count(self, item_id: int) -> int:
         """How many photos the item has; 404 for an item that is not there or is hidden."""

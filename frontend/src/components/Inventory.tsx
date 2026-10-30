@@ -3,6 +3,7 @@ import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, 
 import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
+import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
 import Measure from './Measure'
@@ -444,14 +445,14 @@ function ItemPhotos({ id }: { id: number }) {
         if (!cancelled) setCount(p.count)
       })
       .catch(() => {
-        if (!cancelled) setCount(0)
+        if (!cancelled) setCount(-1) // not known: nothing is said either way
       })
     return () => {
       cancelled = true
     }
   }, [id])
 
-  if (count === null) return null
+  if (count === null || count < 0) return null
   if (count === 0) return <p className="muted no-photos">No photo kept with this item.</p>
   return (
     <div className="item-photos" aria-label="Photos">
@@ -463,7 +464,7 @@ function ItemPhotos({ id }: { id: number }) {
           title={big === n ? 'Shrink' : 'Enlarge'}
           onClick={() => setBig(big === n ? null : n)}
         >
-          <img src={api.items.photoUrl(id, n)} alt={`Item photo ${n}`} loading="lazy" />
+          <GatedImage src={api.items.photoUrl(id, n)} alt={`Item photo ${n}`} loading="lazy" />
         </button>
       ))}
     </div>

@@ -290,16 +290,18 @@ class Loader:
 
 
 def reset(settings: Settings) -> list[str]:
-    """Start over: the inventory file goes, and the captures' media with it (their rows were in
-    the file); the spend ledger stays (the cap is cumulative)."""
+    """Start over: the inventory file goes, and with it the captures' media and the items'
+    photos (their rows were in the file; the next inventory counts from 1 again); the spend
+    ledger stays (the cap is cumulative)."""
     gone: list[str] = []
     db = settings.inventory_db_path
     for path in (db, Path(f"{db}-wal"), Path(f"{db}-shm"), Path(f"{db}-journal")):
         if path.is_file():
             path.unlink()
             gone.append(path.name)
-    captures = settings.data_dir / "captures"
-    if captures.is_dir():
-        shutil.rmtree(captures)
-        gone.append("captures/")
+    for name in ("captures", "items"):
+        folder = settings.data_dir / name
+        if folder.is_dir():
+            shutil.rmtree(folder)
+            gone.append(f"{name}/")
     return gone
