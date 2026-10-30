@@ -40,6 +40,10 @@
 #                      access codes as records beside DEMO_ACCESS_CODE: issue one (shown once),
 #                      list them, end one; the backend picks them up without a restart;
 #                      `keys --hosted ...` does the same on the Modal deployment's inventory
+#   gate on [--label <who>] [--days N] | gate off | gate show
+#                      the access code on this machine: on makes one when .env has none, restarts
+#                      the backend with the gate, issues a code for the phone or a guest and
+#                      prints both to copy; off clears it; show prints the master code
 #   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
 #                      answers, nothing spent); --keep adds to what is there
 #   eval [--keep] [--live]
@@ -389,6 +393,50 @@ cmd_demo() {
   log_ok "demo set loaded"
 }
 
+cmd_gate() {
+  local what="${1:-}" label="phone" days=7 code
+  shift || true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --label) label="${2:?--label needs a value}"; shift 2 ;;
+      --days) days="${2:?--days needs a value}"; shift 2 ;;
+      *) die "usage: ./dev gate on [--label <who>] [--days N] | off | show" ;;
+    esac
+  done
+  case "$what" in
+    show)
+      code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
+      [[ -n "$code" ]] || die "no DEMO_ACCESS_CODE in .env: the gate is off (./dev gate on)"
+      printf 'access code (the master, this machine): %s\n' "$code"
+      ;;
+    off)
+      env_set DEMO_ACCESS_CODE "" "$ROOT/.env"
+      docker_running && compose up -d backend >/dev/null 2>&1 || true
+      log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env, the backend restarted"
+      ;;
+    on)
+      docker_running || die "docker is not running"
+      code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
+      if [[ -z "$code" ]]; then
+        # 24 characters from the system's randomness, letters and digits only, easy to type
+        code="$(python3 -c 'import secrets,string; a=string.ascii_lowercase+string.digits; print("".join(secrets.choice(a) for _ in range(24)))')"
+        env_set DEMO_ACCESS_CODE "$code" "$ROOT/.env"
+        log_info "a master access code was written to .env (git-ignored)"
+      fi
+      # the backend reads .env on start: recreated so the gate is on from its next answer
+      compose up -d backend >/dev/null
+      wait_http "http://localhost:$BACKEND_PORT/readyz" 60 || die "the backend did not come back"
+      printf '\naccess code (the master, for you):     %s\n' "$code"
+      printf 'issued code (for %s, %s days):' "$label" "$days"
+      compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys issue --label "$label" --days "$days" 2>/dev/null | sed 's/^[^:]*:/   /'
+      printf '\nOn the web app: Sign in with the code, then Pair the phone shows the QR code.\n'
+      printf 'On the phone: Backend tab, type the address and the code, or Scan to pair.\n'
+      printf './dev gate show prints the master again; ./dev gate off turns the gate off.\n'
+      ;;
+    *) die "usage: ./dev gate on [--label <who>] [--days N] | off | show" ;;
+  esac
+}
+
 cmd_keys() {
   [[ $# -ge 1 ]] || die "usage: ./dev keys [--hosted] issue --label <who> [--days N] | list | revoke <label>"
   if [[ "$1" == "--hosted" ]]; then
@@ -475,6 +523,7 @@ case "$cmd" in
   phone) cmd_phone "$@" ;;
   demo) cmd_demo "$@" ;;
   keys) cmd_keys "$@" ;;
+  gate) cmd_gate "$@" ;;
   eval) cmd_eval "$@" ;;
   record-fixtures) cmd_record_fixtures "$@" ;;
   demo-scrub) cmd_demo_scrub "$@" ;;

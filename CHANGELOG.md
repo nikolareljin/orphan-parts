@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- `./dev gate on|off|show`: the access code on your own machine, made when `.env` has none, the backend restarted with the gate, a code for the phone or a guest issued and both printed to copy; never part of a deployment.
+
 ### Security
 - No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
 

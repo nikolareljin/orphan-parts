@@ -49,3 +49,18 @@ test_env_require_fails_on_empty() {
 test_project_root_contains_dev() {
   assert_true test -x "$(project_root)/dev"
 }
+
+test_env_set_replaces_or_appends_one_line_and_touches_nothing_else() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  printf '# a note\nMODEL_API_KEY=kept\nexport DEMO_ACCESS_CODE=old\nLOG_LEVEL=INFO\n' > "$dir/.env"
+  env_set DEMO_ACCESS_CODE new-code "$dir/.env"
+  assert_eq "$(tr '\n' '|' < "$dir/.env")" "# a note|MODEL_API_KEY=kept|DEMO_ACCESS_CODE=new-code|LOG_LEVEL=INFO|"
+  env_set DEMO_ACCESS_CODE "" "$dir/.env"
+  assert_eq "$(env_get DEMO_ACCESS_CODE "$dir/.env")" ""
+  env_set NEW_NAME value "$dir/.env"
+  assert_eq "$(tail -1 "$dir/.env")" "NEW_NAME=value"
+  env_set FIRST one "$dir/none.env"
+  assert_eq "$(cat "$dir/none.env")" "FIRST=one"
+  [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
+}

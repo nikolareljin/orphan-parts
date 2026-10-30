@@ -102,6 +102,8 @@ cp .env.example .env          # put MODEL_API_KEY=... in it, or leave OPL_FAKE_A
 ./dev up                      # the web app on http://localhost:5173, the API on :8000
 ```
 
+To try the gate on your own machine (the code, the sign-in, a code for the phone), `./dev gate
+on` prints an access code for you and one for the phone; `./dev gate off` turns it off again.
 Open the web app at your computer's network address, for example `http://192.168.1.20:5173`
 (the page at `localhost` explains why it shows no pairing code: on the phone, localhost is the
 phone), and pair from its footer as in step 4. The phone and the computer must be on the same

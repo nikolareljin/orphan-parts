@@ -47,6 +47,24 @@ env_get() {
   done < "$file"
 }
 
+# env_set KEY VALUE [file]: write one value into a dotenv file, replacing the key's line when
+# there is one (the first, comments untouched) or appending it. The value is written as it is;
+# a value with spaces or # should be quoted by the caller. Nothing else in the file changes.
+env_set() {
+  local key="$1" value="$2" file="${3:-$(project_root)/.env}" tmp done=0 line
+  [[ -f "$file" ]] || : > "$file"
+  tmp="$(mktemp)" || return 1
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ $done -eq 0 && "${line#export }" == "$key="* ]]; then
+      printf '%s=%s\n' "$key" "$value" >> "$tmp"; done=1
+    else
+      printf '%s\n' "$line" >> "$tmp"
+    fi
+  done < "$file"
+  [[ $done -eq 1 ]] || printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  cat "$tmp" > "$file" && rm -f "$tmp"
+}
+
 # env_require VAR [VAR...]: fail if any variable is unset or empty.
 env_require() {
   local name missing=""
