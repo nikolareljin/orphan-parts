@@ -211,11 +211,25 @@ def render(
 def without_names(text: str, names: list[tuple[str, str]]) -> str:
     """The item's kind where its name was: the title, the result and the owner's words were
     written from the names, and the names are the owner's. ``names`` pairs a name with its
-    kind; the longest names go first so a short one never cuts a long one in two."""
+    kind; the longest names go first so a short one never cuts a long one in two. Every name
+    is replaced once, through a marker, so a kind that contains another name is never
+    rewritten again ("HDMI cable" stays "HDMI cable" whatever the cable is called)."""
+    seen: set[str] = set()
+    marks: list[str] = []
     for name, kind in sorted(names, key=lambda n: -len(n[0])):
-        if len(name) < 3:
+        key = name.strip().lower()
+        if len(key) < 3 or key in seen:
             continue
-        text = re.sub(re.escape(name), kind or "an item", text, flags=re.I)
+        seen.add(key)
+        kind = kind or "an item"
+        # a name that is a word of its own kind is already the kind in the text
+        if re.search(rf"(?<![a-z0-9]){re.escape(key)}(?![a-z0-9])", kind.lower()):
+            continue
+        mark = f"\x00{len(marks)}\x00"
+        marks.append(kind)
+        text = re.sub(re.escape(name), mark, text, flags=re.I)
+    for n, kind in enumerate(marks):
+        text = text.replace(f"\x00{n}\x00", kind)
     return text
 
 

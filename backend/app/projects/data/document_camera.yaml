@@ -10,7 +10,7 @@ requirements:
   - key: camera
     label: A phone with a camera, or a USB webcam
     kind: item
-    item_types: [phone, webcam, camera]
+    item_types: [phone, smartphone, webcam, camera]
     blocking: true
   - key: laptop
     label: A laptop that joins the call
