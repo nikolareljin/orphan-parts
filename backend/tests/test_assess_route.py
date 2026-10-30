@@ -1,5 +1,6 @@
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -114,3 +115,20 @@ def test_an_all_metal_rod_fits_the_worn_one_and_a_plastic_rod_does_not(client: T
     asked = client.post("/api/assess", json={"need": need, "candidate": unstated}).json()
     assert {c["key"]: c["status"] for c in asked["checks"]}["material"] == "unknown"
     assert any("metal throughout" in q for q in asked["questions"])
+
+
+@pytest.mark.parametrize(
+    "material", ["possibly metal", "steel and wood", "steel core", "metal coating"]
+)
+def test_partial_or_uncertain_material_does_not_pass(client: TestClient, material: str) -> None:
+    res = client.post(
+        "/api/assess",
+        json={
+            "need": {"profile": "blender_agitator", "values": {"material": "metal"}},
+            "candidate": {"values": {"material": material}},
+        },
+    )
+    assert res.status_code == 200
+    check = next(c for c in res.json()["checks"] if c["key"] == "material")
+    assert check["status"] == "fail"
+    assert res.json()["verdict"] == "CONFLICT"
