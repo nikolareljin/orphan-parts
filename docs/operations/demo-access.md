@@ -130,3 +130,7 @@ code or a token; a session opened is logged with the code's label. See
 `./dev e2e` starts the stack with a code of its own (`DEMO_ACCESS_CODE` set in the shell
 overrides it; the value in `.env` is not used for the run), opens one session before the run
 and gives it to every test, and `tests/access.spec.ts` starts without one to check both doors.
+
+Local gate labels must be one line, 1 to 60 characters. Invalid labels are refused before any local setting or running service changes. Duplicate settings use the last value in the file; exported shell settings still take priority. Quoted values end before a trailing comment.
+
+`gate show` also refuses a shell override so it cannot print a file value as the active master. Bare names without an assignment are ignored by the environment helpers.

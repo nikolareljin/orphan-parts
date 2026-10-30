@@ -114,3 +114,58 @@ test_env_set_and_env_get_agree_on_quotes_crlf_and_special_values() {
   assert_eq "$(env_get T "$dir/c.env")" "2"
   [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
 }
+
+
+test_env_load_uses_last_duplicate_but_keeps_shell_exports() {
+  local f
+  f="$(mktemp)"
+  printf 'DUP_VALUE=first\nDUP_VALUE=last\nDUP_SHELL=first\nDUP_SHELL=last\n' > "$f"
+  unset DUP_VALUE
+  export DUP_SHELL=shell
+  env_load "$f"
+  assert_eq "$DUP_VALUE" "last"
+  assert_eq "$DUP_SHELL" "shell"
+  unset DUP_VALUE DUP_SHELL
+  rm -f "$f"
+}
+
+
+test_env_quoted_values_stop_before_quoted_comments() {
+  local f
+  f="$(mktemp)"
+  printf '%s\n' 'QUOTED="value" # "comment"' "SINGLE='value' # it's a comment" > "$f"
+  assert_eq "$(env_get QUOTED "$f")" "value"
+  assert_eq "$(env_get SINGLE "$f")" "value"
+  unset QUOTED SINGLE
+  env_load "$f"
+  assert_eq "$QUOTED" "value"
+  assert_eq "$SINGLE" "value"
+  unset QUOTED SINGLE
+  rm -f "$f"
+}
+
+
+test_env_set_refuses_invalid_assignments_without_writing() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  assert_false env_set 'BAD NAME' value "$dir/invalid.env"
+  assert_false test -e "$dir/invalid.env"
+  printf 'FIRST=original\n' > "$dir/fixture.env"
+  assert_false env_set FIRST $'value\nSECOND=injected' "$dir/fixture.env"
+  assert_eq "$(cat "$dir/fixture.env")" "FIRST=original"
+  rm -rf -- "$dir"
+}
+
+
+test_env_load_ignores_names_without_assignments() {
+  local f
+  f="$(mktemp)"
+  printf 'BARE_SETTING\nVALID_SETTING=yes\n' > "$f"
+  unset BARE_SETTING VALID_SETTING
+  env_load "$f"
+  assert_eq "${BARE_SETTING-unset}" "unset"
+  assert_eq "$VALID_SETTING" "yes"
+  assert_eq "$(env_get BARE_SETTING "$f")" ""
+  unset VALID_SETTING
+  rm -f "$f"
+}

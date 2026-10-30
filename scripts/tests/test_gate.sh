@@ -150,3 +150,27 @@ test_gate_checks_its_options() {
   assert_false grep -q 'app.keys issue' "$dir/docker.log"
   _gate_cleanup "$dir"
 }
+
+
+test_gate_invalid_labels_do_not_change_state() {
+  local dir label
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _gate_tree "$dir"
+  for label in '   ' "$(printf '%061d' 1)" $'two\nlines'; do
+    assert_false _gate_run "$dir" "$dir/dev" gate on --label "$label" >/dev/null 2>&1
+  done
+  assert_eq "$(env_get DEMO_ACCESS_CODE "$dir/.env")" "placeholder-code"
+  assert_false test -f "$dir/docker.log"
+  _gate_cleanup "$dir"
+}
+
+
+test_gate_show_refuses_an_overriding_shell_code() {
+  local dir out
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _gate_tree "$dir"
+  out="$(env -u CI PATH="$dir/bin:$PATH" DEMO_ACCESS_CODE=other-placeholder "$dir/dev" gate show 2>&1)"
+  assert_true grep -q 'unset DEMO_ACCESS_CODE' <<< "$out"
+  assert_false grep -q 'access code (the master, this machine)' <<< "$out"
+  _gate_cleanup "$dir"
+}

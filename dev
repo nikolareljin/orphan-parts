@@ -425,10 +425,16 @@ cmd_gate() {
     opts=1
   done
   [[ $opts -eq 0 || "$what" == on ]] || die "$usage"
+  if [[ "$what" == on ]]; then
+    label="${label#"${label%%[![:space:]]*}"}"; label="${label%"${label##*[![:space:]]}"}"
+    [[ -n "$label" && ${#label} -le 60 && "$label" != *$'\n'* && "$label" != *$'\r'* ]] \
+      || die "--label needs one line, 1 to 60 characters"
+  fi
   case "$what" in
     show)
       code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
       [[ -n "$code" ]] || die "no DEMO_ACCESS_CODE in .env: the gate is off (./dev gate on)"
+      _gate_shell_check "$code"
       printf 'access code (the master, this machine): %s\n' "$code"
       ;;
     off)

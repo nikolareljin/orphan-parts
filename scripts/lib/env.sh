@@ -13,7 +13,7 @@ _env_value() {
   case "$v" in
     \"*|\'*)
       q="${v:0:1}"; v="${v:1}"
-      [[ "$v" == *"$q"* ]] && v="${v%"$q"*}"
+      [[ "$v" == *"$q"* ]] && v="${v%%"$q"*}"
       ;;
     *)
       v="${v%%[[:space:]]#*}"
@@ -28,18 +28,20 @@ _env_value() {
 env_load() {
   local file="${1:-$(project_root)/.env}"
   [[ -f "$file" ]] || return 0
-  local line key value
+  local line key value loaded=" "
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line%$'\r'}"
     line="${line#"${line%%[![:space:]]*}"}"
     [[ -z "$line" || "$line" == \#* ]] && continue
     line="${line#export }"
+    [[ "$line" == *=* ]] || continue
     key="${line%%=*}"
     value="${line#*=}"
     [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
     value="$(_env_value "$value")"
-    if [[ -z "${!key+x}" ]]; then
+    if [[ -z "${!key+x}" || "$loaded" == *" $key "* ]]; then
       export "$key=$value"
+      loaded="$loaded$key "
     fi
   done < "$file"
 }
@@ -57,6 +59,7 @@ env_get() {
     line="${line#"${line%%[![:space:]]*}"}"
     [[ -z "$line" || "$line" == \#* ]] && continue
     line="${line#export }"
+    [[ "$line" == *=* ]] || continue
     key="${line%%=*}"
     [[ "$key" == "$want" ]] || continue
     value="$(_env_value "${line#*=}")"; found=1
@@ -76,6 +79,7 @@ _env_set_tmp=""
 _env_set_cleanup() { [[ -z "$_env_set_tmp" ]] || rm -f -- "$_env_set_tmp"; _env_set_tmp=""; }
 env_set() {
   local key="$1" value="$2" file="${3:-$(project_root)/.env}" done=0 line rest cr rc=0
+  [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ && "$value" != *$'\n'* && "$value" != *$'\r'* ]] || return 1
   if [[ ! -f "$file" ]]; then
     (umask 077 && : > "$file") || return 1
     chmod 600 "$file" || return 1
