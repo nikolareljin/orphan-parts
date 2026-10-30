@@ -8,3 +8,11 @@ htmlcov
 .coverage
 *.egg-info
 tests
+# never into an image, even though the Dockerfile copies only app/ and pyproject.toml
+.env
+.env.*
+data
+*.sqlite3
+*.sqlite3-*
+*.log
+.git

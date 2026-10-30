@@ -70,6 +70,14 @@ jobs:
           [ "$ok" = 1 ] || { echo "healthz never answered"; exit 1; }
           echo "$ready" | grep -q '"status":"ok"' || { echo "readyz is not ok"; exit 1; }
 
+      - name: no credential and no personal data in the images
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+        run: |
+          curl -fsSL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tgz gitleaks && rm gitleaks.tgz
+          GITLEAKS="$PWD/gitleaks" bash scripts/scan-image.sh "$IMAGE_PREFIX/backend:$TAG" "$IMAGE_PREFIX/frontend:$TAG"
+
       - name: push the images
         run: |
           for svc in backend frontend; do
