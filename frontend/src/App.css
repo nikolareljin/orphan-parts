@@ -59,6 +59,7 @@ footer.service .error {
 dialog.modal {
   width: min(900px, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem); /* the visible height on a phone, under its toolbars */
   padding: 0;
   overflow: hidden; /* the body scrolls; the dialog itself has no bar of its own */
   border: 1px solid var(--line);
@@ -77,6 +78,7 @@ dialog.modal::backdrop {
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem); /* the visible height on a phone, under its toolbars */
 }
 
 .modal-bar {
@@ -995,6 +997,7 @@ button.link {
   dialog.modal {
     width: calc(100vw - 1rem);
     max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1rem);
   }
   table.evidence,
   table.items {

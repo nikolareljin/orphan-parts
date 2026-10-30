@@ -6,4 +6,5 @@
 - No accounts, no tracking, no third-party scripts in the web app.
 
 !!! note
-    Ingest and retention are not built yet; this page states the rules they implement.
+    Nothing is purged on a timer: `RETENTION_HOURS` has no job behind it yet. What is kept is
+    listed above, and goes when you delete it.

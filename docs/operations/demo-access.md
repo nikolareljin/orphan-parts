@@ -38,8 +38,8 @@ origin and, when gated, a session for the phone (`GET /api/pair.svg`); the code 
 session to reach, so only someone already in can hand the phone one, and the access code
 itself is never in the QR. The phone's session ends like any other, after `DEMO_SESSION_HOURS`.
 
-**The set, at no cost.** The public demo is the recorded set (`./dev demo`, [Demo
-walkthrough](../start/demo.md)): with `OPL_FAKE_API=1` on the host nothing is sent to the
+**The set, at no cost.** The public demo is the recorded set (`./dev demo` on the machine
+that runs the stack, [Demo walkthrough](../start/demo.md)): with `OPL_FAKE_API=1` on the host nothing is sent to the
 models and nothing is spent, whoever visits. Live mode is a window the operator opens, with
 `SPEND_CAP_USD` set to the amount they accept for it; the ledger survives restarts, so the cap
 counts across them.

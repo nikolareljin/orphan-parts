@@ -36,8 +36,8 @@ import kotlinx.coroutines.withContext
 
 /** What is typed is what is checked: the backend's open readiness path first, then the code
  * against the gate when there is one, each with its own line. */
-suspend fun check(baseUrl: String, code: String): String = withContext(Dispatchers.IO) {
-    val client = Client(baseUrl, HttpTransport())
+suspend fun check(baseUrl: String, code: String, token: String = ""): String = withContext(Dispatchers.IO) {
+    val client = Client(baseUrl, HttpTransport(), token)
     val ready = try {
         client.readiness()
     } catch (e: Exception) {
@@ -47,6 +47,7 @@ suspend fun check(baseUrl: String, code: String): String = withContext(Dispatche
     val line = "Backend ${ready.status}, Model API ${ready.modelApi}, demo $gate."
     when {
         !ready.gated -> line
+        code.isBlank() && token.isNotBlank() -> "$line Paired: the session from the code works until it ends."
         code.isBlank() -> "$line Type the code to send anything."
         else -> try {
             if (client.access(code)) "$line The code opens it." else "$line The code is refused."
@@ -122,7 +123,9 @@ fun SettingsScreen(settings: Settings, session: Session, onSaved: (Settings) -> 
                     status = "Checking…"
                     val typedUrl = normalizeBaseUrl(url)
                     val typedCode = code
-                    scope.launch { status = check(typedUrl, typedCode) }
+                    // the pairing's session counts for the address it was made for
+                    val pairing = if (typedUrl == settings.baseUrl) settings.token else ""
+                    scope.launch { status = check(typedUrl, typedCode, pairing) }
                 },
             ) { Text("Check") }
         }

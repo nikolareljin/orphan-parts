@@ -102,7 +102,8 @@ cmd_phone() {
   local release=0
   [[ "${1:-}" == "--release" ]] && release=1
   docker_running || die "docker is not running"
-  curl -fsS -m 5 "http://localhost:$BACKEND_PORT/healthz" >/dev/null 2>&1 || die "the stack is not up (or not answering on :$BACKEND_PORT): ./dev up first"
+  # the phone talks to the web port, which proxies the API: that is what has to answer
+  curl -fsS -m 5 "http://localhost:$FRONTEND_PORT/readyz" >/dev/null 2>&1 || die "the stack is not up (or the web app not answering on :$FRONTEND_PORT): ./dev up first"
   # one device for every step: picked here once, so several phones are asked about once
   local picked
   picked="$(bash "$ROOT/scripts/android.sh" serial 2>/dev/null || true)"
@@ -125,12 +126,16 @@ cmd_phone() {
   fi
   api_mode_or_fixture
   log_info "scan this with the app (Backend tab, Scan to pair):"
-  compose run --rm --no-deps -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
+  # inside the running backend: the session is signed with the code that backend started with,
+  # not with whatever this shell or .env says now
+  compose exec -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
 }
 
 # This machine's address on the local network, for the phone to reach the web app.
 lan_address() {
-  if [[ -n "${LAN_ADDRESS:-}" ]]; then printf '%s\n' "$LAN_ADDRESS"; return; fi
+  local set_in_env
+  set_in_env="$(env_get LAN_ADDRESS "$ROOT/.env" 2>/dev/null || true)"
+  if [[ -n "${LAN_ADDRESS:-$set_in_env}" ]]; then printf '%s\n' "${LAN_ADDRESS:-$set_in_env}"; return; fi
   if is_macos; then ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true
   else hostname -I 2>/dev/null | awk '{print $1}' || true; fi
 }
@@ -343,11 +348,15 @@ _start_backend_again() {
   [[ $_backend_was_up -eq 0 ]] || compose start backend >/dev/null
 }
 stop_backend_for_run() {
-  compose ps --status running backend 2>/dev/null | grep -q backend && _backend_was_up=1
-  if [[ $_backend_was_up -eq 1 ]]; then
-    compose stop backend >/dev/null
-    on_exit _start_backend_again
-  fi
+  # whatever the container is doing (running, restarting after a crash, paused), it is stopped
+  # before the inventory file is replaced under it; started again afterwards if it was up
+  local state
+  state="$(compose ps -a --format '{{.State}}' backend 2>/dev/null || true)"
+  [[ -n "$state" ]] || return 0
+  compose stop backend >/dev/null 2>&1 || true
+  case "$state" in
+    running|restarting) _backend_was_up=1; on_exit _start_backend_again ;;
+  esac
 }
 
 cmd_demo() {

@@ -28,8 +28,8 @@ set -euo pipefail
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 what="${1:-}"
 case "$what" in
-  build|test|release|install|install-file|launch|smoke) ;;
-  *) printf 'android: usage: android.sh <build|test|release|install|install-file <apk>|launch|smoke>\n' >&2; exit 2 ;;
+  build|test|release|install|install-file|launch|smoke|serial) ;;
+  *) printf 'android: usage: android.sh <build|test|release|install|install-file <apk>|launch|smoke|serial>\n' >&2; exit 2 ;;
 esac
 
 fail() { printf 'android: %s\n' "$*" >&2; exit 1; }
@@ -170,7 +170,10 @@ smoke() {
   say "launching $activity"
   "$adb" -s "$(device)" shell am start -W -n "$activity" >/dev/null
   local waited=0
-  until "$adb" -s "$(device)" shell dumpsys activity activities 2>/dev/null | grep -q "$activity"; do
+  # the output is read whole, then searched: grep -q closing the pipe early would fail the
+  # pipeline under pipefail and the loop would never see the app
+  local shown=""
+  until shown="$("$adb" -s "$(device)" shell dumpsys activity activities 2>/dev/null || true)" && grep -q "$activity" <<<"$shown"; do
     sleep 1
     waited=$((waited + 1))
     [[ $waited -lt 30 ]] || fail "the app did not come on screen in 30 s"
@@ -189,7 +192,7 @@ case "$what" in
     gradle assembleRelease
     apk="$(find "$app/app/build/outputs/apk/release" -name '*.apk' 2>/dev/null | head -1 || true)"
     [[ -n "$apk" ]] || fail "no release APK after the build"
-    if [[ -n "${KEYSTORE_PATH:-}" || -f "$app/keystore.properties" ]]; then
+    if [[ -n "${KEYSTORE_PATH:-}" ]] || grep -qs '^KEYSTORE_PATH=' "$app/keystore.properties"; then
       say "$apk (release key)"
     else
       say "$apk (debug key: installs, not for a store)"
@@ -197,8 +200,10 @@ case "$what" in
     ;;
   install) install_debug; say "installed" ;;
   serial)
-    # the device picked once, for a caller that runs several steps: empty when none is connected
-    if pick_device; then printf '%s\n' "$serial"; fi
+    # the device picked once, for a caller that runs several steps: empty when none is
+    # connected. Only the serial goes to stdout; the list and the choice go to stderr, so a
+    # caller capturing the answer gets the serial and nothing else
+    if pick_device >&2; then printf '%s\n' "$serial"; fi
     ;;
   install-file)
     apk="${2:?install-file needs the APK path}"

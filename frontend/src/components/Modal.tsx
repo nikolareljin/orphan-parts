@@ -22,10 +22,19 @@ export default function Modal({ title, onClose, children }: { title: string; onC
       event.preventDefault()
       close.current()
     }
+    // a close the platform does on its own (a back gesture, a close watcher that would not be
+    // cancelled) tells the page the same way, so the panel's state follows the dialog's
+    // the event is delivered after the fact: a dialog already open again (a strict-mode
+    // remount closes and reopens it in one go) has nothing to tell
+    const closed = () => {
+      if (!dialog.open) close.current()
+    }
     dialog.addEventListener('cancel', cancel)
+    dialog.addEventListener('close', closed)
     document.body.classList.add('has-dialog')
     return () => {
       dialog.removeEventListener('cancel', cancel)
+      dialog.removeEventListener('close', closed)
       document.body.classList.remove('has-dialog')
       if (dialog.open) dialog.close()
     }
