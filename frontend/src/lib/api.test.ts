@@ -29,14 +29,14 @@ describe('api', () => {
     const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ status: 'ok' }))
     vi.stubGlobal('fetch', fetchMock)
     await api.readiness()
-    expect(fetchMock).toHaveBeenCalledWith('/readyz', { headers: { Accept: 'application/json' } })
+    expect(fetchMock).toHaveBeenCalledWith('/readyz', { headers: { Accept: 'application/json' }, credentials: 'include' })
   })
 
   it('reads version from /api/version', async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ name: 'orphan-parts' }))
     vi.stubGlobal('fetch', fetchMock)
     await api.version()
-    expect(fetchMock).toHaveBeenCalledWith('/api/version', { headers: { Accept: 'application/json' } })
+    expect(fetchMock).toHaveBeenCalledWith('/api/version', { headers: { Accept: 'application/json' }, credentials: 'include' })
   })
 
   it('reports the path and status on failure', async () => {

@@ -28,8 +28,12 @@
 #   release [--dry-run]
 #                      tag VERSION on main and push the tag (the repository admin's command);
 #                      the tag starts the release workflow
-#   deploy [web|android|all] [--version x.y.z]
-#                      put a published release on the host, and build the APK when there is one
+#   deploy [web|android|modal|all] [--version x.y.z]
+#                      put a published release where it runs: the backend on Modal, a host over
+#                      ssh, and the APK when there is one
+#   deploy hosted [secret|backend|web|all]
+#                      the hosted demo (Modal and Cloudflare Pages) from settings in the
+#                      environment, the same steps the deploy workflow runs
 #   android <build|test|release|install|smoke>
 #                      the app: unit tests, the APKs, an install, a smoke run on a device
 #   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded

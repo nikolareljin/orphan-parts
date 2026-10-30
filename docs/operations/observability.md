@@ -5,8 +5,9 @@
 - **Request IDs**: an incoming `X-Request-ID` is honoured, otherwise one is generated. It is
   echoed in the response and attached to every log line written while handling the request.
 - **Health**: `GET /healthz` says the process is up. `GET /readyz` reports whether configuration
-  loaded, which Model API mode is active, whether the data directory is writable, and the spend
-  so far against the cap.
+  loaded, which Model API mode is active (`live`, `fixture`, `record`, or `fixture (key
+  failed)` when the startup probe found the key not answering), whether the data directory is
+  writable, and the spend so far against the cap.
 
 ## Model API calls
 

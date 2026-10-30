@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# deploy.sh [web|android|all] [--version <x.y.z>]: put a published release where people use it.
+# deploy.sh [web|android|modal|hosted|all] [--version <x.y.z>]: put a published release where people use it.
 #
+#   modal    the backend on Modal from this tree (modal deploy deploy/modal_app.py) with this
+#            machine's login; the secret and the web app are left as they are
+#   hosted   the whole hosted demo from settings in the environment, the same steps the deploy
+#            workflow runs: deploy-hosted.sh [secret|backend|web|all]
 #   web      on the host named by DEPLOY_HOST (user@host), in DEPLOY_PATH, pull the release's
 #            images and start them: the same two compose files as here, with TAG set
 #   android  build the release APK when an Android app is in this tree; the upload to the
@@ -20,11 +24,15 @@
 set -euo pipefail
 
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+if [[ "${1:-}" == hosted ]]; then
+  shift
+  exec bash "$root/scripts/deploy-hosted.sh" "$@"
+fi
 target="all"
 version=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    web|android|all) target="$1"; shift ;;
+    web|android|modal|all) target="$1"; shift ;;
     --version) version="${2:?--version needs a value}"; shift 2 ;;
     *) printf 'deploy: unknown argument %s\n' "$1" >&2; exit 2 ;;
   esac
@@ -79,6 +87,22 @@ deploy_web() {
   say "web: up"
 }
 
+deploy_modal() {
+  local modal_cmd="${MODAL:-modal}"
+  if ! command -v "$modal_cmd" >/dev/null 2>&1; then
+    fail "modal: the command is not installed; pipx install modal && modal setup, then again (see docs/operations/deployment.md)"
+  fi
+  [[ -f "$root/deploy/modal_app.py" ]] || fail "modal: no deploy/modal_app.py in this tree"
+  say "modal: deploying the backend from $root"
+  local out
+  out="$("$modal_cmd" deploy "$root/deploy/modal_app.py" 2>&1)" || { printf '%s\n' "$out" >&2; fail "modal: the deploy failed"; }
+  printf '%s\n' "$out" | tail -5
+  local url
+  url="$(printf '%s\n' "$out" | grep -oE 'https://[A-Za-z0-9.-]+\.modal\.run' | tail -1 || true)"
+  [[ -n "$url" ]] && say "modal: the backend answers at $url (put it in the web app's VITE_API_URL and the secret's CORS_ORIGINS)"
+  say "modal: the web app on Cloudflare Pages follows main on its own"
+}
+
 deploy_android() {
   if [[ ! -f "$root/android/gradlew" ]]; then
     [[ "$target" == "all" ]] && { say "android: no app in this tree yet; skipped"; return 0; }
@@ -96,5 +120,6 @@ deploy_android() {
 case "$target" in
   web) deploy_web ;;
   android) deploy_android ;;
+  modal) deploy_modal ;;
   all) deploy_web; deploy_android ;;
 esac

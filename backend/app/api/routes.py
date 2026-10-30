@@ -1,6 +1,6 @@
 import tempfile
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from app import __version__
@@ -55,11 +55,11 @@ def healthz() -> Health:
 
 
 @router.get("/readyz", response_model=Readiness, tags=["ops"])
-def readyz(settings: SettingsDep, ledger: LedgerDep, gate: GateDep) -> Readiness:
+def readyz(request: Request, settings: SettingsDep, ledger: LedgerDep, gate: GateDep) -> Readiness:
     writable = _writable(settings)
     return Readiness(
         status="ok" if writable else "degraded",
-        model_api=settings.model_api_mode,
+        model_api=getattr(request.app.state, "model_api_label", settings.model_api_mode),
         data_dir_writable=writable,
         spend_usd=ledger.total_usd,
         spend_cap_usd=ledger.cap_usd,

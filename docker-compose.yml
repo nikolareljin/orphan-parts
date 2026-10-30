@@ -21,6 +21,7 @@ services:
     volumes:
       - ./backend:/app
       - ./demo:/demo
+      - ./deploy:/deploy:ro
       - app-data:/data
     ports:
       - "${BACKEND_PORT:-8000}:8000"

@@ -84,6 +84,15 @@ requests or merges. The images are the release artifact: the demo host pulls the
 tagged version can be run anywhere without a build. See
 [Deployment](../operations/deployment.md).
 
+## `deploy.yml`
+
+The hosted demo: the backend to Modal and the web app to Cloudflare Pages, from the
+repository's secrets and variables. Inert until the variable `HOSTED_DEPLOY` is `true`; then
+it runs from **Run workflow** (both, backend or web) and after every release tag, one run at a
+time. Its jobs call `scripts/deploy-hosted.sh`, the same script `./dev deploy hosted` runs,
+and use only `actions/checkout`, `actions/setup-python` and `actions/setup-node`. Which
+secret and variable is which is on the [Deployment](../operations/deployment.md) page.
+
 ## `android.yml`
 
 The app's checks, only when `android/`, `scripts/android.sh` or `VERSION` changed: the unit

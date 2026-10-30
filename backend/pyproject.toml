@@ -35,7 +35,7 @@ build-backend = "setuptools.build_meta"
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["profiles/data/*.yaml"]
+app = ["profiles/data/*.yaml", "projects/data/*.yaml"]
 
 [tool.ruff]
 line-length = 100

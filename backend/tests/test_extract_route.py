@@ -133,6 +133,7 @@ def test_extract_answers_502_when_the_response_is_incomplete(tmp_path: Path) -> 
 def test_extract_answers_503_when_the_spend_cap_is_reached(tmp_path: Path) -> None:
     settings = Settings(
         OPL_FAKE_API=False,
+        OPL_KEY_PROBE=False,
         model_api_key="sample-value-for-tests",
         data_dir=tmp_path / "data",
         spend_cap_usd=1.0,

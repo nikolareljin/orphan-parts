@@ -7,6 +7,7 @@ stops the service with a clear message instead of failing on the first user requ
 | Variable | Default | Required | Meaning |
 |---|---|---|---|
 | `MODEL_API_KEY` | | yes, unless fixture mode | Model API key from https://dev.meta.ai |
+| `OPL_KEY_PROBE` | `1` | | one `GET /models` at startup in live mode; a key that cannot work (401, 402, 403, 404) puts the service on recorded answers, said on `/readyz`; a busy or failing API changes nothing |
 | `MODEL_API_BASE_URL` | `https://api.meta.ai/v1` | | Model API base URL |
 | `MODEL_SPARK` | `muse-spark-1.3` | | Muse Spark model ID |
 | `MODEL_WONDER` | `muse-wonder-1.0` | | Muse Wonder model ID; listed and checked, no call in this version |
@@ -28,12 +29,13 @@ stops the service with a clear message instead of failing on the first user requ
 | `EXTRACT_ENHANCE` | `1` | | contrast stretched and edges sharpened on what goes to the model; what is kept is the photo as taken. Changing it changes what the model is shown, so fixtures recorded for a photo stop matching and the operation's fallback answers instead: record the set again |
 | `EXTRACT_BLUR_THRESHOLD` | `150` | | the sharpness (variance of the Laplacian on a 512 px copy) under which a reading warns that the label looks blurred |
 | `RETENTION_HOURS` | `24` | | reserved for a purge of stored photos; nothing but measurement photos is kept today, and no purge runs |
-| `CORS_ORIGINS` | `http://localhost:5173` | | comma-separated browser origins allowed to call the API |
+| `CORS_ORIGINS` | `http://localhost:5173` | | comma-separated browser origins allowed to call the API, named one by one (`*` is refused: calls carry credentials) |
 | `DATA_DIR` | `./data` | | uploads, the spend ledger and the SQLite database |
 | `MAX_UPLOAD_MB` | `12` | | upload size limit per file |
 | `MAX_CLIP_MB` | `60` | | size limit for a clip sent with a capture |
 | `MAX_CAPTURES` | `200` | | how many captures the Inbox keeps at once; a send over it is refused until some are deleted |
 | `INVENTORY_DB_FILE` | `inventory.sqlite3` | | the inventory database, inside `DATA_DIR` |
+| `SQLITE_JOURNAL_MODE` | `WAL` | | the database's journal mode; `DELETE` on a network filesystem (the Modal volume sets it) |
 | `MEASURE_MIN_SHARPNESS` | `150` | | least edge response (Laplacian variance) around every mark before a capture is measured |
 | `MEASURE_MIN_REFERENCE_PX` | `80` | | least span of the scale reference in pixels |
 | `VOICE_MAX_SECONDS` | `600` | | longest voice note accepted; the transcription service takes ten minutes at most, and `MAX_UPLOAD_MB` bounds the file first |
