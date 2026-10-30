@@ -54,7 +54,7 @@ DEMO_ALLOWED = [
     ("POST", re.compile(r"^/api/measure$")),
 ]
 DEMO_LINE = "demo: the code unlocks saving, drafts, prices, projects and captures"
-_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[01]\.[0-9a-f]{32}$")
+_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[01]\.\d{1,12}\.[0-9a-f]{32}$")
 
 
 def demo_allowed(method: str, path: str) -> bool:
@@ -156,6 +156,8 @@ class Gate:
         self._key = hashlib.sha256(b"opl-session:" + code.encode("utf-8")).digest()
         self.session_seconds = settings.demo_session_hours * 3600
         self.visitor = Allowance(settings.demo_visitor_calls_per_hour, 3600)
+        # the demo visitor's tries cost nothing but work: so many per address and hour
+        self.tries = Allowance(settings.demo_visitor_calls_per_hour, 3600)
         self.daily = DailyAllowance(settings.demo_daily_calls)
         self.attempts = Allowance(settings.demo_code_attempts, 900)
         self.cheap = Allowance(settings.demo_requests_per_minute, 60)
@@ -165,42 +167,54 @@ class Gate:
 
     # --- the code and the session ------------------------------------------
 
-    def which_code(self, given: str) -> str | None:
-        """The name of the code this is: ``master`` for the configured one, the record's label
-        for an issued one, None for anything else. The master is checked first and the
+    def which_key(self, given: str) -> tuple[str, int] | None:
+        """What this code is: (``master``, 0) for the configured one, (label, id) for an
+        issued record, None for anything else. The master is checked first and the
         records always, so a miss takes as long as a hit."""
         digest = hashlib.sha256(given.encode("utf-8")).digest()
         master = self.enabled and hmac.compare_digest(digest, self._code_digest)
         record = self.keys.match(given) if self.enabled and self.keys is not None else None
         if master:
-            return "master"
-        return record.label if record is not None else None
+            return "master", 0
+        return (record.label, record.id) if record is not None else None
+
+    def which_code(self, given: str) -> str | None:
+        """The name of the code this is, or None."""
+        found = self.which_key(given)
+        return found[0] if found is not None else None
 
     def code_matches(self, given: str) -> bool:
         return self.which_code(given) is not None
 
-    def _sign(self, sid: str, exp: int, live: bool) -> str:
-        text = f"{sid}.{exp}.{int(live)}".encode()
+    def _sign(self, sid: str, exp: int, live: bool, kid: int) -> str:
+        text = f"{sid}.{exp}.{int(live)}.{kid}".encode()
         return hmac.new(self._key, text, hashlib.sha256).hexdigest()[:32]
 
-    def issue(self, now: float | None = None, *, live: bool = True) -> tuple[str, int]:
-        """A session token and when it ends: ``sid.expiry.door.signature``, nothing stored.
-        The door is ``1`` for a session opened with the code."""
+    def issue(
+        self, now: float | None = None, *, live: bool = True, kid: int = 0
+    ) -> tuple[str, int]:
+        """A session token and when it ends: ``sid.expiry.door.key.signature``, nothing
+        stored. The door is ``1`` for a session opened with a code; the key is the issued
+        record's id, so revoking the record ends the sessions it opened, and ``0`` for the
+        master code."""
         exp = int((time.time() if now is None else now) + self.session_seconds)
         sid = secrets.token_urlsafe(16)
-        return f"{sid}.{exp}.{int(live)}.{self._sign(sid, exp, live)}", exp
+        return f"{sid}.{exp}.{int(live)}.{kid}.{self._sign(sid, exp, live, kid)}", exp
 
     def verify(self, token: str, now: float | None = None) -> Session | None:
         """The session when the token is ours and current, else None."""
         if not self.enabled or not token or not _TOKEN_RE.match(token):
             return None
-        sid, exp_text, door, sig = token.split(".")
+        sid, exp_text, door, kid_text, sig = token.split(".")
         exp = int(exp_text)
         if exp <= (time.time() if now is None else now):
             return None
         live = door == "1"
-        if not hmac.compare_digest(sig, self._sign(sid, exp, live)):
+        kid = int(kid_text)
+        if not hmac.compare_digest(sig, self._sign(sid, exp, live, kid)):
             return None
+        if kid and (self.keys is None or self.keys.revoked(kid)):
+            return None  # the issued code this session came from is gone
         return Session(sid, live)
 
     # --- who is asking ---------------------------------------------------
@@ -257,6 +271,14 @@ class GateMiddleware(BaseHTTPMiddleware):
         if not live and not demo_allowed(method, path):
             log.info("demo: a write was refused", extra={"path": path})
             return _refused(403, DEMO_LINE)
+        if not live and expensive(method, path):
+            # recordings cost nothing to answer but work to decode: so many per address
+            ok, retry = gate.tries.take(ip)
+            if not ok:
+                log.info("limit: demo tries per hour", extra={"path": path, "retry_after": retry})
+                return _refused(
+                    429, f"this address's hourly allowance of tries is used; wait {retry} s", retry
+                )
         # the demo visitor's tries are answered from the recordings and cost nothing, so only
         # the live door is counted against what spends
         if live and expensive(method, path):

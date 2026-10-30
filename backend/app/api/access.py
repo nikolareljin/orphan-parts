@@ -51,12 +51,13 @@ def grant_access(
             detail=f"too many tries; wait {retry} s",
             headers={"Retry-After": str(retry)},
         )
-    which = gate.which_code(body.code)
-    if which is None:
+    found = gate.which_key(body.code)
+    if found is None:
         raise HTTPException(status_code=401, detail="that is not the access code")
+    which, kid = found
     gate.attempts.forget(ip)
     log.info("session opened", extra={"code": which})
-    token, expires_at = gate.issue()
+    token, expires_at = gate.issue(kid=kid)
     response.set_cookie(
         COOKIE,
         token,

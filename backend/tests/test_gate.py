@@ -84,12 +84,13 @@ def test_sessions_are_signed_bound_to_the_code_and_end(tmp_path: Path) -> None:
     session = gate.verify(token, now=1000.0)
     assert session is not None and session.live is True
     assert gate.verify(token, now=4600.0) is None  # ended
-    sid, exp, door, sig = token.split(".")
-    assert door == "1"
-    assert gate.verify(f"{sid}.{exp}.{door}.{'0' * 32}", now=1000.0) is None  # tampered
-    assert gate.verify(f"{sid}.{int(exp) + 9999}.{door}.{sig}", now=1000.0) is None  # stretched
-    assert gate.verify(f"{sid}.{exp}.0.{sig}", now=1000.0) is None  # the door is signed too
-    assert gate.verify(f"{sid}.{exp}.{sig}", now=1000.0) is None  # an old-shape token
+    sid, exp, door, kid, sig = token.split(".")
+    assert door == "1" and kid == "0"
+    assert gate.verify(f"{sid}.{exp}.{door}.{kid}.{'0' * 32}", now=1000.0) is None  # tampered
+    assert gate.verify(f"{sid}.{int(exp) + 9999}.{door}.{kid}.{sig}", now=1000.0) is None
+    assert gate.verify(f"{sid}.{exp}.0.{kid}.{sig}", now=1000.0) is None  # the door is signed
+    assert gate.verify(f"{sid}.{exp}.{door}.7.{sig}", now=1000.0) is None  # the key id too
+    assert gate.verify(f"{sid}.{exp}.{door}.{sig}", now=1000.0) is None  # an old-shape token
     assert gate.verify("", now=1000.0) is None and gate.verify("nonsense", now=1000.0) is None
     other = Gate(gated_settings(tmp_path, demo_access_code="another-code-entirely"))
     assert other.verify(token, now=1000.0) is None  # a changed code ends every session
@@ -155,6 +156,8 @@ def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) ->
     assert opened.status_code == 200 and opened.json()["granted"] is True
     assert gated.get("/api/items").status_code == 200
     keys.revoke("judges")
+    # the session it opened ends with it, not only new ones
+    assert gated.get("/api/items").status_code == 403
     gated.cookies.clear()
     refused = gated.post("/api/access", json={"code": code})
     assert refused.status_code == 401
@@ -204,6 +207,39 @@ def test_leaving_clears_the_cookie(gated: TestClient) -> None:
         "Max-Age=0" in gone.headers["set-cookie"] or "expires" in gone.headers["set-cookie"].lower()
     )
     assert gated.get("/api/items").status_code == 403  # the demo visitor again
+
+
+def test_the_demo_visitor_never_reads_an_item_through_assess(gated: TestClient) -> None:
+    gated.post("/api/access", json={"code": CODE})
+    made = gated.post("/api/items", json={"item_type": "vacuum", "profile": "vacuum_attachment"})
+    assert made.status_code == 201, made.text
+    item_id = made.json()["id"]
+    gated.cookies.clear()
+    for body in (
+        {"need": {"item_id": item_id}, "candidate": {"values": {}}},
+        {"need": {"values": {}, "profile": "vacuum_attachment"}, "candidate": {"item_id": item_id}},
+        {"need": {"item_id": 999}, "candidate": {"values": {}}},  # nor learns which ids exist
+    ):
+        refused = gated.post("/api/assess", json=body)
+        assert refused.status_code == 403 and refused.json()["detail"] == DEMO_LINE, body
+    # values written in are the demo's try
+    tried = gated.post(
+        "/api/assess",
+        json={"need": {"values": {}, "profile": "vacuum_attachment"}, "candidate": {"values": {}}},
+    )
+    assert tried.status_code == 200, tried.text
+
+
+def test_the_demo_visitors_tries_are_counted_per_address(tmp_path: Path) -> None:
+    settings = gated_settings(tmp_path, demo_visitor_calls_per_hour=2)
+    with TestClient(create_app(settings)) as c:
+        photo = [("photos", ("p.jpg", make_photo(), "image/jpeg"))]
+        c.post("/api/extract", files=photo)
+        c.post("/api/extract", files=photo)
+        third = c.post("/api/extract", files=photo)
+        assert third.status_code == 429 and "tries" in third.json()["detail"]
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 0  # nothing spent
+        assert c.get("/api/templates").status_code == 200  # looking stays open
 
 
 def test_what_spends_is_counted_per_visitor_and_per_day(tmp_path: Path) -> None:

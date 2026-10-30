@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { grayPng } from './png'
 
 // These start without the session every other test carries: the two doors are the subject.
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -38,6 +39,15 @@ test('the API answers the demo visitor with recordings and refuses every write',
   expect(write.status()).toBe(403)
   const open = await request.get('/api/version')
   expect(open.status()).toBe(200)
+  // the headline of the demo door: a try is answered, from the recordings, and spends nothing
+  const tried = await request.post('/api/extract', {
+    multipart: { photos: { name: 'label.png', mimeType: 'image/png', buffer: grayPng() } },
+  })
+  expect(tried.status()).toBe(200)
+  expect(((await tried.json()) as { from_fixture: boolean }).from_fixture).toBe(true)
+  // an item by its id is the inventory, not a try
+  const peek = await request.post('/api/assess', { data: { need: { item_id: 1 }, candidate: { values: {} } } })
+  expect(peek.status()).toBe(403)
   const profiles = await request.get('/api/profiles')
   expect(profiles.status()).toBe(200)
   const access = (await (await request.get('/api/access')).json()) as { gated: boolean; granted: boolean; live: boolean }

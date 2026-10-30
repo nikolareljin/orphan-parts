@@ -22,10 +22,11 @@ long as a hit. The records live in the inventory database ([Data model](../refer
 `POST /api/access` with a code opens a session: a cookie the browser keeps (`HttpOnly`,
 `SameSite=Strict`, `Secure` when `DEMO_COOKIE_SECURE=1`), and the same token in the answer for
 a caller that keeps no cookies, sent as `Authorization: Bearer`. The token is
-`sid.expiry.door.signature`, signed with a key derived from the master code: changing the master
-code ends every session at once, revoking an issued code ends new sessions with it (a session
-already open runs to its end, `DEMO_SESSION_HOURS`, 12 by default); nothing is stored on the
-server. A wrong code is refused and only `DEMO_CODE_ATTEMPTS` (5) tries per address and quarter
+`sid.expiry.door.key.signature`, signed with a key derived from the master code: changing the
+master code ends every session at once, and revoking an issued code ends the sessions it
+opened as well as new ones (the token names the record, which is read on every request
+that carries it); a session runs `DEMO_SESSION_HOURS` (12) otherwise. Nothing else is stored
+on the server. A wrong code is refused and only `DEMO_CODE_ATTEMPTS` (5) tries per address and quarter
 hour are taken. `GET /api/access` says whether a code is needed, whether this caller is through
 the door, and whether that reaches the live models (`live`); `DELETE /api/access` ends a session.
 Which code opened a session is logged by its label, never the code itself.
@@ -35,7 +36,9 @@ Which code opened a session is logged by its label, never the code itself.
 Without a session on a gated host, every request is the demo visitor's. Open to the visitor:
 the open paths (`/healthz`, `/readyz`, `/api/version`, `/api/access`, the API documentation),
 the profiles and their rules, the templates, and the four stateless tries: `POST /api/extract`,
-`/api/segment`, `/api/assess`, `/api/measure`. Everything else answers `403` with the line
+`/api/segment`, `/api/assess` (on values written in; an item by its id is the inventory and
+answers 403), `/api/measure`, each so many times per address and hour
+(`DEMO_VISITOR_CALLS_PER_HOUR`, 429 over it). Everything else answers `403` with the line
 above: the inventory, the captures, the searches, the projects, every save, draft, price,
 proposal and capture. The web app shows the pages, a *Sign in with the code* link in the
 header, and the line on whatever a visitor tries to save; the phone says the same on its

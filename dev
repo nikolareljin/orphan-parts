@@ -387,7 +387,8 @@ cmd_demo() {
 cmd_keys() {
   [[ $# -ge 1 ]] || die "usage: ./dev keys issue --label <who> [--days N] | list | revoke <label>"
   docker_running || die "docker is not running"
-  # the running backend reads the same file; a new code works at once, a revoked one stops
+  # the running backend reads the same file; a new code works at once, a revoked one stops,
+  # with the sessions it opened
   compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys "$@"
 }
 

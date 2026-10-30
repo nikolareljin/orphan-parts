@@ -63,6 +63,14 @@ def test_labels_are_checked_and_unique_among_current_codes(tmp_path: Path) -> No
         keys.issue("judges", 7)
     keys.revoke("judges")
     keys.issue("judges", 7)  # the label is free again once the old one is revoked
+    with Store(tmp_path / "inventory.sqlite3").connect() as conn:
+        conn.execute(
+            "UPDATE access_keys SET expires_at = ? WHERE label = 'judges' AND revoked_at IS NULL",
+            ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(),),
+        )
+    reissued, _ = keys.issue("judges", 7)  # and once it has expired
+    assert keys.revoked(keys.match(reissued).id) is False  # type: ignore[union-attr]
+    assert keys.revoked(9999) is True  # no such record
     with pytest.raises(AccessKeyError, match="no current code"):
         keys.revoke("nobody")
 
