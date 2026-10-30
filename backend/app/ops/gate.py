@@ -46,13 +46,14 @@ EXPENSIVE = [
     ("POST", re.compile(r"^/api/captures/\d+/process$")),
 ]
 # What the demo visitor may do without the code: look (the items and captures the owner marked
-# public, their values and photos; never a clip, a note, a location or a draft), and try the
-# stateless readings on recorded answers. Everything that saves, drafts, prices, plans or
-# captures needs the code.
+# public, their values, photos and drawn pictures; never a clip, a note, a location or a
+# draft), and try the stateless readings on recorded answers. Everything that saves, drafts,
+# prices, plans, draws or captures needs the code.
 DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/items$")),
     ("GET", re.compile(r"^/api/items/\d+$")),
     ("GET", re.compile(r"^/api/items/\d+/photos(/\d+)?$")),
+    ("GET", re.compile(r"^/api/items/\d+/pictures(/\d+)?$")),
     ("GET", re.compile(r"^/api/captures$")),
     ("GET", re.compile(r"^/api/captures/\d+$")),
     ("GET", re.compile(r"^/api/captures/\d+/photos/\d+$")),

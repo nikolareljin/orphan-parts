@@ -37,6 +37,7 @@ RESPONSES = "/responses"
 MODELS = "/models"
 TRANSCRIBE = "/asr/transcribe"
 IMAGES = "/images/generations"
+JPEG_MAGIC = b"\xff\xd8\xff"
 
 IMAGE_MIME_TYPES = frozenset(
     {"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/x-icon"}
@@ -445,7 +446,8 @@ class ModelApiClient:
         usage = Usage.from_response(data.get("usage")).model_copy(update={"images": 1})
         usd = 0.0 if from_fixture else cost_usd(model, usage)
         self._record(op, model, IMAGES, usage, usd, from_fixture, attempts, ms)
-        if not image:
+        # a JPEG was asked for: anything else is kept nowhere, though the call is charged
+        if not image.startswith(JPEG_MAGIC):
             raise IncompleteResponseError("the answer carried no image", attempts=attempts)
         return PictureResult(
             data=image,

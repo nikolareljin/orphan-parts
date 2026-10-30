@@ -451,6 +451,11 @@ async def test_an_answer_without_an_image_is_incomplete_and_still_charged(live: 
     h = Harness(live, lambda _: httpx.Response(200, json={"data": [{"b64_json": "!!not base64"}]}))
     with pytest.raises(IncompleteResponseError, match="no image"):
         await h.client.picture("a lamp")
+    png = base64.b64encode(b"\x89PNG\r\n\x1a\n not a jpeg").decode("ascii")
+    h = Harness(live, lambda _: httpx.Response(200, json={"data": [{"b64_json": png}]}))
+    with pytest.raises(IncompleteResponseError, match="no image"):
+        await h.client.picture("a lamp")
+    assert h.ledger.summary().calls == 1
 
 
 # --- models and readiness -----------------------------------------------------

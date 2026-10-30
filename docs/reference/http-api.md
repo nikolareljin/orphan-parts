@@ -35,10 +35,10 @@ separated `components`, and a `version` that every write increments.
 | `GET /api/items/{id}/events` | the history: actor, time, change, version |
 | `GET /api/items/{id}/photos` | how many photos are kept with the item (`count`); an item read from a capture has the capture's, an item saved from the web form the label photos it was read from |
 | `GET /api/items/{id}/photos/{n}` | one of them as JPEG, `1` first, never cached; `404` past the count |
-| `POST /api/items/{id}/public`, `POST /api/captures/{id}/public` | `{public}`: shown to the demo visitor (the item or capture, its values and photos; never a location, a note, a clip or a draft) or private again; the demo visitor's `GET` on items and captures lists the public ones and answers 404 for the rest |
+| `POST /api/items/{id}/public`, `POST /api/captures/{id}/public` | `{public}`: shown to the demo visitor (the item or capture, its values and photos, an item's drawn pictures; never a location, a note, a clip or a draft) or private again; the demo visitor's `GET` on items and captures lists the public ones and answers 404 for the rest |
 | `POST /api/items/{id}/photos` | multipart `uploads`, one to `MAX_PHOTOS` in all on the item: re-encoded on the way in, metadata dropped; `201` with the new `count`; `422` over the limit, `400` for a file that is not an image |
 | `POST /api/items/{id}/picture` | JSON `use` (a project template id, a use in your own words, or empty for the item itself): Muse Image draws what the item could become from its type, accepted values, condition and faults, one image per call, only on this request; `201` with the picture (`n`, `use`, `model`, `cost_usd`, `from_fixture`, `created_at`); `503` with *pictures are off on this server (PICTURE_ENABLED)* while the switch is off. Illustrative, never evidence; counted as a call that spends |
-| `GET /api/items/{id}/pictures` | the pictures drawn for the item and whether this server draws any (`enabled`) |
+| `GET /api/items/{id}/pictures` | the pictures drawn for the item and whether this server draws any (`enabled`); the demo visitor sees those of a public item (404 for the rest) and is never let draw one |
 | `GET /api/items/{id}/pictures/{n}` | one picture as JPEG, `1` first, never cached; `404` for a number never drawn. Kept beside the photos, never counted as one |
 
 Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value

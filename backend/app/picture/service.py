@@ -9,6 +9,7 @@ never counted as a photo of the item; the folder goes with the item, as the phot
 from __future__ import annotations
 
 import logging
+import os
 import re
 from datetime import UTC, datetime
 from pathlib import Path
@@ -19,6 +20,7 @@ from app.config import Settings
 from app.inventory.schema import Item
 from app.inventory.service import Inventory, NotFoundError
 from app.model_api import ModelApiClient
+from app.projects.pack import shown_fields
 from app.projects.templates import Templates, UnknownTemplateError
 
 log = logging.getLogger("app.picture")
@@ -55,13 +57,10 @@ def _line(text: str, limit: int = USE_MAX) -> str:
 
 def prompt_for(item: Item, use: str) -> str:
     """What Muse Image is asked for: the chosen use built from the item as it is known, from
-    its type, accepted values, condition and faults; a proposed value is not yet known."""
+    its type, accepted values, condition and faults; a proposed value is not yet known, and a
+    value that identifies the item or its owner (a serial, a MAC, an IMEI) never goes out."""
     what = item.item_type or item.name or "item"
-    known = [
-        f"{k.replace('_', ' ')} {a.value} {a.unit}".strip()
-        for k, a in list(item.fields.items())[:PROMPT_VALUES]
-        if a.review == "accepted"
-    ]
+    known = [f"{k} {v}" for k, v in shown_fields(item)][:PROMPT_VALUES]
     about = what if not known else f"{what} ({', '.join(known)})"
     if use and use.lower() != what.lower():
         head = f"a semi-realistic illustration of {use} built from {about}"
@@ -123,8 +122,7 @@ class Pictures:
         result = await self.client.picture(prompt_for(item, drawn_as))
         folder = self.folder(item_id)
         folder.mkdir(parents=True, exist_ok=True)
-        # numbered past the highest there is, never over an earlier one
-        n = max((n for n, _ in self._paths(item_id)), default=0) + 1
+        n, fd = self._reserve(item_id)
         picture = Picture(
             n=n,
             use=drawn_as,
@@ -133,8 +131,9 @@ class Pictures:
             from_fixture=result.from_fixture,
             created_at=datetime.now(tz=UTC).isoformat(timespec="seconds"),
         )
+        with os.fdopen(fd, "wb") as out:
+            out.write(result.data)
         (folder / f"picture-{n}.json").write_text(picture.model_dump_json(), encoding="utf-8")
-        (folder / f"picture-{n}.jpg").write_bytes(result.data)
         log.info(
             "item picture",
             extra={
@@ -145,6 +144,21 @@ class Pictures:
             },
         )
         return picture
+
+    def _reserve(self, item_id: int) -> tuple[int, int]:
+        """The next number, claimed by creating its file exclusively: two draws at once never
+        take the same one, and an earlier picture is never written over."""
+        folder = self.folder(item_id)
+        n = max((n for n, _ in self._paths(item_id)), default=0) + 1
+        while True:
+            try:
+                fd = os.open(
+                    folder / f"picture-{n}.jpg", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644
+                )
+            except FileExistsError:
+                n += 1
+                continue
+            return n, fd
 
     def list(self, item_id: int, *, public_only: bool = False) -> PictureList:
         self.inventory.get(item_id, public_only=public_only)
@@ -158,6 +172,7 @@ class Pictures:
     def read(self, item_id: int, n: int, *, public_only: bool = False) -> bytes:
         self.inventory.get(item_id, public_only=public_only)
         for found, path in self._paths(item_id):
-            if found == n:
+            # a number still being written has no record yet
+            if found == n and path.with_suffix(".json").is_file():
                 return path.read_bytes()
         raise NotFoundError(f"item {item_id} has no picture {n}")

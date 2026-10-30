@@ -9,7 +9,9 @@ is read from it, and nothing rests on it.
 The dialog's line *What it could look like* has a field *as a...* (prefilled with the item's
 type; a project template id such as `smart_mirror` names that project, anything else is the
 owner's own words) and the button. The prompt is written by the rules from the item as it is
-known: its type, its accepted values, its condition and its known faults, and the chosen use:
+known: its type, its accepted values (never one that identifies the item or its owner, such as
+a serial number, a MAC address or an IMEI; at most eight), its condition and its known faults,
+and the chosen use:
 *a semi-realistic illustration of a smart mirror built from laptop (screen size 14 in);
 condition: scuffed lid, on a plain background, no text, no logos, no people*. A value still to
 confirm is left out. With no use given, the item is drawn as itself, cleaned up and ready to
@@ -17,9 +19,9 @@ use.
 
 ## When it is called
 
-Never by itself. One call per click on the live door; the demo visitor is refused like every
-other call that spends, and behind the gate the fixture twin answers from the stub, so the key
-is never used for a picture nobody signed in for. The switch is `PICTURE_ENABLED` (off by
+Never by itself. One call per click on the live door. The demo visitor is refused (`403`) like
+every other call that spends, and sees only the pictures already drawn for a public item; the
+key is never used without the code. The switch is `PICTURE_ENABLED` (off by
 default): while it is off the route answers `503` with *pictures are off on this server
 (PICTURE_ENABLED)* and the button is disabled with that line.
 
@@ -29,12 +31,15 @@ default): while it is off the route answers `503` with *pictures are off on this
   `prompt`, `n` 1, `size` `1024x1024`, `response_format` `b64_json`, `output_format` `jpeg`,
   `reasoning_strength` `low` (the model's own refinement pass is skipped: a sketch of a use, not
   a product shot).
-- **Response.** `data[0].b64_json` decoded to the JPEG; `revised_prompt` kept on the result;
+- **Response.** `data[0].b64_json` decoded to the JPEG (an answer that is not a JPEG, `FF D8 FF`
+  first, is an incomplete answer: nothing is kept, the call is still charged); `revised_prompt` kept on the result;
   `usage` (input and output tokens) kept in the ledger entry. Fixture mode answers from
   `tests/fixtures/api/images-generations/picture.json`, a small gray JPEG, so tests and the
-  demo set run without a key.
+  demo set run without a key. Record mode stores each picture's base64 in its fixture (about
+  1-2 MB a picture), so record pictures sparingly.
 - **Where it lands.** `DATA_DIR/items/<id>/picture-<n>.jpg` with a `picture-<n>.json` record
-  (what it was drawn as, the model, the cost, when), beside the item's photos and never
+  (what it was drawn as, the model, the cost, when; the number is claimed by creating the file
+exclusively, so two draws at once never overwrite each other), beside the item's photos and never
   counted as one: `GET /api/items/{id}/photos` does not see it. Served by
   `GET /api/items/{id}/pictures/{n}`, never cached; gone with the item.
 

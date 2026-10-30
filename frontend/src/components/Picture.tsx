@@ -9,9 +9,11 @@ function message(err: unknown): string {
 
 // What the item could look like: a picture drawn by Muse Image only when the button is clicked
 // (every click is a paid call), shown under the photos and labeled as drawn, never as a
-// photo of the item. The server says whether it draws at all (PICTURE_ENABLED).
-export default function Picture({ item }: { item: Item }) {
+// photo of the item. The server says whether it draws at all (PICTURE_ENABLED). The demo visitor
+// sees the pictures already drawn and no button; a list that cannot be read hides the section.
+export default function Picture({ item, demo = false }: { item: Item; demo?: boolean }) {
   const [enabled, setEnabled] = useState<boolean | null>(null)
+  const [failed, setFailed] = useState(false)
   const [pictures, setPictures] = useState<Drawn[]>([])
   const [use, setUse] = useState(item.item_type)
   const [busy, setBusy] = useState(false)
@@ -23,11 +25,12 @@ export default function Picture({ item }: { item: Item }) {
       .pictures(item.id)
       .then((list) => {
         if (cancelled) return
+        setFailed(false)
         setEnabled(list.enabled)
         setPictures(list.pictures)
       })
       .catch(() => {
-        if (!cancelled) setEnabled(null) // not known: the button waits
+        if (!cancelled) setFailed(true)
       })
     return () => {
       cancelled = true
@@ -36,7 +39,7 @@ export default function Picture({ item }: { item: Item }) {
 
   async function draw(event: FormEvent) {
     event.preventDefault()
-    if (busy || !enabled) return
+    if (busy || !enabled || demo) return
     setBusy(true)
     setError('')
     try {
@@ -50,19 +53,22 @@ export default function Picture({ item }: { item: Item }) {
   }
 
   const off = enabled === false
+  if (failed || (demo && pictures.length === 0)) return null
   return (
     <section className="picture" aria-label="What it could look like">
       <h4>What it could look like</h4>
-      <form className="inline" onSubmit={(e) => void draw(e)}>
-        <label>
-          <span>as a…</span>
-          <input value={use} onChange={(e) => setUse(e.target.value)} placeholder={item.item_type} maxLength={200} disabled={off} />
-        </label>
-        <button type="submit" disabled={off || busy || enabled === null}>
-          {busy ? 'Drawing…' : 'Draw it'}
-        </button>
-      </form>
-      {off && <p className="muted">pictures are off on this server (PICTURE_ENABLED)</p>}
+      {!demo && (
+        <form className="inline" onSubmit={(e) => void draw(e)}>
+          <label>
+            <span>as a…</span>
+            <input value={use} onChange={(e) => setUse(e.target.value)} placeholder={item.item_type} maxLength={200} disabled={off} />
+          </label>
+          <button type="submit" disabled={off || busy || enabled === null}>
+            {busy ? 'Drawing…' : 'Draw it'}
+          </button>
+        </form>
+      )}
+      {off && !demo && <p className="muted">pictures are off on this server (PICTURE_ENABLED)</p>}
       {error && (
         <p className="error" role="alert">
           {error}

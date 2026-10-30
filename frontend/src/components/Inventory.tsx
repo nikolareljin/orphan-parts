@@ -19,10 +19,12 @@ export default function Inventory({
   refresh,
   openId: wanted = null,
   onOpened,
+  demo = false,
 }: {
   refresh: number
   openId?: number | null
   onOpened?: () => void
+  demo?: boolean
 }) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(wanted)
@@ -102,6 +104,7 @@ export default function Inventory({
           <ItemPanel
             key={openId}
             id={openId}
+            demo={demo}
             onChanged={() => void load()}
             onClosed={() => {
               setOpenId(null)
@@ -114,7 +117,7 @@ export default function Inventory({
   )
 }
 
-function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => void; onClosed: () => void }) {
+function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolean; onChanged: () => void; onClosed: () => void }) {
   const [item, setItem] = useState<Item | null>(null)
   const [events, setEvents] = useState<ItemEvent[] | null>(null)
   const [error, setError] = useState('')
@@ -244,7 +247,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         {item.parent_id !== null && <> · part of item #{item.parent_id}</>}
       </p>
       <ItemPhotos id={item.id} />
-      <Picture item={item} />
+      <Picture item={item} demo={demo} />
       {error && (
         <p className="error" role="alert">
           {error}

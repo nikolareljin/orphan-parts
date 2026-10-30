@@ -7,7 +7,7 @@ const drawn: Picture = { n: 1, use: 'a bedside lamp', model: 'muse-image-1.0', c
 describe('the line under a picture', () => {
   it('says what it was drawn as, that it is drawn, and the cost', () => {
     const line = pictureCaption(drawn)
-    expect(line).toContain('As a bedside lamp')
+    expect(line).toContain('Drawn as: a bedside lamp')
     expect(line).toContain(PICTURE_LABEL)
     expect(line).toContain('$0.0100')
   })

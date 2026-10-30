@@ -43,10 +43,10 @@ the profiles and their rules, the templates, and the four stateless tries: `POST
 `/api/segment`, `/api/assess` (on values written in; an item by its id is the inventory and
 answers 403), `/api/measure`, each so many times per address and hour
 (`DEMO_VISITOR_CALLS_PER_HOUR`, 429 over it). Everything else answers `403` with the line
-above (the items and captures the owner marked public are the exception: their values and
-photos are shown, never a location, a note, a clip or a draft; the demo set loads as public):
+above (the items and captures the owner marked public are the exception: their values,
+photos and drawn pictures are shown, never a location, a note, a clip or a draft; the demo set loads as public):
 the rest of the inventory, the captures, the searches, the projects, every save, draft, price,
-proposal and capture. The web app shows the pages, a *Sign in with the code* link in the
+proposal, picture drawn and capture. The web app shows the pages, a *Sign in with the code* link in the
 header, and the line on whatever a visitor tries to save; the phone says the same on its
 Capture tab when no code is set.
 

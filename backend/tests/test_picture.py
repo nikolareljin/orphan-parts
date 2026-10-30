@@ -1,6 +1,6 @@
 """A picture of what an item could become: off unless enabled, drawn by Muse Image on a click
 from the recorded stub, kept beside the photos and never counted as one, charged in the
-ledger, refused to the demo visitor, gone with the item."""
+ledger, shown but never drawn for the demo visitor, gone with the item."""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.inventory import FieldCreate, Inventory, ItemCreate
+from app.inventory.schema import Assertion, Review
 from app.main import create_app
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.door import live_request
@@ -119,7 +120,7 @@ def test_the_pictures_go_with_the_item(drawing: TestClient, drawing_settings: Se
     assert drawing.post("/api/items/999/picture", json={}).status_code == 404
 
 
-def test_the_demo_visitor_is_refused_and_the_code_opens_it(tmp_path: Path) -> None:
+def test_the_demo_visitor_sees_public_pictures_and_only_the_code_draws(tmp_path: Path) -> None:
     settings = gated_settings(tmp_path, fixtures_dir=RECORDED_FIXTURES, picture_enabled=True)
     with TestClient(create_app(settings)) as c:
         c.post("/api/access", json={"code": CODE})
@@ -130,8 +131,18 @@ def test_the_demo_visitor_is_refused_and_the_code_opens_it(tmp_path: Path) -> No
         c.cookies.clear()
         refused = c.post(f"/api/items/{item_id}/picture", json={"use": "lamp"})
         assert refused.status_code == 403 and refused.json()["detail"] == DEMO_LINE
-        assert c.get(f"/api/items/{item_id}/pictures").status_code == 403
-        assert c.get(f"/api/items/{item_id}/pictures/1").status_code == 403
+        # what was drawn for a public item is shown; a private item stays out of sight
+        listed = c.get(f"/api/items/{item_id}/pictures")
+        assert listed.status_code == 200 and [p["n"] for p in listed.json()["pictures"]] == [1]
+        served = c.get(f"/api/items/{item_id}/pictures/1")
+        assert served.status_code == 200 and served.content[:3] == b"\xff\xd8\xff"
+        c.post("/api/access", json={"code": CODE})
+        hidden = create(c, item_type="phone")
+        assert c.post(f"/api/items/{hidden}/picture", json={}).status_code == 201
+        c.cookies.clear()
+        assert c.get(f"/api/items/{hidden}/pictures").status_code == 404
+        assert c.get(f"/api/items/{hidden}/pictures/1").status_code == 404
+        assert c.post(f"/api/items/{hidden}/picture", json={}).status_code == 403
 
 
 def test_the_prompt_rests_on_what_is_known(drawing_settings: Settings) -> None:
@@ -164,8 +175,8 @@ async def test_the_service_refuses_without_the_switch(settings: Settings) -> Non
 
 
 async def test_the_demo_door_draws_from_the_stub(live_settings: Settings) -> None:
-    """Behind the gate the twin answers the demo visitor from the recordings; the key is
-    never used for a picture nobody signed in for."""
+    """The gate refuses the demo visitor a picture; should a call come through that door all
+    the same, the twin answers from the recordings and the key is never used."""
 
     def never(request: httpx.Request) -> httpx.Response:
         raise AssertionError("the key must not be used through the demo door")
@@ -184,4 +195,45 @@ async def test_the_demo_door_draws_from_the_stub(live_settings: Settings) -> Non
     assert result.from_fixture is True and result.cost_usd == 0.0
     assert result.data[:2] == b"\xff\xd8"
     assert twin_ledger.summary().calls == 1
+    await client.aclose()
+
+
+def test_the_prompt_never_carries_a_private_value(drawing_settings: Settings) -> None:
+    """Private values stay home, and the values sent are picked after the filter, so accepted
+    ones listed after many proposed still go."""
+    item = Inventory(drawing_settings).create(ItemCreate(item_type="laptop"))
+
+    def value(key: str, text: str, review: Review) -> Assertion:
+        return Assertion(
+            id=0,
+            field=key,
+            value=text,
+            provenance="observed" if review == "proposed" else "tested",
+            confidence=1.0,
+            source="photo" if review == "proposed" else "user_edit",
+            review=review,
+            at="2026-10-30T00:00:00+00:00",
+        )
+
+    fields = {f"guess_{i}": value(f"guess_{i}", str(i), "proposed") for i in range(10)}
+    fields["serial_number"] = value("serial_number", "SN-PRIVATE-1", "accepted")
+    fields["mac_address"] = value("mac_address", "00:11:22:33:44:55", "accepted")
+    fields["weight"] = value("weight", "1.4 kg", "accepted")
+    prompt = prompt_for(item.model_copy(update={"fields": fields}), "a lamp")
+    assert "SN-PRIVATE-1" not in prompt and "serial" not in prompt
+    assert "00:11:22" not in prompt and "mac" not in prompt
+    assert "guess" not in prompt
+    assert "weight 1.4 kg" in prompt
+
+
+async def test_two_draws_at_once_keep_both(drawing_settings: Settings) -> None:
+    import asyncio
+
+    inventory = Inventory(drawing_settings)
+    item = inventory.create(ItemCreate(item_type="laptop"))
+    client = ModelApiClient(drawing_settings, CostLedger(cap_usd=25.0))
+    pictures = Pictures(drawing_settings, client, inventory, Templates())
+    drawn = await asyncio.gather(*(pictures.draw(item.id, use) for use in ("lamp", "mirror")))
+    assert sorted(p.n for p in drawn) == [1, 2]
+    assert {p.use for p in pictures.list(item.id).pictures} == {"lamp", "mirror"}
     await client.aclose()
