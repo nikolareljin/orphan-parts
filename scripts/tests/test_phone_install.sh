@@ -55,7 +55,7 @@ STUB
 
 _phone_env() {
   local dir="$1"; shift
-  env HOME="$dir" TOOLS_DIR="$dir/tools" CURL="$dir/bin/curl" UNZIP="$dir/bin/unzip" PATH="$dir/path" "$@"
+  env HOME="$dir" ANDROID_HOME= TOOLS_DIR="$dir/tools" CURL="$dir/bin/curl" UNZIP="$dir/bin/unzip" PATH="$dir/path" "$@"
 }
 
 test_phone_install_downloads_adb_and_the_release_apk_then_installs() {
