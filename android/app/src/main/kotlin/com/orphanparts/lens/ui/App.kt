@@ -61,6 +61,8 @@ fun App() {
     var lastItemId by remember { mutableStateOf<Int?>(null) }
     var sent by remember { mutableStateOf(0) }
     var service by remember { mutableStateOf(serviceLine("", null, null)) }
+    // what the header's scan said, numbered so the same line twice is shown twice
+    var pairLine by remember { mutableStateOf(0 to "") }
 
     // one client per settings: the session token it holds belongs to that backend and code
     val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode, settings.token) }
@@ -103,8 +105,10 @@ fun App() {
                         scanToPair(context, settings, onSaved = { saved ->
                             store.save(saved)
                             settings = store.load()
-                            page = 1
-                        }) { line -> service = line }
+                        }) { line ->
+                            pairLine = pairLine.first + 1 to line
+                            page = 0
+                        }
                     }
                 }
                 TabRow(
@@ -133,7 +137,7 @@ fun App() {
                 }
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
                     when (page) {
-                        0 -> SettingsScreen(settings, session) { saved ->
+                        0 -> SettingsScreen(settings, session, pairLine) { saved ->
                             store.save(saved)
                             settings = store.load()
                         }

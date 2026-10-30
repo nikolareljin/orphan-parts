@@ -168,6 +168,21 @@ body.has-dialog {
   cursor: zoom-out;
 }
 
+@media (max-width: 600px) {
+  .item-photos .photo img {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+.image-pending {
+  display: inline-block;
+  width: 96px;
+  height: 96px;
+  border-radius: 6px;
+  background: var(--line);
+}
+
 .item-photos .photo.open img {
   width: 100%;
   height: auto;
@@ -183,7 +198,7 @@ button:not(.link):not(.modal-close):not(.nav button):not(.danger) {
   cursor: pointer;
   border: 1px solid var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 button:not(.link):not(.modal-close):not(.nav button):not(.danger):disabled {
@@ -298,7 +313,7 @@ dd {
 
 .extract button {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: 0;
   border-radius: 8px;
   padding: 0.55rem 1rem;
@@ -611,7 +626,7 @@ table.items tr.open {
 .save button,
 .item .danger {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: 0;
   border-radius: 8px;
   padding: 0.45rem 0.9rem;

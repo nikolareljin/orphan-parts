@@ -781,6 +781,19 @@ export function dataUrlToFile(dataUrl: string, name: string): File {
   return new File([bytes], name, { type: mime })
 }
 
+// An image or a clip behind the gate: same origin the browser's cookie goes with the <img>;
+// across origins the file is fetched with the bearer header and handed over as an object
+// URL, which the caller revokes when done.
+export async function mediaUrl(url: string): Promise<string> {
+  if (!crossOrigin) return url
+  const res = await fetch(url, { headers: authHeaders(), credentials: 'include' })
+  if (!res.ok) {
+    noteStatus(res.status)
+    throw new ApiError(res.status, `${url}: HTTP ${res.status}`)
+  }
+  return URL.createObjectURL(await res.blob())
+}
+
 export const api = {
   access: {
     status: () => getJson<Access>('/api/access'),
@@ -892,7 +905,10 @@ export const api = {
     svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}`),
     svg: async (origin: string) => {
       const res = await fetch(api.pair.svgUrl(origin), { headers: authHeaders(), credentials: 'include' })
-      if (!res.ok) throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
+      if (!res.ok) {
+        noteStatus(res.status)
+        throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
+      }
       return await res.text()
     },
     get: (origin: string) =>

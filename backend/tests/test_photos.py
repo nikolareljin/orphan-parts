@@ -59,6 +59,36 @@ def test_the_limit_the_empty_send_and_the_file_that_is_not_an_image(
         photos.add(item_id, [])
 
 
+def test_the_count_and_the_size_are_checked_on_the_way_in(
+    client: TestClient, settings: Settings
+) -> None:
+    item_id = create(client, item_type="USB webcam")
+    # five parts: refused on the count, before any is read
+    too_many = [("uploads", (f"{n}.jpg", b"x", "image/jpeg")) for n in range(5)]
+    res = client.post(f"/api/items/{item_id}/photos", files=too_many)
+    assert res.status_code == 422 and "5 were sent" in res.json()["detail"]
+    # a part over MAX_UPLOAD_MB by what arrives, whatever the client said
+    big = make_photo() + b"\0" * (settings.max_upload_mb * 1024 * 1024)
+    part = [("uploads", ("big.jpg", big, "image/jpeg"))]
+    res = client.post(f"/api/items/{item_id}/photos", files=part)
+    assert res.status_code == 400 and "larger than" in res.json()["detail"]
+    assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 0}
+
+
+def test_a_stray_file_in_the_folder_is_not_a_photo(client: TestClient, settings: Settings) -> None:
+    item_id = create(client, item_type="USB webcam")
+    res = client.post(
+        f"/api/items/{item_id}/photos", files=[("uploads", ("a.jpg", make_photo(), "image/jpeg"))]
+    )
+    assert res.status_code == 201
+    folder = settings.data_dir / "items" / str(item_id)
+    (folder / "photo-x.jpg").write_bytes(b"junk")
+    (folder / "notes.txt").write_bytes(b"junk")
+    assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 1}
+    assert client.get(f"/api/items/{item_id}/photos/1").status_code == 200
+    assert client.get(f"/api/items/{item_id}/photos/1").headers["cache-control"] == "no-store"
+
+
 def test_an_unknown_item_has_no_photos(client: TestClient) -> None:
     assert client.get("/api/items/999/photos").status_code == 404
     assert client.get("/api/items/999/photos/1").status_code == 404

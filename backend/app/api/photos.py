@@ -29,21 +29,31 @@ def item_photo(item_id: int, n: int, photos: PhotosDep) -> Response:
     return Response(
         photos.read(item_id, n),
         media_type="image/jpeg",
-        headers={"Cache-Control": "private, max-age=3600"},
+        headers={"Cache-Control": "no-store"},  # private, and the number is reused after a reset
     )
 
 
 @router.post("/{item_id}/photos", response_model=PhotoCount, status_code=status.HTTP_201_CREATED)
 async def add_item_photos(item_id: int, uploads: PhotosPart, photos: PhotosDep) -> PhotoCount:
     """Keep the photos an item was read from. Re-encoded on the way in, metadata dropped."""
+    limit = photos.settings.max_photos
+    if len(uploads) > limit:
+        # before a byte is read: a send over the ceiling is refused for its count alone
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"an item keeps at most {limit} photos; {len(uploads)} were sent",
+        )
     cap = photos.settings.max_upload_mb * 1024 * 1024
+    data = []
     for upload in uploads:
-        if upload.size is not None and upload.size > cap:
+        # one byte past the cap says the part is too large, whatever the client declared
+        part = await upload.read(cap + 1)
+        if len(part) > cap:
             raise HTTPException(
                 status_code=400,
                 detail=f"a photo is larger than {photos.settings.max_upload_mb} MB",
             )
-    data = [await u.read() for u in uploads]
+        data.append(part)
     try:
         return PhotoCount(count=photos.add(item_id, data))
     except PhotoError as exc:

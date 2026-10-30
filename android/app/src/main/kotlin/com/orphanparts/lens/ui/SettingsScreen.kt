@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,11 +87,17 @@ fun scanToPair(context: android.content.Context, settings: Settings, onSaved: (S
 }
 
 @Composable
-fun SettingsScreen(settings: Settings, session: Session, onSaved: (Settings) -> Unit) {
+fun SettingsScreen(
+    settings: Settings,
+    session: Session,
+    note: Pair<Int, String> = 0 to "", // a line from elsewhere (the header's scan) to show
+    onSaved: (Settings) -> Unit,
+) {
     val context = LocalContext.current
     var url by remember(settings) { mutableStateOf(settings.baseUrl) }
     var code by remember(settings) { mutableStateOf(settings.accessCode) }
     var status by remember { mutableStateOf("") }
+    LaunchedEffect(note) { if (note.second.isNotEmpty()) status = note.second }
     val scope = rememberCoroutineScope()
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
 

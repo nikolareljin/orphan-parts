@@ -6,6 +6,7 @@
   --line: #e2e6eb;
   --accent: #2d6cdf;
   --error: #b42318;
+  --on-accent: #ffffff;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--fg);
   background: var(--bg);
@@ -20,6 +21,7 @@
     --line: #262c35;
     --accent: #6ea0ff;
     --error: #ff7a6b;
+    --on-accent: #0f1216; /* the page color: white on this accent is too faint */
   }
 }
 

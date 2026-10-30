@@ -279,8 +279,17 @@ def test_reset_removes_only_the_inventory_file(recorded_settings: Settings) -> N
     media = recorded_settings.data_dir / "captures" / "1"
     media.mkdir(parents=True)
     (media / "clip.mp4").write_bytes(b"x")
-    assert sorted(reset(recorded_settings)) == ["captures/", db.name, f"{db.name}-wal"]
+    photos = recorded_settings.data_dir / "items" / "1"
+    photos.mkdir(parents=True)
+    (photos / "photo-1.jpg").write_bytes(b"x")
+    assert sorted(reset(recorded_settings)) == [
+        "captures/",
+        db.name,
+        f"{db.name}-wal",
+        "items/",
+    ]
     assert not db.exists() and ledger.exists() and not media.exists()
+    assert not photos.exists()  # item 1 of the next inventory must not wear these
     assert reset(recorded_settings) == []
 
 
