@@ -33,6 +33,7 @@ image = (
 
 data = modal.Volume.from_name("orphan-parts-data", create_if_missing=True)
 RELOAD_EVERY_S = 30.0  # how stale the web container's view of the Volume may be
+RELOAD_RETRY_S = 0.5  # the pause before a refused reload is tried once more
 
 
 @app.function(
@@ -75,10 +76,15 @@ def web():  # type: ignore[no-untyped-def]
             nonlocal last_reload
             writes = request.method in ("POST", "PUT", "PATCH", "DELETE")
             if writes or time.monotonic() - last_reload > RELOAD_EVERY_S:
-                try:  # blocking I/O, off the loop
-                    await asyncio.to_thread(data.reload)
+                try:  # blocking I/O, off the loop; one more try after a moment, since a
+                    # refusal usually means a file streaming in another request
+                    try:
+                        await asyncio.to_thread(data.reload)
+                    except Exception:  # noqa: BLE001 - the Volume's own error types
+                        await asyncio.sleep(RELOAD_RETRY_S)
+                        await asyncio.to_thread(data.reload)
                     last_reload = time.monotonic()
-                except Exception as exc:  # noqa: BLE001 - the Volume's own error types
+                except Exception as exc:  # noqa: BLE001
                     if writes:
                         log.info("volume reload refused before a write: %s", exc)
                         return JSONResponse(

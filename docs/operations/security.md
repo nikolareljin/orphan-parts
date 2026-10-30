@@ -3,7 +3,7 @@
 ## Controls in place
 
 - API keys are `SecretStr` settings read from the environment. They never reach logs, errors or the browser.
-- CORS allowlist from `CORS_ORIGINS`; only `GET`, `POST` and `DELETE`.
+- CORS allowlist from `CORS_ORIGINS`, origins named one by one (`*` refused); `GET`, `POST`, `PUT`, `PATCH` and `DELETE`.
 - Security headers on every response: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
   `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
 - Containers run as an unprivileged user; the production image has no dev tooling.
