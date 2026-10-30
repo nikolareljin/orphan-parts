@@ -235,5 +235,6 @@ function PairImage() {
       cancelled = true
     }
   }, [])
+  if (!src) return null // the session's copy is on its way
   return <img src={src} alt="Pairing code for the phone" width="220" height="220" />
 }

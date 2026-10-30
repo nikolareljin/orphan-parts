@@ -85,6 +85,9 @@ class Settings(BaseSettings):
             raise ValueError("PRICE_COUNTRY must be a two-letter ISO 3166-1 code, or empty")
         if self.candidate_days < 1:
             raise ValueError("CANDIDATE_DAYS must be at least 1")
+        if "*" in self.cors_origin_list:
+            # the browser sends credentials with every call; a wildcard would hand them to any site
+            raise ValueError("CORS_ORIGINS must name the origins; * is not allowed")
         for name in (
             "demo_session_hours",
             "demo_visitor_calls_per_hour",
