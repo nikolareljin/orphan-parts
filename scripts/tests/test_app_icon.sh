@@ -72,3 +72,14 @@ test_app_icon_refuses_an_unknown_option() {
   ROOT=/nonexistent bash "$_app_icon" --force >/dev/null 2>&1 || rc=$?
   assert_eq "$rc" "2"
 }
+
+test_app_icon_refuses_a_logo_whose_frame_moved() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  sed -i 's/id="rect51"/id="frame"/' "$dir/docs/assets/logo.svg"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_true grep -q "logo's frame" <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
+  assert_false test -e "$dir/frontend/public/brand.svg"
+  _app_icon_cleanup "$dir"
+}

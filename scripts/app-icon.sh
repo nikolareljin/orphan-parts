@@ -37,6 +37,10 @@ res="$root/android/app/src/main/res"
 web="$root/frontend/public"
 inkscape="${INKSCAPE:-inkscape}"
 [[ -f "$logo" ]] || fail "no logo at $logo"
+# The crop drops the logo's frame, the one '  <rect' block that ends at id="rect51"; a logo saved
+# another way would make that range run to the end of the file.
+[[ "$(grep -c '^  <rect$' "$logo")" == 1 && "$(grep -c 'id="rect51" />' "$logo")" == 1 ]] ||
+  fail "the logo's frame is not the one '  <rect' block ending at id=\"rect51\"; update crop() for $logo"
 [[ -d "$res" ]] || fail "no app resources at $res"
 [[ -d "$web" ]] || fail "no web assets at $web"
 command -v "$inkscape" >/dev/null 2>&1 || fail "inkscape is not installed (apt install inkscape)"
