@@ -81,3 +81,23 @@ test_modal_deploys_the_app_file_and_names_the_url() {
   assert_false env ROOT="$dir" MODAL="$dir/bin/modal" bash "$_deploy" modal 2>/dev/null
   _deploy_cleanup "$dir"
 }
+
+test_deploy_hosted_reads_its_names_from_env_and_the_shell_wins() {
+  local dir out
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  mkdir -p "$dir/scripts"
+  # a stand-in for deploy-hosted.sh that prints what it was handed
+  printf '#!/usr/bin/env bash\necho "args=$*"\necho "MODAL_TOKEN_ID=${MODAL_TOKEN_ID:-}"\necho "DEMO_ACCESS_CODE=${DEMO_ACCESS_CODE:-}"\necho "SPEND_CAP_USD=${SPEND_CAP_USD:-}"\necho "WEB_ORIGIN=${WEB_ORIGIN:-}"\necho "MODEL_API_KEY=${MODEL_API_KEY:-}"\n' > "$dir/scripts/deploy-hosted.sh"
+  printf 'MODEL_API_KEY=local-only\nMODAL_TOKEN_ID=from-env\nDEMO_ACCESS_CODE=machine-code\nDEMO_ACCESS_CODE_HOSTED=host-code-long\nSPEND_CAP_USD_HOSTED=15\nWEB_ORIGIN=https://orphan-parts.pages.dev\nCLOUDFLARE_API_TOKEN=\n' > "$dir/.env"
+  out="$(env -u MODAL_TOKEN_ID -u DEMO_ACCESS_CODE -u SPEND_CAP_USD -u WEB_ORIGIN -u MODEL_API_KEY ROOT="$dir" bash "$_deploy" hosted backend)"
+  assert_true grep -q '^args=backend$' <<<"$out"
+  assert_true grep -q '^MODAL_TOKEN_ID=from-env$' <<<"$out"
+  assert_true grep -q '^DEMO_ACCESS_CODE=host-code-long$' <<<"$out"   # the host's, not this machine's
+  assert_true grep -q '^SPEND_CAP_USD=15$' <<<"$out"
+  assert_true grep -q '^WEB_ORIGIN=https://orphan-parts.pages.dev$' <<<"$out"
+  assert_true grep -q '^MODEL_API_KEY=$' <<<"$out"                    # never handed to the host
+  # the shell wins over .env
+  out="$(env -u DEMO_ACCESS_CODE MODAL_TOKEN_ID=from-shell ROOT="$dir" bash "$_deploy" hosted)"
+  assert_true grep -q '^MODAL_TOKEN_ID=from-shell$' <<<"$out"
+  [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
+}

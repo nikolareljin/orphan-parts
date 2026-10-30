@@ -24,8 +24,27 @@
 set -euo pipefail
 
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+# .env is read for the deploy settings only when the shell does not already set them: the
+# names below and nothing else, so the backend's own settings never leak into a deploy.
+load_env() {
+  [[ -f "$root/.env" ]] || return 0
+  local line key value
+  while IFS= read -r line; do
+    key="${line%%=*}"
+    value="${line#*=}"   # the first = divides; any later one is part of the value
+    value="${value%\"}"; value="${value#\"}"
+    [[ -z "$value" || -n "${!key:-}" ]] || export "$key=$value"
+  done < <(grep -E "^($1)=" "$root/.env" || true)
+}
+
 if [[ "${1:-}" == hosted ]]; then
   shift
+  load_env 'MODAL_TOKEN_ID|MODAL_TOKEN_SECRET|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID|MODEL_API_KEY_DEMO|DEMO_ACCESS_CODE_HOSTED|WEB_ORIGIN|PAGES_PROJECT|API_URL|SPEND_CAP_USD_HOSTED|OPL_FAKE_API_HOSTED|OPL_MIN_CONTAINERS'
+  # the host's own code, cap and mode are kept apart from this machine's in .env
+  [[ -n "${DEMO_ACCESS_CODE_HOSTED:-}" ]] && export DEMO_ACCESS_CODE="$DEMO_ACCESS_CODE_HOSTED"
+  [[ -n "${SPEND_CAP_USD_HOSTED:-}" ]] && export SPEND_CAP_USD="$SPEND_CAP_USD_HOSTED"
+  [[ -n "${OPL_FAKE_API_HOSTED:-}" ]] && export OPL_FAKE_API="$OPL_FAKE_API_HOSTED"
   exec bash "$root/scripts/deploy-hosted.sh" "$@"
 fi
 target="all"
@@ -41,15 +60,7 @@ done
 fail() { printf 'deploy: %s\n' "$*" >&2; exit 1; }
 say() { printf 'deploy: %s\n' "$*"; }
 
-# .env is read for the deploy settings only when the shell does not already set them.
-if [[ -f "$root/.env" ]]; then
-  while IFS= read -r line; do
-    key="${line%%=*}"
-    value="${line#*=}"   # the first = divides; any later one is part of the value
-    value="${value%\"}"; value="${value#\"}"
-    [[ -n "${!key:-}" ]] || export "$key=$value"
-  done < <(grep -E '^(DEPLOY_HOST|DEPLOY_PATH|IMAGE_PREFIX)=' "$root/.env" || true)
-fi
+load_env 'DEPLOY_HOST|DEPLOY_PATH|IMAGE_PREFIX'
 
 if [[ -z "$version" ]]; then
   [[ -f "$root/VERSION" ]] || fail "no VERSION file and no --version"
