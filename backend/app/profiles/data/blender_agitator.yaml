@@ -4,8 +4,10 @@ description: >
   The rod that mixes the drink in a blender, a milk frother or a frappé maker: a metal rod with
   two tabs or pins at the top that lock into the drive, and a disc, a whisk or blades at the
   bottom. The whole rod is the part. Fit is decided by the rod, the tabs that couple it to the
-  drive and the length that reaches the cup; a worn plastic rod is often replaced by an
-  all-metal one of the same dimensions, so the material is a rule here. When no rod of the
+  drive and the length that reaches the cup; a worn plastic rod is often replaced by a
+  metal one of the same dimensions, so the material is a rule here (metal or plastic, one
+  word, however a listing spells it). On the need it is the material the replacement must
+  be; on a candidate it is the rod's own material. When no rod of the
   same dimensions exists, the search is for another agitator of the same drive, or another
   device whose rod fits this base.
 features:
@@ -83,4 +85,4 @@ rules:
   - key: material
     label: Material
     kind: equal
-    question: Is the rod metal throughout, or does the rod, the tabs or the head carry plastic?
+    question: Is the rod metal throughout, or are the rod, the tabs or the head plastic?

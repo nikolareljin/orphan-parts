@@ -1,5 +1,6 @@
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -88,3 +89,46 @@ def test_assess_is_in_the_openapi_document(client: TestClient) -> None:
     paths = client.get("/openapi.json").json()["paths"]
     assert "/api/assess" in paths
     assert "/api/profiles/{profile_id}/rules" in paths
+
+
+def test_an_all_metal_rod_fits_the_worn_one_and_a_plastic_rod_does_not(client: TestClient) -> None:
+    # the need is the worn rod's dimensions with the material wanted in its replacement
+    need = {
+        "profile": "blender_agitator",
+        "values": {"rod_diameter": "4", "tab_span": "9", "material": "metal"},
+    }
+    metal = {"values": {"rod_diameter": "4", "tab_span": "9", "material": "metal"}}
+    plastic = {"values": {"rod_diameter": "4", "tab_span": "9", "material": "ABS plastic"}}
+    steel = {
+        "values": {"rod_diameter": "4", "tab_span": "9", "material": "stainless steel, all-metal"}
+    }
+    same = client.post("/api/assess", json={"need": need, "candidate": metal}).json()
+    statuses = {c["key"]: c["status"] for c in same["checks"]}
+    assert statuses["material"] == "pass" and statuses["rod_diameter"] == "pass"
+    assert same["verdict"] != "CONFLICT"
+    spelled = client.post("/api/assess", json={"need": need, "candidate": steel}).json()
+    assert {c["key"]: c["status"] for c in spelled["checks"]}["material"] == "pass"
+    other = client.post("/api/assess", json={"need": need, "candidate": plastic}).json()
+    assert other["verdict"] == "CONFLICT"
+    assert {c["key"]: c["status"] for c in other["checks"]}["material"] == "fail"
+    unstated = {"values": {"rod_diameter": "4", "tab_span": "9"}}
+    asked = client.post("/api/assess", json={"need": need, "candidate": unstated}).json()
+    assert {c["key"]: c["status"] for c in asked["checks"]}["material"] == "unknown"
+    assert any("metal throughout" in q for q in asked["questions"])
+
+
+@pytest.mark.parametrize(
+    "material", ["possibly metal", "steel and wood", "steel core", "metal coating"]
+)
+def test_partial_or_uncertain_material_does_not_pass(client: TestClient, material: str) -> None:
+    res = client.post(
+        "/api/assess",
+        json={
+            "need": {"profile": "blender_agitator", "values": {"material": "metal"}},
+            "candidate": {"values": {"material": material}},
+        },
+    )
+    assert res.status_code == 200
+    check = next(c for c in res.json()["checks"] if c["key"] == "material")
+    assert check["status"] == "fail"
+    assert res.json()["verdict"] == "CONFLICT"
