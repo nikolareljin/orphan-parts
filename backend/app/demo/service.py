@@ -4,6 +4,7 @@ run replays them. Photos are given to the services as they would be uploaded, so
 match on the request digest holds for the files in the set."""
 
 import logging
+import shutil
 import wave
 from pathlib import Path
 
@@ -289,11 +290,16 @@ class Loader:
 
 
 def reset(settings: Settings) -> list[str]:
-    """Start over: the inventory file goes, the spend ledger stays (the cap is cumulative)."""
+    """Start over: the inventory file goes, and the captures' media with it (their rows were in
+    the file); the spend ledger stays (the cap is cumulative)."""
     gone: list[str] = []
     db = settings.inventory_db_path
     for path in (db, Path(f"{db}-wal"), Path(f"{db}-shm"), Path(f"{db}-journal")):
         if path.is_file():
             path.unlink()
             gone.append(path.name)
+    captures = settings.data_dir / "captures"
+    if captures.is_dir():
+        shutil.rmtree(captures)
+        gone.append("captures/")
     return gone

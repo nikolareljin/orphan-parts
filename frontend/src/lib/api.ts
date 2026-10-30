@@ -621,6 +621,28 @@ export interface Conflict {
   project_title: string
 }
 
+// Captures from the phone: kept as sent, read into an item on request.
+export type CaptureStatus = 'received' | 'processed' | 'failed'
+
+export interface Capture {
+  id: number
+  status: CaptureStatus
+  note: string
+  name: string
+  find_label: boolean
+  photos: number
+  clip: boolean
+  clip_bytes: number
+  audio: boolean
+  audio_seconds: number
+  item_id: number | null
+  error: string
+  model: string
+  cost_usd: number
+  created_at: string
+  processed_at: string
+}
+
 export interface Access {
   gated: boolean
   granted: boolean
@@ -807,6 +829,15 @@ export const api = {
     recordOutcome: (id: number, outcome: OutcomeCreate) => sendJson<Project>('POST', `/api/projects/${id}/outcome`, outcome),
     setShared: (id: number, shared: boolean) => sendJson<Project>('POST', `/api/projects/${id}/outcome/share`, { shared }),
     shareText: (id: number) => getJson<{ text: string }>(`/api/projects/${id}/outcome/share`),
+  },
+  captures: {
+    list: () => getJson<{ captures: Capture[] }>('/api/captures'),
+    get: (id: number) => getJson<Capture>(`/api/captures/${id}`),
+    process: (id: number) => sendJson<Capture>('POST', `/api/captures/${id}/process`),
+    remove: (id: number) => sendJson<void>('DELETE', `/api/captures/${id}`),
+    photoUrl: (id: number, n: number) => apiUrl(`/api/captures/${id}/photos/${n}`),
+    clipUrl: (id: number) => apiUrl(`/api/captures/${id}/clip`),
+    noteUrl: (id: number) => apiUrl(`/api/captures/${id}/note`),
   },
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [

@@ -653,6 +653,48 @@ class Inventory:
             raise NotFoundError(f"no project {project_id}")
         return row
 
+    # captures from the phone
+
+    def add_capture(self, content: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            cur = conn.execute(
+                "INSERT INTO captures (status, content, created_at) VALUES (?,?,?)",
+                ("received", content, now()),
+            )
+            return self._capture(conn, int(cur.lastrowid or 0))
+
+    def captures(self) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            return conn.execute(
+                "SELECT * FROM captures WHERE deleted_at IS NULL ORDER BY id DESC"
+            ).fetchall()
+
+    def capture(self, capture_id: int) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            return self._capture(conn, capture_id)
+
+    def update_capture(self, capture_id: int, status: str, content: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            self._capture(conn, capture_id)
+            conn.execute(
+                "UPDATE captures SET status = ?, content = ?, processed_at = ? WHERE id = ?",
+                (status, content, now() if status == "processed" else None, capture_id),
+            )
+            return self._capture(conn, capture_id)
+
+    def delete_capture(self, capture_id: int) -> None:
+        with self.store.connect() as conn:
+            self._capture(conn, capture_id)
+            conn.execute("UPDATE captures SET deleted_at = ? WHERE id = ?", (now(), capture_id))
+
+    def _capture(self, conn: sqlite3.Connection, capture_id: int) -> sqlite3.Row:
+        row: sqlite3.Row | None = conn.execute(
+            "SELECT * FROM captures WHERE id = ? AND deleted_at IS NULL", (capture_id,)
+        ).fetchone()
+        if row is None:
+            raise NotFoundError(f"no capture {capture_id}")
+        return row
+
     def delete(self, item_id: int) -> None:
         """Hidden, not erased: the record and its events stay for the audit trail."""
         at = now()

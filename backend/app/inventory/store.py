@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -175,6 +175,18 @@ CREATE TABLE packs (
 CREATE INDEX packs_by_project ON packs (project_id);
 """
 
+# version 8: captures from the phone, kept until processed and deleted
+_SCHEMA_V8 = """
+CREATE TABLE captures (
+    id INTEGER PRIMARY KEY,
+    status TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    processed_at TEXT,
+    deleted_at TEXT
+);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -183,6 +195,7 @@ MIGRATIONS: dict[int, str] = {
     5: _SCHEMA_V5,
     6: _SCHEMA_V6,
     7: _SCHEMA_V7,
+    8: _SCHEMA_V8,
 }
 
 

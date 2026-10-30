@@ -29,6 +29,8 @@ stops the service with a clear message instead of failing on the first user requ
 | `CORS_ORIGINS` | `http://localhost:5173` | | comma-separated browser origins allowed to call the API |
 | `DATA_DIR` | `./data` | | uploads, the spend ledger and the SQLite database |
 | `MAX_UPLOAD_MB` | `12` | | upload size limit per file |
+| `MAX_CLIP_MB` | `60` | | size limit for a clip sent with a capture |
+| `MAX_CAPTURES` | `200` | | how many captures the Inbox keeps at once; a send over it is refused until some are deleted |
 | `INVENTORY_DB_FILE` | `inventory.sqlite3` | | the inventory database, inside `DATA_DIR` |
 | `MEASURE_MIN_SHARPNESS` | `150` | | least edge response (Laplacian variance) around every mark before a capture is measured |
 | `MEASURE_MIN_REFERENCE_PX` | `80` | | least span of the scale reference in pixels |

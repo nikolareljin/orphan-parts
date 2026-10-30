@@ -2,18 +2,20 @@ import { useEffect, useState, type FormEvent } from 'react'
 import Build from './components/Build'
 import ExtractForm from './components/ExtractForm'
 import Find from './components/Find'
+import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
 import { ACCESS_REQUIRED_EVENT, api, type Readiness, type Version } from './lib/api'
 import { demoText } from './lib/access'
 import './App.css'
 
 type Status = { kind: 'loading' } | { kind: 'ok'; ready: Readiness; version: Version } | { kind: 'error'; message: string }
-type View = 'read' | 'inventory' | 'find' | 'build'
+type View = 'read' | 'inbox' | 'inventory' | 'find' | 'build'
 
 export default function App() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
   const [view, setView] = useState<View>('read')
   const [saved, setSaved] = useState(0)
+  const [openItem, setOpenItem] = useState<number | null>(null)
   const [granted, setGranted] = useState<boolean | null>(null)
   const [reloads, setReloads] = useState(0)
 
@@ -52,6 +54,9 @@ export default function App() {
           <button type="button" aria-current={view === 'read' ? 'page' : undefined} onClick={() => setView('read')}>
             Read a label
           </button>
+          <button type="button" aria-current={view === 'inbox' ? 'page' : undefined} onClick={() => setView('inbox')}>
+            Inbox
+          </button>
           <button
             type="button"
             aria-current={view === 'inventory' ? 'page' : undefined}
@@ -84,10 +89,23 @@ export default function App() {
         </section>
       )}
 
+      {open && view === 'inbox' && (
+        <section className="card">
+          <h2>Inbox</h2>
+          <Inbox
+            onOpenItem={(id) => {
+              setOpenItem(id)
+              setSaved((n) => n + 1)
+              setView('inventory')
+            }}
+          />
+        </section>
+      )}
+
       {open && view === 'inventory' && (
         <section className="card">
           <h2>My inventory</h2>
-          <Inventory refresh={saved} />
+          <Inventory refresh={saved} openId={openItem} />
         </section>
       )}
 

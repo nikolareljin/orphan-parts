@@ -36,6 +36,7 @@ EXPENSIVE = [
     ("POST", re.compile(r"^/api/items/\d+/price$")),
     ("POST", re.compile(r"^/api/searches/\d+/candidates$")),
     ("POST", re.compile(r"^/api/projects/propose$")),
+    ("POST", re.compile(r"^/api/captures/\d+/process$")),
 ]
 _TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[0-9a-f]{32}$")
 

@@ -276,8 +276,11 @@ def test_reset_removes_only_the_inventory_file(recorded_settings: Settings) -> N
     Path(f"{db}-wal").write_bytes(b"")
     ledger = recorded_settings.spend_ledger_path
     ledger.write_text("{}\n")
-    assert sorted(reset(recorded_settings)) == [db.name, f"{db.name}-wal"]
-    assert not db.exists() and ledger.exists()
+    media = recorded_settings.data_dir / "captures" / "1"
+    media.mkdir(parents=True)
+    (media / "clip.mp4").write_bytes(b"x")
+    assert sorted(reset(recorded_settings)) == ["captures/", db.name, f"{db.name}-wal"]
+    assert not db.exists() and ledger.exists() and not media.exists()
     assert reset(recorded_settings) == []
 
 
