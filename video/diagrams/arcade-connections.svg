@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <title>Tabletop arcade: how the parts connect (concept preview)</title>
+  <desc>Power, video and audio, data and control connections for the arcade coffee table template. Drawn for the video; not produced by the app.</desc>
+  <rect width="1920" height="1080" fill="#0b0f17"/>
+  <text x="96" y="100" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="46" font-weight="600" fill="#f8fafc" text-anchor="start">Tabletop arcade: how the parts connect</text>
+  <rect x="96" y="120" width="120" height="6" rx="3" fill="#00f5d4"/>
+  <text x="96" y="165" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#94a3b8" text-anchor="start">Drawn for this video from the arcade template's requirements. Ports and cables are to be checked on your own devices.</text>
+  <rect x="1434" y="62" width="390" height="54" rx="27" fill="none" stroke="#d946ef" stroke-width="2.5"/>
+  <text x="1629" y="97" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#d946ef" text-anchor="middle">CONCEPT PREVIEW, NOT BUILT</text>
+  <rect x="96" y="250" width="380" height="110" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="116" y="290" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Wall outlet</text>
+  <text x="116" y="324" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">the one cable that leaves the table</text>
+  <rect x="96" y="470" width="330" height="140" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="116" y="510" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Power strip</text>
+  <text x="116" y="544" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">inside the table, switched</text>
+  <text x="116" y="574" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">missing? check what you have</text>
+  <rect x="640" y="420" width="420" height="200" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="660" y="460" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Laptop (runs the games)</text>
+  <text x="660" y="494" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">from the inventory: a laptop that works</text>
+  <text x="660" y="524" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">and has a video output, per its record</text>
+  <text x="660" y="554" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">emulator front end, your own games</text>
+  <rect x="1300" y="250" width="520" height="170" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="1320" y="290" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Monitor, lying flat</text>
+  <text x="1320" y="324" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">from the inventory: a monitor that works</text>
+  <text x="1320" y="354" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">inputs per its record; confirm the one used</text>
+  <text x="1320" y="384" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">under glass or acrylic (missing)</text>
+  <rect x="1300" y="520" width="520" height="140" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="1320" y="560" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Small speakers</text>
+  <text x="1320" y="594" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">or the laptop's own</text>
+  <text x="1320" y="624" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">optional in the template</text>
+  <rect x="640" y="760" width="420" height="150" rx="14" fill="#1b2436" stroke="#d946ef" stroke-width="2.5" stroke-dasharray="12 8"/>
+  <text x="660" y="800" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">USB encoder</text>
+  <text x="660" y="834" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">two joysticks and buttons wire to it</text>
+  <text x="660" y="864" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">missing: a search on Marketplace</text>
+  <rect x="96" y="760" width="400" height="150" rx="14" fill="#1b2436" stroke="#d946ef" stroke-width="2.5" stroke-dasharray="12 8"/>
+  <text x="116" y="800" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Control panel</text>
+  <text x="116" y="834" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">two joysticks, buttons</text>
+  <text x="116" y="864" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">missing; or two USB gamepads</text>
+  <rect x="1300" y="760" width="520" height="150" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="1320" y="800" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Laptop power adapter</text>
+  <text x="1320" y="834" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">the laptop's own adapter</text>
+  <text x="1320" y="864" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">check output against the laptop's label</text>
+  <path d="M 246,360 L 246,470" fill="none" stroke="#d946ef" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="262" y="425" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600" fill="#d946ef" text-anchor="start">mains</text>
+  <path d="M 426,520 L 520,520 L 520,300 L 1300,300" fill="none" stroke="#d946ef" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 426,575 L 560,575 L 560,700 L 1240,700 L 1240,835 L 1300,835" fill="none" stroke="#d946ef" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1300,870 L 1180,870 L 1180,600 L 1060,600" fill="none" stroke="#d946ef" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1100" y="900" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600" fill="#d946ef" text-anchor="start">DC to the laptop</text>
+  <path d="M 1240,700 L 1240,640 L 1300,640" fill="none" stroke="#d946ef" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1060,470 L 1240,470 L 1240,380 L 1300,380" fill="none" stroke="#00bbf9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="22 12"/>
+  <text x="1075" y="505" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600" fill="#00bbf9" text-anchor="start">video cable, type to confirm</text>
+  <path d="M 1060,545 L 1300,575" fill="none" stroke="#00bbf9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="22 12"/>
+  <text x="1180" y="548" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600" fill="#00bbf9" text-anchor="start">audio</text>
+  <path d="M 850,760 L 850,620" fill="none" stroke="#00f5d4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="865" y="660" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600" fill="#00f5d4" text-anchor="start">USB</text>
+  <path d="M 496,835 L 640,835" fill="none" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 9"/>
+  <text x="505" y="815" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600" fill="#cbd5e1" text-anchor="start">switch wires</text>
+  <path d="M 96,960 L 166,960" fill="none" stroke="#d946ef" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="182" y="967" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#cbd5e1" text-anchor="start">power</text>
+  <path d="M 426,960 L 496,960" fill="none" stroke="#00bbf9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="22 12"/>
+  <text x="512" y="967" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#cbd5e1" text-anchor="start">video and audio</text>
+  <path d="M 756,960 L 826,960" fill="none" stroke="#00f5d4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="842" y="967" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#cbd5e1" text-anchor="start">data (USB)</text>
+  <path d="M 1086,960 L 1156,960" fill="none" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 9"/>
+  <text x="1172" y="967" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#cbd5e1" text-anchor="start">control (switch wiring)</text>
+  <text x="1430" y="967" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#d946ef" text-anchor="start">dashed magenta box: missing, to find</text>
+  <text x="96" y="1030" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#94a3b8" text-anchor="start">Not a tested wiring plan and not produced by the app. No mains work inside the table; the strip stays a closed, rated unit.</text>
+</svg>

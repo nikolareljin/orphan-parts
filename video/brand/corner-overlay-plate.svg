@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <!-- the same, on a neutral plate for dark footage -->
+  <rect x="1736" y="56" width="128" height="128" rx="30" fill="#cbd5e1" fill-opacity="0.92"/>
+  <image x="1744" y="64" width="112" height="112" preserveAspectRatio="xMidYMid meet" href="logo.svg" xlink:href="logo.svg"/>
+</svg>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <title>A plan that adapts: a different display (concept preview)</title>
+  <desc>Two display choices and what a re-plan would touch: connections, enclosure, steps, parts to find. A concept, not a feature.</desc>
+  <rect width="1920" height="1080" fill="#0b0f17"/>
+  <text x="96" y="100" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="46" font-weight="600" fill="#f8fafc" text-anchor="start">A plan that adapts: a different display</text>
+  <rect x="96" y="120" width="120" height="6" rx="3" fill="#00f5d4"/>
+  <text x="96" y="165" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#94a3b8" text-anchor="start">The next step, shown as a concept: choosing another screen would re-plan what follows from it. Nothing here is computed by the app today.</text>
+  <rect x="1434" y="62" width="390" height="54" rx="27" fill="none" stroke="#d946ef" stroke-width="2.5"/>
+  <text x="1629" y="97" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#d946ef" text-anchor="middle">CONCEPT PREVIEW, NOT BUILT</text>
+  <rect x="96" y="230" width="820" height="190" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="116" y="270" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Display A: a monitor</text>
+  <text x="116" y="304" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">from the inventory: works, its inputs per its record</text>
+  <text x="116" y="334" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">lies flat under the glass</text>
+  <text x="116" y="364" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">its own power cable to the strip</text>
+  <rect x="996" y="230" width="820" height="190" rx="14" fill="#1b2436" stroke="#2d384d" stroke-width="2.5"/>
+  <text x="1016" y="270" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#f8fafc" text-anchor="start">Display B: a tablet</text>
+  <text x="1016" y="304" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#cbd5e1" text-anchor="start">from the inventory: works, battery holds a day</text>
+  <text x="1016" y="334" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">smaller screen area: S changes</text>
+  <text x="1016" y="364" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="start">video path and power path to be planned</text>
+  <rect x="96" y="500" width="1720" height="88" rx="14" fill="none" stroke="#d946ef" stroke-width="2" stroke-dasharray="12 8"/>
+  <text x="130" y="555" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="600" fill="#f8fafc" text-anchor="start">Connections</text>
+  <text x="460" y="555" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#cbd5e1" text-anchor="start">video path, power path and audio would be drawn again for the new screen</text>
+  <rect x="96" y="608" width="1720" height="88" rx="14" fill="none" stroke="#d946ef" stroke-width="2" stroke-dasharray="12 8"/>
+  <text x="130" y="663" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="600" fill="#f8fafc" text-anchor="start">Enclosure</text>
+  <text x="460" y="663" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#cbd5e1" text-anchor="start">the opening, the glass and the bracket positions follow S, the screen's measured size</text>
+  <rect x="96" y="716" width="1720" height="88" rx="14" fill="none" stroke="#d946ef" stroke-width="2" stroke-dasharray="12 8"/>
+  <text x="130" y="771" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="600" fill="#f8fafc" text-anchor="start">Steps</text>
+  <text x="460" y="771" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#cbd5e1" text-anchor="start">the build pack's steps and safety lines would be rewritten from the new choice</text>
+  <rect x="96" y="824" width="1720" height="88" rx="14" fill="none" stroke="#d946ef" stroke-width="2" stroke-dasharray="12 8"/>
+  <text x="130" y="879" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="600" fill="#f8fafc" text-anchor="start">Parts to find</text>
+  <text x="460" y="879" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#cbd5e1" text-anchor="start">the missing list would change, and with it the Marketplace searches</text>
+  <text x="96" y="1010" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#94a3b8" text-anchor="start">Today: a build pack is written by the rules from what stands and goes stale when an input changes. Re-planning the layout is not built.</text>
+</svg>

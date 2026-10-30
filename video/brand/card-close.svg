@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs><linearGradient id="cardBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a28"/><stop offset="1" stop-color="#0a0e15"/></linearGradient></defs>
+  <rect width="1920" height="1080" fill="url(#cardBg)"/>
+  <!-- Orphan Parts Lens closing card. The logo is linked, never edited. -->
+  <image x="840" y="110" width="240" height="240" preserveAspectRatio="xMidYMid meet" href="logo.svg" xlink:href="logo.svg"/>
+  <text x="960" y="450" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="96" font-weight="600" fill="#f8fafc" text-anchor="middle">Orphan Parts Lens</text>
+  <rect x="900" y="488" width="120" height="6" rx="3" fill="#00f5d4"/>
+  <text x="960" y="570" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="46" font-weight="400" fill="#cbd5e1" text-anchor="middle">Find replacements. Discover reuse. Build something useful.</text>
+  <text x="960" y="690" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="400" fill="#94a3b8" text-anchor="middle">On Meta's Muse models: Muse Spark, SAM 3.1, Muse Voice Transcribe</text>
+  <text x="960" y="745" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="400" fill="#94a3b8" text-anchor="middle">Concept previews in this video are labeled as such; they are not built yet.</text>
+  <text x="960" y="850" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="36" font-weight="600" fill="#00f5d4" text-anchor="middle">github.com/nikolareljin/orphan-parts</text>
+  <text x="960" y="898" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="400" fill="#cbd5e1" text-anchor="middle">Docs: nikolareljin.github.io/orphan-parts</text>
+  <text x="960" y="940" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="400" fill="#cbd5e1" text-anchor="middle">Android app: the Releases page of the repository</text>
+  <text x="960" y="1010" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="400" fill="#94a3b8" text-anchor="middle" letter-spacing="1">Built during the Meta Global AI Developer Hackathon, Oct 27 to Nov 4, 2026</text>
+</svg>

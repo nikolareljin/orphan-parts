@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <!-- concept: A plan that adapts -->
+  <rect x="96" y="72" width="1048" height="170" rx="16" fill="#0e131d" fill-opacity="0.88" stroke="#2d384d" stroke-width="2"/>
+  <rect x="96" y="72" width="8" height="170" rx="4" fill="#d946ef"/>
+  <text x="136" y="118" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#d946ef" text-anchor="start" letter-spacing="2">CONCEPT PREVIEW, NOT BUILT</text>
+  <text x="136" y="176" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="600" fill="#f8fafc" text-anchor="start">A plan that adapts</text>
+  <text x="136" y="220" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">A different display would re-plan connections, enclosure and steps</text>
+</svg>

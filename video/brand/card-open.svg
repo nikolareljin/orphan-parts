@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs><linearGradient id="cardBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a28"/><stop offset="1" stop-color="#0a0e15"/></linearGradient></defs>
+  <rect width="1920" height="1080" fill="url(#cardBg)"/>
+  <!-- Orphan Parts Lens opening card. The logo is linked, never edited: replace logo.svg and re-run render.sh. -->
+  <image x="780" y="150" width="360" height="360" preserveAspectRatio="xMidYMid meet" href="logo.svg" xlink:href="logo.svg"/>
+  <text x="960" y="640" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="104" font-weight="600" fill="#f8fafc" text-anchor="middle">Orphan Parts Lens</text>
+  <rect x="900" y="680" width="120" height="6" rx="3" fill="#00f5d4"/>
+  <text x="960" y="770" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="400" fill="#cbd5e1" text-anchor="middle">What do you have? What do you want to accomplish?</text>
+  <text x="960" y="980" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="400" fill="#94a3b8" text-anchor="middle" letter-spacing="1">Meta Global AI Developer Hackathon, Oct 27 to Nov 4, 2026</text>
+</svg>
