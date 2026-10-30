@@ -11,14 +11,43 @@ from app.find.schema import Candidate, Search
 from app.inventory.schema import Item
 from app.projects.schema import Budget, Preferences, Project
 
-PRIVATE_FIELDS = ("serial", "imei", "mac_address", "account", "password", "location")
+# Field names that identify the item or its owner: as whole words of the key (``mac`` keeps
+# ``mac`` and ``mac_address`` out, not ``machine``), and a few as any part of it.
+PRIVATE_WORDS = frozenset(
+    {
+        "serial",
+        "sn",
+        "imei",
+        "mac",
+        "vin",
+        "account",
+        "password",
+        "pin",
+        "location",
+        "address",
+        "phone",
+        "email",
+        "owner",
+        "plate",
+        "licence",
+        "license",
+        "ssn",
+        "iban",
+    }
+)
+PRIVATE_PARTS = ("serial", "password", "passwd")
+
+
+def private_field(key: str) -> bool:
+    words = key.lower().split("_")
+    return any(w in PRIVATE_WORDS for w in words) or any(p in key.lower() for p in PRIVATE_PARTS)
 
 
 def shown_fields(item: Item) -> list[tuple[str, str]]:
     """The accepted values of an item, without anything that identifies it or its owner."""
     out: list[tuple[str, str]] = []
     for key in sorted(item.fields):
-        if any(p in key for p in PRIVATE_FIELDS):
+        if private_field(key):
             continue
         assertion = item.fields[key]
         if assertion.review != "accepted":
@@ -179,34 +208,40 @@ def render(
     return "\n".join(lines)
 
 
-def without_names(text: str, items: list[Item]) -> str:
-    """The item's kind where its name was: the title and the result were written from the
-    names, and the names are the owner's."""
-    for item in sorted(items, key=lambda i: -len(i.name)):
-        if len(item.name) < 3:
+def without_names(text: str, names: list[tuple[str, str]]) -> str:
+    """The item's kind where its name was: the title, the result and the owner's words were
+    written from the names, and the names are the owner's. ``names`` pairs a name with its
+    kind; the longest names go first so a short one never cuts a long one in two."""
+    for name, kind in sorted(names, key=lambda n: -len(n[0])):
+        if len(name) < 3:
             continue
-        text = re.sub(re.escape(item.name), item.item_type or "an item", text, flags=re.I)
+        text = re.sub(re.escape(name), kind or "an item", text, flags=re.I)
     return text
 
 
-def share_text(project: Project, items: list[Item]) -> str:
+def share_text(
+    project: Project, items: list[Item], known: list[tuple[str, str]] | None = None
+) -> str:
     """The outcome for other people: what was built, from what kinds of things, how it was
-    tested and what it cannot do. No item names, ids, values, places or prices."""
+    tested and what it cannot do. No item names, ids, values, places or prices. ``known``
+    adds names to keep out beyond the items on the project: ones taken by another project
+    since, or mentioned in passing."""
     if project.outcome is None:
         raise ValueError("no outcome recorded")
     kinds = sorted({(i.item_type or "item").lower() for i in items})
+    names = [(i.name, i.item_type) for i in items] + list(known or [])
     o = project.outcome
     # the owner's own words name the items too; the kind stands where the name was, there as
     # in the title and the result
     lines = [
-        without_names(project.title, items),
+        without_names(project.title, names),
         "",
         f"Built from: {', '.join(kinds) or 'items on hand'}.",
-        f"Result: {without_names(project.result, items)}",
-        f"Set up: {without_names(o.configuration, items)}",
-        f"Tested {o.tested_on}: {without_names(o.test, items)}"
+        f"Result: {without_names(project.result, names)}",
+        f"Set up: {without_names(o.configuration, names)}",
+        f"Tested {o.tested_on}: {without_names(o.test, names)}"
         f" ({'working' if o.working else 'not working'})",
     ]
     if o.limitations:
-        lines.append(f"Limits: {without_names(o.limitations, items)}")
+        lines.append(f"Limits: {without_names(o.limitations, names)}")
     return "\n".join(lines)

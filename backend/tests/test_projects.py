@@ -503,6 +503,10 @@ async def test_the_build_pack_is_written_from_what_stands_and_goes_stale(planner
     )
     inv.add_field(ids["Old laptop"], FieldCreate(field="serial_number", value="SN-77"))
     inv.add_field(ids["Old laptop"], FieldCreate(field="screen_size", value="13", unit="in"))
+    # what identifies the item or its owner stays out, by whole words of the field's name
+    inv.add_field(ids["Old laptop"], FieldCreate(field="mac", value="AA:BB:CC:DD:EE:FF"))
+    inv.add_field(ids["Old laptop"], FieldCreate(field="owner_phone", value="555 0100"))
+    inv.add_field(ids["Old laptop"], FieldCreate(field="machine_type", value="ultrabook"))
     planner.set_preferences(Preferences(budget=50, tools="a screwdriver set"))
     projects = await planner.propose(ProposeRequest())
     desk = projects[0]
@@ -518,6 +522,7 @@ async def test_the_build_pack_is_written_from_what_stands_and_goes_stale(planner
     assert "**Old laptop** as laptop (committed)" in text
     assert "condition: boots, battery weak" in text and "screen size: 13 in" in text
     assert "attic shelf" not in text and "SN-77" not in text and "serial" not in text
+    assert "AA:BB" not in text and "555 0100" not in text and "machine type: ultrabook" in text
     assert "A cable between the two" in text and "blocks the build" in text
     assert "Search: A cable between the two" in text and "top price 38" in text
     assert "A mouse (optional)" in text
@@ -579,6 +584,16 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
     failed = planner.record_outcome(vacuum.id, record)
     assert failed.status == "building" and failed.outcome is not None
     assert failed.outcome.working is False and not failed.outcome.shared
+    # shared once, a new text starts unshared: consent is per record
+    planner.set_share(vacuum.id, ShareChange(shared=True))
+    again = planner.record_outcome(vacuum.id, record)
+    assert again.outcome is not None and not again.outcome.shared
+    # a working outcome needs every blocking requirement, as advancing does
+    planner.inventory.delete(tool.id)
+    with pytest.raises(ProjectsError, match="still needed before done: attachment"):
+        planner.record_outcome(vacuum.id, record.model_copy(update={"working": True}))
+    tool = planner.inventory.create(ItemCreate(item_type="crevice tool", name="Narrow tool"))
+    planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
     done = planner.record_outcome(
         vacuum.id, record.model_copy(update={"working": True, "limitations": ""})
     )
@@ -632,6 +647,11 @@ def test_outcome_dates_are_real_and_past() -> None:
         OutcomeCreate(**base, tested_on="2999-01-01")
     with pytest.raises(ValueError):
         OutcomeCreate(**{**base, "configuration": "  "}, tested_on="2026-10-28")
+    # a record read back is taken as written, whatever the clock says since
+    from app.projects.schema import Outcome
+
+    kept = Outcome(**base, tested_on="2999-01-01", recorded_at="2026-10-28T10:00:00+00:00")
+    assert kept.tested_on == "2999-01-01" and not kept.shared
 
 
 def test_pack_and_outcome_routes(recorded_client: TestClient) -> None:

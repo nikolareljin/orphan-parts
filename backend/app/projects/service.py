@@ -626,15 +626,19 @@ class Planner:
             return self._record_outcome(project_id, outcome)
 
     def _record_outcome(self, project_id: int, outcome: OutcomeCreate) -> Project:
-        row = self.inventory.project(project_id)
-        if row["status"] != "building":
+        # read as a project first: an item deleted since is noticed and its requirement opened
+        project = self.project(project_id)
+        if project.status != "building":
             raise ProjectsError("an outcome is recorded on a project being built")
+        if outcome.working:
+            # done means built: the same bar as advancing, so the two routes agree
+            open_keys = [r.key for r in project.requirements if r.blocking and r.state != "pass"]
+            if open_keys:
+                raise ProjectsError(f"still needed before done: {', '.join(open_keys)}")
+        row = self.inventory.project(project_id)
         content = json.loads(row["content"])
-        content["outcome"] = {
-            **outcome.model_dump(),
-            "recorded_at": now_iso(),
-            "shared": bool((content.get("outcome") or {}).get("shared", False)),
-        }
+        # a new record is a new text: sharing is off until the owner says so for this one
+        content["outcome"] = {**outcome.model_dump(), "recorded_at": now_iso(), "shared": False}
         status = "done" if outcome.working else "building"
         self.inventory.update_project(project_id, status, json.dumps(content))
         if status == "done":
@@ -659,7 +663,9 @@ class Planner:
         project = self.project(project_id)
         if project.outcome is None or not project.outcome.shared:
             raise ProjectsError("the outcome is not shared")
-        return packs.share_text(project, self.items_on(project))
+        # every item the owner has is a name to keep out, not only those still on the project
+        known = [(s.name, s.item_type) for s in self.inventory.list_items()]
+        return packs.share_text(project, self.items_on(project), known)
 
     def project_of(self, row: Any) -> Project:
         content = json.loads(row["content"])
