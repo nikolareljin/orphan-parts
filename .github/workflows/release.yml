@@ -141,7 +141,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # only the highest version: a run for an older tag leaves the latest where it is
-          highest="$(gh release list --limit 100 --json tagName --jq '.[].tagName' | sort -V | tail -1)"
+          highest="$(gh release list --limit 100 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName' | sort -V | tail -1)"
           if [ "$highest" = "$TAG" ]; then
             gh release edit "$TAG" --latest
           else

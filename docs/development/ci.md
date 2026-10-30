@@ -83,8 +83,9 @@ laptop: `bash scripts/scan-image.sh <image>...`.
    the release twice, as `orphan-parts-<version>.apk` (the name the release page shows) and
    as `orphan-parts.apk`, so that
    `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
-   is always the newest release's APK; the release is marked the latest only then, and only
-   when it is the highest version. The QR code in the docs, `docs/assets/apk-qr.svg`, carries
+   is the newest release's APK; the release is marked the latest only then, and only when it
+   is the highest version. If the APK step fails, the previous release stays the latest;
+   **Re-run failed jobs** on the run attaches the APK and marks it. The QR code in the docs, `docs/assets/apk-qr.svg`, carries
    that address and is regenerated only if the address changes, with the backend's `segno`
    (black modules on a white quiet zone, so it scans on a dark page too):
 
@@ -96,10 +97,10 @@ laptop: `bash scripts/scan-image.sh <image>...`.
     sys.stdout.write(b.getvalue().decode())" > docs/assets/apk-qr.svg
     ```
 
-   Last, `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host
-   when the repository variable
-   `DEPLOY_ENABLED` is `true` and the secrets `DEPLOY_HOST` (`user@host`), `DEPLOY_PATH` and
-   `DEPLOY_SSH_KEY` are set. See [Deployment](../operations/deployment.md).
+    Last, `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host
+    when the repository variable `DEPLOY_ENABLED` is `true` and the secrets `DEPLOY_HOST`
+    (`user@host`), `DEPLOY_PATH` and `DEPLOY_SSH_KEY` are set. See
+    [Deployment](../operations/deployment.md).
 
 The jobs use only `actions/checkout`, the job token, Docker, `gh` and `ssh`; no other actions,
 and no stored secrets beyond the deploy host's, which exist only when a host does. A repository ruleset limits tag creation to the repository admin, plus the tag

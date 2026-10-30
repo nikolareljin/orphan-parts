@@ -43,8 +43,8 @@ answers or the live models. A unit test keeps the palette equal to the web app's
 
 The release page carries `orphan-parts-<version>.apk`, and the same file as `orphan-parts.apk`,
 which keeps `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
-pointing at the newest release (the QR code on the docs home and in the phone guide opens it); [On your phone in ten
-minutes](../start/judges.md) is the path for a phone with no development setup (download on the
+pointing at the newest release (the QR code on the docs home and in the phone guide opens
+it); [On your phone in ten minutes](../start/judges.md) is the path for a phone with no development setup (download on the
 phone, or `scripts/phone-install.sh` / `scripts/phone-install.ps1` over USB, which bring their
 own `adb`). The app runs on Android 8.0 and newer; the QR scanner needs Google Play services,
 the typed address works everywhere. On Windows the development path below runs in WSL; the

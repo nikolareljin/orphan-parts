@@ -59,8 +59,8 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    Or, on the phone, open the
    [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) and tap either
    APK. Open the download with installing from the browser allowed (**Allow from this
-   source**); if Play Protect warns, **More details**, **Install anyway**. Or over a USB cable, with **USB
-   debugging** on in **Developer options**: from a clone, `scripts/phone-install.sh` on the
+   source**); if Play Protect warns, **More details**, **Install anyway**. Or over a USB
+   cable, with **USB debugging** on in **Developer options**: from a clone, `scripts/phone-install.sh` on the
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
