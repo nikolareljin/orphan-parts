@@ -29,6 +29,10 @@ e2e/playwright-report/
 site/
 docs/reference/openapi.json
 
+# evaluation runs
+/eval/*
+!/eval/README.md
+
 # runtime
 /data/
 backend/data/

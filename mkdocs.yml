@@ -87,6 +87,7 @@ nav:
       - Android app: guides/android.md
       - Meta glasses: guides/glasses.md
       - Creating a new category: guides/new-category.md
+      - Training and improving the reads: guides/improving.md
   - Meta models:
       - Overview: models/index.md
       - Muse Spark: models/muse-spark.md
