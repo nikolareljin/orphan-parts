@@ -12,8 +12,9 @@ export function reachableFromAPhone(origin: string): boolean {
   }
   return (
     host !== '' &&
-    !['localhost', '::1', '[::1]', '0.0.0.0', '[::]'].includes(host) &&
+    !['localhost', '::1', '[::1]', '0.0.0.0', '[::]', '[::ffff:7f00:1]'].includes(host) &&
     !host.startsWith('127.') &&
+    !host.startsWith('[::ffff:127.') &&
     !host.endsWith('.localhost')
   )
 }

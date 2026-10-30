@@ -25,10 +25,13 @@ fun normalizeBaseUrl(text: String): String {
  * (127.x.x.x, ::1), the unspecified address and the .localhost names are that; any other
  * host, a bracketed IPv6 address included, may be reachable. */
 fun reachableFromAPhone(url: String): Boolean {
-    val host = try { URI(url).host?.lowercase() ?: return false } catch (_: Exception) { return false }
+    val parsed = try { URI(url) } catch (_: Exception) { return false }
+    // a name the URI class will not call a host (an underscore in it) is still a host
+    val host = (parsed.host ?: parsed.authority?.substringBefore(':'))?.lowercase() ?: return false
     return host.isNotEmpty() &&
-        host !in setOf("localhost", "[::1]", "0.0.0.0", "[::]") &&
+        host !in setOf("localhost", "[::1]", "0.0.0.0", "[::]", "[::ffff:7f00:1]") &&
         !host.startsWith("127.") &&
+        !host.startsWith("[::ffff:127.") &&
         !host.endsWith(".localhost")
 }
 
