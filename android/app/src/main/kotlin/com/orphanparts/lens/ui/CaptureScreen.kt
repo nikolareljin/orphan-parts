@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -49,7 +50,8 @@ private const val MAX_SIDE = 1600
 fun CaptureScreen(session: Session, onSaved: (SavedItem) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    // kept across a process death while the camera app is in front, so the result still lands
+    var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var jpeg by remember { mutableStateOf<ByteArray?>(null) }
     var preview by remember { mutableStateOf<Bitmap?>(null) }
     var extraction by remember { mutableStateOf<Extraction?>(null) }
@@ -60,7 +62,7 @@ fun CaptureScreen(session: Session, onSaved: (SavedItem) -> Unit) {
     var saved by remember { mutableStateOf<SavedItem?>(null) }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        val uri = photoUri
+        val uri = photoUri?.let(Uri::parse)
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val prepared = withContext(Dispatchers.IO) { prepare(context.contentResolver.openInputStream(uri)?.use { it.readBytes() }) }
@@ -85,7 +87,7 @@ fun CaptureScreen(session: Session, onSaved: (SavedItem) -> Unit) {
                 val dir = File(context.cacheDir, "captures").apply { mkdirs() }
                 val file = File(dir, "capture.jpg")
                 val uri = FileProvider.getUriForFile(context, context.packageName + ".files", file)
-                photoUri = uri
+                photoUri = uri.toString()
                 takePicture.launch(uri)
             }) { Text("Take a photo") }
             Spacer(Modifier.width(8.dp))
