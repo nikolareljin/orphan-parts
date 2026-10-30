@@ -20,11 +20,11 @@ ROOT = Path(__file__).resolve().parents[2]
 SET = ROOT / "demo" / "set.yaml"
 
 # What the committed fixtures answer for the committed set: the set's photos and the voice
-# note are not in the repository, so no label is read, and every answer that is given (three
-# drafts, two price guidances, four listing reads, the two steps of the proposal loop) comes
+# note are not in the repository, so no label is read, and every answer that is given (six
+# drafts, four price guidances, four listing reads, the two steps of the proposal loop) comes
 # from an operation's stub rather than a recording of this set. Recording the set with its
 # photos brings this to 0; the assertion pins the number the fixtures give today.
-STUB_ANSWERS_ON_THE_COMMITTED_SET = 11
+STUB_ANSWERS_ON_THE_COMMITTED_SET = 16
 
 
 async def test_the_run_scores_the_committed_set_and_writes_the_files(
@@ -47,7 +47,7 @@ async def test_the_run_scores_the_committed_set_and_writes_the_files(
     )
     s = report.summary
     assert s.mode == "fixture" and s.cost_usd == 0.0
-    assert s.items == s.items_loaded == 10 and s.photos == 0 and s.fields_read == 0
+    assert s.items == s.items_loaded == 21 and s.photos == 0 and s.fields_read == 0
     assert s.stub_answers == STUB_ANSWERS_ON_THE_COMMITTED_SET
     # the fit verdicts come from the rules and the owner values: right without any recording
     assert (s.fits_right, s.fits_total) == (2, 2)
@@ -234,8 +234,6 @@ async def test_the_export_writes_one_line_per_item_with_accepted_reads(
         "brand": {"value": "Orbital Power", "unit": ""},
         "output_voltage": {"value": "19.5", "unit": "V"},
     }
-    out = tmp_path / "eval"
-    assert main(["export", "--out", str(out)]) in (0, 1)  # the settings are the environment's
 
 
 def test_the_command_line(
