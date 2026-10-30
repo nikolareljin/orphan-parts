@@ -11,7 +11,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 - `.env.example` lists every name the hosted deploy and the planned second model route use (Modal, Cloudflare, the host's key, code, cap and mode; Baseten and Fireworks), with empty values and where to get each; `./dev deploy hosted` reads them from `.env` when the shell does not set them.
 
 ### Changed
-- The docs site's tabs bar under the header is a mid gray in both schemes (white text at 5.45:1 in light, 7.59:1 in dark) instead of the palette's light blue.
+- The docs site's tabs bar under the header is a mid gray in both schemes instead of the palette's light blue: the active tab's white text reads at 5.45:1 in light and 7.59:1 in dark, the dimmed tabs at 3.62:1 and 4.71:1 (2.29:1 on the blue before).
 - The docs site tells the story: how it fits together (one clickable diagram and two paths through the demo set), lessons learned, next steps (the roadmap folded into it) and the pitch.
 ### Added
 - The evaluation loop: `./dev eval` (`python -m app.eval run`) loads the demo set as the demo does and scores it by the rules into `eval/` (a report as JSON and Markdown, two charts): values read per item against an `expect:` block in `demo/set.yaml`, fit verdicts between items, proposals written against kept, stub answers and spend; `export` writes `train.jsonl` from the accepted reads, `diff` compares two reports; the guide *Training and improving the reads* says where the rules and the prompts live and what fine-tuning Muse Spark Open would take.
