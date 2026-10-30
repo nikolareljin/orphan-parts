@@ -350,8 +350,9 @@ _start_backend_again() {
 stop_backend_for_run() {
   # whatever the container is doing (running, restarting after a crash, paused), it is stopped
   # before the inventory file is replaced under it; started again afterwards if it was up
+  # the service's own container, not a one-off left by a compose run
   local state
-  state="$(compose ps -a --format '{{.State}}' backend 2>/dev/null || true)"
+  state="$(compose ps -a --format '{{.Name}} {{.State}}' backend 2>/dev/null | awk '$1 ~ /-backend-[0-9]+$/ {print $2; exit}' || true)"
   [[ -n "$state" ]] || return 0
   compose stop backend >/dev/null 2>&1 || true
   case "$state" in

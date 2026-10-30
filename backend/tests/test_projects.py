@@ -90,6 +90,13 @@ def test_fits_reads_the_kind_off_the_type_not_the_name(settings: Settings) -> No
     assert not fits(["phone"], headphones) and not fits(["tv", "monitor"], stand)
     assert not fits(["mouse"], pad) and fits(["stand"], stand)
     assert fits(["tool"], tool) and fits(["crevice tool"], tool) and not fits(["crevice"], tool)
+    # a kind with a generic head, or in the plural, is still the kind; a charger is not a laptop
+    cleaner = inventory.create(ItemCreate(item_type="upright vacuum cleaner", name="V"))
+    computer = inventory.create(ItemCreate(item_type="laptop computer", name="L"))
+    cables = inventory.create(ItemCreate(item_type="HDMI cables", name="C"))
+    charger = inventory.create(ItemCreate(item_type="laptop charger", name="Ch"))
+    assert fits(["vacuum"], cleaner) and fits(["laptop"], computer) and fits(["cable"], cables)
+    assert not fits(["laptop"], charger)
 
 
 @pytest.fixture
@@ -632,6 +639,16 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
     assert "narrow tool" not in text.lower() and "upright vacuum" not in text.lower()
     assert "Set up: crevice tool on the vacuum's hose" in text
     assert "Limits: the vacuum rattles" in text
+    # a name that is a word of its kind, or a kind that holds another name, is written once
+    from app.projects.pack import without_names
+
+    pairs = [("Vacuum", "upright vacuum"), ("Cable", "HDMI cable"), ("Cable", "HDMI cable")]
+    held = without_names("the Vacuum and the cable held", pairs)
+    # "Vacuum" and "Cable" are words of their own kinds: the text reads as the kind already
+    assert held == "the Vacuum and the cable held"
+    named = without_names("the Hoover held", [("Hoover", "upright vacuum")])
+    assert named == "the upright vacuum held"
+    assert without_names("HDMI cable", pairs) == "HDMI cable"
     planner.set_share(vacuum.id, ShareChange(shared=False))
     with pytest.raises(ProjectsError, match="not shared"):
         planner.share_text(vacuum.id)

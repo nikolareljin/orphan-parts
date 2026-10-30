@@ -192,7 +192,7 @@ case "$what" in
     gradle assembleRelease
     apk="$(find "$app/app/build/outputs/apk/release" -name '*.apk' 2>/dev/null | head -1 || true)"
     [[ -n "$apk" ]] || fail "no release APK after the build"
-    if [[ -n "${KEYSTORE_PATH:-}" ]] || grep -qs '^KEYSTORE_PATH=' "$app/keystore.properties"; then
+    if [[ -n "${KEYSTORE_PATH:-}" ]] || grep -qsE '^KEYSTORE_PATH[[:space:]]*=' "$app/keystore.properties"; then
       say "$apk (release key)"
     else
       say "$apk (debug key: installs, not for a store)"
