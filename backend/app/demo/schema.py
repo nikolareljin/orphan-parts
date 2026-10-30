@@ -2,6 +2,7 @@
 records every model answer the set needs and the same run replays them at no cost."""
 
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -11,6 +12,30 @@ from app.listing.checklists import Mode
 from app.projects.schema import Preferences
 
 KEY = r"^[a-z][a-z0-9_]{0,63}$"
+
+
+class ExpectFit(BaseModel):
+    """What the rules should say when this item is checked against another of the set."""
+
+    against: str = Field(pattern=KEY, description="the key of the item that is the need")
+    verdict: Literal["fits", "conflict"]
+    values: dict[str, str] = Field(
+        default={},
+        description="the need's values in the rule's terms, when its own fields are named"
+        " otherwise (a vacuum's wand outer diameter is the needed opening inner diameter)",
+    )
+
+
+class Expect(BaseModel):
+    """What an evaluation run scores the item against. Every part is optional."""
+
+    fields: dict[str, str] = Field(
+        default={}, description="values the reading should give, by field, with the unit"
+    )
+    fit: ExpectFit | None = None
+    proposals_min: int | None = Field(
+        default=None, ge=0, description="kept proposals that should allocate this item"
+    )
 
 
 class DemoItem(BaseModel):
@@ -34,6 +59,7 @@ class DemoItem(BaseModel):
     holds_data: bool = False
     asking_price: str = ""
     price: bool = Field(default=False, description="ask for price guidance")
+    expect: Expect | None = Field(default=None, description="what an evaluation run scores")
 
     @field_validator("photos")
     @classmethod
@@ -132,6 +158,15 @@ class DemoSet(BaseModel):
             except ValueError as exc:
                 raise ValueError(f"item {i.key!r}: {exc}") from exc
         keys = {i.key for i in self.items}
+        for i in self.items:
+            if i.expect is not None and i.expect.fit is not None:
+                if i.expect.fit.against not in keys:
+                    raise ValueError(
+                        f"item {i.key!r} expects a fit against {i.expect.fit.against!r},"
+                        " which is not an item"
+                    )
+                if i.expect.fit.against == i.key:
+                    raise ValueError(f"item {i.key!r} expects a fit against itself")
         for s in self.searches:
             if s.need and s.need not in keys:
                 raise ValueError(f"search {s.key!r} needs {s.need!r}, which is not an item")

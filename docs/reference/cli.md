@@ -30,6 +30,7 @@
 | `./dev deploy [web\|android\|all] [--version x.y.z]` | a published release onto a host over ssh (`DEPLOY_HOST`, `DEPLOY_PATH`), and the APK when there is an app |
 | `./dev keys issue --label <who> [--days N]`, `./dev keys list`, `./dev keys revoke <label>` | access codes as records beside `DEMO_ACCESS_CODE`: a new code printed once and kept as a hash with its label and expiry, the list with each one's state, one ended by label with every session it opened; the running backend picks the change up without a restart. `./dev keys --hosted ...` runs the same on the Modal deployment's inventory (`modal run deploy/modal_app.py::keys --args '...'`). A demo reset (`./dev demo`, `load_demo`) takes the records with the inventory: issue the codes after it |
 | `./dev demo [--keep]` | resets the inventory, the issued access codes with it (`--keep` adds instead) and loads `demo/set.yaml` in fixture mode; the backend is stopped for it and started again |
+| `./dev eval [--keep] [--live]` | resets the inventory (`--keep` adds instead), loads `demo/set.yaml` as `./dev demo` does and scores the load by the rules into `eval/` (`report.json`, `report.md`, `charts/`); fixture mode unless `--live`, which uses the key from `.env` and spends; the backend is stopped for it and started again |
 | `./dev record-fixtures [--keep]` | resets the inventory (`--keep` adds instead) and loads the set once with the key from `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`; spends credits once; the backend is stopped for it and started again however the run ends |
 | `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes into `demo/notes/` |
 | `./dev shell [service]` | shell in a running service |
@@ -43,6 +44,9 @@ the phone, with a session when the demo is gated.
 `python -m app.demo <load|record|scrub>` is what the three demo commands run inside the
 container: `load [--set FILE] [--reset]`, `record [--set FILE] [--reset]`,
 `scrub <raw dir> [--out DIR]`.
+`python -m app.eval <run|export|diff>` is behind `./dev eval`: `run [--set FILE] [--out DIR] [--keep]`
+scores a load, `export [--out DIR]` writes `train.jsonl` from the accepted reads, `diff a.json b.json`
+puts two reports side by side.
 
 Flags: `-v` turns on debug logging for the helpers, `-d` adds `set -x`.
 `NATIVE=1 ./dev test` runs the checks on the host instead of in Docker.
