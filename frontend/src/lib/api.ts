@@ -122,6 +122,7 @@ export interface ItemSummary {
   field_count: number
   version: number
   updated_at: string
+  public: boolean
 }
 
 export interface Item extends ItemSummary {
@@ -649,6 +650,7 @@ export interface Capture {
   cost_usd: number
   created_at: string
   processed_at: string
+  public: boolean
 }
 
 export interface Access {
@@ -824,6 +826,7 @@ export const api = {
     create: (spec: ItemCreate) => sendJson<Item>('POST', '/api/items', spec),
     update: (id: number, patch: ItemPatch) => sendJson<Item>('PATCH', `/api/items/${id}`, patch),
     remove: (id: number) => sendJson<void>('DELETE', `/api/items/${id}`),
+    setPublic: (id: number, isPublic: boolean) => sendJson<Item>('POST', `/api/items/${id}/public`, { public: isPublic }),
     addField: (id: number, spec: FieldCreate) => sendJson<Item>('POST', `/api/items/${id}/fields`, spec),
     review: (id: number, assertionId: number, review: Review) =>
       sendJson<Item>('POST', `/api/items/${id}/assertions/${assertionId}/review`, { review }),
@@ -929,6 +932,7 @@ export const api = {
     get: (id: number) => getJson<Capture>(`/api/captures/${id}`),
     process: (id: number) => sendJson<Capture>('POST', `/api/captures/${id}/process`),
     remove: (id: number) => sendJson<void>('DELETE', `/api/captures/${id}`),
+    setPublic: (id: number, isPublic: boolean) => sendJson<Capture>('POST', `/api/captures/${id}/public`, { public: isPublic }),
     photoUrl: (id: number, n: number) => apiUrl(`/api/captures/${id}/photos/${n}`),
     clipUrl: (id: number) => apiUrl(`/api/captures/${id}/clip`),
     noteUrl: (id: number) => apiUrl(`/api/captures/${id}/note`),

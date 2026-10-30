@@ -238,6 +238,8 @@ class Loader:
         except ValueError as exc:
             out.skipped.append(f"{item.key}: {exc}")
             return None
+        # the demo set is the public shelf: what it loads, the demo visitor may see
+        self.inventory.set_public(created.id, True)
         if photos:
             try:
                 self.photos.add(created.id, photos)

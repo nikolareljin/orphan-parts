@@ -135,17 +135,31 @@ class Inventory:
 
     # reading
 
-    def list_items(self) -> list[ItemSummary]:
+    def list_items(self, *, public_only: bool = False) -> list[ItemSummary]:
+        """Every item that is not deleted; for the demo visitor, only the public ones."""
         with self.store.connect() as conn:
             rows = conn.execute(
                 "SELECT i.*, (SELECT COUNT(DISTINCT a.field) FROM assertions a"
                 " WHERE a.item_id = i.id AND a.review != 'rejected') AS field_count"
-                " FROM items i WHERE i.deleted_at IS NULL ORDER BY i.id DESC"
+                " FROM items i WHERE i.deleted_at IS NULL AND (? = 0 OR i.public = 1)"
+                " ORDER BY i.id DESC",
+                (int(public_only),),
             ).fetchall()
             return [self._summary(r) for r in rows]
 
-    def get(self, item_id: int) -> Item:
+    def get(self, item_id: int, *, public_only: bool = False) -> Item:
+        """The item; a private one is not there at all for the demo visitor."""
         with self.store.connect() as conn:
+            item = self._item(conn, item_id)
+            if public_only and not item.public:
+                raise NotFoundError(f"no item {item_id}")
+            return item
+
+    def set_public(self, item_id: int, public: bool) -> Item:
+        """Shown to the demo visitor, or not: the owner's choice, item by item."""
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            conn.execute("UPDATE items SET public = ? WHERE id = ?", (int(public), item_id))
             return self._item(conn, item_id)
 
     def events(self, item_id: int) -> list[Event]:
@@ -663,14 +677,25 @@ class Inventory:
             )
             return self._capture(conn, int(cur.lastrowid or 0))
 
-    def captures(self) -> list[sqlite3.Row]:
+    def captures(self, *, public_only: bool = False) -> list[sqlite3.Row]:
         with self.store.connect() as conn:
             return conn.execute(
-                "SELECT * FROM captures WHERE deleted_at IS NULL ORDER BY id DESC"
+                "SELECT * FROM captures WHERE deleted_at IS NULL AND (? = 0 OR public = 1)"
+                " ORDER BY id DESC",
+                (int(public_only),),
             ).fetchall()
 
-    def capture(self, capture_id: int) -> sqlite3.Row:
+    def capture(self, capture_id: int, *, public_only: bool = False) -> sqlite3.Row:
         with self.store.connect() as conn:
+            row = self._capture(conn, capture_id)
+            if public_only and not row["public"]:
+                raise NotFoundError(f"no capture {capture_id}")
+            return row
+
+    def set_capture_public(self, capture_id: int, public: bool) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            self._capture(conn, capture_id)
+            conn.execute("UPDATE captures SET public = ? WHERE id = ?", (int(public), capture_id))
             return self._capture(conn, capture_id)
 
     def update_capture(self, capture_id: int, status: str, content: str) -> sqlite3.Row:
@@ -791,6 +816,7 @@ class Inventory:
             field_count=row["field_count"],
             version=row["version"],
             updated_at=row["updated_at"],
+            public=bool(row["public"]),
         )
 
     def _item(self, conn: sqlite3.Connection, item_id: int) -> Item:
@@ -830,4 +856,5 @@ class Inventory:
             fields=fields,
             assertions=assertions,
             components=components,
+            public=bool(row["public"]),
         )

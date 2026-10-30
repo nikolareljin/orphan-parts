@@ -34,6 +34,7 @@ class Capture(BaseModel):
     cost_usd: float
     created_at: str
     processed_at: str
+    public: bool = False
 
 
 class CaptureList(BaseModel):

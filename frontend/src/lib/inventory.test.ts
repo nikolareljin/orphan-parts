@@ -28,6 +28,7 @@ const item = (assertions: Assertion[]): Item => ({
   field_count: assertions.length,
   version: 1,
   updated_at: '2026-10-28T21:05:11+00:00',
+  public: false,
   faults: '',
   tests_done: '',
   accessories: '',
