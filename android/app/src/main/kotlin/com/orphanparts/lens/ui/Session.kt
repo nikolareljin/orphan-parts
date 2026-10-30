@@ -2,10 +2,13 @@ package com.orphanparts.lens.ui
 
 import com.orphanparts.lens.api.ApiException
 import com.orphanparts.lens.api.Client
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** The client with the demo code: a session is opened once, and again after a 401. */
+/** The client with the demo code: a session is opened once, and again after a 401. A
+ * connection that breaks is opened again too: a stale token on an upload can end the
+ * connection before the 401 is read, and the next call must not fail the same way. */
 class Session(val client: Client, private val accessCode: String) {
     private var opened = false
 
@@ -18,6 +21,9 @@ class Session(val client: Client, private val accessCode: String) {
             opened = false
             open()
             block(client)
+        } catch (e: IOException) {
+            opened = false
+            throw e
         }
     }
 

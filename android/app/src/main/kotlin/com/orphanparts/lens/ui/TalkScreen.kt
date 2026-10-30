@@ -22,7 +22,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.orphanparts.lens.api.ItemLine
 import com.orphanparts.lens.audio.WavRecorder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -43,7 +45,9 @@ import java.util.Locale
 @Composable
 fun TalkScreen(session: Session, lastItemId: Int?) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    // a scope of the screen's own, not of its composition: a note in flight is kept and said
+    // on the item even when the person switches tabs before the answer
+    val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
     val recorder = remember { WavRecorder() }
     var items by remember { mutableStateOf<List<ItemLine>>(emptyList()) }
     var itemId by remember(lastItemId) { mutableStateOf(lastItemId) }
@@ -55,7 +59,15 @@ fun TalkScreen(session: Session, lastItemId: Int?) {
     var holding by remember { mutableStateOf(false) }
     var speaker by remember { mutableStateOf<TextToSpeech?>(null) }
 
-    val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed = it }
+    val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        allowed = granted
+        if (!granted) status = "The microphone was refused. Allow it for this app in the phone's settings, then come back."
+    }
+
+    // a hold that ends with the screen (a tab switch mid-sentence) releases the microphone
+    DisposableEffect(recorder) {
+        onDispose { recorder.stop() }
+    }
 
     DisposableEffect(Unit) {
         var tts: TextToSpeech? = null
