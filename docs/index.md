@@ -6,9 +6,28 @@ Meta's Muse models.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
-[Built during the hackathon](project/hackathon.md).
-One diagram of the whole, every box a link: [How it fits together](project/flow.md).
-[Built during the hackathon](project/hackathon.md). Trying it on a phone:
+[Built during the hackathon](project/hackathon.md). One diagram of the whole, every box a
+link: [How it fits together](project/flow.md). Trying it on a phone: the
+[five steps](#on-a-phone-in-five-steps) below, or the long version,
+[On your phone in ten minutes](start/judges.md).
+
+## On a phone in five steps
+
+1. **Install the app** on an Android 8.0 or newer phone. Over a USB cable, one command on the
+   computer: `scripts/phone-install.sh` (`scripts\phone-install.ps1` on Windows), with
+   **Developer options** and **USB debugging** turned on. Or, with no computer, the APK from
+   the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) opened on
+   the phone, with installing from the browser allowed (**Allow from this source**).
+2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`, when it is
+   deployed; or `./dev up` and http://localhost:5173 on your own computer. To pair a phone
+   with a local server, open the site at the computer's network address, not `localhost`.
+3. **Sign in**: **Sign in with the code** in the header, then the access code.
+4. **Pair the phone**: at the foot of the page, **Pair the phone** shows a QR code. In the
+   app, on the **Backend** tab, tap **Scan to pair**, then **Check**.
+5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
+   **Inbox**.
+
+The long version, with every phone screen and what to do when a step fails, is
 [On your phone in ten minutes](start/judges.md).
 
 ## The problem

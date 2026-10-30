@@ -27,6 +27,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ### Changed
 - The docs site's tabs bar under the header is a mid gray in both schemes instead of the palette's light blue: all tab labels stay fully opaque white, with the active page in bold and an underline on hover or keyboard focus, so inactive tabs remain readable too; the logo in the header fills the header's full height.
 - The docs site tells the story: how it fits together (one clickable diagram and two paths through the demo set), lessons learned, next steps (the roadmap folded into it) and the pitch.
+- The README and the docs home show the phone setup as five numbered steps (install the app, open the web app, sign in, pair, send a photo) ahead of the long guide, and each intro reads once.
 ### Added
 - A picture of what an item could become: *What it could look like* on the item dialog, under the photos, with a field for the use and **Draw it**; Muse Image draws it only on that click (`POST /api/items/{id}/picture`), from the item's type, accepted values (never a private one such as a serial number, MAC or IMEI), condition and faults; kept beside the photos as `picture-<n>.jpg` and never counted as one, served by `GET /api/items/{id}/pictures/{n}`, captioned as drawn and never evidence, charged in the ledger per image; the demo visitor sees the pictures of public items and is refused a new one. Off unless `PICTURE_ENABLED` is set; the stub `images-generations/picture.json` answers fixture mode.
 
