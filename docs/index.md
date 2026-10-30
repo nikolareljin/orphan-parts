@@ -13,24 +13,25 @@ link: [How it fits together](project/flow.md). Trying it on a phone: the
 
 ## On a phone in five steps
 
-1. **Install the app** on an Android 8.0 or newer phone. Over a USB cable, one command on the
-   computer from a clone: `scripts/phone-install.sh` (`scripts\phone-install.ps1` on
-   Windows), with **Developer options** and **USB debugging** turned on. Or, with no
-   computer, the APK from the
-   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) opened on the
-   phone, with installing from the browser allowed (**Allow from this source**).
+1. **Install the app** on an Android 8.0 or newer phone. On the phone, open the
+   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest), tap the APK
+   and open it, with installing from the browser allowed (**Allow from this source**). Or over a
+   USB cable, with **USB debugging** on in **Developer options**: `scripts/phone-install.sh` on
+   the computer (on Windows,
+   `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`).
 2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`, when it is
-   deployed; or `./dev up` and http://localhost:5173 on your own computer. To pair a phone
+   deployed; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
    with a local server, open the site at the computer's network address, not `localhost`.
 3. **Sign in**: **Sign in with the code** in the header, then the access code. A local stack
-   has no door until `./dev gate on`, which prints a code; without it, go on to step 4.
+   has no door until `./dev gate on`, which prints the codes (reload the page); without it,
+   go on to step 4.
 4. **Pair the phone**: at the foot of the page, **Pair the phone** shows a QR code. In the
-   app, on the **Backend** tab, tap **Scan to pair**, then **Check**.
+   app, on the **Backend** tab, tap **Scan to pair**, then **Check**. A phone without Google
+   Play services types the address shown under the code and the access code instead.
 5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
    **Inbox**.
 
-The long version, with every phone screen and what to do when a step fails, is
-[On your phone in ten minutes](start/judges.md).
+Every phone screen, and what to do when a step fails: [On your phone in ten minutes](start/judges.md).
 
 ## The problem
 
