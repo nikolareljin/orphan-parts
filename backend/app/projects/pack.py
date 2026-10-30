@@ -196,14 +196,17 @@ def share_text(project: Project, items: list[Item]) -> str:
         raise ValueError("no outcome recorded")
     kinds = sorted({(i.item_type or "item").lower() for i in items})
     o = project.outcome
+    # the owner's own words name the items too; the kind stands where the name was, there as
+    # in the title and the result
     lines = [
         without_names(project.title, items),
         "",
         f"Built from: {', '.join(kinds) or 'items on hand'}.",
         f"Result: {without_names(project.result, items)}",
-        f"Set up: {o.configuration}",
-        f"Tested {o.tested_on}: {o.test} ({'working' if o.working else 'not working'})",
+        f"Set up: {without_names(o.configuration, items)}",
+        f"Tested {o.tested_on}: {without_names(o.test, items)}"
+        f" ({'working' if o.working else 'not working'})",
     ]
     if o.limitations:
-        lines.append(f"Limits: {o.limitations}")
+        lines.append(f"Limits: {without_names(o.limitations, items)}")
     return "\n".join(lines)

@@ -552,6 +552,10 @@ class Planner:
         )
 
     def set_progress(self, project_id: int, step: int, done: bool) -> Project:
+        with self._lock:
+            return self._set_progress(project_id, step, done)
+
+    def _set_progress(self, project_id: int, step: int, done: bool) -> Project:
         row = self.inventory.project(project_id)
         if row["status"] not in ("selected", "building"):
             raise ProjectsError("progress is kept on a selected or building project")
@@ -570,6 +574,10 @@ class Planner:
     def record_outcome(self, project_id: int, outcome: OutcomeCreate) -> Project:
         """The owner's record of what was built and how it was tested. A working result marks
         the project done; a failed test keeps it building, with the record kept."""
+        with self._lock:
+            return self._record_outcome(project_id, outcome)
+
+    def _record_outcome(self, project_id: int, outcome: OutcomeCreate) -> Project:
         row = self.inventory.project(project_id)
         if row["status"] != "building":
             raise ProjectsError("an outcome is recorded on a project being built")
@@ -586,6 +594,10 @@ class Planner:
         return self.project(project_id)
 
     def set_share(self, project_id: int, change: ShareChange) -> Project:
+        with self._lock:
+            return self._set_share(project_id, change)
+
+    def _set_share(self, project_id: int, change: ShareChange) -> Project:
         row = self.inventory.project(project_id)
         content = json.loads(row["content"])
         if not content.get("outcome"):

@@ -567,6 +567,22 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
     assert "ran it over the stairs" in text and "(working)" in text
     assert "upright vacuum" not in text.lower() and "narrow tool" not in text.lower()
     assert "vacuum" in text.lower()
+    # the owner's own words are redacted the same way: a name in the set-up, the test or the
+    # limits reads as the kind
+    content = json.loads(planner.inventory.project(vacuum.id)["content"])
+    content["outcome"].update(
+        {
+            "configuration": "Narrow tool on the Upright vacuum's hose",
+            "test": "the Narrow tool held",
+            "limitations": "the Upright vacuum rattles",
+            "shared": True,
+        }
+    )
+    planner.inventory.update_project(vacuum.id, "done", json.dumps(content))
+    text = planner.share_text(vacuum.id)
+    assert "narrow tool" not in text.lower() and "upright vacuum" not in text.lower()
+    assert "Set up: crevice tool on the vacuum's hose" in text
+    assert "Limits: the vacuum rattles" in text
     planner.set_share(vacuum.id, ShareChange(shared=False))
     with pytest.raises(ProjectsError, match="not shared"):
         planner.share_text(vacuum.id)
