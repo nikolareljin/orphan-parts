@@ -10,7 +10,7 @@ export default defineConfig({
   // Six workers share one backend process; while the segmentation test decodes masks in pure
   // Python, every other read waits a second or two, and a page that makes several on open
   // can overrun the default five seconds. The margin is for the harness, not the product.
-  expect: { timeout: 10_000 },
+  expect: { timeout: 20_000 },
   retries: 0,
   // one session through the demo gate, opened before the run; see global-setup.ts
   globalSetup: './global-setup.ts',

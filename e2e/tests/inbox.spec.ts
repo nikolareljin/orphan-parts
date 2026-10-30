@@ -104,6 +104,24 @@ test('a capture from the phone is listed, read into an item and opened', async (
   await expect.poll(() => photo.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
 })
 
+test('a capture is sent from the computer through the form', async ({ page, request }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Inbox' }).click()
+  const form = page.getByRole('form', { name: 'Send a capture' })
+  await form.getByText('Send a capture from this computer').click()
+  await form.getByLabel('Photos').setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: png() })
+  await form.getByLabel('A short video (optional)').setInputFiles({ name: 'clip.mp4', mimeType: 'video/mp4', buffer: mp4() })
+  await form.getByLabel('Name (optional)').fill(`From the desk ${stamp}`)
+  await form.getByLabel('What you know (optional)').fill('an adapter from the desk drawer')
+  await form.getByRole('button', { name: 'Send' }).click()
+  await expect(form).toContainText(/Sent as capture #\d+/)
+  const card = page.getByRole('listitem').filter({ hasText: `From the desk ${stamp}` })
+  await expect(card).toContainText('1 photo, a clip of 1 KB')
+  const id = Number((await card.innerText()).match(/Capture #(\d+)/)?.[1])
+  created.push(id)
+  expect((await request.get(`/api/captures/${id}`)).status()).toBe(200)
+})
+
 test('a capture is deleted from the inbox', async ({ page, request }) => {
   const id = await sendCapture(request, `to delete ${stamp}`)
   await page.goto('/')
