@@ -80,8 +80,16 @@ def test_fits_reads_the_kind_off_the_type_not_the_name(settings: Settings) -> No
     cable = inventory.create(ItemCreate(item_type="HDMI cable", name="The long one"))
     toaster = inventory.create(ItemCreate(item_type="toaster", name="Laptop-sized toaster"))
     assert fits(["laptop", "notebook"], laptop) and not fits(["monitor"], laptop)
-    assert fits(["hdmi"], cable) and fits([], cable)
+    assert fits(["cable"], cable) and fits(["hdmi cable"], cable) and fits([], cable)
     assert not fits(["laptop"], toaster)
+    # whole words at the end of the kind: a part of a word, or a word in front, is not the kind
+    headphones = inventory.create(ItemCreate(item_type="headphones", name="Cans"))
+    stand = inventory.create(ItemCreate(item_type="TV stand", name="Black stand"))
+    pad = inventory.create(ItemCreate(item_type="mouse pad", name="Grey pad"))
+    tool = inventory.create(ItemCreate(item_type="crevice tool", name="Narrow"))
+    assert not fits(["phone"], headphones) and not fits(["tv", "monitor"], stand)
+    assert not fits(["mouse"], pad) and fits(["stand"], stand)
+    assert fits(["tool"], tool) and fits(["crevice tool"], tool) and not fits(["crevice"], tool)
 
 
 @pytest.fixture
@@ -207,6 +215,10 @@ async def test_selection_commits_items_once_and_reserves_them(planner: Planner) 
         planner.select(other.id)
     assert caught.value.conflicts[0].item_name == "Old laptop"
     assert caught.value.conflicts[0].project_id == desk.id
+    # shortlisting a proposal is not a commitment: what the owner set on an item stays
+    planner.inventory.update(ids["Spare monitor"], ItemPatch(availability="reserved"))
+    planner.shortlist(other.id)
+    assert planner.inventory.get(ids["Spare monitor"]).availability == "reserved"
     moved = planner.select(other.id, take=True)
     assert moved.status == "selected"
     lost = planner.project(desk.id)
@@ -240,6 +252,11 @@ async def test_selection_commits_items_once_and_reserves_them(planner: Planner) 
     with pytest.raises(ProjectsError, match="filled already"):
         planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
     assert planner.advance(vacuum.id, "building").status == "building"
+    # a build under way keeps its items: another project cannot take them
+    third = await planner.propose(ProposeRequest())
+    rival = next(p for p in third if p.template == "vacuum_restored")
+    with pytest.raises(ProjectsError, match="being built into"):
+        planner.select(rival.id, take=True)
     # a project moves one way: a build is not shortlisted again
     with pytest.raises(ProjectsError, match="a building project cannot be changed"):
         planner.shortlist(vacuum.id)
@@ -295,6 +312,20 @@ async def test_a_missing_requirement_becomes_a_search_under_the_budget_left(
         planner.search_for(vacuum.id, "wings")
 
 
+async def test_a_spent_budget_is_a_ceiling_of_nothing(planner: Planner) -> None:
+    household(planner.inventory)
+    planner.set_preferences(Preferences(budget=5))
+    projects = await planner.propose(ProposeRequest())
+    vacuum = next(p for p in projects if p.template == "vacuum_restored")
+    planner.select(vacuum.id)  # expects to spend 10 of a budget of 5
+    assert planner.projects().budget.remaining == -5
+    with_search = planner.search_for(vacuum.id, "attachment")
+    req = next(r for r in with_search.requirements if r.key == "attachment")
+    assert req.search_id is not None
+    search = planner.finder.search(req.search_id)
+    assert search.max_price == 0 and search.budget_left == 0
+
+
 async def test_the_tool_loop_replays_statelessly(live_settings: Settings) -> None:
     bodies: list[dict[str, Any]] = []
 
@@ -333,6 +364,9 @@ async def test_the_tool_loop_replays_statelessly(live_settings: Settings) -> Non
     assert [r["call_id"] for r in results] == ["call_fixture_1", "call_fixture_2"]
     assert "Old laptop" in results[0]["output"] and "homework_workstation" in results[1]["output"]
     assert len(ledger.entries()) == 2 and ledger.entries()[0].op == "propose-1"
+    # the call cost both steps; the projects it produced share that, nothing more or less
+    assert ledger.total_usd > 0
+    assert sum(p.cost_usd for p in projects) == pytest.approx(ledger.total_usd, abs=1e-5)
 
 
 async def test_a_loop_that_never_answers_is_an_error(live_settings: Settings) -> None:

@@ -289,6 +289,7 @@ class ModelApiClient:
         the tool results, since nothing is stored on the server. Ends with the strict answer."""
         items = list(input)
         last: ModelResponse | None = None
+        spent = 0.0
         for step in range(1, max_steps + 1):
             response = await self.respond(
                 model=model,
@@ -300,6 +301,7 @@ class ModelApiClient:
                 **kwargs,
             )
             last = response
+            spent += response.cost_usd
             calls = response.tool_calls
             if not calls:
                 try:
@@ -309,7 +311,10 @@ class ModelApiClient:
                         f"output did not match {model_cls.__name__}: {exc}",
                         attempts=response.attempts,
                     ) from exc
-                return StructuredResponse[T](parsed=parsed, response=response)
+                # the answer carries what the whole loop cost, every step counted once
+                return StructuredResponse[T](
+                    parsed=parsed, response=response.model_copy(update={"cost_usd": spent})
+                )
             items = items + list(response.output)
             for call in calls:
                 try:

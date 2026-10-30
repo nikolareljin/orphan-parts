@@ -12,6 +12,7 @@ import {
   missing,
   money,
   numberOrNull,
+  numberProblem,
   packLabel,
   progressText,
   skillsFromText,
@@ -136,6 +137,12 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
   async function save(event: FormEvent) {
     event.preventDefault()
     if (busy) return
+    const problem = numberProblem(budget, 'The budget') ?? numberProblem(radius, 'The radius')
+    if (problem) {
+      setError(problem)
+      setSaved(false)
+      return
+    }
     setBusy(true)
     setError('')
     setSaved(false)
