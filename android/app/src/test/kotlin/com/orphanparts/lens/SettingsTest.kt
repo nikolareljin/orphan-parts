@@ -44,3 +44,18 @@ class PairingTest {
         assertNull(pairingFrom("", current))
     }
 }
+
+class ReachableTest {
+    @Test
+    fun a_pairing_code_that_points_at_localhost_is_refused_and_said() {
+        val current = Settings("", "", "")
+        assertNull(pairingFrom("""{"url":"http://localhost:5183","gated":false,"token":""}""", current))
+        assertNull(pairingFrom("""{"url":"http://127.0.0.1:8000","gated":false,"token":""}""", current))
+        assertTrue(pointsAtLocalhost("""{"url":"http://localhost:5183"}"""))
+        assertFalse(pointsAtLocalhost("""{"url":"http://192.168.1.20:5183"}"""))
+        assertFalse(pointsAtLocalhost("not json"))
+        assertTrue(reachableFromAPhone("https://orphan-parts.pages.dev"))
+        assertTrue(reachableFromAPhone("http://192.168.1.20:5183"))
+        assertFalse(reachableFromAPhone("http://app.localhost:5183"))
+    }
+}

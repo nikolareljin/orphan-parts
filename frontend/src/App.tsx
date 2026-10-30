@@ -5,6 +5,7 @@ import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
+import { reachableFromAPhone } from './lib/pairing'
 import { demoText } from './lib/access'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
@@ -155,10 +156,20 @@ export default function App() {
                 In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code. It carries this address
                 {status.ready.demo.gated ? ' and a session of its own; the access code stays here.' : '.'}
               </p>
-              <PairImage />
-              <p className="muted">
-                Or type <code>{apiBase || window.location.origin}</code> into the app.
-              </p>
+              {reachableFromAPhone(apiBase || window.location.origin) ? (
+                <>
+                  <PairImage />
+                  <p className="muted">
+                    Or type <code>{apiBase || window.location.origin}</code> into the app.
+                  </p>
+                </>
+              ) : (
+                <p className="muted">
+                  This page is open at <code>{window.location.origin}</code>, which the phone cannot reach (on the phone,
+                  localhost is the phone). Open the web app at the computer's network address and pair from there, or
+                  run <code>./dev phone</code>, which prints a code with that address.
+                </p>
+              )}
             </details>
           </>
         )}

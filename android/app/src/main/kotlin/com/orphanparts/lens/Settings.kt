@@ -21,6 +21,19 @@ fun normalizeBaseUrl(text: String): String {
 
 /** The pairing payload a QR code carries: the origin, whether gated, a session token. The
  * code itself is kept as it was; a scan replaces the URL and the session, nothing else. */
+/** On the phone, localhost is the phone: an address like that in a pairing code came from a
+ * browser open on the computer itself and can never answer here. */
+fun reachableFromAPhone(url: String): Boolean {
+    val host = url.removePrefix("https://").removePrefix("http://").substringBefore('/').substringBefore(':').lowercase()
+    return host.isNotEmpty() && host !in setOf("localhost", "127.0.0.1", "[", "0.0.0.0") && !host.endsWith(".localhost")
+}
+
+/** Whether a pairing code was refused only because it points at localhost. */
+fun pointsAtLocalhost(text: String): Boolean {
+    val url = try { normalizeBaseUrl(JSONObject(text).optString("url")) } catch (_: Exception) { return false }
+    return url.isNotEmpty() && !reachableFromAPhone(url)
+}
+
 fun pairingFrom(text: String, current: Settings): Settings? {
     val json = try {
         JSONObject(text)
@@ -31,7 +44,7 @@ fun pairingFrom(text: String, current: Settings): Settings? {
     // somebody else's and not a pairing code
     if (!json.has("gated")) return null
     val url = normalizeBaseUrl(json.optString("url"))
-    if (url.isEmpty()) return null
+    if (url.isEmpty() || !reachableFromAPhone(url)) return null
     return Settings(baseUrl = url, accessCode = current.accessCode, token = json.optString("token"))
 }
 

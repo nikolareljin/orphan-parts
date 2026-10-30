@@ -6,6 +6,25 @@ function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
+// The clip as sent. A browser that cannot decode it (a codec it lacks, or a file with no
+// video track) says so and offers the file instead of a blank player.
+function Clip({ id }: { id: number }) {
+  const [unplayable, setUnplayable] = useState(false)
+  const url = api.captures.clipUrl(id)
+  if (unplayable) {
+    return (
+      <p className="muted">
+        This browser cannot play the clip of capture #{id} (a codec it lacks, or a file without a video track).{' '}
+        <a href={url} download={`capture-${id}.mp4`}>
+          Download it
+        </a>
+        .
+      </p>
+    )
+  }
+  return <video controls preload="metadata" src={url} aria-label={`Capture ${id} clip`} onError={() => setUnplayable(true)} />
+}
+
 // What the phone sent: photos, a clip, a spoken note, a line. Read into an item on request.
 export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void }) {
   const [captures, setCaptures] = useState<Capture[] | null>(null)
@@ -78,7 +97,7 @@ export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void
                 </div>
                 <p className="meta">{captureSummary(c)}</p>
                 {c.note && <p>“{c.note}”</p>}
-                {c.clip && <video controls preload="metadata" src={api.captures.clipUrl(c.id)} aria-label={`Capture ${c.id} clip`} />}
+                {c.clip && <Clip id={c.id} />}
                 {c.audio && <audio controls preload="metadata" src={api.captures.noteUrl(c.id)} aria-label={`Capture ${c.id} note`} />}
                 {c.error && (
                   <p className={c.status === 'failed' ? 'error' : 'muted'} role={c.status === 'failed' ? 'alert' : undefined}>

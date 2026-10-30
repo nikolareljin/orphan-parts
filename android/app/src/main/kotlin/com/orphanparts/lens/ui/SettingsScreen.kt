@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +28,7 @@ import com.orphanparts.lens.api.Client
 import com.orphanparts.lens.api.HttpTransport
 import com.orphanparts.lens.normalizeBaseUrl
 import com.orphanparts.lens.pairingFrom
+import com.orphanparts.lens.pointsAtLocalhost
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,6 +60,31 @@ suspend fun check(baseUrl: String, code: String, token: String = ""): String = w
     }
 }
 
+/** The phone's camera reads the pairing code the web app (or ./dev phone) shows; what it
+ * carries becomes the settings, and one line says what happened. */
+fun scanToPair(context: android.content.Context, settings: Settings, onSaved: (Settings) -> Unit, onStatus: (String) -> Unit) {
+    val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+    GmsBarcodeScanning.getClient(context, options).startScan()
+        .addOnSuccessListener { barcode ->
+            val raw = barcode.rawValue ?: ""
+            val paired = pairingFrom(raw, settings)
+            if (paired == null) {
+                onStatus(
+                    if (pointsAtLocalhost(raw)) {
+                        "Could not pair: that code points at localhost, which on the phone is the phone itself. Open the web app at the computer's network address and scan its code, or run ./dev phone."
+                    } else {
+                        "That code is not a pairing code."
+                    },
+                )
+            } else {
+                onSaved(paired)
+                onStatus("Paired with ${paired.baseUrl}" + (if (paired.token.isNotBlank()) " (with a session)." else "."))
+            }
+        }
+        .addOnCanceledListener { onStatus("Scan cancelled.") }
+        .addOnFailureListener { e -> onStatus("Could not scan: ${e.message ?: e.javaClass.simpleName}") }
+}
+
 @Composable
 fun SettingsScreen(settings: Settings, session: Session, onSaved: (Settings) -> Unit) {
     val context = LocalContext.current
@@ -68,72 +92,67 @@ fun SettingsScreen(settings: Settings, session: Session, onSaved: (Settings) -> 
     var code by remember(settings) { mutableStateOf(settings.accessCode) }
     var status by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column {
-        Text("Where the inventory lives", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "The same backend as the web app. Scan the code the web app shows under Pair the phone, or type the address. Photos, clips and notes go there and nowhere else.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Spacer(Modifier.height(12.dp))
-        Button(onClick = {
-            val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
-            GmsBarcodeScanning.getClient(context, options).startScan()
-                .addOnSuccessListener { barcode ->
-                    val paired = pairingFrom(barcode.rawValue ?: "", settings)
-                    if (paired == null) {
-                        status = "That code is not a pairing code."
-                    } else {
-                        onSaved(paired)
-                        status = "Paired with ${paired.baseUrl}" + (if (paired.token.isNotBlank()) " (with a session)." else ".")
-                    }
-                }
-                .addOnCanceledListener { status = "Scan cancelled." }
-                .addOnFailureListener { e -> status = "Could not scan: ${e.message ?: e.javaClass.simpleName}" }
-        }) { Text("Scan to pair") }
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = url,
-            onValueChange = { url = it },
-            label = { Text("Backend URL") },
-            placeholder = { Text("http://192.168.1.20:5173") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = code,
-            onValueChange = { code = it },
-            label = { Text("Access code (when the demo is gated)") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        if (settings.token.isNotBlank()) {
-            Spacer(Modifier.height(4.dp))
-            Text("A session from the pairing is kept; it ends on its own, scan again then.", style = MaterialTheme.typography.bodySmall)
+        Panel {
+            Text("Where the inventory lives", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "The same backend as the web app. Scan the code the web app shows under Pair the phone, or type the address. Photos, clips and notes go there and nowhere else.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = muted,
+            )
+            Spacer(Modifier.height(12.dp))
+            PrimaryButton("Scan to pair") { scanToPair(context, settings, onSaved) { status = it } }
         }
-        Spacer(Modifier.height(16.dp))
-        Row {
-            Button(onClick = {
-                onSaved(Settings(normalizeBaseUrl(url), code, token = if (normalizeBaseUrl(url) == settings.baseUrl) settings.token else ""))
-                status = "Saved."
-            }) { Text("Save") }
-            Spacer(Modifier.width(8.dp))
-            OutlinedButton(
-                enabled = url.isNotBlank(),
-                onClick = {
+        Spacer(Modifier.height(12.dp))
+        Panel {
+            Text("Or type it", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(10.dp))
+            OutlinedTextField(
+                value = url,
+                onValueChange = { url = it },
+                label = { Text("Backend URL") },
+                placeholder = { Text("http://192.168.1.20:5173") },
+                singleLine = true,
+                colors = fieldColors(),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = code,
+                onValueChange = { code = it },
+                label = { Text("Access code (when the demo is gated)") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                colors = fieldColors(),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (settings.token.isNotBlank()) {
+                Spacer(Modifier.height(6.dp))
+                Text("A session from the pairing is kept; it ends on its own, scan again then.", style = MaterialTheme.typography.bodySmall, color = muted)
+            }
+            Spacer(Modifier.height(12.dp))
+            Row {
+                PrimaryButton("Save") {
+                    onSaved(Settings(normalizeBaseUrl(url), code, token = if (normalizeBaseUrl(url) == settings.baseUrl) settings.token else ""))
+                    status = "Saved."
+                }
+                Spacer(Modifier.width(8.dp))
+                SecondaryButton("Check", enabled = url.isNotBlank()) {
                     status = "Checking…"
                     val typedUrl = normalizeBaseUrl(url)
                     val typedCode = code
                     // the pairing's session counts for the address it was made for
                     val pairing = if (typedUrl == settings.baseUrl) settings.token else ""
                     scope.launch { status = check(typedUrl, typedCode, pairing) }
-                },
-            ) { Text("Check") }
+                }
+            }
         }
-        Spacer(Modifier.height(8.dp))
-        Text(status, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(10.dp))
+        StatusLine(status)
     }
 }
