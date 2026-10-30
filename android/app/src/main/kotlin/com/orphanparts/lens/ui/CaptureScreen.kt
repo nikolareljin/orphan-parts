@@ -1,17 +1,24 @@
 package com.orphanparts.lens.ui
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,168 +33,204 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.exifinterface.media.ExifInterface
-import com.orphanparts.lens.api.Extraction
-import com.orphanparts.lens.api.SavedItem
+import com.orphanparts.lens.api.Capture
+import com.orphanparts.lens.audio.WavRecorder
+import com.orphanparts.lens.preparePhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 
-private const val MAX_SIDE = 1600
+const val MAX_PHOTOS = 4
+const val CLIP_SECONDS = 30
 
-/** A photo of the label through the system camera, read by the backend, saved privately. The
- * photo is re-encoded here, so no metadata leaves the phone. */
+/** The system camera, recording a clip of at most CLIP_SECONDS into the file given. */
+class ShortClip : ActivityResultContracts.CaptureVideo() {
+    override fun createIntent(context: Context, input: Uri): Intent =
+        super.createIntent(context, input).putExtra(MediaStore.EXTRA_DURATION_LIMIT, CLIP_SECONDS)
+}
+
+/** One capture: photos, a clip, a spoken note and a line, sent together. The backend keeps
+ * the bundle and reads it into an item when asked; the photos are re-encoded here first. */
 @Composable
-fun CaptureScreen(session: Session, onSaved: (SavedItem) -> Unit) {
+fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
-    var jpeg by remember { mutableStateOf<ByteArray?>(null) }
-    var preview by remember { mutableStateOf<Bitmap?>(null) }
-    var extraction by remember { mutableStateOf<Extraction?>(null) }
+    val recorder = remember { WavRecorder() }
+    var photos by remember { mutableStateOf<List<Pair<ByteArray, Bitmap>>>(emptyList()) }
+    var clip by remember { mutableStateOf<ByteArray?>(null) }
+    var audio by remember { mutableStateOf<ByteArray?>(null) }
+    var audioSeconds by remember { mutableStateOf(0.0) }
     var name by remember { mutableStateOf("") }
-    var condition by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
+    var holding by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
-    var saved by remember { mutableStateOf<SavedItem?>(null) }
+    var pendingUri by remember { mutableStateOf<Uri?>(null) }
+    var allowed by remember {
+        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+    }
+    val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed = it }
+
+    fun fileUri(name: String): Uri {
+        val dir = File(context.cacheDir, "captures").apply { mkdirs() }
+        return FileProvider.getUriForFile(context, context.packageName + ".files", File(dir, name))
+    }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        val uri = photoUri
+        val uri = pendingUri
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val prepared = withContext(Dispatchers.IO) { prepare(context.contentResolver.openInputStream(uri)?.use { it.readBytes() }) }
-            jpeg = prepared?.first
-            preview = prepared?.second
-            extraction = null
-            saved = null
-            status = if (prepared == null) "The photo could not be read." else "Photo ready: ${prepared.first.size / 1024} KB."
+            val prepared = withContext(Dispatchers.IO) { preparePhoto(context.contentResolver.openInputStream(uri)?.use { it.readBytes() }) }
+            if (prepared == null) {
+                status = "The photo could not be read."
+            } else {
+                photos = photos + prepared
+                status = "Photo ${photos.size} ready (${prepared.first.size / 1024} KB)."
+            }
+        }
+    }
+    val takeClip = rememberLauncherForActivityResult(ShortClip()) { ok ->
+        val uri = pendingUri
+        if (!ok || uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val bytes = withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)?.use { it.readBytes() } }
+            clip = bytes
+            status = if (bytes == null) "The clip could not be read." else "Clip ready (${bytes.size / 1024} KB)."
         }
     }
 
+    fun clear() {
+        photos = emptyList()
+        clip = null
+        audio = null
+        audioSeconds = 0.0
+        name = ""
+        note = ""
+    }
+
     Column(Modifier.verticalScroll(rememberScrollState())) {
-        Text("Read a label", style = MaterialTheme.typography.titleLarge)
+        Text("Capture a thing", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Fill the frame with the label, straight on, in good light. For a feature to measure later, put a ruler in the same plane and mark it on the web.",
+            "Photos of the item and its label, a short clip if it moves or makes a sound, and what you know about it, said or typed. Send it, and the backend reads it into your inventory.",
             style = MaterialTheme.typography.bodyMedium,
         )
         Spacer(Modifier.height(12.dp))
         Row {
-            Button(onClick = {
-                val dir = File(context.cacheDir, "captures").apply { mkdirs() }
-                val file = File(dir, "capture.jpg")
-                val uri = FileProvider.getUriForFile(context, context.packageName + ".files", file)
-                photoUri = uri
-                takePicture.launch(uri)
-            }) { Text("Take a photo") }
-            Spacer(Modifier.width(8.dp))
             Button(
-                enabled = jpeg != null && !busy,
+                enabled = photos.size < MAX_PHOTOS && !busy,
                 onClick = {
-                    val bytes = jpeg ?: return@Button
+                    val uri = fileUri("photo-${System.currentTimeMillis()}.jpg")
+                    pendingUri = uri
+                    takePicture.launch(uri)
+                },
+            ) { Text(if (photos.isEmpty()) "Take a photo" else "Another photo (${photos.size}/$MAX_PHOTOS)") }
+            Spacer(Modifier.width(8.dp))
+            OutlinedButton(
+                enabled = !busy,
+                onClick = {
+                    val uri = fileUri("clip-${System.currentTimeMillis()}.mp4")
+                    pendingUri = uri
+                    takeClip.launch(uri)
+                },
+            ) { Text(if (clip == null) "Record a clip" else "Clip again") }
+        }
+        if (photos.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Row {
+                for ((n, photo) in photos.withIndex()) {
+                    Image(
+                        photo.second.asImageBitmap(),
+                        contentDescription = "Photo ${n + 1}",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(72.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        if (!allowed) {
+            OutlinedButton(onClick = { askPermission.launch(Manifest.permission.RECORD_AUDIO) }) { Text("Allow the microphone") }
+        } else {
+            val colors = MaterialTheme.colorScheme
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .background(if (holding) colors.secondary else colors.primary, MaterialTheme.shapes.large)
+                    .semantics { role = Role.Button }
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                holding = true
+                                recorder.start()
+                                tryAwaitRelease()
+                                holding = false
+                                val wav = recorder.stop()
+                                audio = wav
+                                audioSeconds = if (wav == null) 0.0 else recorder.seconds()
+                                status = if (wav == null) "Nothing heard." else "Note ready (${"%.1f".format(audioSeconds)} s)."
+                            },
+                        )
+                    },
+            ) {
+                Text(
+                    when {
+                        holding -> "Listening… release when done"
+                        audio != null -> "Hold to talk again (${"%.1f".format(audioSeconds)} s kept)"
+                        else -> "Hold to talk: what is it, what is wrong, what you tested"
+                    },
+                    color = colors.onPrimary,
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name, if you know it") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("A line about it") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+        Row {
+            Button(
+                enabled = !busy && (photos.isNotEmpty() || clip != null || audio != null || note.isNotBlank()),
+                onClick = {
                     busy = true
-                    status = "Reading the label…"
+                    status = "Sending…"
+                    val bundle = photos.map { it.first }
+                    val sentClip = clip
+                    val sentAudio = audio
                     scope.launch {
                         try {
-                            val read = session.call { it.extract(bytes) }
-                            extraction = read
-                            if (name.isBlank()) name = read.itemType.replaceFirstChar { it.uppercase() }
-                            status = if (read.fromFixture) "Read by a recorded answer (fixture mode)." else "Read by ${read.model}."
+                            val kept = session.call { it.sendCapture(bundle, sentClip, sentAudio, name.trim(), note.trim()) }
+                            status = "Sent as capture #${kept.id}: ${kept.photos} photo(s)${if (kept.clip) ", a clip" else ""}${if (kept.audio) ", a note" else ""}. See Captures."
+                            clear()
+                            onSent(kept)
                         } catch (e: Exception) {
-                            status = "Could not read it: ${describe(e)}"
+                            status = "Could not send: ${describe(e)}"
                         } finally {
                             busy = false
                         }
                     }
                 },
-            ) { Text(if (busy) "Working…" else "Read it") }
+            ) { Text(if (busy) "Sending…" else "Send") }
+            Spacer(Modifier.width(8.dp))
+            OutlinedButton(enabled = !busy, onClick = { clear(); status = "" }) { Text("Clear") }
         }
         Spacer(Modifier.height(8.dp))
-        preview?.let { Image(it.asImageBitmap(), contentDescription = "The photo", modifier = Modifier.fillMaxWidth()) }
         Text(status, style = MaterialTheme.typography.bodyMedium)
-        extraction?.let { read ->
-            Spacer(Modifier.height(12.dp))
-            Text("A ${read.itemType.ifBlank { "device" }}", style = MaterialTheme.typography.titleMedium)
-            for (f in read.fields) {
-                val unit = if (f.unit.isNotBlank()) " ${f.unit}" else ""
-                Text("${f.name.replace('_', ' ')}: ${f.value}$unit  (${(f.confidence * 100).toInt()}%, ${f.source})", style = MaterialTheme.typography.bodyMedium)
-            }
-            for (w in read.warnings) Text("Note: $w", style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(value = condition, onValueChange = { condition = it }, label = { Text("Condition, in your words") }, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(8.dp))
-            OutlinedButton(
-                enabled = !busy && name.isNotBlank() && saved == null,
-                onClick = {
-                    busy = true
-                    scope.launch {
-                        try {
-                            val item = session.call { it.saveItem(read, name.trim(), condition.trim()) }
-                            saved = item
-                            onSaved(item)
-                            status = "Saved privately as item #${item.id}. Every value is yours to confirm on the web."
-                        } catch (e: Exception) {
-                            status = "Could not save: ${describe(e)}"
-                        } finally {
-                            busy = false
-                        }
-                    }
-                },
-            ) { Text(if (saved != null) "Saved as #${saved?.id}" else "Save privately") }
-        }
     }
-}
-
-/** The photo as it is sent: decoded, turned the way the camera held it, scaled to at most
- * MAX_SIDE on the long side, re-encoded as a JPEG with nothing but pixels. */
-private fun prepare(bytes: ByteArray?): Pair<ByteArray, Bitmap>? {
-    if (bytes == null) return null
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-    var sample = 1
-    while (maxOf(bounds.outWidth, bounds.outHeight) / sample > MAX_SIDE * 2) sample *= 2
-    val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample }) ?: return null
-    val upright = turned(decoded, orientationOf(bytes))
-    val longSide = maxOf(upright.width, upright.height)
-    val scaled = if (longSide > MAX_SIDE) {
-        val ratio = MAX_SIDE.toFloat() / longSide
-        Bitmap.createScaledBitmap(upright, (upright.width * ratio).toInt(), (upright.height * ratio).toInt(), true)
-    } else {
-        upright
-    }
-    val out = ByteArrayOutputStream()
-    scaled.compress(Bitmap.CompressFormat.JPEG, 88, out)
-    return out.toByteArray() to scaled
-}
-
-private fun orientationOf(bytes: ByteArray): Int = try {
-    ExifInterface(ByteArrayInputStream(bytes)).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-} catch (_: Exception) {
-    ExifInterface.ORIENTATION_NORMAL
-}
-
-/** The pixels as the camera saw them, so the orientation tag is not needed and is not sent. */
-private fun turned(bitmap: Bitmap, orientation: Int): Bitmap {
-    val matrix = Matrix()
-    when (orientation) {
-        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
-        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
-        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
-        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
-        ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
-        ExifInterface.ORIENTATION_TRANSPOSE -> { matrix.postRotate(90f); matrix.postScale(-1f, 1f) }
-        ExifInterface.ORIENTATION_TRANSVERSE -> { matrix.postRotate(270f); matrix.postScale(-1f, 1f) }
-        else -> return bitmap
-    }
-    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 }

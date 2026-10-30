@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__
 from app.api.access import router as access_router
 from app.api.assess import router as assess_router
+from app.api.captures import router as captures_router
 from app.api.drafts import router as drafts_router
 from app.api.extract import router as extract_router
 from app.api.find import router as find_router
@@ -20,6 +21,7 @@ from app.api.routes import router
 from app.api.segment import router as segment_router
 from app.api.value import router as value_router
 from app.api.voice import router as voice_router
+from app.captures import Captures
 from app.config import Settings, get_settings
 from app.extract import Extractor
 from app.find import Finder
@@ -63,6 +65,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.profiles,
         app.state.extractor,
         app.state.assessor,
+    )
+    app.state.captures = Captures(
+        settings, app.state.inventory, app.state.extractor, app.state.segmenter, app.state.voice
     )
     app.state.templates = Templates()
     app.state.planner = Planner(
@@ -120,6 +125,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(value_router)
     app.include_router(find_router)
     app.include_router(projects_router)
+    app.include_router(captures_router)
     for exc_type, handler in inventory_handlers.items():
         app.add_exception_handler(exc_type, handler)
     return app

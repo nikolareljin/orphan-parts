@@ -36,6 +36,7 @@ EXPENSIVE = [
     ("POST", re.compile(r"^/api/items/\d+/price$")),
     ("POST", re.compile(r"^/api/searches/\d+/candidates$")),
     ("POST", re.compile(r"^/api/projects/propose$")),
+    ("POST", re.compile(r"^/api/captures/\d+/process$")),
 ]
 _TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[0-9a-f]{32}$")
 
@@ -47,15 +48,28 @@ def expensive(method: str, path: str) -> bool:
 class Allowance:
     """So many hits per key in a sliding window; says how long until the next one is allowed."""
 
+    SWEEP_EVERY = 1000  # takes between sweeps of keys whose window has passed
+
     def __init__(self, limit: int, seconds: float) -> None:
         self.limit = limit
         self.seconds = seconds
         self._hits: dict[str, deque[float]] = {}
         self._lock = threading.Lock()
+        self._takes = 0
+
+    def _sweep(self, now: float) -> None:
+        """Keys nobody has used for a whole window are dropped, so a long-running demo does
+        not keep a deque for every address that ever called."""
+        gone = [k for k, h in self._hits.items() if not h or now - h[-1] >= self.seconds]
+        for k in gone:
+            del self._hits[k]
 
     def take(self, key: str, now: float | None = None) -> tuple[bool, int]:
         now = time.monotonic() if now is None else now
         with self._lock:
+            self._takes += 1
+            if self._takes % self.SWEEP_EVERY == 0:
+                self._sweep(now)
             hits = self._hits.setdefault(key, deque())
             while hits and now - hits[0] >= self.seconds:
                 hits.popleft()
@@ -145,12 +159,14 @@ class Gate:
     # --- who is asking ---------------------------------------------------
 
     def client_ip(self, request: Request) -> str:
-        """The caller's address; the proxy's forwarded header only when told to trust it."""
+        """The caller's address; the proxy's forwarded header only when told to trust it. The
+        last entry is the one the proxy appended, the address it saw; anything before it the
+        caller may have written."""
         if self.trust_proxy:
             forwarded = request.headers.get("x-forwarded-for", "")
-            first = forwarded.split(",")[0].strip()
-            if first and re.fullmatch(r"[0-9A-Fa-f.:]{3,45}", first):
-                return first
+            last = forwarded.split(",")[-1].strip()
+            if last and re.fullmatch(r"[0-9A-Fa-f.:]{3,45}", last):
+                return last
         return request.client.host if request.client else "unknown"
 
     def token_of(self, request: Request) -> str:

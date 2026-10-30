@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
+from app.captures.service import Captures
 from app.config import Settings
 from app.extract.service import Extractor
 from app.find.service import Finder
@@ -126,3 +127,11 @@ def app_planner(request: Request) -> Planner:
 
 
 PlannerDep = Annotated[Planner, Depends(app_planner)]
+
+
+def app_captures(request: Request) -> Captures:
+    captures: Captures = request.app.state.captures
+    return captures
+
+
+CapturesDep = Annotated[Captures, Depends(app_captures)]

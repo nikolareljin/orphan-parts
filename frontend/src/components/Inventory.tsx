@@ -12,9 +12,9 @@ function message(err: unknown): string {
 }
 
 // The owner's items. ``refresh`` changes when something was saved elsewhere on the page.
-export default function Inventory({ refresh }: { refresh: number }) {
+export default function Inventory({ refresh, openId: wanted = null }: { refresh: number; openId?: number | null }) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
-  const [openId, setOpenId] = useState<number | null>(null)
+  const [openId, setOpenId] = useState<number | null>(wanted)
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -29,6 +29,11 @@ export default function Inventory({ refresh }: { refresh: number }) {
   useEffect(() => {
     void load()
   }, [load, refresh])
+
+  // an item opened from elsewhere (the inbox) is shown as soon as it is asked for
+  useEffect(() => {
+    if (wanted !== null) setOpenId(wanted)
+  }, [wanted, refresh])
 
   return (
     <section className="inventory">

@@ -25,6 +25,22 @@ data class VoiceNote(val transcript: String, val seconds: Double, val cut: Boole
 
 data class Readiness(val status: String, val modelApi: String, val gated: Boolean)
 
+/** One bundle sent from the phone, and where the backend stands with it. */
+data class Capture(
+    val id: Int,
+    val status: String,
+    val note: String,
+    val name: String,
+    val photos: Int,
+    val clip: Boolean,
+    val audio: Boolean,
+    val audioSeconds: Double,
+    val itemId: Int?,
+    val error: String,
+    val model: String,
+    val createdAt: String,
+)
+
 class ApiException(val status: Int, message: String) : Exception(message)
 
 /** The backend, by the paths the web app uses; the session token from the access code goes
@@ -79,6 +95,24 @@ class Client(private val baseUrl: String, private val transport: Transport, priv
         return VoiceNote(json.optString("transcript"), json.optDouble("seconds", 0.0), json.optBoolean("cut"), json.optString("model"))
     }
 
+    /** The capture bundle: every photo under `photos`, the clip, the note and the text part. */
+    fun sendCapture(photos: List<ByteArray>, clip: ByteArray?, audio: ByteArray?, name: String, note: String): Capture {
+        val body = Multipart()
+        for ((n, photo) in photos.withIndex()) body.file("photos", "photo-${n + 1}.jpg", "image/jpeg", photo)
+        if (clip != null) body.file("clip", "clip.mp4", "video/mp4", clip)
+        if (audio != null) body.file("audio", "note.wav", "audio/wav", audio)
+        body.text("request", JSONObject().put("name", name).put("note", note).put("find_label", true).toString())
+        return parseCapture(send("POST", "/api/captures", body.bytes(), body.contentType))
+    }
+
+    fun captures(): List<Capture> {
+        val array = get("/api/captures").optJSONArray("captures") ?: JSONArray()
+        return (0 until array.length()).map { parseCapture(array.getJSONObject(it)) }
+    }
+
+    fun processCapture(id: Int): Capture =
+        parseCapture(send("POST", "/api/captures/$id/process", ByteArray(0), "application/json"))
+
     private fun headers(contentType: String?): Map<String, String> {
         val h = mutableMapOf<String, String>()
         if (contentType != null) h["Content-Type"] = contentType
@@ -114,6 +148,21 @@ class Client(private val baseUrl: String, private val transport: Transport, priv
             }
             return "HTTP ${response.status}"
         }
+
+        fun parseCapture(json: JSONObject): Capture = Capture(
+            id = json.getInt("id"),
+            status = json.optString("status"),
+            note = json.optString("note"),
+            name = json.optString("name"),
+            photos = json.optInt("photos"),
+            clip = json.optBoolean("clip"),
+            audio = json.optBoolean("audio"),
+            audioSeconds = json.optDouble("audio_seconds", 0.0),
+            itemId = if (json.isNull("item_id")) null else json.optInt("item_id"),
+            error = json.optString("error"),
+            model = json.optString("model"),
+            createdAt = json.optString("created_at"),
+        )
 
         fun parseExtraction(json: JSONObject): Extraction {
             val fields = json.optJSONObject("fields") ?: JSONObject()

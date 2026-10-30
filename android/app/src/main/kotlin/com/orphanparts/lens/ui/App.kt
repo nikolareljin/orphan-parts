@@ -37,6 +37,7 @@ fun App() {
     var settings by remember { mutableStateOf(store.load()) }
     var page by remember { mutableStateOf(if (settings.ready) 1 else 0) }
     var lastItemId by remember { mutableStateOf<Int?>(null) }
+    var sent by remember { mutableStateOf(0) }
 
     // one client per settings: the session token it holds belongs to that backend and code
     val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode) }
@@ -47,7 +48,8 @@ fun App() {
                 TabRow(selectedTabIndex = page) {
                     Tab(selected = page == 0, onClick = { page = 0 }, text = { Text("Backend") })
                     Tab(selected = page == 1, onClick = { page = 1 }, text = { Text("Capture") }, enabled = settings.ready)
-                    Tab(selected = page == 2, onClick = { page = 2 }, text = { Text("Talk") }, enabled = settings.ready)
+                    Tab(selected = page == 2, onClick = { page = 2 }, text = { Text("Captures") }, enabled = settings.ready)
+                    Tab(selected = page == 3, onClick = { page = 3 }, text = { Text("Talk") }, enabled = settings.ready)
                 }
                 Column(Modifier.padding(16.dp)) {
                     when (page) {
@@ -55,8 +57,10 @@ fun App() {
                             store.save(saved)
                             settings = store.load()
                         }
-                        1 -> CaptureScreen(session) { saved ->
-                            lastItemId = saved.id
+                        1 -> CaptureScreen(session) { sent += 1 }
+                        2 -> CapturesScreen(session, sent) { itemId ->
+                            lastItemId = itemId
+                            page = 3
                         }
                         else -> TalkScreen(session, lastItemId)
                     }

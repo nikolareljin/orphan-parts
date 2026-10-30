@@ -113,3 +113,48 @@ class ClientTest {
         assertEquals("HTTP 502", Client.detailOf(HttpResponse(502, "bad gateway")))
     }
 }
+
+class CaptureClientTest {
+    private fun client(vararg answers: HttpResponse): Pair<Client, FakeTransport> {
+        val transport = FakeTransport(ArrayDeque(answers.toList()))
+        return Client("http://backend:8000", transport) to transport
+    }
+
+    @Test
+    fun a_capture_bundle_carries_every_part_under_its_field_name() {
+        val (c, t) = client(
+            HttpResponse(201, """{"id":4,"status":"received","note":"a line","name":"","find_label":true,"photos":2,"clip":true,"clip_bytes":10,"audio":true,"audio_seconds":2.5,"item_id":null,"error":"","model":"","cost_usd":0,"created_at":"2026-10-29T10:00:00+00:00","processed_at":""}"""),
+        )
+        val kept = c.sendCapture(listOf(byteArrayOf(1), byteArrayOf(2)), byteArrayOf(3), byteArrayOf(4), "", "a line")
+        assertEquals(4, kept.id)
+        assertEquals(2, kept.photos)
+        assertTrue(kept.clip && kept.audio)
+        assertNull(kept.itemId)
+        assertEquals(2.5, kept.audioSeconds, 0.0)
+        val body = String(t.sent[0].body!!, Charsets.ISO_8859_1)
+        assertEquals("http://backend:8000/api/captures", t.sent[0].url)
+        assertTrue(body.contains("name=\"photos\"; filename=\"photo-1.jpg\""))
+        assertTrue(body.contains("name=\"photos\"; filename=\"photo-2.jpg\""))
+        assertTrue(body.contains("name=\"clip\"; filename=\"clip.mp4\""))
+        assertTrue(body.contains("name=\"audio\"; filename=\"note.wav\""))
+        assertTrue(body.contains("name=\"request\""))
+        assertTrue(body.contains("\"note\":\"a line\""))
+    }
+
+    @Test
+    fun captures_are_listed_and_one_is_processed() {
+        val (c, t) = client(
+            HttpResponse(200, """{"captures":[{"id":4,"status":"processed","note":"","name":"","photos":1,"clip":false,"audio":false,"audio_seconds":0,"item_id":9,"error":"","model":"muse-spark-1.3","created_at":"2026-10-29T10:00:00+00:00"}]}"""),
+            HttpResponse(200, """{"id":5,"status":"failed","note":"","name":"","photos":1,"clip":false,"audio":false,"audio_seconds":0,"item_id":null,"error":"no recorded answer","model":"","created_at":""}"""),
+        )
+        val list = c.captures()
+        assertEquals(1, list.size)
+        assertEquals(9, list[0].itemId)
+        assertEquals("processed", list[0].status)
+        val failed = c.processCapture(5)
+        assertEquals("POST", t.sent[1].method)
+        assertEquals("http://backend:8000/api/captures/5/process", t.sent[1].url)
+        assertEquals("failed", failed.status)
+        assertEquals("no recorded answer", failed.error)
+    }
+}

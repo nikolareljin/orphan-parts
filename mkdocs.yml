@@ -70,6 +70,7 @@ nav:
       - Verdict ladder: concepts/verdicts.md
       - Category profiles: concepts/profiles.md
   - Guides:
+      - Capture from the phone: guides/capture.md
       - My inventory: guides/inventory.md
       - Measure a feature: guides/measure.md
       - Does it fit?: guides/match.md

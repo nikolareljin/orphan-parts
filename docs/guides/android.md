@@ -12,21 +12,21 @@ backend does the work; the app talks to it and nothing else.
 and whether the gate is on. Both values stay in the app's private storage on the phone. The
 session the code opens is kept in memory and opened again after a 401.
 
-**Capture.** A photo through the system camera app, so the app asks for no camera permission.
-The photo is decoded, scaled to at most 1600 pixels on the long side and re-encoded as a JPEG
-on the phone, so nothing but pixels leaves it. **Read it** sends it to `/api/extract` and shows
-the fields with their confidence and source; **Save privately** posts the reading to
-`/api/items` with a name and your line on the condition. Every value saved this way is an
-observation to confirm on the web, as with any reading. For a feature to measure, the hint
-says what the web page needs: a ruler in the same plane, straight on; the marking stays on
-the web.
+**Capture.** One session per thing: photos through the system camera app (so the app asks for
+no camera permission; four per capture), a clip of at most 30 seconds through the same app,
+hold to talk for what you know, a name and a line, then **Send**. Each photo is decoded, scaled
+to at most 1600 pixels on the long side and re-encoded as a JPEG on the phone, so nothing but
+pixels leaves it; the clip is sent as recorded. The bundle goes to `/api/captures` and waits
+in the web app's Inbox; **Captures** lists what was sent, and **Read it now** has the backend
+read it into an item (the label found first, the note kept as your words). See
+[Capture from the phone](capture.md). For a feature to measure, the hint says what the web
+page needs: a ruler in the same plane, straight on; the marking stays on the web.
 
-**Talk.** Hold the button and say what you know about the item: what it is, what is wrong
-with it, what you tested. The phone records 16 kHz mono PCM and sends it as a WAV file to
-`/api/items/{id}/voice`; the backend transcribes it with Muse Voice Transcribe and keeps it as
-your words on the item. The transcript comes back on screen and is read aloud with the
-phone's own speech, so you hear what was kept. The item is the one just captured, or any
-other from the inventory.
+**Talk.** For an item already in the inventory: hold the button and say what you know about
+it. The phone records 16 kHz mono PCM and sends it as a WAV file to `/api/items/{id}/voice`;
+the backend transcribes it with Muse Voice Transcribe and keeps it as your words on the item.
+The transcript comes back on screen and is read aloud with the phone's own speech, so you hear
+what was kept. The item is the one a capture was read into, or any other from the inventory.
 
 ## Building and running it
 

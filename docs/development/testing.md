@@ -138,6 +138,14 @@ multipart framing, the WAV header and sizes, and the settings' URL. The smoke ru
 (`ANDROID_AVD`), launches the app, confirms its activity is on screen and keeps a screenshot;
 `scripts/tests/test_android.sh` checks that script with stand-ins for gradlew and adb.
 
+Captures are tested on bundles made in the test (a synthetic photo, a WAV, the head of an MP4):
+a bundle kept as sent with the photos re-encoded on arrival and read into an item with the
+transcript and the line, processed once only, deleted with its files while the item stays; a
+capture without photos still an item; every refusal (an empty bundle, five photos, a bad photo,
+a clip of the wrong kind, an audio file that is not a WAV, a clip beyond the limit); a failed reading
+recorded with the media kept; the label found first through a mock server; the multipart
+route, the media routes and their 404s; and the paths in the OpenAPI document.
+
 The demo set (`demo/set.yaml`, `python -m app.demo`) is tested on a set written into a temporary
 directory: the set checked (repeated keys, a search needing an item that is not there, a search
 without an item or a profile, five photos refused, an empty file allowed); the scrub (metadata

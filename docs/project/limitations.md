@@ -16,4 +16,6 @@
 - The public demo answers from recorded responses for its own set: a photo of your own gets the
   recorded answer for that operation, not a reading of your label. Live mode is a setting the
   operator turns on for a window, with the cap set to what they accept to spend.
+- A clip from the phone is kept and played back; no frame is read from it yet, so what the
+  label says has to be in a photo.
 - Human review is required before anything is posted, bought or sold.
