@@ -8,6 +8,13 @@ export interface Readiness {
   spend_usd: number
   spend_cap_usd: number
   paused: boolean
+  demo: {
+    gated: boolean
+    paused: boolean
+    daily_used: number
+    daily_cap: number
+    visitor_cap_per_hour: number
+  }
 }
 
 export interface Limits {
@@ -501,6 +508,19 @@ export interface Measurement extends MeasureResult {
   at: string
 }
 
+export interface Access {
+  gated: boolean
+  granted: boolean
+  token: string
+  expires_at: number
+}
+
+// A 401 means the session is gone: the shell is told, so it asks for the code again.
+export const ACCESS_REQUIRED_EVENT = 'opl-access-required'
+function noteStatus(status: number): void {
+  if (status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event(ACCESS_REQUIRED_EVENT))
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -519,7 +539,10 @@ export function apiUrl(path: string): string {
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(apiUrl(path), { headers: { Accept: 'application/json' } })
-  if (!res.ok) throw new ApiError(res.status, `${path}: HTTP ${res.status}`)
+  if (!res.ok) {
+    noteStatus(res.status)
+    throw new ApiError(res.status, `${path}: HTTP ${res.status}`)
+  }
   return (await res.json()) as T
 }
 
@@ -550,7 +573,10 @@ async function postForm<T>(path: string, parts: FormPart[]): Promise<T> {
     else form.append(field, value, value.name)
   }
   const res = await fetch(apiUrl(path), { method: 'POST', body: form, headers: { Accept: 'application/json' } })
-  if (!res.ok) throw new ApiError(res.status, await detailOf(res, path))
+  if (!res.ok) {
+    noteStatus(res.status)
+    throw new ApiError(res.status, await detailOf(res, path))
+  }
   return (await res.json()) as T
 }
 
@@ -558,7 +584,10 @@ async function sendJson<T>(method: 'POST' | 'PATCH' | 'DELETE', path: string, bo
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   const res = await fetch(apiUrl(path), { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
-  if (!res.ok) throw new ApiError(res.status, await detailOf(res, path))
+  if (!res.ok) {
+    noteStatus(res.status)
+    throw new ApiError(res.status, await detailOf(res, path))
+  }
   if (res.status === 204) return undefined as T
   return (await res.json()) as T
 }
@@ -574,6 +603,11 @@ export function dataUrlToFile(dataUrl: string, name: string): File {
 }
 
 export const api = {
+  access: {
+    status: () => getJson<Access>('/api/access'),
+    grant: (code: string) => sendJson<Access>('POST', '/api/access', { code }),
+    leave: () => sendJson<Access>('DELETE', '/api/access'),
+  },
   readiness: () => getJson<Readiness>('/readyz'),
   version: () => getJson<Version>('/api/version'),
   extract: (photos: File[], crops: File[] = []) =>

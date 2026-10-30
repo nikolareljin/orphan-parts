@@ -14,6 +14,14 @@ Every call writes one log line from `app.model_api` with `op`, `model`, `attempt
 `input_tokens`, `output_tokens`, `usd` and the running `total_usd`. Retries log a warning with
 the delay and the error. Reaching the cap logs a warning and `GET /readyz` turns `paused` on.
 
+## The demo gate
+
+A refusal by the gate logs the path and the reason under `app.gate`: `limit: requests per
+minute`, `limit: visitor calls per hour`, `limit: daily calls`, or `paused: a call that spends
+was refused`, with the `Retry-After` given. The code and the tokens never appear in a line.
+`/readyz` carries the gate's state under `demo`: `gated`, `paused`, `daily_used`, `daily_cap`,
+`visitor_cap_per_hour`.
+
 ## Spend ledger
 
 `DATA_DIR/model_api_spend.jsonl` holds one JSON line per call (timestamp, request ID, operation,

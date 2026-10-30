@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
+from app.api.access import router as access_router
 from app.api.assess import router as assess_router
 from app.api.drafts import router as drafts_router
 from app.api.extract import router as extract_router
@@ -26,6 +27,7 @@ from app.listing import Lister, VoiceNotes
 from app.match import Assessor
 from app.measure import Measurer
 from app.model_api import CostLedger, ModelApiClient
+from app.ops.gate import Gate, GateMiddleware
 from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
 from app.profiles import Profiles
@@ -87,7 +89,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
-    # Last added runs first: every response, including CORS preflights, gets an id.
+    app.state.gate = Gate(settings)
+    # Last added runs first: the gate runs inside the request context, so a refusal carries
+    # the request id and the security headers like any other answer.
+    app.add_middleware(GateMiddleware, gate=app.state.gate)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
@@ -97,6 +102,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.add_middleware(RequestContextMiddleware)
     app.include_router(router)
+    app.include_router(access_router)
     app.include_router(extract_router)
     app.include_router(segment_router)
     app.include_router(items_router)

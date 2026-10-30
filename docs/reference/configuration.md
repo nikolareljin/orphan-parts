@@ -35,6 +35,15 @@ stops the service with a clear message instead of failing on the first user requ
 | `VOICE_MAX_SECONDS` | `600` | | longest voice note accepted; the transcription service takes ten minutes at most, and `MAX_UPLOAD_MB` bounds the file first |
 | `PRICE_SEARCH_CONTEXT` | `low` | | how much of each page the search hands the model: `low`, `medium` or `high`; more costs tokens and time |
 | `PRICE_COUNTRY` | | | ISO 3166-1 country for local price results when the request names none |
+| `DEMO_ACCESS_CODE` | | | the code the demo runs behind, twelve characters at least; empty = no gate |
+| `DEMO_SESSION_HOURS` | `12` | | how long a session lasts |
+| `DEMO_VISITOR_CALLS_PER_HOUR` | `20` | | calls that spend, per session and hour |
+| `DEMO_DAILY_CALLS` | `300` | | calls that spend, for everyone per UTC day |
+| `DEMO_CODE_ATTEMPTS` | `5` | | tries of the code per address and quarter hour |
+| `DEMO_REQUESTS_PER_MINUTE` | `120` | | requests of any kind per address and minute |
+| `DEMO_PAUSED` | `0` | | `1` refuses every call that spends; `/readyz` says so |
+| `DEMO_TRUST_PROXY` | `0` | | read the caller's address from the forwarded header; the production compose file sets it |
+| `DEMO_COOKIE_SECURE` | `0` | | mark the session cookie `Secure`; set it on an https host |
 | `MARKETPLACE_SEARCH_URL` | `https://www.facebook.com/marketplace/search/` | | the search page a request's handoff link opens, with the request's words and top price; the owner runs it |
 | `CANDIDATE_DAYS` | `14` | | how long a candidate's observation is trusted before it is too old |
 | `MARKETPLACE_CREATE_URL` | `https://www.facebook.com/marketplace/create/item` | | where Open Marketplace sends the owner with the draft copied; nothing is posted by the service |

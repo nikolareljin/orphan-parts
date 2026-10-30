@@ -11,6 +11,7 @@ from app.listing.voice import VoiceNotes
 from app.match.service import Assessor
 from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
+from app.ops.gate import Gate
 from app.profiles import Profiles
 from app.segment.service import Segmenter
 from app.value.service import Valuer
@@ -108,3 +109,11 @@ def app_finder(request: Request) -> Finder:
 
 
 FinderDep = Annotated[Finder, Depends(app_finder)]
+
+
+def app_gate(request: Request) -> Gate:
+    gate: Gate = request.app.state.gate
+    return gate
+
+
+GateDep = Annotated[Gate, Depends(app_gate)]
