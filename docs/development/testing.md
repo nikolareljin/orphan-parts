@@ -35,6 +35,18 @@ per-address limit with the open paths exempt; the forwarded address trusted only
 the settings checked). Playwright runs behind the gate: one session from a global setup for
 every test, and `access.spec.ts` starts without one.
 
+Build and reuse is tested with a recorded two-step tool loop (`propose-1`, `propose-2`): the
+templates load and are checked (a repeated key, no blocking requirement, a file named
+otherwise refused); the tools show only what a build may use; the proposal built on an item
+nobody has is dropped and an allocation of the wrong kind is dropped and said; nothing usable
+refused before any call; selection commits and reserves, a second build wanting the same item
+is a conflict until it takes it, abandoning releases, advancing in order and not before every blocking requirement is filled;
+a requirement filled by hand with an item of the right kind, and the wrong kind, a gone item,
+a filled requirement and a project that is over refused; a missing requirement becomes a search
+under the budget left and the item bought from it marks the search found; the loop replayed statelessly through a
+mock server (the brief, the output items and one result per call, two ledger entries) and a
+loop that never answers refused; the routes and their refusals.
+
 Missing items are tested with a recorded listing reading (`listing-text`): the handoff link,
 the ladder onto the states, the seller message; a search from an item or from values with its
 refusals; a text candidate read, assessed and dated, with a rule key kept as read and an unknown

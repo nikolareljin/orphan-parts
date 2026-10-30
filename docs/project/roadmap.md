@@ -4,10 +4,6 @@ What follows the hackathon scope, in rough order.
 
 ## The core, completed
 
-- **Build and reuse.** A few preference questions; project proposals grounded in the actual
-  inventory, with allocations, missing requirements, effort, skills, cost and unknowns; several
-  selected projects without committing one item twice; a combined budget; missing requirements
-  that become search requests.
 - **Build pack.** A versioned document per project, Markdown and PDF, with a date and an input
   digest, stale when a critical input changes; a progress checklist; an outcome record with the
   test, the date and the limitations.

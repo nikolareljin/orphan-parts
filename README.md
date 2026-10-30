@@ -25,7 +25,7 @@ by a scan, nothing is posted or searched on your behalf, and a number without a 
 | Catalog | read the label, confirm or reject each value, add what you know, keep condition, faults, tests, parts, intent and availability, measure a feature against a ruler | built |
 | Sell and give away | a preparation checklist, price guidance from sourced comparables with the four figures kept apart, a listing draft that discloses what the rules require, a voice note kept as your words, the Marketplace create page by handoff | built |
 | Find the one that fits | what an item needs, a Marketplace search you run, listings brought back as text, a screenshot or values you know, each assessed by the category's rules and dated, the seller's questions as a message | built |
-| Build and reuse | project proposals grounded in what you own, allocations and a budget, a versioned build pack | follows |
+| Build and reuse | what you want from a build, project proposals grounded in what you own with every allocation checked against the inventory, items committed to one selected build at a time, a budget across the selected set, missing pieces as searches | built; the build pack follows |
 
 Underneath, one engine answers five questions with evidence: Identify, Value, List, Find, Reuse.
 A category is a data file, a profile, that names the fields, the features worth measuring with
