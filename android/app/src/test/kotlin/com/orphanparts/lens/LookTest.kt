@@ -10,7 +10,7 @@ import java.io.File
 
 class LookTest {
     private fun cssTokens(block: String): Map<String, String> =
-        Regex("""--([a-z]+):\s*(#[0-9a-fA-F]{6});""").findAll(block)
+        Regex("""--([a-z-]+):\s*(#[0-9a-fA-F]{6});""").findAll(block)
             .associate { it.groupValues[1] to it.groupValues[2].lowercase() }
 
     @Test
@@ -27,7 +27,7 @@ class LookTest {
 
     @Test
     fun the_palette_names_every_token_once() {
-        assertEquals(setOf("bg", "fg", "muted", "card", "line", "accent", "error"), Tokens.light.asCss().keys)
+        assertEquals(setOf("bg", "fg", "muted", "card", "line", "accent", "error", "on-accent"), Tokens.light.asCss().keys)
         assertEquals(Tokens.light, Tokens.palette(dark = false))
         assertEquals(Tokens.dark, Tokens.palette(dark = true))
     }
@@ -37,6 +37,10 @@ class LookTest {
         assertTrue(soundsLikeAFailure("Could not send: timeout"))
         assertTrue(soundsLikeAFailure("Not reachable: refused"))
         assertTrue(soundsLikeAFailure("Nothing heard."))
+        assertTrue(soundsLikeAFailure("The photo could not be read."))
+        assertTrue(soundsLikeAFailure("The clip is 70 MB, more than the backend takes."))
+        assertTrue(soundsLikeAFailure("Capture #3: HTTP 500"))
+        assertTrue(soundsLikeAFailure("The microphone was refused. Allow it for this app."))
         assertFalse(soundsLikeAFailure("Sent as capture #3: 2 photo(s). See Captures."))
         assertFalse(soundsLikeAFailure(""))
     }

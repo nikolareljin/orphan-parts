@@ -2,6 +2,7 @@ package com.orphanparts.lens
 
 import android.content.Context
 import org.json.JSONObject
+import java.net.URI
 
 /** Where the backend is and what opens it: the demo code, or a session the pairing gave;
  * kept in the app's private storage. */
@@ -19,21 +20,29 @@ fun normalizeBaseUrl(text: String): String {
     return url
 }
 
-/** The pairing payload a QR code carries: the origin, whether gated, a session token. The
- * code itself is kept as it was; a scan replaces the URL and the session, nothing else. */
 /** On the phone, localhost is the phone: an address like that in a pairing code came from a
- * browser open on the computer itself and can never answer here. */
+ * browser open on the computer itself and can never answer here. The whole loopback range
+ * (127.x.x.x, ::1), the unspecified address and the .localhost names are that; any other
+ * host, a bracketed IPv6 address included, may be reachable. */
 fun reachableFromAPhone(url: String): Boolean {
-    val host = url.removePrefix("https://").removePrefix("http://").substringBefore('/').substringBefore(':').lowercase()
-    return host.isNotEmpty() && host !in setOf("localhost", "127.0.0.1", "[", "0.0.0.0") && !host.endsWith(".localhost")
+    val host = try { URI(url).host?.lowercase() ?: return false } catch (_: Exception) { return false }
+    return host.isNotEmpty() &&
+        host !in setOf("localhost", "[::1]", "0.0.0.0", "[::]") &&
+        !host.startsWith("127.") &&
+        !host.endsWith(".localhost")
 }
 
-/** Whether a pairing code was refused only because it points at localhost. */
+/** Whether a pairing code (one of ours: it says `gated`) was refused only because it points
+ * at localhost. */
 fun pointsAtLocalhost(text: String): Boolean {
-    val url = try { normalizeBaseUrl(JSONObject(text).optString("url")) } catch (_: Exception) { return false }
+    val json = try { JSONObject(text) } catch (_: Exception) { return false }
+    if (!json.has("gated")) return false
+    val url = normalizeBaseUrl(json.optString("url"))
     return url.isNotEmpty() && !reachableFromAPhone(url)
 }
 
+/** The pairing payload a QR code carries: the origin, whether gated, a session token. The
+ * code itself is kept as it was; a scan replaces the URL and the session, nothing else. */
 fun pairingFrom(text: String, current: Settings): Settings? {
     val json = try {
         JSONObject(text)

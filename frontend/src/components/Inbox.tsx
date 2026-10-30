@@ -6,15 +6,15 @@ function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
-// The clip as sent. A browser that cannot decode it (a codec it lacks, or a file with no
-// video track) says so and offers the file instead of a blank player.
+// The clip as sent. A browser that cannot decode it (a codec it lacks) says so and offers
+// the file instead of a blank player.
 function Clip({ id }: { id: number }) {
   const [unplayable, setUnplayable] = useState(false)
   const url = api.captures.clipUrl(id)
   if (unplayable) {
     return (
       <p className="muted">
-        This browser cannot play the clip of capture #{id} (a codec it lacks, or a file without a video track).{' '}
+        This browser cannot play the clip of capture #{id} (a codec it lacks).{' '}
         <a href={url} download={`capture-${id}.mp4`}>
           Download it
         </a>
