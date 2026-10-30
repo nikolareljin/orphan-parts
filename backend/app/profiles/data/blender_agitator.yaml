@@ -85,4 +85,4 @@ rules:
   - key: material
     label: Material
     kind: equal
-    question: What material must the replacement rod be? Say metal or plastic.
+    question: Is the rod metal throughout, or are the rod, the tabs or the head plastic?

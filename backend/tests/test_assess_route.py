@@ -110,3 +110,7 @@ def test_an_all_metal_rod_fits_the_worn_one_and_a_plastic_rod_does_not(client: T
     other = client.post("/api/assess", json={"need": need, "candidate": plastic}).json()
     assert other["verdict"] == "CONFLICT"
     assert {c["key"]: c["status"] for c in other["checks"]}["material"] == "fail"
+    unstated = {"values": {"rod_diameter": "4", "tab_span": "9"}}
+    asked = client.post("/api/assess", json={"need": need, "candidate": unstated}).json()
+    assert {c["key"]: c["status"] for c in asked["checks"]}["material"] == "unknown"
+    assert any("metal throughout" in q for q in asked["questions"])

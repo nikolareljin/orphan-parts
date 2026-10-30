@@ -90,49 +90,90 @@ def _list(text: str) -> tuple[str, str]:
 
 
 # what a listing, a label or an owner calls a material, read as the one word a rule compares
-_METALS = (
-    "stainless",
-    "steel",
-    "aluminium",
-    "aluminum",
-    "alloy",
-    "brass",
-    "chrome",
-    "metal",
-    "iron",
-    "titanium",
-    "zinc",
+_METALS = frozenset(
+    (
+        "stainless",
+        "steel",
+        "aluminium",
+        "aluminum",
+        "alloy",
+        "brass",
+        "bronze",
+        "copper",
+        "chrome",
+        "metal",
+        "metals",
+        "iron",
+        "nickel",
+        "titanium",
+        "zinc",
+    )
 )
-_PLASTICS = (
-    "plastic",
-    "abs",
-    "nylon",
-    "polypropylene",
-    "polycarbonate",
-    "pvc",
-    "acrylic",
-    "resin",
-    "silicone",
-    "rubber",
+_PLASTICS = frozenset(
+    (
+        "plastic",
+        "plastics",
+        "abs",
+        "nylon",
+        "polyamide",
+        "pom",
+        "acetal",
+        "delrin",
+        "polypropylene",
+        "polyethylene",
+        "polycarbonate",
+        "polystyrene",
+        "tritan",
+        "pvc",
+        "acrylic",
+        "resin",
+        "silicone",
+        "rubber",
+    )
+)
+# a word before a material that says it is not that material: "non-metal", "no plastic"
+_NOT_BEFORE = frozenset(("non", "no", "not", "without"))
+# a word that says the material is only part of it or only on the surface
+_PARTIAL = frozenset(
+    (
+        "mostly",
+        "partly",
+        "partially",
+        "part",
+        "mainly",
+        "coated",
+        "plated",
+        "finish",
+        "look",
+        "effect",
+        "style",
+        "imitation",
+        "faux",
+    )
 )
 
 
 def _material(text: str) -> tuple[str, str]:
     """``metal`` or ``plastic`` when the words say so, else the text cleaned: the rule for a
     material compares one word, so "all-metal", "stainless steel" and "metal throughout" are
-    one value, as are "ABS plastic" and "plastic". A mix ("metal rod, plastic head") or a
-    negation ("non-metal", "plastic-free") stays as written, so a rule asking for metal does
-    not pass it."""
+    one value, as are "ABS plastic", "POM" and "BPA-free plastic". A mix ("metal rod, plastic
+    head"), a part or a surface ("mostly metal", "chrome finish") and a negation ("non-metal",
+    "no plastic", "plastic-free") stay as written, so a rule asking for metal does not pass
+    them."""
     low = _clean(text).lower()
-    words = set(re.findall(r"[a-z]+", low))
-    if "non" in words or "free" in words:
-        return low, ""
-    metal = any(w in _METALS for w in words)
-    plastic = any(w in _PLASTICS for w in words)
-    if metal and not plastic:
-        return "metal", ""
-    if plastic and not metal:
-        return "plastic", ""
+    words = re.findall(r"[a-z]+", low)
+    found: set[str] = set()
+    for i, word in enumerate(words):
+        kind = "metal" if word in _METALS else "plastic" if word in _PLASTICS else ""
+        if not kind:
+            continue
+        before = words[i - 1] if i else ""
+        after = words[i + 1] if i + 1 < len(words) else ""
+        if before in _NOT_BEFORE or after == "free":
+            return low, ""
+        found.add(kind)
+    if len(found) == 1 and not _PARTIAL.intersection(words):
+        return found.pop(), ""
     return low, ""
 
 

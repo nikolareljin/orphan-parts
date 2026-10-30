@@ -6,7 +6,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ### Fixed
 - The frappé maker's agitator in the demo set asks for a metal replacement: the material on the need side is the one wanted, the worn rod's plastic is a fault note, so a rod of the same dimensions that a listing calls all-metal or stainless steel passes and a plastic one is a conflict (a material is read as the one word metal or plastic, however it is spelled; a mix stays as written and does not pass).
-- A material followed by punctuation or in parentheses ("Metal.", "(stainless)") reads as metal or plastic instead of a conflict, and a negation ("non-metal", "plastic-free") stays as written; the agitator's material question asks what the replacement rod must be.
+- A material followed by punctuation or in parentheses ("Metal.", "(stainless)") reads as metal or plastic instead of a conflict, as do POM, nylon and "BPA-free plastic"; a negation ("non-metal", "no plastic", "plastic-free"), a part or a surface ("mostly metal", "chrome-plated") stays as written; the agitator's material question asks the seller whether the rod is metal throughout.
 
 ### Security
 - No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
