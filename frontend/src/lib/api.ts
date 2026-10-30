@@ -873,7 +873,10 @@ export const api = {
     svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}`),
     svg: async (origin: string) => {
       const res = await fetch(api.pair.svgUrl(origin), { headers: authHeaders(), credentials: 'include' })
-      if (!res.ok) throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
+      if (!res.ok) {
+        noteStatus(res.status)
+        throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
+      }
       return await res.text()
     },
     get: (origin: string) =>
