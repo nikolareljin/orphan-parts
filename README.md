@@ -9,7 +9,8 @@ Meta's Muse models.
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
 Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
-on the docs site).
+on the docs site). **Trying it on a phone? [JUDGES.md](JUDGES.md)**: the app from the release
+page, the hosted server with your code, ten minutes, no development setup.
 
 Orphan Parts Lens starts from a private inventory of the devices, parts and other things you
 own. A photo of a label becomes a record you confirm field by field. A photo next to a ruler
