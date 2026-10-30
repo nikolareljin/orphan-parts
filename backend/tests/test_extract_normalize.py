@@ -36,6 +36,10 @@ from app.extract import FIELDS, field_guide, normalize
         ("list", "UL CE FCC", ("UL, CE, FCC", "")),
         ("list", "ul, ce; fcc / ul", ("UL, CE, FCC", "")),
         ("text", "  light  scuffs on the  case ", ("light scuffs on the case", "")),
+        ("material", "Stainless steel, all-metal", ("metal", "")),
+        ("material", "ABS plastic", ("plastic", "")),
+        ("material", "metal rod, plastic head", ("metal rod, plastic head", "")),
+        ("material", "wood", ("wood", "")),
     ],
 )
 def test_normalizers(kind: str, text: str, expected: tuple[str, str]) -> None:

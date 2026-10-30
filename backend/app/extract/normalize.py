@@ -89,6 +89,50 @@ def _list(text: str) -> tuple[str, str]:
     return ", ".join(dict.fromkeys(parts)), ""
 
 
+# what a listing, a label or an owner calls a material, read as the one word a rule compares
+_METALS = (
+    "stainless",
+    "steel",
+    "aluminium",
+    "aluminum",
+    "alloy",
+    "brass",
+    "chrome",
+    "metal",
+    "iron",
+    "titanium",
+    "zinc",
+)
+_PLASTICS = (
+    "plastic",
+    "abs",
+    "nylon",
+    "polypropylene",
+    "polycarbonate",
+    "pvc",
+    "acrylic",
+    "resin",
+    "silicone",
+    "rubber",
+)
+
+
+def _material(text: str) -> tuple[str, str]:
+    """``metal`` or ``plastic`` when the words say so, else the text cleaned: the rule for a
+    material compares one word, so "all-metal", "stainless steel" and "metal throughout" are
+    one value, as are "ABS plastic" and "plastic". A mix ("metal rod, plastic head") stays as
+    written, so a rule asking for metal does not pass it."""
+    low = _clean(text).lower()
+    words = set(low.replace("-", " ").replace("/", " ").replace(",", " ").split())
+    metal = any(w in _METALS for w in words)
+    plastic = any(w in _PLASTICS for w in words)
+    if metal and not plastic:
+        return "metal", ""
+    if plastic and not metal:
+        return "plastic", ""
+    return low, ""
+
+
 def _text(text: str) -> tuple[str, str]:
     return _clean(text), ""
 
@@ -102,6 +146,7 @@ _NORMALIZERS = {
     "connector": _connector,
     "polarity": _polarity,
     "list": _list,
+    "material": _material,
     "text": _text,
 }
 
