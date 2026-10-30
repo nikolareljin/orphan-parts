@@ -91,7 +91,7 @@ object Tokens {
  * screens write for a failure starts one of these ways. */
 private val FAILURE_OPENINGS = listOf(
     "Could not", "Not reachable", "Nothing heard", "That code", "Scan canceled", "The photo could not",
-    "The camera returned", "The clip is", "The microphone was refused", "Capture #",
+    "The camera returned", "The clip is", "The clip could not", "The microphone was refused", "Capture #",
 )
 
 fun soundsLikeAFailure(text: String): Boolean = FAILURE_OPENINGS.any { text.startsWith(it) }

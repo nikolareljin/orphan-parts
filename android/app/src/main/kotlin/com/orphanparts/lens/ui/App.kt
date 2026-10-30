@@ -63,6 +63,8 @@ fun App() {
     var service by remember { mutableStateOf(serviceLine("", null, null)) }
     // what the header's scan said, numbered so the same line twice is shown twice
     var pairLine by remember { mutableStateOf(0 to "") }
+    // shown on the Backend tab once: leaving the tab clears it, so a return does not replay it
+    LaunchedEffect(page) { if (page != 0 && pairLine.second.isNotEmpty()) pairLine = pairLine.first to "" }
 
     // one client per settings: the session token it holds belongs to that backend and code
     val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode, settings.token) }

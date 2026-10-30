@@ -12,6 +12,7 @@ describe('reachableFromAPhone', () => {
     expect(reachableFromAPhone('http://localhost:5183')).toBe(false)
     expect(reachableFromAPhone('http://127.0.0.1:8000')).toBe(false)
     expect(reachableFromAPhone('http://127.0.0.2:8000')).toBe(false)
+    expect(reachableFromAPhone('http://[::ffff:127.0.0.1]:8000')).toBe(false)
     expect(reachableFromAPhone('http://0.0.0.0:8000')).toBe(false)
     expect(reachableFromAPhone('http://[::1]:8000')).toBe(false)
     expect(reachableFromAPhone('http://app.localhost')).toBe(false)
