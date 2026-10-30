@@ -393,6 +393,7 @@ class ModelApiClient:
             result["reachable"] = True
         except ModelApiError as exc:
             result["reachable"] = False
+            result["status"] = exc.status
             result["error"] = str(exc)
         return result
 

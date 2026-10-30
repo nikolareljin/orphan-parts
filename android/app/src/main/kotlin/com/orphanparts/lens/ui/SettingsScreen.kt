@@ -81,7 +81,7 @@ fun scanToPair(context: android.content.Context, settings: Settings, onSaved: (S
                 onStatus("Paired with ${paired.baseUrl}" + (if (paired.token.isNotBlank()) " (with a session)." else "."))
             }
         }
-        .addOnCanceledListener { onStatus("Scan cancelled.") }
+        .addOnCanceledListener { onStatus("Scan canceled.") }
         .addOnFailureListener { e -> onStatus("Could not scan: ${e.message ?: e.javaClass.simpleName}") }
 }
 

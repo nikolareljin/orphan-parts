@@ -4,8 +4,10 @@
 # the repository's secrets and variables; from a shell it runs the same with this machine's
 # modal and wrangler logins.
 #
-#   secret    writes the Modal secret orphan-parts from the environment (every field, replaced)
+#   secret    writes the Modal secret orphan-parts from the environment (every field, replaced;
+#             a value holding a single quote is refused: the dotenv keeps it verbatim otherwise)
 #   backend   deploys deploy/modal_app.py, reads the URL off the output and waits for /readyz
+#             to answer ok with the key answering (a key that failed its probe fails the step)
 #   web       builds the web app against the backend's URL and publishes frontend/dist to Pages
 #   all       secret, backend, web, in that order; web takes the URL backend found
 #
@@ -54,16 +56,24 @@ need_modal() {
 step_secret() {
   need_modal
   origin_ok "${WEB_ORIGIN:-}" || fail "secret: WEB_ORIGIN must be an https origin (https://<project>.pages.dev)"
+  local name value
+  for name in MODEL_API_KEY_DEMO DEMO_ACCESS_CODE SPEND_CAP_USD OPL_FAKE_API; do
+    value="${!name:-}"
+    [[ "$value" != *"'"* ]] || fail "secret: $name holds a single quote, which the dotenv cannot carry"
+  done
   local file
   file="$(mktemp)" || fail "secret: no temporary file"
   chmod 600 "$file"
+  # single quotes: the dotenv reader keeps the value as it is (no $expansion, no escapes)
   {
-    printf 'MODEL_API_KEY=%s\n' "${MODEL_API_KEY_DEMO:-}"
-    printf 'DEMO_ACCESS_CODE=%s\n' "${DEMO_ACCESS_CODE:-}"
-    printf 'SPEND_CAP_USD=%s\n' "${SPEND_CAP_USD:-20}"
-    printf 'OPL_FAKE_API=%s\n' "${OPL_FAKE_API:-1}"
-    printf 'CORS_ORIGINS=%s\n' "$WEB_ORIGIN"
-    printf 'DEMO_COOKIE_SECURE=1\n'
+    printf "MODEL_API_KEY='%s'\n" "${MODEL_API_KEY_DEMO:-}"
+    printf "DEMO_ACCESS_CODE='%s'\n" "${DEMO_ACCESS_CODE:-}"
+    printf "SPEND_CAP_USD='%s'\n" "${SPEND_CAP_USD:-20}"
+    printf "OPL_FAKE_API='%s'\n" "${OPL_FAKE_API:-1}"
+    printf "CORS_ORIGINS='%s'\n" "$WEB_ORIGIN"
+    printf "DEMO_COOKIE_SECURE='1'\n"
+    # Modal's proxy forwards the visitor's address: counted per visitor, not per proxy
+    printf "DEMO_TRUST_PROXY='1'\n"
   } > "$file"
   local ok=0
   "${modal_cmd[@]}" secret create orphan-parts --from-dotenv "$file" --force && ok=1
@@ -93,6 +103,10 @@ step_backend() {
   done
   [[ -n "$ready" ]] || fail "backend: $url/readyz did not answer after $tries tries"
   printf '%s\n' "$ready" | grep -q '"status":"ok"' || fail "backend: readyz is not ok: $ready"
+  # the key in the secret must answer: a service on recorded answers because it did not
+  # is a deploy to fix, not one to build the web app against
+  printf '%s\n' "$ready" | grep -q '"model_api":"fixture (key failed)"' \
+    && fail "backend: the key did not answer the startup probe: $ready"
   say "backend: $url is up: $ready"
   api_url="$url"
   [[ -n "${GITHUB_OUTPUT:-}" ]] && printf 'api_url=%s\n' "$url" >> "$GITHUB_OUTPUT"

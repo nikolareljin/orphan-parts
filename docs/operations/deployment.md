@@ -16,7 +16,7 @@ Docker images yourself on a host of your own, which stays supported.
 pipx install modal && modal setup          # once, a browser login
 modal secret create orphan-parts \
   MODEL_API_KEY=... DEMO_ACCESS_CODE=... SPEND_CAP_USD=20 OPL_FAKE_API=1 \
-  CORS_ORIGINS=https://orphan-parts.pages.dev
+  CORS_ORIGINS=https://orphan-parts.pages.dev DEMO_COOKIE_SECURE=1 DEMO_TRUST_PROXY=1
 ./dev deploy modal                         # modal deploy deploy/modal_app.py; prints the URL
 curl -fsS https://<the url>/readyz
 ```
@@ -30,12 +30,18 @@ the demo set under `demo/`, mounts the volume `orphan-parts-data` at `/data` (th
 file, the captures, the spend ledger) and reads the secret. One container (`max_containers=1`: one writer for the database, one
 counter for the demo gate), kept warm (`min_containers=1`; `OPL_MIN_CONTAINERS=0` at deploy
 time lets it scale to zero, with a cold start of some seconds on the first request after an
-idle quarter hour). A write is committed to the volume as soon as its request succeeds.
-Without `MODEL_API_KEY` in the secret the service runs in fixture mode (recorded answers,
-nothing spent); with a key that does not answer at startup (401, 402, 403, a network failure),
-the service runs in fixture mode too and `/readyz` reports `fixture (key failed)` until a
-restart with a working key (`OPL_KEY_PROBE=0` turns that probe off). Changing the secret takes
-a redeploy. `modal app logs orphan-parts` streams the log; `modal volume ls orphan-parts-data`
+idle quarter hour). A write is committed to the volume as soon as its request succeeds, and
+what another container committed is read back before any write and within half a minute
+otherwise. The database runs with `SQLITE_JOURNAL_MODE=DELETE` there: the write-ahead log
+needs shared memory that a network filesystem cannot give. `DEMO_TRUST_PROXY=1` in the
+secret makes the gate count visitors by the address Modal's proxy forwards, not by the
+proxy's own. Without `MODEL_API_KEY` in the secret the service runs in fixture mode
+(recorded answers, nothing spent); with a key that cannot work (401, 402, 403, or 404 on a
+wrong URL at startup), the service runs in fixture mode too and `/readyz` reports `fixture
+(key failed)` until a restart with a working key (`OPL_KEY_PROBE=0` turns that probe off);
+the deploy step treats that answer as a failure, so the web app is never built against a
+backend whose key is wrong. An API that is busy or down at startup (429, 5xx, a timeout)
+changes nothing: every request retries on its own. Changing the secret takes a redeploy. `modal app logs orphan-parts` streams the log; `modal volume ls orphan-parts-data`
 lists the data. The demo set goes into the host's inventory with
 `modal run deploy/modal_app.py::load_demo` (the inventory reset first; `--no-reset` adds to
 it), the same load as `./dev demo` on a machine of your own, in the mode the secret says;
@@ -59,7 +65,8 @@ or `web`) and after every release tag. Its two jobs call `scripts/deploy-hosted.
 also runs from a shell as `./dev deploy hosted [secret|backend|web|all]` with the same
 settings in the environment and this machine's `modal` and `wrangler` logins:
 
-1. **backend**: `secret` writes the Modal secret `orphan-parts` from the settings below (every
+1. **backend**: `secret` writes the Modal secret `orphan-parts` from the settings below, each
+   value quoted so that a `$`, a space or a `#` in a code or a key is kept as it is (every
    field, replaced), then `backend` runs `modal deploy deploy/modal_app.py`, reads the URL off
    the output and waits for `/readyz` to answer `ok`;
 2. **web**: builds the web app against that URL and publishes `frontend/dist` to the Pages
@@ -81,7 +88,7 @@ here; the values live there and in the operator's password manager.
 | `HOSTED_DEPLOY` | `true` lets the workflow run; anything else keeps it inert |
 | `WEB_ORIGIN` | the origin browsers use, `https://orphan-parts.pages.dev` or a custom domain attached to the project; it becomes the backend's `CORS_ORIGINS` |
 | `PAGES_PROJECT` | the Pages project name (default `orphan-parts`) |
-| `API_URL` | optional: the backend URL for a web-only run; otherwise the backend job's URL |
+| `API_URL` | optional: the backend URL for a web-only run; a backend job in the same run wins over it |
 | `OPL_FAKE_API` | `1` for recorded answers, `0` for the live models (default `1`) |
 | `SPEND_CAP_USD` | the ledger's cap on the host (default `20`) |
 | `OPL_MIN_CONTAINERS` | `1` keeps the container warm, `0` lets it scale to zero (default `1`) |
