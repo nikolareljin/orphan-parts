@@ -1,15 +1,40 @@
 # Roadmap
 
-Beyond the hackathon scope, in rough priority order:
+What follows the hackathon scope, in rough order.
 
-- More category profiles: bike cassettes, light bulbs, power-tool batteries, camera lenses,
-  appliance parts, fasteners with a coin for scale.
-- Declutter mode: one photo of a drawer, SAM segments every item, a batch of drafts and a catalog feed.
-- Seller Q&A assistant on WhatsApp Business: answers buyer questions from the listing's evidence,
-  approve-to-send.
-- WhatsApp product cards from the catalog.
-- Instagram and Facebook Page posting for small shops.
-- Price alerts: watch a Find profile and get told when a candidate above the fit threshold appears.
-- Android companion for Meta glasses through the Wearables Device Access Toolkit, with a live
-  overlay on Ray-Ban Display.
-- Reuse or recycle fallback: suggest a repair cafe or e-waste drop-off when a part has no resale value.
+## The core, completed
+
+- **Build and reuse.** A few preference questions; project proposals grounded in the actual
+  inventory, with allocations, missing requirements, effort, skills, cost and unknowns; several
+  selected projects without committing one item twice; a combined budget; missing requirements
+  that become search requests.
+- **Build pack.** A versioned document per project, Markdown and PDF, with a date and an input
+  digest, stale when a critical input changes; a progress checklist; an outcome record with the
+  test, the date and the limitations.
+- **Ranking across candidates.** Several candidates for one need compared side by side, with the
+  fit, the price and the open questions of each.
+- **Android app.** Capture into the same inventory with the phone camera, hold to talk, a
+  calibrated photo capture for measurement; marking stays on the web.
+
+## Around it
+
+- **Community rescue.** Another person's offer of an item, a tool or help joins a project;
+  evidence tasks per participant; a redacted outcome record shared by choice.
+- **Storage.** SQLite under `DATA_DIR` and local files serve one household; Postgres and object
+  storage are the path when more than one does.
+- **More profiles.** Bike cassettes, light bulbs, power-tool batteries, camera lenses, appliance
+  parts, fasteners with a coin for scale; profiles drafted by Muse Wonder from a few photos.
+- **Declutter mode.** One photo of a drawer, SAM segments every item, a batch of records and
+  drafts.
+- **Seller Q&A on WhatsApp Business.** Answers to buyer questions from the listing's evidence,
+  approve-to-send; product cards from the catalog; Instagram and Facebook Page posting.
+- **Price alerts.** Watch a search and be told when a documented candidate appears.
+- **Meta glasses.** The Android companion through the Wearables Device Access Toolkit, with a
+  live overlay on Ray-Ban Display.
+- **Reuse or recycle fallback.** A repair cafe or an e-waste drop-off when a part has no resale
+  value.
+
+## Out of scope, stated as such
+
+Autonomous Marketplace search or posting, purchases, payments, universal geometry recognition,
+unreviewed disassembly, fabricated prices, guaranteed compatibility.
