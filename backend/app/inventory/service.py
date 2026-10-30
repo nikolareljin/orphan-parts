@@ -137,12 +137,13 @@ class Inventory:
 
     def list_items(self, *, public_only: bool = False) -> list[ItemSummary]:
         """Every item that is not deleted; for the demo visitor, only the public ones."""
-        where = " AND i.public = 1" if public_only else ""
         with self.store.connect() as conn:
             rows = conn.execute(
                 "SELECT i.*, (SELECT COUNT(DISTINCT a.field) FROM assertions a"
                 " WHERE a.item_id = i.id AND a.review != 'rejected') AS field_count"
-                " FROM items i WHERE i.deleted_at IS NULL" + where + " ORDER BY i.id DESC"
+                " FROM items i WHERE i.deleted_at IS NULL AND (? = 0 OR i.public = 1)"
+                " ORDER BY i.id DESC",
+                (int(public_only),),
             ).fetchall()
             return [self._summary(r) for r in rows]
 
@@ -677,10 +678,11 @@ class Inventory:
             return self._capture(conn, int(cur.lastrowid or 0))
 
     def captures(self, *, public_only: bool = False) -> list[sqlite3.Row]:
-        where = " AND public = 1" if public_only else ""
         with self.store.connect() as conn:
             return conn.execute(
-                "SELECT * FROM captures WHERE deleted_at IS NULL" + where + " ORDER BY id DESC"
+                "SELECT * FROM captures WHERE deleted_at IS NULL AND (? = 0 OR public = 1)"
+                " ORDER BY id DESC",
+                (int(public_only),),
             ).fetchall()
 
     def capture(self, capture_id: int, *, public_only: bool = False) -> sqlite3.Row:
