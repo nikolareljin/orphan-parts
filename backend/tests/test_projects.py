@@ -87,6 +87,13 @@ def test_fits_reads_the_kind_off_the_type_not_the_name(settings: Settings) -> No
     assert not fits(["phone"], headphones) and not fits(["tv", "monitor"], stand)
     assert not fits(["mouse"], pad) and fits(["stand"], stand)
     assert fits(["tool"], tool) and fits(["crevice tool"], tool) and not fits(["crevice"], tool)
+    # a kind with a generic head, or in the plural, is still the kind; a charger is not a laptop
+    cleaner = inventory.create(ItemCreate(item_type="upright vacuum cleaner", name="V"))
+    computer = inventory.create(ItemCreate(item_type="laptop computer", name="L"))
+    cables = inventory.create(ItemCreate(item_type="HDMI cables", name="C"))
+    charger = inventory.create(ItemCreate(item_type="laptop charger", name="Ch"))
+    assert fits(["vacuum"], cleaner) and fits(["laptop"], computer) and fits(["cable"], cables)
+    assert not fits(["laptop"], charger)
 
 
 @pytest.fixture

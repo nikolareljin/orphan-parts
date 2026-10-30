@@ -10,7 +10,7 @@ requirements:
   - key: source
     label: A device that plays music (an old phone, a tablet, a laptop, a streamer)
     kind: item
-    item_types: [phone, tablet, laptop, streamer, player]
+    item_types: [phone, smartphone, tablet, laptop, streamer, player]
     blocking: true
   - key: output
     label: A speaker or an amplifier with speakers

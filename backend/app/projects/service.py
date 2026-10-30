@@ -104,16 +104,37 @@ def _words(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+", text.lower())
 
 
+# A word a kind may end in without being another thing: "vacuum cleaner" is a vacuum, "laptop
+# computer" a laptop, "speaker system" speakers. A "tv stand" or a "laptop charger" is not.
+GENERIC_HEADS = frozenset(
+    {"cleaner", "computer", "device", "unit", "set", "system", "machine", "player", "kit", "pc"}
+)
+
+
+def _singular(word: str) -> str:
+    if word.endswith("ies") and len(word) > 4:
+        return word[:-3] + "y"
+    if word.endswith("es") and word[:-2].endswith(("s", "x", "ch", "sh")):
+        return word[:-2]
+    if word.endswith("s") and not word.endswith("ss") and len(word) > 3:
+        return word[:-1]
+    return word
+
+
 def fits(requirement_types: list[str], item: Item) -> bool:
     """Whether an item can fill a requirement: its type ends in one of the kinds asked for, as
-    whole words ("hdmi cable" is a cable, "crevice tool" a tool or a crevice tool; "headphones"
-    are not a phone, a "tv stand" is not a tv). The name is the owner's label and does not
-    count; a toaster called "old laptop" is a toaster."""
+    whole words, one or many ("hdmi cables" are a cable, "crevice tool" a tool or a crevice
+    tool), or in the kind followed by a generic head ("vacuum cleaner", "laptop computer").
+    "Headphones" are not a phone, a "tv stand" is not a tv, a "laptop charger" not a laptop.
+    The name is the owner's label and does not count; a toaster called "old laptop" is a
+    toaster."""
     if not requirement_types:
         return True
-    kind = _words(item.item_type)
+    kind = [_singular(w) for w in _words(item.item_type)]
+    if kind and kind[-1] in GENERIC_HEADS and len(kind) > 1:
+        kind = kind[:-1]
     for wanted in requirement_types:
-        words = _words(wanted)
+        words = [_singular(w) for w in _words(wanted)]
         if words and kind[-len(words) :] == words:
             return True
     return False
@@ -368,7 +389,8 @@ class Planner:
         from anywhere but done."""
         status = str(self.inventory.project(project_id)["status"])
         if status not in allowed:
-            raise ProjectsError(f"a {status} project cannot be changed this way")
+            article = "an" if status[0] in "aeiou" else "a"
+            raise ProjectsError(f"{article} {status} project cannot be changed this way")
 
     def _select(self, project_id: int, *, take: bool) -> Project:
         self.expect_status(project_id, "proposed", "shortlisted", "selected")
@@ -389,10 +411,15 @@ class Planner:
         for c in conflicts:
             # a build under way keeps its items: every blocking requirement passed before it
             # started, and taking one would leave it in a state it cannot be in
-            if str(self.inventory.project(c.project_id)["status"]) == "building":
+            other_status = str(self.inventory.project(c.project_id)["status"])
+            if other_status == "building":
                 raise ProjectsError(
                     f"{c.item_name} is being built into {c.project_title!r};"
                     " finish or abandon that first"
+                )
+            if other_status == "done":
+                raise ProjectsError(
+                    f"{c.item_name} is part of {c.project_title!r}, which is done; it stays there"
                 )
         for c in conflicts:
             self.inventory.release_allocation(c.project_id, c.item_id)
