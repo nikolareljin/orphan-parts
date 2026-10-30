@@ -54,9 +54,10 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
 
 1. **Install the app** on an Android 8.0 or newer phone. Over a USB cable, one command on the
    computer from a clone: `scripts/phone-install.sh` (`scripts\phone-install.ps1` on
-   Windows), with **Developer options** and **USB debugging** turned on. Or, with no computer, the APK from
-   the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) opened on
-   the phone, with installing from the browser allowed (**Allow from this source**).
+   Windows), with **Developer options** and **USB debugging** turned on. Or, with no
+   computer, the APK from the
+   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) opened on the
+   phone, with installing from the browser allowed (**Allow from this source**).
 2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`, when it is
    deployed; or `./dev up` and http://localhost:5173 on your own computer. To pair a phone
    with a local server, open the site at the computer's network address, not `localhost`.
