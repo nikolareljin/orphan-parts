@@ -98,9 +98,9 @@ laptop: `bash scripts/scan-image.sh <image>...`.
     sys.stdout.write(b.getvalue().decode())" > docs/assets/apk-qr.svg
     ```
 
-    Alongside it, `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host
-    when the repository variable `DEPLOY_ENABLED` is `true` and the secrets `DEPLOY_HOST`
-    (`user@host`), `DEPLOY_PATH` and `DEPLOY_SSH_KEY` are set. See
+    Alongside it, `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against
+    the host when the repository variable `DEPLOY_ENABLED` is `true` and the secrets
+    `DEPLOY_HOST` (`user@host`), `DEPLOY_PATH` and `DEPLOY_SSH_KEY` are set. See
     [Deployment](../operations/deployment.md).
 
 The jobs use only `actions/checkout`, the job token, Docker, `gh` and `ssh`; no other actions,
