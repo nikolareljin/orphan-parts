@@ -21,6 +21,7 @@ import {
   stepDone,
   todayIso,
 } from '../lib/projects'
+import Modal from './Modal'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -101,7 +102,11 @@ export default function Build() {
           </tbody>
         </table>
       )}
-      {openId !== null && <ProjectPanel key={openId} id={openId} onChanged={load} onClosed={() => setOpenId(null)} />}
+      {openId !== null && (
+        <Modal title={`Project #${openId}`} onClose={() => setOpenId(null)}>
+          <ProjectPanel key={openId} id={openId} onChanged={load} onClosed={() => setOpenId(null)} />
+        </Modal>
+      )}
     </div>
   )
 }

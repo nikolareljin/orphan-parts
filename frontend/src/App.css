@@ -1,17 +1,189 @@
 .shell {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 2rem 1rem 4rem;
+  padding: 1rem 1rem 3rem;
+}
+
+/* the top bar: the mark, the name, the pages as tabs */
+header.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: 0.25rem 0 0.75rem;
+  margin: 0 0 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand img {
+  width: 28px;
+  height: 28px;
 }
 
 header h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.75rem;
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
 }
 
 .tagline {
-  margin: 0 0 1.5rem;
+  margin: 0.1rem 0 0;
   color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* the service strip: quiet, at the end, one line per fact */
+footer.service {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+footer.service .error {
+  color: var(--error);
+}
+
+/* dialogs: the panel that opens from a list */
+dialog.modal {
+  width: min(900px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+dialog.modal::backdrop {
+  background: rgba(10, 14, 20, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.modal-frame {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 2rem);
+}
+
+.modal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-title {
+  font-size: 0.85rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.modal-close {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.modal-body {
+  overflow: auto;
+  padding: 0.25rem 1.25rem 1.25rem;
+}
+
+.modal-body > article,
+.modal-body > .item {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0.75rem;
+}
+
+body.has-dialog {
+  overflow: hidden;
+}
+
+/* one scale of buttons: filled for the action, outlined for the rest, a link for the small ones */
+button:not(.link):not(.modal-close):not(.nav button) {
+  font: inherit;
+  border-radius: 8px;
+  padding: 0.5rem 0.95rem;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+button:not(.link):not(.modal-close):not(.nav button):disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+form button[type='button']:not(.link):not(.modal-close),
+.actions button:not(:first-child):not(.link),
+.row button[type='button']:not(.link):not(:first-of-type) {
+  background: var(--card);
+  color: var(--accent);
+}
+
+/* tables: a quiet head that stays, zebra rows, a hover */
+table.evidence,
+table.items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+table.evidence thead th,
+table.items thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+table.evidence tbody tr:nth-child(even),
+table.items tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+table.evidence tbody tr:hover,
+table.items tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.card .table-wrap {
+  overflow-x: auto;
 }
 
 .card {
@@ -251,24 +423,30 @@ table.evidence tbody th {
 /* pages */
 .nav {
   display: flex;
-  gap: 0.5rem;
-  margin: 0 0 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
 }
 
 .nav button {
-  background: var(--card);
-  color: var(--fg);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.35rem 0.9rem;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.45rem 0.7rem;
   font: inherit;
+  font-weight: 500;
   cursor: pointer;
 }
 
+.nav button:hover {
+  color: var(--fg);
+}
+
 .nav button[aria-current='page'] {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .visually-hidden {
@@ -796,4 +974,46 @@ button.link {
   .inbox .thumbs {
     flex-direction: row;
   }
+  .shell {
+    padding: 0.75rem 1rem 2rem;
+  }
+  header.top {
+    align-items: flex-start;
+  }
+  .nav {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .nav button {
+    white-space: nowrap;
+  }
+  .card {
+    padding: 0.85rem 1rem;
+  }
+  dialog.modal {
+    width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+  }
+  table.evidence,
+  table.items {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* rows of controls on the pages: things sit side by side with room between them */
+.build .row,
+.find .row,
+.inbox .row,
+.modal-body .row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+}
+
+.build .row h3,
+.find .row h3 {
+  margin: 0;
 }

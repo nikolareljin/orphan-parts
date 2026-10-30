@@ -4,6 +4,7 @@ import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Listing from './Listing'
+import Modal from './Modal'
 import Measure from './Measure'
 import Value from './Value'
 
@@ -73,8 +74,8 @@ export default function Inventory({ refresh, openId: wanted = null }: { refresh:
                 <td>{availabilityLabel(s.availability)}</td>
                 <td>{whenText(s.updated_at)}</td>
                 <td>
-                  <button type="button" className="link" onClick={() => setOpenId(s.id === openId ? null : s.id)}>
-                    {s.id === openId ? 'Close' : 'Open'}
+                  <button type="button" className="link" onClick={() => setOpenId(s.id)}>
+                    Open
                   </button>
                 </td>
               </tr>
@@ -83,15 +84,17 @@ export default function Inventory({ refresh, openId: wanted = null }: { refresh:
         </table>
       )}
       {openId !== null && (
-        <ItemPanel
-          key={openId}
-          id={openId}
-          onChanged={() => void load()}
-          onClosed={() => {
-            setOpenId(null)
-            void load()
-          }}
-        />
+        <Modal title={`Item #${openId}`} onClose={() => setOpenId(null)}>
+          <ItemPanel
+            key={openId}
+            id={openId}
+            onChanged={() => void load()}
+            onClosed={() => {
+              setOpenId(null)
+              void load()
+            }}
+          />
+        </Modal>
       )}
     </section>
   )

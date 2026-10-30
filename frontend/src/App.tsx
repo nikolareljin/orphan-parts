@@ -6,14 +6,14 @@ import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
 import { ACCESS_REQUIRED_EVENT, api, type Readiness, type Version } from './lib/api'
 import { demoText } from './lib/access'
+import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
 
 type Status = { kind: 'loading' } | { kind: 'ok'; ready: Readiness; version: Version } | { kind: 'error'; message: string }
-type View = 'read' | 'inbox' | 'inventory' | 'find' | 'build'
 
 export default function App() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
-  const [view, setView] = useState<View>('read')
+  const [view, setViewState] = useState<View>(() => viewFromHash(window.location.hash))
   const [saved, setSaved] = useState(0)
   const [openItem, setOpenItem] = useState<number | null>(null)
   const [granted, setGranted] = useState<boolean | null>(null)
@@ -35,6 +35,22 @@ export default function App() {
     }
   }, [reloads])
 
+  // the page is the URL hash: reload and back land where the person was
+  function setView(next: View) {
+    setViewState(next)
+    const wanted = hashFor(next)
+    if (window.location.hash !== wanted) window.history.pushState(null, '', wanted || window.location.pathname)
+  }
+  useEffect(() => {
+    const changed = () => setViewState(viewFromHash(window.location.hash))
+    window.addEventListener('hashchange', changed)
+    window.addEventListener('popstate', changed)
+    return () => {
+      window.removeEventListener('hashchange', changed)
+      window.removeEventListener('popstate', changed)
+    }
+  }, [])
+
   // a session that ended mid-visit: any 401 brings the code form back
   useEffect(() => {
     const lost = () => setGranted(false)
@@ -46,31 +62,22 @@ export default function App() {
 
   return (
     <main className="shell">
-      <header>
-        <h1>Orphan Parts Lens</h1>
-        <p className="tagline">Show it, ask it, sell it, or find the one that fits.</p>
+      <header className="top">
+        <div className="brand">
+          <img src="/favicon.svg" alt="" width="28" height="28" />
+          <div>
+            <h1>Orphan Parts Lens</h1>
+            <p className="tagline">Show it, ask it, sell it, or find the one that fits.</p>
+          </div>
+        </div>
         {open && (
-        <nav className="nav" aria-label="Pages">
-          <button type="button" aria-current={view === 'read' ? 'page' : undefined} onClick={() => setView('read')}>
-            Read a label
-          </button>
-          <button type="button" aria-current={view === 'inbox' ? 'page' : undefined} onClick={() => setView('inbox')}>
-            Inbox
-          </button>
-          <button
-            type="button"
-            aria-current={view === 'inventory' ? 'page' : undefined}
-            onClick={() => setView('inventory')}
-          >
-            My inventory
-          </button>
-          <button type="button" aria-current={view === 'find' ? 'page' : undefined} onClick={() => setView('find')}>
-            Find a part
-          </button>
-          <button type="button" aria-current={view === 'build' ? 'page' : undefined} onClick={() => setView('build')}>
-            Build and reuse
-          </button>
-        </nav>
+          <nav className="nav" aria-label="Pages">
+            {VIEWS.map((v) => (
+              <button key={v.id} type="button" aria-current={view === v.id ? 'page' : undefined} onClick={() => setView(v.id)}>
+                {v.label}
+              </button>
+            ))}
+          </nav>
         )}
       </header>
 
@@ -123,38 +130,28 @@ export default function App() {
         </section>
       )}
 
-      <section className="card">
-        <h2>Service</h2>
-        {status.kind === 'loading' && <p>Checking the API…</p>}
+      <footer className="service" role="contentinfo" aria-label="Service">
+        {status.kind === 'loading' && <span>Checking the API…</span>}
         {status.kind === 'error' && (
-          <p className="error">
+          <span className="error">
             API not reachable: {status.message}. Start it with <code>./dev up</code>.
-          </p>
+          </span>
         )}
         {status.kind === 'ok' && (
-          <dl>
-            <dt>Version</dt>
-            <dd>{status.version.version}</dd>
-            <dt>Model API</dt>
-            <dd>
+          <>
+            <span>Orphan Parts Lens {status.version.version}</span>
+            <span>
               {status.ready.model_api === 'fixture'
-                ? 'fixture mode (no key, recorded responses)'
-                : `${status.ready.model_api}, spent $${status.ready.spend_usd.toFixed(2)} of $${status.ready.spend_cap_usd.toFixed(2)}`}
+                ? 'fixture mode (nothing spent)'
+                : `${status.ready.model_api} mode, spent $${status.ready.spend_usd.toFixed(2)} of $${status.ready.spend_cap_usd.toFixed(2)}`}
               {status.ready.paused ? ' (paused: spend cap reached)' : ''}
-            </dd>
-            <dt>Models</dt>
-            <dd>{Object.values(status.version.models).join(', ')}</dd>
-            <dt>Storage</dt>
-            <dd>{status.ready.data_dir_writable ? 'writable' : 'read-only'}</dd>
-            {demoText(status.ready) && (
-              <>
-                <dt>Demo</dt>
-                <dd>{demoText(status.ready)}</dd>
-              </>
-            )}
-          </dl>
+            </span>
+            <span>{Object.values(status.version.models).join(', ')}</span>
+            <span>{status.ready.data_dir_writable ? 'storage writable' : 'storage read-only'}</span>
+            {demoText(status.ready) && <span>{demoText(status.ready)}</span>}
+          </>
         )}
-      </section>
+      </footer>
     </main>
   )
 }
