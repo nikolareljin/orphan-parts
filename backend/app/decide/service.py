@@ -251,7 +251,9 @@ class Decider:
     def committed_to(self, item_id: int) -> list[str]:
         """The titles of the selected, building or done projects that count on the item: a
         sale or a gift breaks that build, so the view says it before the choice."""
-        return [str(r["title"]) for r in self.inventory.committed_elsewhere(item_id, 0)]
+        # an item can fill more than one requirement of a project: each title once, in order
+        titles = (str(r["title"]) for r in self.inventory.committed_elsewhere(item_id, 0))
+        return list(dict.fromkeys(titles))
 
     def decision(self, item_id: int) -> Decision:
         item = self.inventory.get(item_id)
@@ -271,7 +273,11 @@ class Decider:
 
     def decide(self, item_id: int, spec: DecisionCreate) -> Item:
         item = self.inventory.decide(
-            item_id, INTENT_FOR[spec.choice], decided_line(spec), said=bool(spec.note)
+            item_id,
+            INTENT_FOR[spec.choice],
+            decided_line(spec),
+            said=bool(spec.note),
+            version=spec.version,
         )
         log.info("decided", extra={"item_id": item_id, "choice": spec.choice})
         return item

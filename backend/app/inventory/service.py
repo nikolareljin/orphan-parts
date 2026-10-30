@@ -465,15 +465,22 @@ class Inventory:
                 self._USES_SELECT + " WHERE u.item_id = ? ORDER BY u.id", (item_id,)
             ).fetchall()
 
-    def decide(self, item_id: int, intent: str, change: str, *, said: bool) -> Item:
+    def decide(
+        self, item_id: int, intent: str, change: str, *, said: bool, version: int | None = None
+    ) -> Item:
         """The owner's decision: the intent it implies is set and the decision itself is the
         event line, so the history keeps the why. The version is bumped only when the item
         changes: a new intent, or a note (``said``) that gives the item a new why. The same
         choice again, with nothing said, is an event and nothing more; the guidance and the
-        uses written before it stay current."""
+        uses written before it stay current. With ``version`` set, a choice made from an older
+        version of the item is refused and nothing is written."""
         at = now()
         with self.store.connect() as conn:
             row = self._row(conn, item_id)
+            if version is not None and version != int(row["version"]):
+                raise VersionConflictError(
+                    f"item {item_id} is at version {row['version']}, not {version}"
+                )
             version = int(row["version"])
             if intent != str(row["intent"]) or said:
                 version += 1

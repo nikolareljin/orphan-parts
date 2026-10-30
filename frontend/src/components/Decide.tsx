@@ -23,13 +23,18 @@ export default function Decide({
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [refusal, setRefusal] = useState('')
+  // bumped after a decision: the same choice again leaves the version as it was, yet the last
+  // decision and its date change
+  const [decided, setDecided] = useState(0)
 
   useEffect(() => {
     let cancelled = false
     api.decide
       .view(item.id)
       .then((d) => {
-        if (!cancelled) setView(d)
+        if (cancelled) return
+        setView(d)
+        setError('')
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(message(err))
@@ -38,7 +43,7 @@ export default function Decide({
       cancelled = true
     }
     // the item's version too: a decision, an edit or an accepted value changes the rows
-  }, [item.id, item.version])
+  }, [item.id, item.version, decided])
 
   // The price call takes the currency and the place from the owner, on the Value panel's own
   // form; this row sends them there rather than ask with a currency it made up.
@@ -71,6 +76,7 @@ export default function Decide({
     try {
       await onDecide(choice, note)
       setNote('')
+      setDecided((n) => n + 1)
       if (choice === 'sell' || choice === 'give') {
         document.querySelector('section.listing')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }

@@ -403,7 +403,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
       )}
 
-      <Decide item={item} onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note))} />
+      <Decide item={item} onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))} />
 
       <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
 

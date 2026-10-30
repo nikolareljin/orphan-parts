@@ -35,5 +35,6 @@ def decide(item_id: int, spec: DecisionCreate, decider: DeciderDep) -> Item:
     """The owner's choice: `keep_build` sets the intent to build, `sell` and `give` to the
     same, `not_worth` keeps the item with the note. The history gets
     `decided: <choice>: <note>`; the version is bumped when the intent changes or a note is
-    given, not for the same choice said again."""
+    given, not for the same choice said again. With `version` set, a choice made from an older
+    version of the item is refused with 409 and nothing is written."""
     return decider.decide(item_id, spec)

@@ -978,8 +978,9 @@ export const api = {
   decide: {
     view: (itemId: number) => getJson<Decision>(`/api/items/${itemId}/decide`),
     uses: (itemId: number) => sendJson<Uses>('POST', `/api/items/${itemId}/uses`),
-    choose: (itemId: number, choice: DecisionChoice, note: string) =>
-      sendJson<Item>('POST', `/api/items/${itemId}/decision`, { choice, note }),
+    // made from the item version the panel showed: a stale choice is refused with 409
+    choose: (itemId: number, choice: DecisionChoice, note: string, version?: number) =>
+      sendJson<Item>('POST', `/api/items/${itemId}/decision`, { choice, note, version }),
   },
   pair: {
     // the phone talks to the API's own origin when the web app is served elsewhere

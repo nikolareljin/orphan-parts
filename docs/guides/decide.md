@@ -39,7 +39,9 @@ mode set; see [Seller flow](seller.md). The panel shows the last decision with i
 The decision is yours even when a selected, building or done project counts on the item: the
 panel names the project above the buttons and does not stop you. A refused decision (the demo
 visitor, an item changed meanwhile, no connection) is said under the buttons and the note stays
-as typed; nothing scrolls, because nothing was decided.
+as typed; nothing scrolls, because nothing was decided. The choice carries the item version the
+panel showed: if the item changed in another tab since, the choice is refused, the item is
+reloaded, and you choose again from what it is now.
 
 Everything on the panel is behind the access code: the demo visitor sees none of it.
 

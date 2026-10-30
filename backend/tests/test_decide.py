@@ -248,6 +248,32 @@ def test_the_same_choice_again_is_an_event_and_not_a_new_version(
     ]
 
 
+def test_a_choice_made_from_an_older_version_is_refused_and_nothing_is_written(
+    recorded_client: TestClient,
+) -> None:
+    item = recorded_client.post("/api/items", json={"item_type": "laptop"}).json()
+    item_id, version = item["id"], item["version"]
+    # another tab decides first: the item moves on
+    given = recorded_client.post(
+        f"/api/items/{item_id}/decision", json={"choice": "give", "version": version}
+    )
+    assert given.status_code == 200 and given.json()["version"] == version + 1
+    events = recorded_client.get(f"/api/items/{item_id}/events").json()
+    # the stale tab's choice is refused
+    stale = recorded_client.post(
+        f"/api/items/{item_id}/decision", json={"choice": "keep_build", "version": version}
+    )
+    assert stale.status_code == 409
+    after = recorded_client.get(f"/api/items/{item_id}").json()
+    assert after["intent"] == "give" and after["version"] == version + 1
+    assert recorded_client.get(f"/api/items/{item_id}/events").json() == events
+    # made from the current version, it goes through
+    kept = recorded_client.post(
+        f"/api/items/{item_id}/decision", json={"choice": "keep_build", "version": version + 1}
+    )
+    assert kept.status_code == 200 and kept.json()["intent"] == "build"
+
+
 def test_the_view_names_the_selected_project_that_counts_on_the_item(
     recorded_client: TestClient,
 ) -> None:
@@ -262,6 +288,11 @@ def test_the_view_names_the_selected_project_that_counts_on_the_item(
     assert recorded_client.get(f"/api/items/{laptop_id}/decide").json()["committed_to"] == []
     selected = recorded_client.post(f"/api/projects/{desk['id']}/select", json={})
     assert selected.status_code == 200, selected.text
+    view = recorded_client.get(f"/api/items/{laptop_id}/decide").json()
+    assert view["committed_to"] == [desk["title"]]
+    # the same project counting on the item twice is named once
+    inventory: Inventory = recorded_client.app.state.inventory  # type: ignore[attr-defined]
+    inventory.add_allocation(desk["id"], laptop_id, "spare", "a second slot", True)
     view = recorded_client.get(f"/api/items/{laptop_id}/decide").json()
     assert view["committed_to"] == [desk["title"]]
     assert view["item"]["availability"] == "reserved"

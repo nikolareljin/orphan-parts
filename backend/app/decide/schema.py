@@ -109,6 +109,9 @@ class Decision(BaseModel):
 class DecisionCreate(BaseModel):
     choice: Choice
     note: str = Field(default="", max_length=NOTE_MAX)
+    version: int | None = Field(
+        default=None, description="the item version the choice was made from; stale is a 409"
+    )
 
     @field_validator("note")
     @classmethod
