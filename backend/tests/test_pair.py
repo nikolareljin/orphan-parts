@@ -70,7 +70,8 @@ def test_pair_routes_need_a_session_when_gated(settings: Settings, tmp_path: Pat
         assert c.get("/api/pair", params={"origin": "host"}).status_code == 422
         assert c.get("/api/pair").status_code == 422
     with TestClient(create_app(gated(tmp_path))) as c:
-        assert c.get("/api/pair", params={"origin": "http://host:5173"}).status_code == 401
+        # the demo visitor cannot pair a phone
+        assert c.get("/api/pair", params={"origin": "http://host:5173"}).status_code == 403
         c.post("/api/access", json={"code": CODE})
         found = c.get("/api/pair", params={"origin": "http://host:5173"}).json()
         assert found["gated"] is True and found["token"]

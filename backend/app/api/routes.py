@@ -19,6 +19,9 @@ class Demo(BaseModel):
     """The gate as it stands: whether a code is needed, what is left today, what is paused."""
 
     gated: bool
+    live_models: bool = Field(
+        default=False, description="whether the code's door reaches the live models at all"
+    )
     paused: bool = Field(description="the operator's switch; the spend cap is reported apart")
     daily_used: int
     daily_cap: int
@@ -54,18 +57,27 @@ def healthz() -> Health:
     return Health(status="ok")
 
 
+def _model_api_label(request: Request, settings: SettingsDep, gate: GateDep) -> str:
+    """What answers: the mode, and behind a gate with a key, which door gets the key."""
+    label = str(getattr(request.app.state, "model_api_label", settings.model_api_mode))
+    if gate.enabled and gate.live_models:
+        return f"{label} for the code, recorded otherwise"
+    return label
+
+
 @router.get("/readyz", response_model=Readiness, tags=["ops"])
 def readyz(request: Request, settings: SettingsDep, ledger: LedgerDep, gate: GateDep) -> Readiness:
     writable = _writable(settings)
     return Readiness(
         status="ok" if writable else "degraded",
-        model_api=getattr(request.app.state, "model_api_label", settings.model_api_mode),
+        model_api=_model_api_label(request, settings, gate),
         data_dir_writable=writable,
         spend_usd=ledger.total_usd,
         spend_cap_usd=ledger.cap_usd,
         paused=ledger.paused,
         demo=Demo(
             gated=gate.enabled,
+            live_models=gate.live_models,
             paused=gate.paused,
             daily_used=gate.daily.used,
             daily_cap=gate.daily.limit,

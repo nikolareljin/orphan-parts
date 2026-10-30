@@ -10,6 +10,7 @@ export interface Readiness {
   paused: boolean
   demo: {
     gated: boolean
+    live_models: boolean
     paused: boolean
     daily_used: number
     daily_cap: number
@@ -652,17 +653,20 @@ export interface Capture {
 export interface Access {
   gated: boolean
   granted: boolean
+  // whether this caller reaches the live models: the code's door and a key on the host
+  live: boolean
   token: string
   expires_at: number
 }
 
-// A 401 means the session is gone: the token kept for it is dropped and the shell is told,
-// so it asks for the code again.
+// A 401 (the token kept for that session is dropped), or a write refused as the demo visitor,
+// means the session is gone: the shell is told, so it shows the way in again.
 export const ACCESS_REQUIRED_EVENT = 'opl-access-required'
-function noteStatus(status: number): void {
-  if (status !== 401) return
-  keepToken('')
-  if (typeof window !== 'undefined') window.dispatchEvent(new Event(ACCESS_REQUIRED_EVENT))
+export const DEMO_PREFIX = 'demo:'
+function noteStatus(status: number, detail = ''): void {
+  if (status === 401) keepToken('')
+  const lost = status === 401 || (status === 403 && detail.startsWith(DEMO_PREFIX))
+  if (lost && typeof window !== 'undefined') window.dispatchEvent(new Event(ACCESS_REQUIRED_EVENT))
 }
 
 export class ApiError extends Error {
@@ -711,8 +715,9 @@ function authHeaders(): Record<string, string> {
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(apiUrl(path), { headers: { Accept: 'application/json', ...authHeaders() }, credentials: 'include' })
   if (!res.ok) {
-    noteStatus(res.status)
-    throw new ApiError(res.status, `${path}: HTTP ${res.status}`)
+    const detail = await detailOf(res, path)
+    noteStatus(res.status, detail)
+    throw new ApiError(res.status, detail)
   }
   return (await res.json()) as T
 }
@@ -745,8 +750,9 @@ async function postForm<T>(path: string, parts: FormPart[]): Promise<T> {
   }
   const res = await fetch(apiUrl(path), { method: 'POST', body: form, headers: { Accept: 'application/json', ...authHeaders() }, credentials: 'include' })
   if (!res.ok) {
-    noteStatus(res.status)
-    throw new ApiError(res.status, await detailOf(res, path))
+    const detail = await detailOf(res, path)
+    noteStatus(res.status, detail)
+    throw new ApiError(res.status, detail)
   }
   return (await res.json()) as T
 }
@@ -756,9 +762,10 @@ async function sendJson<T>(method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: st
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   const res = await fetch(apiUrl(path), { method, headers, body: body === undefined ? undefined : JSON.stringify(body), credentials: 'include' })
   if (!res.ok) {
-    noteStatus(res.status)
     const answer = res.clone()
-    throw new ApiError(res.status, await detailOf(res, path), await answer.json().catch(() => undefined))
+    const detail = await detailOf(res, path)
+    noteStatus(res.status, detail)
+    throw new ApiError(res.status, detail, await answer.json().catch(() => undefined))
   }
   if (res.status === 204) return undefined as T
   return (await res.json()) as T

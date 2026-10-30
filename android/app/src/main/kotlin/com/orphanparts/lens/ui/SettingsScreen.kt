@@ -51,7 +51,7 @@ suspend fun check(baseUrl: String, code: String, token: String = ""): String = w
         } catch (e: Exception) {
             "$line The pairing could not be checked: ${describe(e)}"
         }
-        code.isBlank() -> "$line Type the code to send anything."
+        code.isBlank() -> "$line Without the code this phone is the demo visitor: nothing it sends is kept."
         else -> try {
             if (client.access(code)) "$line The code opens it." else "$line The code is refused."
         } catch (e: ApiException) {
@@ -124,7 +124,7 @@ fun SettingsScreen(settings: Settings, session: Session, onSaved: (Settings) -> 
             OutlinedTextField(
                 value = code,
                 onValueChange = { code = it },
-                label = { Text("Access code (when the demo is gated)") },
+                label = { Text("Access code (the live door; without it a gated backend is a demo)") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 colors = fieldColors(),

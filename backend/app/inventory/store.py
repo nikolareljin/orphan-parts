@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -187,6 +187,18 @@ CREATE TABLE captures (
 );
 """
 
+# version 9: access codes as records: the hash, a label, when it was issued, expires, was revoked
+_SCHEMA_V9 = """
+CREATE TABLE access_keys (
+    id INTEGER PRIMARY KEY,
+    hash TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT,
+    revoked_at TEXT
+);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -196,6 +208,7 @@ MIGRATIONS: dict[int, str] = {
     6: _SCHEMA_V6,
     7: _SCHEMA_V7,
     8: _SCHEMA_V8,
+    9: _SCHEMA_V9,
 }
 
 

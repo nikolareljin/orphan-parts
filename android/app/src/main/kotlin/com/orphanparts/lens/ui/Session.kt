@@ -13,6 +13,10 @@ import kotlinx.coroutines.withContext
 class Session(val client: Client, private val accessCode: String, private val pairedToken: String = "") {
     private var opened = false
 
+    /** Whether this phone has a way through the code's door: a code typed, or a pairing. Without
+     * one a gated backend treats it as the demo visitor and keeps nothing it sends. */
+    val hasDoor: Boolean get() = accessCode.isNotBlank() || pairedToken.isNotBlank()
+
     suspend fun <T> call(block: (Client) -> T): T = withContext(Dispatchers.IO) {
         if (!opened) open()
         try {

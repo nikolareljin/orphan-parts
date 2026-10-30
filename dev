@@ -36,6 +36,9 @@
 #                      environment, the same steps the deploy workflow runs
 #   android <build|test|release|install|smoke>
 #                      the app: unit tests, the APKs, an install, a smoke run on a device
+#   keys issue --label <who> [--days N] | keys list | keys revoke <label>
+#                      access codes as records beside DEMO_ACCESS_CODE: issue one (shown once),
+#                      list them, end one; the backend picks them up without a restart
 #   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
 #                      answers, nothing spent); --keep adds to what is there
 #   record-fixtures [--keep]
@@ -381,6 +384,13 @@ cmd_demo() {
   log_ok "demo set loaded"
 }
 
+cmd_keys() {
+  [[ $# -ge 1 ]] || die "usage: ./dev keys issue --label <who> [--days N] | list | revoke <label>"
+  docker_running || die "docker is not running"
+  # the running backend reads the same file; a new code works at once, a revoked one stops
+  compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys "$@"
+}
+
 cmd_record_fixtures() {
   local reset="--reset"
   [[ "${1:-}" == "--keep" ]] && reset=""
@@ -426,6 +436,7 @@ case "$cmd" in
   android) cmd_android "$@" ;;
   phone) cmd_phone "$@" ;;
   demo) cmd_demo "$@" ;;
+  keys) cmd_keys "$@" ;;
   record-fixtures) cmd_record_fixtures "$@" ;;
   demo-scrub) cmd_demo_scrub "$@" ;;
   shell) cmd_shell "$@" ;;

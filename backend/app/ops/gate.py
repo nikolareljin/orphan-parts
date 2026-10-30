@@ -1,6 +1,9 @@
-"""The demo gate: an access code exchanged for a signed session, allowances on what costs
-money, a limit on everything else, and a switch the operator throws. One process keeps the
-counts; the spend ledger on disk is the floor under all of it."""
+"""The demo gate: two doors on one deployment. The access code (the configured master code or
+a code issued as a record) opens a signed session: the live door, the full inventory and the
+live models when a key is configured. Without one a visitor is the demo: the stateless tries
+on recorded answers and what is public, every write refused with one line. Allowances on what
+costs money, a limit on everything else, and a switch the operator throws. One process keeps
+the counts; the spend ledger on disk is the floor under all of it."""
 
 import hashlib
 import hmac
@@ -19,6 +22,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
 from app.config import Settings
+from app.keys import AccessKeys
+from app.ops.door import live_request
 
 log = logging.getLogger("app.gate")
 
@@ -38,7 +43,22 @@ EXPENSIVE = [
     ("POST", re.compile(r"^/api/projects/propose$")),
     ("POST", re.compile(r"^/api/captures/\d+/process$")),
 ]
-_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[0-9a-f]{32}$")
+# What the demo visitor may do without the code: look, and try the stateless readings on
+# recorded answers. Everything that saves, drafts, prices, plans or captures needs the code.
+DEMO_ALLOWED = [
+    ("GET", re.compile(r"^/api/profiles(/[A-Za-z0-9_-]+/(features|rules))?$")),
+    ("GET", re.compile(r"^/api/templates$")),
+    ("POST", re.compile(r"^/api/extract$")),
+    ("POST", re.compile(r"^/api/segment$")),
+    ("POST", re.compile(r"^/api/assess$")),
+    ("POST", re.compile(r"^/api/measure$")),
+]
+DEMO_LINE = "demo: the code unlocks saving, drafts, prices, projects and captures"
+_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[01]\.[0-9a-f]{32}$")
+
+
+def demo_allowed(method: str, path: str) -> bool:
+    return any(m == method and p.match(path) for m, p in DEMO_ALLOWED)
 
 
 def expensive(method: str, path: str) -> bool:
@@ -112,10 +132,24 @@ class DailyAllowance:
             return self._used
 
 
+class Session:
+    """Who a current token stands for: its id, and whether it opens the live door."""
+
+    __slots__ = ("live", "sid")
+
+    def __init__(self, sid: str, live: bool) -> None:
+        self.sid = sid
+        self.live = live
+
+
 class Gate:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, keys: AccessKeys | None = None) -> None:
         code = settings.demo_access_code.get_secret_value() if settings.demo_access_code else ""
         self.enabled = bool(code)
+        # the codes issued as records, beside the master code; set once the inventory is open
+        self.keys = keys
+        # whether a key is configured, so the live door reaches the live models at all
+        self.live_models = settings.model_api_mode != "fixture"
         # the code is the only secret there is: the session key is derived from it, so a
         # changed code ends every session
         self._code_digest = hashlib.sha256(code.encode("utf-8")).digest()
@@ -131,30 +165,43 @@ class Gate:
 
     # --- the code and the session ------------------------------------------
 
-    def code_matches(self, given: str) -> bool:
+    def which_code(self, given: str) -> str | None:
+        """The name of the code this is: ``master`` for the configured one, the record's label
+        for an issued one, None for anything else. The master is checked first and the
+        records always, so a miss takes as long as a hit."""
         digest = hashlib.sha256(given.encode("utf-8")).digest()
-        return self.enabled and hmac.compare_digest(digest, self._code_digest)
+        master = self.enabled and hmac.compare_digest(digest, self._code_digest)
+        record = self.keys.match(given) if self.enabled and self.keys is not None else None
+        if master:
+            return "master"
+        return record.label if record is not None else None
 
-    def _sign(self, sid: str, exp: int) -> str:
-        return hmac.new(self._key, f"{sid}.{exp}".encode(), hashlib.sha256).hexdigest()[:32]
+    def code_matches(self, given: str) -> bool:
+        return self.which_code(given) is not None
 
-    def issue(self, now: float | None = None) -> tuple[str, int]:
-        """A session token and when it ends: ``sid.expiry.signature``, nothing stored."""
+    def _sign(self, sid: str, exp: int, live: bool) -> str:
+        text = f"{sid}.{exp}.{int(live)}".encode()
+        return hmac.new(self._key, text, hashlib.sha256).hexdigest()[:32]
+
+    def issue(self, now: float | None = None, *, live: bool = True) -> tuple[str, int]:
+        """A session token and when it ends: ``sid.expiry.door.signature``, nothing stored.
+        The door is ``1`` for a session opened with the code."""
         exp = int((time.time() if now is None else now) + self.session_seconds)
         sid = secrets.token_urlsafe(16)
-        return f"{sid}.{exp}.{self._sign(sid, exp)}", exp
+        return f"{sid}.{exp}.{int(live)}.{self._sign(sid, exp, live)}", exp
 
-    def verify(self, token: str, now: float | None = None) -> str | None:
-        """The session id when the token is ours and current, else None."""
+    def verify(self, token: str, now: float | None = None) -> Session | None:
+        """The session when the token is ours and current, else None."""
         if not self.enabled or not token or not _TOKEN_RE.match(token):
             return None
-        sid, exp_text, sig = token.split(".")
+        sid, exp_text, door, sig = token.split(".")
         exp = int(exp_text)
         if exp <= (time.time() if now is None else now):
             return None
-        if not hmac.compare_digest(sig, self._sign(sid, exp)):
+        live = door == "1"
+        if not hmac.compare_digest(sig, self._sign(sid, exp, live)):
             return None
-        return sid
+        return Session(sid, live)
 
     # --- who is asking ---------------------------------------------------
 
@@ -198,13 +245,21 @@ class GateMiddleware(BaseHTTPMiddleware):
         if not ok:
             log.info("limit: requests per minute", extra={"path": path, "retry_after": retry})
             return _refused(429, f"too many requests; try again in {retry} s", retry)
-        visitor = ip
+        # no gate: a machine of your own, every request is the owner's; with a gate, the
+        # session decides the door, and no session is the demo visitor
+        visitor, live = ip, True
         if gate.enabled:
-            sid = gate.verify(gate.token_of(request))
-            if sid is None:
-                return _refused(401, "access code required")
-            visitor = sid
-        if expensive(method, path):
+            session = gate.verify(gate.token_of(request))
+            if session is None:
+                live = False
+            else:
+                visitor, live = session.sid, session.live
+        if not live and not demo_allowed(method, path):
+            log.info("demo: a write was refused", extra={"path": path})
+            return _refused(403, DEMO_LINE)
+        # the demo visitor's tries are answered from the recordings and cost nothing, so only
+        # the live door is counted against what spends
+        if live and expensive(method, path):
             if gate.paused:
                 log.info("paused: a call that spends was refused", extra={"path": path})
                 return _refused(503, "paused by the operator; nothing is sent to the models")
@@ -219,4 +274,8 @@ class GateMiddleware(BaseHTTPMiddleware):
             if not gate.daily.take():
                 log.info("limit: daily calls", extra={"path": path})
                 return _refused(429, "the demo's daily allowance is used up; back tomorrow (UTC)")
-        return await call_next(request)
+        token = live_request.set(live)
+        try:
+            return await call_next(request)
+        finally:
+            live_request.reset(token)
