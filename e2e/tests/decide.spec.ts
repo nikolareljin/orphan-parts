@@ -44,6 +44,11 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(list).toContainText('Needs: an external monitor')
   await expect(list).toContainText('low effort')
 
+  // a guidance written on the Value panel is read into the worth row at once
+  await panel.getByRole('region', { name: 'What is it worth?' }).getByRole('button', { name: 'Price guidance' }).click()
+  await expect(decide).toContainText(/about \d/)
+  await expect(decide).not.toContainText('Not asked yet.')
+
   // the choice sets the intent and is kept with its note and date
   await decide.getByLabel('Note').fill('worth a listing')
   await decide.getByRole('button', { name: 'Sell', exact: true }).click()

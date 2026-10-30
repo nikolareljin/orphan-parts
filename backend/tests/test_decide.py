@@ -1,18 +1,31 @@
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.decide import DecisionCreate, decided_line, parse_decided, suggested, templates_for
-from app.decide.service import brief, known_fields
+from app.decide import (
+    Decider,
+    DecisionCreate,
+    Use,
+    UsesWriting,
+    decided_line,
+    parse_decided,
+    suggested,
+    templates_for,
+)
+from app.decide.service import NEEDS_MAX, TEXT_MAX, brief, known_fields
 from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.main import create_app
+from app.model_api import ModelApiClient
+from app.model_api.client import ModelResponse, StructuredResponse
 from app.ops.gate import DEMO_LINE, expensive
 from app.projects import Templates
 from app.projects.schema import Preferences
+from app.projects.service import Planner
 from app.value.schema import Strategy
 
 pytestmark = pytest.mark.anyio
@@ -83,6 +96,65 @@ def test_the_decision_line_round_trips() -> None:
     assert parse_decided("decided: not_worth") == ("not_worth", "")
     assert parse_decided("decided: lend: it") is None
     assert parse_decided("changed intent") is None
+
+
+class _Writes:
+    """A client that answers a uses call with what it was given, as the model wrote it."""
+
+    def __init__(self, uses: list[Use]) -> None:
+        self.uses = uses
+
+    async def respond_structured(self, model_cls: type, **_: Any) -> StructuredResponse[Any]:
+        response = ModelResponse.model_construct(
+            model="muse-spark", from_fixture=False, cost_usd=0.01
+        )
+        return StructuredResponse.model_construct(
+            parsed=UsesWriting(uses=self.uses), response=response
+        )
+
+
+class _Owner:
+    def preferences(self) -> Preferences:
+        return Preferences()
+
+
+async def test_the_models_text_is_trimmed_and_capped_before_it_is_kept(
+    settings: Settings,
+) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory)
+    long = "x" * (TEXT_MAX + 50)
+    written = [
+        Use(title="   ", what_it_does="no title", needs=[], effort="low", note=""),
+        Use(
+            title=f"  {long}  ",
+            what_it_does=long,
+            needs=["  a cable  ", "   ", *[f"part {n}" for n in range(NEEDS_MAX + 2)]],
+            effort="high",
+            note=long,
+        ),
+        *[
+            Use(title=f"use {n}", what_it_does="", needs=[], effort="medium", note="")
+            for n in range(4)
+        ],
+    ]
+    decider = Decider(
+        settings,
+        cast(ModelApiClient, _Writes(written)),
+        inventory,
+        Templates(),
+        cast(Planner, _Owner()),
+        cast(Any, None),
+        cast(Any, None),
+    )
+    kept = await decider.uses(item_id)
+    # the untitled one dropped, three kept, each text cut to its bound
+    assert [u.title for u in kept.uses] == ["x" * TEXT_MAX, "use 0", "use 1"]
+    first = kept.uses[0]
+    assert len(first.what_it_does) == TEXT_MAX and len(first.note) == TEXT_MAX
+    assert first.needs[0] == "a cable" and len(first.needs) == NEEDS_MAX
+    assert kept.model == "muse-spark" and kept.from_fixture is False
+    assert decider.latest_uses(item_id) == kept
 
 
 def test_uses_come_from_the_stub_and_are_kept_on_the_item(recorded_client: TestClient) -> None:

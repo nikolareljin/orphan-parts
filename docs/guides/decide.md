@@ -7,12 +7,12 @@ answered and adds one answer of its own. Nothing is decided for you; the last ro
 
 ## Built so far
 
-**Decide**, at the top of the item's page, six rows:
+**Decide**, on the item's page below its values and details and above the other panels, six rows:
 
 | Row | What it shows | Who answers |
 |---|---|---|
 | What it is | the kind of item and how many of its values you have accepted, with a link down to the values | the inventory |
-| What it is worth | the latest price guidance in a line: the typical asking figure (the estimate's when nothing was asked), the strategy to start from, weak evidence and *item changed since* when either applies; **Ask what it is worth**, shown when none was made, takes you to the Value panel's form, where the currency and the place are yours to give | Muse Spark proposes, the rules keep what a page backs; see [Value an item](value.md) |
+| What it is worth | the latest price guidance in a line: the typical asking figure (the estimate's when nothing was asked), the strategy to start from, weak evidence and *item changed since* when either applies; **Ask what it is worth**, shown when none was made, takes you to the Value panel's form, where the currency and the place are yours to give; the row reads the new guidance as soon as the panel writes it | Muse Spark proposes, the rules keep what a page backs; see [Value an item](value.md) |
 | What it is good for | the project templates in the catalog with a requirement this kind of item fills, named with the requirement; then **Ask for ideas** | the templates are the rules, from the item's type against each requirement's kinds; the ideas are the model's proposals and the panel says so |
 | What would complete it | the open searches from this item with their candidate counts, the Marketplace search to run, and a link to [Find a part](search.md) | the inventory |
 | What it could look like | *Picture: coming* | nothing yet |
@@ -43,7 +43,7 @@ as typed; nothing scrolls, because nothing was decided. The choice carries the i
 panel showed: if the item changed in another tab since, the choice is refused, the item is
 reloaded, and you choose again from what it is now.
 
-Everything on the panel is behind the access code: the demo visitor sees none of it.
+Everything on the panel is behind the access code: the demo visitor sees the demo line in its place.
 
 ## Next
 

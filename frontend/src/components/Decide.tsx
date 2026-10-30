@@ -13,9 +13,12 @@ function message(err: unknown): string {
 // uses are the model's proposals and say so; the choice is kept on the item as an event.
 export default function Decide({
   item,
+  guided,
   onDecide,
 }: {
   item: Item
+  // bumped when the Value panel writes a guidance: the worth row reads it again
+  guided: number
   onDecide: (choice: DecisionChoice, note: string) => Promise<void>
 }) {
   const [view, setView] = useState<Decision | null>(null)
@@ -43,7 +46,7 @@ export default function Decide({
       cancelled = true
     }
     // the item's version too: a decision, an edit or an accepted value changes the rows
-  }, [item.id, item.version, decided])
+  }, [item.id, item.version, decided, guided])
 
   // The price call takes the currency and the place from the owner, on the Value panel's own
   // form; this row sends them there rather than ask with a currency it made up.

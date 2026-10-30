@@ -121,6 +121,8 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
   const [details, setDetails] = useState({ condition: '', faults: '', tests_done: '', accessories: '', location: '', notes: '' })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [profiles, setProfiles] = useState<ProfileSummary[]>([])
+  // a guidance written on the Value panel: the Decide panel's worth row reads it again
+  const [guided, setGuided] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -403,13 +405,17 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
       )}
 
-      <Decide item={item} onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))} />
+      <Decide
+        item={item}
+        guided={guided}
+        onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
+      />
 
       <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
 
       <Assess item={item} />
 
-      <Value item={item} />
+      <Value item={item} onGuided={() => setGuided((n) => n + 1)} />
 
       <Listing item={item} onChanged={() => attempt(() => api.items.get(item.id))} />
 
