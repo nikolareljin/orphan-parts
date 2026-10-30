@@ -42,6 +42,10 @@
 #                      `keys --hosted ...` does the same on the Modal deployment's inventory
 #   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
 #                      answers, nothing spent); --keep adds to what is there
+#   eval [--keep] [--live]
+#                      reset the inventory, load demo/set.yaml and score the load by the rules
+#                      into eval/ (report, charts); fixture mode unless --live, which uses the
+#                      key from .env and spends; --keep adds to what is there
 #   record-fixtures [--keep]
 #                      reset the inventory and load the set once with the key from .env,
 #                      keeping every model answer as a fixture (OPL_RECORD_FIXTURES=1);
@@ -404,6 +408,27 @@ cmd_keys() {
   compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys "$@"
 }
 
+cmd_eval() {
+  local reset="" fake="1"
+  for arg in "$@"; do
+    case "$arg" in
+      --keep) reset="--keep" ;;
+      --live) fake="0" ;;
+      *) die "usage: ./dev eval [--keep] [--live]" ;;
+    esac
+  done
+  docker_running || die "docker is not running"
+  if [[ "$fake" == "0" ]]; then
+    need_env_file
+    grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "eval --live needs MODEL_API_KEY in .env"
+  fi
+  mkdir -p "$ROOT/eval"
+  stop_backend_for_run
+  # shellcheck disable=SC2086
+  compose run --rm --no-deps -e OPL_FAKE_API="$fake" backend python -m app.eval run --set /demo/set.yaml --out /eval $reset
+  log_ok "report written under eval/"
+}
+
 cmd_record_fixtures() {
   local reset="--reset"
   [[ "${1:-}" == "--keep" ]] && reset=""
@@ -450,6 +475,7 @@ case "$cmd" in
   phone) cmd_phone "$@" ;;
   demo) cmd_demo "$@" ;;
   keys) cmd_keys "$@" ;;
+  eval) cmd_eval "$@" ;;
   record-fixtures) cmd_record_fixtures "$@" ;;
   demo-scrub) cmd_demo_scrub "$@" ;;
   shell) cmd_shell "$@" ;;

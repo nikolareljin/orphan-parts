@@ -110,11 +110,23 @@ def test_without_a_code_nothing_is_gated(client: TestClient) -> None:
 
 
 def test_without_a_session_the_visitor_is_the_demo(gated: TestClient) -> None:
-    # the inventory and every write are behind the code, with one line that says so
-    assert gated.get("/api/items").status_code == 403
-    assert gated.get("/api/items").json() == {"detail": DEMO_LINE}
+    # the visitor reads what the owner marked public, nothing else; every write is behind the
+    # code, with one line that says so
+    gated.post("/api/access", json={"code": CODE})
+    private = gated.post("/api/items", json={"item_type": "private thing"}).json()["id"]
+    shown = gated.post("/api/items", json={"item_type": "public thing"}).json()["id"]
+    assert gated.post(f"/api/items/{shown}/public", json={"public": True}).json()["public"] is True
+    gated.cookies.clear()
+    listed = gated.get("/api/items")
+    assert listed.status_code == 200 and [i["id"] for i in listed.json()] == [shown]
+    assert gated.get(f"/api/items/{shown}").status_code == 200
+    assert gated.get(f"/api/items/{private}").status_code == 404
+    assert gated.get(f"/api/items/{private}/photos").status_code == 404
+    assert gated.post(f"/api/items/{shown}/public", json={"public": False}).status_code == 403
+    assert gated.get(f"/api/items/{shown}/events").json() == {"detail": DEMO_LINE}
     assert gated.post("/api/items", json={"item_type": "x"}).status_code == 403
-    assert gated.get("/api/captures").status_code == 403
+    captures = gated.get("/api/captures")
+    assert captures.status_code == 200 and captures.json() == {"captures": []}
     assert gated.post("/api/captures", data={"request": "{}"}).status_code == 403
     assert gated.get("/api/searches").status_code == 403
     assert gated.post("/api/projects/propose", json={}).status_code == 403
@@ -127,7 +139,9 @@ def test_without_a_session_the_visitor_is_the_demo(gated: TestClient) -> None:
     assert gated.get("/api/access").json()["granted"] is False
     assert gated.get("/readyz").json()["demo"]["gated"] is True
     assert demo_allowed("POST", "/api/assess") and demo_allowed("POST", "/api/measure")
-    assert not demo_allowed("POST", "/api/items") and not demo_allowed("GET", "/api/items")
+    assert not demo_allowed("POST", "/api/items") and demo_allowed("GET", "/api/items")
+    assert not demo_allowed("GET", "/api/searches")
+    assert not demo_allowed("GET", "/api/items/1/events")
     assert not demo_allowed("DELETE", "/api/captures/1")
 
 
@@ -144,10 +158,11 @@ def test_the_right_code_opens_a_session_in_a_cookie_and_as_a_token(gated: TestCl
     assert gated.get("/api/items").status_code == 200  # the client keeps the cookie
     assert gated.get("/api/access").json()["granted"] is True
     gated.cookies.clear()
-    assert gated.get("/api/items").status_code == 403
+    assert gated.get("/api/searches").status_code == 403
     bearer = {"Authorization": f"Bearer {body['token']}"}
     assert gated.get("/api/items", headers=bearer).status_code == 200
-    assert gated.get("/api/items", headers={"Authorization": "Bearer nonsense"}).status_code == 403
+    nonsense = {"Authorization": "Bearer nonsense"}
+    assert gated.get("/api/searches", headers=nonsense).status_code == 403
 
 
 def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) -> None:
@@ -164,9 +179,9 @@ def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) ->
     assert gated.get("/api/items", headers=bearer).status_code == 200
     keys.revoke("judges")
     # the sessions it opened end with it, the phone's too, not only new ones
-    assert gated.get("/api/items", headers=bearer).status_code == 403
+    assert gated.get("/api/searches", headers=bearer).status_code == 403
     gated.cookies.update(browser)
-    assert gated.get("/api/items").status_code == 403
+    assert gated.get("/api/searches").status_code == 403
     gated.cookies.clear()
     refused = gated.post("/api/access", json={"code": code})
     assert refused.status_code == 401
@@ -215,7 +230,7 @@ def test_leaving_clears_the_cookie(gated: TestClient) -> None:
     assert (
         "Max-Age=0" in gone.headers["set-cookie"] or "expires" in gone.headers["set-cookie"].lower()
     )
-    assert gated.get("/api/items").status_code == 403  # the demo visitor again
+    assert gated.get("/api/searches").status_code == 403  # the demo visitor again
 
 
 def test_a_record_with_the_same_id_after_a_reset_is_a_stranger(tmp_path: Path) -> None:

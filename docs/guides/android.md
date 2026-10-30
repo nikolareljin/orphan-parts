@@ -39,6 +39,15 @@ scale of buttons (filled for the action, outlined for the rest), pills for statu
 service line at the foot saying where the backend is and whether it answers with recorded
 answers or the live models. A unit test keeps the palette equal to the web app's stylesheet.
 
+## Installing the released app
+
+The release page carries `orphan-parts-<version>.apk`; [On your phone in ten
+minutes](../start/judges.md) is the path for a phone with no development setup (download on the
+phone, or `scripts/phone-install.sh` / `scripts/phone-install.ps1` over USB, which bring their
+own `adb`). The app runs on Android 8.0 and newer; the QR scanner needs Google Play services,
+the typed address works everywhere. On Windows the development path below runs in WSL; the
+install scripts run natively.
+
 ## Building and running it
 
 ```bash

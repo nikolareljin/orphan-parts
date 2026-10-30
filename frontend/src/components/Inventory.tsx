@@ -402,6 +402,14 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
       <Listing item={item} onChanged={() => void apply(() => api.items.get(item.id))} />
 
       <div className="row">
+        <label className="inline">
+          <input
+            type="checkbox"
+            checked={item.public}
+            onChange={(e) => void apply(() => api.items.setPublic(item.id, e.target.checked))}
+          />{' '}
+          Public in the demo (what it is and its photos; never the location or the notes)
+        </label>
         <button type="button" className="link" onClick={() => void showEvents()}>
           History
         </button>

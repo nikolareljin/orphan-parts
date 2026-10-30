@@ -46,6 +46,7 @@ async function openItem(page: Page, name: string) {
 }
 
 test('a sale draft keeps confirmed facts, discloses the faults, and its checklist is kept', async ({ page, request }) => {
+  test.slow() // a draft, a checklist and a second draft, each a model read, with five other workers on the backend
   const name = `Orbital charger ${stamp}`
   await createAdapter(request, name)
   const { listing } = await openItem(page, name)

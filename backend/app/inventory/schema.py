@@ -62,6 +62,7 @@ class ItemSummary(BaseModel):
     field_count: int
     version: int
     updated_at: str
+    public: bool = Field(default=False, description="shown to the demo visitor")
 
 
 class Item(ItemSummary):

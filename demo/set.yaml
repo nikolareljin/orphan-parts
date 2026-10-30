@@ -2,6 +2,12 @@
 # written by `./dev demo-scrub <raw dir>` (re-encoded, no metadata). `./dev record-fixtures`
 # runs the set once with a key and keeps every model answer; `./dev demo` replays it.
 # A photo named here that is not present is skipped with a note, so the set loads either way.
+# An item's `expect:` block is what `./dev eval` scores the load against: values the reading
+# should give, the verdict the rules should reach against another item, how many kept
+# proposals should use it. Fit and proposal expectations come from the rules and the owner
+# values written here; the adapter's expected fields are the values in the extract stub
+# (backend/tests/fixtures/api/responses/extract.json), which answers every label read until
+# the set is recorded with its own photos. A photo that is not present scores as not read.
 title: a drawer of idle things
 currency: USD
 country: US
@@ -17,6 +23,8 @@ items:
     tests_done: ran for a minute, suction fine
     fields:
       wand_outer_diameter: "32"
+    expect:
+      proposals_min: 1
   - key: tool_fits
     name: Crevice tool, the one that fits
     item_type: crevice tool
@@ -25,6 +33,9 @@ items:
     photos: [photos/vac_tool1_c.jpg]
     fields:
       opening_inner_diameter: "32.2"
+    expect:
+      # the wand's outer diameter is the needed opening inner diameter, in the rule's terms
+      fit: {against: vacuum, verdict: fits, values: {opening_inner_diameter: "32"}}
   - key: tool_near
     name: Crevice tool, the near miss
     item_type: crevice tool
@@ -33,6 +44,8 @@ items:
     photos: [photos/vac_tool2_c.jpg]
     fields:
       opening_inner_diameter: "35"
+    expect:
+      fit: {against: vacuum, verdict: conflict, values: {opening_inner_diameter: "32"}}
   - key: laptop_old
     name: Old laptop
     item_type: laptop
@@ -40,6 +53,8 @@ items:
     photos: [photos/laptop1_b.jpg]
     condition: boots, battery weak
     tests_done: booted to the desktop
+    expect:
+      proposals_min: 1
   - key: laptop_second
     name: Second laptop, cracked screen
     item_type: laptop
@@ -59,6 +74,8 @@ items:
     item_type: monitor
     intent: build
     condition: works, one HDMI input
+    expect:
+      proposals_min: 1
   - key: phone
     name: Broken phone
     item_type: phone
@@ -75,6 +92,14 @@ items:
     intent: keep
     photos: [photos/psu1_b.jpg]
     voice_note: notes/note_adapter.wav
+    expect:
+      # the extract stub's values; replace them with what the recording of psu1_b.jpg reads
+      fields:
+        brand: Orbital Power
+        model_number: OP-65N
+        output_voltage: 19.5 V
+        output_current: 3.33 A
+        output_power: 65 W
   - key: keyboard
     name: USB keyboard
     item_type: keyboard
@@ -82,6 +107,80 @@ items:
     photos: [photos/kbd_a.jpg]
     condition: works, two keycaps loose
     draft: give
+
+  # the owner's shelf (Oct 31): old laptops, memory, tablets, monitors, mice, switches, a
+  # phone with a broken screen, and the frappé maker whose agitator wore out
+  - key: laptop_third
+    name: Third laptop, works
+    item_type: laptop
+    intent: build
+    condition: works; slow; 8 GB RAM; HDMI out
+    tests_done: booted, ran a browser for an hour
+  - key: ram_sticks
+    name: Four RAM modules, DDR3 SO-DIMM
+    item_type: ram module
+    intent: build
+    condition: untested; from two laptops of the same age
+  - key: tablet_one
+    name: Android tablet, 10 inch
+    item_type: tablet
+    intent: build
+    condition: works; battery holds a day
+    tests_done: charged, browser works
+  - key: tablet_two
+    name: Android tablet, 8 inch, old
+    item_type: tablet
+    intent: sell
+    condition: works; slow
+    draft: sell
+    price: true
+  - key: monitor_two
+    name: Second monitor, 24 inch
+    item_type: monitor
+    intent: build
+    condition: works; HDMI and VGA
+  - key: mouse_one
+    name: USB mouse
+    item_type: mouse
+    intent: build
+  - key: mouse_two
+    name: Wireless mouse, no dongle
+    item_type: mouse
+    intent: give
+    faults: the USB receiver is missing
+    draft: give
+  - key: switch_one
+    name: Network switch, 8 ports
+    item_type: network switch
+    intent: build
+    condition: works; gigabit
+  - key: switch_two
+    name: Network switch, 5 ports
+    item_type: network switch
+    intent: sell
+    draft: sell
+    price: true
+  - key: s8
+    name: Samsung S8, broken screen
+    item_type: phone
+    intent: build
+    faults: screen cracked and dark in one third; touch works; camera works
+    holds_data: true
+    condition: charges and boots
+  - key: frappe_agitator
+    name: Frappé maker agitator, worn
+    item_type: blender agitator
+    profile: blender_agitator
+    intent: keep
+    faults: the plastic around the two tabs is worn; the rod wobbles in the drive and the disc no longer spins true
+    condition: the base runs; the rod no longer mixes
+    fields:
+      rod_diameter: "4"
+      tab_span: "9"
+      tab_width: "2.5"
+      tab_length: "8"
+      rod_length: "150"
+      material: "plastic"
 
 searches:
   - key: vac_tool
@@ -102,11 +201,16 @@ searches:
         asking_price: "15"
       - text: "@listings/L4.txt"
         asking_price: "12"
+  - key: metal_agitator
+    need: frappe_agitator
+    title: all-metal agitator rod for the frappé maker, 4 mm rod, two tabs 9 mm across
+    max_price: 20
+    listings: []
 
 propose:
   count: 3
   preferences:
-    interests: a quiet desk for homework; music in the kitchen
+    interests: a quiet desk for homework; music in the kitchen; home automation; an arcade table for the living room; a smart mirror in the hall; a home server for the photos
     effort: low
     skills: [basic computer setup]
     budget: 50

@@ -122,7 +122,8 @@ class Loader:
         out = Outcome(mode=self.settings.model_api_mode)
         self.currency, self.country = demo.currency, demo.country
         stubs_before = self.client.fixture_fallbacks
-        ids: dict[str, int] = {}
+        # the set's keys to the ids the inventory gave, kept for whoever scores the run
+        self.ids = ids = {}
         for item in demo.items:
             item_id = await self.load_item(item, base, out)
             if item_id is not None:
@@ -237,6 +238,8 @@ class Loader:
         except ValueError as exc:
             out.skipped.append(f"{item.key}: {exc}")
             return None
+        # the demo set is the public shelf: what it loads, the demo visitor may see
+        self.inventory.set_public(created.id, True)
         if photos:
             try:
                 self.photos.add(created.id, photos)
@@ -295,6 +298,7 @@ class Loader:
     # the set's currency and country, read once per run
     currency: str = "USD"
     country: str = ""
+    ids: dict[str, int] = {}
 
 
 def reset(settings: Settings) -> list[str]:

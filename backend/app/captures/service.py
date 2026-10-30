@@ -158,14 +158,17 @@ class Captures:
         )
         return self.capture_of(row)
 
-    def captures(self) -> list[Capture]:
-        return [self.capture_of(r) for r in self.inventory.captures()]
+    def captures(self, *, public_only: bool = False) -> list[Capture]:
+        return [self.capture_of(r) for r in self.inventory.captures(public_only=public_only)]
 
-    def capture(self, capture_id: int) -> Capture:
-        return self.capture_of(self.inventory.capture(capture_id))
+    def capture(self, capture_id: int, *, public_only: bool = False) -> Capture:
+        return self.capture_of(self.inventory.capture(capture_id, public_only=public_only))
 
-    def photo(self, capture_id: int, n: int) -> bytes:
-        found = self.capture(capture_id)
+    def set_public(self, capture_id: int, public: bool) -> Capture:
+        return self.capture_of(self.inventory.set_capture_public(capture_id, public))
+
+    def photo(self, capture_id: int, n: int, *, public_only: bool = False) -> bytes:
+        found = self.capture(capture_id, public_only=public_only)
         if n < 1 or n > found.photos:
             raise NotFoundError(f"capture {capture_id} has no photo {n}")
         return (self.folder(capture_id) / f"photo-{n}.jpg").read_bytes()
@@ -310,6 +313,7 @@ class Captures:
             status=row["status"],
             created_at=row["created_at"],
             processed_at=row["processed_at"] or "",
+            public=bool(row["public"]),
             **content,
         )
 

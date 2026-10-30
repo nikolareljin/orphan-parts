@@ -19,6 +19,7 @@ export interface Readiness {
 }
 
 export interface Limits {
+  max_clip_mb: number
   max_photos: number
   max_upload_mb: number
 }
@@ -121,6 +122,7 @@ export interface ItemSummary {
   field_count: number
   version: number
   updated_at: string
+  public: boolean
 }
 
 export interface Item extends ItemSummary {
@@ -648,6 +650,7 @@ export interface Capture {
   cost_usd: number
   created_at: string
   processed_at: string
+  public: boolean
 }
 
 export interface Access {
@@ -823,6 +826,7 @@ export const api = {
     create: (spec: ItemCreate) => sendJson<Item>('POST', '/api/items', spec),
     update: (id: number, patch: ItemPatch) => sendJson<Item>('PATCH', `/api/items/${id}`, patch),
     remove: (id: number) => sendJson<void>('DELETE', `/api/items/${id}`),
+    setPublic: (id: number, isPublic: boolean) => sendJson<Item>('POST', `/api/items/${id}/public`, { public: isPublic }),
     addField: (id: number, spec: FieldCreate) => sendJson<Item>('POST', `/api/items/${id}/fields`, spec),
     review: (id: number, assertionId: number, review: Review) =>
       sendJson<Item>('POST', `/api/items/${id}/assertions/${assertionId}/review`, { review }),
@@ -918,9 +922,17 @@ export const api = {
   },
   captures: {
     list: () => getJson<{ captures: Capture[] }>('/api/captures'),
+    // the bundle the phone sends, from this computer: photos, one clip, a name and a line
+    send: (photos: File[], clip: File | null, request: { name: string; note: string }) =>
+      postForm<Capture>('/api/captures', [
+        ...photos.map((p): FormPart => ['photos', p]),
+        ...(clip ? [['clip', clip] as FormPart] : []),
+        ['request', JSON.stringify({ ...request, find_label: true })],
+      ]),
     get: (id: number) => getJson<Capture>(`/api/captures/${id}`),
     process: (id: number) => sendJson<Capture>('POST', `/api/captures/${id}/process`),
     remove: (id: number) => sendJson<void>('DELETE', `/api/captures/${id}`),
+    setPublic: (id: number, isPublic: boolean) => sendJson<Capture>('POST', `/api/captures/${id}/public`, { public: isPublic }),
     photoUrl: (id: number, n: number) => apiUrl(`/api/captures/${id}/photos/${n}`),
     clipUrl: (id: number) => apiUrl(`/api/captures/${id}/clip`),
     noteUrl: (id: number) => apiUrl(`/api/captures/${id}/note`),

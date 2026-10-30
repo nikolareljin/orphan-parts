@@ -12,8 +12,10 @@ test('without a session the pages are the demo, and the code opens the rest', as
   // the pages are there for the visitor; the way in is a link in the header
   await expect(page.getByRole('button', { name: 'My inventory' })).toBeVisible()
   await expect(page.getByText(/demo: recorded answers; the code unlocks saving/)).toBeVisible()
+  // the inventory shows what the owner made public; a save is what the code unlocks
   await page.getByRole('button', { name: 'My inventory' }).click()
-  await expect(page.getByRole('alert')).toContainText('demo: the code unlocks saving')
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Read a label' }).click()
 
   await page.getByRole('button', { name: 'Sign in with the code' }).click()
   const gate = page.getByRole('form', { name: 'Access code' })
@@ -32,7 +34,9 @@ test('without a session the pages are the demo, and the code opens the rest', as
 
 test('the API answers the demo visitor with recordings and refuses every write', async ({ request }) => {
   test.skip(!code, 'the stack runs without a gate')
-  const refused = await request.get('/api/items')
+  const listed = await request.get('/api/items')
+  expect(listed.status()).toBe(200) // the public shelf, whatever is on it
+  const refused = await request.get('/api/searches')
   expect(refused.status()).toBe(403)
   expect(((await refused.json()) as { detail: string }).detail).toContain('demo: the code unlocks saving')
   const write = await request.post('/api/items', { data: { item_type: 'kettle' } })

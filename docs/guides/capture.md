@@ -14,6 +14,18 @@ before they leave it, pixels only; the clip is sent as recorded. **Captures** li
 sent and whether the backend has read it: **Read it now** asks for that, and a capture that
 could not be read says why and can be tried again.
 
+## From a computer
+
+The Inbox's **Send a capture from this computer** form takes the same bundle the phone
+sends: up to `MAX_PHOTOS` photos of the item and its label, one short video (an MP4 or 3GP
+file, at most `MAX_CLIP_MB`; a recording from a phone's camera or a laptop's webcam saved as
+MP4 is what it takes, a MOV or WebM file is refused by its bytes), a name and a line. What
+the form can tell before sending (too many photos, a photo or a video over the limit, a
+file that is not MP4) it says at once; the backend's own check answers the rest. The
+capture waits in the Inbox like one from the phone. The demo visitor sees the form and
+cannot send. On the phone, **Photos from the gallery** and **A video from the gallery** on
+the Capture tab take media already on the phone, re-encoded and checked the same way.
+
 ## In the Inbox
 
 The web app's **Inbox** shows every capture newest first: the thumbnails, the clip to play,

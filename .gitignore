@@ -29,6 +29,10 @@ e2e/playwright-report/
 site/
 docs/reference/openapi.json
 
+# evaluation runs
+/eval/*
+!/eval/README.md
+
 # runtime
 /data/
 backend/data/
@@ -43,3 +47,5 @@ backend/data/
 .DS_Store
 # the browser checks' session through the demo gate
 e2e/.auth/
+# security scan reports (scripts/scan-security.sh --json)
+scan/

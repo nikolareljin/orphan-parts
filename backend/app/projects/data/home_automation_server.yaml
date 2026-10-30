@@ -1,0 +1,38 @@
+id: home_automation_server
+label: Home automation server
+goal: One always-on machine that runs the lights, the sensors and the schedules of the house from an old laptop, with its battery as the built-in backup.
+result: a laptop with the lid closed on a shelf, running a home automation system reachable from every phone in the house
+effort: medium
+skills: [basic computer setup, networking]
+opens_devices: false
+typical_cost: {low: 0, high: 60, currency: USD}
+requirements:
+  - key: server
+    label: A laptop or a small computer that stays on
+    kind: item
+    item_types: [laptop, notebook, mini pc, desktop]
+    blocking: true
+  - key: network
+    label: A wired link to the router, or a switch with a spare port
+    kind: item
+    item_types: [switch, network switch, router, ethernet cable, cable]
+    blocking: false
+  - key: radio
+    label: A Zigbee or Z-Wave USB stick, for devices that are not on Wi-Fi
+    kind: item
+    item_types: [zigbee stick, z-wave stick, usb stick, dongle]
+    blocking: false
+  - key: memory
+    label: Spare RAM, if the laptop has less than 8 GB
+    kind: item
+    item_types: [ram, memory, ram module, so-dimm]
+    blocking: false
+steps:
+  - Install a small Linux on the laptop and the home automation system on it; set the lid to do nothing when closed.
+  - Plug it into the switch by cable; give it a fixed address on the router.
+  - Add the devices you have (bulbs, plugs, sensors) and one schedule, such as the hall light at dusk.
+  - Open the dashboard from a phone on the same network; keep the laptop's own screen off.
+safety:
+  - A laptop running shut needs air; stand it on its feet, never on a cushion.
+sources:
+  - the home automation system's installation guide

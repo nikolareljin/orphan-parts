@@ -8,6 +8,8 @@ Meta's Muse models.
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
 [Built during the hackathon](project/hackathon.md).
 One diagram of the whole, every box a link: [How it fits together](project/flow.md).
+[Built during the hackathon](project/hackathon.md). Trying it on a phone:
+[On your phone in ten minutes](start/judges.md).
 
 ## The problem
 

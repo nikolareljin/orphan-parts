@@ -2,12 +2,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse, Response
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.api.deps import CapturesDep
 from app.api.model_errors import as_http
 from app.captures import Capture, CaptureCreate, CaptureError, CaptureList
 from app.listing import BadAudioError
+from app.ops.door import live_request
 
 router = APIRouter(prefix="/api", tags=["captures"])
 
@@ -70,17 +71,29 @@ async def create_capture(
 @router.get("/captures", response_model=CaptureList)
 def list_captures(captures: CapturesDep) -> CaptureList:
     """Every capture not deleted, newest first."""
-    return CaptureList(captures=captures.captures())
+    return CaptureList(captures=captures.captures(public_only=not live_request.get()))
 
 
 @router.get("/captures/{capture_id}", response_model=Capture)
 def get_capture(capture_id: int, captures: CapturesDep) -> Capture:
-    return captures.capture(capture_id)
+    return captures.capture(capture_id, public_only=not live_request.get())
+
+
+class PublicMark(BaseModel):
+    public: bool
+
+
+@router.post("/captures/{capture_id}/public", response_model=Capture)
+def mark_capture_public(capture_id: int, mark: PublicMark, captures: CapturesDep) -> Capture:
+    """Shown to the demo visitor (the capture and its photos; never the clip or the note)."""
+    return captures.set_public(capture_id, mark.public)
 
 
 @router.get("/captures/{capture_id}/photos/{n}", response_class=Response)
 def capture_photo(capture_id: int, n: int, captures: CapturesDep) -> Response:
-    return Response(captures.photo(capture_id, n), media_type="image/jpeg")
+    return Response(
+        captures.photo(capture_id, n, public_only=not live_request.get()), media_type="image/jpeg"
+    )
 
 
 @router.get("/captures/{capture_id}/clip", response_class=Response)

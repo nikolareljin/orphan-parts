@@ -35,6 +35,7 @@ separated `components`, and a `version` that every write increments.
 | `GET /api/items/{id}/events` | the history: actor, time, change, version |
 | `GET /api/items/{id}/photos` | how many photos are kept with the item (`count`); an item read from a capture has the capture's, an item saved from the web form the label photos it was read from |
 | `GET /api/items/{id}/photos/{n}` | one of them as JPEG, `1` first, never cached; `404` past the count |
+| `POST /api/items/{id}/public`, `POST /api/captures/{id}/public` | `{public}`: shown to the demo visitor (the item or capture, its values and photos; never a location, a note, a clip or a draft) or private again; the demo visitor's `GET` on items and captures lists the public ones and answers 404 for the rest |
 | `POST /api/items/{id}/photos` | multipart `uploads`, one to `MAX_PHOTOS` in all on the item: re-encoded on the way in, metadata dropped; `201` with the new `count`; `422` over the limit, `400` for a file that is not an image |
 
 Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value
@@ -100,7 +101,7 @@ Errors: `400` for a bad photo, `404` for an unknown item, measurement or profile
 | `GET /api/pair?origin=&api=`, `GET /api/pair.svg?origin=&api=` | what the phone needs to talk to this backend: the web origin given, or `api` when the backend has an origin of its own (a scheme, a host, an optional port, nothing more), and, when the demo is gated, a session of its own as `token` with `expires_at`; as JSON or as a QR code; reached only with a session, so the access code never leaves the server; 422 for any other origin |
 | `GET /healthz` | process is up |
 | `GET /readyz` | config loaded, Model API mode (`live`, `record` or `fixture`; `fixture (key failed)` when the key did not answer the startup probe), data directory writable, spend so far against the cap, `paused` once the cap is reached |
-| `GET /api/version` | package version, the configured model IDs and the upload `limits` (`max_photos`, `max_upload_mb`) the web form follows |
+| `GET /api/version` | package version, the configured model IDs and the upload `limits` (`max_photos`, `max_upload_mb`, `max_clip_mb`) the web forms follow |
 | `GET /api/spend` | the spend ledger: total, cap, remaining, calls per model with token counts, live versus fixture calls |
 
 Every response carries `X-Request-ID`. Send your own to have it echoed back and used in the logs
