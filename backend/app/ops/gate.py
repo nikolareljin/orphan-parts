@@ -5,6 +5,7 @@ on recorded answers and what is public, every write refused with one line. Allow
 costs money, a limit on everything else, and a switch the operator throws. One process keeps
 the counts; the spend ledger on disk is the floor under all of it."""
 
+import asyncio
 import hashlib
 import hmac
 import logging
@@ -133,13 +134,15 @@ class DailyAllowance:
 
 
 class Session:
-    """Who a current token stands for: its id, and whether it opens the live door."""
+    """Who a current token stands for: its id, whether it opens the live door, and the issued
+    record it came from (0 for the master code or the demo)."""
 
-    __slots__ = ("live", "sid")
+    __slots__ = ("kid", "live", "sid")
 
-    def __init__(self, sid: str, live: bool) -> None:
+    def __init__(self, sid: str, live: bool, kid: int = 0) -> None:
         self.sid = sid
         self.live = live
+        self.kid = kid
 
 
 class Gate:
@@ -215,7 +218,7 @@ class Gate:
             return None
         if kid and (self.keys is None or self.keys.revoked(kid)):
             return None  # the issued code this session came from is gone
-        return Session(sid, live)
+        return Session(sid, live, kid)
 
     # --- who is asking ---------------------------------------------------
 
@@ -263,7 +266,8 @@ class GateMiddleware(BaseHTTPMiddleware):
         # session decides the door, and no session is the demo visitor
         visitor, live = ip, True
         if gate.enabled:
-            session = gate.verify(gate.token_of(request))
+            # a token from an issued code is checked against its record: a read, off the loop
+            session = await asyncio.to_thread(gate.verify, gate.token_of(request))
             if session is None:
                 live = False
             else:
@@ -271,8 +275,9 @@ class GateMiddleware(BaseHTTPMiddleware):
         if not live and not demo_allowed(method, path):
             log.info("demo: a write was refused", extra={"path": path})
             return _refused(403, DEMO_LINE)
-        if not live and expensive(method, path):
-            # recordings cost nothing to answer but work to decode: so many per address
+        if not live and method == "POST":
+            # the four tries: recordings cost nothing to answer but work to decode, so many per
+            # address and hour
             ok, retry = gate.tries.take(ip)
             if not ok:
                 log.info("limit: demo tries per hour", extra={"path": path, "retry_after": retry})

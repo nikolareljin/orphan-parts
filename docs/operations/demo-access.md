@@ -15,7 +15,7 @@ machine of your own. Beside it, **codes issued as records**: `./dev keys issue -
 --days 7` prints a code once (`opl_` and 24 random bytes) and keeps only its SHA-256 hash with
 the label and the expiry; `./dev keys list` shows each record and whether it is current,
 expired or revoked; `./dev keys revoke judges` ends one. The running backend reads the same
-file, so a new code works at once and a revoked one stops at once for new sessions. A code is
+file, so a new code works at once and a revoked one stops at once, its open sessions with it. A code is
 compared in constant time against the master and every current record, so a miss takes as
 long as a hit. The records live in the inventory database ([Data model](../reference/data-model.md)).
 

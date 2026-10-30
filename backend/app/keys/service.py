@@ -91,10 +91,13 @@ class AccessKeys:
         return [_key_of(r) for r in rows]
 
     def revoke(self, label: str) -> AccessKey:
-        """The current code with this label stops working now."""
+        """The newest unrevoked code with this label stops working now, with every session it
+        opened."""
         with self.store.connect() as conn:
             row = conn.execute(
-                "SELECT * FROM access_keys WHERE label = ? AND revoked_at IS NULL", (label,)
+                "SELECT * FROM access_keys WHERE label = ? AND revoked_at IS NULL"
+                " ORDER BY id DESC LIMIT 1",
+                (label,),
             ).fetchone()
             if row is None:
                 raise AccessKeyError(f"no current code is labeled {label!r}")

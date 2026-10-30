@@ -155,8 +155,16 @@ def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) ->
     opened = gated.post("/api/access", json={"code": code})
     assert opened.status_code == 200 and opened.json()["granted"] is True
     assert gated.get("/api/items").status_code == 200
+    # the phone paired from this session carries the same record
+    phone = gated.get("/api/pair", params={"origin": "http://host:5173"}).json()["token"]
+    bearer = {"Authorization": f"Bearer {phone}"}
+    browser = dict(gated.cookies)
+    gated.cookies.clear()
+    assert gated.get("/api/items", headers=bearer).status_code == 200
     keys.revoke("judges")
-    # the session it opened ends with it, not only new ones
+    # the sessions it opened end with it, the phone's too, not only new ones
+    assert gated.get("/api/items", headers=bearer).status_code == 403
+    gated.cookies.update(browser)
     assert gated.get("/api/items").status_code == 403
     gated.cookies.clear()
     refused = gated.post("/api/access", json={"code": code})
@@ -238,6 +246,9 @@ def test_the_demo_visitors_tries_are_counted_per_address(tmp_path: Path) -> None
         c.post("/api/extract", files=photo)
         third = c.post("/api/extract", files=photo)
         assert third.status_code == 429 and "tries" in third.json()["detail"]
+        # every try counts, the cheap ones too
+        need = {"need": {"values": {}, "profile": "vacuum_attachment"}, "candidate": {"values": {}}}
+        assert c.post("/api/assess", json=need).status_code == 429
         assert c.get("/readyz").json()["demo"]["daily_used"] == 0  # nothing spent
         assert c.get("/api/templates").status_code == 200  # looking stays open
 

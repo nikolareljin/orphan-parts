@@ -71,6 +71,8 @@ def test_labels_are_checked_and_unique_among_current_codes(tmp_path: Path) -> No
     reissued, _ = keys.issue("judges", 7)  # and once it has expired
     assert keys.revoked(keys.match(reissued).id) is False  # type: ignore[union-attr]
     assert keys.revoked(9999) is True  # no such record
+    keys.revoke("judges")  # the newest record with the label, not the expired one
+    assert keys.match(reissued) is None
     with pytest.raises(AccessKeyError, match="no current code"):
         keys.revoke("nobody")
 
