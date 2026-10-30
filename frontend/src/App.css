@@ -132,6 +132,69 @@ body.has-dialog {
   overflow: hidden;
 }
 
+/* the item's photos: in view above the values while the dialog scrolls under them */
+.item-photos {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+  margin: 0 0 0.5rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+.item-photos .photo {
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+  cursor: zoom-in;
+}
+
+.item-photos .photo img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.item-photos .photo.open {
+  flex-basis: 100%;
+  cursor: zoom-out;
+}
+
+@media (max-width: 600px) {
+  .item-photos .photo img,
+  .item-photos .image-pending {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+.image-pending {
+  display: inline-block;
+  width: 96px;
+  height: 96px;
+  border-radius: 6px;
+  background: var(--line);
+}
+
+.image-pending.failed {
+  background: repeating-linear-gradient(45deg, var(--line), var(--line) 6px, var(--card) 6px, var(--card) 12px);
+}
+
+.item-photos .photo.open img {
+  width: 100%;
+  height: auto;
+  max-height: 45vh;
+  object-fit: contain;
+}
+
 /* one scale of buttons: filled for the action, outlined for the rest, a link for the small ones */
 button:not(.link):not(.modal-close):not(.nav button):not(.danger) {
   font: inherit;

@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
@@ -72,14 +72,26 @@ export default function ExtractForm({
 
   // The reading becomes a private record: observed fields, each still to confirm.
   // A failed save keeps the reading on the page: it was paid for, and can be saved again.
+  const saving = useRef(false)
   async function save() {
-    if (state.kind !== 'done' || state.saved) return
+    if (state.kind !== 'done' || state.saved || saving.current) return
+    saving.current = true // one item per click, however long the save and the upload take
     try {
       const saved = await api.items.create({ extraction: state.result, name: name.trim() })
-      setState({ ...state, saved, saveError: undefined })
+      // the photos the reading was made from stay with the item, beside the values to confirm;
+      // the item is saved either way, and a refused photo is said rather than undoing the save
+      let photoNote: string | undefined
+      try {
+        await api.items.addPhotos(saved.id, files)
+      } catch (err: unknown) {
+        photoNote = `The item is saved; its photos were not kept: ${messageOf(err)}`
+      }
+      setState({ ...state, saved, saveError: photoNote })
       onSaved?.(saved)
     } catch (err: unknown) {
       setState({ ...state, saveError: messageOf(err) })
+    } finally {
+      saving.current = false
     }
   }
 
@@ -123,9 +135,16 @@ export default function ExtractForm({
             <EvidenceTable result={state.result} />
             <div className="save">
               {state.saved ? (
-                <p className="meta">
-                  Saved privately as item #{state.saved.id}, {state.saved.name}. Nothing is published.
-                </p>
+                <>
+                  <p className="meta">
+                    Saved privately as item #{state.saved.id}, {state.saved.name}. Nothing is published.
+                  </p>
+                  {state.saveError && (
+                    <p className="error" role="alert">
+                      {state.saveError}
+                    </p>
+                  )}
+                </>
               ) : (
                 <>
                   <label>

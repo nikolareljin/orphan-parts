@@ -21,6 +21,7 @@ from app.inventory.schema import FieldCreate, ItemCreate
 from app.listing import Lister, VoiceNotes
 from app.listing.schema import DraftRequest
 from app.model_api import ModelApiClient, ModelApiError
+from app.photos import ItemPhotos, PhotoError
 from app.projects import Planner, ProposeRequest
 from app.value import Valuer
 from app.value.schema import PriceRequest
@@ -114,6 +115,8 @@ class Loader:
         self.valuer = valuer
         self.finder = finder
         self.planner = planner
+        # the set's photos stay with the items they were read from, as a capture's do
+        self.photos = ItemPhotos(settings, inventory)
 
     async def run(self, demo: DemoSet, base: Path) -> Outcome:
         out = Outcome(mode=self.settings.model_api_mode)
@@ -234,6 +237,11 @@ class Loader:
         except ValueError as exc:
             out.skipped.append(f"{item.key}: {exc}")
             return None
+        if photos:
+            try:
+                self.photos.add(created.id, photos)
+            except (OSError, BadImageError, PhotoError) as exc:
+                out.skipped.append(f"{item.key}: the photos could not be kept: {exc}")
         out.items += 1
         if item.accept_all:
             for assertion in created.assertions:
@@ -290,16 +298,18 @@ class Loader:
 
 
 def reset(settings: Settings) -> list[str]:
-    """Start over: the inventory file goes, and the captures' media with it (their rows were in
-    the file); the spend ledger stays (the cap is cumulative)."""
+    """Start over: the inventory file goes, and with it the captures' media and the items'
+    photos (their rows were in the file; the next inventory counts from 1 again); the spend
+    ledger stays (the cap is cumulative)."""
     gone: list[str] = []
     db = settings.inventory_db_path
     for path in (db, Path(f"{db}-wal"), Path(f"{db}-shm"), Path(f"{db}-journal")):
         if path.is_file():
             path.unlink()
             gone.append(path.name)
-    captures = settings.data_dir / "captures"
-    if captures.is_dir():
-        shutil.rmtree(captures)
-        gone.append("captures/")
+    for name in ("captures", "items"):
+        folder = settings.data_dir / name
+        if folder.is_dir():
+            shutil.rmtree(folder)
+            gone.append(f"{name}/")
     return gone

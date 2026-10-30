@@ -18,6 +18,7 @@ from app.inventory.schema import ItemCreate, ItemPatch
 from app.inventory.service import NotFoundError
 from app.listing import BadAudioError, VoiceNotes, wav_seconds
 from app.model_api import ModelApiError
+from app.photos import ItemPhotos, PhotoError
 from app.segment import Segmenter
 
 log = logging.getLogger("app.captures")
@@ -65,12 +66,14 @@ class Captures:
         extractor: Extractor,
         segmenter: Segmenter,
         voice: VoiceNotes,
+        photos: ItemPhotos,
     ) -> None:
         self.settings = settings
         self.inventory = inventory
         self.extractor = extractor
         self.segmenter = segmenter
         self.voice = voice
+        self.photos = photos
         self.root = settings.data_dir / "captures"
         self._busy: set[int] = set()  # captures being read right now, one read each
         # the check of the busy set and the step after it are one: a delete and a read of the
@@ -248,6 +251,15 @@ class Captures:
                     }
                 )
             item = self.inventory.create(spec)
+            if photos:
+                # the item keeps the pictures it was read from, so the capture can go later;
+                # a copy that fails is said in the log and never undoes the read
+                try:
+                    self.photos.add(item.id, photos, prepared=True)
+                except (OSError, PhotoError) as exc:
+                    log.warning(
+                        "item photos not kept", extra={"item_id": item.id, "error": str(exc)}
+                    )
         except (ModelApiError, BadImageError, ValueError) as exc:
             content["error"] = str(exc)[:500]
             self.inventory.update_capture(capture_id, "failed", json.dumps(content))

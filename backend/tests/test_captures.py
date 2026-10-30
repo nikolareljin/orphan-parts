@@ -13,6 +13,7 @@ from app.extract import Extractor
 from app.inventory import Inventory
 from app.listing import VoiceNotes
 from app.model_api import CostLedger, FixtureMissingError, ModelApiClient
+from app.photos import ItemPhotos
 from app.segment import Segmenter
 from tests.conftest import RECORDED_FIXTURES, make_photo
 
@@ -44,6 +45,7 @@ def service(settings: Settings) -> Captures:
         Extractor(settings, client),
         Segmenter(settings, client),
         VoiceNotes(settings, client, inventory),
+        ItemPhotos(settings, inventory),
     )
 
 
@@ -221,6 +223,7 @@ async def test_the_label_is_found_first_when_asked(live_settings: Settings) -> N
         Extractor(live_settings, client),
         Segmenter(live_settings, client),
         VoiceNotes(live_settings, client, inventory),
+        ItemPhotos(live_settings, inventory),
     )
     kept = captures.create(CaptureCreate(find_label=True), [make_photo()], None, None)
     done = await captures.process(kept.id)
@@ -283,6 +286,23 @@ def test_captures_folder_is_under_the_data_dir(settings: Settings) -> None:
     captures = service(settings)
     assert captures.folder(7) == settings.data_dir / "captures" / "7"
     assert isinstance(captures.folder(7), Path)
+
+
+async def test_the_item_keeps_the_captures_photos(recorded_settings: Settings) -> None:
+    from app.captures import CaptureCreate
+
+    captures = service(recorded_settings)
+    kept = captures.create(
+        CaptureCreate(find_label=False), [make_photo(), make_photo(800, 600)], None, None
+    )
+    done = await captures.process(kept.id)
+    assert done.item_id is not None
+    photos = ItemPhotos(recorded_settings, captures.inventory)
+    assert photos.count(done.item_id) == 2
+    assert photos.read(done.item_id, 1) == captures.photo(kept.id, 1)
+    # the capture can go; the item keeps its pictures
+    captures.delete(kept.id)
+    assert photos.count(done.item_id) == 2
 
 
 def test_the_route_refuses_an_empty_clip_and_a_full_inbox(client: TestClient) -> None:

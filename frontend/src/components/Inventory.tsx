@@ -3,6 +3,7 @@ import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, 
 import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
+import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
 import Measure from './Measure'
@@ -241,6 +242,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         {item.item_type} · version {item.version} · saved {whenText(item.created_at)}
         {item.parent_id !== null && <> · part of item #{item.parent_id}</>}
       </p>
+      <ItemPhotos id={item.id} />
       {error && (
         <p className="error" role="alert">
           {error}
@@ -423,6 +425,49 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         </ol>
       )}
     </article>
+  )
+}
+
+// The photos the item was read from (the capture's, or the label photos saved with it), above
+// the values to confirm and in view while the dialog scrolls, so each value can be checked
+// against the picture. One click makes a photo large, another shrinks it.
+function ItemPhotos({ id }: { id: number }) {
+  const [count, setCount] = useState<number | null>(null)
+  const [big, setBig] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setCount(null)
+    setBig(null)
+    api.items
+      .photos(id)
+      .then((p) => {
+        if (!cancelled) setCount(p.count)
+      })
+      .catch(() => {
+        if (!cancelled) setCount(-1) // not known: nothing is said either way
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  if (count === null || count < 0) return null
+  if (count === 0) return <p className="muted no-photos">No photo kept with this item.</p>
+  return (
+    <div className="item-photos" aria-label="Photos">
+      {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
+        <button
+          key={n}
+          type="button"
+          className={`link photo${big === n ? ' open' : ''}`}
+          title={big === n ? 'Shrink' : 'Enlarge'}
+          onClick={() => setBig(big === n ? null : n)}
+        >
+          <GatedImage src={api.items.photoUrl(id, n)} alt={`Item photo ${n}`} loading="lazy" />
+        </button>
+      ))}
+    </div>
   )
 }
 

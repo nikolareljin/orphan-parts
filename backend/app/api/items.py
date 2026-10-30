@@ -3,7 +3,7 @@ from collections.abc import Callable
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
-from app.api.deps import InventoryDep, ProfilesDep
+from app.api.deps import InventoryDep, PhotosDep, ProfilesDep
 from app.inventory import (
     ComponentCreate,
     Event,
@@ -76,8 +76,10 @@ def update_item(
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_item(item_id: int, inventory: InventoryDep) -> None:
+def delete_item(item_id: int, inventory: InventoryDep, photos: PhotosDep) -> None:
+    """Hide the item; its photos are removed, its record and history stay."""
     inventory.delete(item_id)
+    photos.remove(item_id)
 
 
 @router.post("/{item_id}/fields", response_model=Item)

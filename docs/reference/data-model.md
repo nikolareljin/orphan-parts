@@ -29,8 +29,12 @@ shape of each is the one the [HTTP API](http-api.md) returns.
 ## What is kept, and for how long
 
 - A photo sent to a reading route (`/api/extract`, `/api/segment`) is read in memory and dropped
-  with the request; the photo a measurement was made on is kept with the measurement, on the
-  item. Photos are re-encoded on ingest, so no metadata is ever stored.
+  with the request. The web form then keeps the photos a saved item was read from under
+  `DATA_DIR/items/<id>/` (`POST /api/items/{id}/photos`), and an item read from a capture gets
+  the capture's photos the same way; they are shown in the item dialog beside the values to
+  confirm and removed when the item is deleted. The photo a measurement was made on is kept
+  with the measurement, on the item. Photos are re-encoded on ingest, so no metadata is ever
+  stored.
 - A capture from the phone is kept as sent, re-encoded photos, the clip and the WAV note, under
   `DATA_DIR/captures/<id>/`, until the capture is deleted; the item read from it stays.
 - A voice recording sent to `/api/items/{id}/voice` is transcribed and dropped; the transcript
@@ -44,5 +48,5 @@ shape of each is the one the [HTTP API](http-api.md) returns.
 ## Backups
 
 Stop the stack, copy `DATA_DIR`, start it again. The database is plain SQLite and opens with any
-client; the measurement photos are JPEG blobs inside it, and the captures' media are files
-beside it under `captures/`.
+client; the measurement photos are JPEG blobs inside it, and the captures' media and the
+items' photos are files beside it under `captures/` and `items/`.

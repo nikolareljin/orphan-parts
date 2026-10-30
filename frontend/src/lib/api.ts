@@ -171,6 +171,11 @@ export interface ComponentCreate {
   notes?: string
 }
 
+// How many photos are kept with an item; each is at /api/items/{id}/photos/{n}, 1 first.
+export interface PhotoCount {
+  count: number
+}
+
 export interface ItemEvent {
   id: number
   item_id: number
@@ -769,6 +774,19 @@ export function dataUrlToFile(dataUrl: string, name: string): File {
   return new File([bytes], name, { type: mime })
 }
 
+// An image or a clip behind the gate: same origin the browser's cookie goes with the <img>;
+// across origins the file is fetched with the bearer header and handed over as an object
+// URL, which the caller revokes when done.
+export async function mediaUrl(url: string): Promise<string> {
+  if (!crossOrigin) return url
+  const res = await fetch(url, { headers: authHeaders(), credentials: 'include' })
+  if (!res.ok) {
+    noteStatus(res.status)
+    throw new ApiError(res.status, `${url}: HTTP ${res.status}`)
+  }
+  return URL.createObjectURL(await res.blob())
+}
+
 export const api = {
   access: {
     status: () => getJson<Access>('/api/access'),
@@ -803,6 +821,13 @@ export const api = {
       sendJson<Item>('POST', `/api/items/${id}/assertions/${assertionId}/review`, { review }),
     addComponent: (id: number, spec: ComponentCreate) => sendJson<Item>('POST', `/api/items/${id}/components`, spec),
     events: (id: number) => getJson<ItemEvent[]>(`/api/items/${id}/events`),
+    photos: (id: number) => getJson<PhotoCount>(`/api/items/${id}/photos`),
+    photoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/photos/${n}`),
+    addPhotos: (id: number, photos: File[]) =>
+      postForm<PhotoCount>(
+        `/api/items/${id}/photos`,
+        photos.map((p): FormPart => ['uploads', p]),
+      ),
     measurements: (id: number) => getJson<Measurement[]>(`/api/items/${id}/measurements`),
     measure: (id: number, photo: File, request: MeasureRequest) =>
       postForm<Measurement>(`/api/items/${id}/measurements`, [

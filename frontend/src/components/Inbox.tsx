@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, type Capture } from '../lib/api'
 import { captureSummary, captureTone, statusLabel } from '../lib/captures'
+import GatedImage from './GatedImage'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -98,7 +99,7 @@ export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void
             <li key={c.id} className="capture">
               <div className="thumbs">
                 {Array.from({ length: c.photos }, (_, i) => (
-                  <img key={i} src={api.captures.photoUrl(c.id, i + 1)} alt={`Capture ${c.id}, photo ${i + 1}`} loading="lazy" />
+                  <GatedImage key={i} src={api.captures.photoUrl(c.id, i + 1)} alt={`Capture ${c.id}, photo ${i + 1}`} loading="lazy" />
                 ))}
                 {c.photos === 0 && <span className="no-photo muted">no photo</span>}
               </div>

@@ -16,6 +16,7 @@ from app.api.items import error_handlers as inventory_handlers
 from app.api.items import router as items_router
 from app.api.measure import router as measure_router
 from app.api.pair import router as pair_router
+from app.api.photos import router as photos_router
 from app.api.profiles import router as profiles_router
 from app.api.projects import router as projects_router
 from app.api.routes import router
@@ -34,6 +35,7 @@ from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import Gate, GateMiddleware
 from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
+from app.photos import ItemPhotos
 from app.profiles import Profiles
 from app.projects import Planner, Templates
 from app.segment import Segmenter
@@ -89,6 +91,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.extractor = Extractor(settings, client)
     app.state.segmenter = Segmenter(settings, client)
     app.state.inventory = Inventory(settings)
+    app.state.photos = ItemPhotos(settings, app.state.inventory)
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)
     app.state.assessor = Assessor(app.state.profiles, app.state.inventory)
@@ -104,7 +107,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.assessor,
     )
     app.state.captures = Captures(
-        settings, app.state.inventory, app.state.extractor, app.state.segmenter, app.state.voice
+        settings,
+        app.state.inventory,
+        app.state.extractor,
+        app.state.segmenter,
+        app.state.voice,
+        app.state.photos,
     )
     app.state.templates = Templates()
     app.state.planner = Planner(
@@ -156,6 +164,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(extract_router)
     app.include_router(segment_router)
     app.include_router(items_router)
+    app.include_router(photos_router)
     app.include_router(profiles_router)
     app.include_router(measure_router)
     app.include_router(assess_router)

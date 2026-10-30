@@ -217,6 +217,7 @@ async def test_the_set_loads_in_fixture_mode_and_says_what_it_skipped(
     assert outcome.skipped == ["vacuum: photo photos/missing.jpg missing"]
     items = {i.name: i for i in loader.inventory.list_items()}
     adapter = loader.inventory.get(items["Laptop power adapter"].id)
+    assert loader.photos.count(adapter.id) == 1  # the photo it was read from stays with it
     # the reading's values are accepted, the owner value sits beside them, the note is kept
     assert adapter.fields["output_voltage"].review == "accepted"
     assert adapter.fields["output_current"].provenance == "owner_reported"
@@ -279,8 +280,17 @@ def test_reset_removes_only_the_inventory_file(recorded_settings: Settings) -> N
     media = recorded_settings.data_dir / "captures" / "1"
     media.mkdir(parents=True)
     (media / "clip.mp4").write_bytes(b"x")
-    assert sorted(reset(recorded_settings)) == ["captures/", db.name, f"{db.name}-wal"]
+    photos = recorded_settings.data_dir / "items" / "1"
+    photos.mkdir(parents=True)
+    (photos / "photo-1.jpg").write_bytes(b"x")
+    assert sorted(reset(recorded_settings)) == [
+        "captures/",
+        db.name,
+        f"{db.name}-wal",
+        "items/",
+    ]
     assert not db.exists() and ledger.exists() and not media.exists()
+    assert not photos.exists()  # item 1 of the next inventory must not wear these
     assert reset(recorded_settings) == []
 
 

@@ -33,6 +33,9 @@ separated `components`, and a `version` that every write increments.
 | `POST /api/items/{id}/assertions/{aid}/review` | `{"review": "accepted" \| "rejected" \| "proposed"}` for one observed value |
 | `POST /api/items/{id}/components` | separate a part into its own item under this one; the parent's faults note it; `201` with the part |
 | `GET /api/items/{id}/events` | the history: actor, time, change, version |
+| `GET /api/items/{id}/photos` | how many photos are kept with the item (`count`); an item read from a capture has the capture's, an item saved from the web form the label photos it was read from |
+| `GET /api/items/{id}/photos/{n}` | one of them as JPEG, `1` first, never cached; `404` past the count |
+| `POST /api/items/{id}/photos` | multipart `uploads`, one to `MAX_PHOTOS` in all on the item: re-encoded on the way in, metadata dropped; `201` with the new `count`; `422` over the limit, `400` for a file that is not an image |
 
 Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value
 outside the allowed sets (intent, availability, provenance, review), a field name that is not
