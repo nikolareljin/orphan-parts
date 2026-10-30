@@ -32,15 +32,15 @@ default): while it is off the route answers `503` with *pictures are off on this
   `reasoning_strength` `low` (the model's own refinement pass is skipped: a sketch of a use, not
   a product shot).
 - **Response.** `data[0].b64_json` decoded to the JPEG (an answer that is not a JPEG, `FF D8 FF`
-  first, is an incomplete answer: nothing is kept, the call is still charged); `revised_prompt` kept on the result;
-  `usage` (input and output tokens) kept in the ledger entry. Fixture mode answers from
-  `tests/fixtures/api/images-generations/picture.json`, a small gray JPEG, so tests and the
-  demo set run without a key. Record mode stores each picture's base64 in its fixture (about
-  1-2 MB a picture), so record pictures sparingly.
+  first, is an incomplete answer: nothing is kept, the call is still charged); `revised_prompt`
+  kept on the result; `usage` (input and output tokens) kept in the ledger entry. Fixture mode
+  answers from `tests/fixtures/api/images-generations/picture.json`, a small gray JPEG, so tests,
+  the browser checks and the demo set run without a key. Record mode stores each picture whole, in base64, in its
+  fixture, so record pictures sparingly.
 - **Where it lands.** `DATA_DIR/items/<id>/picture-<n>.jpg` with a `picture-<n>.json` record
   (what it was drawn as, the model, the cost, when; the number is claimed by creating the file
-exclusively, so two draws at once never overwrite each other), beside the item's photos and never
-  counted as one: `GET /api/items/{id}/photos` does not see it. Served by
+  exclusively, so two draws at once never overwrite each other), beside the item's photos and
+  never counted as one: `GET /api/items/{id}/photos` does not see it. Served by
   `GET /api/items/{id}/pictures/{n}`, never cached; gone with the item.
 
 ## Cost

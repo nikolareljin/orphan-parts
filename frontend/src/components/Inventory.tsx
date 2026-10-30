@@ -413,7 +413,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
             checked={item.public}
             onChange={(e) => void apply(() => api.items.setPublic(item.id, e.target.checked))}
           />{' '}
-          Public in the demo (what it is and its photos; never the location or the notes)
+          Public in the demo (what it is, its photos and drawn pictures; never the location or the notes)
         </label>
         <button type="button" className="link" onClick={() => void showEvents()}>
           History

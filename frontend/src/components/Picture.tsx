@@ -44,7 +44,8 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
     setError('')
     try {
       const drawn = await api.items.drawPicture(item.id, use.trim())
-      setPictures((kept) => [drawn, ...kept.filter((p) => p.n !== drawn.n)])
+      // in drawing order, as the list comes back
+      setPictures((kept) => [...kept.filter((p) => p.n !== drawn.n), drawn])
     } catch (err: unknown) {
       setError(message(err))
     } finally {

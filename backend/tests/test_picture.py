@@ -2,6 +2,7 @@
 from the recorded stub, kept beside the photos and never counted as one, charged in the
 ledger, shown but never drawn for the demo visitor, gone with the item."""
 
+import asyncio
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.inventory import FieldCreate, Inventory, ItemCreate
 from app.inventory.schema import Assertion, Review
+from app.inventory.service import NotFoundError
 from app.main import create_app
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.door import live_request
@@ -227,8 +229,6 @@ def test_the_prompt_never_carries_a_private_value(drawing_settings: Settings) ->
 
 
 async def test_two_draws_at_once_keep_both(drawing_settings: Settings) -> None:
-    import asyncio
-
     inventory = Inventory(drawing_settings)
     item = inventory.create(ItemCreate(item_type="laptop"))
     client = ModelApiClient(drawing_settings, CostLedger(cap_usd=25.0))
@@ -236,4 +236,38 @@ async def test_two_draws_at_once_keep_both(drawing_settings: Settings) -> None:
     drawn = await asyncio.gather(*(pictures.draw(item.id, use) for use in ("lamp", "mirror")))
     assert sorted(p.n for p in drawn) == [1, 2]
     assert {p.use for p in pictures.list(item.id).pictures} == {"lamp", "mirror"}
+    await client.aclose()
+
+
+async def test_a_picture_for_an_item_deleted_meanwhile_is_not_kept(
+    drawing_settings: Settings,
+) -> None:
+    inventory = Inventory(drawing_settings)
+    item = inventory.create(ItemCreate(item_type="laptop"))
+    client = ModelApiClient(drawing_settings, CostLedger(cap_usd=25.0))
+    pictures = Pictures(drawing_settings, client, inventory, Templates())
+    drawn = client.picture
+
+    async def delete_while_drawing(prompt: str, *, op: str = "picture") -> Any:
+        result = await drawn(prompt, op=op)
+        inventory.delete(item.id)
+        return result
+
+    client.picture = delete_while_drawing  # type: ignore[method-assign]
+    with pytest.raises(NotFoundError):
+        await pictures.draw(item.id, "lamp")
+    assert not pictures.folder(item.id).exists()
+    await client.aclose()
+
+
+async def test_an_item_with_no_type_or_name_is_drawn_as_an_item(
+    drawing_settings: Settings,
+) -> None:
+    inventory = Inventory(drawing_settings)
+    item = inventory.create(ItemCreate())
+    client = ModelApiClient(drawing_settings, CostLedger(cap_usd=25.0))
+    pictures = Pictures(drawing_settings, client, inventory, Templates())
+    picture = await pictures.draw(item.id, "")
+    assert picture.use == "item"
+    assert [p.name for p in pictures.folder(item.id).iterdir() if p.name.startswith(".")] == []
     await client.aclose()

@@ -118,8 +118,10 @@ class Pictures:
         if not self.settings.picture_enabled:
             raise PicturesOffError(OFF_LINE)
         item = self.inventory.get(item_id)
-        drawn_as = self._use(use) or item.item_type or item.name
+        drawn_as = self._use(use) or item.item_type or item.name or "item"
         result = await self.client.picture(prompt_for(item, drawn_as))
+        # the item may have been deleted while the picture was drawn: its folder stays gone
+        self.inventory.get(item_id)
         folder = self.folder(item_id)
         folder.mkdir(parents=True, exist_ok=True)
         n, fd = self._reserve(item_id)
@@ -133,7 +135,11 @@ class Pictures:
         )
         with os.fdopen(fd, "wb") as out:
             out.write(result.data)
-        (folder / f"picture-{n}.json").write_text(picture.model_dump_json(), encoding="utf-8")
+        # the record makes the picture visible, so it lands whole or not at all
+        record = folder / f"picture-{n}.json"
+        partial = folder / f".picture-{n}.json.part"
+        partial.write_text(picture.model_dump_json(), encoding="utf-8")
+        os.replace(partial, record)
         log.info(
             "item picture",
             extra={
