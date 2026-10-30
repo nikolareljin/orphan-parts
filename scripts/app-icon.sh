@@ -86,22 +86,40 @@ render() {  # render <svg> <png> <px>
   [[ -s "$2" ]] || fail "inkscape wrote nothing to $2"
 }
 
-# A crop is used only when the edits it rests on all took: the new viewBox once, the logo's
-# frame gone (its sed range closed), the bled ground there, and the document still closed. A
-# logo saved another way fails here instead of writing a broken or uncropped icon.
+# crop() edits the logo in four places, each of which has to be there exactly once: the
+# viewBox, the frame (the one '  <rect' block, closed by id="rect51" a few lines below), the end
+# of the defs, and the end of the document. A logo saved another way is refused before anything
+# is written, instead of coming out broken, uncropped or with a shape of it dropped.
+# occurrences, not lines: a second </defs> on the same line counts
+matches() { { grep -o -- "$1" "$2" || true; } | wc -l | tr -d ' '; }
+count() { matches "$1" "$logo"; }
+line_of() { grep -n -- "$1" "$logo" | head -1 | cut -d: -f1; }
+logo_fits() {
+  [[ "$(count 'viewBox="0 0 512 512"')" == 1 && "$(count '^  <rect$')" == 1 &&
+     "$(count 'id="rect51" />')" == 1 && "$(count '</defs>')" == 1 && "$(count '</svg>')" == 1 ]] &&
+    (( $(line_of '^  <rect$') < $(line_of 'id="rect51" />') &&
+       $(line_of 'id="rect51" />') - $(line_of '^  <rect$') < 16 )) ||
+    fail "$logo is not shaped as crop() expects (one viewBox, one frame '  <rect' ending at id=\"rect51\", one </defs>, one </svg>); update crop()"
+}
+
+# A crop is used only when its edits took: the new viewBox once, the frame gone, the bled ground
+# once, and a well-formed document (checked with python3 when there is one).
 checked() {  # checked <svg>
-  [[ "$(grep -c 'viewBox="0 0 512 512"' "$logo")" == 1 ]] &&
-    [[ "$(grep -c 'viewBox=' "$1")" == 1 ]] &&
+  [[ "$(matches 'viewBox=' "$1")" == 1 && "$(matches 'fill="url(#bgGrad)" />' "$1")" == 1 ]] &&
     ! grep -q 'viewBox="0 0 512 512"' "$1" &&
     ! grep -q 'id="rect51"' "$1" &&
-    grep -q 'fill="url(#bgGrad)" />' "$1" &&
     [[ "$(tail -n 1 "$1")" == *"</svg>" ]] ||
-    fail "the crop of $logo did not take (its viewBox, its frame id=\"rect51\" or its </defs> changed); update crop()"
+    fail "the crop of $logo did not take; update crop()"
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -I -c 'import sys, xml.dom.minidom; xml.dom.minidom.parse(sys.argv[1])' "$1" 2>/dev/null ||
+      fail "the crop of $logo is not well-formed; update crop()"
+  fi
 }
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
+logo_fits
 crop "$CANVAS_DP" > "$work/foreground.svg"
 checked "$work/foreground.svg"
 inner="$(calc "$VISIBLE_DP * $unit_per_dp")"
@@ -113,8 +131,8 @@ crop "$legacy_side" "<circle cx=\"$CX\" cy=\"$CY\" r=\"$(calc "$inner / 2")\" />
 crop "$VISIBLE_DP" "<rect x=\"$ix\" y=\"$iy\" width=\"$inner\" height=\"$inner\" rx=\"$(calc "$inner / 5")\" />" > "$work/brand.svg"
 for svg in square round brand; do checked "$work/$svg.svg"; done
 
-# Every file is rendered under $work first and moved into place only when all of them are there,
-# so a failure half-way leaves the icons as they were.
+# Every file is rendered under $work first and copied into place once every render succeeded, so
+# a render that fails half-way leaves the icons as they were.
 
 # density: pixels per dp
 for density in mdpi:1 hdpi:1.5 xhdpi:2 xxhdpi:3 xxxhdpi:4; do
@@ -129,7 +147,9 @@ for density in mdpi:1 hdpi:1.5 xhdpi:2 xxhdpi:3 xxxhdpi:4; do
 done
 for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
   mkdir -p "$res/mipmap-$density"
-  cp -- "$work/mipmap-$density/"*.png "$res/mipmap-$density/"
+  for png in ic_launcher_foreground ic_launcher ic_launcher_round; do
+    cp -- "$work/mipmap-$density/$png.png" "$res/mipmap-$density/$png.png"
+  done
 done
 cp -- "$work/brand.svg" "$web/brand.svg"
 say "web: frontend/public/brand.svg"

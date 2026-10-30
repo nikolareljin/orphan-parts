@@ -30,7 +30,7 @@ test_app_icon_writes_every_density_and_the_web_mark() {
   _app_icon_tree "$dir"
   assert_true env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
   res="$dir/android/app/src/main/res"
-  # three PNGs per density, at 108dp and 48dp in pixels (rendered aside, then moved into place)
+  # three PNGs per density, at 108dp and 48dp in pixels (rendered aside, then copied into place)
   assert_eq "$(grep -c -- '--export-type=png' "$dir/inkscape.log")" "15"
   assert_true grep -q -- "/mipmap-mdpi/ic_launcher_foreground.png --export-width=108 " "$dir/inkscape.log"
   assert_true grep -q -- "/mipmap-hdpi/ic_launcher.png --export-width=72 " "$dir/inkscape.log"
@@ -77,26 +77,7 @@ test_app_icon_refuses_an_unknown_option() {
   assert_eq "$rc" "2"
 }
 
-test_app_icon_refuses_a_logo_whose_frame_moved() {
-  local dir
-  dir="$(mktemp -d)" || { assert_true false; return; }
-  _app_icon_tree "$dir"
-  sed -i 's/id="rect51"/id="frame"/' "$dir/docs/assets/logo.svg"
-  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
-  assert_true grep -q 'did not take' <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
-  assert_false test -e "$dir/frontend/public/brand.svg"
-  _app_icon_cleanup "$dir"
-}
 
-test_app_icon_refuses_a_logo_whose_viewbox_changed() {
-  local dir
-  dir="$(mktemp -d)" || { assert_true false; return; }
-  _app_icon_tree "$dir"
-  sed -i 's/viewBox="0 0 512 512"/viewBox="0 0 512 512.0"/' "$dir/docs/assets/logo.svg"
-  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
-  assert_false test -e "$dir/frontend/public/brand.svg"
-  _app_icon_cleanup "$dir"
-}
 
 test_app_icon_keeps_the_icons_when_inkscape_writes_nothing() {
   local dir
@@ -126,5 +107,65 @@ STUB
   assert_true env PATH="$dir/bin:$PATH" LC_ALL=el_GR.UTF-8 ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
   assert_true grep -q 'viewBox="51.9988 35.9988 408.0024 408.0024"' "$dir/frontend/public/brand.svg"
   assert_true grep -q -- '--export-width=108 ' "$dir/inkscape.log"
+  _app_icon_cleanup "$dir"
+}
+
+# Each way a logo can stop fitting the crop's edits is refused with a line, before anything is
+# written: the frame's id renamed, its close before its open, a second shape at the frame's
+# indent, the viewBox changed, a second </defs>, a second </svg>; and a crop that comes out with
+# two bled grounds or not well-formed.
+test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
+  local dir edit
+  for edit in \
+    's/id="rect51"/id="frame"/' \
+    '0,/^  <rect$/s//  <rect id="rect51" \/>\n  <rect/' \
+    's|^  <rect$|  <rect\n     id="extra" />\n  <rect|' \
+    's/viewBox="0 0 512 512"/viewBox="0 0 512 512.0"/' \
+    's|</defs>|</defs><defs></defs>|' \
+    's|</svg>|<svg></svg></svg>|' \
+    's|^  </defs>$|  </defs>\n  <rect fill="url(#bgGrad)" />|' \
+    's|^  </defs>$|  </defs>\n  <text>a \& b</text>|'; do
+    # the last two fit the logo's shape and break only the crop: a second bled ground, and a
+    # document that does not parse (checked with python3, so skipped without it)
+    [[ "$edit" == *'<text>'* ]] && ! command -v python3 >/dev/null 2>&1 && continue
+    dir="$(mktemp -d)" || { assert_true false; return; }
+    _app_icon_tree "$dir"
+    sed -i "$edit" "$dir/docs/assets/logo.svg"
+    assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+    assert_true grep -q 'update crop()' <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
+    assert_false test -e "$dir/frontend/public/brand.svg"
+    assert_false test -e "$dir/inkscape.log"
+    _app_icon_cleanup "$dir"
+  done
+}
+
+# A render that fails half-way (the fourth call, the first hdpi one) leaves every icon and the
+# web mark as they were, the densities already rendered included.
+test_app_icon_keeps_every_icon_when_a_later_render_fails() {
+  local dir res density png
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  res="$dir/android/app/src/main/res"
+  for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+    mkdir -p "$res/mipmap-$density"
+    for png in ic_launcher_foreground ic_launcher ic_launcher_round; do
+      printf 'old %s %s\n' "$density" "$png" > "$res/mipmap-$density/$png.png"
+    done
+  done
+  printf 'old mark\n' > "$dir/frontend/public/brand.svg"
+  cp -r "$res" "$dir/res.before"
+  cp "$dir/frontend/public/brand.svg" "$dir/brand.before"
+  mv "$dir/bin/inkscape" "$dir/bin/inkscape-ok"
+  cat > "$dir/bin/inkscape" <<STUB
+#!/usr/bin/env bash
+n=\$(( \$(cat "$dir/calls" 2>/dev/null || echo 0) + 1 )); echo "\$n" > "$dir/calls"
+(( n < 4 )) || exit 1
+exec "$dir/bin/inkscape-ok" "\$@"
+STUB
+  chmod +x "$dir/bin/inkscape"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_eq "$(cat "$dir/calls")" "4"
+  assert_true diff -r "$dir/res.before" "$res"
+  assert_true cmp -s "$dir/brand.before" "$dir/frontend/public/brand.svg"
   _app_icon_cleanup "$dir"
 }
