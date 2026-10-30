@@ -217,6 +217,7 @@ async def test_the_set_loads_in_fixture_mode_and_says_what_it_skipped(
     assert outcome.skipped == ["vacuum: photo photos/missing.jpg missing"]
     items = {i.name: i for i in loader.inventory.list_items()}
     adapter = loader.inventory.get(items["Laptop power adapter"].id)
+    assert loader.photos.count(adapter.id) == 1  # the photo it was read from stays with it
     # the reading's values are accepted, the owner value sits beside them, the note is kept
     assert adapter.fields["output_voltage"].review == "accepted"
     assert adapter.fields["output_current"].provenance == "owner_reported"

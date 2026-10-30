@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
@@ -72,8 +72,10 @@ export default function ExtractForm({
 
   // The reading becomes a private record: observed fields, each still to confirm.
   // A failed save keeps the reading on the page: it was paid for, and can be saved again.
+  const saving = useRef(false)
   async function save() {
-    if (state.kind !== 'done' || state.saved) return
+    if (state.kind !== 'done' || state.saved || saving.current) return
+    saving.current = true // one item per click, however long the save and the upload take
     try {
       const saved = await api.items.create({ extraction: state.result, name: name.trim() })
       // the photos the reading was made from stay with the item, beside the values to confirm;
@@ -88,6 +90,8 @@ export default function ExtractForm({
       onSaved?.(saved)
     } catch (err: unknown) {
       setState({ ...state, saveError: messageOf(err) })
+    } finally {
+      saving.current = false
     }
   }
 

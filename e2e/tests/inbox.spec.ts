@@ -99,7 +99,9 @@ test('a capture from the phone is listed, read into an item and opened', async (
   await expect(card).toContainText('read by')
   await card.getByRole('button', { name: /Open item #\d+/ }).click()
   await expect(page.getByRole('dialog')).toContainText(`Captured adapter ${stamp}`)
-  await expect(page.getByRole('dialog').getByRole('img', { name: 'Item photo 1' })).toBeVisible()
+  const photo = page.getByRole('dialog').getByRole('img', { name: 'Item photo 1', exact: true })
+  await expect(photo).toBeVisible()
+  await expect.poll(() => photo.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
 })
 
 test('a capture is deleted from the inbox', async ({ page, request }) => {

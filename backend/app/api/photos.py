@@ -38,7 +38,7 @@ async def add_item_photos(item_id: int, uploads: PhotosPart, photos: PhotosDep) 
     """Keep the photos an item was read from. Re-encoded on the way in, metadata dropped."""
     limit = photos.settings.max_photos
     if len(uploads) > limit:
-        # before a byte is read: a send over the ceiling is refused for its count alone
+        # refused for its count alone, before any part is read into memory
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"an item keeps at most {limit} photos; {len(uploads)} were sent",
