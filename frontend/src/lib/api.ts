@@ -171,6 +171,11 @@ export interface ComponentCreate {
   notes?: string
 }
 
+// How many photos are kept with an item; each is at /api/items/{id}/photos/{n}, 1 first.
+export interface PhotoCount {
+  count: number
+}
+
 export interface ItemEvent {
   id: number
   item_id: number
@@ -800,6 +805,13 @@ export const api = {
       sendJson<Item>('POST', `/api/items/${id}/assertions/${assertionId}/review`, { review }),
     addComponent: (id: number, spec: ComponentCreate) => sendJson<Item>('POST', `/api/items/${id}/components`, spec),
     events: (id: number) => getJson<ItemEvent[]>(`/api/items/${id}/events`),
+    photos: (id: number) => getJson<PhotoCount>(`/api/items/${id}/photos`),
+    photoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/photos/${n}`),
+    addPhotos: (id: number, photos: File[]) =>
+      postForm<PhotoCount>(
+        `/api/items/${id}/photos`,
+        photos.map((p): FormPart => ['uploads', p]),
+      ),
     measurements: (id: number) => getJson<Measurement[]>(`/api/items/${id}/measurements`),
     measure: (id: number, photo: File, request: MeasureRequest) =>
       postForm<Measurement>(`/api/items/${id}/measurements`, [

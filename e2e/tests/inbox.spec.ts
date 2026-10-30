@@ -99,6 +99,7 @@ test('a capture from the phone is listed, read into an item and opened', async (
   await expect(card).toContainText('read by')
   await card.getByRole('button', { name: /Open item #\d+/ }).click()
   await expect(page.getByRole('dialog')).toContainText(`Captured adapter ${stamp}`)
+  await expect(page.getByRole('dialog').getByRole('img', { name: 'Item photo 1' })).toBeVisible()
 })
 
 test('a capture is deleted from the inbox', async ({ page, request }) => {

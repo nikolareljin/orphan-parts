@@ -66,6 +66,8 @@ test('a reading is saved privately and shows up in the inventory to confirm', as
 
   const panel = page.getByRole('article', { name: `Item ${charger}` })
   await expect(panel).toContainText('laptop power adapter')
+  // the photo the reading was made from is kept with the item, above the values to confirm
+  await expect(panel.getByRole('img', { name: 'Item photo 1' })).toBeVisible()
   await expect(panel.getByText(/\d+ to confirm/)).toBeVisible()
   const voltage = panel.getByRole('table', { name: 'Fields' }).getByRole('row', { name: /Output voltage/ })
   await expect(voltage).toContainText('19.5 V')
@@ -84,6 +86,7 @@ test('intent, an owner value, a separated part and the history', async ({ page, 
   const items = page.getByRole('table', { name: 'Items' })
   await items.getByRole('row', { name: webcam }).getByRole('button', { name: 'Open' }).click()
   const panel = page.getByRole('article', { name: `Item ${webcam}` })
+  await expect(panel).toContainText('No photo kept with this item.')
 
   await panel.getByLabel('Intent').selectOption('sell')
   await expect(items.getByRole('row', { name: webcam })).toContainText('Sell')

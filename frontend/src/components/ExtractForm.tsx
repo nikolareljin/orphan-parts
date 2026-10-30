@@ -76,7 +76,15 @@ export default function ExtractForm({
     if (state.kind !== 'done' || state.saved) return
     try {
       const saved = await api.items.create({ extraction: state.result, name: name.trim() })
-      setState({ ...state, saved, saveError: undefined })
+      // the photos the reading was made from stay with the item, beside the values to confirm;
+      // the item is saved either way, and a refused photo is said rather than undoing the save
+      let photoNote: string | undefined
+      try {
+        await api.items.addPhotos(saved.id, files)
+      } catch (err: unknown) {
+        photoNote = `The item is saved; its photos were not kept: ${messageOf(err)}`
+      }
+      setState({ ...state, saved, saveError: photoNote })
       onSaved?.(saved)
     } catch (err: unknown) {
       setState({ ...state, saveError: messageOf(err) })

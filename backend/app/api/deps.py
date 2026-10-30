@@ -13,6 +13,7 @@ from app.match.service import Assessor
 from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import Gate
+from app.photos import ItemPhotos
 from app.profiles import Profiles
 from app.projects.service import Planner
 from app.segment.service import Segmenter
@@ -135,3 +136,11 @@ def app_captures(request: Request) -> Captures:
 
 
 CapturesDep = Annotated[Captures, Depends(app_captures)]
+
+
+def app_photos(request: Request) -> ItemPhotos:
+    photos: ItemPhotos = request.app.state.photos
+    return photos
+
+
+PhotosDep = Annotated[ItemPhotos, Depends(app_photos)]

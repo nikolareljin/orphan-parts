@@ -8,8 +8,10 @@ approve.
 ## From a reading to a record
 
 Read a label, then **Save privately**. Every field the model read becomes an **observed** value
-on the new item, marked *to confirm*. On the item page you accept or reject each one. A rejected
-observation disappears from the item's current values but stays in the record.
+on the new item, marked *to confirm*. On the item page you accept or reject each one, with the
+photos the reading was made from above the values (they stay in view while the list scrolls;
+one click makes a photo large). A rejected observation disappears from the item's current
+values but stays in the record.
 
 Anything you know yourself goes in through **Add what you know**: a field, a value, a unit, and
 how you know it (stated by you, documented, tested, estimated). Your value is accepted as stated

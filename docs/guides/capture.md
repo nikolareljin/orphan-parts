@@ -21,8 +21,9 @@ the note to hear, the line, the status. **Read it** turns a capture into an item
 go through the same reading as the web form (the label found first by SAM 3.1, the fields read
 by Muse Spark, every value marked as observed and waiting for you to confirm), the note is
 transcribed by Muse Voice Transcribe and kept on the item as your words, the line becomes the
-item's notes, and a clip is noted as having come with it. **Open item** goes to the inventory.
-**Delete** removes the capture and its files; an item made from it stays.
+item's notes, and a clip is noted as having come with it. The capture's photos pass to the
+item, shown above its values. **Open item** goes to the inventory. **Delete** removes the
+capture and its files; an item made from it stays, photos included.
 
 ## What is kept
 
