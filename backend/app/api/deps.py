@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 
 from app.captures.service import Captures
 from app.config import Settings
+from app.decide.service import Decider
 from app.extract.service import Extractor
 from app.find.service import Finder
 from app.inventory.service import Inventory
@@ -144,3 +145,11 @@ def app_photos(request: Request) -> ItemPhotos:
 
 
 PhotosDep = Annotated[ItemPhotos, Depends(app_photos)]
+
+
+def app_decider(request: Request) -> Decider:
+    decider: Decider = request.app.state.decider
+    return decider
+
+
+DeciderDep = Annotated[Decider, Depends(app_decider)]

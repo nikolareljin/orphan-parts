@@ -430,6 +430,63 @@ class Inventory:
                 "SELECT * FROM price_reports WHERE item_id = ? ORDER BY sold_on, id", (item_id,)
             ).fetchall()
 
+    # what the item is good for: stored as written, read back with the item's current version
+
+    _USES_SELECT = (
+        "SELECT u.*, i.version AS current_item_version FROM uses u JOIN items i ON i.id = u.item_id"
+    )
+
+    def add_uses(self, item_id: int, content: str, *, item_version: int) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            last = conn.execute(
+                "SELECT MAX(version) FROM uses WHERE item_id = ?", (item_id,)
+            ).fetchone()[0]
+            version = int(last or 0) + 1
+            # Keep the version used in the brief, even if the item changed during the request.
+            self._event(conn, item_id, f"uses written (v{version})", item_version, at)
+            cur = conn.execute(
+                "INSERT INTO uses (item_id, version, item_version, content, created_at)"
+                " VALUES (?,?,?,?,?)",
+                (item_id, version, item_version, content, at),
+            )
+            found: sqlite3.Row | None = conn.execute(
+                self._USES_SELECT + " WHERE u.id = ?", (int(cur.lastrowid or 0),)
+            ).fetchone()
+            assert found is not None
+            return found
+
+    def uses(self, item_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            return conn.execute(
+                self._USES_SELECT + " WHERE u.item_id = ? ORDER BY u.id", (item_id,)
+            ).fetchall()
+
+    def decide(
+        self, item_id: int, intent: str, change: str, *, said: bool, version: int | None = None
+    ) -> Item:
+        """The owner's decision: the intent it implies is set and the decision itself is the
+        event line, so the history keeps the why. The version is bumped only when the item
+        changes: a new intent, or a note (``said``) that gives the item a new why. The same
+        choice again, with nothing said, is an event and nothing more; the guidance and the
+        uses written before it stay current. With ``version`` set, a choice made from an older
+        version of the item is refused and nothing is written."""
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            if version is not None and version != int(row["version"]):
+                raise VersionConflictError(
+                    f"item {item_id} is at version {row['version']}, not {version}"
+                )
+            version = int(row["version"])
+            if intent != str(row["intent"]) or said:
+                version += 1
+                conn.execute(SET_COLUMN["intent"], (intent, version, at, item_id))
+            self._event(conn, item_id, change, version, at)
+            return self._item(conn, item_id)
+
     # missing-item searches and their candidates; a search may name the item it is for
 
     _SEARCH_SELECT = (

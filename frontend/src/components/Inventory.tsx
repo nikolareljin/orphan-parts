@@ -3,6 +3,7 @@ import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, 
 import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
+import Decide from './Decide'
 import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
@@ -120,6 +121,8 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
   const [details, setDetails] = useState({ condition: '', faults: '', tests_done: '', accessories: '', location: '', notes: '' })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [profiles, setProfiles] = useState<ProfileSummary[]>([])
+  // a guidance written on the Value panel: the Decide panel's worth row reads it again
+  const [guided, setGuided] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -179,6 +182,8 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
 
   // Every change goes through here: the item is replaced by the server's answer, the list reloads.
   // A write refused because the item changed in between reloads it instead of overwriting.
+  // The refusal is shown here and thrown again, so a panel with its own error line says it too
+  // and does not carry on as if the change had happened.
   async function apply(action: () => Promise<Item>) {
     try {
       show(await action())
@@ -189,13 +194,20 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         try {
           show(await api.items.get(id))
           setError(`${message(err)}. The item was reloaded; make the change again if it still applies.`)
-          return
-        } catch {
-          // fall through to the original message
+          throw err
+        } catch (reloadErr: unknown) {
+          if (reloadErr === err) throw err
+          // the reload failed too: the original message stands
         }
       }
       setError(message(err))
+      throw err
     }
+  }
+
+  // The same for a control with nowhere of its own to say a refusal: the error line above says it.
+  function attempt(action: () => Promise<Item>) {
+    void apply(action).catch(() => undefined)
   }
 
   async function showEvents() {
@@ -255,7 +267,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
           <select
             value={item.intent}
             onChange={(e) =>
-              void apply(() =>
+              attempt(() =>
                 api.items.update(item.id, { intent: e.target.value as Item['intent'], version: item.version }),
               )
             }
@@ -272,7 +284,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
           <select
             value={item.availability}
             onChange={(e) =>
-              void apply(() =>
+              attempt(() =>
                 api.items.update(item.id, {
                   availability: e.target.value as Item['availability'],
                   version: item.version,
@@ -291,7 +303,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
           <span>Profile</span>
           <select
             value={item.profile}
-            onChange={(e) => void apply(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
+            onChange={(e) => attempt(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
           >
             <option value="">none yet</option>
             {profiles.map((p) => (
@@ -335,10 +347,10 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
                   {reviewLabel(a.review)}
                   {a.review === 'proposed' && (
                     <span className="actions">
-                      <button type="button" className="link" onClick={() => void apply(() => api.items.review(item.id, a.id, 'accepted'))}>
+                      <button type="button" className="link" onClick={() => attempt(() => api.items.review(item.id, a.id, 'accepted'))}>
                         Accept
                       </button>
-                      <button type="button" className="link" onClick={() => void apply(() => api.items.review(item.id, a.id, 'rejected'))}>
+                      <button type="button" className="link" onClick={() => attempt(() => api.items.review(item.id, a.id, 'rejected'))}>
                         Reject
                       </button>
                     </span>
@@ -356,7 +368,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         className="details"
         onSubmit={(e: FormEvent) => {
           e.preventDefault()
-          void apply(() => api.items.update(item.id, { ...details, version: item.version }))
+          attempt(() => api.items.update(item.id, { ...details, version: item.version }))
         }}
       >
         <h4>Details</h4>
@@ -393,20 +405,26 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
       )}
 
-      <Measure item={item} onMeasured={() => void apply(() => api.items.get(item.id))} />
+      <Decide
+        item={item}
+        guided={guided}
+        onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
+      />
+
+      <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
 
       <Assess item={item} />
 
-      <Value item={item} />
+      <Value item={item} onGuided={() => setGuided((n) => n + 1)} />
 
-      <Listing item={item} onChanged={() => void apply(() => api.items.get(item.id))} />
+      <Listing item={item} onChanged={() => attempt(() => api.items.get(item.id))} />
 
       <div className="row">
         <label className="inline">
           <input
             type="checkbox"
             checked={item.public}
-            onChange={(e) => void apply(() => api.items.setPublic(item.id, e.target.checked))}
+            onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
           />{' '}
           Public in the demo (what it is and its photos; never the location or the notes)
         </label>
@@ -491,11 +509,14 @@ function AddField({ onAdd }: { onAdd: (spec: { field: string; value: string; uni
       onSubmit={(e: FormEvent) => {
         e.preventDefault()
         if (!name || !value.trim()) return
-        void onAdd({ field: name, value: value.trim(), unit: unit.trim(), provenance }).then(() => {
-          setField('')
-          setValue('')
-          setUnit('')
-        })
+        // the form clears once the value is on the item; a refusal leaves it as typed
+        void onAdd({ field: name, value: value.trim(), unit: unit.trim(), provenance })
+          .then(() => {
+            setField('')
+            setValue('')
+            setUnit('')
+          })
+          .catch(() => undefined)
       }}
     >
       <h4>Add what you know</h4>
@@ -537,10 +558,12 @@ function AddComponent({ onAdd }: { onAdd: (spec: { name: string; condition: stri
       onSubmit={(e: FormEvent) => {
         e.preventDefault()
         if (!name.trim()) return
-        void onAdd({ name: name.trim(), condition: condition.trim() }).then(() => {
-          setName('')
-          setCondition('')
-        })
+        void onAdd({ name: name.trim(), condition: condition.trim() })
+          .then(() => {
+            setName('')
+            setCondition('')
+          })
+          .catch(() => undefined)
       }}
     >
       <h4>Separate a part</h4>
