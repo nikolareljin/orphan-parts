@@ -20,6 +20,12 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
   const [note, setNote] = useState('')
   const [noteCut, setNoteCut] = useState(false)
 
+  // a decision on the item (Sell, Give away) picks the mode; any other intent leaves the radio
+  // where it is, and the radio still changes it
+  useEffect(() => {
+    if (item.intent === 'sell' || item.intent === 'give') setMode(item.intent)
+  }, [item.intent])
+
   useEffect(() => {
     let cancelled = false
     api.drafts

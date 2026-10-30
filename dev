@@ -40,6 +40,10 @@
 #                      access codes as records beside DEMO_ACCESS_CODE: issue one (shown once),
 #                      list them, end one; the backend picks them up without a restart;
 #                      `keys --hosted ...` does the same on the Modal deployment's inventory
+#   gate on [--label <who>] [--days N] | gate off | gate show
+#                      the access code on this machine: on makes one when .env has none, restarts
+#                      the backend with the gate, issues a code for the phone or a guest and
+#                      prints both to copy; off clears it; show prints the master code
 #   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
 #                      answers, nothing spent); --keep adds to what is there
 #   eval [--keep] [--live]
@@ -389,6 +393,115 @@ cmd_demo() {
   log_ok "demo set loaded"
 }
 
+# Compose reads DEMO_ACCESS_CODE from the shell before .env, an empty one too: one set there would
+# win over the value the gate writes, and the backend would start with another code than the one
+# printed. _gate_shell_check [code]: passes when the shell sets none, or exactly the code given.
+_gate_shell_check() {
+  [[ -n "${DEMO_ACCESS_CODE+x}" ]] || return 0
+  [[ $# -gt 0 && "$DEMO_ACCESS_CODE" == "$1" ]] && return 0
+  die "DEMO_ACCESS_CODE is set in this shell and overrides .env for the backend: unset DEMO_ACCESS_CODE, then run ./dev gate again"
+}
+
+# The host port Compose published for the backend (BACKEND_PORT from the shell or from .env),
+# else this script's own BACKEND_PORT.
+_gate_backend_port() {
+  local published
+  published="$(compose port backend 8000 2>/dev/null | tail -n 1)" || published=""
+  published="${published##*:}"
+  if [[ "$published" =~ ^[0-9]+$ ]]; then printf '%s\n' "$published"; else printf '%s\n' "$BACKEND_PORT"; fi
+}
+
+cmd_gate() {
+  local usage="usage: ./dev gate on [--label <who>] [--days N] | off | show"
+  local what="${1:-}" label="phone" days=7 opts=0 code
+  [[ -n "${CI:-}" ]] && die "gate is for this machine only, never CI"
+  shift || true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --label) [[ $# -ge 2 && -n "$2" ]] || die "--label needs a value"; label="$2"; shift 2 ;;
+      --days) [[ $# -ge 2 && "$2" =~ ^[1-9][0-9]*$ ]] || die "--days needs a whole number, 1 or more"; days="$2"; shift 2 ;;
+      *) die "$usage" ;;
+    esac
+    opts=1
+  done
+  [[ $opts -eq 0 || "$what" == on ]] || die "$usage"
+  if [[ "$what" == on ]]; then
+    label="${label#"${label%%[![:space:]]*}"}"; label="${label%"${label##*[![:space:]]}"}"
+    [[ -n "$label" && ${#label} -le 60 && "$label" != *$'\n'* && "$label" != *$'\r'* ]] \
+      || die "--label needs one line, 1 to 60 characters"
+  fi
+  case "$what" in
+    show)
+      code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
+      [[ -n "$code" ]] || die "no DEMO_ACCESS_CODE in .env: the gate is off (./dev gate on)"
+      _gate_shell_check "$code"
+      printf 'access code (the master, this machine): %s\n' "$code"
+      ;;
+    off)
+      need_env_file
+      _gate_shell_check ""
+      env_set DEMO_ACCESS_CODE "" "$ROOT/.env"
+      # a running backend is recreated with the change; a stopped one is left stopped
+      if docker_running && [[ -n "$(compose ps --status running -q backend 2>/dev/null)" ]]; then
+        api_mode_or_fixture
+        compose up -d backend >/dev/null || die "the backend did not start again (./dev logs backend)"
+        wait_http "http://localhost:$(_gate_backend_port)/readyz" 60 || { compose logs --tail 20 backend; die "the backend did not come back (its log is above)"; }
+        log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env, the backend restarted"
+      else
+        log_ok "the gate is off: DEMO_ACCESS_CODE cleared in .env; the backend is not running, the change applies on the next ./dev up"
+      fi
+      ;;
+    on)
+      need_env_file
+      docker_running || die "docker is not running"
+      code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
+      if [[ -n "$code" ]]; then _gate_shell_check "$code"; else _gate_shell_check; fi
+      local work issued line issued_code="" port
+      tmp_dir work
+      if [[ -z "$code" ]]; then
+        # 24 characters from the system's randomness, letters and digits only, easy to type;
+        # made in the backend's own image, so the host needs no Python. The code is the last
+        # line: an image built first for it prints the build's progress on stdout before it
+        code="$(compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -c 'import secrets,string; a=string.ascii_lowercase+string.digits; print("".join(secrets.choice(a) for _ in range(24)))' 2>"$work/stderr" | tail -n 1 | tr -d '\r\n')" || code=""
+        if [[ ! "$code" =~ ^[a-z0-9]{24}$ ]]; then
+          cat -- "$work/stderr" >&2
+          die "no code could be made (is the backend image built? ./dev up --build)"
+        fi
+        env_set DEMO_ACCESS_CODE "$code" "$ROOT/.env"
+        log_info "a master access code was written to .env (git-ignored)"
+      fi
+      [[ ${#code} -ge 12 ]] || die "DEMO_ACCESS_CODE in .env is shorter than 12 characters; the backend refuses it (./dev gate off, then on again)"
+      # the backend reads .env on start: recreated (or started, alone) so the gate is on from its
+      # next answer; without a key it runs in fixture mode, as ./dev up starts it
+      api_mode_or_fixture
+      compose up -d backend >/dev/null || die "the backend did not start (./dev logs backend)"
+      port="$(_gate_backend_port)"
+      wait_http "http://localhost:$port/readyz" 60 || { compose logs --tail 20 backend; die "the backend did not come back (its log is above)"; }
+      printf '\naccess code (the master, for you):     %s\n' "$code"
+      # the code is the stdout line "<label>: <code>" (the label as the backend keeps it, trimmed);
+      # stderr (compose's own lines, the expiry note) is kept apart and shown only on failure
+      label="${label#"${label%%[![:space:]]*}"}"; label="${label%"${label##*[![:space:]]}"}"
+      if ! issued="$(compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys issue --label="$label" --days="$days" 2>"$work/stderr")"; then
+        cat -- "$work/stderr" >&2
+        die "no code issued for $label: the gate is on with the master above (./dev keys list; ./dev keys revoke $label, or another --label)"
+      fi
+      while IFS= read -r line; do
+        line="${line%$'\r'}"
+        if [[ "$line" == "$label: "* ]]; then issued_code="${line#"$label: "}"; break; fi
+      done <<< "$issued"
+      if [[ -z "$issued_code" ]]; then
+        cat -- "$work/stderr" >&2
+        die "no line \"$label: <code>\" in the answer of app.keys issue; ./dev keys list shows whether a code for $label was issued"
+      fi
+      printf 'issued code (for %s, %s days):    %s\n' "$label" "$days" "$issued_code"
+      printf '\nOn the web app: Sign in with the code, then Pair the phone shows the QR code.\n'
+      printf 'On the phone: Backend tab, type the address and the code, or Scan to pair.\n'
+      printf './dev gate show prints the master again; ./dev gate off turns the gate off.\n'
+      ;;
+    *) die "$usage" ;;
+  esac
+}
+
 cmd_keys() {
   [[ $# -ge 1 ]] || die "usage: ./dev keys [--hosted] issue --label <who> [--days N] | list | revoke <label>"
   if [[ "$1" == "--hosted" ]]; then
@@ -475,6 +588,7 @@ case "$cmd" in
   phone) cmd_phone "$@" ;;
   demo) cmd_demo "$@" ;;
   keys) cmd_keys "$@" ;;
+  gate) cmd_gate "$@" ;;
   eval) cmd_eval "$@" ;;
   record-fixtures) cmd_record_fixtures "$@" ;;
   demo-scrub) cmd_demo_scrub "$@" ;;

@@ -69,6 +69,13 @@ against parts from the parts' own guidance; a live call through a mock server ca
 `web_search` tool, the location and the include, with two searches billed; the routes and their
 refusals. Search calls, results and citations are read off a response in isolation.
 
+Deciding is tested against a recorded answer (`uses`): the templates a laptop fills and a
+charger does not, the brief without a serial number, a location or the notes, the model's text
+trimmed and capped, the uses kept per item and made stale by an edit, the view with its
+guidance, searches, committed projects and last decision, the same choice again as an event
+without a new version, a choice from an older version refused with 409, and the demo visitor
+refused on every route.
+
 Listing drafts are tested against the recorded Muse Spark answers (`draft-sell`, `draft-give`):
 facts resting on unconfirmed fields dropped, the disclosures appended, the free title, the
 data steps, a stale draft after the item changes, and a working claim without a recorded test

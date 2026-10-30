@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -204,6 +204,19 @@ ALTER TABLE items ADD COLUMN public INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE captures ADD COLUMN public INTEGER NOT NULL DEFAULT 0;
 """
 
+# version 11: what an item is good for, one answer per asking, written from one item version
+_SCHEMA_V11 = """
+CREATE TABLE uses (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    version INTEGER NOT NULL,
+    item_version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX uses_by_item ON uses (item_id);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -215,6 +228,7 @@ MIGRATIONS: dict[int, str] = {
     8: _SCHEMA_V8,
     9: _SCHEMA_V9,
     10: _SCHEMA_V10,
+    11: _SCHEMA_V11,
 }
 
 
