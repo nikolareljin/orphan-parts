@@ -674,8 +674,34 @@ export function apiUrl(path: string): string {
   return `${apiBase}${path.startsWith('/') ? path : `/${path}`}`
 }
 
+// When the API lives on another origin (the web app on Cloudflare Pages, the backend on
+// Modal), the gate's cookie never crosses, so the session token from POST /api/access is
+// kept for the tab and sent as a bearer header. Same origin keeps the cookie and no token.
+const TOKEN_KEY = 'opl-session'
+export const crossOrigin = apiBase !== '' && (typeof window === 'undefined' || !apiBase.startsWith(window.location.origin))
+
+export function keepToken(token: string): void {
+  if (!crossOrigin) return
+  try {
+    if (token) sessionStorage.setItem(TOKEN_KEY, token)
+    else sessionStorage.removeItem(TOKEN_KEY)
+  } catch {
+    // storage blocked: the session lasts the page
+  }
+}
+
+function authHeaders(): Record<string, string> {
+  if (!crossOrigin) return {}
+  try {
+    const token = sessionStorage.getItem(TOKEN_KEY)
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  } catch {
+    return {}
+  }
+}
+
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(apiUrl(path), { headers: { Accept: 'application/json' } })
+  const res = await fetch(apiUrl(path), { headers: { Accept: 'application/json', ...authHeaders() }, credentials: 'include' })
   if (!res.ok) {
     noteStatus(res.status)
     throw new ApiError(res.status, `${path}: HTTP ${res.status}`)
@@ -709,7 +735,7 @@ async function postForm<T>(path: string, parts: FormPart[]): Promise<T> {
     if (typeof value === 'string') form.append(field, value)
     else form.append(field, value, value.name)
   }
-  const res = await fetch(apiUrl(path), { method: 'POST', body: form, headers: { Accept: 'application/json' } })
+  const res = await fetch(apiUrl(path), { method: 'POST', body: form, headers: { Accept: 'application/json', ...authHeaders() }, credentials: 'include' })
   if (!res.ok) {
     noteStatus(res.status)
     throw new ApiError(res.status, await detailOf(res, path))
@@ -718,9 +744,9 @@ async function postForm<T>(path: string, parts: FormPart[]): Promise<T> {
 }
 
 async function sendJson<T>(method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' }
+  const headers: Record<string, string> = { Accept: 'application/json', ...authHeaders() }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
-  const res = await fetch(apiUrl(path), { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
+  const res = await fetch(apiUrl(path), { method, headers, body: body === undefined ? undefined : JSON.stringify(body), credentials: 'include' })
   if (!res.ok) {
     noteStatus(res.status)
     const answer = res.clone()
@@ -743,8 +769,16 @@ export function dataUrlToFile(dataUrl: string, name: string): File {
 export const api = {
   access: {
     status: () => getJson<Access>('/api/access'),
-    grant: (code: string) => sendJson<Access>('POST', '/api/access', { code }),
-    leave: () => sendJson<Access>('DELETE', '/api/access'),
+    grant: async (code: string) => {
+      const access = await sendJson<Access>('POST', '/api/access', { code })
+      keepToken(access.granted ? access.token : '')
+      return access
+    },
+    leave: async () => {
+      const access = await sendJson<Access>('DELETE', '/api/access')
+      keepToken('')
+      return access
+    },
   },
   readiness: () => getJson<Readiness>('/readyz'),
   version: () => getJson<Version>('/api/version'),
@@ -832,8 +866,17 @@ export const api = {
     shareText: (id: number) => getJson<{ text: string }>(`/api/projects/${id}/outcome/share`),
   },
   pair: {
-    svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}`),
-    get: (origin: string) => getJson<{ url: string; gated: boolean; token: string; expires_at: number }>(`/api/pair?origin=${encodeURIComponent(origin)}`),
+    // the phone talks to the API's own origin when the web app is served elsewhere
+    svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}`),
+    svg: async (origin: string) => {
+      const res = await fetch(api.pair.svgUrl(origin), { headers: authHeaders(), credentials: 'include' })
+      if (!res.ok) throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
+      return await res.text()
+    },
+    get: (origin: string) =>
+      getJson<{ url: string; gated: boolean; token: string; expires_at: number }>(
+        `/api/pair?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}`,
+      ),
   },
   captures: {
     list: () => getJson<{ captures: Capture[] }>('/api/captures'),

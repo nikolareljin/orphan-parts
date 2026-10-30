@@ -63,3 +63,21 @@ test_what_is_not_set_up_is_skipped_for_all_and_refused_by_name() {
   assert_false env ROOT="$dir" bash "$_deploy" elsewhere 2>/dev/null
   _deploy_cleanup "$dir"
 }
+
+test_modal_deploys_the_app_file_and_names_the_url() {
+  local dir out
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _deploy_tree "$dir"
+  mkdir -p "$dir/deploy"; printf 'app = 1\n' > "$dir/deploy/modal_app.py"
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$@" > "%s/modal.log"\nprintf "Created web function web => https://someone--orphan-parts-web.modal.run\\n"\n' "$dir" > "$dir/bin/modal"
+  chmod +x "$dir/bin/modal"
+  out="$(env ROOT="$dir" MODAL="$dir/bin/modal" bash "$_deploy" modal)" && assert_true true || assert_true false
+  assert_eq "$(cat "$dir/modal.log" | tr '\n' ' ')" "deploy $dir/deploy/modal_app.py "
+  assert_true grep -q "answers at https://someone--orphan-parts-web.modal.run" <<<"$out"
+  # no modal command: said with the install line; no app file: said
+  out="$(env ROOT="$dir" MODAL="$dir/bin/nowhere" bash "$_deploy" modal 2>&1)" && assert_true false || assert_true true
+  assert_true grep -q "pipx install modal" <<<"$out"
+  rm "$dir/deploy/modal_app.py"
+  assert_false env ROOT="$dir" MODAL="$dir/bin/modal" bash "$_deploy" modal 2>/dev/null
+  _deploy_cleanup "$dir"
+}

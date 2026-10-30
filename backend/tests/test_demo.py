@@ -293,6 +293,8 @@ def test_the_command_line(
     import app.demo.__main__ as cli
 
     monkeypatch.setattr(cli, "get_settings", lambda: recorded_settings)
+    # the record command sets the flag in the environment; keep that from leaking to other tests
+    monkeypatch.setenv("OPL_RECORD_FIXTURES", "0")
     assert main([]) == 2
     assert main(["fly"]) == 2
     assert main(["load", "--set", str(tmp_path / "nowhere.yaml")]) == 1

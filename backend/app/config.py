@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     fake_api: bool = Field(default=False, alias="OPL_FAKE_API")
     record_fixtures: bool = Field(default=False, alias="OPL_RECORD_FIXTURES")
+    key_probe: bool = Field(default=True, alias="OPL_KEY_PROBE")
     fixtures_dir: Path = _BACKEND_ROOT / "tests" / "fixtures" / "api"
     spend_cap_usd: float = 25.0
     spend_ledger_file: str = "model_api_spend.jsonl"

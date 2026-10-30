@@ -44,6 +44,11 @@ models and nothing is spent, whoever visits. Live mode is a window the operator 
 `SPEND_CAP_USD` set to the amount they accept for it; the ledger survives restarts, so the cap
 counts across them.
 
+**Across origins.** When the web app is served from another origin than the backend (Cloudflare
+Pages in front of Modal), the cookie cannot travel; the web app keeps the session token from
+`POST /api/access` for the tab and sends it as a bearer header, and the pairing code carries the
+backend's own origin. See [Deployment](deployment.md).
+
 **Behind nginx.** The production image forwards the caller's address and scheme; the backend
 reads the forwarded address only with `DEMO_TRUST_PROXY=1`, which the production compose file
 sets, so that the per-address limits count visitors, not the proxy. It takes the last address

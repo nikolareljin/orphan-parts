@@ -38,6 +38,9 @@ android/
   app/src/test/       unit tests on the JVM
   build.gradle.kts, settings.gradle.kts, gradlew
 
+deploy/
+  modal_app.py        the backend on Modal: image, volume, secret, one container (./dev deploy modal)
+
 demo/
   set.yaml            the demo set: items, searches, listings, the proposal brief
   photos/, notes/     scrubbed photos and WAV notes (written by ./dev demo-scrub)
@@ -51,13 +54,15 @@ scripts/
   release-notes.sh    the notes of one release, assembled from the changelog and the history
   release.sh          tag VERSION on main and push the tag, by hand (./dev release)
   deploy.sh           put a published release on the host, build the APK (./dev deploy)
+  deploy-hosted.sh    the hosted demo: the Modal secret, the backend, the web app on Pages
+                      (./dev deploy hosted; the deploy workflow's steps)
   tests/              their tests
 VERSION               the version, the one place it is read from by hand
 
 docker/docs/          image that builds and serves the docs site
 docs/, mkdocs.yml     this site
 overrides/            the theme override: the share metadata every page carries
-.github/workflows/    ci.yml (checks), android.yml (the app's checks), tag-release.yml (merged release/x.y.z -> tag), release.yml (tags to GHCR + GitHub release + APK), docs.yml (Pages)
+.github/workflows/    ci.yml (checks), android.yml (the app's checks), tag-release.yml (merged release/x.y.z -> tag), release.yml (tags to GHCR + GitHub release + APK), deploy.yml (the hosted demo on Modal and Cloudflare Pages), docs.yml (Pages)
 dev                   command runner
 docker-compose.yml    development stack
 docker-compose.prod.yml

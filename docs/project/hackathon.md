@@ -1,7 +1,7 @@
 # Built during the hackathon
 
-**This repository is the entry for the Meta Global AI Developer Hackathon**, Indie track, built
-between October 27 and November 4, 2026. Everything in it was written in that window, with the
+**This repository is the entry for the Meta Global AI Developer Hackathon**, Indie track, created
+by Nik Reljin and built between October 27 and November 4, 2026. Everything in it was written in that window, with the
 Meta Model API for the models and Muse Code as the coding agent. This log grows with each feature
 and links to the commits.
 
@@ -27,4 +27,5 @@ and links to the commits.
 | Oct 29 | The demo set as data: photos scrubbed of metadata, one recorded run that keeps every model answer, and a load that resets the inventory and replays the set at no cost; the public demo is the set. |
 | Oct 29 | The phone as the capture tool: photos, a clip, a spoken note and a line sent in one go and kept privately; the Inbox in the web app; a capture read into an item on request, with the label found first and the note kept as the owner's words. |
 | Oct 29 | One path from a fresh machine to the app on the phone: the setup installs the JDK and the Android tools, one command builds, installs and launches the app, and the phone pairs by scanning a code that carries the address and a session of its own. |
+| Oct 30 | Hosting: the web app on Cloudflare Pages, the backend on Modal with a volume and one secret, sessions across origins, the pairing code carrying the backend's origin, a key probed at startup so a dead key means recorded answers rather than errors. |
 | Oct 29 | Clearer reads: contrast and edges lifted on what the model is shown, a blur score with a warning to retake, the photo kept as taken. |

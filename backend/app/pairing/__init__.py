@@ -30,13 +30,21 @@ class Pairing(BaseModel):
         return self.model_dump_json(include={"url", "gated", "token"})
 
 
-def pairing(origin: str, gate: Gate) -> Pairing:
-    if not ORIGIN.match(origin):
+def pairing(origin: str, gate: Gate, api: str = "") -> Pairing:
+    """The phone talks to ``api`` when the web app is served from another origin (Cloudflare
+    Pages in front of Modal), and to the web origin otherwise, which proxies the API."""
+    for given in (origin, api):
+        if given and not ORIGIN.match(given):
+            raise BadOriginError(
+                "origin must be a scheme, a host and an optional port, nothing more"
+            )
+    if not origin:
         raise BadOriginError("origin must be a scheme, a host and an optional port, nothing more")
+    url = api or origin
     if not gate.enabled:
-        return Pairing(url=origin, gated=False)
+        return Pairing(url=url, gated=False)
     token, expires_at = gate.issue()
-    return Pairing(url=origin, gated=True, token=token, expires_at=expires_at)
+    return Pairing(url=url, gated=True, token=token, expires_at=expires_at)
 
 
 def svg(found: Pairing) -> bytes:

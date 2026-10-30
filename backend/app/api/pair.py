@@ -7,9 +7,9 @@ from app.pairing import BadOriginError, Pairing, pairing, svg
 router = APIRouter(prefix="/api", tags=["ops"])
 
 
-def _pairing(origin: str, gate: GateDep) -> Pairing:
+def _pairing(origin: str, gate: GateDep, api: str = "") -> Pairing:
     try:
-        return pairing(origin, gate)
+        return pairing(origin, gate, api)
     except BadOriginError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
@@ -18,20 +18,27 @@ def _pairing(origin: str, gate: GateDep) -> Pairing:
 
 @router.get("/pair", response_model=Pairing)
 def pair(
-    response: Response, gate: GateDep, origin: str = Query(description="the web app's origin")
+    response: Response,
+    gate: GateDep,
+    origin: str = Query(description="the web app's origin"),
+    api: str = Query(default="", description="the API's origin, when it is not the web app's"),
 ) -> Pairing:
     """What the phone needs: the origin to talk to and, when the demo is gated, a session of
     its own. Reached only with a session, so only someone already in can hand the phone one."""
-    found = _pairing(origin, gate)
+    found = _pairing(origin, gate, api)
     response.headers["Cache-Control"] = "no-store"
     return found
 
 
 @router.get("/pair.svg", response_class=Response)
-def pair_svg(gate: GateDep, origin: str = Query(description="the web app's origin")) -> Response:
+def pair_svg(
+    gate: GateDep,
+    origin: str = Query(description="the web app's origin"),
+    api: str = Query(default="", description="the API's origin, when it is not the web app's"),
+) -> Response:
     """The same, as a QR code the phone scans."""
     return Response(
-        svg(_pairing(origin, gate)),
+        svg(_pairing(origin, gate, api)),
         media_type="image/svg+xml",
         headers={"Cache-Control": "no-store"},
     )

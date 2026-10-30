@@ -1,0 +1,86 @@
+name: deploy
+
+# The hosted demo: the backend on Modal, the web app on Cloudflare Pages, from the repository's
+# secrets and variables (Settings, Secrets and variables, Actions). Inert until the variable
+# HOSTED_DEPLOY is true. Runs by hand (Run workflow, with what to deploy) and after a release
+# tag is pushed. Nothing here runs for pull requests or merges on their own.
+#
+# Secrets: MODAL_TOKEN_ID, MODAL_TOKEN_SECRET, MODEL_API_KEY_DEMO, DEMO_ACCESS_CODE,
+# CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID. Variables: HOSTED_DEPLOY, WEB_ORIGIN,
+# PAGES_PROJECT, API_URL (optional), OPL_FAKE_API, SPEND_CAP_USD, OPL_MIN_CONTAINERS.
+# docs/operations/deployment.md says what each one is.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: what to deploy
+        type: choice
+        options: [both, backend, web]
+        default: both
+  push:
+    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  WEB_ORIGIN: ${{ vars.WEB_ORIGIN }}
+  PAGES_PROJECT: ${{ vars.PAGES_PROJECT || 'orphan-parts' }}
+
+jobs:
+  backend:
+    if: vars.HOSTED_DEPLOY == 'true' && (github.event_name == 'push' || inputs.target == 'both' || inputs.target == 'backend')
+    runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.deploy.outputs.api_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet modal
+
+      - name: the secret, from the repository's secrets and variables
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+          MODEL_API_KEY_DEMO: ${{ secrets.MODEL_API_KEY_DEMO }}
+          DEMO_ACCESS_CODE: ${{ secrets.DEMO_ACCESS_CODE }}
+          OPL_FAKE_API: ${{ vars.OPL_FAKE_API }}
+          SPEND_CAP_USD: ${{ vars.SPEND_CAP_USD }}
+        run: bash scripts/deploy-hosted.sh secret
+
+      - name: deploy the backend and wait for /readyz
+        id: deploy
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+          OPL_MIN_CONTAINERS: ${{ vars.OPL_MIN_CONTAINERS }}
+        run: bash scripts/deploy-hosted.sh backend
+
+  web:
+    # runs after the backend, or on its own when only the web app was asked for
+    needs: backend
+    if: >-
+      always() && vars.HOSTED_DEPLOY == 'true'
+      && (github.event_name == 'push' || inputs.target == 'both' || inputs.target == 'web')
+      && (needs.backend.result == 'success' || needs.backend.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: build the web app against the backend and publish it to Pages
+        env:
+          API_URL: ${{ vars.API_URL || needs.backend.outputs.api_url }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bash scripts/deploy-hosted.sh web

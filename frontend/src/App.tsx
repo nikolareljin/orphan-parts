@@ -4,7 +4,7 @@ import ExtractForm from './components/ExtractForm'
 import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
-import { ACCESS_REQUIRED_EVENT, api, type Readiness, type Version } from './lib/api'
+import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
 import { demoText } from './lib/access'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
@@ -155,9 +155,9 @@ export default function App() {
                 In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code. It carries this address
                 {status.ready.demo.gated ? ' and a session of its own; the access code stays here.' : '.'}
               </p>
-              <img src={api.pair.svgUrl(window.location.origin)} alt="Pairing code for the phone" width="220" height="220" />
+              <PairImage />
               <p className="muted">
-                Or type <code>{window.location.origin}</code> into the app.
+                Or type <code>{apiBase || window.location.origin}</code> into the app.
               </p>
             </details>
           </>
@@ -213,4 +213,25 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
       </form>
     </section>
   )
+}
+
+
+// The pairing code as an image. Across origins an <img> carries no bearer header, so the SVG
+// is fetched with the session and shown as a data URL; same origin the cookie does it.
+function PairImage() {
+  const [src, setSrc] = useState(api.pair.svgUrl(window.location.origin))
+  useEffect(() => {
+    if (!apiBase) return
+    let cancelled = false
+    api.pair
+      .svg(window.location.origin)
+      .then((text) => {
+        if (!cancelled) setSrc(`data:image/svg+xml;utf8,${encodeURIComponent(text)}`)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  return <img src={src} alt="Pairing code for the phone" width="220" height="220" />
 }

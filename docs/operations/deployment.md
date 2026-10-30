@@ -2,6 +2,103 @@
 
 Production runs the same two images the release workflow publishes.
 
+## Where it runs
+
+The web app is static and is served by **Cloudflare Pages**; the backend, with its image work,
+the inventory and the captures, runs on **Modal** as one container with a persistent volume; the
+models are the Meta Model API. The web app calls the backend across origins and the backend keeps
+the API key. This is the hosted demo; the sections after this one describe running the two
+Docker images yourself on a host of your own, which stays supported.
+
+### The backend on Modal
+
+```bash
+pipx install modal && modal setup          # once, a browser login
+modal secret create orphan-parts \
+  MODEL_API_KEY=... DEMO_ACCESS_CODE=... SPEND_CAP_USD=20 OPL_FAKE_API=1 \
+  CORS_ORIGINS=https://orphan-parts.pages.dev
+./dev deploy modal                         # modal deploy deploy/modal_app.py; prints the URL
+curl -fsS https://<the url>/readyz
+```
+
+That is the by-hand path; the workflow under *From GitHub Actions* below does the same from
+the repository's settings.
+
+`deploy/modal_app.py` builds the image from `backend/pyproject.toml`, adds `backend/app`, mounts
+the volume `orphan-parts-data` at `/data` (the inventory file, the captures, the spend ledger)
+and reads the secret. One container (`max_containers=1`: one writer for the database, one
+counter for the demo gate), kept warm (`min_containers=1`; `OPL_MIN_CONTAINERS=0` at deploy
+time lets it scale to zero, with a cold start of some seconds on the first request after an
+idle quarter hour). A write is committed to the volume as soon as its request succeeds.
+Without `MODEL_API_KEY` in the secret the service runs in fixture mode (recorded answers,
+nothing spent); with a key that does not answer at startup (401, 402, 403, a network failure),
+the service runs in fixture mode too and `/readyz` reports `fixture (key failed)` until a
+restart with a working key (`OPL_KEY_PROBE=0` turns that probe off). Changing the secret takes
+a redeploy. `modal app logs orphan-parts` streams the log; `modal volume ls orphan-parts-data`
+lists the data.
+
+### The web app on Cloudflare Pages
+
+A Pages project (`orphan-parts`, so the site is `https://orphan-parts.pages.dev`) that holds
+the production build of `frontend/`, made with `VITE_API_URL` set to the Modal URL (no
+trailing slash). The deploy workflow below builds and publishes it with `wrangler`; by hand it
+is `npx wrangler@4 pages deploy frontend/dist --project-name orphan-parts --branch main` after
+`VITE_API_URL=... npm run build`. The Pages origin is the backend's `CORS_ORIGINS`.
+
+### From GitHub Actions
+
+`deploy.yml` does the two deploys from the repository's own settings, so no key is typed on a
+laptop and the secret on Modal is written from one place. It is inert until the repository
+variable `HOSTED_DEPLOY` is `true`; then it runs on **Run workflow** (choose `both`, `backend`
+or `web`) and after every release tag. Its two jobs call `scripts/deploy-hosted.sh`, which
+also runs from a shell as `./dev deploy hosted [secret|backend|web|all]` with the same
+settings in the environment and this machine's `modal` and `wrangler` logins:
+
+1. **backend**: `secret` writes the Modal secret `orphan-parts` from the settings below (every
+   field, replaced), then `backend` runs `modal deploy deploy/modal_app.py`, reads the URL off
+   the output and waits for `/readyz` to answer `ok`;
+2. **web**: builds the web app against that URL and publishes `frontend/dist` to the Pages
+   project, creating the project when it does not exist yet.
+
+The settings, under the repository's **Settings, Secrets and variables, Actions**. Names only
+here; the values live there and in the operator's password manager.
+
+| Secret | What it is |
+|---|---|
+| `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` | a Modal API token (the dashboard's Settings, API tokens, or `modal token new`) |
+| `MODEL_API_KEY_DEMO` | the Model API key the host uses, with its own spend limit; empty = recorded answers |
+| `DEMO_ACCESS_CODE` | the access code; empty = an open demo |
+| `CLOUDFLARE_API_TOKEN` | a Cloudflare API token with the *Cloudflare Pages: Edit* permission |
+| `CLOUDFLARE_ACCOUNT_ID` | the account id from the Cloudflare dashboard |
+
+| Variable | What it is |
+|---|---|
+| `HOSTED_DEPLOY` | `true` lets the workflow run; anything else keeps it inert |
+| `WEB_ORIGIN` | the origin browsers use, `https://orphan-parts.pages.dev` or a custom domain attached to the project; it becomes the backend's `CORS_ORIGINS` |
+| `PAGES_PROJECT` | the Pages project name (default `orphan-parts`) |
+| `API_URL` | optional: the backend URL for a web-only run; otherwise the backend job's URL |
+| `OPL_FAKE_API` | `1` for recorded answers, `0` for the live models (default `1`) |
+| `SPEND_CAP_USD` | the ledger's cap on the host (default `20`) |
+| `OPL_MIN_CONTAINERS` | `1` keeps the container warm, `0` lets it scale to zero (default `1`) |
+
+A `WEB_ORIGIN` on `pages.dev` that is not the project's own is refused before anything is
+published, so the backend never allows one origin while browsers use another. The workflow
+uses only `actions/checkout`, `actions/setup-python` and `actions/setup-node`; `modal` is
+installed with pip and `wrangler` runs with `npx`. The ssh deploy job of the release workflow
+is a different path (a host of your own) and stays inert on its own switch.
+
+Across origins the gate's cookie cannot travel, so the web app keeps the session token from
+`POST /api/access` for the tab and sends it as a bearer header; the phone does the same from
+its pairing code, which then carries the Modal URL. Same-origin set-ups (the dev stack, the
+Docker images behind nginx) keep the cookie and need nothing of this.
+
+### The modes
+
+| Mode | Secret | Who gets in | What it spends |
+|---|---|---|---|
+| open demo | `OPL_FAKE_API=1`, no `DEMO_ACCESS_CODE` | anyone with the URL | nothing |
+| gated, live | a key, `OPL_FAKE_API=0`, a code, `SPEND_CAP_USD` | whoever has the code | up to the cap |
+
 ## From a published release
 
 ```bash

@@ -7,6 +7,7 @@ stops the service with a clear message instead of failing on the first user requ
 | Variable | Default | Required | Meaning |
 |---|---|---|---|
 | `MODEL_API_KEY` | | yes, unless fixture mode | Model API key from https://dev.meta.ai |
+| `OPL_KEY_PROBE` | `1` | | one `GET /models` at startup in live mode; a key that does not answer puts the service on recorded answers, said on `/readyz` |
 | `MODEL_API_BASE_URL` | `https://api.meta.ai/v1` | | Model API base URL |
 | `MODEL_SPARK` | `muse-spark-1.3` | | Muse Spark model ID |
 | `MODEL_WONDER` | `muse-wonder-1.0` | | Muse Wonder model ID; listed and checked, no call in this version |

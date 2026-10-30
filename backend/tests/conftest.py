@@ -49,6 +49,7 @@ def live_settings(tmp_path: Path) -> Settings:
     """Live mode with a placeholder key; pair it with a mock transport."""
     return Settings(
         OPL_FAKE_API=False,
+        OPL_KEY_PROBE=False,
         model_api_key=SAMPLE_VALUE,
         data_dir=tmp_path / "data",
         fixtures_dir=tmp_path / "fixtures",

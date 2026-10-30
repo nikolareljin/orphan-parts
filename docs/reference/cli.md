@@ -22,6 +22,10 @@
 | `./dev docs-build` | exports the OpenAPI document and builds `site/` |
 | `./dev build` | builds the production images |
 | `./dev version <x.y.z>` | sets the version in every manifest and starts a changelog section |
+| `./dev release [--dry-run]` | tags `VERSION` on `main` and pushes the tag (the repository admin's command); the tag starts the release workflow |
+| `./dev deploy modal` | the backend on Modal from this tree (`modal deploy deploy/modal_app.py`); prints the URL for the web app's `VITE_API_URL` |
+| `./dev deploy hosted [secret\|backend\|web\|all]` | the hosted demo from settings in the environment, the steps the deploy workflow runs: the Modal secret, the backend with its `/readyz` check, the web app built against it and published to Pages |
+| `./dev deploy [web\|android\|all] [--version x.y.z]` | a published release onto a host over ssh (`DEPLOY_HOST`, `DEPLOY_PATH`), and the APK when there is an app |
 | `./dev demo [--keep]` | resets the inventory (`--keep` adds instead) and loads `demo/set.yaml` in fixture mode; the backend is stopped for it and started again |
 | `./dev record-fixtures [--keep]` | resets the inventory (`--keep` adds instead) and loads the set once with the key from `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`; spends credits once; the backend is stopped for it and started again however the run ends |
 | `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes into `demo/notes/` |
