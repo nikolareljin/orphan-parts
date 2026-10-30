@@ -29,6 +29,8 @@ export interface Version {
   version: string
   models: Record<string, string>
   limits: Limits
+  // whether the item dialog may draw a picture of what an item could become (PICTURE_ENABLED)
+  pictures: boolean
 }
 
 export type Source =
@@ -177,6 +179,22 @@ export interface ComponentCreate {
 // How many photos are kept with an item; each is at /api/items/{id}/photos/{n}, 1 first.
 export interface PhotoCount {
   count: number
+}
+
+// A picture of what the item could become, drawn by Muse Image on a click and kept beside the
+// photos, never as one of them; at /api/items/{id}/pictures/{n}. Illustrative, not evidence.
+export interface Picture {
+  n: number
+  use: string
+  model: string
+  cost_usd: number
+  from_fixture: boolean
+  created_at: string
+}
+
+export interface PictureList {
+  enabled: boolean
+  pictures: Picture[]
 }
 
 export interface ItemEvent {
@@ -630,6 +648,77 @@ export interface Conflict {
   project_title: string
 }
 
+// Decide what an item becomes: what the rules say it fills, what the model proposes it is good
+// for, and one view that gathers what the app already answered about it.
+export type DecisionChoice = 'keep_build' | 'sell' | 'give' | 'not_worth'
+
+export interface Use {
+  title: string
+  what_it_does: string
+  needs: string[]
+  effort: Effort
+  note: string
+}
+
+export interface TemplateFit {
+  id: string
+  label: string
+  fills: string[]
+}
+
+export interface Uses {
+  id: number
+  item_id: number
+  version: number
+  item_version: number
+  stale: boolean
+  templates: TemplateFit[]
+  uses: Use[]
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  at: string
+}
+
+export interface Worth {
+  id: number
+  version: number
+  currency: string
+  typical: number | null
+  strategy: Strategy | null
+  weak: boolean
+  stale: boolean
+  at: string
+}
+
+export interface OpenSearch {
+  id: number
+  title: string
+  status: SearchStatus
+  candidates: number
+  handoff_url: string
+}
+
+export interface Decided {
+  choice: DecisionChoice
+  note: string
+  at: string
+  version: number
+}
+
+export interface Decision {
+  item: ItemSummary
+  accepted_fields: number
+  worth: Worth | null
+  uses: Uses | null
+  searches: OpenSearch[]
+  templates: TemplateFit[]
+  intent: Intent
+  // the selected, building or done projects that count on the item, by title
+  committed_to: string[]
+  last: Decided | null
+}
+
 // Captures from the phone: kept as sent, read into an item on request.
 export type CaptureStatus = 'received' | 'processed' | 'failed'
 
@@ -834,6 +923,9 @@ export const api = {
     events: (id: number) => getJson<ItemEvent[]>(`/api/items/${id}/events`),
     photos: (id: number) => getJson<PhotoCount>(`/api/items/${id}/photos`),
     photoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/photos/${n}`),
+    pictures: (id: number) => getJson<PictureList>(`/api/items/${id}/pictures`),
+    drawPicture: (id: number, use: string) => sendJson<Picture>('POST', `/api/items/${id}/picture`, { use }),
+    pictureUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/pictures/${n}`),
     addPhotos: (id: number, photos: File[]) =>
       postForm<PhotoCount>(
         `/api/items/${id}/photos`,
@@ -903,6 +995,13 @@ export const api = {
     recordOutcome: (id: number, outcome: OutcomeCreate) => sendJson<Project>('POST', `/api/projects/${id}/outcome`, outcome),
     setShared: (id: number, shared: boolean) => sendJson<Project>('POST', `/api/projects/${id}/outcome/share`, { shared }),
     shareText: (id: number) => getJson<{ text: string }>(`/api/projects/${id}/outcome/share`),
+  },
+  decide: {
+    view: (itemId: number) => getJson<Decision>(`/api/items/${itemId}/decide`),
+    uses: (itemId: number) => sendJson<Uses>('POST', `/api/items/${itemId}/uses`),
+    // made from the item version the panel showed: a stale choice is refused with 409
+    choose: (itemId: number, choice: DecisionChoice, note: string, version?: number) =>
+      sendJson<Item>('POST', `/api/items/${itemId}/decision`, { choice, note, version }),
   },
   pair: {
     // the phone talks to the API's own origin when the web app is served elsewhere

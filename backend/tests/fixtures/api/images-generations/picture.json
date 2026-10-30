@@ -1,0 +1,35 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "key": "fallback-picture",
+  "request": {
+    "model": "muse-image-1.0",
+    "prompt": "the item's type, accepted values, condition and the chosen use, see app/picture/service.py",
+    "n": 1,
+    "size": "1024x1024",
+    "response_format": "b64_json",
+    "output_format": "jpeg",
+    "reasoning_strength": "low"
+  },
+  "response": {
+    "created": 1761868800,
+    "data": [
+      {
+        "b64_json": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAAQABADASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAAAP/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AAA//2Q==",
+        "revised_prompt": "A semi-realistic illustration on a plain background, no text, no logos, no people."
+      }
+    ],
+    "output_format": "jpeg",
+    "usage": {
+      "input_tokens": 48,
+      "output_tokens": 1024,
+      "total_tokens": 1072,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 48
+      }
+    }
+  },
+  "status": 200
+}

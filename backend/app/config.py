@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     demo_trust_proxy: bool = False
     demo_cookie_secure: bool = False
     max_photos: int = 4
+    # a picture of what an item could become, drawn by Muse Image on a click: off unless set,
+    # since every click is a paid call
+    picture_enabled: bool = False
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
     data_dir: Path = Path("./data")

@@ -37,10 +37,15 @@ def unit_of(reading: Reading) -> str:
     return m.group(1) if m else ""
 
 
+# rule keys that are not label fields but still need one spelling on both sides
+RULE_NORMALIZERS = {"material": "material"}
+
+
 def normal(key: str, text: str) -> str:
     """Text as the label normaliser for the field would write it, lower case, one space."""
     spec = FIELD_BY_NAME.get(key)
-    value, _ = normalize(spec.normalizer if spec else "text", text)
+    kind = spec.normalizer if spec else RULE_NORMALIZERS.get(key, "text")
+    value, _ = normalize(kind, text)
     return " ".join(value.lower().split())
 
 

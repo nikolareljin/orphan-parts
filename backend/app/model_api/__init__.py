@@ -3,6 +3,7 @@
 from app.model_api.client import (
     ModelApiClient,
     ModelResponse,
+    PictureResult,
     StructuredResponse,
     Transcript,
     citations,
@@ -33,6 +34,7 @@ __all__ = [
     "ModelApiClient",
     "ModelApiError",
     "ModelResponse",
+    "PictureResult",
     "SpendCapError",
     "StructuredResponse",
     "Transcript",

@@ -18,6 +18,7 @@ services:
       DEMO_REQUESTS_PER_MINUTE: ${DEMO_REQUESTS_PER_MINUTE:-120}
       DEMO_VISITOR_CALLS_PER_HOUR: ${DEMO_VISITOR_CALLS_PER_HOUR:-20}
       DEMO_DAILY_CALLS: ${DEMO_DAILY_CALLS:-300}
+      PICTURE_ENABLED: ${PICTURE_ENABLED:-0}
     volumes:
       - ./backend:/app
       - ./demo:/demo

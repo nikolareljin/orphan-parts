@@ -69,6 +69,13 @@ against parts from the parts' own guidance; a live call through a mock server ca
 `web_search` tool, the location and the include, with two searches billed; the routes and their
 refusals. Search calls, results and citations are read off a response in isolation.
 
+Deciding is tested against a recorded answer (`uses`): the templates a laptop fills and a
+charger does not, the brief without a serial number, a location or the notes, the model's text
+trimmed and capped, the uses kept per item and made stale by an edit, the view with its
+guidance, searches, committed projects and last decision, the same choice again as an event
+without a new version, a choice from an older version refused with 409, and the demo visitor
+refused on every route.
+
 Listing drafts are tested against the recorded Muse Spark answers (`draft-sell`, `draft-give`):
 facts resting on unconfirmed fields dropped, the disclosures appended, the free title, the
 data steps, a stale draft after the item changes, and a working claim without a recorded test
@@ -105,7 +112,8 @@ E2E_VIDEO=on ./dev e2e    # record every test, not only failures
 ```
 
 Playwright runs in its official image against the dev stack with the backend in fixture mode,
-so the browser sees exactly what a user sees and no credit is spent. The runner shares the
+so the browser sees exactly what a user sees and no credit is spent; `PICTURE_ENABLED` is on for
+the run, so the item dialog draws its picture from the recorded stub. The runner shares the
 frontend container's network and runs as the host user; results, traces and videos land under
 `e2e/test-results/`. Specs live in `e2e/tests/` and address the page by role and label, the way
 a user does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather

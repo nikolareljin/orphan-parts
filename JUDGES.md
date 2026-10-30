@@ -102,6 +102,9 @@ cp .env.example .env          # put MODEL_API_KEY=... in it, or leave OPL_FAKE_A
 ./dev up                      # the web app on http://localhost:5173, the API on :8000
 ```
 
+To try the gate on your own machine (the code, the sign-in, a code for the phone), `./dev gate
+on` prints an access code for you and one for the phone; `./dev gate off` turns it off again.
+
 Open the web app at your computer's network address, for example `http://192.168.1.20:5173`
 (the page at `localhost` explains why it shows no pairing code: on the phone, localhost is the
 phone), and pair from its footer as in step 4. The phone and the computer must be on the same
@@ -117,7 +120,12 @@ app, installs it over USB and prints the pairing code in the terminal.
   values.
 - **My inventory:** confirm or reject each value, measure a feature against a ruler, ask
   **Does it fit?**, prepare a listing, ask what it is worth, build something from what you
-  have.
+  have. Under the photos, **Draw it** shows what the item could look like as what you type
+  (a picture, labeled as drawn, only when that server has pictures on).
+
+- **Decide**, on the item below its values: what it is, what it is worth, what it is good for
+  (**Ask for ideas**), what would complete it; then **Keep and build**, **Sell**, **Give
+  away** or **Not worth it**, with a note the item keeps.
 - **From a laptop instead of the phone:** the Inbox's **Send a capture** form takes photos
   and a short video (MP4 or 3GP) straight from the computer.
 - **Talk tab:** for an item already in the inventory, hold and say what you know; the
