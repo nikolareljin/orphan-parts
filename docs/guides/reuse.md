@@ -76,5 +76,5 @@ curl -s -X POST localhost:8000/api/projects/1/outcome -H 'content-type: applicat
 
 ## Not yet
 
-The pack as a PDF, and a pack that cites the candidate listings' pages, are on the
-[roadmap](../project/roadmap.md).
+The pack as a PDF, and a pack that cites the candidate listings' pages, are under
+[Next steps](../project/next.md).

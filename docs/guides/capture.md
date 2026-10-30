@@ -44,4 +44,4 @@ curl -s localhost:8000/api/captures
 ## Not yet
 
 A frame picked from the clip for reading, and the next-steps questions after a capture is
-read (what to do with it, what to build), are on the [roadmap](../project/roadmap.md).
+read (what to do with it, what to build), are under [Next steps](../project/next.md).

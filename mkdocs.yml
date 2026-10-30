@@ -123,7 +123,10 @@ nav:
       - Working with Muse Code: development/muse-code.md
   - Project:
       - Built during the hackathon: project/hackathon.md
-      - Roadmap: project/roadmap.md
+      - How it fits together: project/flow.md
+      - Lessons learned: project/lessons.md
+      - Next steps: project/next.md
+      - Why you would want this: project/pitch.md
       - Limitations: project/limitations.md
       - Changelog: project/changelog.md
       - License: project/license.md

@@ -26,4 +26,4 @@ asking price is shown beside that, not folded into it.
 ## Not yet
 
 A comparison view across the candidates of one need, with the fit, the price and the open
-questions of each in one table, is on the [roadmap](../project/roadmap.md).
+questions of each in one table, is under [Next steps](../project/next.md).

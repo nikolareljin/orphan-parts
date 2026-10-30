@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Changed
+- The docs site tells the story: how it fits together (one clickable diagram and two paths through the demo set), lessons learned, next steps (the roadmap folded into it) and the pitch.
+
 ## 0.2.0 - 2026-10-30
 
 ### Changed

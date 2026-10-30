@@ -62,4 +62,4 @@ a search under it; see [Build and reuse](reuse.md).
 ## Not yet
 
 A profile drafted by a model from a few example photos, for you to review before it is saved,
-is on the [roadmap](../project/roadmap.md).
+is under [Next steps](../project/next.md).

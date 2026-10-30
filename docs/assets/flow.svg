@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="100%" role="img" aria-labelledby="fl-title fl-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <title id="fl-title">How Orphan Parts Lens fits together</title>
+  <desc id="fl-desc">The phone and the computer feed the Inbox; the models read; the private inventory holds what you confirm; four paths and Find a part leave from it; the access code and the demo visitor are the two doors. Blue boxes are where a model answers, dark-bordered boxes are where the rules decide, dashed boxes are handoffs you run.</desc>
+  <style>
+    .fl-bg { fill: #f6f7f9; }
+    .fl-box { fill: #ffffff; stroke: #5b6470; stroke-width: 1.5; }
+    .fl-rules { fill: #ffffff; stroke: #1b1f24; stroke-width: 1.8; }
+    .fl-model { fill: #e8effc; stroke: #2d6cdf; stroke-width: 1.8; }
+    .fl-hand { fill: #f6f7f9; stroke: #5b6470; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .fl-door-live { fill: #ffffff; stroke: #2d6cdf; stroke-width: 2.2; }
+    .fl-door-demo { fill: #ffffff; stroke: #5b6470; stroke-width: 2.2; }
+    .fl-t { fill: #1b1f24; font-size: 17px; font-weight: 600; }
+    .fl-s { fill: #1b1f24; font-size: 14px; }
+    .fl-m { fill: #5b6470; font-size: 14px; }
+    .fl-b { fill: #2d6cdf; font-size: 13px; font-weight: 600; }
+    .fl-p { fill: #1b1f24; font-size: 13px; }
+    .fl-e { fill: #b42318; font-size: 14px; }
+    .fl-arrow { fill: none; stroke: #5b6470; stroke-width: 1.6; }
+    a:hover .fl-box, a:hover .fl-rules, a:hover .fl-model, a:hover .fl-hand { stroke: #2d6cdf; stroke-width: 2.6; }
+    a:hover .fl-t, a:hover .fl-s { fill: #2d6cdf; }
+    a:hover .fl-t { text-decoration: underline; }
+  </style>
+  <defs>
+    <marker id="fl-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6470"/>
+    </marker>
+  </defs>
+  <rect class="fl-bg" x="0" y="0" width="1200" height="760" rx="12"/>
+
+  <!-- legend -->
+  <rect class="fl-model" x="30" y="22" width="18" height="18" rx="3"/>
+  <text class="fl-s" x="56" y="36">a model answers</text>
+  <rect class="fl-rules" x="190" y="22" width="18" height="18" rx="3"/>
+  <text class="fl-s" x="216" y="36">the rules decide</text>
+  <rect class="fl-hand" x="350" y="22" width="18" height="18" rx="3"/>
+  <text class="fl-s" x="376" y="36">by handoff: you run it on Marketplace</text>
+
+  <!-- arrows -->
+  <g class="fl-arrow" marker-end="url(#fl-head)">
+    <path d="M 230 130 H 290"/>
+    <path d="M 230 345 H 260 V 150 H 290"/>
+    <path d="M 230 400 H 290"/>
+    <path d="M 385 170 V 210"/>
+    <path d="M 480 330 H 540"/>
+    <path d="M 720 265 H 750 V 95 H 780"/>
+    <path d="M 750 190 H 780"/>
+    <path d="M 750 315 H 780"/>
+    <path d="M 750 473 H 780"/>
+    <path d="M 750 265 V 614 H 780"/>
+  </g>
+
+  <!-- the phone -->
+  <a href="../../guides/android/">
+    <rect class="fl-box" x="30" y="90" width="200" height="140" rx="10"/>
+    <text class="fl-t" x="46" y="116">The phone</text>
+  </a>
+  <a href="../../guides/capture/">
+    <text class="fl-s" x="46" y="146">Capture tab</text>
+    <text class="fl-m" x="46" y="170">photos</text>
+    <text class="fl-m" x="46" y="192">a 30-second clip</text>
+    <text class="fl-m" x="46" y="214">a spoken note, a line</text>
+  </a>
+
+  <!-- the computer -->
+  <rect class="fl-box" x="30" y="300" width="200" height="140" rx="10"/>
+  <text class="fl-t" x="46" y="326">The computer</text>
+  <a href="../../guides/capture/#in-the-inbox">
+    <text class="fl-s" x="46" y="352">the Inbox's send form</text>
+  </a>
+  <text class="fl-m" x="46" y="374">photos, a note, a line</text>
+  <a href="../../guides/seller/#the-first-steps">
+    <text class="fl-s" x="46" y="406">the label form</text>
+  </a>
+  <text class="fl-m" x="46" y="428">four photos, read now</text>
+
+  <!-- the inbox -->
+  <a href="../../guides/capture/#in-the-inbox">
+    <rect class="fl-box" x="290" y="90" width="190" height="80" rx="10"/>
+    <text class="fl-t" x="306" y="116">Inbox</text>
+    <text class="fl-m" x="306" y="140">captures, newest first</text>
+    <text class="fl-m" x="306" y="160">private until read</text>
+  </a>
+
+  <!-- read: the models -->
+  <rect class="fl-model" x="290" y="210" width="190" height="230" rx="10"/>
+  <text class="fl-t" x="306" y="236">Read</text>
+  <a href="../../models/sam-3-1/">
+    <rect class="fl-model" x="300" y="252" width="170" height="50" rx="6"/>
+    <text class="fl-b" x="310" y="272">SAM 3.1</text>
+    <text class="fl-p" x="310" y="292">finds the label crop first</text>
+  </a>
+  <a href="../../models/muse-spark/">
+    <rect class="fl-model" x="300" y="312" width="170" height="50" rx="6"/>
+    <text class="fl-b" x="310" y="332">Muse Spark</text>
+    <text class="fl-p" x="310" y="352">reads the label into fields</text>
+  </a>
+  <a href="../../models/muse-voice-transcribe/">
+    <rect class="fl-model" x="300" y="372" width="170" height="50" rx="6"/>
+    <text class="fl-b" x="310" y="392">Muse Voice Transcribe</text>
+    <text class="fl-p" x="310" y="412">the note, as your words</text>
+  </a>
+
+  <!-- the private inventory -->
+  <a href="../../guides/inventory/">
+    <rect class="fl-rules" x="540" y="90" width="180" height="350" rx="10"/>
+    <text class="fl-t" x="556" y="116">My inventory</text>
+    <text class="fl-m" x="556" y="138">private, never published</text>
+    <text class="fl-s" x="556" y="172">values to confirm,</text>
+    <text class="fl-s" x="556" y="192">each with its source</text>
+    <text class="fl-s" x="556" y="226">the photos beside them</text>
+    <text class="fl-s" x="556" y="260">what you know yourself</text>
+    <text class="fl-s" x="556" y="294">condition and faults</text>
+    <text class="fl-s" x="556" y="314">intent, availability</text>
+  </a>
+  <a href="../../guides/measure/">
+    <rect class="fl-rules" x="556" y="344" width="148" height="80" rx="6"/>
+    <text class="fl-s" x="566" y="366">Measure a feature</text>
+    <text class="fl-m" x="566" y="386">against a ruler,</text>
+    <text class="fl-m" x="566" y="404">with an uncertainty;</text>
+    <text class="fl-m" x="566" y="420">no ruler, no number</text>
+  </a>
+
+  <!-- catalog -->
+  <a href="../../guides/inventory/">
+    <rect class="fl-rules" x="780" y="60" width="390" height="70" rx="10"/>
+    <text class="fl-t" x="796" y="86">Catalog</text>
+    <text class="fl-s" x="796" y="112">confirm or reject each value; add what you know</text>
+  </a>
+
+  <!-- does it fit -->
+  <a href="../../guides/match/">
+    <rect class="fl-rules" x="780" y="140" width="390" height="100" rx="10"/>
+    <text class="fl-t" x="796" y="166">Does it fit?</text>
+    <text class="fl-m" x="796" y="226">an unknown is never a pass; it becomes a question</text>
+  </a>
+  <a href="../../concepts/profiles/">
+    <rect class="fl-rules" x="796" y="178" width="170" height="26" rx="6"/>
+    <text class="fl-p" x="806" y="196">the rules of a profile</text>
+  </a>
+  <a href="../../concepts/verdicts/">
+    <rect class="fl-rules" x="976" y="178" width="150" height="26" rx="6"/>
+    <text class="fl-p" x="986" y="196">the verdict ladder</text>
+  </a>
+
+  <!-- sell or give away -->
+  <a href="../../guides/seller/">
+    <rect class="fl-rules" x="780" y="250" width="390" height="130" rx="10"/>
+    <text class="fl-t" x="796" y="276">Sell or give away</text>
+  </a>
+  <a href="../../guides/seller/">
+    <rect class="fl-model" x="796" y="288" width="180" height="26" rx="6"/>
+    <text class="fl-p" x="806" y="306">listing draft, Muse Spark</text>
+    <rect class="fl-rules" x="986" y="288" width="176" height="26" rx="6"/>
+    <text class="fl-p" x="996" y="306">the checklist, disclosures</text>
+  </a>
+  <a href="../../guides/value/">
+    <rect class="fl-model" x="796" y="322" width="180" height="26" rx="6"/>
+    <text class="fl-p" x="806" y="340">price guidance, Muse Spark</text>
+    <rect class="fl-rules" x="986" y="322" width="176" height="26" rx="6"/>
+    <text class="fl-p" x="996" y="340">sourced comparables only</text>
+  </a>
+  <a href="../../guides/marketplace/">
+    <rect class="fl-hand" x="796" y="354" width="290" height="22" rx="6"/>
+    <text class="fl-p" x="806" y="370">the Marketplace create page, by handoff</text>
+  </a>
+
+  <!-- build and reuse -->
+  <a href="../../guides/reuse/">
+    <rect class="fl-rules" x="780" y="390" width="390" height="166" rx="10"/>
+    <text class="fl-t" x="796" y="416">Build and reuse</text>
+    <rect class="fl-rules" x="796" y="428" width="300" height="24" rx="6"/>
+    <text class="fl-p" x="806" y="445">preferences; project templates as data</text>
+  </a>
+  <a href="../../reference/agent-tools/">
+    <rect class="fl-model" x="796" y="460" width="300" height="24" rx="6"/>
+    <text class="fl-p" x="806" y="477">proposals from Muse Spark, through tools</text>
+  </a>
+  <a href="../../guides/reuse/">
+    <rect class="fl-rules" x="796" y="492" width="300" height="24" rx="6"/>
+    <text class="fl-p" x="806" y="509">the rules keep what the inventory allows</text>
+    <rect class="fl-rules" x="796" y="524" width="146" height="24" rx="6"/>
+    <text class="fl-p" x="806" y="541">the build pack</text>
+    <rect class="fl-rules" x="950" y="524" width="146" height="24" rx="6"/>
+    <text class="fl-p" x="960" y="541">the outcome, yours</text>
+  </a>
+
+  <!-- find a part -->
+  <a href="../../guides/search/">
+    <rect class="fl-rules" x="780" y="566" width="390" height="96" rx="10"/>
+    <text class="fl-t" x="796" y="592">Find a part</text>
+  </a>
+  <a href="../../guides/marketplace/">
+    <rect class="fl-hand" x="796" y="602" width="300" height="22" rx="6"/>
+    <text class="fl-p" x="806" y="618">a Marketplace search, run by you</text>
+  </a>
+  <a href="../../guides/search/">
+    <rect class="fl-model" x="796" y="632" width="150" height="24" rx="6"/>
+    <text class="fl-p" x="806" y="649">a listing, read back</text>
+    <rect class="fl-rules" x="954" y="632" width="200" height="24" rx="6"/>
+    <text class="fl-p" x="964" y="649">assessed by the rules, dated</text>
+  </a>
+
+  <!-- the two doors -->
+  <a href="../../operations/demo-access/">
+    <rect class="fl-door-live" x="30" y="684" width="560" height="60" rx="10"/>
+    <text class="fl-t" x="46" y="710">The access code</text>
+    <text class="fl-s" x="46" y="732">the live models and saving: inventory, drafts, prices, projects, captures</text>
+  </a>
+  <a href="../../operations/demo-access/">
+    <rect class="fl-door-demo" x="610" y="684" width="560" height="60" rx="10"/>
+    <text class="fl-t" x="626" y="710">The demo visitor</text>
+    <text class="fl-s" x="626" y="732">recorded answers for the demo set, nothing kept;</text>
+    <text class="fl-e" x="982" y="732">every write refused</text>
+  </a>
+  <text class="fl-m" x="30" y="668">Two doors on one deployment</text>
+</svg>
