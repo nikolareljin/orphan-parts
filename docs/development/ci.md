@@ -55,9 +55,14 @@ version that is tagged already: an existing tag is never moved or deleted. Then 
 gets the tag and the publish job calls `release.yml`. A pull request closed without a merge, or
 from any other branch, does nothing. The tag is pushed with the job token, which on its own
 does not start tag-triggered workflows; that is why `release.yml` is called rather than waited
-for. The ruleset that limits tag creation has to list GitHub Actions as a bypass actor, or the
-push is refused and the tag is pushed by hand (`git tag 0.2.0 && git push origin 0.2.0`),
-which still triggers `release.yml`.
+for. The ruleset that limits tag creation lists only the admin role as a bypass actor, so the
+job token's push is refused (`GH013 ... creations being restricted`); the job
+(`scripts/push-release-tag.sh`) then fails with the exact command in its run summary (any
+other push failure keeps git's own message), and an admin pushes the tag on the merge commit
+(`git tag 0.2.0 <merge commit> && git push origin 0.2.0`), which triggers `release.yml` by
+itself. To let the workflow tag on its own, give tag creation a ruleset of its own with GitHub
+Actions as a bypass actor and keep updates and deletions admin-only, so a tag is still never
+moved.
 
 `release.yml`, called with the tag or triggered by a tag push:
 

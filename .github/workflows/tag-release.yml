@@ -7,8 +7,9 @@ name: tag-release
 #
 # The tag is pushed with the job token, so it does not fire the release workflow's tag trigger
 # by itself; the publish job calls that workflow directly. The repository ruleset that limits
-# tag creation has to let GitHub Actions through, otherwise the push is refused and the tag
-# is pushed by hand instead.
+# tag creation has to let GitHub Actions through, otherwise the push is refused and the job
+# fails with the exact command an admin runs (in the run summary); the admin's tag push then
+# starts the release workflow through its own tag trigger.
 on:
   pull_request:
     types: [closed]
@@ -40,9 +41,9 @@ jobs:
       - name: tag the merge commit
         env:
           TAG: ${{ steps.check.outputs.tag }}
-        run: |
-          git tag "$TAG"
-          git push origin "refs/tags/$TAG"
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        # on a ruleset refusal it writes the admin's command to the run summary and fails
+        run: bash scripts/push-release-tag.sh "$TAG" "$SHA"
 
   publish:
     needs: tag

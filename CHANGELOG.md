@@ -9,6 +9,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ### Added
 - The evaluation loop: `./dev eval` (`python -m app.eval run`) loads the demo set as the demo does and scores it by the rules into `eval/` (a report as JSON and Markdown, two charts): values read per item against an `expect:` block in `demo/set.yaml`, fit verdicts between items, proposals written against kept, stub answers and spend; `export` writes `train.jsonl` from the accepted reads, `diff` compares two reports; the guide *Training and improving the reads* says where the rules and the prompts live and what fine-tuning Muse Spark Open would take.
 
+### Fixed
+- A release merge whose tag the ruleset refuses now fails with the exact command an admin runs to tag the merge commit, in the run summary, instead of an opaque rule violation.
+
 ## 0.2.0 - 2026-10-30
 
 ### Changed
