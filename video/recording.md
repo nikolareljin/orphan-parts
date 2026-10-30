@@ -31,7 +31,7 @@ From a clone of the repository, `main` checked out:
 ```bash
 cp .env.example .env          # once
 ./dev up
-./dev demo                    # before every take: the inventory reset, the demo set loaded
+./dev demo                    # once, before the fixture scenes: the inventory reset, the demo set loaded
 ```
 
 - **Fixture scenes** (status *now* in `readiness.md`): `.env` with `OPL_FAKE_API=1`. Nothing
@@ -41,8 +41,10 @@ cp .env.example .env          # once
   says the mode is live. Each **Propose** and **Read it** spends credits; rehearse in fixture
   mode, then record each live take once or twice.
 
-Record the fixture scenes first, then the live ones, so a reset between takes never costs a
-run.
+Record the fixture scenes first, then the live ones. Record S11 to S14 as one session with no
+reset in between: `./dev demo` clears the live proposals and the second selected project that
+S12 needs for **Move it here**. Stage the conflicting selection first (select a second project
+that commits the laptop), then record S11 to S14.
 
 ## The phone
 

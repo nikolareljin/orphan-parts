@@ -47,13 +47,13 @@ here.**
 | S03 | Opening card | card | nothing | `brand/card-open.png` |
 | S04 | The mixer and the worn agitator, close | needs owner footage | the appliance and the part | phone camera |
 | S05 | Capture on the phone | needs owner photos | the app installed and paired, the appliance | Capture tab, photos, hold to talk, name, **Send** |
-| S06 | Read the label | needs owner photos and the key | S05's capture; `OPL_FAKE_API=0` with the key | **Inbox**, **Read it**, **Accept** |
+| S06 | Read the label | needs owner photos and the key | S05's capture; `OPL_FAKE_API=0` with the key | **Inbox**, **Read it**, open the item, **Accept** |
 | S07 | Measure the rod | needs owner photos | a side photo of the rod with a ruler in the same plane | **My inventory**, the agitator, **Measure a feature**, *Rod diameter*, marks, **Measure** |
 | S08 | The replacement search and its questions | recordable now | `./dev demo`; check the *Needs* line (storyboard note) | **Find a part**, the agitator search, hover **Search Marketplace**, **Bring a listing back**, **Values I know**, **Assess it**, **Ask the seller** |
-| S09 | The inventory | recordable now | `./dev demo`; a drive item, or say "monitors" | **My inventory**, scroll, open *Third laptop, works* |
+| S09 | The inventory | recordable now | `./dev demo` | **My inventory**, scroll, open *Third laptop, works* |
 | S10 | What I want from a build | recordable now | `./dev demo` | **Build and reuse**, **What I want from a build**, fields, **Save** |
 | S11 | Five proposals | recordable with the key | live Muse Spark run (fixture mode proposes the homework desk, not the arcade) | **Propose projects**, How many **5**, **Propose** |
-| S12 | Select the arcade, resolve a conflict | recordable with the key | S11's arcade proposal; a second selected project that wants the same laptop | open the arcade, **Select and commit the items**, **Move it here** |
+| S12 | Select the arcade, resolve a conflict | recordable with the key | S11's arcade proposal; a second project that wants the same laptop, selected before S11 in the same session | open the arcade, **Select and commit the items**, **Move it here** |
 | S13 | Missing controls as a Marketplace search | recordable with the key | S12 | *Still needed*, **Find it on Marketplace**, hover **Search Marketplace** |
 | S14 | The build pack | recordable with the key | S12 | **Write the build pack**, **Download** |
 | S15 | Connection diagram | concept preview | nothing | `diagrams/arcade-connections.png` |

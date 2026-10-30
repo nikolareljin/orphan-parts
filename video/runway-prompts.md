@@ -2,7 +2,7 @@
 
 For context only: a few seconds of atmosphere at the start (S01, S02) when the owner's own
 footage is not available. Never for anything the app does, never imitating its screens, never
-showing a repair that worked. A clip from here carries the line *Illustrative clip, generated
+showing a repair that worked. A clip from here carries the line *Illustrative clip, made
 with Runway* in the bottom right for its whole duration, and is listed in `assets.md`.
 
 Before using any: check the plan's current terms for use in a public video and for a

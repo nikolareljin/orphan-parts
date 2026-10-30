@@ -23,10 +23,12 @@ joystick_mount_hole = 0;      // placeholder
 /* [Buttons: from the buttons you buy, measured] */
 buttons_per_player = 3;
 button_hole = 28;         // placeholder: the hole the button's datasheet asks for
-button_pitch = 40;        // placeholder: centre to centre
-button_offset_x = 70;     // placeholder: first button from the joystick centre
+button_pitch = 40;        // placeholder: center to center
+button_offset_x = 70;     // placeholder: first button from the joystick center
 
 /* [Layout] */
+joystick_x_fraction = 0.3; // placeholder: the joystick's place across a player's zone
+cut_margin = 1;           // how far each hole reaches past the plate's faces, so cuts go through
 player_zone = panel_width / players;
 row_y = panel_depth / 2;
 
@@ -39,15 +41,15 @@ module plate() {
 }
 
 module player_holes(x0) {
-  jx = x0 + player_zone * 0.3;
-  translate([jx, row_y, -1]) cylinder(d = joystick_shaft_hole, h = panel_thickness + 2, $fn = 64);
+  jx = x0 + player_zone * joystick_x_fraction;
+  translate([jx, row_y, -cut_margin]) cylinder(d = joystick_shaft_hole, h = panel_thickness + 2 * cut_margin, $fn = 64);
   if (joystick_mount_hole > 0 && joystick_mount_spacing_x > 0 && joystick_mount_spacing_y > 0)
     for (sx = [-1, 1], sy = [-1, 1])
-      translate([jx + sx * joystick_mount_spacing_x / 2, row_y + sy * joystick_mount_spacing_y / 2, -1])
-        cylinder(d = joystick_mount_hole, h = panel_thickness + 2, $fn = 24);
+      translate([jx + sx * joystick_mount_spacing_x / 2, row_y + sy * joystick_mount_spacing_y / 2, -cut_margin])
+        cylinder(d = joystick_mount_hole, h = panel_thickness + 2 * cut_margin, $fn = 24);
   for (i = [0 : buttons_per_player - 1])
-    translate([jx + button_offset_x + i * button_pitch, row_y, -1])
-      cylinder(d = button_hole, h = panel_thickness + 2, $fn = 64);
+    translate([jx + button_offset_x + i * button_pitch, row_y, -cut_margin])
+      cylinder(d = button_hole, h = panel_thickness + 2 * cut_margin, $fn = 64);
 }
 
 difference() {

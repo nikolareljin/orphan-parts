@@ -8,7 +8,10 @@ titles from `titles/`, top left, in for the first 4 s of a shot unless said othe
 Captions bottom center, from `scripts/main.srt`.
 
 Browser: the web app at `http://localhost:5173`, window content 1920x1080, zoom 110 percent.
-Before every web take: `./dev demo` (the inventory reset and the demo set loaded).
+Reset once, `./dev demo` (the inventory reset and the demo set loaded), before the fixture
+scenes. Record S11 to S14 as one session with no reset in between: a reset clears the live
+proposals and the selection S12 needs for **Move it here**. Stage the conflicting selection
+first (select a second project that commits the laptop), then record S11 to S14.
 
 | Shot | Time | Dur | Picture | Exact actions | Source | Overlay | Status |
 |---|---|---|---|---|---|---|---|
@@ -17,7 +20,7 @@ Before every web take: `./dev demo` (the inventory reset and the demo set loaded
 | S03 | 0:12 | 6 | Opening card | 1 s fade in from black | `brand/card-open.png` | none | card |
 | S04 | 0:18 | 8 | The mixer and the worn agitator, close: the tabs at the top of the rod | Macro or close focus; the label on the base visible in frame | phone camera | `t01-story-a` | photos |
 | S05 | 0:26 | 6 | The phone's Capture tab | Capture tab: photograph the base, the label (fills the frame), the agitator; hold to talk: "the rod wobbles in the drive; the base runs"; type a name; **Send** | scrcpy window in OBS, or `adb shell screenrecord` | `t02-capture` | photos |
-| S06 | 0:32 | 5 | The capture read into an item | **Inbox**, the new capture, **Read it**; the label crop and the values *to confirm*; **Accept** one value | OBS, browser | `t03-read` | photos (and key) |
+| S06 | 0:32 | 5 | The capture read into an item | **Inbox**, the new capture, **Read it**; open the item: the label crop and the values *to confirm*; **Accept** one value | OBS, browser | `t03-read` | photos (and key) |
 | S07 | 0:37 | 5 | A dimension from a ruler | **My inventory**, *Frappé maker agitator, worn*, **Measure a feature**, feature *Rod diameter*, upload the side photo with the ruler, mark two points on the ruler and the two edges of the rod, **Measure**; the value with its method and uncertainty | OBS, browser | `t04-measure` | photos |
 | S08 | 0:42 | 13 | The replacement search, its open questions | **Find a part**, the search *all-metal agitator rod for the frappé maker*; hover **Search Marketplace** (do not open it on camera); **Bring a listing back**, choose **Values I know**, type only what a seller might state, **Assess it**; the state (*needs evidence* expected), **Ask the seller**, the questions | OBS, browser | `t05-find` 0 to 3 s, `t07-routes` 3 to 7 s, `t06-sample-values` 7 to 11 s | now |
 | S09 | 0:55 | 8 | The inventory: laptops, RAM, tablets, monitors, mice, switches | **My inventory**, scroll the list slowly; open *Third laptop, works* for 2 s | OBS, browser | `t08-story-b` | now |

@@ -16,7 +16,7 @@ Shot K1.
 
 Shot K2.
 
-> I catalogue what I own, then say what I want: my interests, budget, and experience.
+> I catalog what I own, then say what I want: my interests, budget, and experience.
 
 ## 0:13 to 0:23 · Proposals
 

@@ -21,7 +21,9 @@ S04|8|take|t01-story-a
 S05|6|take|t02-capture
 S06|5|take|t03-read
 S07|5|take|t04-measure
-S08|13|take|t05-find
+S08|3|take|t05-find
+S08b|4|take|t07-routes
+S08c|6|take|t06-sample-values
 S09|8|take|t08-story-b
 S10|9|take|t09-preferences
 S11|8|take|t10-propose
@@ -53,7 +55,7 @@ while IFS='|' read -r shot secs picture title; do
     last="v1"
   fi
   if [[ "$picture" == take ]]; then
-    filter+=";[$last]drawtext=text='$shot  take goes here':font='Noto Sans':fontsize=40:fontcolor=0x94a3b8:x=(w-tw)/2:y=(h-th)/2[v2]"
+    filter+=";[$last]drawtext=text='${shot:0:3}  take goes here':font='Noto Sans':fontsize=40:fontcolor=0x94a3b8:x=(w-tw)/2:y=(h-th)/2[v2]"
     last="v2"
   fi
   ffmpeg -nostdin -loglevel error -y "${inputs[@]}" -filter_complex "$filter" -map "[$last]" \

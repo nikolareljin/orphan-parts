@@ -75,4 +75,11 @@ def main(src, dst):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:3])
+    args = sys.argv[1:]
+    if args and args[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        sys.exit(0)
+    if len(args) != 2:
+        print(__doc__.strip(), file=sys.stderr)
+        sys.exit(2)
+    main(*args)

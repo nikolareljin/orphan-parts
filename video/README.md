@@ -10,7 +10,7 @@ electronics turned into a tabletop arcade.
 | Path | What |
 |---|---|
 | [readiness.md](readiness.md) | what the app does today, and for each scene: recordable now, needs the key, needs the owner's photos, or a concept preview, with the exact app actions |
-| [scripts/main.md](scripts/main.md), [scripts/short.md](scripts/short.md) | the narration, with every correction to the draft explained |
+| [scripts/main.md](scripts/main.md), [scripts/short.md](scripts/short.md) | the narration, with a note per section of what the app does and what is not claimed |
 | `scripts/main.srt`, `scripts/short.srt` | captions; `scripts/captions.py` writes them from the scripts |
 | [storyboard/main.md](storyboard/main.md), [storyboard/short.md](storyboard/short.md) | the shot lists: times, durations, pictures, exact actions, overlays |
 | [recording.md](recording.md) | OBS Studio on Ubuntu, the stack in fixture and live mode, the phone |
@@ -33,7 +33,8 @@ electronics turned into a tabletop arcade.
    Photograph the mixer's label and the agitator next to a ruler for S05 to S07.
 3. **Rehearse in fixture mode**: `./dev up`, `./dev demo`, every *now* scene once.
 4. **Record** with OBS (`recording.md`): the fixture scenes, then the live ones with the key.
-   `./dev demo` before every take.
+   `./dev demo` once before the fixture scenes; S11 to S14 as one session with no reset,
+   the conflicting selection staged first.
 5. **Check the timing**: `video/animatic.sh` and watch `video/out/animatic-main.mp4`.
 6. **Cut** in Clipchamp (`clipchamp.md`) by `storyboard/main.md`; export a short test first.
 7. **Record the narration** to the cut, retime the captions (`recording.md`, *Narration*).

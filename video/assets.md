@@ -13,7 +13,7 @@ every take, clip or track that goes into the cut.
 | `titles/*.svg`, `*.png` | drawn for the video | MIT |
 | `diagrams/*.svg`, `*.png` | drawn for the video from the arcade template's requirements; concept previews | MIT |
 | `cad/arcade_panel.scad` | written for the video; unvalidated, placeholders only | MIT |
-| `scripts/*.md`, `*.srt` | the owner's narration, corrected for accuracy | the owner's |
+| `scripts/*.md`, `*.srt` | the owner's narration; each section notes what the app does and what is not claimed | the owner's |
 | Text in every PNG | Noto Sans, rendered into the pictures; the font file is not distributed | SIL Open Font License 1.1 |
 
 ## Recorded for the video

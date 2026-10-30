@@ -1,13 +1,12 @@
 # Main video: narration (2:50)
 
-The owner's draft narration, corrected only where it described something the app does not do
-yet. Each correction is listed under the section it belongs to. Shot numbers point at
-[the storyboard](../storyboard/main.md). The captions in `main.srt` are written from the
+The narration, section by section. Under each section, a note of what the app does in it and
+what is not claimed. Shot numbers point at [the storyboard](../storyboard/main.md). The captions in `main.srt` are written from the
 quoted lines below by `captions.py`; edit the text here, then run it again.
 
 Pace: 342 words in 170 seconds, about 2.0 words a second (120 words a minute) including
-pauses. Section 4 is the densest at 2.2 words a second; read it a little faster or give it
-two seconds from section 5.
+pauses. Section 1 (0:00 to 0:18) is the densest at 2.3 words a second, then section 4 (1:12 to
+1:52) at 2.2; read them a little faster, or give section 1 a second from section 2.
 
 ## 0:00 to 0:18 · Two questions
 
@@ -16,8 +15,6 @@ Shots S01 to S03.
 > One missing part can interrupt a favorite routine. Meanwhile, useful electronics sit in
 > drawers because we don't know what to do with them. Orphan Parts Lens starts with two
 > questions: what do you have, and what do you want to accomplish?
-
-Unchanged.
 
 ## 0:18 to 0:55 · Story A: the drink mixer
 
@@ -30,22 +27,21 @@ Shots S04 to S08.
 > produces the result I want, is the next step. The useful answer includes the evidence and
 > questions needed before I buy.
 
-Corrected: the draft said the app *explores three routes*. Today it searches for the
-replacement part only (the `blender_agitator` profile and a search request you run on
-Marketplace). The donor-appliance and other-device routes are not built; the line now calls
-them the next step, and title `t07-routes` labels them a concept preview on screen.
+The app searches for the replacement part only: the `blender_agitator` profile and a search
+request you run on Marketplace. The donor-appliance and other-device routes are not built;
+the narration calls them the next step, and title `t07-routes` labels them a concept preview
+on screen.
 
 ## 0:55 to 1:12 · Story B: what I own and what I want
 
 Shots S09 and S10.
 
-> The same approach applies to my unused electronics. I catalogue my laptops, drives,
+> The same approach applies to my unused electronics. I catalog my laptops, monitors,
 > tablets, and accessories. Then I explain my interests, budget, and experience, so the
 > suggestions fit both my equipment and me.
 
-Unchanged. The demo set holds laptops, RAM, tablets, monitors, mice and switches but no
-drive: add a drive to the inventory before recording S09, or say "monitors" instead of
-"drives".
+The demo set holds laptops, RAM, tablets, two monitors, mice and switches; every item named
+here is in it.
 
 ## 1:12 to 1:52 · The arcade
 
@@ -58,15 +54,11 @@ Shots S11 to S16.
 > steps, and the safety notes. A connection diagram and an assembly preview, shown here as
 > concept previews, would explain how the computer, display, and controls work together.
 
-Corrected:
-
-- *a task display* became *a smart mirror*: there is no task-display template; the smart
-  mirror template shows the time, the weather and a calendar.
-- *the app opens the search, and I run it* added, so nothing suggests the app searches
-  Marketplace on its own.
-- The draft said a connection diagram *explains* and an assembly preview *helps*. Neither is
-  in the app. The build pack (real) now carries the sentence, and the diagram and the
-  preview are named as concept previews.
+- The smart mirror is one of the app's project templates: the time, the weather and a
+  calendar.
+- The app opens a Marketplace search; you run it. It does not search Marketplace on its own.
+- The build pack is in the app. The connection diagram and the assembly preview are not; on
+  screen they are labeled concept previews.
 
 ## 1:52 to 2:15 · The next step
 
@@ -77,8 +69,8 @@ Shots S17 and S18.
 > shown in this concept preview: a downloadable build package, including designs for
 > suitable brackets or housings.
 
-Unchanged: the draft already calls this the next step and a concept preview. On screen,
-titles `t16-swap` and `t17-brackets` carry the label.
+Not built: a concept preview. On screen, titles `t16-swap` and `t17-brackets` carry the
+label.
 
 ## 2:15 to 2:40 · Why it matters
 
@@ -89,12 +81,10 @@ Shots S19 to S21.
 > secondhand parts easier to evaluate. Each confirmed result could also become useful
 > evidence for the next person facing the same problem.
 
-Unchanged: every claim is conditional.
+Every claim here is conditional.
 
 ## 2:40 to 2:50 · Close
 
 Shot S22.
 
 > Orphan Parts Lens. Find replacements. Discover reuse. Build something useful.
-
-Unchanged.
