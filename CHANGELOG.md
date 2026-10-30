@@ -4,6 +4,8 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-30
+
 ### Changed
 - The docs site is complete: the demo walkthrough, find and rank, a new category by hand, the agent tools, the data model and the history pages written; the pages on what is not in this version (catalog feed, messaging, glasses, the other Muse models, provider routing) say so and point at the roadmap; the architecture and identification pages describe the service as it is.
 - The README, the docs home, the roadmap, the limitations and the site description now say what the product is: a private inventory of what you own, four paths on it (catalog, sell and give away, find the one that fits, and build and reuse to follow), what is built and what comes next.
