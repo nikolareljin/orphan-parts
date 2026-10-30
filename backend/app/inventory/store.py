@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -162,6 +162,19 @@ CREATE INDEX allocations_by_item ON allocations (item_id);
 CREATE INDEX allocations_by_project ON allocations (project_id);
 """
 
+# version 7: build packs, one document per writing, with the digest of its inputs
+_SCHEMA_V7 = """
+CREATE TABLE packs (
+    id INTEGER PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES projects(id),
+    version INTEGER NOT NULL,
+    digest TEXT NOT NULL,
+    markdown TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX packs_by_project ON packs (project_id);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -169,6 +182,7 @@ MIGRATIONS: dict[int, str] = {
     4: _SCHEMA_V4,
     5: _SCHEMA_V5,
     6: _SCHEMA_V6,
+    7: _SCHEMA_V7,
 }
 
 

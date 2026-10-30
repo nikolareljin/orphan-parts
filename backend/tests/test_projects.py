@@ -10,17 +10,19 @@ from app.config import Settings
 from app.extract import Extractor
 from app.find import Finder
 from app.inventory import Inventory
-from app.inventory.schema import ItemCreate
+from app.inventory.schema import FieldCreate, ItemCreate, ItemPatch
 from app.match import Assessor
 from app.model_api import CostLedger, IncompleteResponseError, ModelApiClient
 from app.profiles import Profiles
 from app.projects import (
     AllocationConflictError,
     FillRequest,
+    OutcomeCreate,
     Planner,
     Preferences,
     ProjectsError,
     ProposeRequest,
+    ShareChange,
     Templates,
     UnknownTemplateError,
     fits,
@@ -427,3 +429,163 @@ def test_paths_are_in_the_openapi_document(client: TestClient) -> None:
     paths = client.get("/openapi.json").json()["paths"]
     for path in ("/api/preferences", "/api/projects/propose", "/api/projects/{project_id}/select"):
         assert path in paths
+
+
+async def test_the_build_pack_is_written_from_what_stands_and_goes_stale(planner: Planner) -> None:
+    ids = household(planner.inventory)
+    inv = planner.inventory
+    inv.update(
+        ids["Old laptop"], ItemPatch(condition="boots, battery weak", location="attic shelf")
+    )
+    inv.add_field(ids["Old laptop"], FieldCreate(field="serial_number", value="SN-77"))
+    inv.add_field(ids["Old laptop"], FieldCreate(field="screen_size", value="13", unit="in"))
+    planner.set_preferences(Preferences(budget=50, tools="a screwdriver set"))
+    projects = await planner.propose(ProposeRequest())
+    desk = projects[0]
+    with pytest.raises(ProjectsError, match="selected project"):
+        planner.write_pack(desk.id)
+    planner.select(desk.id)
+    planner.search_for(desk.id, "video_cable")
+    pack = planner.write_pack(desk.id)
+    assert pack.version == 1 and not pack.stale
+    text = pack.markdown
+    assert text.startswith(f"# {desk.title}")
+    assert "Build pack version 1" in text and pack.digest in text
+    assert "**Old laptop** as laptop (committed)" in text
+    assert "condition: boots, battery weak" in text and "screen size: 13 in" in text
+    assert "attic shelf" not in text and "SN-77" not in text and "serial" not in text
+    assert "A cable between the two" in text and "blocks the build" in text
+    assert "Search: A cable between the two" in text and "top price 38" in text
+    assert "A mouse (optional)" in text
+    assert "12 USD" in text and "12 of 50 USD, 38 left" in text
+    assert "## Tools\n\na screwdriver set" in text
+    assert "1. [ ] Put the laptop on a stand" in text
+    assert "HDMI output" in text and "## Limitations" in text and "## Outcome" not in text
+    # the same inputs: not stale; an item on it changed: stale, and the next writing is version 2
+    assert not planner.packs_of(desk.id)[0].stale
+    inv.update(ids["Old laptop"], ItemPatch(faults="one dead key"))
+    assert planner.pack(pack.id).stale
+    assert planner.packs_of(desk.id)[0].stale
+    second = planner.write_pack(desk.id)
+    assert second.version == 2 and not second.stale and "one dead key" in second.markdown
+    # the budget is an input too
+    planner.set_preferences(Preferences(budget=80))
+    assert planner.pack(second.id).stale
+
+
+async def test_progress_and_the_outcome_record(planner: Planner) -> None:
+    household(planner.inventory)
+    projects = await planner.propose(ProposeRequest())
+    vacuum = next(p for p in projects if p.template == "vacuum_restored")
+    with pytest.raises(ProjectsError, match="selected or building"):
+        planner.set_progress(vacuum.id, 0, True)
+    planner.select(vacuum.id)
+    ticked = planner.set_progress(vacuum.id, 1, True)
+    assert ticked.progress == [False, True, False]
+    with pytest.raises(ProjectsError, match="no step 9"):
+        planner.set_progress(vacuum.id, 9, True)
+    record = OutcomeCreate(
+        configuration="the crevice tool on the wand",
+        test="ran it over the stairs",
+        tested_on="2026-10-28",
+        working=False,
+        limitations="the latch does not click",
+    )
+    with pytest.raises(ProjectsError, match="being built"):
+        planner.record_outcome(vacuum.id, record)
+    tool = planner.inventory.create(ItemCreate(item_type="crevice tool", name="Narrow tool"))
+    planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
+    planner.advance(vacuum.id, "building")
+    failed = planner.record_outcome(vacuum.id, record)
+    assert failed.status == "building" and failed.outcome is not None
+    assert failed.outcome.working is False and not failed.outcome.shared
+    done = planner.record_outcome(
+        vacuum.id, record.model_copy(update={"working": True, "limitations": ""})
+    )
+    assert done.status == "done" and done.outcome is not None and done.outcome.working
+    assert planner.inventory.get(tool.id).availability == "reserved"
+    pack = planner.write_pack(vacuum.id)
+    assert "## Outcome" in pack.markdown and "Tested 2026-10-28: working" in pack.markdown
+    assert "2. [x]" in pack.markdown
+    with pytest.raises(ProjectsError, match="not shared"):
+        planner.share_text(vacuum.id)
+    shared = planner.set_share(vacuum.id, ShareChange(shared=True))
+    assert shared.outcome is not None and shared.outcome.shared
+    text = planner.share_text(vacuum.id)
+    assert text.startswith(vacuum.title) and "Built from: crevice tool, vacuum." in text
+    assert "ran it over the stairs" in text and "(working)" in text
+    assert "Upright vacuum" not in text and "Narrow tool" not in text
+    planner.set_share(vacuum.id, ShareChange(shared=False))
+    with pytest.raises(ProjectsError, match="not shared"):
+        planner.share_text(vacuum.id)
+    with pytest.raises(ProjectsError, match="no outcome"):
+        planner.set_share(projects[0].id, ShareChange(shared=True))
+
+
+def test_outcome_dates_are_real_and_past() -> None:
+    base = {"configuration": "x", "test": "y", "working": True}
+    with pytest.raises(ValueError, match="real date"):
+        OutcomeCreate(**base, tested_on="2026-02-30")
+    with pytest.raises(ValueError, match="future"):
+        OutcomeCreate(**base, tested_on="2999-01-01")
+    with pytest.raises(ValueError):
+        OutcomeCreate(**{**base, "configuration": "  "}, tested_on="2026-10-28")
+
+
+def test_pack_and_outcome_routes(recorded_client: TestClient) -> None:
+    c = recorded_client
+    for item_type, name in (("vacuum", "Upright vacuum"), ("crevice tool", "Narrow tool")):
+        c.post("/api/items", json={"item_type": item_type, "name": name})
+    projects = c.post("/api/projects/propose", json={}).json()
+    vacuum = next(p for p in projects if p["template"] == "vacuum_restored")
+    pid = vacuum["id"]
+    assert c.post(f"/api/projects/{pid}/pack").status_code == 422
+    assert c.post(f"/api/projects/{pid}/select", json={}).status_code == 200
+    written = c.post(f"/api/projects/{pid}/pack")
+    assert written.status_code == 201 and written.json()["version"] == 1
+    pack_id = written.json()["id"]
+    assert c.get(f"/api/packs/{pack_id}").json()["stale"] is False
+    as_file = c.get(f"/api/packs/{pack_id}.md")
+    assert as_file.status_code == 200
+    assert as_file.headers["content-type"].startswith("text/markdown")
+    assert (
+        as_file.headers["content-disposition"] == f'attachment; filename="build-pack-{pid}-v1.md"'
+    )
+    assert as_file.text.startswith("# The upright vacuum back to work")
+    assert c.get("/api/packs/999.md").status_code == 404
+    assert (
+        c.post(f"/api/projects/{pid}/progress", json={"step": 0, "done": True}).json()["progress"][
+            0
+        ]
+        is True
+    )
+    assert (
+        c.post(f"/api/projects/{pid}/progress", json={"step": 7, "done": True}).status_code == 422
+    )
+    assert len(c.get(f"/api/projects/{pid}/packs").json()) == 1
+    tool = next(i for i in c.get("/api/items").json() if i["name"] == "Narrow tool")
+    c.post(f"/api/projects/{pid}/requirements/attachment/fill", json={"item_id": tool["id"]})
+    c.post(f"/api/projects/{pid}/advance/building")
+    record = {
+        "configuration": "tool on the wand",
+        "test": "stairs",
+        "tested_on": "2026-10-28",
+        "working": True,
+    }
+    assert c.get(f"/api/projects/{pid}/outcome/share").status_code == 422
+    done = c.post(f"/api/projects/{pid}/outcome", json=record)
+    assert done.status_code == 200 and done.json()["status"] == "done"
+    assert (
+        c.post(
+            f"/api/projects/{pid}/outcome", json={**record, "tested_on": "2999-01-01"}
+        ).status_code
+        == 422
+    )
+    assert (
+        c.post(f"/api/projects/{pid}/outcome/share", json={"shared": True}).json()["outcome"][
+            "shared"
+        ]
+        is True
+    )
+    text = c.get(f"/api/projects/{pid}/outcome/share").json()["text"]
+    assert "Built from: crevice tool, vacuum." in text and "Narrow tool" not in text

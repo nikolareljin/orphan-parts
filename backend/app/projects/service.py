@@ -4,6 +4,7 @@ item is committed twice."""
 
 import json
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from app.config import Settings
@@ -12,11 +13,14 @@ from app.find.service import Finder
 from app.inventory import Inventory
 from app.inventory.schema import Item, ItemPatch
 from app.model_api import ModelApiClient, text_part, user_message
+from app.projects import pack as packs
 from app.projects.schema import (
     Allocation,
     Budget,
     Conflict,
     FillRequest,
+    OutcomeCreate,
+    Pack,
     Preferences,
     Project,
     ProjectList,
@@ -24,6 +28,7 @@ from app.projects.schema import (
     ProposalSet,
     ProposeRequest,
     Requirement,
+    ShareChange,
     Template,
 )
 from app.projects.templates import Templates
@@ -71,6 +76,10 @@ TOOLS: list[dict[str, Any]] = [
         "strict": True,
     },
 ]
+
+
+def now_iso() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 class ProjectsError(ValueError):
@@ -298,7 +307,7 @@ class Planner:
         rows = self.inventory.projects()
         projects = [self.project_of(r) for r in rows]
         prefs = self.preferences()
-        selected = [p for p in projects if p.status in ("selected", "building")]
+        selected = [p for p in projects if p.status in ("selected", "building", "done")]
         spend = round(sum(p.spend_estimate for p in selected), 2)
         return ProjectList(
             projects=projects,
@@ -407,7 +416,7 @@ class Planner:
         return self.project_of(updated)
 
     def reserve(self, item_id: int) -> None:
-        """An item is reserved while any selected project counts on it, available otherwise."""
+        """An item is reserved while a selected, building or done project counts on it."""
         wanted = "reserved" if self.inventory.committed_elsewhere(item_id, 0) else "available"
         item = self.inventory.get(item_id)
         if item.availability != "gone" and item.availability != wanted:
@@ -439,8 +448,118 @@ class Planner:
             self.inventory.update_project(project_id, str(row["status"]), json.dumps(content))
         )
 
+    # --- the build pack, progress and the outcome ------------------------------
+
+    def items_on(self, project: Project) -> list[Item]:
+        out: list[Item] = []
+        for a in project.allocations:
+            try:
+                out.append(self.inventory.get(a.item_id))
+            except LookupError:
+                continue
+        return out
+
+    def digest(self, project: Project) -> str:
+        return packs.digest_for(project, self.items_on(project), self.preferences())
+
+    def write_pack(self, project_id: int) -> Pack:
+        """The pack from what stands now: the rules write it, nothing is asked of a model."""
+        project = self.project(project_id)
+        if project.status in ("proposed", "shortlisted", "abandoned"):
+            raise ProjectsError("a build pack is written for a selected project")
+        items = self.items_on(project)
+        prefs = self.preferences()
+        searches: dict[int, Any] = {}
+        for r in project.requirements:
+            if r.search_id is None:
+                continue
+            try:
+                searches[r.search_id] = (
+                    self.finder.search(r.search_id),
+                    self.finder.candidates(r.search_id),
+                )
+            except LookupError:
+                continue
+        digest = packs.digest_for(project, items, prefs)
+        version = len(self.inventory.packs(project_id)) + 1
+        markdown = packs.render(
+            project, items, prefs, self.projects().budget, searches, version, digest
+        )
+        return self.pack_of(self.inventory.add_pack(project_id, digest, markdown), digest)
+
+    def packs_of(self, project_id: int) -> list[Pack]:
+        current = self.digest(self.project(project_id))
+        return [self.pack_of(r, current) for r in self.inventory.packs(project_id)]
+
+    def pack(self, pack_id: int) -> Pack:
+        row = self.inventory.pack(pack_id)
+        return self.pack_of(row, self.digest(self.project(int(row["project_id"]))))
+
+    def pack_of(self, row: Any, current: str) -> Pack:
+        return Pack(
+            id=int(row["id"]),
+            project_id=int(row["project_id"]),
+            version=int(row["version"]),
+            digest=row["digest"],
+            stale=row["digest"] != current,
+            markdown=row["markdown"],
+            created_at=row["created_at"],
+        )
+
+    def set_progress(self, project_id: int, step: int, done: bool) -> Project:
+        row = self.inventory.project(project_id)
+        if row["status"] not in ("selected", "building"):
+            raise ProjectsError("progress is kept on a selected or building project")
+        content = json.loads(row["content"])
+        steps = content.get("steps", [])
+        if step >= len(steps):
+            raise ProjectsError(f"no step {step}")
+        progress = list(content.get("progress", [])) + [False] * len(steps)
+        progress = progress[: len(steps)]
+        progress[step] = done
+        content["progress"] = progress
+        return self.project_of(
+            self.inventory.update_project(project_id, str(row["status"]), json.dumps(content))
+        )
+
+    def record_outcome(self, project_id: int, outcome: OutcomeCreate) -> Project:
+        """The owner's record of what was built and how it was tested. A working result marks
+        the project done; a failed test keeps it building, with the record kept."""
+        row = self.inventory.project(project_id)
+        if row["status"] not in ("building", "done"):
+            raise ProjectsError("an outcome is recorded on a project being built")
+        content = json.loads(row["content"])
+        content["outcome"] = {
+            **outcome.model_dump(),
+            "recorded_at": now_iso(),
+            "shared": bool((content.get("outcome") or {}).get("shared", False)),
+        }
+        status = "done" if outcome.working else "building"
+        self.inventory.update_project(project_id, status, json.dumps(content))
+        if status == "done":
+            return self.set_status(project_id, status, commit=True)
+        return self.project(project_id)
+
+    def set_share(self, project_id: int, change: ShareChange) -> Project:
+        row = self.inventory.project(project_id)
+        content = json.loads(row["content"])
+        if not content.get("outcome"):
+            raise ProjectsError("no outcome recorded")
+        content["outcome"]["shared"] = change.shared
+        return self.project_of(
+            self.inventory.update_project(project_id, str(row["status"]), json.dumps(content))
+        )
+
+    def share_text(self, project_id: int) -> str:
+        project = self.project(project_id)
+        if project.outcome is None or not project.outcome.shared:
+            raise ProjectsError("the outcome is not shared")
+        return packs.share_text(project, self.items_on(project))
+
     def project_of(self, row: Any) -> Project:
         content = json.loads(row["content"])
+        content.setdefault("progress", [])
+        content.setdefault("outcome", None)
         allocations = [
             Allocation(
                 item_id=int(a["item_id"]),

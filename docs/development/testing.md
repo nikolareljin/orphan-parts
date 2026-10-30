@@ -43,7 +43,15 @@ refused before any call; selection commits and reserves, a second build wanting 
 is a conflict until it takes it, abandoning releases, advancing in order and not before every blocking requirement is filled;
 a requirement filled by hand with an item of the right kind, and the wrong kind, a gone item,
 a filled requirement and a project that is over refused; a missing requirement becomes a search
-under the budget left and the item bought from it marks the search found; the loop replayed statelessly through a
+under the budget left and the item bought from it marks the search found; the build pack
+written from what stands (the items' accepted values in, a serial number, a location and a note
+out, the search with its top price, the budget line, the tools, the steps with progress, the
+limits), refused before selection, stale once an item on it or the budget changed and the next
+writing the next version; progress on a selected project and an unknown step refused; the
+outcome recorded only while building, a failed test keeping it building and a working one
+marking it done with the items still reserved, the dates real and past, blank text refused; the
+share text redacted and refused until shared; the routes with the Markdown file and its
+headers; the loop replayed statelessly through a
 mock server (the brief, the output items and one result per call, two ledger entries) and a
 loop that never answers refused; the routes and their refusals.
 

@@ -76,6 +76,33 @@ test('preferences are kept, proposals come from the inventory, and selection com
   await again.getByRole('button', { name: 'Start building' }).click()
   await expect(again).toContainText('being built')
 
+  // the build pack is written from what stands, with a file to keep; a tick is progress
+  await again.getByRole('button', { name: 'Write the build pack' }).click()
+  const packs = again.getByRole('list', { name: 'Packs' })
+  await expect(packs).toContainText('version 1')
+  await expect(packs.getByRole('link', { name: 'Download' })).toHaveAttribute('href', /\/api\/packs\/\d+\.md$/)
+  const packUrl = await packs.getByRole('link', { name: 'Download' }).getAttribute('href')
+  const file = await request.get(packUrl ?? '')
+  expect(file.status()).toBe(200)
+  expect(await file.text()).toContain('# Homework desk from the old laptop and the spare monitor')
+  await again.getByRole('list', { name: 'Progress' }).getByRole('checkbox').first().check()
+  await expect(again).toContainText('1 of 3 steps done')
+  await expect(packs).toContainText('stale')
+
+  // the outcome, in the owner's words: a working result marks it done, and the share text is redacted
+  const outcome = again.getByRole('form', { name: 'Record the outcome' })
+  await outcome.getByLabel('What was set up').fill('laptop on the monitor over HDMI')
+  await outcome.getByLabel('How it was tested').fill('a full homework session')
+  await outcome.getByLabel('Limits').fill('the laptop fan is loud')
+  await outcome.getByRole('button', { name: 'Record the outcome' }).click()
+  await expect(again).toContainText('done')
+  await expect(again.getByLabel('Recorded outcome')).toContainText('working')
+  await again.getByLabel(/Share the outcome/).check()
+  const share = again.getByRole('textbox', { name: 'Share text' })
+  await expect(share).toHaveValue(/Built from: hdmi cable, keyboard, laptop, monitor\./)
+  await expect(share).toHaveValue(/a full homework session/)
+  await expect(share).not.toHaveValue(/Old laptop/)
+
   await page.getByRole('button', { name: 'Find a part' }).click()
   await expect(page.getByRole('table', { name: 'Searches' })).toContainText('A cable between the two')
 })

@@ -552,6 +552,28 @@ export interface Requirement {
   profile: string
 }
 
+export interface Outcome {
+  configuration: string
+  test: string
+  tested_on: string
+  working: boolean
+  limitations: string
+  recorded_at: string
+  shared: boolean
+}
+
+export type OutcomeCreate = Pick<Outcome, 'configuration' | 'test' | 'tested_on' | 'working' | 'limitations'>
+
+export interface Pack {
+  id: number
+  project_id: number
+  version: number
+  digest: string
+  stale: boolean
+  markdown: string
+  created_at: string
+}
+
 export interface Project {
   id: number
   template: string
@@ -570,6 +592,8 @@ export interface Project {
   steps: string[]
   safety: string[]
   dropped: string[]
+  progress: boolean[]
+  outcome: Outcome | null
   model: string
   from_fixture: boolean
   cost_usd: number
@@ -776,6 +800,13 @@ export const api = {
     searchFor: (id: number, key: string) => sendJson<Project>('POST', `/api/projects/${id}/requirements/${key}/search`),
     fill: (id: number, key: string, itemId: number) =>
       sendJson<Project>('POST', `/api/projects/${id}/requirements/${key}/fill`, { item_id: itemId, why: '' }),
+    writePack: (id: number) => sendJson<Pack>('POST', `/api/projects/${id}/pack`),
+    packs: (id: number) => getJson<Pack[]>(`/api/projects/${id}/packs`),
+    packUrl: (packId: number) => apiUrl(`/api/packs/${packId}.md`),
+    setProgress: (id: number, step: number, done: boolean) => sendJson<Project>('POST', `/api/projects/${id}/progress`, { step, done }),
+    recordOutcome: (id: number, outcome: OutcomeCreate) => sendJson<Project>('POST', `/api/projects/${id}/outcome`, outcome),
+    setShared: (id: number, shared: boolean) => sendJson<Project>('POST', `/api/projects/${id}/outcome/share`, { shared }),
+    shareText: (id: number) => getJson<{ text: string }>(`/api/projects/${id}/outcome/share`),
   },
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [
