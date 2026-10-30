@@ -1,0 +1,36 @@
+/* Keep every tab readable in both themes; weight marks the active page. */
+[data-md-color-scheme="default"] .md-tabs {
+  background-color: #5f6b77;
+}
+
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: #4b5560;
+}
+
+[data-md-color-scheme="default"] .md-tabs__link,
+[data-md-color-scheme="slate"] .md-tabs__link {
+  color: #fff;
+  opacity: 1;
+}
+
+.md-tabs__item--active .md-tabs__link {
+  font-weight: 700;
+}
+
+/* With every label at full opacity, hover and keyboard focus need their own cue. */
+.md-tabs__link:hover,
+.md-tabs__link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+/* The logo in the header fills the header's full height (2.4rem) instead of 1.2rem. */
+.md-header__button.md-logo {
+  padding: 0 0.2rem;
+  margin: 0 0.2rem;
+}
+
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2.4rem;
+}
