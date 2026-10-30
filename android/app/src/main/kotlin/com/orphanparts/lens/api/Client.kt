@@ -70,6 +70,9 @@ class Client(private val baseUrl: String, private val transport: Transport, priv
         return json.optBoolean("granted", false)
     }
 
+    /** Whether the session this client holds (a pairing) still opens the backend. */
+    fun accessGranted(): Boolean = get("/api/access").optBoolean("granted", false)
+
     fun extract(jpeg: ByteArray): Extraction {
         val body = Multipart().file("photos", "capture.jpg", "image/jpeg", jpeg)
         val json = send("POST", "/api/extract", body.bytes(), body.contentType)
