@@ -90,10 +90,8 @@ searches:
     max_price: 15
     listings:
       - text: "@listings/L1.txt"
-        observed_on: "2026-10-28"
         asking_price: "9"
       - text: "@listings/L2.txt"
-        observed_on: "2026-10-28"
         asking_price: "6"
   - key: adapter_spare
     need: adapter
@@ -101,10 +99,8 @@ searches:
     max_price: 25
     listings:
       - text: "@listings/L3.txt"
-        observed_on: "2026-10-27"
         asking_price: "15"
       - text: "@listings/L4.txt"
-        observed_on: "2026-10-27"
         asking_price: "12"
 
 propose:

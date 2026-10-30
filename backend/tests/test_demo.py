@@ -126,6 +126,31 @@ def test_the_set_is_checked(tmp_path: Path) -> None:
                 with_files=False,
             )
         )
+    with pytest.raises(ValueError, match="search keys repeat"):
+        DemoSet.model_validate(
+            {"searches": [{"key": "s", "profile": "generic_item", "title": "x"}] * 2}
+        )
+    with pytest.raises(ValueError, match="inside it"):
+        load_set(
+            write_set(
+                tmp_path / "escape",
+                "items:\n  - {key: a, name: A, photos: ['../../.env']}\n",
+                with_files=False,
+            )
+        )
+    with pytest.raises(ValueError, match="observed_on"):
+        DemoSet.model_validate(
+            {
+                "searches": [
+                    {
+                        "key": "s",
+                        "profile": "generic_item",
+                        "title": "x",
+                        "listings": [{"text": "a listing", "observed_on": "yesterday"}],
+                    }
+                ]
+            }
+        )
     with pytest.raises(ValueError, match="an item or a profile"):
         load_set(
             write_set(tmp_path / "bad2", "searches:\n  - {key: s, title: x}\n", with_files=False)
@@ -142,16 +167,25 @@ def test_scrub_drops_metadata_shrinks_and_copies_notes(tmp_path: Path) -> None:
     raw.mkdir()
     (raw / "vac_a.JPG").write_bytes(photo_with_exif())
     (raw / "cam.png").write_bytes(make_photo(300, 200, "PNG"))
-    (raw / "note.wav").write_bytes(wav_bytes(0.5))
+    # a note as an editor saves it: the sound, then an INFO chunk with the software and a date
+    info = b"INFOISFT" + (12).to_bytes(4, "little") + b"SoundEdit 9\0"
+    info += b"ICRD" + (4).to_bytes(4, "little") + b"2026"
+    tagged = wav_bytes(0.5) + b"LIST" + len(info).to_bytes(4, "little") + info
+    (raw / "note.wav").write_bytes(tagged)
     (raw / "notes.txt").write_text("not media")
     (raw / "broken.jpg").write_bytes(b"not a photo")
+    (raw / "cam.JPG").write_bytes(make_photo(320, 240))  # the same stem as cam.png
     notes = scrub(raw, out)
     cleaned = (out / "vac_a.jpg").read_bytes()
     assert dimensions(cleaned) == (1600, 1200)
     assert "exif" not in Image.open(BytesIO(cleaned)).info
     assert b"A phone" not in cleaned and b"2026:10:29" not in cleaned
-    assert dimensions((out / "cam.jpg").read_bytes()) == (300, 200)
-    assert (out / "note.wav").read_bytes() == (raw / "note.wav").read_bytes()
+    # two sources, one stem: both kept, the second numbered
+    sizes = {dimensions((out / n).read_bytes()) for n in ("cam.jpg", "cam-2.jpg")}
+    assert sizes == {(300, 200), (320, 240)}
+    cleaned_note = (out / "note.wav").read_bytes()
+    assert b"SoundEdit" not in cleaned_note and b"ICRD" not in cleaned_note
+    assert cleaned_note[:4] == b"RIFF" and len(cleaned_note) == len(wav_bytes(0.5))
     assert not (out / "notes.txt").exists() and not (out / "broken.jpg").exists()
     assert any("not a photo or a WAV note" in n for n in notes)
     assert any(n.startswith("broken.jpg:") for n in notes)
@@ -159,6 +193,7 @@ def test_scrub_drops_metadata_shrinks_and_copies_notes(tmp_path: Path) -> None:
     # the raw directory is read, never written
     assert sorted(p.name for p in raw.iterdir()) == [
         "broken.jpg",
+        "cam.JPG",
         "cam.png",
         "note.wav",
         "notes.txt",
@@ -201,7 +236,9 @@ async def test_the_set_loads_in_fixture_mode_and_says_what_it_skipped(
     }
     lines = outcome.lines()
     assert lines[0].startswith("mode fixture: 5 item(s) from 1 photo(s)")
-    assert lines[1] == "skipped: vacuum: photo photos/missing.jpg missing"
+    # every answer came from an operation's stub (nothing is recorded for these files): said
+    assert "operation's stub" in lines[1] and outcome.stub_answers >= 1
+    assert lines[2] == "skipped: vacuum: photo photos/missing.jpg missing"
 
 
 async def test_record_mode_writes_a_fixture_per_answer(live_settings: Settings) -> None:
@@ -225,6 +262,11 @@ async def test_record_mode_writes_a_fixture_per_answer(live_settings: Settings) 
     assert len(written) == 1 and written[0].stem != "extract"  # keyed by the request digest
     fixture = json.loads(written[0].read_text())
     assert fixture["op"] == "extract" and fixture["response"] == extract["response"]
+    # the same run again replays what is on disk: nothing is bought twice
+    spent = client.ledger.total_usd
+    again = await loader.run(load_set(path), path.parent)
+    assert again.items == 1 and again.cost_usd == 0.0 and client.ledger.total_usd == spent
+    assert len(list((recording.fixtures_dir / "responses").glob("*.json"))) == 1
 
 
 def test_reset_removes_only_the_inventory_file(recorded_settings: Settings) -> None:
@@ -308,3 +350,33 @@ def test_the_committed_set_parses_and_names_only_files_under_demo() -> None:
                 assert (path.parent / listing.text[1:]).is_file(), listing.text
                 text = (path.parent / listing.text[1:]).read_text()
                 assert text.startswith("DEMO DATA")
+
+
+async def test_a_load_on_stubs_says_so(recorded_settings: Settings) -> None:
+    # the committed fixtures hold an operation stub for extract, no recording of this photo
+    loader, client = build_loader(recorded_settings)
+    path = write_set(
+        recorded_settings.data_dir.parent / "demo",
+        "items:\n  - {key: a, name: Adapter, photos: [photos/psu.jpg]}\n",
+    )
+    try:
+        outcome = await loader.run(load_set(path), path.parent)
+    finally:
+        await client.aclose()
+    assert outcome.items == 1 and outcome.stub_answers >= 1
+    assert any("operation's stub" in line for line in outcome.lines())
+
+
+async def test_a_search_with_a_need_keeps_its_own_profile(recorded_settings: Settings) -> None:
+    loader, client = build_loader(recorded_settings)
+    path = write_set(
+        recorded_settings.data_dir.parent / "demo",
+        "items:\n  - {key: a, name: Adapter}\n"
+        "searches:\n  - {key: s, need: a, profile: generic_item, title: A lead}\n",
+    )
+    try:
+        outcome = await loader.run(load_set(path), path.parent)
+    finally:
+        await client.aclose()
+    assert outcome.searches == 1 and not any("no profile" in x for x in outcome.skipped)
+    assert loader.finder.searches()[0].profile == "generic_item"

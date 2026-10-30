@@ -18,7 +18,7 @@ from pathlib import Path
 import yaml
 
 from app.config import Settings, get_settings
-from app.demo.schema import DemoSet
+from app.demo.schema import DemoSet, Outcome
 from app.demo.service import Loader, load_set, reset, scrub
 from app.extract import Extractor
 from app.find import Finder
@@ -74,13 +74,12 @@ def build_loader(settings: Settings) -> tuple[Loader, ModelApiClient]:
     return loader, client
 
 
-async def _run(settings: Settings, demo: DemoSet, base: Path) -> list[str]:
+async def _run(settings: Settings, demo: DemoSet, base: Path) -> Outcome:
     loader, client = build_loader(settings)
     try:
-        outcome = await loader.run(demo, base)
+        return await loader.run(demo, base)
     finally:
         await client.aclose()
-    return outcome.lines()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -148,8 +147,16 @@ def main(argv: list[str] | None = None) -> int:
     if do_reset:
         for name in reset(settings):
             print(f"removed {name}")
-    for line in asyncio.run(_run(settings, demo, path.parent)):
+    outcome = asyncio.run(_run(settings, demo, path.parent))
+    for line in outcome.lines():
         print(line)
+    if what == "record" and outcome.skipped:
+        # the paid run: what it skipped has no recording, so the run is not done
+        print(
+            f"demo: {len(outcome.skipped)} part(s) of the set were skipped; see above",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
