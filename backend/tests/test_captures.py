@@ -146,6 +146,53 @@ async def test_a_failed_processing_is_recorded_and_the_media_stays(settings: Set
     assert (settings.data_dir / "captures" / str(kept.id) / "photo-1.jpg").is_file()
 
 
+async def test_the_item_is_linked_before_the_note_is_tried(settings: Settings) -> None:
+    from app.captures import CaptureCreate
+
+    captures = service(settings)  # no fixtures: the transcription cannot be answered
+    kept = captures.create(CaptureCreate(note="a spare charger"), [], None, wav_bytes())
+    done = await captures.process(kept.id)
+    assert done.status == "processed" and done.item_id is not None
+    assert "the item is there" in done.error and "note" in done.error
+    with pytest.raises(CaptureError, match="already processed"):
+        await captures.process(kept.id)
+    assert len(captures.inventory.list_items()) == 1
+
+
+async def test_one_read_at_a_time_and_the_files_are_checked(settings: Settings) -> None:
+    from app.captures import CaptureCreate
+
+    captures = service(settings)
+    kept = captures.create(CaptureCreate(find_label=False), [make_photo()], None, None)
+    captures._busy.add(kept.id)
+    with pytest.raises(CaptureError, match="being read"):
+        await captures.process(kept.id)
+    with pytest.raises(CaptureError, match="being read"):
+        captures.delete(kept.id)
+    captures._busy.discard(kept.id)
+    (settings.data_dir / "captures" / str(kept.id) / "photo-1.jpg").unlink()
+    with pytest.raises(CaptureError, match="missing on disk"):
+        await captures.process(kept.id)
+    assert captures.capture(kept.id).status == "failed"
+
+
+def test_a_capture_whose_files_cannot_be_written_is_not_kept(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.captures import CaptureCreate
+
+    captures = service(settings)
+
+    def refuse(self: Path, data: bytes) -> int:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(Path, "write_bytes", refuse)
+    with pytest.raises(OSError):
+        captures.create(CaptureCreate(find_label=False), [make_photo()], None, None)
+    assert captures.captures() == []
+    assert not (settings.data_dir / "captures" / "1").exists()
+
+
 async def test_the_label_is_found_first_when_asked(live_settings: Settings) -> None:
     from app.captures import CaptureCreate
 

@@ -34,9 +34,12 @@
 #                      the app: unit tests, the APKs, an install, a smoke run on a device
 #   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
 #                      answers, nothing spent); --keep adds to what is there
-#   record-fixtures    load the set once with the key from .env and keep every model answer
-#                      as a fixture (OPL_RECORD_FIXTURES=1); spends credits once
-#   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata
+#   record-fixtures [--keep]
+#                      reset the inventory and load the set once with the key from .env,
+#                      keeping every model answer as a fixture (OPL_RECORD_FIXTURES=1);
+#                      spends credits once; --keep adds to what is there
+#   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
+#                      WAV notes copied into demo/notes/
 #   shell <service>    open a shell in a running service
 #   help               this text
 #
@@ -100,18 +103,26 @@ cmd_phone() {
   [[ "${1:-}" == "--release" ]] && release=1
   docker_running || die "docker is not running"
   curl -fsS -m 5 "http://localhost:$BACKEND_PORT/healthz" >/dev/null 2>&1 || die "the stack is not up (or not answering on :$BACKEND_PORT): ./dev up first"
+  # one device for every step: picked here once, so several phones are asked about once
+  local picked
+  picked="$(bash "$ROOT/scripts/android.sh" serial 2>/dev/null || true)"
+  [[ -z "$picked" ]] || export ANDROID_SERIAL="$picked"
   if [[ $release -eq 1 ]]; then
     bash "$ROOT/scripts/android.sh" release
     local apk
-    apk="$(find "$ROOT/android/app/build/outputs/apk/release" -name '*.apk' | head -1)"
+    apk="$(find "$ROOT/android/app/build/outputs/apk/release" -name '*.apk' | head -1 || true)"
     bash "$ROOT/scripts/android.sh" install-file "$apk"
   else
+    bash "$ROOT/scripts/android.sh" build
     bash "$ROOT/scripts/android.sh" install
   fi
   bash "$ROOT/scripts/android.sh" launch
   local address
   address="$(lan_address)"
   [[ -n "$address" ]] || die "could not tell this machine's address on the network; set LAN_ADDRESS"
+  if [[ "$(os_name)" == wsl ]]; then
+    log_warn "under WSL this is the WSL address; the phone needs the Windows host's address on the Wi-Fi, so set LAN_ADDRESS to that and forward port $FRONTEND_PORT"
+  fi
   api_mode_or_fixture
   log_info "scan this with the app (Backend tab, Scan to pair):"
   compose run --rm --no-deps -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
@@ -325,28 +336,39 @@ cmd_android() { bash "$ROOT/scripts/android.sh" "$@"; }
 
 # The set is loaded through the backend's own code against the stack's data volume, so the
 # backend is stopped for the reset and started again after; nothing else is touched.
+# The loaders have the data volume to themselves: a running backend is stopped for the run and
+# started again however the run ends, so a failed load does not leave the stack down.
+_backend_was_up=0
+_start_backend_again() {
+  [[ $_backend_was_up -eq 0 ]] || compose start backend >/dev/null
+}
+stop_backend_for_run() {
+  compose ps --status running backend 2>/dev/null | grep -q backend && _backend_was_up=1
+  if [[ $_backend_was_up -eq 1 ]]; then
+    compose stop backend >/dev/null
+    on_exit _start_backend_again
+  fi
+}
+
 cmd_demo() {
   local reset="--reset"
   [[ "${1:-}" == "--keep" ]] && reset=""
   docker_running || die "docker is not running"
-  local was_up=0
-  compose ps --status running backend 2>/dev/null | grep -q backend && was_up=1
-  [[ $was_up -eq 0 ]] || compose stop backend >/dev/null
+  stop_backend_for_run
   # shellcheck disable=SC2086
   compose run --rm --no-deps -e OPL_FAKE_API=1 backend python -m app.demo load --set /demo/set.yaml $reset
-  [[ $was_up -eq 0 ]] || compose start backend >/dev/null
   log_ok "demo set loaded"
 }
 
 cmd_record_fixtures() {
+  local reset="--reset"
+  [[ "${1:-}" == "--keep" ]] && reset=""
   need_env_file
   docker_running || die "docker is not running"
   grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "record-fixtures needs MODEL_API_KEY in .env"
-  local was_up=0
-  compose ps --status running backend 2>/dev/null | grep -q backend && was_up=1
-  [[ $was_up -eq 0 ]] || compose stop backend >/dev/null
-  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 backend python -m app.demo record --set /demo/set.yaml --reset
-  [[ $was_up -eq 0 ]] || compose start backend >/dev/null
+  stop_backend_for_run
+  # shellcheck disable=SC2086
+  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 backend python -m app.demo record --set /demo/set.yaml $reset
   log_ok "fixtures recorded under backend/tests/fixtures/api; review and commit them"
 }
 
@@ -354,8 +376,8 @@ cmd_demo_scrub() {
   local raw="${1:?usage: ./dev demo-scrub <raw dir>}"
   [[ -d "$raw" ]] || die "demo-scrub: $raw is not a directory"
   docker_running || die "docker is not running"
-  compose run --rm --no-deps -e OPL_FAKE_API=1 -v "$(cd "$raw" && pwd):/raw:ro" backend python -m app.demo scrub /raw --out /demo/photos
-  log_ok "scrubbed copies under demo/photos; move any WAV note to demo/notes"
+  compose run --rm --no-deps -e OPL_FAKE_API=1 -v "$(cd "$raw" && pwd):/raw:ro" backend python -m app.demo scrub /raw --out /demo/photos --notes /demo/notes
+  log_ok "scrubbed copies under demo/photos, WAV notes under demo/notes"
 }
 
 cmd_shell() {

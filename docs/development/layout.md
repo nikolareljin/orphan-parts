@@ -5,10 +5,16 @@ backend/
   app/
     main.py           app factory, middleware, routers
     config.py         settings, validated at startup
-    api/routes.py     HTTP endpoints
+    api/              one router per feature (items, extract, segment, measure, assess,
+                      drafts, voice, value, find, projects, profiles, access); routes.py
+                      holds the operational paths
+    extract/, segment/, measure/, match/, listing/, value/, find/, projects/
+                      one package per feature: schema, service, data
+    inventory/        the SQLite store, its migrations and the item service
+    profiles/         the category profiles as data, and their loader
     demo/             the demo set loaded through the services, recorded once, replayed
     model_api/        the Model API client, pricing, spend ledger, recorded fixtures
-    ops/              logging, request context, security headers
+    ops/              logging, request context, security headers, the demo gate
     openapi_export.py prints the OpenAPI document for the docs site
   tests/
     fixtures/api/     recorded Model API responses, one JSON file per request or operation
@@ -18,6 +24,7 @@ backend/
 frontend/
   src/
     App.tsx           shell
+    components/       one component per page and panel
     lib/api.ts        the only place that talks to the backend
   vite.config.ts      dev proxy to the backend, vitest config
   Dockerfile          build + nginx
@@ -56,5 +63,4 @@ docker-compose.yml    development stack
 docker-compose.prod.yml
 ```
 
-Directories that arrive with later features: `backend/app/pipeline/`, `profiles/`, `agent/`,
-`providers/`, `channels/`, `meta/`; `frontend/src/pages/`, `components/`; `demo/`.
+Directories that arrive with later features: `demo/`.

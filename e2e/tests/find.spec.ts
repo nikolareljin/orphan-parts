@@ -55,6 +55,8 @@ test('a search from an item hands off to Marketplace and a listing brought back 
   await expect(candidate).toContainText('withdrawn')
   await panel.getByRole('button', { name: 'Close search' }).click()
   await expect(panel).toContainText('closed')
+  // a closed search takes no listing: the form is gone, not just refused on submit
+  await expect(panel.getByRole('form', { name: 'Bring a listing back' })).toHaveCount(0)
 })
 
 test('a search from values written in rejects a listing that conflicts with them', async ({ page }) => {

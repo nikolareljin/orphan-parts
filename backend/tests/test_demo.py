@@ -1,4 +1,5 @@
 import json
+import os
 import wave
 from io import BytesIO
 from pathlib import Path
@@ -233,8 +234,11 @@ def test_reset_removes_only_the_inventory_file(recorded_settings: Settings) -> N
     Path(f"{db}-wal").write_bytes(b"")
     ledger = recorded_settings.spend_ledger_path
     ledger.write_text("{}\n")
-    assert sorted(reset(recorded_settings)) == [db.name, f"{db.name}-wal"]
-    assert not db.exists() and ledger.exists()
+    media = recorded_settings.data_dir / "captures" / "1"
+    media.mkdir(parents=True)
+    (media / "clip.mp4").write_bytes(b"x")
+    assert sorted(reset(recorded_settings)) == ["captures/", db.name, f"{db.name}-wal"]
+    assert not db.exists() and ledger.exists() and not media.exists()
     assert reset(recorded_settings) == []
 
 
@@ -256,20 +260,36 @@ def test_the_command_line(
     raw = tmp_path / "raw"
     raw.mkdir()
     (raw / "a.jpg").write_bytes(make_photo())
-    assert main(["scrub", str(raw), "--out", str(tmp_path / "out")]) == 0
-    assert (tmp_path / "out" / "a.jpg").is_file()
+    (raw / "note.wav").write_bytes(wav_bytes())
+    out, notes = tmp_path / "out", tmp_path / "notes"
+    assert main(["scrub", str(raw), "--out", str(out), "--notes", str(notes)]) == 0
+    assert (out / "a.jpg").is_file()
+    assert (notes / "note.wav").is_file() and not (out / "note.wav").exists()
     path = write_set(tmp_path / "demo")
     recorded_settings.data_dir.mkdir(parents=True, exist_ok=True)
     recorded_settings.inventory_db_path.write_bytes(b"")
     assert main(["load", "--set", str(path), "--reset"]) == 0
     out = capsys.readouterr().out
     assert "removed inventory.sqlite3" in out and "mode fixture: 5 item(s)" in out
-    # a set that does not parse
+    # a set that does not parse, and one that is not YAML at all
     bad = write_set(tmp_path / "bad", "items:\n  - {key: a}\n", with_files=False)
     assert main(["load", "--set", str(bad)]) == 1
-    # record needs a key: fixture mode refuses
+    (tmp_path / "bad" / "set.yaml").write_text("items: [\n")
+    assert main(["load", "--set", str(bad)]) == 1
+    assert "demo:" in capsys.readouterr().err
+    # a field name the inventory refuses is refused before anything is loaded
+    odd = write_set(
+        tmp_path / "odd",
+        "items:\n  - {key: a, name: A, fields: {Wand-Outer: '32'}}\n",
+        with_files=False,
+    )
+    assert main(["load", "--set", str(odd)]) == 1
+    assert "item 'a'" in capsys.readouterr().err
+    # record needs a key: fixture mode refuses; the variables it sets are put back afterwards
     monkeypatch.setenv("OPL_FAKE_API", "1")
+    monkeypatch.setenv("OPL_RECORD_FIXTURES", "0")
     assert main(["record", "--set", str(path)]) == 1
+    assert os.environ["OPL_RECORD_FIXTURES"] == "1" and "OPL_FAKE_API" not in os.environ
 
 
 def test_the_committed_set_parses_and_names_only_files_under_demo() -> None:

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from app.ops.gate import Gate
 
-ORIGIN = re.compile(r"^https?://[A-Za-z0-9.\-]+(:\d{1,5})?$")
+ORIGIN = re.compile(r"^https?://(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9.\-]+)(:\d{1,5})?$")
 APP_NAME = "Orphan Parts Lens"
 
 

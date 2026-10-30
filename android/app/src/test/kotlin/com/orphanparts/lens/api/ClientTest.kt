@@ -145,16 +145,21 @@ class CaptureClientTest {
     fun captures_are_listed_and_one_is_processed() {
         val (c, t) = client(
             HttpResponse(200, """{"captures":[{"id":4,"status":"processed","note":"","name":"","photos":1,"clip":false,"audio":false,"audio_seconds":0,"item_id":9,"error":"","model":"muse-spark-1.3","created_at":"2026-10-29T10:00:00+00:00"}]}"""),
-            HttpResponse(200, """{"id":5,"status":"failed","note":"","name":"","photos":1,"clip":false,"audio":false,"audio_seconds":0,"item_id":null,"error":"no recorded answer","model":"","created_at":""}"""),
+            HttpResponse(503, """{"detail":"no recorded answer for this request in fixture mode"}"""),
         )
         val list = c.captures()
         assertEquals(1, list.size)
         assertEquals(9, list[0].itemId)
         assertEquals("processed", list[0].status)
-        val failed = c.processCapture(5)
+        // a read that fails is an error answer; the capture itself then reads as failed on the list
+        try {
+            c.processCapture(5)
+            fail("expected the backend's refusal")
+        } catch (e: ApiException) {
+            assertEquals(503, e.status)
+            assertEquals("no recorded answer for this request in fixture mode", e.message)
+        }
         assertEquals("POST", t.sent[1].method)
         assertEquals("http://backend:8000/api/captures/5/process", t.sent[1].url)
-        assertEquals("failed", failed.status)
-        assertEquals("no recorded answer", failed.error)
     }
 }

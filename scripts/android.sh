@@ -120,7 +120,9 @@ pick_device() {
   say "using $serial"
 }
 
-has_tty() { [[ -t 0 || -r /dev/tty ]] && [[ -z "${ANDROID_NO_TTY:-}" ]]; }
+# a terminal to ask on: stdin, or a controlling terminal that opens (a readable /dev/tty node
+# is not one without a session behind it)
+has_tty() { [[ -z "${ANDROID_NO_TTY:-}" ]] && { [[ -t 0 ]] || ( : </dev/tty ) 2>/dev/null; }; }
 
 booted="" # the emulator this run started, to stop at the end
 stop_emulator() {
@@ -185,7 +187,7 @@ case "$what" in
   release)
     say "building the release APK"
     gradle assembleRelease
-    apk="$(find "$app/app/build/outputs/apk/release" -name '*.apk' 2>/dev/null | head -1)"
+    apk="$(find "$app/app/build/outputs/apk/release" -name '*.apk' 2>/dev/null | head -1 || true)"
     [[ -n "$apk" ]] || fail "no release APK after the build"
     if [[ -n "${KEYSTORE_PATH:-}" || -f "$app/keystore.properties" ]]; then
       say "$apk (release key)"
@@ -194,6 +196,10 @@ case "$what" in
     fi
     ;;
   install) install_debug; say "installed" ;;
+  serial)
+    # the device picked once, for a caller that runs several steps: empty when none is connected
+    if pick_device; then printf '%s\n' "$serial"; fi
+    ;;
   install-file)
     apk="${2:?install-file needs the APK path}"
     [[ -f "$apk" ]] || fail "no APK at $apk"

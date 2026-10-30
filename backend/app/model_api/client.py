@@ -7,6 +7,7 @@ for tests and the offline demo.
 
 import asyncio
 import base64
+import hashlib
 import json
 import logging
 import random
@@ -346,7 +347,12 @@ class ModelApiClient:
             "request": (None, json.dumps(body).encode("utf-8"), "application/json"),
             "audio": ("note.wav", audio_wav, "audio/wav"),
         }
-        data, from_fixture, attempts, ms = await self._post(TRANSCRIBE, body, op, files=files)
+        # the recording is what distinguishes one transcription from another: its digest joins
+        # the fixture key (the request itself carries the bytes, not the digest)
+        key = {**body, "audio_sha256": hashlib.sha256(audio_wav).hexdigest()[:16]}
+        data, from_fixture, attempts, ms = await self._post(
+            TRANSCRIBE, body, op, files=files, key=key
+        )
         seconds = float(data.get("audioDurationMs") or 0) / 1000.0
         usage = Usage.from_response(None, audio_seconds=seconds)
         usd = 0.0 if from_fixture else cost_usd(model, usage)
@@ -390,11 +396,14 @@ class ModelApiClient:
         body: dict[str, Any],
         op: str,
         files: dict[str, Any] | None = None,
+        key: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], bool, int, float]:
+        """body goes on the wire; key, when given, is what names the fixture instead."""
+        keyed = body if key is None else key
         if self.mode == "fixture":
-            fixture = self.fixtures.find(endpoint, body, op)
+            fixture = self.fixtures.find(endpoint, keyed, op)
             if fixture is None:
-                raise FixtureMissingError(endpoint, request_key(endpoint, body), op)
+                raise FixtureMissingError(endpoint, request_key(endpoint, keyed), op)
             if fixture.status >= 400:
                 err = fixture.response.get("error") or {}
                 raise ModelApiError(
@@ -407,7 +416,7 @@ class ModelApiClient:
         self.ledger.require_budget()
         data, attempts, ms = await self._request("POST", endpoint, body, op, files=files)
         if self.mode == "record":
-            self.fixtures.save(endpoint, body, op, data)
+            self.fixtures.save(endpoint, keyed, op, data)
         return data, False, attempts, ms
 
     async def _request(

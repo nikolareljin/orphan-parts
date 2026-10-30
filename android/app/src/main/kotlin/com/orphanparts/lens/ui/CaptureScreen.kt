@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,10 +57,16 @@ import java.io.File
 const val MAX_PHOTOS = 4
 const val CLIP_SECONDS = 30
 
-/** The system camera, recording a clip of at most CLIP_SECONDS into the file given. */
+/** The largest clip the backend takes (MAX_CLIP_MB), less a margin for the container's own bytes. */
+const val CLIP_MAX_BYTES = 56L * 1024 * 1024
+
+/** The system camera, recording a clip of at most CLIP_SECONDS and CLIP_MAX_BYTES into the file
+ * given: the camera stops at whichever comes first, so a high-quality clip is not refused later. */
 class ShortClip : ActivityResultContracts.CaptureVideo() {
     override fun createIntent(context: Context, input: Uri): Intent =
-        super.createIntent(context, input).putExtra(MediaStore.EXTRA_DURATION_LIMIT, CLIP_SECONDS)
+        super.createIntent(context, input)
+            .putExtra(MediaStore.EXTRA_DURATION_LIMIT, CLIP_SECONDS)
+            .putExtra(MediaStore.EXTRA_SIZE_LIMIT, CLIP_MAX_BYTES)
 }
 
 /** One capture: photos, a clip, a spoken note and a line, sent together. The backend keeps
@@ -78,7 +85,8 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
     var holding by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
-    var pendingUri by remember { mutableStateOf<Uri?>(null) }
+    // kept across a process death while the camera app is in front, so the result still lands
+    var pendingUri by rememberSaveable { mutableStateOf<String?>(null) }
     var allowed by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
     }
@@ -90,7 +98,7 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
     }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        val uri = pendingUri
+        val uri = pendingUri?.let(Uri::parse)
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val prepared = withContext(Dispatchers.IO) { preparePhoto(context.contentResolver.openInputStream(uri)?.use { it.readBytes() }) }
@@ -103,12 +111,17 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
         }
     }
     val takeClip = rememberLauncherForActivityResult(ShortClip()) { ok ->
-        val uri = pendingUri
+        val uri = pendingUri?.let(Uri::parse)
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val bytes = withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)?.use { it.readBytes() } }
-            clip = bytes
-            status = if (bytes == null) "The clip could not be read." else "Clip ready (${bytes.size / 1024} KB)."
+            if (bytes != null && bytes.size > CLIP_MAX_BYTES) {
+                clip = null
+                status = "The clip is ${bytes.size / 1024 / 1024} MB, more than the backend takes; record a shorter one."
+            } else {
+                clip = bytes
+                status = if (bytes == null) "The clip could not be read." else "Clip ready (${bytes.size / 1024} KB)."
+            }
         }
     }
 
@@ -134,7 +147,7 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
                 enabled = photos.size < MAX_PHOTOS && !busy,
                 onClick = {
                     val uri = fileUri("photo-${System.currentTimeMillis()}.jpg")
-                    pendingUri = uri
+                    pendingUri = uri.toString()
                     takePicture.launch(uri)
                 },
             ) { Text(if (photos.isEmpty()) "Take a photo" else "Another photo (${photos.size}/$MAX_PHOTOS)") }
@@ -143,7 +156,7 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
                 enabled = !busy,
                 onClick = {
                     val uri = fileUri("clip-${System.currentTimeMillis()}.mp4")
-                    pendingUri = uri
+                    pendingUri = uri.toString()
                     takeClip.launch(uri)
                 },
             ) { Text(if (clip == null) "Record a clip" else "Clip again") }

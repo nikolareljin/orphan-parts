@@ -19,6 +19,8 @@ instead of calling the API; that is how the tests and CI run.
 ./dev up
 ```
 
+After a pull that changes the backend's dependencies, `./dev up --build` rebuilds the image first.
+
 | Service | URL |
 |---|---|
 | Web app | http://localhost:5173 |

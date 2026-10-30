@@ -13,7 +13,15 @@ function message(err: unknown): string {
 }
 
 // The owner's items. ``refresh`` changes when something was saved elsewhere on the page.
-export default function Inventory({ refresh, openId: wanted = null }: { refresh: number; openId?: number | null }) {
+export default function Inventory({
+  refresh,
+  openId: wanted = null,
+  onOpened,
+}: {
+  refresh: number
+  openId?: number | null
+  onOpened?: () => void
+}) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(wanted)
   const [error, setError] = useState('')
@@ -31,10 +39,14 @@ export default function Inventory({ refresh, openId: wanted = null }: { refresh:
     void load()
   }, [load, refresh])
 
-  // an item opened from elsewhere (the inbox) is shown as soon as it is asked for
+  // an item opened from elsewhere (the inbox) is shown as soon as it is asked for, once:
+  // the ask is handed back as taken, so the next visit to the page does not reopen it
   useEffect(() => {
-    if (wanted !== null) setOpenId(wanted)
-  }, [wanted, refresh])
+    if (wanted !== null) {
+      setOpenId(wanted)
+      onOpened?.()
+    }
+  }, [wanted, refresh, onOpened])
 
   return (
     <section className="inventory">
