@@ -54,6 +54,7 @@ def web():  # type: ignore[no-untyped-def]
     if not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
     from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.responses import JSONResponse
 
     from app.main import create_app
 
@@ -62,23 +63,33 @@ def web():  # type: ignore[no-untyped-def]
     last_reload = 0.0
 
     class VolumeSync(BaseHTTPMiddleware):  # type: ignore[misc]
-        """What another container committed (``load_demo``) reaches this one before any
-        write of its own and within RELOAD_EVERY_S otherwise, and what this container wrote
-        reaches the Volume at once, not only on shutdown."""
+        """What another container committed (``load_demo``) is read back before any write
+        of this container's and within RELOAD_EVERY_S otherwise; what this container wrote
+        reaches the Volume after every write request, not only on shutdown. The Volume
+        refuses a reload while a file on it is open in another request: a write then
+        answers 503 and the client tries again, so a stale copy of the inventory is never
+        committed over a set loaded meanwhile."""
 
         async def dispatch(self, request, call_next):  # type: ignore[no-untyped-def]
             nonlocal last_reload
             writes = request.method in ("POST", "PUT", "PATCH", "DELETE")
             if writes or time.monotonic() - last_reload > RELOAD_EVERY_S:
-                # blocking I/O, off the loop; a file another request holds open makes
-                # the reload refuse, and the next one does it
-                try:
+                try:  # blocking I/O, off the loop
                     await asyncio.to_thread(data.reload)
                     last_reload = time.monotonic()
                 except Exception as exc:  # noqa: BLE001 - the Volume's own error types
+                    if writes:
+                        log.info("volume reload refused before a write: %s", exc)
+                        return JSONResponse(
+                            {"detail": "the host is syncing its data; try again in a moment"},
+                            status_code=503,
+                            headers={"Retry-After": "2"},
+                        )
                     log.info("volume reload skipped: %s", exc)
             response = await call_next(request)
-            if writes and response.status_code < 500:
+            if writes:
+                # whatever the outcome: a reload may commit what is on disk anyway, so the
+                # Volume is told now rather than by accident later
                 await asyncio.to_thread(data.commit)
             return response
 

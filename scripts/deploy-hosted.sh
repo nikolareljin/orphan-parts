@@ -5,7 +5,8 @@
 # modal and wrangler logins.
 #
 #   secret    writes the Modal secret orphan-parts from the environment (every field, replaced;
-#             a value holding a single quote is refused: the dotenv keeps it verbatim otherwise)
+#             a value holding a single quote, a backslash or a newline is refused, since the
+#             dotenv reader cannot carry those; anything else is kept as it is)
 #   backend   deploys deploy/modal_app.py, reads the URL off the output and waits for /readyz
 #             to answer ok with the key answering (a key that failed its probe fails the step)
 #   web       builds the web app against the backend's URL and publishes frontend/dist to Pages
@@ -59,7 +60,8 @@ step_secret() {
   local name value
   for name in MODEL_API_KEY_DEMO DEMO_ACCESS_CODE SPEND_CAP_USD OPL_FAKE_API; do
     value="${!name:-}"
-    [[ "$value" != *"'"* ]] || fail "secret: $name holds a single quote, which the dotenv cannot carry"
+    [[ "$value" != *[\\\']* && "$value" != *$'\n'* ]] \
+      || fail "secret: $name holds a single quote, a backslash or a newline, which the dotenv cannot carry"
   done
   local file
   file="$(mktemp)" || fail "secret: no temporary file"

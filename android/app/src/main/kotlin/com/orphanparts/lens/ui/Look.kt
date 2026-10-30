@@ -62,12 +62,14 @@ object Tokens {
         val line: Long,
         val accent: Long,
         val error: Long,
+        val onAccent: Long,
     ) {
         /** The palette as the CSS custom properties it was taken from, for the test that keeps
          * the two in step. */
         fun asCss(): Map<String, String> = mapOf(
             "bg" to hex(bg), "fg" to hex(fg), "muted" to hex(muted), "card" to hex(card),
             "line" to hex(line), "accent" to hex(accent), "error" to hex(error),
+            "on-accent" to hex(onAccent),
         )
 
         private fun hex(value: Long): String = "#%06x".format(value and 0xFFFFFF)
@@ -75,23 +77,29 @@ object Tokens {
 
     val light = Palette(
         bg = 0xFFF6F7F9, fg = 0xFF1B1F24, muted = 0xFF5B6470, card = 0xFFFFFFFF,
-        line = 0xFFE2E6EB, accent = 0xFF2D6CDF, error = 0xFFB42318,
+        line = 0xFFE2E6EB, accent = 0xFF2D6CDF, error = 0xFFB42318, onAccent = 0xFFFFFFFF,
     )
     val dark = Palette(
         bg = 0xFF0F1216, fg = 0xFFE6E9EE, muted = 0xFF9AA4B1, card = 0xFF171B21,
-        line = 0xFF262C35, accent = 0xFF6EA0FF, error = 0xFFFF7A6B,
+        line = 0xFF262C35, accent = 0xFF6EA0FF, error = 0xFFFF7A6B, onAccent = 0xFF0F1216,
     )
 
     fun palette(dark: Boolean): Palette = if (dark) this.dark else light
 }
 
-/** A status line that says something failed is shown in the error tone. */
-fun soundsLikeAFailure(text: String): Boolean =
-    listOf("Could not", "Not reachable", "Nothing heard", "That code", "Scan canceled").any { text.startsWith(it) }
+/** A status line that says something failed is shown in the error tone: every line the
+ * screens write for a failure starts one of these ways. */
+private val FAILURE_OPENINGS = listOf(
+    "Could not", "Not reachable", "Nothing heard", "That code", "Scan canceled", "The photo could not",
+    "The camera returned", "The clip is", "The microphone was refused", "Capture #",
+)
+
+fun soundsLikeAFailure(text: String): Boolean = FAILURE_OPENINGS.any { text.startsWith(it) }
 
 fun scheme(p: Tokens.Palette, dark: Boolean): ColorScheme {
     val base = if (dark) darkColorScheme() else lightColorScheme()
-    val onAccent = Color.White // the web app: white on the accent in both modes
+    // as the web app: white on the light accent, the page color on the lighter dark one
+    val onAccent = Color(p.onAccent)
     return base.copy(
         primary = Color(p.accent), onPrimary = onAccent,
         primaryContainer = Color(p.accent), onPrimaryContainer = onAccent,
@@ -295,14 +303,14 @@ fun QrButton(onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Canvas(
         modifier = Modifier
-            .size(40.dp)
+            .size(48.dp) // the least touch target
             .border(1.dp, colors.outline, RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
             .semantics {
                 role = Role.Button
                 contentDescription = "Scan to pair"
             }
-            .padding(9.dp),
+            .padding(13.dp),
     ) {
         val m = size.width / 7f // seven modules across
         fun finder(x: Int, y: Int) {
