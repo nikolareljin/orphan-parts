@@ -30,11 +30,11 @@ test_app_icon_writes_every_density_and_the_web_mark() {
   _app_icon_tree "$dir"
   assert_true env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
   res="$dir/android/app/src/main/res"
-  # three PNGs per density, at 108dp and 48dp in pixels
+  # three PNGs per density, at 108dp and 48dp in pixels (rendered aside, then moved into place)
   assert_eq "$(grep -c -- '--export-type=png' "$dir/inkscape.log")" "15"
-  assert_true grep -q -- "--export-filename=$res/mipmap-mdpi/ic_launcher_foreground.png --export-width=108 " "$dir/inkscape.log"
-  assert_true grep -q -- "--export-filename=$res/mipmap-hdpi/ic_launcher.png --export-width=72 " "$dir/inkscape.log"
-  assert_true grep -q -- "--export-filename=$res/mipmap-xxxhdpi/ic_launcher_round.png --export-width=192 " "$dir/inkscape.log"
+  assert_true grep -q -- "/mipmap-mdpi/ic_launcher_foreground.png --export-width=108 " "$dir/inkscape.log"
+  assert_true grep -q -- "/mipmap-hdpi/ic_launcher.png --export-width=72 " "$dir/inkscape.log"
+  assert_true grep -q -- "/mipmap-xxxhdpi/ic_launcher_round.png --export-width=192 " "$dir/inkscape.log"
   # the foreground: 108dp around the viewfinder's center (256,240), the ring (187 units) 66dp
   # across, so 108 * 374 / 66 units; the logo's frame is gone and nothing is clipped
   assert_true grep -q 'viewBox="-50.0018 -66.0018 612.0036 612.0036"' "$res/mipmap-mdpi/ic_launcher_foreground.png"
@@ -45,6 +45,10 @@ test_app_icon_writes_every_density_and_the_web_mark() {
   assert_true grep -q 'viewBox="51.9988 35.9988 408.0024 408.0024"' "$dir/frontend/public/brand.svg"
   assert_true grep -q 'rx="81.6005"' "$dir/frontend/public/brand.svg"
   assert_false grep -q 'id="rect51"' "$dir/frontend/public/brand.svg"
+  # every crop is a whole document: the clipped ones close their group, all close the svg
+  assert_eq "$(tail -n 1 "$dir/frontend/public/brand.svg")" "</g></svg>"
+  assert_eq "$(tail -n 1 "$res/mipmap-mdpi/ic_launcher_round.png")" "</g></svg>"
+  assert_eq "$(tail -n 1 "$res/mipmap-mdpi/ic_launcher_foreground.png")" "</svg>"
   _app_icon_cleanup "$dir"
 }
 
@@ -79,7 +83,48 @@ test_app_icon_refuses_a_logo_whose_frame_moved() {
   _app_icon_tree "$dir"
   sed -i 's/id="rect51"/id="frame"/' "$dir/docs/assets/logo.svg"
   assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
-  assert_true grep -q "logo's frame" <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
+  assert_true grep -q 'did not take' <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
   assert_false test -e "$dir/frontend/public/brand.svg"
+  _app_icon_cleanup "$dir"
+}
+
+test_app_icon_refuses_a_logo_whose_viewbox_changed() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  sed -i 's/viewBox="0 0 512 512"/viewBox="0 0 512 512.0"/' "$dir/docs/assets/logo.svg"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_false test -e "$dir/frontend/public/brand.svg"
+  _app_icon_cleanup "$dir"
+}
+
+test_app_icon_keeps_the_icons_when_inkscape_writes_nothing() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$dir/bin/inkscape"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_true grep -q 'wrote nothing' <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
+  assert_false test -e "$dir/frontend/public/brand.svg"
+  assert_false test -e "$dir/android/app/src/main/res/mipmap-mdpi"
+  _app_icon_cleanup "$dir"
+}
+
+# An awk that writes decimals with a comma unless it runs in the C locale, as mawk does under a
+# comma-decimal locale: the geometry must come out the same.
+test_app_icon_geometry_ignores_a_comma_decimal_locale() {
+  local dir real_awk
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  real_awk="$(command -v awk)"
+  cat > "$dir/bin/awk" <<STUB
+#!/usr/bin/env bash
+if [[ "\${LC_ALL:-}" == C ]]; then exec "$real_awk" "\$@"; fi
+"$real_awk" "\$@" | tr . ,
+STUB
+  chmod +x "$dir/bin/awk"
+  assert_true env PATH="$dir/bin:$PATH" LC_ALL=el_GR.UTF-8 ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_true grep -q 'viewBox="51.9988 35.9988 408.0024 408.0024"' "$dir/frontend/public/brand.svg"
+  assert_true grep -q -- '--export-width=108 ' "$dir/inkscape.log"
   _app_icon_cleanup "$dir"
 }

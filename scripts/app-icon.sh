@@ -5,13 +5,15 @@
 # The adaptive icon (Android 8.0 and newer, what every supported phone shows) is two layers on a
 # 108dp canvas of which a launcher shows the middle 72dp or so under its own mask:
 #
-#   background   a solid color, the middle of the logo's dark gradient (values/ic_launcher_background.xml)
+#   background   a solid color, the middle of the logo's dark gradient, set by hand in
+#                values/ic_launcher_background.xml (the opaque foreground covers it everywhere)
 #   foreground   the logo's viewfinder, cropped around its center so the outer ring spans RING_DP
 #                of the canvas (inside the 66dp safe zone, so no launcher mask cuts it), on the
 #                logo's own gradient bled to the edges, so that no frame or seam shows
 #
 # The legacy icons (ic_launcher.png, ic_launcher_round.png) are the same composition clipped to a
-# rounded square and a circle, with the usual 2dp margin of a 48dp icon. The web header's mark
+# rounded square and a circle, with the usual 2dp margin of a 48dp icon; with minSdk 26 no
+# supported phone shows them, they are there for tools that read them. The web header's mark
 # (frontend/public/brand.svg) is that rounded square without the margin, kept as SVG; the browser
 # tab keeps the whole logo (favicon.svg).
 #
@@ -37,10 +39,6 @@ res="$root/android/app/src/main/res"
 web="$root/frontend/public"
 inkscape="${INKSCAPE:-inkscape}"
 [[ -f "$logo" ]] || fail "no logo at $logo"
-# The crop drops the logo's frame, the one '  <rect' block that ends at id="rect51"; a logo saved
-# another way would make that range run to the end of the file.
-[[ "$(grep -c '^  <rect$' "$logo")" == 1 && "$(grep -c 'id="rect51" />' "$logo")" == 1 ]] ||
-  fail "the logo's frame is not the one '  <rect' block ending at id=\"rect51\"; update crop() for $logo"
 [[ -d "$res" ]] || fail "no app resources at $res"
 [[ -d "$web" ]] || fail "no web assets at $web"
 command -v "$inkscape" >/dev/null 2>&1 || fail "inkscape is not installed (apt install inkscape)"
@@ -58,7 +56,8 @@ LEGACY_DP=48         # the legacy icon's canvas
 LEGACY_INNER_DP=44   # the legacy icon's shape, 2dp in from each edge
 
 # One number per expression, with awk so the script needs nothing beyond coreutils.
-calc() { awk "BEGIN { printf \"%.4f\", $1 }"; }
+# In the C locale, so a comma-decimal locale never turns 162.0000 into 162,0000.
+calc() { LC_ALL=C awk "BEGIN { printf \"%.4f\", $1 }"; }
 
 unit_per_dp="$(calc "2 * $RING / $RING_DP")"      # logo units per dp
 
@@ -84,30 +83,54 @@ crop() {
 render() {  # render <svg> <png> <px>
   "$inkscape" --export-type=png --export-filename="$2" --export-width="$3" --export-height="$3" \
     --export-background-opacity=0 "$1" >/dev/null 2>&1 || fail "inkscape could not render $2"
+  [[ -s "$2" ]] || fail "inkscape wrote nothing to $2"
+}
+
+# A crop is used only when the edits it rests on all took: the new viewBox once, the logo's
+# frame gone (its sed range closed), the bled ground there, and the document still closed. A
+# logo saved another way fails here instead of writing a broken or uncropped icon.
+checked() {  # checked <svg>
+  [[ "$(grep -c 'viewBox="0 0 512 512"' "$logo")" == 1 ]] &&
+    [[ "$(grep -c 'viewBox=' "$1")" == 1 ]] &&
+    ! grep -q 'viewBox="0 0 512 512"' "$1" &&
+    ! grep -q 'id="rect51"' "$1" &&
+    grep -q 'fill="url(#bgGrad)" />' "$1" &&
+    [[ "$(tail -n 1 "$1")" == *"</svg>" ]] ||
+    fail "the crop of $logo did not take (its viewBox, its frame id=\"rect51\" or its </defs> changed); update crop()"
 }
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 crop "$CANVAS_DP" > "$work/foreground.svg"
+checked "$work/foreground.svg"
 inner="$(calc "$VISIBLE_DP * $unit_per_dp")"
 ix="$(calc "$CX - $inner / 2")"
 iy="$(calc "$CY - $inner / 2")"
 legacy_side="$(calc "$VISIBLE_DP * $LEGACY_DP / $LEGACY_INNER_DP")"
 crop "$legacy_side" "<rect x=\"$ix\" y=\"$iy\" width=\"$inner\" height=\"$inner\" rx=\"$(calc "$inner / 5")\" />" > "$work/square.svg"
 crop "$legacy_side" "<circle cx=\"$CX\" cy=\"$CY\" r=\"$(calc "$inner / 2")\" />" > "$work/round.svg"
-crop "$VISIBLE_DP" "<rect x=\"$ix\" y=\"$iy\" width=\"$inner\" height=\"$inner\" rx=\"$(calc "$inner / 5")\" />" > "$web/brand.svg"
-say "web: frontend/public/brand.svg"
+crop "$VISIBLE_DP" "<rect x=\"$ix\" y=\"$iy\" width=\"$inner\" height=\"$inner\" rx=\"$(calc "$inner / 5")\" />" > "$work/brand.svg"
+for svg in square round brand; do checked "$work/$svg.svg"; done
+
+# Every file is rendered under $work first and moved into place only when all of them are there,
+# so a failure half-way leaves the icons as they were.
 
 # density: pixels per dp
 for density in mdpi:1 hdpi:1.5 xhdpi:2 xxhdpi:3 xxxhdpi:4; do
   name="${density%%:*}"
   scale="${density##*:}"
-  dir="$res/mipmap-$name"
+  dir="$work/mipmap-$name"
   mkdir -p "$dir"
   render "$work/foreground.svg" "$dir/ic_launcher_foreground.png" "$(calc "$CANVAS_DP * $scale" | cut -d. -f1)"
   render "$work/square.svg" "$dir/ic_launcher.png" "$(calc "$LEGACY_DP * $scale" | cut -d. -f1)"
   render "$work/round.svg" "$dir/ic_launcher_round.png" "$(calc "$LEGACY_DP * $scale" | cut -d. -f1)"
   say "$name: $(calc "$CANVAS_DP * $scale" | cut -d. -f1)px foreground, $(calc "$LEGACY_DP * $scale" | cut -d. -f1)px legacy"
 done
+for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+  mkdir -p "$res/mipmap-$density"
+  cp -- "$work/mipmap-$density/"*.png "$res/mipmap-$density/"
+done
+cp -- "$work/brand.svg" "$web/brand.svg"
+say "web: frontend/public/brand.svg"
 say "done: the ring spans ${RING_DP}dp of the ${CANVAS_DP}dp canvas"
