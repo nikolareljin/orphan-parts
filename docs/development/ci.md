@@ -85,9 +85,10 @@ laptop: `bash scripts/scan-image.sh <image>...`.
    `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
    is the newest release's APK; the release is marked the latest only then, and only when it
    is the highest version. If the APK step fails, the previous release stays the latest;
-   **Re-run failed jobs** on the run attaches the APK and marks it. The QR code in the docs, `docs/assets/apk-qr.svg`, carries
-   that address and is regenerated only if the address changes, with the backend's `segno`
-   (black modules on a white quiet zone, so it scans on a dark page too):
+   **Re-run failed jobs** on the run attaches the APK and marks it. The QR code in the docs,
+   `docs/assets/apk-qr.svg`, carries that address and is regenerated only if the address
+   changes, with the backend's `segno` (black modules on a white quiet zone, so it scans on a
+   dark page too):
 
     ```bash
     docker compose run --rm --no-deps -T backend python -c "import io, segno, sys
@@ -97,7 +98,7 @@ laptop: `bash scripts/scan-image.sh <image>...`.
     sys.stdout.write(b.getvalue().decode())" > docs/assets/apk-qr.svg
     ```
 
-    Last, `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host
+    Alongside it, `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host
     when the repository variable `DEPLOY_ENABLED` is `true` and the secrets `DEPLOY_HOST`
     (`user@host`), `DEPLOY_PATH` and `DEPLOY_SSH_KEY` are set. See
     [Deployment](../operations/deployment.md).

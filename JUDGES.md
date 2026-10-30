@@ -23,9 +23,9 @@ here needs a development setup; a computer is optional.
 
 The QR code, shown on another screen and scanned with the phone's camera, opens
 `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`, the
-newest release's APK; the same link opened in the phone's browser downloads it too. Either way
-the download starts; go on at 3 below (open the download). The release page is the other way to
-the same file:
+newest release's APK; the same link opened in the phone's browser downloads it too. Either
+way, continue at item 3 of the list below (open the download). The release page is the other
+way to the same file:
 
 1. On the phone, open `https://github.com/nikolareljin/orphan-parts/releases/latest` in the
    browser.
