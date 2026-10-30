@@ -60,7 +60,7 @@ def web():  # type: ignore[no-untyped-def]
 
     fastapi_app = create_app()
     log = logging.getLogger("app.modal")
-    last_reload = 0.0
+    last_reload = float("-inf")  # the first request reads back whatever the clock says
 
     class VolumeSync(BaseHTTPMiddleware):  # type: ignore[misc]
         """What another container committed (``load_demo``) is read back before any write
