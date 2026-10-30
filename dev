@@ -27,6 +27,11 @@
 #                      put a published release on the host, and build the APK when there is one
 #   android <build|test|release|install|smoke>
 #                      the app: unit tests, the APKs, an install, a smoke run on a device
+#   demo [--keep]      reset the inventory and load demo/set.yaml in fixture mode (recorded
+#                      answers, nothing spent); --keep adds to what is there
+#   record-fixtures    load the set once with the key from .env and keep every model answer
+#                      as a fixture (OPL_RECORD_FIXTURES=1); spends credits once
+#   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata
 #   shell <service>    open a shell in a running service
 #   help               this text
 #
@@ -268,6 +273,41 @@ cmd_deploy() { bash "$ROOT/scripts/deploy.sh" "$@"; }
 
 cmd_android() { bash "$ROOT/scripts/android.sh" "$@"; }
 
+# The set is loaded through the backend's own code against the stack's data volume, so the
+# backend is stopped for the reset and started again after; nothing else is touched.
+cmd_demo() {
+  local reset="--reset"
+  [[ "${1:-}" == "--keep" ]] && reset=""
+  docker_running || die "docker is not running"
+  local was_up=0
+  compose ps --status running backend 2>/dev/null | grep -q backend && was_up=1
+  [[ $was_up -eq 0 ]] || compose stop backend >/dev/null
+  # shellcheck disable=SC2086
+  compose run --rm --no-deps -e OPL_FAKE_API=1 backend python -m app.demo load --set /demo/set.yaml $reset
+  [[ $was_up -eq 0 ]] || compose start backend >/dev/null
+  log_ok "demo set loaded"
+}
+
+cmd_record_fixtures() {
+  need_env_file
+  docker_running || die "docker is not running"
+  grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "record-fixtures needs MODEL_API_KEY in .env"
+  local was_up=0
+  compose ps --status running backend 2>/dev/null | grep -q backend && was_up=1
+  [[ $was_up -eq 0 ]] || compose stop backend >/dev/null
+  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 backend python -m app.demo record --set /demo/set.yaml --reset
+  [[ $was_up -eq 0 ]] || compose start backend >/dev/null
+  log_ok "fixtures recorded under backend/tests/fixtures/api; review and commit them"
+}
+
+cmd_demo_scrub() {
+  local raw="${1:?usage: ./dev demo-scrub <raw dir>}"
+  [[ -d "$raw" ]] || die "demo-scrub: $raw is not a directory"
+  docker_running || die "docker is not running"
+  compose run --rm --no-deps -e OPL_FAKE_API=1 -v "$(cd "$raw" && pwd):/raw:ro" backend python -m app.demo scrub /raw --out /demo/photos
+  log_ok "scrubbed copies under demo/photos; move any WAV note to demo/notes"
+}
+
 cmd_shell() {
   local svc="${1:-backend}"
   compose exec "$svc" sh
@@ -291,6 +331,9 @@ case "$cmd" in
   release) cmd_release "$@" ;;
   deploy) cmd_deploy "$@" ;;
   android) cmd_android "$@" ;;
+  demo) cmd_demo "$@" ;;
+  record-fixtures) cmd_record_fixtures "$@" ;;
+  demo-scrub) cmd_demo_scrub "$@" ;;
   shell) cmd_shell "$@" ;;
   help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
   *) die "unknown command: $cmd (try ./dev help)" 2 ;;

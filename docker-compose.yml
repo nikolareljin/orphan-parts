@@ -20,6 +20,7 @@ services:
       DEMO_DAILY_CALLS: ${DEMO_DAILY_CALLS:-300}
     volumes:
       - ./backend:/app
+      - ./demo:/demo
       - app-data:/data
     ports:
       - "${BACKEND_PORT:-8000}:8000"

@@ -33,6 +33,12 @@ the floor under all of them.
 everything else working; `/readyz` reports it under `demo`, apart from the spend cap's own
 `paused`. The spend cap (`SPEND_CAP_USD`) still ends calls on its own when reached.
 
+**The set, at no cost.** The public demo is the recorded set (`./dev demo`, [Demo
+walkthrough](../start/demo.md)): with `OPL_FAKE_API=1` on the host nothing is sent to the
+models and nothing is spent, whoever visits. Live mode is a window the operator opens, with
+`SPEND_CAP_USD` set to the amount they accept for it; the ledger survives restarts, so the cap
+counts across them.
+
 **Behind nginx.** The production image forwards the caller's address and scheme; the backend
 reads the forwarded address only with `DEMO_TRUST_PROXY=1`, which the production compose file
 sets, so that the per-address limits count visitors, not the proxy. It takes the last address
