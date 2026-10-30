@@ -64,6 +64,11 @@ itself. To let the workflow tag on its own, give tag creation a ruleset of its o
 Actions as a bypass actor and keep updates and deletions admin-only, so a tag is still never
 moved.
 
+Before any image is pushed, `scripts/scan-image.sh` checks both: no filled secret-like name in
+the image's environment, no `.env`, database, log, keystore or capture media in the project's
+paths, and gitleaks clean on those paths; a finding stops the release. It runs the same on a
+laptop: `bash scripts/scan-image.sh <image>...`.
+
 `release.yml`, called with the tag or triggered by a tag push:
 
 1. checks that the tag equals `VERSION` and the version in all three manifests,

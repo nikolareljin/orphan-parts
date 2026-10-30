@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Security
+- No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
+
 ### Changed
 - `.env.example` lists every name the hosted deploy and the planned second model route use (Modal, Cloudflare, the host's key, code, cap and mode; Baseten and Fireworks), with empty values and where to get each; `./dev deploy hosted` reads them from `.env` when the shell does not set them.
 
