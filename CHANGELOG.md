@@ -4,10 +4,11 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- `./dev gate on|off|show`: the access code on your own machine, made when `.env` has none, the backend restarted with the gate, a code for the phone or a guest issued and both printed to copy; never part of a deployment. The scripts read `.env` as Compose does: a ` #` comment after a value, the text inside quotes, the last of a repeated key, Windows line endings.
 ### Fixed
+- The local gate checks labels before changing state; environment readers agree on duplicate values and quoted comments, and the setter refuses malformed assignments.
 - Ideas keep the item version used for their brief when an edit happens during the request; decision rows fit a phone dialog.
-
-### Fixed
 - Material matching preserves uncertain claims, mixed wood or ceramic descriptions, and component or coating descriptions instead of approving the whole part as metal or plastic.
 - The frappé maker's agitator in the demo set asks for a metal replacement: the material on the need side is the one wanted, the worn rod's plastic is a fault note, so a rod of the same dimensions that a listing calls all-metal or stainless steel passes and a plastic one is a conflict (a material is read as the one word metal or plastic, however it is spelled; a mix stays as written and does not pass).
 - A material followed by punctuation or in parentheses ("Metal.", "(stainless)") reads as metal or plastic instead of a conflict, as do POM, nylon and "BPA-free plastic"; a negation ("non-metal", "no plastic", "plastic-free"), a part or a surface ("mostly metal", "chrome-plated") stays as written; the agitator's material question asks the seller whether the rod is metal throughout.
