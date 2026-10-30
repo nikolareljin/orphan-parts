@@ -639,6 +639,16 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
     assert "narrow tool" not in text.lower() and "upright vacuum" not in text.lower()
     assert "Set up: crevice tool on the vacuum's hose" in text
     assert "Limits: the vacuum rattles" in text
+    # a name that is a word of its kind, or a kind that holds another name, is written once
+    from app.projects.pack import without_names
+
+    pairs = [("Vacuum", "upright vacuum"), ("Cable", "HDMI cable"), ("Cable", "HDMI cable")]
+    held = without_names("the Vacuum and the cable held", pairs)
+    # "Vacuum" and "Cable" are words of their own kinds: the text reads as the kind already
+    assert held == "the Vacuum and the cable held"
+    named = without_names("the Hoover held", [("Hoover", "upright vacuum")])
+    assert named == "the upright vacuum held"
+    assert without_names("HDMI cable", pairs) == "HDMI cable"
     planner.set_share(vacuum.id, ShareChange(shared=False))
     with pytest.raises(ProjectsError, match="not shared"):
         planner.share_text(vacuum.id)
