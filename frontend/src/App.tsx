@@ -219,7 +219,9 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
 // The pairing code as an image. Across origins an <img> carries no bearer header, so the SVG
 // is fetched with the session and shown as a data URL; same origin the cookie does it.
 function PairImage() {
-  const [src, setSrc] = useState(api.pair.svgUrl(window.location.origin))
+  // across origins the first source would be an unauthenticated fetch of the SVG: none until
+  // the session's copy is in hand
+  const [src, setSrc] = useState(apiBase ? '' : api.pair.svgUrl(window.location.origin))
   useEffect(() => {
     if (!apiBase) return
     let cancelled = false

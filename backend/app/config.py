@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
     data_dir: Path = Path("./data")
+    # WAL needs shared memory between the connections, which a network filesystem
+    # cannot give; DELETE there (Modal's volume sets it)
+    sqlite_journal_mode: Literal["WAL", "DELETE", "TRUNCATE"] = "WAL"
     max_upload_mb: int = 12
     extract_enhance: bool = True
     extract_blur_threshold: float = 150.0

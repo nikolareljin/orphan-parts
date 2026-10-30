@@ -80,7 +80,8 @@ jobs:
 
       - name: build the web app against the backend and publish it to Pages
         env:
-          API_URL: ${{ vars.API_URL || needs.backend.outputs.api_url }}
+          # the backend just deployed wins over a URL kept in the variables
+          API_URL: ${{ needs.backend.outputs.api_url || vars.API_URL }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: bash scripts/deploy-hosted.sh web

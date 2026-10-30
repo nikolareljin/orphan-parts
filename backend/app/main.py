@@ -41,6 +41,11 @@ from app.value import Valuer
 
 log = logging.getLogger("app")
 
+# a probe answered with one of these says the key or the URL cannot work: refused, unpaid,
+# forbidden, not there. A busy or failing API (429, 5xx, a timeout) is left alone: every
+# request retries on its own and the key may answer the next one.
+KEY_FAILURES = frozenset({401, 402, 403, 404})
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -53,7 +58,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         # a key that does not answer must not turn every call into an error: the service
         # runs on recorded answers and says so, until a restart with a working key
         probe = await client.check()
-        if not probe.get("reachable"):
+        if not probe.get("reachable") and probe.get("status") not in KEY_FAILURES:
+            log.warning(
+                "the API did not answer the probe; staying live",
+                extra={"error": probe.get("error", "")},
+            )
+        elif not probe.get("reachable"):
             log.warning(
                 "the key did not answer; running in fixture mode",
                 extra={"error": probe.get("error", "")},

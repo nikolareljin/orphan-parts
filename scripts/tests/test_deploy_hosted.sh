@@ -69,13 +69,17 @@ test_hosted_secret_is_written_from_the_environment_with_every_field() {
   _hosted_tree "$dir"
   assert_true _hosted_env "$dir" MODEL_API_KEY_DEMO=sample-value DEMO_ACCESS_CODE=judges-code SPEND_CAP_USD=15 OPL_FAKE_API=0 bash "$_hosted" secret
   assert_true grep -q '^secret create orphan-parts --from-dotenv .* --force$' "$dir/modal.log"
-  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY=sample-value DEMO_ACCESS_CODE=judges-code SPEND_CAP_USD=15 OPL_FAKE_API=0 CORS_ORIGINS=https://orphan-parts.pages.dev DEMO_COOKIE_SECURE=1 "
+  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY='sample-value' DEMO_ACCESS_CODE='judges-code' SPEND_CAP_USD='15' OPL_FAKE_API='0' CORS_ORIGINS='https://orphan-parts.pages.dev' DEMO_COOKIE_SECURE='1' DEMO_TRUST_PROXY='1' "
+  # a value with a dollar, a space or a hash is kept as it is; one with a single quote is refused
+  assert_true _hosted_env "$dir" DEMO_ACCESS_CODE='pa$s #word' bash "$_hosted" secret
+  assert_true grep -q "^DEMO_ACCESS_CODE='pa\$s #word'$" "$dir/secret.env"
+  assert_false _hosted_env "$dir" DEMO_ACCESS_CODE="it's" bash "$_hosted" secret 2>/dev/null
   # the dotenv the stand-in copied was a temporary file, removed after the call
   assert_false test -f "$(grep -oE -- '--from-dotenv [^ ]+' "$dir/modal.log" | cut -d' ' -f2)"
   # nothing set: recorded answers, open, the defaults
   rm -f "$dir/secret.env"
   assert_true _hosted_env "$dir" bash "$_hosted" secret
-  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY= DEMO_ACCESS_CODE= SPEND_CAP_USD=20 OPL_FAKE_API=1 CORS_ORIGINS=https://orphan-parts.pages.dev DEMO_COOKIE_SECURE=1 "
+  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY='' DEMO_ACCESS_CODE='' SPEND_CAP_USD='20' OPL_FAKE_API='1' CORS_ORIGINS='https://orphan-parts.pages.dev' DEMO_COOKIE_SECURE='1' DEMO_TRUST_PROXY='1' "
   # the origin has to be https, and present
   assert_false _hosted_env "$dir" WEB_ORIGIN= bash "$_hosted" secret 2>/dev/null
   assert_false _hosted_env "$dir" WEB_ORIGIN=http://orphan-parts.pages.dev bash "$_hosted" secret 2>/dev/null
@@ -92,8 +96,11 @@ test_hosted_backend_deploys_finds_the_url_and_waits_for_readyz() {
   assert_true grep -q '^-fsS -m 20 https://someone--orphan-parts-web.modal.run/readyz$' "$dir/curl.log"
   assert_true grep -q 'backend: https://someone--orphan-parts-web.modal.run is up' <<<"$out"
   assert_eq "$(cat "$dir/out")" "api_url=https://someone--orphan-parts-web.modal.run"
-  # a readyz that is not ok, one that never answers, a deploy without a URL, a failed deploy
+  # a readyz that is not ok, one whose key failed its probe, one that never answers, a deploy
+  # without a URL, a failed deploy
   printf '{"status":"degraded"}' > "$dir/readyz"
+  assert_false _hosted_env "$dir" bash "$_hosted" backend 2>/dev/null
+  printf '{"status":"ok","model_api":"fixture (key failed)","demo":"gated"}' > "$dir/readyz"
   assert_false _hosted_env "$dir" bash "$_hosted" backend 2>/dev/null
   rm "$dir/readyz"
   : > "$dir/curl.log"
