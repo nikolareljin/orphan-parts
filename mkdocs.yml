@@ -33,6 +33,9 @@ theme:
         icon: material/weather-sunny
         name: light mode
 
+extra_css:
+  - assets/extra.css
+
 plugins:
   - search
   - swagger-ui-tag

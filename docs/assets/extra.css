@@ -1,0 +1,10 @@
+/* The tabs bar under the header: a mid gray instead of the palette's light blue.
+   Both grays keep white text above 4.5:1 (#5f6b77 at 5.45:1, #4b5560 at 7.59:1).
+   The tab text itself keeps Material's colors and opacity rules. */
+[data-md-color-scheme="default"] .md-tabs {
+  background-color: #5f6b77;
+}
+
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: #4b5560;
+}
