@@ -696,6 +696,8 @@ export interface Decision {
   searches: OpenSearch[]
   templates: TemplateFit[]
   intent: Intent
+  // the selected, building or done projects that count on the item, by title
+  committed_to: string[]
   last: Decided | null
 }
 

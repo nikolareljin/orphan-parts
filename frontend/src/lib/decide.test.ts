@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Worth } from './api'
-import { candidatesText, choiceLabel, effortLabel, fillsLine, worthLine } from './decide'
+import { candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from './decide'
 
 const worth = (over: Partial<Worth>): Worth => ({
   id: 1,
@@ -32,6 +32,18 @@ describe('fillsLine', () => {
         { id: 'home_server', label: 'Home server', fills: ['computer', 'video_cable'] },
       ]),
     ).toBe('Homework workstation (laptop); Home server (computer, video cable)')
+  })
+})
+
+describe('reservedLine', () => {
+  it('names the builds a sale would break, and says nothing when there is none', () => {
+    expect(reservedLine([])).toBe('')
+    expect(reservedLine(['Homework workstation'])).toBe(
+      'Reserved by Homework workstation: selling or giving it away breaks that build.',
+    )
+    expect(reservedLine(['Homework workstation', 'Home server'])).toBe(
+      'Reserved by Homework workstation, Home server: selling or giving it away breaks those builds.',
+    )
   })
 })
 

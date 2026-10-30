@@ -34,6 +34,13 @@ export function fillsLine(templates: TemplateFit[]): string {
   return templates.map((t) => `${t.label} (${t.fills.map((k) => k.replace(/_/g, ' ')).join(', ')})`).join('; ')
 }
 
+// What a sale or a gift breaks: the selected projects that count on the item, by title.
+export function reservedLine(committedTo: string[]): string {
+  if (committedTo.length === 0) return ''
+  const one = committedTo.length === 1
+  return `Reserved by ${committedTo.join(', ')}: selling or giving it away breaks ${one ? 'that build' : 'those builds'}.`
+}
+
 export function candidatesText(search: OpenSearch): string {
   return search.candidates === 1 ? '1 candidate' : `${search.candidates} candidates`
 }

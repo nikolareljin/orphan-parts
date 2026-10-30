@@ -33,7 +33,7 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(decide).toContainText('No open search from this item.')
   await expect(decide).toContainText('Picture: coming.')
 
-  // the model's proposals, from the recorded answer, labelled as proposals
+  // the model's proposals, from the recorded answer, labeled as proposals
   await decide.getByRole('button', { name: 'Ask for ideas' }).click()
   const ideas = decide.getByRole('status', { name: /Ideas/ })
   await expect(ideas).toContainText("The model's proposals")

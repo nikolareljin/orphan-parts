@@ -465,14 +465,19 @@ class Inventory:
                 self._USES_SELECT + " WHERE u.item_id = ? ORDER BY u.id", (item_id,)
             ).fetchall()
 
-    def decide(self, item_id: int, intent: str, change: str) -> Item:
-        """The owner's decision: the intent it implies is set, the version bumped as for any
-        change, and the decision itself is the event line, so the history keeps the why."""
+    def decide(self, item_id: int, intent: str, change: str, *, said: bool) -> Item:
+        """The owner's decision: the intent it implies is set and the decision itself is the
+        event line, so the history keeps the why. The version is bumped only when the item
+        changes: a new intent, or a note (``said``) that gives the item a new why. The same
+        choice again, with nothing said, is an event and nothing more; the guidance and the
+        uses written before it stay current."""
         at = now()
         with self.store.connect() as conn:
             row = self._row(conn, item_id)
-            version = int(row["version"]) + 1
-            conn.execute(SET_COLUMN["intent"], (intent, version, at, item_id))
+            version = int(row["version"])
+            if intent != str(row["intent"]) or said:
+                version += 1
+                conn.execute(SET_COLUMN["intent"], (intent, version, at, item_id))
             self._event(conn, item_id, change, version, at)
             return self._item(conn, item_id)
 

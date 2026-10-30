@@ -26,6 +26,7 @@ from app.find.service import Finder
 from app.inventory import Inventory
 from app.inventory.schema import Item
 from app.model_api import ModelApiClient, text_part, user_message
+from app.projects.pack import private_field
 from app.projects.schema import Preferences
 from app.projects.service import Planner, fits
 from app.projects.templates import Templates
@@ -53,8 +54,9 @@ INSTRUCTIONS = (
 
 
 def brief(item: Item, known: dict[str, str], prefs: Preferences, fills: list[TemplateFit]) -> str:
-    """What the model is told: confirmed values, the owner's details and preferences, and the
-    projects the rules already found it fills. Nothing else."""
+    """What the model is told: confirmed values, the item's condition, faults, tests and
+    accessories, the owner's preferences, and the projects the rules already found it fills.
+    Nothing else: not the location, the notes, a photo or a search."""
     lines = [f"name: {item.name}", f"item_type: {item.item_type}"]
     for key in DETAIL_KEYS:
         lines.append(f"{key}: {getattr(item, key) or '(not given)'}")
@@ -71,6 +73,16 @@ def brief(item: Item, known: dict[str, str], prefs: Preferences, fills: list[Tem
     if not fills:
         lines.append("- (none)")
     return "\n".join(lines)
+
+
+def known_fields(item: Item) -> dict[str, str]:
+    """The accepted values the brief may carry: nothing that identifies the item or its owner
+    (a serial, an address, an account), by the same rule the build brief keeps."""
+    return {
+        k: f"{a.value} {a.unit}".strip()
+        for k, a in item.fields.items()
+        if a.review == "accepted" and not private_field(k)
+    }
 
 
 def templates_for(item: Item, templates: Templates) -> list[TemplateFit]:
@@ -132,11 +144,7 @@ class Decider:
 
     async def uses(self, item_id: int) -> Uses:
         item = self.inventory.get(item_id)
-        known = {
-            k: f"{a.value} {a.unit}".strip()
-            for k, a in item.fields.items()
-            if a.review == "accepted"
-        }
+        known = known_fields(item)
         fills = templates_for(item, self.templates)
         result = await self.client.respond_structured(
             UsesWriting,
@@ -240,6 +248,11 @@ class Decider:
                 return Decided(choice=choice, note=note, at=event.at, version=event.version)
         return None
 
+    def committed_to(self, item_id: int) -> list[str]:
+        """The titles of the selected, building or done projects that count on the item: a
+        sale or a gift breaks that build, so the view says it before the choice."""
+        return [str(r["title"]) for r in self.inventory.committed_elsewhere(item_id, 0)]
+
     def decision(self, item_id: int) -> Decision:
         item = self.inventory.get(item_id)
         return Decision(
@@ -250,12 +263,15 @@ class Decider:
             searches=self.searches_from(item_id),
             templates=templates_for(item, self.templates),
             intent=item.intent,
+            committed_to=self.committed_to(item_id),
             last=self.last(item_id),
         )
 
     # --- the choice ------------------------------------------------------------------------
 
     def decide(self, item_id: int, spec: DecisionCreate) -> Item:
-        item = self.inventory.decide(item_id, INTENT_FOR[spec.choice], decided_line(spec))
+        item = self.inventory.decide(
+            item_id, INTENT_FOR[spec.choice], decided_line(spec), said=bool(spec.note)
+        )
         log.info("decided", extra={"item_id": item_id, "choice": spec.choice})
         return item

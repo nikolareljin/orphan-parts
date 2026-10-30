@@ -20,9 +20,10 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
   const [note, setNote] = useState('')
   const [noteCut, setNoteCut] = useState(false)
 
-  // a decision on the item (Sell, Give away) picks the mode; the radio still changes it
+  // a decision on the item (Sell, Give away) picks the mode; any other intent leaves the radio
+  // where it is, and the radio still changes it
   useEffect(() => {
-    setMode(item.intent === 'give' ? 'give' : 'sell')
+    if (item.intent === 'sell' || item.intent === 'give') setMode(item.intent)
   }, [item.intent])
 
   useEffect(() => {

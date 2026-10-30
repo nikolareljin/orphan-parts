@@ -834,6 +834,11 @@ button.link {
   margin: 0 0 0.25rem;
 }
 
+.decide .reserved {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
 .decide .choices button {
   background: var(--accent);
   color: var(--on-accent);

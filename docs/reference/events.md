@@ -23,7 +23,7 @@ lists them. The changes written today:
 | `sell draft written (v<n>)` / `give draft written (v<n>)` | a listing draft |
 | `price guidance written (v<n>)` | a guidance |
 | `uses written (v<n>)` | what the item is good for, asked |
-| `decided: <choice>: <note>` | the owner's decision (`keep_build`, `sell`, `give`, `not_worth`), with the note when given; the intent it implies is set in the same change |
+| `decided: <choice>: <note>` | the owner's decision (`keep_build`, `sell`, `give`, `not_worth`), with the note when given; the intent it implies is set in the same change. The version is bumped only when the intent changes or a note is given; the same choice again is the line alone |
 | `search opened: <title>` | a missing-item search for what the item needs |
 | `proposed for: <project>` / `put on: <project>` | an allocation, by a proposal or by hand |
 | `deleted` | the item hidden |

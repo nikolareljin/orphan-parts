@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, type Decision, type DecisionChoice, type Item, type Uses } from '../lib/api'
-import { CHOICES, candidatesText, choiceLabel, effortLabel, fillsLine, worthLine } from '../lib/decide'
+import { CHOICES, candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from '../lib/decide'
 import { usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 
@@ -22,6 +22,7 @@ export default function Decide({
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+  const [refusal, setRefusal] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -39,18 +40,12 @@ export default function Decide({
     // the item's version too: a decision, an edit or an accepted value changes the rows
   }, [item.id, item.version])
 
-  async function askWorth() {
-    if (busy) return
-    setBusy('worth')
-    setError('')
-    try {
-      await api.value.guide(item.id, { currency: 'USD', country: '', city: '' })
-      setView(await api.decide.view(item.id))
-    } catch (err: unknown) {
-      setError(message(err))
-    } finally {
-      setBusy('')
-    }
+  // The price call takes the currency and the place from the owner, on the Value panel's own
+  // form; this row sends them there rather than ask with a currency it made up.
+  function askWorth() {
+    const form = document.querySelector<HTMLFormElement>('section.value form')
+    form?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    form?.querySelector<HTMLElement>('input, select')?.focus({ preventScroll: true })
   }
 
   async function askUses() {
@@ -67,10 +62,12 @@ export default function Decide({
     }
   }
 
+  // A refused decision (the demo visitor, a conflict, no connection) is said here, by the
+  // buttons; the note stays as typed and nothing scrolls, because nothing was decided.
   async function choose(choice: DecisionChoice) {
     if (busy) return
     setBusy(choice)
-    setError('')
+    setRefusal('')
     try {
       await onDecide(choice, note)
       setNote('')
@@ -78,7 +75,7 @@ export default function Decide({
         document.querySelector('section.listing')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
     } catch (err: unknown) {
-      setError(message(err))
+      setRefusal(message(err))
     } finally {
       setBusy('')
     }
@@ -114,8 +111,8 @@ export default function Decide({
             {view.worth === null && (
               <>
                 {' '}
-                <button type="button" className="link" onClick={() => void askWorth()} disabled={busy !== ''}>
-                  {busy === 'worth' ? 'Working…' : 'Ask what it is worth'}
+                <button type="button" className="link" onClick={askWorth}>
+                  Ask what it is worth
                 </button>
               </>
             )}
@@ -162,6 +159,11 @@ export default function Decide({
                 {view.last.note && <> · {view.last.note}</>}
               </p>
             )}
+            {view.committed_to.length > 0 && (
+              <p className="reserved" role="note">
+                {reservedLine(view.committed_to)}
+              </p>
+            )}
             <div className="row">
               <label>
                 <span>Note</span>
@@ -175,6 +177,11 @@ export default function Decide({
                 </button>
               ))}
             </div>
+            {refusal && (
+              <p className="error" role="alert">
+                Not decided: {refusal}
+              </p>
+            )}
           </dd>
         </dl>
       )}

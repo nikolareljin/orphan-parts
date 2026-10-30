@@ -100,6 +100,9 @@ class Decision(BaseModel):
     searches: list[OpenSearch]
     templates: list[TemplateFit]
     intent: Intent
+    committed_to: list[str] = Field(
+        description="the selected, building or done projects that count on the item, by title"
+    )
     last: Decided | None
 
 

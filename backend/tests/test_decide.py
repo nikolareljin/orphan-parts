@@ -6,11 +6,13 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.decide import DecisionCreate, decided_line, parse_decided, suggested, templates_for
+from app.decide.service import brief, known_fields
 from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.main import create_app
 from app.ops.gate import DEMO_LINE, expensive
 from app.projects import Templates
+from app.projects.schema import Preferences
 from app.value.schema import Strategy
 
 pytestmark = pytest.mark.anyio
@@ -44,6 +46,22 @@ def test_the_rules_name_the_templates_a_laptop_fills(settings: Settings) -> None
     charger_fills = {t.id: t.fills for t in templates_for(charger, Templates())}
     assert "homework_workstation" not in charger_fills
     assert charger_fills["smart_mirror"] == ["power"]
+
+
+def test_the_brief_carries_the_accepted_values_and_nothing_that_identifies(
+    settings: Settings,
+) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory, location="top shelf", notes="was my brother's")
+    inventory.add_field(item_id, FieldCreate(field="serial_number", value="XK12-99"))
+    inventory.add_field(item_id, FieldCreate(field="mac", value="00:11:22:33:44:55"))
+    inventory.add_field(item_id, FieldCreate(field="screen_size", value="15", unit="in"))
+    item = inventory.get(item_id)
+    assert known_fields(item) == {"ram": "8 GB", "screen_size": "15 in"}
+    text = brief(item, known_fields(item), Preferences(), templates_for(item, Templates()))
+    assert "scuffed lid" in text and "- ram: 8 GB" in text
+    for private in ("XK12-99", "00:11:22", "top shelf", "brother"):
+        assert private not in text, private
 
 
 def test_the_strategy_to_start_from_is_typical_when_it_has_a_figure() -> None:
@@ -151,6 +169,7 @@ def test_the_view_gathers_guidance_uses_searches_and_the_decision(
         ).json()
         assert changed["intent"] == intent, choice
     assert recorded_client.get(f"/api/items/{item_id}/decide").json()["last"]["note"] == ""
+    assert view["committed_to"] == []
     assert (
         recorded_client.post(f"/api/items/{item_id}/decision", json={"choice": "lend"}).status_code
         == 422
@@ -196,3 +215,60 @@ def test_the_demo_visitor_is_refused_on_every_decide_route(gated: TestClient) ->
     assert expensive("POST", "/api/items/12/uses")
     assert not expensive("GET", "/api/items/12/decide")
     assert not expensive("POST", "/api/items/12/decision")
+
+
+def test_the_same_choice_again_is_an_event_and_not_a_new_version(
+    recorded_client: TestClient,
+) -> None:
+    item = recorded_client.post("/api/items", json={"item_type": "laptop"}).json()
+    item_id, version = item["id"], item["version"]
+    assert recorded_client.post(f"/api/items/{item_id}/price", json={}).status_code == 201
+    # the intent is keep already: nothing changes, nothing is said, the version stays
+    same = recorded_client.post(f"/api/items/{item_id}/decision", json={"choice": "not_worth"})
+    assert same.status_code == 200 and same.json()["version"] == version
+    view = recorded_client.get(f"/api/items/{item_id}/decide").json()
+    assert view["last"]["choice"] == "not_worth" and view["last"]["version"] == version
+    assert view["worth"]["stale"] is False
+    # a note gives the item a new why: that is a change
+    noted = recorded_client.post(
+        f"/api/items/{item_id}/decision", json={"choice": "not_worth", "note": "parts only"}
+    ).json()
+    assert noted["intent"] == "keep" and noted["version"] == version + 1
+    # a new intent is a change, with or without a note
+    sold = recorded_client.post(f"/api/items/{item_id}/decision", json={"choice": "sell"}).json()
+    assert sold["intent"] == "sell" and sold["version"] == version + 2
+    again = recorded_client.post(f"/api/items/{item_id}/decision", json={"choice": "sell"}).json()
+    assert again["version"] == version + 2
+    events = [e["change"] for e in recorded_client.get(f"/api/items/{item_id}/events").json()]
+    assert events[-4:] == [
+        "decided: not_worth",
+        "decided: not_worth: parts only",
+        "decided: sell",
+        "decided: sell",
+    ]
+
+
+def test_the_view_names_the_selected_project_that_counts_on_the_item(
+    recorded_client: TestClient,
+) -> None:
+    for item_type, name in (("laptop", "Old laptop"), ("monitor", "Spare monitor")):
+        recorded_client.post("/api/items", json={"item_type": item_type, "name": name})
+    laptop_id = recorded_client.get("/api/items").json()[0]["id"]
+    assert recorded_client.get(f"/api/items/{laptop_id}/decide").json()["committed_to"] == []
+    proposed = recorded_client.post("/api/projects/propose", json={"count": 3}).json()
+    desk = next(p for p in proposed if p["template"] == "homework_workstation")
+    assert laptop_id in [a["item_id"] for a in desk["allocations"]]
+    # proposed is not reserved; selected is
+    assert recorded_client.get(f"/api/items/{laptop_id}/decide").json()["committed_to"] == []
+    selected = recorded_client.post(f"/api/projects/{desk['id']}/select", json={})
+    assert selected.status_code == 200, selected.text
+    view = recorded_client.get(f"/api/items/{laptop_id}/decide").json()
+    assert view["committed_to"] == [desk["title"]]
+    assert view["item"]["availability"] == "reserved"
+    # the decision is still the owner's; the view only says what it breaks
+    sold = recorded_client.post(f"/api/items/{laptop_id}/decision", json={"choice": "sell"})
+    assert sold.status_code == 200 and sold.json()["intent"] == "sell"
+    # given up, the project releases the item
+    given_up = recorded_client.post(f"/api/projects/{desk['id']}/abandon")
+    assert given_up.status_code == 200, given_up.text
+    assert recorded_client.get(f"/api/items/{laptop_id}/decide").json()["committed_to"] == []
