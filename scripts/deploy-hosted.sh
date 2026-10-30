@@ -66,6 +66,8 @@ step_secret() {
   local file
   file="$(mktemp)" || fail "secret: no temporary file"
   chmod 600 "$file"
+  # the key and the code are in this file: gone when the step ends, however it ends
+  trap 'rm -f -- "$file"' RETURN
   # single quotes: the dotenv reader keeps the value as it is (no $expansion, no escapes)
   {
     printf "MODEL_API_KEY='%s'\n" "${MODEL_API_KEY_DEMO:-}"
@@ -128,7 +130,9 @@ step_web() {
   say "web: building the web app against $api_url"
   (cd "$root/frontend" && VITE_API_URL="$api_url" "${npm_cmd[@]}" ci && VITE_API_URL="$api_url" "${npm_cmd[@]}" run build)
   [[ -d "$root/frontend/dist" ]] || fail "web: no frontend/dist after the build"
-  if ! "${wrangler_cmd[@]}" pages project list 2>/dev/null | grep -qE "(^|[[:space:]|])$project([[:space:]|]|$)"; then
+  local projects
+  projects="$("${wrangler_cmd[@]}" pages project list 2>/dev/null || true)"
+  if ! grep -qE "(^|[[:space:]|])$project([[:space:]|]|$)" <<<"$projects"; then
     say "web: creating the Pages project $project"
     "${wrangler_cmd[@]}" pages project create "$project" --production-branch main
   fi
