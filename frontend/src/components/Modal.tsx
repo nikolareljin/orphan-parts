@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 
 // One dialog for every panel that opens from a list: the page behind stays where it was,
 // Escape and the close button end it, focus stays inside. The panel's own heading and
@@ -8,8 +8,13 @@ export default function Modal({ title, onClose, children }: { title: string; onC
   // the latest handler, so the dialog is opened once and not on every render of the parent
   const close = useRef(onClose)
   close.current = onClose
+  // a click counts as the backdrop's only when the press started there too: a drag that
+  // starts in a field and ends outside must not throw the panel away
+  const pressedBackdrop = useRef(false)
 
-  useEffect(() => {
+  // a layout effect: its cleanup runs while the dialog is still in the document, so the
+  // browser hands focus back to the button that opened it
+  useLayoutEffect(() => {
     const dialog = ref.current
     if (!dialog) return
     if (!dialog.open) dialog.showModal()
@@ -31,9 +36,13 @@ export default function Modal({ title, onClose, children }: { title: string; onC
       ref={ref}
       className="modal"
       aria-label={title}
+      onPointerDown={(event) => {
+        pressedBackdrop.current = event.target === event.currentTarget
+      }}
       onClick={(event) => {
         // a click on the backdrop lands on the dialog element itself, not on its content
-        if (event.target === event.currentTarget) onClose()
+        if (event.target === event.currentTarget && pressedBackdrop.current) onClose()
+        pressedBackdrop.current = false
       }}
     >
       <div className="modal-frame">
