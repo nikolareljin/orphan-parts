@@ -86,11 +86,13 @@ SHARPNESS_TILES = 4
 
 def sharpness_of(img: Image.Image) -> float:
     """How much edge there is where the photo has the most: the variance of its Laplacian on a
-    copy at most SHARPNESS_PX wide, taken over a grid of tiles and the sharpest tile counted,
-    so a legible label that fills a quarter of the frame scores as the label, not as the
-    frame. The outermost pixel ring is left out: the filter copies it unchanged, and a flat
-    frame would score its own border. Printed text scores in the hundreds and above; a
-    blurred label, or a patch with nothing on it, in the tens."""
+    copy at most SHARPNESS_PX wide, taken over a grid of tiles, and the third sharpest tile
+    counted: a legible label that fills a quarter of the frame covers several tiles and
+    scores as the label, not as the frame, while one sharp thing beside a blurred label (a
+    finger, a table edge) fills one tile and does not pass for it. The outermost pixel ring
+    is left out: the filter copies it unchanged, and a flat frame would score its own border.
+    Printed text scores in the hundreds and above; a blurred label, or a patch with nothing
+    on it, in the tens."""
     gray = img.convert("L")
     gray.thumbnail((SHARPNESS_PX, SHARPNESS_PX))
     lap = gray.filter(_LAPLACIAN)
@@ -101,14 +103,17 @@ def sharpness_of(img: Image.Image) -> float:
     tiles = SHARPNESS_TILES
     tile_w = max(8, (width - 2) // tiles)
     tile_h = max(8, (height - 2) // tiles)
-    best = 0.0
+    scores: list[float] = []
     for top in range(inner[1], inner[3], tile_h):
         for left in range(inner[0], inner[2], tile_w):
             box = (left, top, min(left + tile_w, inner[2]), min(top + tile_h, inner[3]))
             if box[2] - box[0] < 4 or box[3] - box[1] < 4:
                 continue
-            best = max(best, float(ImageStat.Stat(lap.crop(box)).var[0]))
-    return best
+            scores.append(float(ImageStat.Stat(lap.crop(box)).var[0]))
+    if not scores:
+        return 0.0
+    scores.sort(reverse=True)
+    return scores[min(2, len(scores) - 1)]
 
 
 def sharpness(data: bytes) -> float:

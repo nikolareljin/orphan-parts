@@ -114,13 +114,19 @@ def test_enhance_keeps_the_size_and_sharpness_tells_text_from_blur() -> None:
         assert sharpness(flat.getvalue()) < 60, shade
     # a sharp label in one corner of a wide frame reads as the label, not as the frame
     frame = Image.new("RGB", (1600, 1200), (235, 235, 235))
-    frame.paste(img.resize((640, 480)), (40, 40))
+    frame.paste(img.resize((960, 720)), (40, 40))
     corner = BytesIO()
     frame.save(corner, "JPEG")
     assert sharpness(corner.getvalue()) > 150
     tiny = BytesIO()
     Image.new("RGB", (3, 3), (0, 0, 0)).save(tiny, "PNG")
     assert sharpness(tiny.getvalue()) == 0.0
+    # one sharp thing beside a blurred label (a finger, an edge) does not pass for the label
+    smudged = img.filter(ImageFilter.GaussianBlur(4))
+    ImageDraw.Draw(smudged).rectangle((560, 400, 620, 460), fill=(0, 0, 0))
+    edge = BytesIO()
+    smudged.save(edge, "JPEG")
+    assert sharpness(edge.getvalue()) < 150
     better = enhance(sharp.getvalue())
     assert dimensions(better) == (640, 480)
     assert better[:2] == b"\xff\xd8"  # a JPEG
