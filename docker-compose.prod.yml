@@ -12,6 +12,8 @@ services:
     environment:
       DATA_DIR: /data
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      # behind nginx, the caller's address is in the forwarded header
+      DEMO_TRUST_PROXY: "1"
     volumes:
       - app-data:/data
     ports: []

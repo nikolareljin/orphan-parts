@@ -57,7 +57,10 @@ on the release is the artifact that step will take.
 - `.env` on the host supplies configuration; nothing is baked into the images.
 
 Set `CORS_ORIGINS` to the public origin and give the deployment its own API key with a low
-`SPEND_CAP_USD`.
+`SPEND_CAP_USD`. On any host other people can reach, set `DEMO_ACCESS_CODE` (twelve characters
+at least) and, on https, `DEMO_COOKIE_SECURE=1`; the production compose file already tells the
+backend to trust the address nginx forwards. See [Demo access](demo-access.md) for the
+allowances and the operator's switch.
 
 ## Status of the images
 

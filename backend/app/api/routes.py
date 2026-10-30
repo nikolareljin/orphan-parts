@@ -1,10 +1,10 @@
 import tempfile
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app import __version__
-from app.api.deps import LedgerDep, SettingsDep
+from app.api.deps import GateDep, LedgerDep, SettingsDep
 from app.config import Settings
 from app.model_api import LedgerSummary
 
@@ -15,6 +15,16 @@ class Health(BaseModel):
     status: str
 
 
+class Demo(BaseModel):
+    """The gate as it stands: whether a code is needed, what is left today, what is paused."""
+
+    gated: bool
+    paused: bool = Field(description="the operator's switch; the spend cap is reported apart")
+    daily_used: int
+    daily_cap: int
+    visitor_cap_per_hour: int
+
+
 class Readiness(BaseModel):
     status: str
     model_api: str
@@ -22,6 +32,7 @@ class Readiness(BaseModel):
     spend_usd: float
     spend_cap_usd: float
     paused: bool
+    demo: Demo
 
 
 class Limits(BaseModel):
@@ -44,7 +55,7 @@ def healthz() -> Health:
 
 
 @router.get("/readyz", response_model=Readiness, tags=["ops"])
-def readyz(settings: SettingsDep, ledger: LedgerDep) -> Readiness:
+def readyz(settings: SettingsDep, ledger: LedgerDep, gate: GateDep) -> Readiness:
     writable = _writable(settings)
     return Readiness(
         status="ok" if writable else "degraded",
@@ -53,6 +64,13 @@ def readyz(settings: SettingsDep, ledger: LedgerDep) -> Readiness:
         spend_usd=ledger.total_usd,
         spend_cap_usd=ledger.cap_usd,
         paused=ledger.paused,
+        demo=Demo(
+            gated=gate.enabled,
+            paused=gate.paused,
+            daily_used=gate.daily.used,
+            daily_cap=gate.daily.limit,
+            visitor_cap_per_hour=gate.visitor.limit,
+        ),
     )
 
 

@@ -195,6 +195,10 @@ cmd_e2e() {
   need_env_file
   docker_running || die "docker is not running"
   export OPL_FAKE_API=1
+  # the browser checks go through the demo gate, with a code of their own unless .env has one;
+  # the allowances are for people, not for six workers on one address, so they are wide here
+  export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE:-e2e-demo-access-code}"
+  export DEMO_REQUESTS_PER_MINUTE=100000 DEMO_VISITOR_CALLS_PER_HOUR=100000 DEMO_DAILY_CALLS=1000000
   export DOCKER_UID DOCKER_GID
   DOCKER_UID="$(id -u)"
   DOCKER_GID="$(id -g)"
