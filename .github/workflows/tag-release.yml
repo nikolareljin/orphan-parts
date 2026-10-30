@@ -39,33 +39,11 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: tag the merge commit
-        id: push
         env:
           TAG: ${{ steps.check.outputs.tag }}
           SHA: ${{ github.event.pull_request.merge_commit_sha }}
-        run: |
-          git tag "$TAG"
-          if git push origin "refs/tags/$TAG" 2> push.err; then
-            echo "pushed=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          cat push.err >&2
-          # the tag ruleset lets only the admin create tags: the job token is refused (GH013).
-          # Say what the admin runs; the release workflow then starts from that tag push.
-          {
-            echo "## The tag $TAG was not pushed"
-            echo
-            echo "The repository's tag ruleset refuses tag creation by the workflow token."
-            echo "An admin pushes it, and the release workflow runs from that push:"
-            echo
-            echo '```bash'
-            echo "git fetch origin && git tag $TAG $SHA && git push origin $TAG"
-            echo '```'
-            echo
-            echo "Or let GitHub Actions create tags (not move or delete them) in the ruleset."
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "::error title=tag not pushed::the tag ruleset refused the workflow token; an admin runs: git tag $TAG $SHA && git push origin $TAG (see the run summary)"
-          exit 1
+        # on a ruleset refusal it writes the admin's command to the run summary and fails
+        run: bash scripts/push-release-tag.sh "$TAG" "$SHA"
 
   publish:
     needs: tag
