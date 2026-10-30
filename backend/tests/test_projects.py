@@ -36,10 +36,15 @@ pytestmark = pytest.mark.anyio
 def test_the_shipped_templates_load_and_say_what_they_need() -> None:
     templates = Templates()
     assert templates.ids() == [
+        "arcade_table",
         "document_camera",
         "external_monitor_workaround",
+        "home_automation_server",
         "home_music_setup",
+        "home_server",
         "homework_workstation",
+        "retro_console",
+        "smart_mirror",
         "vacuum_restored",
     ]
     vacuum = templates.get("vacuum_restored")

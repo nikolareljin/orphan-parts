@@ -19,7 +19,7 @@ requirements:
     blocking: false
   - key: controls
     label: Two joysticks and buttons on a USB encoder, or two gamepads
-    kind: part
+    kind: item
     item_types: [joystick, gamepad, controller, arcade encoder]
     blocking: true
   - key: table
@@ -30,7 +30,7 @@ requirements:
     profile: generic_item
   - key: glass
     label: A sheet of glass or acrylic the size of the top
-    kind: part
+    kind: item
     item_types: [glass, acrylic, sheet]
     blocking: false
   - key: speakers

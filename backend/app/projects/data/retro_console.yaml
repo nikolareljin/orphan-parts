@@ -19,12 +19,12 @@ requirements:
     blocking: true
   - key: controls
     label: One or two gamepads, USB or Bluetooth
-    kind: part
+    kind: item
     item_types: [gamepad, controller, joystick]
     blocking: true
   - key: cable
     label: The cable or adapter between the device and the TV
-    kind: part
+    kind: item
     item_types: [cable, hdmi, adapter, usb-c adapter]
     blocking: true
 steps:

@@ -14,7 +14,7 @@ requirements:
     blocking: true
   - key: mirror
     label: A two-way mirror or a sheet of two-way film on glass, the size of the display or larger
-    kind: part
+    kind: item
     item_types: [mirror, two-way mirror, glass, film]
     blocking: true
   - key: frame

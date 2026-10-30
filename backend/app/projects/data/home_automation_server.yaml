@@ -19,7 +19,7 @@ requirements:
     blocking: false
   - key: radio
     label: A Zigbee or Z-Wave USB stick, for devices that are not on Wi-Fi
-    kind: part
+    kind: item
     item_types: [zigbee stick, z-wave stick, usb stick, dongle]
     blocking: false
   - key: memory
