@@ -5,4 +5,4 @@ Not in this version. The way to talk to the inventory from a phone is the
 item, kept as your words and read back. A messaging channel, where a photo sent to a business
 number comes back with the reading and a link to the item, would call the same API the web app
 and the phone call; no webhook, signature check or media download exists in the service. It
-stays on the [roadmap](../project/roadmap.md).
+stays under [Next steps](../project/next.md).

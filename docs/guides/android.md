@@ -102,4 +102,4 @@ picks one without asking. The emulator is a device like any other once it is run
 ## Not yet
 
 A calibrated capture marked on the phone, a spoken question answered from the inventory, and
-the store listing are on the [roadmap](../project/roadmap.md).
+the store listing are under [Next steps](../project/next.md).

@@ -6,6 +6,6 @@ and never a literal in code, and the client prices each call from the published 
 model it was made to. Fixture mode (`OPL_FAKE_API=1`) is the one alternative: recorded answers,
 nothing spent.
 
-Routing a job to another provider, a local open-weight model or a hosted one, is on the
-[roadmap](../project/roadmap.md); the client's interface (one `respond`, one `transcribe`, one
+Routing a job to another provider, a local open-weight model or a hosted one, is under
+[Next steps](../project/next.md); the client's interface (one `respond`, one `transcribe`, one
 tool loop) is the seam it would go behind.
