@@ -14,7 +14,8 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
       # behind nginx, the caller's address is in the forwarded header
       DEMO_TRUST_PROXY: "1"
-    volumes:
+    # !override: the dev file's bind mounts (the source tree, the demo folder) stay out
+    volumes: !override
       - app-data:/data
     ports: []
     expose:
@@ -28,7 +29,7 @@ services:
     restart: unless-stopped
     command: []
     environment: {}
-    volumes: []
+    volumes: !override []
     ports:
       - "${WEB_PORT:-8080}:80"
     depends_on:
