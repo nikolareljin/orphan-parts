@@ -27,7 +27,7 @@ how it compares:
 
 | Kind | Passes when |
 |---|---|
-| `equal` | both sides read the same after the label normaliser (polarity, connector, part number) |
+| `equal` | both sides read the same after the label normaliser (polarity, connector, part number, material) |
 | `within` | the candidate is within the tolerance of the needed value: an absolute amount, a percentage, or the larger of the two |
 | `at_least` | the candidate is at least the needed value, less any slack |
 | `at_most` | the candidate is at most the needed value, plus any slack |

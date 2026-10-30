@@ -120,10 +120,13 @@ _PLASTICS = (
 def _material(text: str) -> tuple[str, str]:
     """``metal`` or ``plastic`` when the words say so, else the text cleaned: the rule for a
     material compares one word, so "all-metal", "stainless steel" and "metal throughout" are
-    one value, as are "ABS plastic" and "plastic". A mix ("metal rod, plastic head") stays as
-    written, so a rule asking for metal does not pass it."""
+    one value, as are "ABS plastic" and "plastic". A mix ("metal rod, plastic head") or a
+    negation ("non-metal", "plastic-free") stays as written, so a rule asking for metal does
+    not pass it."""
     low = _clean(text).lower()
-    words = set(low.replace("-", " ").replace("/", " ").replace(",", " ").split())
+    words = set(re.findall(r"[a-z]+", low))
+    if "non" in words or "free" in words:
+        return low, ""
     metal = any(w in _METALS for w in words)
     plastic = any(w in _PLASTICS for w in words)
     if metal and not plastic:

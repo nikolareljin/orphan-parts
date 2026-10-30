@@ -40,6 +40,16 @@ from app.extract import FIELDS, field_guide, normalize
         ("material", "ABS plastic", ("plastic", "")),
         ("material", "metal rod, plastic head", ("metal rod, plastic head", "")),
         ("material", "wood", ("wood", "")),
+        ("material", "Metal.", ("metal", "")),
+        ("material", "metal;", ("metal", "")),
+        ("material", "(stainless)", ("metal", "")),
+        ("material", "Aluminum.", ("metal", "")),
+        ("material", "die-cast zinc", ("metal", "")),
+        ("material", "metal/plastic", ("metal/plastic", "")),
+        ("material", "18/8", ("18/8", "")),
+        ("material", "", ("", "")),
+        ("material", "non-metal", ("non-metal", "")),
+        ("material", "Plastic-free", ("plastic-free", "")),
     ],
 )
 def test_normalizers(kind: str, text: str, expected: tuple[str, str]) -> None:
