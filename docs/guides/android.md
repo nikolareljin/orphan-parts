@@ -79,6 +79,10 @@ The version is the repository's `VERSION`; each release attaches `orphan-parts-<
 The app allows plain HTTP, because the dev stack on a home network answers that way; the
 demo host answers over HTTPS.
 
+The launcher icon is rendered from `docs/assets/logo.svg`: `scripts/app-icon.sh` (Inkscape
+required) writes the adaptive icon's foreground and the legacy icons for every density under
+`android/app/src/main/res/mipmap-*/`; run it again after a change to the logo.
+
 ## Allow the phone
 
 `./dev phone` installs over USB, which the phone has to allow once:

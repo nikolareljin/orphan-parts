@@ -23,8 +23,9 @@ header.top {
 }
 
 .brand img {
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
+  flex: none;
 }
 
 header h1 {
