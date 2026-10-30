@@ -4,6 +4,7 @@ item is committed twice."""
 
 import json
 import logging
+import threading
 from typing import Any
 
 from app.config import Settings
@@ -120,6 +121,9 @@ class Planner:
         self.inventory = inventory
         self.templates = templates
         self.finder = finder
+        # one change to the projects at a time: a selection checks the other projects' holds
+        # and then commits, and two selections of one item must not both pass the check
+        self._lock = threading.RLock()
 
     # --- preferences --------------------------------------------------------
 
@@ -315,11 +319,25 @@ class Planner:
         return self.project_of(self.inventory.project(project_id))
 
     def shortlist(self, project_id: int) -> Project:
-        return self.set_status(project_id, "shortlisted", commit=False)
+        with self._lock:
+            self.expect_status(project_id, "proposed", "shortlisted", "selected")
+            return self.set_status(project_id, "shortlisted", commit=False)
 
     def select(self, project_id: int, *, take: bool = False) -> Project:
         """Commit the project's items. An item committed to another selected project is a
         conflict, answered with the other project, unless the owner says to take it."""
+        with self._lock:
+            return self._select(project_id, take=take)
+
+    def expect_status(self, project_id: int, *allowed: str) -> None:
+        """A project moves one way: proposed, shortlisted, selected, building, done; abandoned
+        from anywhere but done."""
+        status = str(self.inventory.project(project_id)["status"])
+        if status not in allowed:
+            raise ProjectsError(f"a {status} project cannot be changed this way")
+
+    def _select(self, project_id: int, *, take: bool) -> Project:
+        self.expect_status(project_id, "proposed", "shortlisted", "selected")
         project = self.project(project_id)
         conflicts: list[Conflict] = []
         for a in project.allocations:
@@ -349,11 +367,17 @@ class Planner:
         self.inventory.update_project(project_id, str(row["status"]), json.dumps(content))
 
     def abandon(self, project_id: int) -> Project:
-        return self.set_status(project_id, "abandoned", commit=False)
+        with self._lock:
+            self.expect_status(project_id, "proposed", "shortlisted", "selected", "building")
+            return self.set_status(project_id, "abandoned", commit=False)
 
     def advance(self, project_id: int, status: str) -> Project:
         if status not in ("building", "done"):
             raise ProjectsError("a project advances to building or done")
+        with self._lock:
+            return self._advance(project_id, status)
+
+    def _advance(self, project_id: int, status: str) -> Project:
         project = self.project(project_id)
         if project.status not in ("selected", "building"):
             raise ProjectsError("only a selected project is built")
@@ -365,6 +389,10 @@ class Planner:
     def fill(self, project_id: int, key: str, request: FillRequest) -> Project:
         """An item of the owner's for a requirement the proposal left open. It must be usable
         and of a kind the requirement takes; a search open for the requirement is marked found."""
+        with self._lock:
+            return self._fill(project_id, key, request)
+
+    def _fill(self, project_id: int, key: str, request: FillRequest) -> Project:
         row = self.inventory.project(project_id)
         if row["status"] in ("done", "abandoned"):
             raise ProjectsError("the project is over")
@@ -398,13 +426,14 @@ class Planner:
         return self.project_of(updated)
 
     def set_status(self, project_id: int, status: str, *, commit: bool) -> Project:
-        row = self.inventory.project(project_id)
-        updated = self.inventory.update_project(project_id, status, row["content"])
-        self.inventory.set_committed(project_id, commit)
-        # the status is written first: an item is reserved by what a selected project holds
-        for a in self.inventory.allocations(project_id):
-            self.reserve(int(a["item_id"]))
-        return self.project_of(updated)
+        with self._lock:
+            row = self.inventory.project(project_id)
+            updated = self.inventory.update_project(project_id, status, row["content"])
+            self.inventory.set_committed(project_id, commit)
+            # the status is written first: an item is reserved by what a selected project holds
+            for a in self.inventory.allocations(project_id):
+                self.reserve(int(a["item_id"]))
+            return self.project_of(updated)
 
     def reserve(self, item_id: int) -> None:
         """An item is reserved while any selected project counts on it, available otherwise."""
@@ -428,7 +457,7 @@ class Planner:
         search = self.finder.create(
             SearchCreate(
                 profile=req["profile"] or "generic_item",
-                title=f"{req['label']} for {row['title']}",
+                title=f"{req['label']} for {row['title']}"[:200],
                 max_price=budget.remaining if budget.remaining and budget.remaining > 0 else None,
                 currency=budget.currency,
                 budget_left=budget.remaining if budget.remaining and budget.remaining > 0 else None,
@@ -441,6 +470,18 @@ class Planner:
 
     def project_of(self, row: Any) -> Project:
         content = json.loads(row["content"])
+        rows = self.inventory.allocations(int(row["id"]))
+        # an item deleted from the inventory drops out of the allocations (the join skips it);
+        # the requirement it filled is open again, written back so the next read agrees
+        held = {int(a["item_id"]) for a in rows}
+        lost = [r for r in content["requirements"] if r["item_id"] and r["item_id"] not in held]
+        if lost:
+            for r in lost:
+                r["item_id"], r["state"] = None, "unknown"
+            row = self.inventory.update_project(
+                int(row["id"]), str(row["status"]), json.dumps(content)
+            )
+            content = json.loads(row["content"])
         allocations = [
             Allocation(
                 item_id=int(a["item_id"]),
@@ -449,7 +490,7 @@ class Planner:
                 committed=bool(a["committed"]),
                 why=a["why"],
             )
-            for a in self.inventory.allocations(int(row["id"]))
+            for a in rows
         ]
         return Project(
             id=int(row["id"]),

@@ -237,13 +237,32 @@ async def test_selection_commits_items_once_and_reserves_them(planner: Planner) 
     with pytest.raises(ProjectsError, match="filled already"):
         planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
     assert planner.advance(vacuum.id, "building").status == "building"
+    # a project moves one way: a build is not shortlisted again
+    with pytest.raises(ProjectsError, match="a building project cannot be changed"):
+        planner.shortlist(vacuum.id)
     assert planner.advance(vacuum.id, "done").status == "done"
     with pytest.raises(ProjectsError, match="is over"):
         planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
+    for change in (planner.abandon, planner.select, planner.shortlist):
+        with pytest.raises(ProjectsError, match="a done project cannot be changed"):
+            change(vacuum.id)
     with pytest.raises(ProjectsError):
         planner.advance(desk.id, "building")
     with pytest.raises(ProjectsError):
         planner.advance(vacuum.id, "flying")
+
+
+async def test_a_deleted_item_leaves_its_project_open(planner: Planner) -> None:
+    ids = household(planner.inventory)
+    planner.set_preferences(Preferences(budget=20))
+    desk, _vacuum = await planner.propose(ProposeRequest())
+    planner.select(desk.id)
+    planner.inventory.delete(ids["Old laptop"])
+    project = planner.project(desk.id)
+    assert all(a.item_name != "Old laptop" for a in project.allocations)
+    assert next(r for r in project.requirements if r.key == "laptop").state == "unknown"
+    # the project is still the owner's to change: nothing 404s on the item that is gone
+    assert planner.abandon(desk.id).status == "abandoned"
 
 
 async def test_a_missing_requirement_becomes_a_search_under_the_budget_left(

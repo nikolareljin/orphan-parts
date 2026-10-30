@@ -568,7 +568,8 @@ class Inventory:
         with self.store.connect() as conn:
             return conn.execute(
                 "SELECT a.*, i.name AS item_name FROM allocations a"
-                " JOIN items i ON i.id = a.item_id WHERE a.project_id = ? ORDER BY a.id",
+                " JOIN items i ON i.id = a.item_id AND i.deleted_at IS NULL"
+                " WHERE a.project_id = ? ORDER BY a.id",
                 (project_id,),
             ).fetchall()
 
@@ -580,11 +581,12 @@ class Inventory:
             )
 
     def committed_elsewhere(self, item_id: int, project_id: int) -> list[sqlite3.Row]:
-        """The other selected projects an item is committed to."""
+        """The other selected projects an item is committed to; a deleted item holds nothing."""
         with self.store.connect() as conn:
             return conn.execute(
                 "SELECT a.project_id, p.title FROM allocations a"
                 " JOIN projects p ON p.id = a.project_id"
+                " JOIN items i ON i.id = a.item_id AND i.deleted_at IS NULL"
                 " WHERE a.item_id = ? AND a.committed = 1 AND a.project_id != ?"
                 " AND p.status IN ('selected', 'building')",
                 (item_id, project_id),
