@@ -1,0 +1,40 @@
+id: smart_mirror
+label: Smart mirror
+goal: A mirror that shows the time, the weather and your calendar behind the glass, driven by a tablet or a laptop you no longer use.
+result: a framed two-way mirror with a tablet or a thin monitor behind it, showing a dashboard page in black and white
+effort: medium
+skills: [basic computer setup, basic woodwork]
+opens_devices: false
+typical_cost: {low: 30, high: 120, currency: USD}
+requirements:
+  - key: display
+    label: A tablet, or a monitor with a small computer behind it
+    kind: item
+    item_types: [tablet, monitor, display, screen, laptop, notebook]
+    blocking: true
+  - key: mirror
+    label: A two-way mirror or a sheet of two-way film on glass, the size of the display or larger
+    kind: item
+    item_types: [mirror, two-way mirror, glass, film]
+    blocking: true
+  - key: frame
+    label: A frame deep enough for the display and its cable
+    kind: item
+    item_types: [frame, picture frame, box]
+    blocking: false
+    profile: generic_item
+  - key: power
+    label: A charger or power adapter that stays plugged in
+    kind: item
+    item_types: [charger, power adapter, adapter]
+    blocking: true
+steps:
+  - Open a dashboard page on the display (a weather, clock and calendar page in white on black; a tablet's browser in kiosk mode is enough).
+  - Fit the display behind the two-way mirror in the frame, screen against the glass; black card around it so only the lit parts show.
+  - Route the charger out of the frame; set the display never to sleep and the screen to its dimmest readable setting.
+  - Hang it where the light does not hit the glass straight on; check it reads from across the room.
+safety:
+  - A tablet that charges all day warms up; leave an air gap and do not seal the frame.
+sources:
+  - the dashboard page's setup guide
+  - the tablet's kiosk mode help

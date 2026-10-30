@@ -8,7 +8,12 @@ from app.profiles import Profiles, UnknownProfileError
 
 def test_the_shipped_profiles_load_with_their_features() -> None:
     profiles = Profiles()
-    assert profiles.ids() == ["generic_item", "power_adapter", "vacuum_attachment"]
+    assert profiles.ids() == [
+        "blender_agitator",
+        "generic_item",
+        "power_adapter",
+        "vacuum_attachment",
+    ]
     vacuum = profiles.get("vacuum_attachment")
     assert [f.key for f in vacuum.features] == [
         "opening_inner_diameter",
@@ -96,8 +101,13 @@ def test_a_feature_needs_a_positive_tolerance(tmp_path: Path) -> None:
 
 def test_profiles_are_served(client: TestClient) -> None:
     listed = client.get("/api/profiles").json()
-    assert [p["id"] for p in listed] == ["generic_item", "power_adapter", "vacuum_attachment"]
-    assert listed[2] == {
+    assert [p["id"] for p in listed] == [
+        "blender_agitator",
+        "generic_item",
+        "power_adapter",
+        "vacuum_attachment",
+    ]
+    assert listed[3] == {
         "id": "vacuum_attachment",
         "label": "Vacuum attachment",
         "feature_count": 5,

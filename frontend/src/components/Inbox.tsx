@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, type Capture } from '../lib/api'
+import { api, type Capture, type Limits } from '../lib/api'
 import { captureSummary, captureTone, statusLabel } from '../lib/captures'
 import GatedImage from './GatedImage'
+import SendCapture from './SendCapture'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -40,7 +41,15 @@ function Clip({ id }: { id: number }) {
 }
 
 // What the phone sent: photos, a clip, a spoken note, a line. Read into an item on request.
-export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void }) {
+export default function Inbox({
+  onOpenItem,
+  limits,
+  demo,
+}: {
+  onOpenItem: (id: number) => void
+  limits: Limits
+  demo: boolean
+}) {
   const [captures, setCaptures] = useState<Capture[] | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
   const [error, setError] = useState('')
@@ -79,6 +88,7 @@ export default function Inbox({ onOpenItem }: { onOpenItem: (id: number) => void
 
   return (
     <div className="inbox">
+      <SendCapture limits={limits} demo={demo} onSent={() => void load()} />
       <p className="muted">
         Captures arrive from the phone app: photos, a short clip, a spoken note and a line. <strong>Read it</strong> turns one into an item in your
         inventory, with every value marked as observed and the note kept as your words. Nothing here leaves this backend until you read it.{' '}

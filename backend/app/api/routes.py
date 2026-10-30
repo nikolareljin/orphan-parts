@@ -43,6 +43,7 @@ class Limits(BaseModel):
 
     max_photos: int
     max_upload_mb: int
+    max_clip_mb: int
 
 
 class Version(BaseModel):
@@ -98,7 +99,11 @@ def version(settings: SettingsDep) -> Version:
             "voice": settings.model_voice,
             "sam": settings.model_sam,
         },
-        limits=Limits(max_photos=settings.max_photos, max_upload_mb=settings.max_upload_mb),
+        limits=Limits(
+            max_photos=settings.max_photos,
+            max_upload_mb=settings.max_upload_mb,
+            max_clip_mb=settings.max_clip_mb,
+        ),
     )
 
 

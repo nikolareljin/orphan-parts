@@ -20,6 +20,8 @@
 | `./dev fmt` | ruff format, eslint --fix |
 | `./dev docs` | serves the docs site at :8001 with live reload |
 | `./dev docs-build` | exports the OpenAPI document and builds `site/` |
+| `scripts/scan-security.sh [--json] [<ref>]` | gitleaks over the history reachable from the ref and foxguard over the tracked files at it, checked out clean so nothing uncommitted is scanned; `--json` writes `scan/*.json` and prints the counts |
+| `scripts/phone-install.sh [--version x.y.z] [--apk file]`, `scripts\phone-install.ps1 [-Version x.y.z] [-Apk file]` | the released app onto a phone over USB from a computer with nothing installed: `adb` downloaded when missing, the APK from the release page, the install, the launch; macOS, Linux and WSL for the first, Windows PowerShell for the second |
 | `./dev build` | builds the production images |
 | `./dev version <x.y.z>` | sets the version in every manifest and starts a changelog section |
 | `./dev release [--dry-run]` | tags `VERSION` on `main` and pushes the tag (the repository admin's command); the tag starts the release workflow |

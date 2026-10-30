@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -38,6 +39,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.orphanparts.lens.api.Capture
 import com.orphanparts.lens.audio.WavRecorder
+import com.orphanparts.lens.looksLikeVideo
 import com.orphanparts.lens.preparePhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
@@ -119,6 +121,50 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
             }
         }
     }
+    // from the gallery: photos re-encoded as the camera's are, a clip checked by its bytes
+    val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_PHOTOS)) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        scope.launch {
+            val room = MAX_PHOTOS - photos.size
+            val prepared = withContext(Dispatchers.IO) {
+                uris.take(room).mapNotNull { uri ->
+                    try {
+                        preparePhoto(context.contentResolver.openInputStream(uri)?.use { it.readBytes() })
+                    } catch (e: Exception) {
+                        null
+                    } catch (e: OutOfMemoryError) {
+                        null
+                    }
+                }
+            }
+            photos = photos + prepared
+            status = when {
+                prepared.isEmpty() -> "The photo could not be read."
+                uris.size > room -> "${prepared.size} photo(s) added; an item keeps $MAX_PHOTOS."
+                else -> "${prepared.size} photo(s) ready."
+            }
+        }
+    }
+    val pickClip = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val bytes = withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                } catch (e: Exception) {
+                    null
+                } catch (e: OutOfMemoryError) {
+                    null
+                }
+            }
+            when {
+                bytes == null || bytes.isEmpty() -> { clip = null; status = "The clip could not be read." }
+                bytes.size > CLIP_MAX_BYTES -> { clip = null; status = "The clip is ${bytes.size / 1024 / 1024} MB, more than the backend takes; pick a shorter one." }
+                !looksLikeVideo(bytes) -> { clip = null; status = "The clip is not an MP4 or 3GP file; the backend takes those two." }
+                else -> { clip = bytes; status = "Clip ready (${bytes.size / 1024} KB)." }
+            }
+        }
+    }
     val takeClip = rememberLauncherForActivityResult(ShortClip()) { ok ->
         val uri = pendingUri?.let(Uri::parse)
         if (!ok || uri == null) return@rememberLauncherForActivityResult
@@ -184,6 +230,16 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
                     val uri = fileUri("clip-${System.currentTimeMillis()}.mp4")
                     pendingUri = uri.toString()
                     takeClip.launch(uri)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Row {
+                SecondaryButton("Photos from the gallery", enabled = photos.size < MAX_PHOTOS && !busy) {
+                    pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }
+                Spacer(Modifier.width(8.dp))
+                SecondaryButton("A video from the gallery", enabled = !busy) {
+                    pickClip.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
                 }
             }
             if (photos.isNotEmpty() || clip != null) {
