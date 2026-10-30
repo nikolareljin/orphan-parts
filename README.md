@@ -38,7 +38,7 @@ profiles, with a generic one for anything else.
   a listing, your own word. An observation stays "to confirm" until you accept it.
 - **A ruler, not a guess.** A dimension comes from marks on a photo with a scale reference and
   explicit geometry; a blurred, oblique or unreferenced capture is refused with the reason.
-- **Rules decide, the model explains.** Does it fit? ends in one verdict from a ladder; an
+- **Rules decide, the model reads.** Does it fit? ends in one verdict from a ladder; an
   unknown is never a pass, and a conflict is never talked away.
 - **Four price figures, never merged.** Asking, sold, what you reported, and the model's
   estimate, each with its page and date; weak evidence is called weak.
