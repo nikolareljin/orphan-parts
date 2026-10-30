@@ -56,8 +56,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.model_api_label = settings.model_api_mode
     if settings.model_api_mode == "live" and settings.key_probe:
         # a key that does not answer must not turn every call into an error: the service
-        # runs on recorded answers and says so, until a restart with a working key
-        probe = await client.check()
+        # runs on recorded answers and says so, until a restart with a working key. One
+        # short try: a slow API must not hold the start, a busy one is left alone anyway
+        quick = settings.model_copy(
+            update={
+                "model_api_max_attempts": 1,
+                "model_api_timeout_s": min(settings.model_api_timeout_s, 15.0),
+            }
+        )
+        prober = ModelApiClient(quick, ledger)
+        probe = await prober.check()
+        await prober.aclose()
         if not probe.get("reachable") and probe.get("status") not in KEY_FAILURES:
             log.warning(
                 "the API did not answer the probe; staying live",

@@ -70,10 +70,13 @@ test_hosted_secret_is_written_from_the_environment_with_every_field() {
   assert_true _hosted_env "$dir" MODEL_API_KEY_DEMO=sample-value DEMO_ACCESS_CODE=judges-code SPEND_CAP_USD=15 OPL_FAKE_API=0 bash "$_hosted" secret
   assert_true grep -q '^secret create orphan-parts --from-dotenv .* --force$' "$dir/modal.log"
   assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY='sample-value' DEMO_ACCESS_CODE='judges-code' SPEND_CAP_USD='15' OPL_FAKE_API='0' CORS_ORIGINS='https://orphan-parts.pages.dev' DEMO_COOKIE_SECURE='1' DEMO_TRUST_PROXY='1' "
-  # a value with a dollar, a space or a hash is kept as it is; one with a single quote is refused
+  # a value with a dollar, a space or a hash is kept as it is; a single quote, a backslash or
+  # a newline is refused (the dotenv reader would drop or bend the value)
   assert_true _hosted_env "$dir" DEMO_ACCESS_CODE='pa$s #word' bash "$_hosted" secret
   assert_true grep -q "^DEMO_ACCESS_CODE='pa\$s #word'$" "$dir/secret.env"
   assert_false _hosted_env "$dir" DEMO_ACCESS_CODE="it's" bash "$_hosted" secret 2>/dev/null
+  assert_false _hosted_env "$dir" DEMO_ACCESS_CODE='back\slash' bash "$_hosted" secret 2>/dev/null
+  assert_false _hosted_env "$dir" MODEL_API_KEY_DEMO=$'two\nlines' bash "$_hosted" secret 2>/dev/null
   # the dotenv the stand-in copied was a temporary file, removed after the call
   assert_false test -f "$(grep -oE -- '--from-dotenv [^ ]+' "$dir/modal.log" | cut -d' ' -f2)"
   # nothing set: recorded answers, open, the defaults
