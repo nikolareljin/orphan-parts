@@ -17,20 +17,37 @@ class WavRecorder(private val maxSeconds: Int = 60) {
 
     val isRecording: Boolean get() = running.get()
 
+    /** Why the last start gave nothing: the microphone held by another app, or none at all. */
+    @Volatile var problem: String? = null
+        private set
+
     @SuppressLint("MissingPermission")
     fun start() {
         if (!running.compareAndSet(false, true)) return
         pcm.reset()
+        problem = null
         val minBuffer = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val record = AudioRecord(
             MediaRecorder.AudioSource.MIC, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
             maxOf(minBuffer, sampleRate),
         )
+        if (record.state != AudioRecord.STATE_INITIALIZED) {
+            // another app holds the microphone, or the device has none: nothing to record from
+            record.release()
+            problem = "the microphone is not available"
+            running.set(false)
+            return
+        }
         val maxBytes = maxSeconds * sampleRate * 2
         thread = Thread {
             val buffer = ByteArray(4096)
             try {
-                record.startRecording()
+                try {
+                    record.startRecording()
+                } catch (e: IllegalStateException) {
+                    problem = "the microphone could not start"
+                    running.set(false)
+                }
                 while (running.get() && pcm.size() < maxBytes) {
                     val n = record.read(buffer, 0, buffer.size)
                     if (n > 0) pcm.write(buffer, 0, n)

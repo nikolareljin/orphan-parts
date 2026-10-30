@@ -22,8 +22,8 @@
 | `./dev build` | builds the production images |
 | `./dev version <x.y.z>` | sets the version in every manifest and starts a changelog section |
 | `./dev demo [--keep]` | resets the inventory (`--keep` adds instead) and loads `demo/set.yaml` in fixture mode; the backend is stopped for it and started again |
-| `./dev record-fixtures` | loads the set once with the key from `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`; spends credits once |
-| `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes |
+| `./dev record-fixtures [--keep]` | resets the inventory (`--keep` adds instead) and loads the set once with the key from `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`; spends credits once; the backend is stopped for it and started again however the run ends |
+| `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes into `demo/notes/` |
 | `./dev shell [service]` | shell in a running service |
 
 `python -m app.extract <photo> [<photo> ...]` (inside the backend container or the native venv)

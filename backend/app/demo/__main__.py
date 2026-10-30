@@ -4,7 +4,8 @@
                                            the settings say (fixture mode replays, no key needed)
   record [--set demo/set.yaml] [--reset]   the same run with OPL_RECORD_FIXTURES=1 forced, so
                                            every model answer is written as a fixture; needs a key
-  scrub  <raw dir> [--out demo/photos]     raw photos re-encoded without metadata, WAV notes copied
+  scrub  <raw dir> [--out demo/photos] [--notes demo/notes]
+                                           raw photos re-encoded without metadata, WAV notes copied
 
 --reset removes the inventory file first, so the set is the whole inventory.
 """
@@ -13,6 +14,8 @@ import asyncio
 import os
 import sys
 from pathlib import Path
+
+import yaml
 
 from app.config import Settings, get_settings
 from app.demo.schema import DemoSet
@@ -88,16 +91,24 @@ def main(argv: list[str] | None = None) -> int:
     what = args.pop(0)
     if what == "scrub":
         if not args or args[0].startswith("--"):
-            print("usage: python -m app.demo scrub <raw dir> [--out DIR]", file=sys.stderr)
+            print(
+                "usage: python -m app.demo scrub <raw dir> [--out DIR] [--notes DIR]",
+                file=sys.stderr,
+            )
             return 2
         raw = Path(args.pop(0))
         out = Path("demo/photos")
-        if args[:1] == ["--out"] and len(args) >= 2:
-            out = Path(args[1])
+        notes: Path | None = None
+        while len(args) >= 2 and args[0] in ("--out", "--notes"):
+            if args[0] == "--out":
+                out = Path(args[1])
+            else:
+                notes = Path(args[1])
+            args = args[2:]
         if not raw.is_dir():
             print(f"demo: {raw} is not a directory", file=sys.stderr)
             return 1
-        for line in scrub(raw, out):
+        for line in scrub(raw, out, notes):
             print(line)
         return 0
     set_file: str | None = None
@@ -121,13 +132,17 @@ def main(argv: list[str] | None = None) -> int:
         clear = getattr(get_settings, "cache_clear", None)
         if clear is not None:
             clear()
-    settings = get_settings()
+    try:
+        settings = get_settings()
+    except ValueError as exc:
+        print(f"demo: the settings are refused: {exc}", file=sys.stderr)
+        return 1
     if what == "record" and settings.model_api_mode != "record":
         print("demo: record needs a key in the environment and fixture mode off", file=sys.stderr)
         return 1
     try:
         demo = load_set(path)
-    except ValueError as exc:
+    except (ValueError, yaml.YAMLError) as exc:
         print(f"demo: {path}: {exc}", file=sys.stderr)
         return 1
     if do_reset:

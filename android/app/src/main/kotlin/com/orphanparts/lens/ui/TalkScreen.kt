@@ -126,7 +126,7 @@ fun TalkScreen(session: Session, lastItemId: Int?) {
                             holding = false
                             val wav = recorder.stop()
                             if (wav == null) {
-                                status = "Nothing heard."
+                                status = recorder.problem?.let { "Nothing heard: $it." } ?: "Nothing heard."
                             } else {
                                 status = "Writing it down (${"%.1f".format(recorder.seconds())} s)…"
                                 scope.launch {

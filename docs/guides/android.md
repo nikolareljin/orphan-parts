@@ -38,7 +38,7 @@ what was kept. The item is the one a capture was read into, or any other from th
 ./dev android release    # the release APK, with the release key when one is given
 ```
 
-The build needs a JDK 17 or later and the Android SDK (`ANDROID_HOME`, or `~/Android/Sdk`);
+The build needs a JDK 17 or 21 (Gradle 8.13 refuses a newer one) and the Android SDK (`ANDROID_HOME`, or `~/Android/Sdk`);
 `ANDROID_AVD=<name>` lets the smoke run boot a headless emulator when no phone is connected.
 The release APK is signed with the release key when `KEYSTORE_PATH`, `KEYSTORE_PASSWORD`,
 `KEY_ALIAS` and `KEY_PASSWORD` are set (or `android/keystore.properties`, which is ignored by

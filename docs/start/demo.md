@@ -13,8 +13,8 @@ about it, whether a draft or price guidance is written for it, the searches with
 brought back (written examples labelled as such), and the proposal brief. Three commands:
 
 ```bash
-./dev demo-scrub ~/raw-photos   # re-encoded copies into demo/photos/, no metadata; WAV notes copied
-./dev record-fixtures           # with a key: one run, every model answer kept as a fixture
+./dev demo-scrub ~/raw-photos   # re-encoded copies into demo/photos/, WAV notes into demo/notes/
+./dev record-fixtures           # with a key: the inventory reset, one run, every answer kept
 ./dev demo                      # the inventory reset and the set loaded, in fixture mode
 ```
 
@@ -60,7 +60,7 @@ message. [Find a part](../guides/search.md).
 
 **Build and reuse**: say what you want from a build, ask for proposals, and Muse Spark reads the
 inventory through tools and proposes projects from templates kept as data; only what names
-items you own is shown. Select the homework desk: its items are committed, the budget line
+items you own is shown. Select the homework workstation: its items are committed, the budget line
 says what is left, the missing cable becomes a search, and the build pack is one document from
 what stands. Record the outcome once it works. [Build and reuse](../guides/reuse.md).
 
