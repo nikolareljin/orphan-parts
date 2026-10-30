@@ -80,8 +80,16 @@ def test_fits_reads_the_kind_off_the_type_not_the_name(settings: Settings) -> No
     cable = inventory.create(ItemCreate(item_type="HDMI cable", name="The long one"))
     toaster = inventory.create(ItemCreate(item_type="toaster", name="Laptop-sized toaster"))
     assert fits(["laptop", "notebook"], laptop) and not fits(["monitor"], laptop)
-    assert fits(["hdmi"], cable) and fits([], cable)
+    assert fits(["cable"], cable) and fits(["hdmi cable"], cable) and fits([], cable)
     assert not fits(["laptop"], toaster)
+    # whole words at the end of the kind: a part of a word, or a word in front, is not the kind
+    headphones = inventory.create(ItemCreate(item_type="headphones", name="Cans"))
+    stand = inventory.create(ItemCreate(item_type="TV stand", name="Black stand"))
+    pad = inventory.create(ItemCreate(item_type="mouse pad", name="Grey pad"))
+    tool = inventory.create(ItemCreate(item_type="crevice tool", name="Narrow"))
+    assert not fits(["phone"], headphones) and not fits(["tv", "monitor"], stand)
+    assert not fits(["mouse"], pad) and fits(["stand"], stand)
+    assert fits(["tool"], tool) and fits(["crevice tool"], tool) and not fits(["crevice"], tool)
 
 
 @pytest.fixture
@@ -207,6 +215,10 @@ async def test_selection_commits_items_once_and_reserves_them(planner: Planner) 
         planner.select(other.id)
     assert caught.value.conflicts[0].item_name == "Old laptop"
     assert caught.value.conflicts[0].project_id == desk.id
+    # shortlisting a proposal is not a commitment: what the owner set on an item stays
+    planner.inventory.update(ids["Spare monitor"], ItemPatch(availability="reserved"))
+    planner.shortlist(other.id)
+    assert planner.inventory.get(ids["Spare monitor"]).availability == "reserved"
     moved = planner.select(other.id, take=True)
     assert moved.status == "selected"
     lost = planner.project(desk.id)
@@ -240,6 +252,11 @@ async def test_selection_commits_items_once_and_reserves_them(planner: Planner) 
     with pytest.raises(ProjectsError, match="filled already"):
         planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
     assert planner.advance(vacuum.id, "building").status == "building"
+    # a build under way keeps its items: another project cannot take them
+    third = await planner.propose(ProposeRequest())
+    rival = next(p for p in third if p.template == "vacuum_restored")
+    with pytest.raises(ProjectsError, match="being built into"):
+        planner.select(rival.id, take=True)
     # a project moves one way: a build is not shortlisted again
     with pytest.raises(ProjectsError, match="a building project cannot be changed"):
         planner.shortlist(vacuum.id)
@@ -295,6 +312,20 @@ async def test_a_missing_requirement_becomes_a_search_under_the_budget_left(
         planner.search_for(vacuum.id, "wings")
 
 
+async def test_a_spent_budget_is_a_ceiling_of_nothing(planner: Planner) -> None:
+    household(planner.inventory)
+    planner.set_preferences(Preferences(budget=5))
+    projects = await planner.propose(ProposeRequest())
+    vacuum = next(p for p in projects if p.template == "vacuum_restored")
+    planner.select(vacuum.id)  # expects to spend 10 of a budget of 5
+    assert planner.projects().budget.remaining == -5
+    with_search = planner.search_for(vacuum.id, "attachment")
+    req = next(r for r in with_search.requirements if r.key == "attachment")
+    assert req.search_id is not None
+    search = planner.finder.search(req.search_id)
+    assert search.max_price == 0 and search.budget_left == 0
+
+
 async def test_the_tool_loop_replays_statelessly(live_settings: Settings) -> None:
     bodies: list[dict[str, Any]] = []
 
@@ -333,6 +364,9 @@ async def test_the_tool_loop_replays_statelessly(live_settings: Settings) -> Non
     assert [r["call_id"] for r in results] == ["call_fixture_1", "call_fixture_2"]
     assert "Old laptop" in results[0]["output"] and "homework_workstation" in results[1]["output"]
     assert len(ledger.entries()) == 2 and ledger.entries()[0].op == "propose-1"
+    # the call cost both steps; the projects it produced share that, nothing more or less
+    assert ledger.total_usd > 0
+    assert sum(p.cost_usd for p in projects) == pytest.approx(ledger.total_usd, abs=1e-5)
 
 
 async def test_a_loop_that_never_answers_is_an_error(live_settings: Settings) -> None:
@@ -435,6 +469,16 @@ def test_project_routes(recorded_client: TestClient) -> None:
     assert (
         recorded_client.post(f"/api/projects/{desk['id']}/abandon").json()["status"] == "abandoned"
     )
+    # an abandoned project is over: every move on it is refused with a line, never a 500
+    for path, body in (
+        ("shortlist", None),
+        ("select", {}),
+        ("abandon", None),
+        ("requirements/monitor/search", None),
+    ):
+        over = recorded_client.post(f"/api/projects/{desk['id']}/{path}", json=body)
+        assert over.status_code == 422, (path, over.text)
+        assert "abandoned project" in over.json()["detail"] or "over" in over.json()["detail"]
     assert recorded_client.get("/api/projects/999").status_code == 404
     assert recorded_client.post("/api/projects/propose", json={"count": 9}).status_code == 422
 
@@ -459,6 +503,10 @@ async def test_the_build_pack_is_written_from_what_stands_and_goes_stale(planner
     )
     inv.add_field(ids["Old laptop"], FieldCreate(field="serial_number", value="SN-77"))
     inv.add_field(ids["Old laptop"], FieldCreate(field="screen_size", value="13", unit="in"))
+    # what identifies the item or its owner stays out, by whole words of the field's name
+    inv.add_field(ids["Old laptop"], FieldCreate(field="mac", value="AA:BB:CC:DD:EE:FF"))
+    inv.add_field(ids["Old laptop"], FieldCreate(field="owner_phone", value="555 0100"))
+    inv.add_field(ids["Old laptop"], FieldCreate(field="machine_type", value="ultrabook"))
     planner.set_preferences(Preferences(budget=50, tools="a screwdriver set"))
     projects = await planner.propose(ProposeRequest())
     desk = projects[0]
@@ -474,6 +522,7 @@ async def test_the_build_pack_is_written_from_what_stands_and_goes_stale(planner
     assert "**Old laptop** as laptop (committed)" in text
     assert "condition: boots, battery weak" in text and "screen size: 13 in" in text
     assert "attic shelf" not in text and "SN-77" not in text and "serial" not in text
+    assert "AA:BB" not in text and "555 0100" not in text and "machine type: ultrabook" in text
     assert "A cable between the two" in text and "blocks the build" in text
     assert "Search: A cable between the two" in text and "top price 38" in text
     assert "A mouse (optional)" in text
@@ -535,6 +584,16 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
     failed = planner.record_outcome(vacuum.id, record)
     assert failed.status == "building" and failed.outcome is not None
     assert failed.outcome.working is False and not failed.outcome.shared
+    # shared once, a new text starts unshared: consent is per record
+    planner.set_share(vacuum.id, ShareChange(shared=True))
+    again = planner.record_outcome(vacuum.id, record)
+    assert again.outcome is not None and not again.outcome.shared
+    # a working outcome needs every blocking requirement, as advancing does
+    planner.inventory.delete(tool.id)
+    with pytest.raises(ProjectsError, match="still needed before done: attachment"):
+        planner.record_outcome(vacuum.id, record.model_copy(update={"working": True}))
+    tool = planner.inventory.create(ItemCreate(item_type="crevice tool", name="Narrow tool"))
+    planner.fill(vacuum.id, "attachment", FillRequest(item_id=tool.id))
     done = planner.record_outcome(
         vacuum.id, record.model_copy(update={"working": True, "limitations": ""})
     )
@@ -557,6 +616,22 @@ async def test_progress_and_the_outcome_record(planner: Planner) -> None:
     assert "ran it over the stairs" in text and "(working)" in text
     assert "upright vacuum" not in text.lower() and "narrow tool" not in text.lower()
     assert "vacuum" in text.lower()
+    # the owner's own words are redacted the same way: a name in the set-up, the test or the
+    # limits reads as the kind
+    content = json.loads(planner.inventory.project(vacuum.id)["content"])
+    content["outcome"].update(
+        {
+            "configuration": "Narrow tool on the Upright vacuum's hose",
+            "test": "the Narrow tool held",
+            "limitations": "the Upright vacuum rattles",
+            "shared": True,
+        }
+    )
+    planner.inventory.update_project(vacuum.id, "done", json.dumps(content))
+    text = planner.share_text(vacuum.id)
+    assert "narrow tool" not in text.lower() and "upright vacuum" not in text.lower()
+    assert "Set up: crevice tool on the vacuum's hose" in text
+    assert "Limits: the vacuum rattles" in text
     planner.set_share(vacuum.id, ShareChange(shared=False))
     with pytest.raises(ProjectsError, match="not shared"):
         planner.share_text(vacuum.id)
@@ -572,6 +647,11 @@ def test_outcome_dates_are_real_and_past() -> None:
         OutcomeCreate(**base, tested_on="2999-01-01")
     with pytest.raises(ValueError):
         OutcomeCreate(**{**base, "configuration": "  "}, tested_on="2026-10-28")
+    # a record read back is taken as written, whatever the clock says since
+    from app.projects.schema import Outcome
+
+    kept = Outcome(**base, tested_on="2999-01-01", recorded_at="2026-10-28T10:00:00+00:00")
+    assert kept.tested_on == "2999-01-01" and not kept.shared
 
 
 def test_pack_and_outcome_routes(recorded_client: TestClient) -> None:

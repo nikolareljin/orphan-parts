@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 
 from app.api.deps import CapturesDep
@@ -50,8 +50,14 @@ async def create_capture(
             )
     if clip is not None and clip.size is not None and clip.size > clip_cap:
         raise HTTPException(status_code=400, detail=f"the clip is larger than {s.max_clip_mb} MB")
-    if audio is not None and audio.size is not None and audio.size > photo_cap:
-        raise HTTPException(status_code=400, detail=f"the note is larger than {s.max_upload_mb} MB")
+    if clip is not None and clip.size == 0:
+        raise _refused(CaptureError("the clip is empty; record it again"))
+    # a note as long as VOICE_MAX_SECONDS allows, 16 kHz mono 16-bit, plus its header
+    audio_cap = max(photo_cap, s.voice_max_seconds * 32_000 + 4096)
+    if audio is not None and audio.size is not None and audio.size > audio_cap:
+        raise HTTPException(
+            status_code=400, detail=f"the note is longer than {s.voice_max_seconds} s"
+        )
     photo_data = [await p.read() for p in photos or []]
     clip_data = await clip.read() if clip is not None else None
     audio_data = await audio.read() if audio is not None else None
@@ -79,12 +85,13 @@ def capture_photo(capture_id: int, n: int, captures: CapturesDep) -> Response:
 
 @router.get("/captures/{capture_id}/clip", response_class=Response)
 def capture_clip(capture_id: int, captures: CapturesDep) -> Response:
-    return Response(captures.media(capture_id, "clip.mp4"), media_type="video/mp4")
+    """The clip as the phone wrote it, streamed, so a player can seek (byte ranges)."""
+    return FileResponse(captures.media_path(capture_id, "clip.mp4"), media_type="video/mp4")
 
 
 @router.get("/captures/{capture_id}/note", response_class=Response)
 def capture_note(capture_id: int, captures: CapturesDep) -> Response:
-    return Response(captures.media(capture_id, "note.wav"), media_type="audio/wav")
+    return FileResponse(captures.media_path(capture_id, "note.wav"), media_type="audio/wav")
 
 
 @router.post("/captures/{capture_id}/process", response_model=Capture)

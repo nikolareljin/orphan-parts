@@ -31,7 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,6 +49,8 @@ import com.orphanparts.lens.api.Capture
 import com.orphanparts.lens.audio.WavRecorder
 import com.orphanparts.lens.preparePhoto
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -74,14 +75,17 @@ class ShortClip : ActivityResultContracts.CaptureVideo() {
 @Composable
 fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    // a scope of the screen's own, not of its composition: a send in flight lands, and is said,
+    // even when the person switches tabs before the answer (a second send would duplicate it)
+    val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
     val recorder = remember { WavRecorder() }
     var photos by remember { mutableStateOf<List<Pair<ByteArray, Bitmap>>>(emptyList()) }
     var clip by remember { mutableStateOf<ByteArray?>(null) }
     var audio by remember { mutableStateOf<ByteArray?>(null) }
     var audioSeconds by remember { mutableStateOf(0.0) }
-    var name by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
+    // the typed line and name survive a process death behind the camera app; the bytes do not
+    var name by rememberSaveable { mutableStateOf("") }
+    var note by rememberSaveable { mutableStateOf("") }
     var holding by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
@@ -101,7 +105,17 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
         val uri = pendingUri?.let(Uri::parse)
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val prepared = withContext(Dispatchers.IO) { preparePhoto(context.contentResolver.openInputStream(uri)?.use { it.readBytes() }) }
+            // a photo the phone cannot open or decode (gone, refused, too large for memory) is
+            // said on the screen, never a crash
+            val prepared = withContext(Dispatchers.IO) {
+                try {
+                    preparePhoto(context.contentResolver.openInputStream(uri)?.use { it.readBytes() })
+                } catch (e: Exception) {
+                    null
+                } catch (e: OutOfMemoryError) {
+                    null
+                }
+            }
             if (prepared == null) {
                 status = "The photo could not be read."
             } else {
@@ -115,7 +129,11 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val bytes = withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)?.use { it.readBytes() } }
-            if (bytes != null && bytes.size > CLIP_MAX_BYTES) {
+            if (bytes != null && bytes.isEmpty()) {
+                // a camera app that said yes but wrote nothing (some ignore the output file)
+                clip = null
+                status = "The camera returned an empty clip; record it again."
+            } else if (bytes != null && bytes.size > CLIP_MAX_BYTES) {
                 clip = null
                 status = "The clip is ${bytes.size / 1024 / 1024} MB, more than the backend takes; record a shorter one."
             } else {
