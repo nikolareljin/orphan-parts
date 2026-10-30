@@ -80,7 +80,7 @@ See the [Quickstart](start/quickstart.md).
 
 | Model | Job in the app |
 |---|---|
-| [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, listing drafts, price search with citations, explanations |
+| [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, listing drafts, price search with citations |
 | [SAM 3.1](models/sam-3-1.md) | isolates item, label and connector in photos |
 | [Muse Voice Transcribe](models/muse-voice-transcribe.md) | voice notes kept as the owner's words; spoken questions on the phone later |
 | [Muse Wonder](models/muse-wonder.md) | plans the buyer comparison, drafts new profiles, later |
