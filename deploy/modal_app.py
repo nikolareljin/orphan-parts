@@ -53,6 +53,7 @@ def web():  # type: ignore[no-untyped-def]
     os.environ.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
     if not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
+    from starlette.middleware import Middleware
     from starlette.middleware.base import BaseHTTPMiddleware
     from starlette.responses import JSONResponse
 
@@ -67,8 +68,8 @@ def web():  # type: ignore[no-untyped-def]
         of this container's and within RELOAD_EVERY_S otherwise; what this container wrote
         reaches the Volume after every write request, not only on shutdown. The Volume
         refuses a reload while a file on it is open in another request: a write then
-        answers 503 and the client tries again, so a stale copy of the inventory is never
-        committed over a set loaded meanwhile."""
+        answers 503 with Retry-After (shown to the user, who tries again) rather than commit
+        a stale copy of the inventory over a set loaded meanwhile."""
 
         async def dispatch(self, request, call_next):  # type: ignore[no-untyped-def]
             nonlocal last_reload
@@ -93,7 +94,8 @@ def web():  # type: ignore[no-untyped-def]
                 await asyncio.to_thread(data.commit)
             return response
 
-    fastapi_app.add_middleware(VolumeSync)
+    # innermost, so the 503 still carries the CORS and request headers the outer layers add
+    fastapi_app.user_middleware.append(Middleware(VolumeSync))
     return fastapi_app
 
 
