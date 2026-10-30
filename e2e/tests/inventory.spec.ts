@@ -67,7 +67,9 @@ test('a reading is saved privately and shows up in the inventory to confirm', as
   const panel = page.getByRole('article', { name: `Item ${charger}` })
   await expect(panel).toContainText('laptop power adapter')
   // the photo the reading was made from is kept with the item, above the values to confirm
-  await expect(panel.getByRole('img', { name: 'Item photo 1' })).toBeVisible()
+  const photo = panel.getByRole('img', { name: 'Item photo 1', exact: true })
+  await expect(photo).toBeVisible()
+  await expect.poll(() => photo.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
   await expect(panel.getByText(/\d+ to confirm/)).toBeVisible()
   const voltage = panel.getByRole('table', { name: 'Fields' }).getByRole('row', { name: /Output voltage/ })
   await expect(voltage).toContainText('19.5 V')

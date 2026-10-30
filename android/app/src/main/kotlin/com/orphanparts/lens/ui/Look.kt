@@ -5,7 +5,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -92,6 +94,7 @@ object Tokens {
 private val FAILURE_OPENINGS = listOf(
     "Could not", "Not reachable", "Nothing heard", "That code", "Scan canceled", "The photo could not",
     "The camera returned", "The clip is", "The clip could not", "The microphone was refused", "Capture #",
+    "The code is refused", "The pairing has ended", "The pairing could not",
 )
 
 fun soundsLikeAFailure(text: String): Boolean = FAILURE_OPENINGS.any { text.startsWith(it) }
@@ -244,7 +247,9 @@ fun StatusLine(text: String) {
 }
 
 /** Press and hold: `onStart` says whether to begin (and starts the recorder); `onStop` runs on
- * release. Accent while idle, the error tone while it listens, so recording is visible. */
+ * release, and when the gesture is cut short (the key changed under it). Every move of the
+ * finger is consumed, so a scrolling page cannot take the hold away mid-sentence. Accent
+ * while idle, the error tone while it listens, so recording is visible. */
 @Composable
 fun HoldButton(
     idle: String,
@@ -262,17 +267,25 @@ fun HoldButton(
             .fillMaxWidth()
             .height(64.dp)
             .background(if (holding) colors.error else colors.primary, MaterialTheme.shapes.large)
-            .semantics { role = Role.Button }
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                stateDescription = if (holding) active else idle
+            }
             .pointerInput(key) {
-                detectTapGestures(
-                    onPress = {
-                        if (!onStart()) return@detectTapGestures
-                        holding = true
-                        tryAwaitRelease()
+                awaitEachGesture {
+                    awaitFirstDown().consume()
+                    if (!onStart()) return@awaitEachGesture
+                    holding = true
+                    try {
+                        do {
+                            val event = awaitPointerEvent()
+                            event.changes.forEach { it.consume() }
+                        } while (event.changes.any { it.pressed })
+                    } finally {
                         holding = false
                         onStop()
-                    },
-                )
+                    }
+                }
             },
     ) {
         Text(

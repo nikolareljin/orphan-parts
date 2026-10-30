@@ -48,15 +48,15 @@ suspend fun check(baseUrl: String, code: String, token: String = ""): String = w
     when {
         !ready.gated -> line
         code.isBlank() && token.isNotBlank() -> try {
-            if (client.accessGranted()) "$line Paired: the session works until it ends." else "$line The pairing has ended; scan the code again."
+            if (client.accessGranted()) "$line Paired: the session works until it ends." else "The pairing has ended; scan the code again. $line"
         } catch (e: Exception) {
-            "$line The pairing could not be checked: ${describe(e)}"
+            "The pairing could not be checked: ${describe(e)} $line"
         }
         code.isBlank() -> "$line Without the code this phone is the demo visitor: nothing it sends is kept."
         else -> try {
-            if (client.access(code)) "$line The code opens it." else "$line The code is refused."
+            if (client.access(code)) "$line The code opens it." else "The code is refused. $line"
         } catch (e: ApiException) {
-            "$line The code is refused: ${describe(e)}"
+            "The code is refused: ${describe(e)} $line"
         }
     }
 }

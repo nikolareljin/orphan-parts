@@ -32,8 +32,10 @@ counter for the demo gate), kept warm (`min_containers=1`; `OPL_MIN_CONTAINERS=0
 time lets it scale to zero, with a cold start of some seconds on the first request after an
 idle quarter hour). A write is committed to the volume as soon as its request ends, and what
 another container committed is read back before any write and within half a minute
-otherwise; while a file on the volume is open in another request the read-back is refused,
-and a write arriving then answers 503 with `Retry-After` rather than commit a stale copy. The database runs with `SQLITE_JOURNAL_MODE=DELETE` there: the write-ahead log
+otherwise; while a file on the volume is open in another request the read-back is refused
+(tried once more after half a second), and a write arriving then answers 503 with
+`Retry-After` rather than commit a stale copy. One window stays: a write already running
+when another container commits is committed over it; load the set before the demo opens. The database runs with `SQLITE_JOURNAL_MODE=DELETE` there: the write-ahead log
 needs shared memory that a network filesystem cannot give. `DEMO_TRUST_PROXY=1` in the
 secret makes the gate count visitors by the address Modal's proxy forwards, not by the
 proxy's own. Without `MODEL_API_KEY` in the secret the service runs in fixture mode

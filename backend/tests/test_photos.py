@@ -85,6 +85,14 @@ def test_a_stray_file_in_the_folder_is_not_a_photo(client: TestClient, settings:
     (folder / "photo-x.jpg").write_bytes(b"junk")
     (folder / "notes.txt").write_bytes(b"junk")
     assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 1}
+    # a gap left by hand: the next photo is numbered past the highest, nothing is overwritten
+    (folder / "photo-3.jpg").write_bytes((folder / "photo-1.jpg").read_bytes())
+    (folder / "photo-1.jpg").unlink()
+    res = client.post(
+        f"/api/items/{item_id}/photos", files=[("uploads", ("b.jpg", make_photo(), "image/jpeg"))]
+    )
+    assert res.status_code == 201 and res.json() == {"count": 2}
+    assert sorted(p.name for p in folder.glob("photo-[0-9]*.jpg")) == ["photo-3.jpg", "photo-4.jpg"]
     assert client.get(f"/api/items/{item_id}/photos/1").status_code == 200
     assert client.get(f"/api/items/{item_id}/photos/1").headers["cache-control"] == "no-store"
 

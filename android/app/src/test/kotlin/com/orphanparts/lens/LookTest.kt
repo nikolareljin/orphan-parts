@@ -41,6 +41,9 @@ class LookTest {
         assertTrue(soundsLikeAFailure("The clip is 70 MB, more than the backend takes."))
         assertTrue(soundsLikeAFailure("Capture #3: HTTP 500"))
         assertTrue(soundsLikeAFailure("The microphone was refused. Allow it for this app."))
+        assertTrue(soundsLikeAFailure("The code is refused. Backend ok, Model API fixture, demo gated."))
+        assertTrue(soundsLikeAFailure("The pairing has ended; scan the code again. Backend ok."))
+        assertFalse(soundsLikeAFailure("Backend ok, Model API fixture, demo gated. The code opens it."))
         assertFalse(soundsLikeAFailure("Sent as capture #3: 2 photo(s). See Captures."))
         assertFalse(soundsLikeAFailure(""))
     }

@@ -53,7 +53,8 @@ class ItemPhotos:
         self.inventory.get(item_id)
         if not photos:
             raise PhotoError("no photo sent")
-        have = len(self._paths(item_id))
+        kept = self._paths(item_id)
+        have = len(kept)
         limit = self.settings.max_photos
         if have + len(photos) > limit:
             raise PhotoError(f"an item keeps at most {limit} photos; this one has {have}")
@@ -68,12 +69,13 @@ class ItemPhotos:
         )
         folder = self.folder(item_id)
         folder.mkdir(parents=True, exist_ok=True)
-        n = have
+        # numbered past the highest there is, so a gap left by hand never makes an overwrite
+        n = max((int(PHOTO_NAME.fullmatch(p.name).group(1)) for p in kept), default=0)  # type: ignore[union-attr]
         for data in ready:
             n += 1
             (folder / f"photo-{n}.jpg").write_bytes(data)
-        log.info("item photos", extra={"item_id": item_id, "photos": n})
-        return n
+        log.info("item photos", extra={"item_id": item_id, "photos": have + len(ready)})
+        return have + len(ready)
 
     def read(self, item_id: int, n: int) -> bytes:
         self.inventory.get(item_id)

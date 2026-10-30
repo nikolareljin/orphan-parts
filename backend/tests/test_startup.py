@@ -1,8 +1,10 @@
 import ast
 import json
+import os
 from pathlib import Path
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
@@ -167,6 +169,8 @@ def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
     monkeypatch.setenv("OPL_FAKE_API", "1")  # type: ignore[attr-defined]
     monkeypatch.delenv("DEMO_ACCESS_CODE", raising=False)  # type: ignore[attr-defined]
     monkeypatch.delenv("SQLITE_JOURNAL_MODE", raising=False)  # type: ignore[attr-defined]
+    # web() sets defaults into the process environment: every key is put back afterwards
+    environment = dict(os.environ)
     from app import config as config_module
 
     config_module.get_settings.cache_clear()  # read from this environment, not the cache
@@ -176,11 +180,14 @@ def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     module.RELOAD_EVERY_S = 3600.0
+    module.RELOAD_RETRY_S = 0.0
 
     try:
         _drive_the_volume(module, calls, refuse)
     finally:
         config_module.get_settings.cache_clear()
+        os.environ.clear()
+        os.environ.update(environment)
 
 
 def _drive_the_volume(module: object, calls: list[str], refuse: dict[str, bool]) -> None:
@@ -200,9 +207,17 @@ def _drive_the_volume(module: object, calls: list[str], refuse: dict[str, bool])
         assert refused.status_code == 503 and refused.headers["retry-after"] == "2"
         # inside the CORS layer: a browser on the web app's origin can read the answer
         assert refused.headers["access-control-allow-origin"] == origin["Origin"]
-        assert calls == ["reload"]  # nothing written, nothing committed
+        assert calls == ["reload", "reload"]  # tried twice, nothing written, nothing committed
         assert c.get("/api/items").status_code == 200  # a read goes on regardless
         assert len(c.get("/api/items").json()) == 1
+
+
+def test_a_wildcard_cors_origin_is_refused(tmp_path: Path) -> None:
+    # credentials travel with every call: a wildcard would reflect any origin with them
+    with pytest.raises(ValueError, match="CORS_ORIGINS"):
+        live(tmp_path, cors_origins="*")
+    with pytest.raises(ValueError, match="CORS_ORIGINS"):
+        live(tmp_path, cors_origins="https://a.example, *")
 
 
 def test_project_templates_are_packaged() -> None:
