@@ -66,7 +66,11 @@ def get_project(project_id: int, planner: PlannerDep) -> Project:
 
 @router.post("/projects/{project_id}/shortlist", response_model=Project)
 def shortlist(project_id: int, planner: PlannerDep) -> Project:
-    return planner.shortlist(project_id)
+    """Keep the proposal in mind; a selected project put back here releases its items."""
+    try:
+        return planner.shortlist(project_id)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
 
 
 @router.post("/projects/{project_id}/select", response_model=Project)
@@ -75,7 +79,9 @@ def select(project_id: int, request: SelectRequest, planner: PlannerDep) -> Proj
     selected project; `take: true` moves it here and opens the requirement there."""
     try:
         return planner.select(project_id, take=request.take)
-    except AllocationConflictError as exc:
+    except ProjectsError as exc:
+        if not isinstance(exc, AllocationConflictError):
+            raise _error(exc) from exc
         return JSONResponse(  # type: ignore[return-value]
             status_code=status.HTTP_409_CONFLICT,
             content={
@@ -87,7 +93,11 @@ def select(project_id: int, request: SelectRequest, planner: PlannerDep) -> Proj
 
 @router.post("/projects/{project_id}/abandon", response_model=Project)
 def abandon(project_id: int, planner: PlannerDep) -> Project:
-    return planner.abandon(project_id)
+    """Give the project up from any state but done; its items are released."""
+    try:
+        return planner.abandon(project_id)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
 
 
 @router.post("/projects/{project_id}/advance/{to}", response_model=Project)

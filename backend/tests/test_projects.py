@@ -432,6 +432,16 @@ def test_project_routes(recorded_client: TestClient) -> None:
     assert (
         recorded_client.post(f"/api/projects/{desk['id']}/abandon").json()["status"] == "abandoned"
     )
+    # an abandoned project is over: every move on it is refused with a line, never a 500
+    for path, body in (
+        ("shortlist", None),
+        ("select", {}),
+        ("abandon", None),
+        ("requirements/monitor/search", None),
+    ):
+        over = recorded_client.post(f"/api/projects/{desk['id']}/{path}", json=body)
+        assert over.status_code == 422, (path, over.text)
+        assert "abandoned project" in over.json()["detail"] or "over" in over.json()["detail"]
     assert recorded_client.get("/api/projects/999").status_code == 404
     assert recorded_client.post("/api/projects/propose", json={"count": 9}).status_code == 422
 

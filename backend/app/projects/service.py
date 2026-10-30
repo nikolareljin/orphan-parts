@@ -444,7 +444,13 @@ class Planner:
 
     def search_for(self, project_id: int, key: str) -> Project:
         """A missing requirement becomes a search request, with the budget left as its ceiling."""
+        with self._lock:
+            return self._search_for(project_id, key)
+
+    def _search_for(self, project_id: int, key: str) -> Project:
         row = self.inventory.project(project_id)
+        if row["status"] in ("done", "abandoned"):
+            raise ProjectsError("the project is over")
         content = json.loads(row["content"])
         req = next((r for r in content["requirements"] if r["key"] == key), None)
         if req is None:
