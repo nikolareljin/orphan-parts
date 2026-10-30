@@ -9,10 +9,10 @@ Meta's Muse models.
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
 Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
-on the docs site).
-One diagram of the whole, every box a link: [How it fits together](https://nikolareljin.github.io/orphan-parts/project/flow/).
-on the docs site). **Trying it on a phone? [JUDGES.md](JUDGES.md)**: the app from the release
-page, the hosted server with your code, ten minutes, no development setup.
+on the docs site). One diagram of the whole, every box a link:
+[How it fits together](https://nikolareljin.github.io/orphan-parts/project/flow/).
+**Trying it on a phone?** [Five steps](#on-a-phone-in-five-steps) below; the long version,
+with the phone's own screens and no development setup, is [JUDGES.md](JUDGES.md).
 
 Orphan Parts Lens starts from a private inventory of the devices, parts and other things you
 own. A photo of a label becomes a record you confirm field by field. A photo next to a ruler
@@ -49,6 +49,33 @@ profiles, with a generic one for anything else.
   per-address limit, a spend cap and an operator's switch.
 
 Documentation: https://nikolareljin.github.io/orphan-parts/
+
+## On a phone in five steps
+
+1. **Install the app** on an Android 8.0 or newer phone. On the phone, open the
+   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest), tap the APK
+   and open it, with installing from the browser allowed (**Allow from this source**); if Play
+   Protect warns, **More details**, **Install anyway**. Or over a USB cable, with **USB
+   debugging** on in **Developer options**: from a clone, `scripts/phone-install.sh` on the
+   computer (on Windows,
+   `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
+   download in the long version.
+2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`, when it is
+   deployed; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
+   with a local server, open the site at the computer's network address, not `localhost`
+   (for example `http://192.168.1.20:5173`), with the phone on the same network.
+3. **Sign in**: **Sign in with the code** in the header, then the access code you were given.
+   A local stack has no door until `./dev gate on`, which prints a code for you and one for
+   the phone; reload the page, then sign in with yours. Without it, go on to step 4.
+4. **Pair the phone**: at the foot of the page, open **Pair the phone** for the QR code. In the
+   app, on the **Backend** tab, tap **Scan to pair** and point the camera at the code on a
+   second screen, then **Check**. Without Google Play services or a second screen, type the
+   address shown under the code into **Backend URL** and the access code, if the site has one,
+   into the field under it, then tap **Save** and **Check**.
+5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
+   **Inbox**.
+
+Every phone screen, and what to do when a step fails: [JUDGES.md](JUDGES.md).
 
 ## Quickstart
 
