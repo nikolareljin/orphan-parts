@@ -6,8 +6,9 @@ is history, not progress.
 
 ## The item's history
 
-Every change to an item writes one event: `actor` (the web app, the phone, a command line),
-`at`, a `change` in plain words and the item `version` it produced. `GET /api/items/{id}/events`
+Every change to an item writes one event: `actor` (always `owner` today: the web app, the
+phone and the command line all act for the owner), `at`, a `change` in plain words and the item
+`version` it produced. `GET /api/items/{id}/events`
 lists them. The changes written today:
 
 | Change | When |
@@ -15,7 +16,9 @@ lists them. The changes written today:
 | `created from a label reading with <n> observed field(s)` or `created` | an item saved from a reading or by hand |
 | `changed <fields>` | the item's own fields edited |
 | `<field> accepted` / `rejected` / `proposed` | an observed value reviewed |
-| `<field> set to <value> (<provenance>)` | an owner value added; a measurement proposed as a value and a voice note kept write their own line the same way |
+| `<field> set to <value> (<provenance>)` | an owner value added; a voice note kept writes its line the same way |
+| `<feature> measured: <value> ± <uncertainty> mm (<method>)` / `<feature> capture refused: <reason>` | a measurement made, or refused with the reason |
+| `sale reported: <price> <currency> on <date>` | a sale the owner reported |
 | `component separated: <name>` and `separated from item <id>` | a part given its own record, on both items |
 | `sell draft written (v<n>)` / `give draft written (v<n>)` | a listing draft |
 | `price guidance written (v<n>)` | a guidance |

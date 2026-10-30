@@ -31,6 +31,3 @@ flowchart LR
 Each step is one call the owner makes; nothing runs on its own. When the label cannot be found
 first, the photos are read whole and the page says so; when a value is unknown, it stays
 unknown and becomes a question.
-
-!!! note
-    Segment and extract are built. Ground and the agent are next.
