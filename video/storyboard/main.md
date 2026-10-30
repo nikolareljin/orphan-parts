@@ -51,11 +51,12 @@ first (select a second project that commits the laptop), then record S11 to S14.
   mixer's label says.
 - **S07.** No model is involved: the number is geometry on the marks. A blurred or angled photo
   is refused with the reason; if it is, retake the photo, do not stage the refusal.
-- **S08.** Check the *Needs* line first. The demo set records the worn rod's material as
-  plastic, and the material rule is an equality: a candidate stated as metal is a conflict on
-  that rule as the profile stands. Either leave the material out of the typed values (it
-  becomes a question to the seller) or start a new search (**I need one that fits**, *Needed by*: **Values written in below**)
-  under the agitator profile from the measurement of S07. The rod numbers in the demo set (4 mm rod, 9 mm
+- **S08.** Check the *Needs* line first. The demo set records the material the replacement
+  must be, metal (the worn rod's plastic is in its faults), and the material rule is an
+  equality: a candidate stated as metal, steel or all-metal passes it, one stated as plastic
+  is a conflict, and leaving the material out of the typed values makes it a question to the
+  seller. To search from the measurement of S07 instead, start a new search (**I need one that fits**, *Needed by*: **Values written in below**)
+  under the agitator profile. The rod numbers in the demo set (4 mm rod, 9 mm
   across the tabs) are the set's entries: confirm them against S07 before they appear. Never
   type an asking price that a real listing did not state.
 - **S11 to S14** need a live run: in fixture mode **Propose** answers with the recorded

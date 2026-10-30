@@ -11,7 +11,15 @@ captures*. Allowances, a daily cap, upload limits and a spend cap stand behind t
 
 Two kinds of code open the same door. The configured `DEMO_ACCESS_CODE` (twelve characters at
 least) is the master code; with it empty there is no gate at all, which is the setting for a
-machine of your own. Beside it, **codes issued as records**: `./dev keys issue --label judges
+machine of your own. To try the gate there, `./dev gate on [--label <who>] [--days N]` writes a
+master code into `.env` when it has none, restarts the backend with it (or starts the backend
+alone when the stack is down; `./dev up` afterwards keeps the gate, since the code is in `.env`)
+and issues a code for the phone (label `phone`, 7 days by default), printing both. A second
+`gate on` while that code is current stops at the issue step, the gate on with the master
+printed: `./dev keys revoke phone` first, or pass another `--label`. `./dev gate show` prints
+the master again and `./dev gate off` clears it. The command refuses to run in CI, and when the
+shell sets a `DEMO_ACCESS_CODE` other than the one in `.env` (Compose would prefer the shell's).
+Beside it, **codes issued as records**: `./dev keys issue --label judges
 --days 7` prints a code once (`opl_` and 24 random bytes) and keeps only its SHA-256 hash with
 the label and the expiry; `./dev keys list` shows each record and whether it is current,
 expired or revoked; `./dev keys revoke judges` ends one. The running backend reads the same
@@ -122,3 +130,7 @@ code or a token; a session opened is logged with the code's label. See
 `./dev e2e` starts the stack with a code of its own (`DEMO_ACCESS_CODE` set in the shell
 overrides it; the value in `.env` is not used for the run), opens one session before the run
 and gives it to every test, and `tests/access.spec.ts` starts without one to check both doors.
+
+Local gate labels must be one line, 1 to 60 characters. Invalid labels are refused before any local setting or running service changes. Duplicate settings use the last value in the file; exported shell settings still take priority. Quoted values end before a trailing comment.
+
+`gate show` also refuses a shell override so it cannot print a file value as the active master. Bare names without an assignment are ignored by the environment helpers.

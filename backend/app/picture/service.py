@@ -17,9 +17,10 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from app.config import Settings
+from app.extract.imaging import BadImageError, prepare
 from app.inventory.schema import Item
 from app.inventory.service import Inventory, NotFoundError
-from app.model_api import ModelApiClient
+from app.model_api import IncompleteResponseError, ModelApiClient
 from app.projects.pack import shown_fields
 from app.projects.templates import Templates, UnknownTemplateError
 
@@ -120,6 +121,10 @@ class Pictures:
         item = self.inventory.get(item_id)
         drawn_as = self._use(use) or item.item_type or item.name or "item"
         result = await self.client.picture(prompt_for(item, drawn_as))
+        try:
+            pixels = prepare(result.data, max_px=1024, max_bytes=20 * 1024 * 1024)
+        except BadImageError as exc:
+            raise IncompleteResponseError("the answer carried an invalid image") from exc
         # the item may have been deleted while the picture was drawn: its folder stays gone
         self.inventory.get(item_id)
         folder = self.folder(item_id)
@@ -134,7 +139,7 @@ class Pictures:
             created_at=datetime.now(tz=UTC).isoformat(timespec="seconds"),
         )
         with os.fdopen(fd, "wb") as out:
-            out.write(result.data)
+            out.write(pixels)
         # the record makes the picture visible, so it lands whole or not at all
         record = folder / f"picture-{n}.json"
         partial = folder / f".picture-{n}.json.part"

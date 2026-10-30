@@ -89,6 +89,84 @@ def _list(text: str) -> tuple[str, str]:
     return ", ".join(dict.fromkeys(parts)), ""
 
 
+# what a listing, a label or an owner calls a material, read as the one word a rule compares
+_METALS = frozenset(
+    (
+        "stainless",
+        "steel",
+        "aluminium",
+        "aluminum",
+        "alloy",
+        "brass",
+        "bronze",
+        "copper",
+        "chrome",
+        "metal",
+        "metals",
+        "iron",
+        "nickel",
+        "titanium",
+        "zinc",
+    )
+)
+_PLASTICS = frozenset(
+    (
+        "plastic",
+        "plastics",
+        "abs",
+        "nylon",
+        "polyamide",
+        "pom",
+        "acetal",
+        "delrin",
+        "polypropylene",
+        "polyethylene",
+        "polycarbonate",
+        "polystyrene",
+        "tritan",
+        "pvc",
+        "acrylic",
+        "resin",
+        "silicone",
+        "rubber",
+    )
+)
+# a word before a material that says it is not that material: "non-metal", "no plastic"
+_NOT_BEFORE = frozenset(("non", "no", "not", "without"))
+# Only simple material declarations establish the whole part's material.
+_MATERIAL_WORDS = (
+    _METALS
+    | _PLASTICS
+    | frozenset(
+        ("all", "solid", "throughout", "die", "cast", "bpa", "lead", "free", "non", "stick")
+    )
+)
+
+
+def _material(text: str) -> tuple[str, str]:
+    """``metal`` or ``plastic`` when the words say so, else the text cleaned: the rule for a
+    material compares one word, so "all-metal", "stainless steel" and "metal throughout" are
+    one value, as are "ABS plastic", "POM" and "BPA-free plastic". A mix ("metal rod, plastic
+    head"), a part or a surface ("mostly metal", "chrome finish") and a negation ("non-metal",
+    "no plastic", "plastic-free") stay as written, so a rule asking for metal does not pass
+    them."""
+    low = _clean(text).lower()
+    words = re.findall(r"[a-z]+", low)
+    found: set[str] = set()
+    for i, word in enumerate(words):
+        kind = "metal" if word in _METALS else "plastic" if word in _PLASTICS else ""
+        if not kind:
+            continue
+        before = words[i - 1] if i else ""
+        after = words[i + 1] if i + 1 < len(words) else ""
+        if before in _NOT_BEFORE or after == "free":
+            return low, ""
+        found.add(kind)
+    if len(found) == 1 and set(words) <= _MATERIAL_WORDS and "?" not in low:
+        return found.pop(), ""
+    return low, ""
+
+
 def _text(text: str) -> tuple[str, str]:
     return _clean(text), ""
 
@@ -102,6 +180,7 @@ _NORMALIZERS = {
     "connector": _connector,
     "polarity": _polarity,
     "list": _list,
+    "material": _material,
     "text": _text,
 }
 

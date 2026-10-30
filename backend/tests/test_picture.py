@@ -271,3 +271,51 @@ async def test_an_item_with_no_type_or_name_is_drawn_as_an_item(
     assert picture.use == "item"
     assert [p.name for p in pictures.folder(item.id).iterdir() if p.name.startswith(".")] == []
     await client.aclose()
+
+
+async def test_invalid_image_is_not_saved(drawing_settings: Settings) -> None:
+    from app.model_api import IncompleteResponseError
+
+    inventory = Inventory(drawing_settings)
+    item = inventory.create(ItemCreate(item_type="laptop"))
+    client = ModelApiClient(drawing_settings, CostLedger(25.0))
+    original = client.picture
+
+    async def broken(prompt: str, *, op: str = "picture") -> Any:
+        result = await original(prompt, op=op)
+        return result.model_copy(update={"data": b"\xff\xd8\xffbroken"})
+
+    client.picture = broken  # type: ignore[method-assign]
+    pictures = Pictures(drawing_settings, client, inventory, Templates())
+    with pytest.raises(IncompleteResponseError):
+        await pictures.draw(item.id, "lamp")
+    assert not pictures.folder(item.id).exists()
+    await client.aclose()
+
+
+async def test_picture_metadata_is_removed(drawing_settings: Settings) -> None:
+    from io import BytesIO
+
+    from PIL import Image
+
+    inventory = Inventory(drawing_settings)
+    item = inventory.create(ItemCreate(item_type="laptop"))
+    client = ModelApiClient(drawing_settings, CostLedger(25.0))
+    original = client.picture
+    image = Image.new("RGB", (16, 16), "gray")
+    exif = Image.Exif()
+    exif[270] = "private fixture metadata"
+    encoded = BytesIO()
+    image.save(encoded, "JPEG", exif=exif)
+
+    async def tagged(prompt: str, *, op: str = "picture") -> Any:
+        result = await original(prompt, op=op)
+        return result.model_copy(update={"data": encoded.getvalue()})
+
+    client.picture = tagged  # type: ignore[method-assign]
+    pictures = Pictures(drawing_settings, client, inventory, Templates())
+    result = await pictures.draw(item.id, "lamp")
+    with Image.open(BytesIO(pictures.read(item.id, result.n))) as saved:
+        assert not saved.getexif()
+        saved.load()
+    await client.aclose()

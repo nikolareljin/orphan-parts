@@ -59,3 +59,5 @@ price rests on it; it is not part of the evidence set. The job Muse Image was fi
 considered for, a clean cover photo with the background replaced and the product's pixels
 untouched, is not built: a listing ships with the photo checklist instead
 ([Seller flow](../guides/seller.md)).
+
+Returned images are decoded and re-encoded before storage. Corrupt images are refused; metadata is stripped.

@@ -172,7 +172,7 @@ items:
     item_type: blender agitator
     profile: blender_agitator
     intent: keep
-    faults: the plastic around the two tabs is worn; the rod wobbles in the drive and the disc no longer spins true
+    faults: the rod is plastic around the two tabs and worn there; it wobbles in the drive and the disc no longer spins true
     condition: the base runs; the rod no longer mixes
     fields:
       rod_diameter: "4"
@@ -180,7 +180,9 @@ items:
       tab_width: "2.5"
       tab_length: "8"
       rod_length: "150"
-      material: "plastic"
+      # the material wanted in a replacement (metal or plastic); the worn rod's own plastic is
+      # in the faults
+      material: "metal"
 
 searches:
   - key: vac_tool

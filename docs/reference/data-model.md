@@ -21,6 +21,7 @@ startup and refuses to open a file written by a newer version.
 | `projects` | v6 | `template`, `title`, `status`, `version`, `content` (requirements, result, effort, spend, unknowns, steps, progress, the outcome) |
 | `allocations` | v6 | an item on a project for a requirement, `committed` or exploratory, with `why` |
 | `packs` | v7 | build packs: `version` per project, `digest` of the inputs, the `markdown` |
+| `uses` | v11 | what an item is good for, one row per asking: `version` per item, the `item_version` it was written from, `content` (the templates the rules found it fills, the model's proposals, the model and the cost), `created_at` |
 | `items.public`, `captures.public` | v10 | `1` when the owner shows the row to the demo visitor (the demo loader marks what it loads); the demo visitor's reads are limited to these rows |
 | `access_keys` | v9 | access codes issued as records: the `hash` (SHA-256), a `label`, when issued, `expires_at`, `revoked_at`; the code itself is shown once and never kept |
 | `captures` | v8 | what the phone sent in one go: `status` (received, processed, failed), `content` (the line, the name, the counts, the item it became, the error), times; the media under `DATA_DIR/captures/<id>/` |

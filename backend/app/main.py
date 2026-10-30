@@ -9,6 +9,7 @@ from app import __version__
 from app.api.access import router as access_router
 from app.api.assess import router as assess_router
 from app.api.captures import router as captures_router
+from app.api.decide import router as decide_router
 from app.api.drafts import router as drafts_router
 from app.api.extract import router as extract_router
 from app.api.find import router as find_router
@@ -26,6 +27,7 @@ from app.api.value import router as value_router
 from app.api.voice import router as voice_router
 from app.captures import Captures
 from app.config import Settings, get_settings
+from app.decide import Decider
 from app.extract import Extractor
 from app.find import Finder
 from app.inventory import Inventory
@@ -131,6 +133,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         settings, client, app.state.inventory, app.state.templates, app.state.finder
     )
     app.state.pictures = Pictures(settings, client, app.state.inventory, app.state.templates)
+
+    app.state.decider = Decider(
+        settings,
+        client,
+        app.state.inventory,
+        app.state.templates,
+        app.state.planner,
+        app.state.valuer,
+        app.state.finder,
+    )
     log.info(
         "starting",
         extra={
@@ -188,6 +200,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(find_router)
     app.include_router(projects_router)
     app.include_router(captures_router)
+    app.include_router(decide_router)
     for exc_type, handler in inventory_handlers.items():
         app.add_exception_handler(exc_type, handler)
     return app

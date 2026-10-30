@@ -66,12 +66,39 @@ dialog.modal {
   border-radius: 12px;
   background: var(--card);
   color: var(--fg);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  /* a deep, soft shadow in two layers, so the panel stands clear of the darkened page behind
+     it (a dark ring would vanish against the dark backdrop; dark mode adds a light one) */
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.28),
+    0 40px 90px rgba(0, 0, 0, 0.45);
 }
 
 dialog.modal::backdrop {
-  background: rgba(10, 14, 20, 0.55);
-  backdrop-filter: blur(2px);
+  /* the page behind: dark, see-through, and blurred so the open panel is the one thing in focus */
+  background: rgba(8, 11, 16, 0.72);
+  -webkit-backdrop-filter: blur(10px) saturate(0.8);
+  backdrop-filter: blur(10px) saturate(0.8);
+}
+
+@media (prefers-color-scheme: dark) {
+  dialog.modal {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 12px 28px rgba(0, 0, 0, 0.5),
+      0 40px 90px rgba(0, 0, 0, 0.7);
+  }
+
+  dialog.modal::backdrop {
+    background: rgba(2, 4, 8, 0.78);
+  }
+}
+
+/* a lighter blur on a phone, where a wide blur over the whole page costs the most */
+@media (max-width: 600px) {
+  dialog.modal::backdrop {
+    -webkit-backdrop-filter: blur(6px) saturate(0.8);
+    backdrop-filter: blur(6px) saturate(0.8);
+  }
 }
 
 .modal-frame {
@@ -818,6 +845,72 @@ button.link {
 .assess .questions {
   margin: 0.5rem 0 0;
   padding-left: 1.25rem;
+}
+
+/* decide what it becomes */
+.decide .rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 600px) {
+  .decide .rows {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+
+  .decide .rows dd {
+    margin-bottom: 0.5rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.decide .rows dt {
+  font-weight: 600;
+}
+
+.decide .rows dd {
+  margin: 0;
+}
+
+.decide .rows button.link {
+  padding-left: 0;
+}
+
+.decide .searches,
+.decide .uses ul {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.decide .uses li {
+  margin: 0.35rem 0;
+}
+
+.decide .decided {
+  margin: 0 0 0.25rem;
+}
+
+.decide .reserved {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.decide .choices button {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 0;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.decide .choices button:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 /* prepare to sell or give away */
