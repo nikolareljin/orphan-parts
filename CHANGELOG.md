@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Changed
+- Dialogs stand clear of the page: a deeper, layered shadow around the panel and a darker, more blurred see-through backdrop behind it, in light and dark mode; in dark mode a light hairline edge outlines the panel, and on a phone the backdrop blurs less.
+
 ### Added
 - `./dev gate on|off|show`: the access code on your own machine, made when `.env` has none, the backend restarted with the gate, a code for the phone or a guest issued and both printed to copy; never part of a deployment. The scripts read `.env` as Compose does: a ` #` comment after a value, the text inside quotes, the last of a repeated key, Windows line endings.
 ### Fixed

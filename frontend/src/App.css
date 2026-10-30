@@ -66,12 +66,39 @@ dialog.modal {
   border-radius: 12px;
   background: var(--card);
   color: var(--fg);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  /* a deep, soft shadow in two layers, so the panel stands clear of the darkened page behind
+     it (a dark ring would vanish against the dark backdrop; dark mode adds a light one) */
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.28),
+    0 40px 90px rgba(0, 0, 0, 0.45);
 }
 
 dialog.modal::backdrop {
-  background: rgba(10, 14, 20, 0.55);
-  backdrop-filter: blur(2px);
+  /* the page behind: dark, see-through, and blurred so the open panel is the one thing in focus */
+  background: rgba(8, 11, 16, 0.72);
+  -webkit-backdrop-filter: blur(10px) saturate(0.8);
+  backdrop-filter: blur(10px) saturate(0.8);
+}
+
+@media (prefers-color-scheme: dark) {
+  dialog.modal {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 12px 28px rgba(0, 0, 0, 0.5),
+      0 40px 90px rgba(0, 0, 0, 0.7);
+  }
+
+  dialog.modal::backdrop {
+    background: rgba(2, 4, 8, 0.78);
+  }
+}
+
+/* a lighter blur on a phone, where a wide blur over the whole page costs the most */
+@media (max-width: 600px) {
+  dialog.modal::backdrop {
+    -webkit-backdrop-filter: blur(6px) saturate(0.8);
+    backdrop-filter: blur(6px) saturate(0.8);
+  }
 }
 
 .modal-frame {
