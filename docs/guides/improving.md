@@ -78,7 +78,7 @@ and the Fireworks workshop deck
 
 This version makes no model call to either provider: every call goes to the Meta Model API
 through one [client](../models/model-api-client.md). A tuned adapter would be one more
-provider behind it, chosen per job, as the [roadmap](../project/roadmap.md) describes.
+provider behind it, chosen per job, as the [next steps](../project/next.md) describes.
 
 ## What is never tuned
 
