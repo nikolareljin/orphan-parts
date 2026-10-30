@@ -92,9 +92,14 @@ class CostLedger:
         if self.paused:
             raise SpendCapError(self.total_usd, self.cap_usd)
 
+    # without a file, the entries live in memory only (the demo's twin): the last so many
+    MEMORY_ENTRIES = 1000
+
     def record(self, entry: LedgerEntry) -> None:
         with self._lock:
             self._entries.append(entry)
+            if self.path is None and len(self._entries) > self.MEMORY_ENTRIES:
+                del self._entries[: -self.MEMORY_ENTRIES]
             self._total += entry.usd
             if self.path is not None:
                 self.path.parent.mkdir(parents=True, exist_ok=True)

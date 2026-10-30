@@ -49,7 +49,9 @@ lists the data. The demo set goes into the host's inventory with
 `modal run deploy/modal_app.py::load_demo` (the inventory reset first; `--no-reset` adds to
 it), the same load as `./dev demo` on a machine of your own, in the mode the secret says;
 record the set's fixtures and commit them before the deploy, or the load answers from the
-operations' stubs and says so.
+operations' stubs and says so. Access codes for the hosted demo: `modal run
+deploy/modal_app.py::keys --args 'issue --label judges --days 7'` (`./dev keys --hosted
+...`), after the set is loaded, since the load replaces the inventory file the records live in.
 
 ### The web app on Cloudflare Pages
 

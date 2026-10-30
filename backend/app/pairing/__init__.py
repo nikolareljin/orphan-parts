@@ -30,7 +30,7 @@ class Pairing(BaseModel):
         return self.model_dump_json(include={"url", "gated", "token"})
 
 
-def pairing(origin: str, gate: Gate, api: str = "") -> Pairing:
+def pairing(origin: str, gate: Gate, api: str = "", kid: int = 0, stamp: str = "") -> Pairing:
     """The phone talks to ``api`` when the web app is served from another origin (Cloudflare
     Pages in front of Modal), and to the web origin otherwise, which proxies the API."""
     for given in (origin, api):
@@ -43,7 +43,8 @@ def pairing(origin: str, gate: Gate, api: str = "") -> Pairing:
     url = api or origin
     if not gate.enabled:
         return Pairing(url=url, gated=False)
-    token, expires_at = gate.issue()
+    # the phone's session is the caller's: from an issued code, it ends with that code
+    token, expires_at = gate.issue(kid=kid, stamp=stamp)
     return Pairing(url=url, gated=True, token=token, expires_at=expires_at)
 
 

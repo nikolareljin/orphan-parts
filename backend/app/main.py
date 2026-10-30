@@ -28,6 +28,7 @@ from app.config import Settings, get_settings
 from app.extract import Extractor
 from app.find import Finder
 from app.inventory import Inventory
+from app.keys import AccessKeys
 from app.listing import Lister, VoiceNotes
 from app.match import Assessor
 from app.measure import Measurer
@@ -86,11 +87,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             app.state.settings = settings
             client = ModelApiClient(settings, ledger)
             app.state.model_api_label = "fixture (key failed)"
+    gate = app.state.gate
+    gate.live_models = settings.model_api_mode != "fixture"
+    if gate.enabled and gate.live_models:
+        # the demo visitor is answered by the fixture twin: the same recordings, its own
+        # ledger that goes nowhere, nothing spent; the key answers only the code's door
+        client.twin = ModelApiClient(
+            settings.model_copy(update={"fake_api": True}), CostLedger(settings.spend_cap_usd)
+        )
     app.state.ledger = ledger
     app.state.model_api = client
     app.state.extractor = Extractor(settings, client)
     app.state.segmenter = Segmenter(settings, client)
     app.state.inventory = Inventory(settings)
+    gate.keys = AccessKeys(app.state.inventory.store)
     app.state.photos = ItemPhotos(settings, app.state.inventory)
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)

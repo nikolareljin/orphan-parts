@@ -4,6 +4,7 @@ import ExtractForm from './components/ExtractForm'
 import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
+import Modal from './components/Modal'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
 
 import { reachableFromAPhone } from './lib/pairing'
@@ -22,6 +23,8 @@ export default function App() {
   const [saved, setSaved] = useState(0)
   const [openItem, setOpenItem] = useState<number | null>(null)
   const [granted, setGranted] = useState<boolean | null>(null)
+  const [gated, setGated] = useState(false)
+  const [signIn, setSignIn] = useState(false)
   const [reloads, setReloads] = useState(0)
 
   useEffect(() => {
@@ -31,6 +34,7 @@ export default function App() {
         if (cancelled) return
         setStatus({ kind: 'ok', ready, version })
         setGranted(access.granted)
+        setGated(access.gated)
       })
       .catch((err: unknown) => {
         if (!cancelled) setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
@@ -56,14 +60,19 @@ export default function App() {
     }
   }, [])
 
-  // a session that ended mid-visit: any 401 brings the code form back
+  // a session that ended mid-visit: a 401, or a write refused as the demo visitor, brings
+  // the way in back to the header; the pages stay, as they do for any visitor
   useEffect(() => {
-    const lost = () => setGranted(false)
+    const lost = () => {
+      setGranted(false)
+      setGated(true)
+    }
     window.addEventListener(ACCESS_REQUIRED_EVENT, lost)
     return () => window.removeEventListener(ACCESS_REQUIRED_EVENT, lost)
   }, [])
 
-  const open = granted !== false
+  // the demo door: gated, and no session; the code opens the rest
+  const demo = gated && granted === false
 
   return (
     <main className="shell">
@@ -75,20 +84,34 @@ export default function App() {
             <p className="tagline">Show it, ask it, sell it, or find the one that fits.</p>
           </div>
         </div>
-        {open && (
-          <nav className="nav" aria-label="Pages">
-            {VIEWS.map((v) => (
-              <button key={v.id} type="button" aria-current={view === v.id ? 'page' : undefined} onClick={() => setView(v.id)}>
-                {v.label}
-              </button>
-            ))}
-          </nav>
-        )}
+        <nav className="nav" aria-label="Pages">
+          {VIEWS.map((v) => (
+            <button key={v.id} type="button" aria-current={view === v.id ? 'page' : undefined} onClick={() => setView(v.id)}>
+              {v.label}
+            </button>
+          ))}
+          {demo && (
+            <button type="button" className="link door" onClick={() => setSignIn(true)}>
+              Sign in with the code
+            </button>
+          )}
+        </nav>
       </header>
 
-      {granted === false && <AccessGate onGranted={() => setReloads((n) => n + 1)} />}
+      {demo && signIn && (
+        <Modal title="Access code" onClose={() => setSignIn(false)}>
+          <AccessGate
+            onGranted={() => {
+              setSignIn(false)
+              setReloads((n) => n + 1)
+              // the page under the dialog loads again through the door it now has
+              setSaved((n) => n + 1)
+            }}
+          />
+        </Modal>
+      )}
 
-      {open && view === 'read' && (
+      {view === 'read' && (
         <section className="card">
           <h2>Read a label</h2>
           <ExtractForm
@@ -101,7 +124,7 @@ export default function App() {
         </section>
       )}
 
-      {open && view === 'inbox' && (
+      {view === 'inbox' && (
         <section className="card">
           <h2>Inbox</h2>
           <Inbox
@@ -114,21 +137,21 @@ export default function App() {
         </section>
       )}
 
-      {open && view === 'inventory' && (
+      {view === 'inventory' && (
         <section className="card">
           <h2>My inventory</h2>
           <Inventory refresh={saved} openId={openItem} onOpened={() => setOpenItem(null)} />
         </section>
       )}
 
-      {open && view === 'find' && (
+      {view === 'find' && (
         <section className="card">
           <h2>Find a part</h2>
           <Find />
         </section>
       )}
 
-      {open && view === 'build' && (
+      {view === 'build' && (
         <section className="card">
           <h2>Build and reuse</h2>
           <Build />
@@ -153,9 +176,13 @@ export default function App() {
             </span>
             <span>{Object.values(status.version.models).join(', ')}</span>
             <span>{status.ready.data_dir_writable ? 'storage writable' : 'storage read-only'}</span>
-            {demoText(status.ready) && <span>{demoText(status.ready)}</span>}
+            {demoText(status.ready, !demo) && <span>{demoText(status.ready, !demo)}</span>}
             <details className="pair">
               <summary>Pair the phone</summary>
+              {demo ? (
+                <p className="muted">The phone pairs with a session of yours: sign in with the code first.</p>
+              ) : (
+              <>
               <p>
                 In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code. It carries this address
                 {status.ready.demo.gated ? ' and a session of its own; the access code stays here.' : '.'}
@@ -174,6 +201,8 @@ export default function App() {
                   <code>./dev phone</code>, which prints a code with that address.
                 </p>
               )}
+              </>
+              )}
             </details>
           </>
         )}
@@ -182,7 +211,7 @@ export default function App() {
   )
 }
 
-// The code the demo runs behind. A session is a cookie the browser keeps; nothing is stored here.
+// The code's door. A session is a cookie the browser keeps; nothing is stored here.
 function AccessGate({ onGranted }: { onGranted: () => void }) {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
@@ -207,9 +236,13 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
   }
 
   return (
-    <section className="card gate">
-      <h2>This demo runs behind an access code</h2>
-      <p className="muted">Every call to the models costs money, so the demo is open to people with the code. A session lasts a while and keeps nothing about you but the cookie.</p>
+    <section className="gate">
+      <h3>The code opens the rest</h3>
+      <p className="muted">
+        Without it this is the demo: recorded answers to try, nothing kept. The code unlocks the inventory, saving, drafts, prices,
+        projects and captures, and the live models when the host has a key. A session lasts a while and keeps nothing about you but
+        the cookie.
+      </p>
       <form onSubmit={(e) => void enter(e)} aria-label="Access code">
         <div className="row">
           <label>

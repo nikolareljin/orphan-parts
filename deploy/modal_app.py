@@ -11,6 +11,7 @@ spent); with a key that does not answer, the startup probe does the same and say
 import asyncio
 import logging
 import os
+import shlex
 import time
 from pathlib import Path
 
@@ -128,5 +129,28 @@ def load_demo(reset: bool = True) -> int:  # type: ignore[no-untyped-def]
     if reset:
         args.append("--reset")
     code = main(args)
+    data.commit()
+    return code
+
+
+@app.function(
+    image=image,
+    volumes={"/data": data},
+    secrets=[modal.Secret.from_name("orphan-parts")],
+    timeout=120,
+)
+def keys(args: str = "list") -> int:  # type: ignore[no-untyped-def]
+    """The access codes of the hosted demo, on its own inventory: ``modal run
+    deploy/modal_app.py::keys --args 'issue --label judges --days 7'`` (``list``,
+    ``revoke <label>``). The code is printed once; the web container reads the record
+    before its next write and within half a minute otherwise."""
+    os.environ.setdefault("DATA_DIR", "/data")
+    os.environ.setdefault("LOG_FORMAT", "text")
+    os.environ.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
+    os.environ.setdefault("OPL_FAKE_API", "1")
+    from app.keys.__main__ import main as keys_main
+
+    data.reload()
+    code = keys_main(shlex.split(args))
     data.commit()
     return code

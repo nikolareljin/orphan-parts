@@ -28,6 +28,7 @@ from app.model_api.errors import (
 from app.model_api.fixtures import FixtureStore, request_key
 from app.model_api.ledger import CostLedger, LedgerEntry
 from app.model_api.pricing import Usage, cost_usd
+from app.ops.door import live_request
 from app.ops.logging import request_id_var
 
 log = logging.getLogger("app.model_api")
@@ -181,9 +182,20 @@ class ModelApiClient:
             timeout=httpx.Timeout(settings.model_api_timeout_s, connect=10.0),
             transport=transport,
         )
+        # the fixture twin answers the demo visitor: same fixtures, its own ledger, nothing
+        # spent; set by the app when the demo gate is on, None on a machine of your own
+        self.twin: ModelApiClient | None = None
+
+    def _for_request(self) -> "ModelApiClient | None":
+        """The twin when this request came through the demo door, else None (answer here)."""
+        if self.twin is not None and not live_request.get():
+            return self.twin
+        return None
 
     async def aclose(self) -> None:
         await self._http.aclose()
+        if self.twin is not None:
+            await self.twin.aclose()
 
     # -- public calls ---------------------------------------------------------
 
@@ -204,6 +216,22 @@ class ModelApiClient:
         search_queries: int = 0,
         audio_seconds: float = 0.0,
     ) -> ModelResponse:
+        if (twin := self._for_request()) is not None:
+            return await twin.respond(
+                model=model,
+                input=input,
+                instructions=instructions,
+                schema=schema,
+                schema_name=schema_name,
+                effort=effort,
+                max_output_tokens=max_output_tokens,
+                tools=tools,
+                include=include,
+                metadata=metadata,
+                op=op,
+                search_queries=search_queries,
+                audio_seconds=audio_seconds,
+            )
         body: dict[str, Any] = {"model": model, "input": input, "store": False}
         if instructions:
             body["instructions"] = instructions
@@ -347,6 +375,8 @@ class ModelApiClient:
         op: str = "transcribe",
     ) -> Transcript:
         """One recording to text with Muse Voice Transcribe: multipart, WAV only, one turn."""
+        if (twin := self._for_request()) is not None:
+            return await twin.transcribe(audio_wav, keywords=keywords, op=op)
         model = self.settings.model_voice
         body: dict[str, Any] = {"model": model, "audioEncoding": "WAV", "mode": "PUSH_TO_TALK"}
         if keywords:
@@ -375,6 +405,8 @@ class ModelApiClient:
         )
 
     async def list_models(self) -> list[str]:
+        if (twin := self._for_request()) is not None:
+            return await twin.list_models()
         if self.mode == "fixture":
             s = self.settings
             return [s.model_spark, s.model_wonder, s.model_image, s.model_voice, s.model_sam]

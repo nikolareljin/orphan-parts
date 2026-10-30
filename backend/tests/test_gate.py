@@ -5,8 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.keys import AccessKeys
 from app.main import create_app
-from app.ops.gate import COOKIE, Allowance, DailyAllowance, Gate, expensive
+from app.ops.gate import COOKIE, DEMO_LINE, Allowance, DailyAllowance, Gate, demo_allowed, expensive
 from tests.conftest import make_photo
 
 CODE = "a-demo-code-with-length"
@@ -80,11 +81,17 @@ def test_sessions_are_signed_bound_to_the_code_and_end(tmp_path: Path) -> None:
     gate = Gate(gated_settings(tmp_path, demo_session_hours=1))
     token, expires_at = gate.issue(now=1000.0)
     assert expires_at == 4600
-    assert gate.verify(token, now=1000.0) is not None
+    session = gate.verify(token, now=1000.0)
+    assert session is not None and session.live is True
     assert gate.verify(token, now=4600.0) is None  # ended
-    sid, exp, sig = token.split(".")
-    assert gate.verify(f"{sid}.{exp}.{'0' * 32}", now=1000.0) is None  # tampered
-    assert gate.verify(f"{sid}.{int(exp) + 9999}.{sig}", now=1000.0) is None  # stretched
+    sid, exp, door, kid, sig = token.split(".")
+    assert not Gate.needs_record(token) and Gate.needs_record(f"{sid}.{exp}.{door}.3.{sig}")
+    assert door == "1" and kid == "0"
+    assert gate.verify(f"{sid}.{exp}.{door}.{kid}.{'0' * 32}", now=1000.0) is None  # tampered
+    assert gate.verify(f"{sid}.{int(exp) + 9999}.{door}.{kid}.{sig}", now=1000.0) is None
+    assert gate.verify(f"{sid}.{exp}.0.{kid}.{sig}", now=1000.0) is None  # the door is signed
+    assert gate.verify(f"{sid}.{exp}.{door}.7.{sig}", now=1000.0) is None  # the key id too
+    assert gate.verify(f"{sid}.{exp}.{door}.{sig}", now=1000.0) is None  # an old-shape token
     assert gate.verify("", now=1000.0) is None and gate.verify("nonsense", now=1000.0) is None
     other = Gate(gated_settings(tmp_path, demo_access_code="another-code-entirely"))
     assert other.verify(token, now=1000.0) is None  # a changed code ends every session
@@ -96,22 +103,32 @@ def test_sessions_are_signed_bound_to_the_code_and_end(tmp_path: Path) -> None:
 def test_without_a_code_nothing_is_gated(client: TestClient) -> None:
     assert client.get("/api/items").status_code == 200
     body = client.get("/api/access").json()
-    assert body == {"gated": False, "granted": True, "token": "", "expires_at": 0}
+    assert body == {"gated": False, "granted": True, "live": False, "token": "", "expires_at": 0}
     assert client.post("/api/access", json={"code": "whatever"}).json()["granted"] is True
     demo = client.get("/readyz").json()["demo"]
     assert demo["gated"] is False and demo["paused"] is False and demo["daily_used"] == 0
 
 
-def test_with_a_code_every_page_needs_a_session_and_the_open_paths_stay_open(
-    gated: TestClient,
-) -> None:
-    assert gated.get("/api/items").status_code == 401
-    assert gated.get("/api/items").json() == {"detail": "access code required"}
-    assert gated.post("/api/items", json={"item_type": "x"}).status_code == 401
-    for path in ("/healthz", "/readyz", "/api/version", "/openapi.json", "/docs"):
+def test_without_a_session_the_visitor_is_the_demo(gated: TestClient) -> None:
+    # the inventory and every write are behind the code, with one line that says so
+    assert gated.get("/api/items").status_code == 403
+    assert gated.get("/api/items").json() == {"detail": DEMO_LINE}
+    assert gated.post("/api/items", json={"item_type": "x"}).status_code == 403
+    assert gated.get("/api/captures").status_code == 403
+    assert gated.post("/api/captures", data={"request": "{}"}).status_code == 403
+    assert gated.get("/api/searches").status_code == 403
+    assert gated.post("/api/projects/propose", json={}).status_code == 403
+    # the open paths, the profiles and the stateless tries stay reachable
+    for path in ("/healthz", "/readyz", "/api/version", "/openapi.json", "/docs", "/api/profiles"):
         assert gated.get(path).status_code == 200, path
+    assert gated.get("/api/profiles/power_adapter/rules").status_code == 200
+    tried = gated.post("/api/extract", files=[("photos", ("p.jpg", make_photo(), "image/jpeg"))])
+    assert tried.status_code not in (401, 403), tried.text
     assert gated.get("/api/access").json()["granted"] is False
     assert gated.get("/readyz").json()["demo"]["gated"] is True
+    assert demo_allowed("POST", "/api/assess") and demo_allowed("POST", "/api/measure")
+    assert not demo_allowed("POST", "/api/items") and not demo_allowed("GET", "/api/items")
+    assert not demo_allowed("DELETE", "/api/captures/1")
 
 
 def test_the_right_code_opens_a_session_in_a_cookie_and_as_a_token(gated: TestClient) -> None:
@@ -127,10 +144,59 @@ def test_the_right_code_opens_a_session_in_a_cookie_and_as_a_token(gated: TestCl
     assert gated.get("/api/items").status_code == 200  # the client keeps the cookie
     assert gated.get("/api/access").json()["granted"] is True
     gated.cookies.clear()
-    assert gated.get("/api/items").status_code == 401
+    assert gated.get("/api/items").status_code == 403
     bearer = {"Authorization": f"Bearer {body['token']}"}
     assert gated.get("/api/items", headers=bearer).status_code == 200
-    assert gated.get("/api/items", headers={"Authorization": "Bearer nonsense"}).status_code == 401
+    assert gated.get("/api/items", headers={"Authorization": "Bearer nonsense"}).status_code == 403
+
+
+def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) -> None:
+    keys = AccessKeys(gated.app.state.inventory.store)
+    code, _ = keys.issue("judges", 7)
+    opened = gated.post("/api/access", json={"code": code})
+    assert opened.status_code == 200 and opened.json()["granted"] is True
+    assert gated.get("/api/items").status_code == 200
+    # the phone paired from this session carries the same record
+    phone = gated.get("/api/pair", params={"origin": "http://host:5173"}).json()["token"]
+    bearer = {"Authorization": f"Bearer {phone}"}
+    browser = dict(gated.cookies)
+    gated.cookies.clear()
+    assert gated.get("/api/items", headers=bearer).status_code == 200
+    keys.revoke("judges")
+    # the sessions it opened end with it, the phone's too, not only new ones
+    assert gated.get("/api/items", headers=bearer).status_code == 403
+    gated.cookies.update(browser)
+    assert gated.get("/api/items").status_code == 403
+    gated.cookies.clear()
+    refused = gated.post("/api/access", json={"code": code})
+    assert refused.status_code == 401
+    # the master code stands beside the records
+    assert gated.post("/api/access", json={"code": CODE}).json()["granted"] is True
+
+
+def test_with_a_key_the_code_is_the_live_door_and_the_demo_gets_recordings(
+    tmp_path: Path,
+) -> None:
+    settings = gated_settings(
+        tmp_path, OPL_FAKE_API=False, OPL_KEY_PROBE=False, model_api_key="sample-key-value"
+    )
+    with TestClient(create_app(settings)) as c:
+        ready = c.get("/readyz").json()
+        assert ready["model_api"] == "live for the code, recorded otherwise"
+        assert ready["demo"]["live_models"] is True
+        assert c.get("/api/access").json() == {
+            "gated": True,
+            "granted": False,
+            "live": False,
+            "token": "",
+            "expires_at": 0,
+        }
+        opened = c.post("/api/access", json={"code": CODE}).json()
+        assert opened["granted"] is True and opened["live"] is True
+        assert c.get("/api/access").json()["live"] is True
+        client = c.app.state.model_api
+        assert client.twin is not None and client.twin.mode == "fixture"
+        assert client.mode == "live"
 
 
 def test_the_code_may_be_tried_only_so_often(tmp_path: Path) -> None:
@@ -149,7 +215,58 @@ def test_leaving_clears_the_cookie(gated: TestClient) -> None:
     assert (
         "Max-Age=0" in gone.headers["set-cookie"] or "expires" in gone.headers["set-cookie"].lower()
     )
-    assert gated.get("/api/items").status_code == 401
+    assert gated.get("/api/items").status_code == 403  # the demo visitor again
+
+
+def test_a_record_with_the_same_id_after_a_reset_is_a_stranger(tmp_path: Path) -> None:
+    from app.inventory.store import Store
+
+    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    gate = Gate(gated_settings(tmp_path), keys)
+    _, record = keys.issue("judges", 7)
+    token, _ = gate.issue(kid=record.id, stamp=record.created_at)
+    assert gate.verify(token) is not None
+    # the same id, issued at another time (the inventory reset and the code reissued)
+    other, _ = gate.issue(kid=record.id, stamp="2026-01-01T00:00:00+00:00")
+    assert gate.verify(other) is None
+    keys.revoke("judges")
+    assert gate.verify(token) is None
+
+
+def test_the_demo_visitor_never_reads_an_item_through_assess(gated: TestClient) -> None:
+    gated.post("/api/access", json={"code": CODE})
+    made = gated.post("/api/items", json={"item_type": "vacuum", "profile": "vacuum_attachment"})
+    assert made.status_code == 201, made.text
+    item_id = made.json()["id"]
+    gated.cookies.clear()
+    for body in (
+        {"need": {"item_id": item_id}, "candidate": {"values": {}}},
+        {"need": {"values": {}, "profile": "vacuum_attachment"}, "candidate": {"item_id": item_id}},
+        {"need": {"item_id": 999}, "candidate": {"values": {}}},  # nor learns which ids exist
+    ):
+        refused = gated.post("/api/assess", json=body)
+        assert refused.status_code == 403 and refused.json()["detail"] == DEMO_LINE, body
+    # values written in are the demo's try
+    tried = gated.post(
+        "/api/assess",
+        json={"need": {"values": {}, "profile": "vacuum_attachment"}, "candidate": {"values": {}}},
+    )
+    assert tried.status_code == 200, tried.text
+
+
+def test_the_demo_visitors_tries_are_counted_per_address(tmp_path: Path) -> None:
+    settings = gated_settings(tmp_path, demo_visitor_calls_per_hour=2)
+    with TestClient(create_app(settings)) as c:
+        photo = [("photos", ("p.jpg", make_photo(), "image/jpeg"))]
+        c.post("/api/extract", files=photo)
+        c.post("/api/extract", files=photo)
+        third = c.post("/api/extract", files=photo)
+        assert third.status_code == 429 and "tries" in third.json()["detail"]
+        # every try counts, the cheap ones too
+        need = {"need": {"values": {}, "profile": "vacuum_attachment"}, "candidate": {"values": {}}}
+        assert c.post("/api/assess", json=need).status_code == 429
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 0  # nothing spent
+        assert c.get("/api/templates").status_code == 200  # looking stays open
 
 
 def test_what_spends_is_counted_per_visitor_and_per_day(tmp_path: Path) -> None:
@@ -167,6 +284,13 @@ def test_what_spends_is_counted_per_visitor_and_per_day(tmp_path: Path) -> None:
         # reading costs nothing and stays open
         assert c.get("/api/items").status_code == 200
         assert c.get("/readyz").json()["demo"]["daily_used"] == 2
+        # the demo visitor's tries are recordings: not counted, not refused by the allowance
+        kept = dict(c.cookies)
+        c.cookies.clear()
+        tried = c.post("/api/extract", files=photo)
+        assert tried.status_code != 429, tried.text
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 2
+        c.cookies.update(kept)
         # another visitor shares the day
         c.cookies.clear()
         c.post("/api/access", json={"code": CODE})

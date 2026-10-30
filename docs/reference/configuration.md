@@ -41,7 +41,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `VOICE_MAX_SECONDS` | `600` | | longest voice note accepted; the transcription service takes ten minutes at most, and `MAX_UPLOAD_MB` bounds the file first |
 | `PRICE_SEARCH_CONTEXT` | `low` | | how much of each page the search hands the model: `low`, `medium` or `high`; more costs tokens and time |
 | `PRICE_COUNTRY` | | | ISO 3166-1 country for local price results when the request names none |
-| `DEMO_ACCESS_CODE` | | | the code the demo runs behind, twelve characters at least; empty = no gate |
+| `DEMO_ACCESS_CODE` | | | the master code of the live door, twelve characters at least; empty = no gate (a machine of your own). Codes issued as records (`./dev keys`) open the same door beside it; without a code a visitor is the demo |
 | `DEMO_SESSION_HOURS` | `12` | | how long a session lasts |
 | `DEMO_VISITOR_CALLS_PER_HOUR` | `20` | | calls that spend, per session and hour |
 | `DEMO_DAILY_CALLS` | `300` | | calls that spend, for everyone per UTC day |
