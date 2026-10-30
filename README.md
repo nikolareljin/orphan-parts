@@ -88,7 +88,7 @@ Changes go through pull requests; a release is a pull request from a `release/x.
 |---|---|
 | Muse Spark | reads labels and listings into structured fields, writes listing drafts, searches the web for prices with citations |
 | SAM 3.1 | isolates the item, its label and its connector in photos |
-| Muse Voice Transcribe | voice notes kept as the owner's words; spoken questions on the phone later |
+| Muse Voice Transcribe | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
 | Muse Wonder | plans the buyer comparison and drafts new category profiles, later |
 | Muse Image | background cleanup of the cover photo, always labeled, later |
 | Muse Glimmer, Muse Spark Open | on-device pre-check and alternative extraction provider, later |

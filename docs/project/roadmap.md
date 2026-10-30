@@ -7,8 +7,8 @@ What follows the hackathon scope, in rough order.
 - **Build pack as a PDF**, and candidate listings cited by page in it.
 - **Ranking across candidates.** Several candidates for one need compared side by side, with the
   fit, the price and the open questions of each.
-- **Android app.** Capture into the same inventory with the phone camera, hold to talk, a
-  calibrated photo capture for measurement; marking stays on the web.
+- **On the phone.** A calibrated capture marked on the phone, a spoken question answered from
+  the inventory, and the store listing of the app.
 
 ## Around it
 

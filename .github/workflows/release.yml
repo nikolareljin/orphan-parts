@@ -104,7 +104,10 @@ jobs:
           fi
       - name: build the release APK
         if: steps.app.outputs.present == 'true'
-        run: bash scripts/deploy.sh android --version "$TAG"
+        run: |
+          export JAVA_HOME="${JAVA_HOME_17_X64:-${JAVA_HOME_21_X64:-}}"
+          [ -n "$JAVA_HOME" ] || { echo "the runner has no JDK 17 or 21"; exit 1; }
+          bash scripts/deploy.sh android --version "$TAG"
       - name: attach the APK to the release
         if: steps.app.outputs.present == 'true'
         env:

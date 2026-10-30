@@ -66,8 +66,9 @@ a generic one until a profile exists for it.
 
 On the web today, behind an access code when it is public: a demo you can leave running, with
 allowances per visitor and per day, a spend cap and an operator's switch
-([Demo access](operations/demo-access.md)). On the phone, with the camera and your voice, and
-hands-free through Meta glasses, later. One backend serves all of them.
+([Demo access](operations/demo-access.md)). On the phone, a photo into the same inventory and a
+voice note kept as your words and read back ([Android app](guides/android.md)); hands-free
+through Meta glasses, later. One backend serves all of them.
 
 ## In sixty seconds
 
@@ -83,7 +84,7 @@ See the [Quickstart](start/quickstart.md).
 |---|---|
 | [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, listing drafts, price search with citations |
 | [SAM 3.1](models/sam-3-1.md) | isolates item, label and connector in photos |
-| [Muse Voice Transcribe](models/muse-voice-transcribe.md) | voice notes kept as the owner's words; spoken questions on the phone later |
+| [Muse Voice Transcribe](models/muse-voice-transcribe.md) | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
 | [Muse Wonder](models/muse-wonder.md) | plans the buyer comparison, drafts new profiles, later |
 | [Muse Image](models/muse-image.md) | background cleanup of the cover photo, always labeled, later |
 | [Muse Glimmer](models/muse-glimmer.md), [Muse Spark Open](models/muse-spark-open.md) | on-device pre-check and alternative provider, later |
