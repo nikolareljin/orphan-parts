@@ -6,7 +6,8 @@ Meta's Muse models.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
-[Built during the hackathon](project/hackathon.md).
+[Built during the hackathon](project/hackathon.md). Trying it on a phone:
+[On your phone in ten minutes](start/judges.md).
 
 ## The problem
 
