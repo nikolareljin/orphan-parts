@@ -48,10 +48,14 @@ counts across them.
 reads the forwarded address only with `DEMO_TRUST_PROXY=1`, which the production compose file
 sets, so that the per-address limits count visitors, not the proxy. It takes the last address
 in the header, the one the proxy appended; anything before it the caller may have written.
+That is one hop: with a TLS terminator or another proxy in front of nginx, the last address is
+that proxy's and every visitor shares it; then the front proxy has to be the one that forwards
+the address, with nginx passing its header through.
 
 **What is logged.** A refusal is logged with the path and which limit or switch refused it,
 never with the code or a token. See [Observability](observability.md).
 
 **The browser checks** run through the gate: `./dev e2e` starts the stack with a code of its
-own (or the one in `.env`), opens one session before the run and gives it to every test, and
+own (`DEMO_ACCESS_CODE` set in the shell overrides it; the value in `.env` is not used for the
+run), opens one session before the run and gives it to every test, and
 `tests/access.spec.ts` starts without one to check the gate itself.
