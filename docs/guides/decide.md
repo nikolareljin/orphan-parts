@@ -24,7 +24,7 @@ person with your skills, and one thing to check first. The brief it is given hol
 accepted values, its condition, faults and tests done, your [preferences](reuse.md) (interests,
 skills, budget) and the templates the rules already found it fills; nothing else. The answer is
 kept on the item with the item version it was written from, says *item changed since* once the
-item is edited, and is shown under the heading *The model's proposals*, because that is what it
+item is edited (including while the request is running), and is shown under the heading *The model's proposals*, because that is what it
 is: the rules did not check it, and a part the tests do not call working is not working because
 an idea assumes it.
 
@@ -50,3 +50,5 @@ Everything on the panel is behind the access code: the demo visitor sees the dem
 The picture: a photo of the item as the chosen use would have it, from Muse Image, next to the
 decision. The row is there; the call is not. The other rows follow what their own panels learn:
 a search that finds its candidate counts here, a guidance redone after the item changed says so.
+
+On a phone, the row labels sit above their answers so the panel fits the dialog.

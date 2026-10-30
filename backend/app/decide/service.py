@@ -178,7 +178,7 @@ class Decider:
             "from_fixture": result.response.from_fixture,
             "cost_usd": result.response.cost_usd,
         }
-        row = self.inventory.add_uses(item_id, json.dumps(content))
+        row = self.inventory.add_uses(item_id, json.dumps(content), item_version=item.version)
         log.info(
             "uses",
             extra={

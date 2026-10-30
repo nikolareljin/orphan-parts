@@ -66,3 +66,17 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(again.decide).toContainText('Decided:')
   await expect(again.decide).toContainText('worth a listing')
 })
+
+
+test('the decision rows fit a phone dialog', async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const name = `Phone laptop ${stamp}`
+  await createLaptop(request, name)
+  const { decide } = await openItem(page, name)
+  await expect(decide).toContainText('Homework workstation (laptop)')
+  const sizes = await decide.evaluate((el) => ({ width: el.clientWidth, scroll: el.scrollWidth }))
+  expect(sizes.scroll).toBeLessThanOrEqual(sizes.width)
+  await decide.getByRole('link', { name: 'Find a part', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page).toHaveURL(/#find$/)
+})

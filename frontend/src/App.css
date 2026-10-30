@@ -803,9 +803,21 @@ button.link {
 /* decide what it becomes */
 .decide .rows {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 0.5rem 1rem;
   margin: 0.5rem 0 0;
+}
+
+@media (max-width: 600px) {
+  .decide .rows {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+
+  .decide .rows dd {
+    margin-bottom: 0.5rem;
+    overflow-wrap: anywhere;
+  }
 }
 
 .decide .rows dt {

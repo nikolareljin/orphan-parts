@@ -375,3 +375,28 @@ def test_the_view_names_the_selected_project_that_counts_on_the_item(
     given_up = recorded_client.post(f"/api/projects/{desk['id']}/abandon")
     assert given_up.status_code == 200, given_up.text
     assert recorded_client.get(f"/api/items/{laptop_id}/decide").json()["committed_to"] == []
+
+
+async def test_uses_keep_the_version_read_before_the_request(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory)
+    before = inventory.get(item_id).version
+
+    class ChangingWriter(_Writes):
+        async def respond_structured(self, model_cls: type, **kw: Any) -> StructuredResponse[Any]:
+            inventory.add_field(item_id, FieldCreate(field="ram", value="16", unit="GB"))
+            return await super().respond_structured(model_cls, **kw)
+
+    decider = Decider(
+        settings,
+        cast(ModelApiClient, ChangingWriter([])),
+        inventory,
+        Templates(),
+        cast(Planner, _Owner()),
+        cast(Any, None),
+        cast(Any, None),
+    )
+    uses = await decider.uses(item_id)
+    assert uses.item_version == before
+    assert uses.stale is True
+    assert decider.latest_uses(item_id) == uses

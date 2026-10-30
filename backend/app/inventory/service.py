@@ -436,16 +436,15 @@ class Inventory:
         "SELECT u.*, i.version AS current_item_version FROM uses u JOIN items i ON i.id = u.item_id"
     )
 
-    def add_uses(self, item_id: int, content: str) -> sqlite3.Row:
+    def add_uses(self, item_id: int, content: str, *, item_version: int) -> sqlite3.Row:
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            self._row(conn, item_id)
             last = conn.execute(
                 "SELECT MAX(version) FROM uses WHERE item_id = ?", (item_id,)
             ).fetchone()[0]
             version = int(last or 0) + 1
-            # written from this item version; asking what it is good for changes nothing about it
-            item_version = int(row["version"])
+            # Keep the version used in the brief, even if the item changed during the request.
             self._event(conn, item_id, f"uses written (v{version})", item_version, at)
             cur = conn.execute(
                 "INSERT INTO uses (item_id, version, item_version, content, created_at)"
