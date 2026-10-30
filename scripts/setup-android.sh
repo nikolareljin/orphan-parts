@@ -93,7 +93,8 @@ else
     url="${TOOLS_URL:-https://dl.google.com/android/repository/$name}"
     tmp="$(mktemp -d)"
     # a download that stops half-way, or a checksum that does not match, leaves nothing behind
-    trap 'rm -rf "$tmp"' EXIT
+    _setup_android_cleanup() { rm -rf "$tmp"; }
+    on_exit _setup_android_cleanup
     say "downloading the command-line tools ($name)"
     "$curl_cmd" -fsSL "$url" -o "$tmp/$name"
     got="$(sha256sum "$tmp/$name" 2>/dev/null | awk '{print $1}' || shasum -a 256 "$tmp/$name" | awk '{print $1}')"

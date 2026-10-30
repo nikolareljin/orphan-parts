@@ -106,7 +106,8 @@ cmd_phone() {
   curl -fsS -m 5 "http://localhost:$FRONTEND_PORT/readyz" >/dev/null 2>&1 || die "the stack is not up (or the web app not answering on :$FRONTEND_PORT): ./dev up first"
   # one device for every step: picked here once, so several phones are asked about once
   local picked
-  picked="$(bash "$ROOT/scripts/android.sh" serial 2>/dev/null || true)"
+  # stdout is the serial alone; the list of phones and the question go to the terminal
+  picked="$(bash "$ROOT/scripts/android.sh" serial || true)"
   [[ -z "$picked" ]] || export ANDROID_SERIAL="$picked"
   if [[ $release -eq 1 ]]; then
     bash "$ROOT/scripts/android.sh" release
@@ -127,8 +128,14 @@ cmd_phone() {
   api_mode_or_fixture
   log_info "scan this with the app (Backend tab, Scan to pair):"
   # inside the running backend: the session is signed with the code that backend started with,
-  # not with whatever this shell or .env says now
-  compose exec -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
+  # not with whatever this shell or .env says now; a stack run natively has no container, and
+  # then a fresh one with this shell's settings is what there is
+  if compose ps --status running backend 2>/dev/null | grep -q backend; then
+    compose exec -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
+  else
+    log_warn "the backend is not a running container here; the code is signed with this shell's DEMO_ACCESS_CODE"
+    compose run --rm --no-deps -T backend python -m app.pairing --origin "http://$address:$FRONTEND_PORT"
+  fi
 }
 
 # This machine's address on the local network, for the phone to reach the web app.
@@ -350,8 +357,9 @@ _start_backend_again() {
 stop_backend_for_run() {
   # whatever the container is doing (running, restarting after a crash, paused), it is stopped
   # before the inventory file is replaced under it; started again afterwards if it was up
+  # the service's own container, not a one-off left by a compose run
   local state
-  state="$(compose ps -a --format '{{.State}}' backend 2>/dev/null || true)"
+  state="$(compose ps -a --format '{{.Name}} {{.State}}' backend 2>/dev/null | awk '$1 ~ /-backend-[0-9]+$/ {print $2; exit}' || true)"
   [[ -n "$state" ]] || return 0
   compose stop backend >/dev/null 2>&1 || true
   case "$state" in

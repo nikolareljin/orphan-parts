@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,6 +80,10 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
     // even when the person switches tabs before the answer (a second send would duplicate it)
     val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
     val recorder = remember { WavRecorder() }
+    // a hold that ends with the screen releases the microphone
+    DisposableEffect(recorder) {
+        onDispose { recorder.stop() }
+    }
     var photos by remember { mutableStateOf<List<Pair<ByteArray, Bitmap>>>(emptyList()) }
     var clip by remember { mutableStateOf<ByteArray?>(null) }
     var audio by remember { mutableStateOf<ByteArray?>(null) }
@@ -128,7 +133,17 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
         val uri = pendingUri?.let(Uri::parse)
         if (!ok || uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val bytes = withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)?.use { it.readBytes() } }
+            // a clip the camera never wrote, or one too large for the phone's memory, is said,
+            // never a crash
+            val bytes = withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                } catch (e: Exception) {
+                    null
+                } catch (e: OutOfMemoryError) {
+                    null
+                }
+            }
             if (bytes != null && bytes.isEmpty()) {
                 // a camera app that said yes but wrote nothing (some ignore the output file)
                 clip = null
