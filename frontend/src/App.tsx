@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import Build from './components/Build'
 import ExtractForm from './components/ExtractForm'
 import Find from './components/Find'
 import Inventory from './components/Inventory'
@@ -7,7 +8,7 @@ import { demoText } from './lib/access'
 import './App.css'
 
 type Status = { kind: 'loading' } | { kind: 'ok'; ready: Readiness; version: Version } | { kind: 'error'; message: string }
-type View = 'read' | 'inventory' | 'find'
+type View = 'read' | 'inventory' | 'find' | 'build'
 
 export default function App() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
@@ -61,6 +62,9 @@ export default function App() {
           <button type="button" aria-current={view === 'find' ? 'page' : undefined} onClick={() => setView('find')}>
             Find a part
           </button>
+          <button type="button" aria-current={view === 'build' ? 'page' : undefined} onClick={() => setView('build')}>
+            Build and reuse
+          </button>
         </nav>
         )}
       </header>
@@ -91,6 +95,13 @@ export default function App() {
         <section className="card">
           <h2>Find a part</h2>
           <Find />
+        </section>
+      )}
+
+      {open && view === 'build' && (
+        <section className="card">
+          <h2>Build and reuse</h2>
+          <Build />
         </section>
       )}
 

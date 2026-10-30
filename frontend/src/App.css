@@ -669,3 +669,46 @@ button.link {
   display: block;
   margin: 0.25rem 0 0.5rem;
 }
+
+/* Build and reuse */
+.build .preferences,
+.build .propose {
+  margin: 0.5rem 0 1rem;
+}
+
+.build .wide {
+  display: block;
+}
+
+.build .wide textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.build .check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.build .project-panel {
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.build .project-panel h4 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.build .safety li {
+  color: var(--error);
+}
+
+.build .actions {
+  margin-top: 0.75rem;
+}

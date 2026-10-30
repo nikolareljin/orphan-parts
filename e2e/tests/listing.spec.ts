@@ -65,7 +65,11 @@ test('a sale draft keeps confirmed facts, discloses the faults, and its checklis
   await expect(draft).toContainText('required step(s) left')
   await expect(draft.getByRole('link', { name: 'Open Marketplace' })).toHaveAttribute('href', /facebook\.com\/marketplace\/create\/item/)
 
-  await draft.getByLabel(/Clean the outside/).check()
+  // the tick is a write; wait for it to land before the page reloads
+  await Promise.all([
+    page.waitForResponse((res) => res.url().includes('/checklist') && res.ok()),
+    draft.getByLabel(/Clean the outside/).check(),
+  ])
   await page.reload()
   const again = await openItem(page, name)
   await expect(again.listing.getByRole('status').getByLabel(/Clean the outside/)).toBeChecked()

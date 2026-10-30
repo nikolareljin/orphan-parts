@@ -1,0 +1,43 @@
+id: homework_workstation
+label: Homework workstation
+goal: A quiet desk for schoolwork from a laptop you already own, with a bigger screen and a proper keyboard.
+result: a laptop driving an external monitor, with a keyboard and a mouse, on a desk
+effort: low
+skills: [basic computer setup]
+opens_devices: false
+typical_cost: {low: 0, high: 60, currency: USD}
+requirements:
+  - key: laptop
+    label: A working laptop
+    kind: item
+    item_types: [laptop, notebook]
+    blocking: true
+  - key: monitor
+    label: An external monitor with an input the laptop can drive
+    kind: item
+    item_types: [monitor, display, screen]
+    blocking: true
+    profile: generic_item
+  - key: video_cable
+    label: A cable between the two (HDMI, DisplayPort or USB-C)
+    kind: item
+    item_types: [cable, hdmi, displayport, adapter]
+    blocking: true
+    profile: generic_item
+  - key: keyboard
+    label: A keyboard
+    kind: item
+    item_types: [keyboard]
+    blocking: false
+  - key: mouse
+    label: A mouse
+    kind: item
+    item_types: [mouse]
+    blocking: false
+steps:
+  - Put the laptop on a stand or a few books so the monitor and the laptop screen sit at eye height.
+  - Connect the monitor; set the display to extend, not mirror, and match the monitor's native resolution.
+  - Plug in the keyboard and the mouse; set the laptop lid to stay awake when closed if you close it.
+safety: []
+sources:
+  - the laptop maker's page on external displays, for the ports and resolutions it supports

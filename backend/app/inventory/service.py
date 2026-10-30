@@ -505,6 +505,122 @@ class Inventory:
             raise NotFoundError(f"no candidate {candidate_id}")
         return row
 
+    # preferences, projects and allocations
+
+    def preferences(self) -> sqlite3.Row | None:
+        with self.store.connect() as conn:
+            row: sqlite3.Row | None = conn.execute(
+                "SELECT * FROM preferences WHERE id = 1"
+            ).fetchone()
+            return row
+
+    def set_preferences(self, content: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            conn.execute(
+                "INSERT INTO preferences (id, content, updated_at) VALUES (1, ?, ?)"
+                " ON CONFLICT(id) DO UPDATE SET content = excluded.content,"
+                " updated_at = excluded.updated_at",
+                (content, now()),
+            )
+            found: sqlite3.Row = conn.execute("SELECT * FROM preferences WHERE id = 1").fetchone()
+            return found
+
+    def add_project(
+        self, template: str, title: str, content: str, allocations: list[tuple[int, str, str]]
+    ) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            cur = conn.execute(
+                "INSERT INTO projects (template, title, status, version, content, created_at,"
+                " updated_at) VALUES (?,?,?,?,?,?,?)",
+                (template, title, "proposed", 1, content, at, at),
+            )
+            project_id = int(cur.lastrowid or 0)
+            for item_id, requirement, why in allocations:
+                row = self._row(conn, item_id)
+                conn.execute(
+                    "INSERT INTO allocations (project_id, item_id, requirement, why, committed, at)"
+                    " VALUES (?,?,?,?,0,?)",
+                    (project_id, item_id, requirement, why, at),
+                )
+                self._event(conn, item_id, f"proposed for: {title}", int(row["version"]), at)
+            return self._project(conn, project_id)
+
+    def projects(self) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            return conn.execute("SELECT * FROM projects ORDER BY id DESC").fetchall()
+
+    def project(self, project_id: int) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            return self._project(conn, project_id)
+
+    def update_project(self, project_id: int, status: str, content: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            row = self._project(conn, project_id)
+            conn.execute(
+                "UPDATE projects SET status = ?, content = ?, version = ?, updated_at = ?"
+                " WHERE id = ?",
+                (status, content, int(row["version"]) + 1, now(), project_id),
+            )
+            return self._project(conn, project_id)
+
+    def allocations(self, project_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            return conn.execute(
+                "SELECT a.*, i.name AS item_name FROM allocations a"
+                " JOIN items i ON i.id = a.item_id AND i.deleted_at IS NULL"
+                " WHERE a.project_id = ? ORDER BY a.id",
+                (project_id,),
+            ).fetchall()
+
+    def set_committed(self, project_id: int, committed: bool) -> None:
+        with self.store.connect() as conn:
+            conn.execute(
+                "UPDATE allocations SET committed = ? WHERE project_id = ?",
+                (1 if committed else 0, project_id),
+            )
+
+    def committed_elsewhere(self, item_id: int, project_id: int) -> list[sqlite3.Row]:
+        """The other selected projects an item is committed to; a deleted item holds nothing."""
+        with self.store.connect() as conn:
+            return conn.execute(
+                "SELECT a.project_id, p.title FROM allocations a"
+                " JOIN projects p ON p.id = a.project_id"
+                " JOIN items i ON i.id = a.item_id AND i.deleted_at IS NULL"
+                " WHERE a.item_id = ? AND a.committed = 1 AND a.project_id != ?"
+                " AND p.status IN ('selected', 'building')",
+                (item_id, project_id),
+            ).fetchall()
+
+    def add_allocation(
+        self, project_id: int, item_id: int, requirement: str, why: str, committed: bool
+    ) -> None:
+        at = now()
+        with self.store.connect() as conn:
+            project = self._project(conn, project_id)
+            row = self._row(conn, item_id)
+            conn.execute(
+                "INSERT INTO allocations (project_id, item_id, requirement, why, committed, at)"
+                " VALUES (?,?,?,?,?,?)",
+                (project_id, item_id, requirement, why, 1 if committed else 0, at),
+            )
+            self._event(conn, item_id, f"put on: {project['title']}", int(row["version"]), at)
+
+    def release_allocation(self, project_id: int, item_id: int) -> None:
+        with self.store.connect() as conn:
+            conn.execute(
+                "DELETE FROM allocations WHERE project_id = ? AND item_id = ?",
+                (project_id, item_id),
+            )
+
+    def _project(self, conn: sqlite3.Connection, project_id: int) -> sqlite3.Row:
+        row: sqlite3.Row | None = conn.execute(
+            "SELECT * FROM projects WHERE id = ?", (project_id,)
+        ).fetchone()
+        if row is None:
+            raise NotFoundError(f"no project {project_id}")
+        return row
+
     def delete(self, item_id: int) -> None:
         """Hidden, not erased: the record and its events stay for the audit trail."""
         at = now()

@@ -13,6 +13,7 @@ from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import Gate
 from app.profiles import Profiles
+from app.projects.service import Planner
 from app.segment.service import Segmenter
 from app.value.service import Valuer
 
@@ -117,3 +118,11 @@ def app_gate(request: Request) -> Gate:
 
 
 GateDep = Annotated[Gate, Depends(app_gate)]
+
+
+def app_planner(request: Request) -> Planner:
+    planner: Planner = request.app.state.planner
+    return planner
+
+
+PlannerDep = Annotated[Planner, Depends(app_planner)]

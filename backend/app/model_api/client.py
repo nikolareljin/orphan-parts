@@ -272,6 +272,69 @@ class ModelApiClient:
             ) from exc
         return StructuredResponse[T](parsed=parsed, response=response)
 
+    async def respond_with_tools[T: BaseModel](
+        self,
+        model_cls: type[T],
+        *,
+        model: str,
+        input: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        handle: Callable[[str, dict[str, Any]], str | Awaitable[str]],
+        max_steps: int = 4,
+        op: str = "agent",
+        schema_name: str | None = None,
+        **kwargs: Any,
+    ) -> StructuredResponse[T]:
+        """The tool loop, stateless: every step resends the input, the previous output items and
+        the tool results, since nothing is stored on the server. Ends with the strict answer."""
+        items = list(input)
+        last: ModelResponse | None = None
+        spent = 0.0
+        for step in range(1, max_steps + 1):
+            response = await self.respond(
+                model=model,
+                input=items,
+                tools=tools,
+                schema=strict_schema(model_cls),
+                schema_name=schema_name or model_cls.__name__,
+                op=f"{op}-{step}",
+                **kwargs,
+            )
+            last = response
+            spent += response.cost_usd
+            calls = response.tool_calls
+            if not calls:
+                try:
+                    parsed = model_cls.model_validate_json(response.text)
+                except ValueError as exc:
+                    raise IncompleteResponseError(
+                        f"output did not match {model_cls.__name__}: {exc}",
+                        attempts=response.attempts,
+                    ) from exc
+                # the answer carries what the whole loop cost, every step counted once
+                return StructuredResponse[T](
+                    parsed=parsed, response=response.model_copy(update={"cost_usd": spent})
+                )
+            items = items + list(response.output)
+            for call in calls:
+                try:
+                    args = json.loads(call.get("arguments") or "{}")
+                except ValueError:
+                    args = {}
+                result = handle(str(call.get("name", "")), args if isinstance(args, dict) else {})
+                output = await result if isinstance(result, Awaitable) else result
+                items.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": str(call.get("call_id", "")),
+                        "output": output,
+                    }
+                )
+        raise IncompleteResponseError(
+            f"the tool loop did not finish in {max_steps} steps",
+            attempts=last.attempts if last else 0,
+        )
+
     async def transcribe(
         self,
         audio_wav: bytes,
