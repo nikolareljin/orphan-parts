@@ -37,6 +37,10 @@ shape of each is the one the [HTTP API](http-api.md) returns.
   confirm and removed when the item is deleted. The photo a measurement was made on is kept
   with the measurement, on the item. Photos are re-encoded on ingest, so no metadata is ever
   stored.
+- A picture drawn on request (`POST /api/items/{id}/picture`, with `PICTURE_ENABLED`) is kept
+  in the same folder as `picture-<n>.jpg` with a `picture-<n>.json` record (what it was drawn
+  as, the model, the cost, when), never among the photos and never read as evidence; it goes
+  with the item.
 - A capture from the phone is kept as sent, re-encoded photos, the clip and the WAV note, under
   `DATA_DIR/captures/<id>/`, until the capture is deleted; the item read from it stays.
 - A voice recording sent to `/api/items/{id}/voice` is transcribed and dropped; the transcript

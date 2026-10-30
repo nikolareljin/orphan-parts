@@ -117,7 +117,8 @@ app, installs it over USB and prints the pairing code in the terminal.
   values.
 - **My inventory:** confirm or reject each value, measure a feature against a ruler, ask
   **Does it fit?**, prepare a listing, ask what it is worth, build something from what you
-  have.
+  have. Under the photos, **Draw it** shows what the item could look like as what you type
+  (a picture, labeled as drawn, only when that server has pictures on).
 - **From a laptop instead of the phone:** the Inbox's **Send a capture** form takes photos
   and a short video (MP4 or 3GP) straight from the computer.
 - **Talk tab:** for an item already in the inventory, hold and say what you know; the

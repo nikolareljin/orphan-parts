@@ -195,6 +195,26 @@ body.has-dialog {
   object-fit: contain;
 }
 
+/* what the item could look like: drawn on a click, labeled as drawn, under the photos */
+.picture figure {
+  margin: 0.5rem 0;
+}
+
+.picture figure img {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.picture figcaption {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
 /* one scale of buttons: filled for the action, outlined for the rest, a link for the small ones */
 button:not(.link):not(.modal-close):not(.nav button):not(.danger) {
   font: inherit;

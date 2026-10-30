@@ -88,6 +88,7 @@ See the [Quickstart](start/quickstart.md).
 | [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, listing drafts, price search with citations, project proposals through tools |
 | [SAM 3.1](models/sam-3-1.md) | isolates item, label and connector in photos |
 | [Muse Voice Transcribe](models/muse-voice-transcribe.md) | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
-| [Muse Wonder](models/muse-wonder.md), [Muse Image](models/muse-image.md), [Muse Glimmer](models/muse-glimmer.md), [Muse Spark Open](models/muse-spark-open.md) | considered, not used in this version; each page says what for |
+| [Muse Image](models/muse-image.md) | a picture of what an item could become, drawn only on a click when the switch is on; illustrative, never evidence |
+| [Muse Wonder](models/muse-wonder.md), [Muse Glimmer](models/muse-glimmer.md), [Muse Spark Open](models/muse-spark-open.md) | considered, not used in this version; each page says what for |
 
 Development uses Muse Code; see [Working with Muse Code](development/muse-code.md).

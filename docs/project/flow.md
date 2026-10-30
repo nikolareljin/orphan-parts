@@ -15,10 +15,12 @@ Marketplace.
 </div>
 
 The split is the whole design: Muse Spark, SAM 3.1 and Muse Voice Transcribe read, write and
-propose; the profile's rules, the inventory and your own confirmations decide what is kept. A
-model never moves a candidate up the [verdict ladder](../concepts/verdicts.md), never adds a
-line to a listing draft that no confirmed field backs, and never changes a
-[profile](../concepts/profiles.md) or a project template. The
+propose, and Muse Image draws a picture of what an item could become only when you ask; the
+profile's rules, the inventory and your own confirmations decide what is kept. A model never
+moves a candidate up the [verdict ladder](../concepts/verdicts.md), never adds a line to a
+listing draft that no confirmed field backs, never changes a
+[profile](../concepts/profiles.md) or a project template, and a drawn picture is never
+evidence. The
 [architecture](../development/architecture.md) page shows the same split from the inside.
 
 ## One path through: the crevice tool

@@ -13,6 +13,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ### Changed
 - The docs site tells the story: how it fits together (one clickable diagram and two paths through the demo set), lessons learned, next steps (the roadmap folded into it) and the pitch.
 ### Added
+- A picture of what an item could become: *What it could look like* on the item dialog, under the photos, with a field for the use and **Draw it**; Muse Image draws it only on that click (`POST /api/items/{id}/picture`), from the item's type, accepted values, condition and faults; kept beside the photos as `picture-<n>.jpg` and never counted as one, served by `GET /api/items/{id}/pictures/{n}`, captioned as drawn and never evidence, charged in the ledger per image, refused to the demo visitor. Off unless `PICTURE_ENABLED` is set; the stub `images-generations/picture.json` answers fixture mode.
 - The evaluation loop: `./dev eval` (`python -m app.eval run`) loads the demo set as the demo does and scores it by the rules into `eval/` (a report as JSON and Markdown, two charts): values read per item against an `expect:` block in `demo/set.yaml`, fit verdicts between items, proposals written against kept, stub answers and spend; `export` writes `train.jsonl` from the accepted reads, `diff` compares two reports; the guide *Training and improving the reads* says where the rules and the prompts live and what fine-tuning Muse Spark Open would take.
 
 ### Fixed

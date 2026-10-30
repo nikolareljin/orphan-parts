@@ -7,6 +7,7 @@ import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
 import Measure from './Measure'
+import Picture from './Picture'
 import Value from './Value'
 
 function message(err: unknown): string {
@@ -243,6 +244,7 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
         {item.parent_id !== null && <> · part of item #{item.parent_id}</>}
       </p>
       <ItemPhotos id={item.id} />
+      <Picture item={item} />
       {error && (
         <p className="error" role="alert">
           {error}

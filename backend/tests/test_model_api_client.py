@@ -1,3 +1,4 @@
+import base64
 import json
 import random
 from collections.abc import Callable
@@ -402,6 +403,54 @@ async def test_each_recording_gets_its_own_transcribe_fixture(tmp_path: Path) ->
     assert len(list((tmp_path / "fixtures").rglob("*.json"))) == 2
     # the key names the recording; the request on the wire carries the bytes, not the digest
     assert b"audio_sha256" not in h.requests[-1].content
+
+
+# --- pictures ----------------------------------------------------------------
+
+
+async def test_a_picture_is_asked_for_as_documented_and_priced_per_image(live: Settings) -> None:
+    jpeg = b"\xff\xd8\xff\xe0 a jpeg"
+    answer = {
+        "created": 1761868800,
+        "data": [{"b64_json": base64.b64encode(jpeg).decode("ascii"), "revised_prompt": "lamp"}],
+        "output_format": "jpeg",
+        "usage": {
+            "input_tokens": 48,
+            "output_tokens": 1024,
+            "total_tokens": 1072,
+            "input_tokens_details": {"image_tokens": 0, "text_tokens": 48},
+        },
+    }
+    h = Harness(live, lambda _: httpx.Response(200, json=answer))
+    result = await h.client.picture("a lamp built from a laptop", op="picture")
+    assert result.data == jpeg
+    assert result.revised_prompt == "lamp"
+    assert result.model == "muse-image-1.0"
+    assert result.cost_usd == pytest.approx(0.01)  # one image, whatever the tokens
+    assert result.from_fixture is False and result.attempts == 1
+    assert h.requests[0].url.path == "/v1/images/generations"
+    assert h.body() == {
+        "model": "muse-image-1.0",
+        "prompt": "a lamp built from a laptop",
+        "n": 1,
+        "size": "1024x1024",
+        "response_format": "b64_json",
+        "output_format": "jpeg",
+        "reasoning_strength": "low",
+    }
+    totals = h.ledger.summary().by_model["muse-image-1.0"]
+    assert (totals.calls, totals.input_tokens, totals.output_tokens) == (1, 48, 1024)
+    assert h.ledger.entries()[0].usage.images == 1
+
+
+async def test_an_answer_without_an_image_is_incomplete_and_still_charged(live: Settings) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json={"created": 1, "data": [{"url": "x"}]}))
+    with pytest.raises(IncompleteResponseError, match="no image"):
+        await h.client.picture("a lamp")
+    assert h.ledger.summary().calls == 1
+    h = Harness(live, lambda _: httpx.Response(200, json={"data": [{"b64_json": "!!not base64"}]}))
+    with pytest.raises(IncompleteResponseError, match="no image"):
+        await h.client.picture("a lamp")
 
 
 # --- models and readiness -----------------------------------------------------
