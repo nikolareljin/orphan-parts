@@ -36,10 +36,15 @@ pytestmark = pytest.mark.anyio
 def test_the_shipped_templates_load_and_say_what_they_need() -> None:
     templates = Templates()
     assert templates.ids() == [
+        "arcade_table",
         "document_camera",
         "external_monitor_workaround",
+        "home_automation_server",
         "home_music_setup",
+        "home_server",
         "homework_workstation",
+        "retro_console",
+        "smart_mirror",
         "vacuum_restored",
     ]
     vacuum = templates.get("vacuum_restored")
@@ -418,7 +423,7 @@ def test_project_routes(recorded_client: TestClient) -> None:
     )
     assert saved.status_code == 200 and saved.json()["budget"] == 30
     assert recorded_client.put("/api/preferences", json={"effort": "heroic"}).status_code == 422
-    assert len(recorded_client.get("/api/templates").json()) == 5
+    assert len(recorded_client.get("/api/templates").json()) == 10
 
     proposed = recorded_client.post("/api/projects/propose", json={"count": 3})
     assert proposed.status_code == 201, proposed.text

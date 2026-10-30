@@ -101,7 +101,7 @@ Errors: `400` for a bad photo, `404` for an unknown item, measurement or profile
 | `GET /api/pair?origin=&api=`, `GET /api/pair.svg?origin=&api=` | what the phone needs to talk to this backend: the web origin given, or `api` when the backend has an origin of its own (a scheme, a host, an optional port, nothing more), and, when the demo is gated, a session of its own as `token` with `expires_at`; as JSON or as a QR code; reached only with a session, so the access code never leaves the server; 422 for any other origin |
 | `GET /healthz` | process is up |
 | `GET /readyz` | config loaded, Model API mode (`live`, `record` or `fixture`; `fixture (key failed)` when the key did not answer the startup probe), data directory writable, spend so far against the cap, `paused` once the cap is reached |
-| `GET /api/version` | package version, the configured model IDs and the upload `limits` (`max_photos`, `max_upload_mb`) the web form follows |
+| `GET /api/version` | package version, the configured model IDs and the upload `limits` (`max_photos`, `max_upload_mb`, `max_clip_mb`) the web forms follow |
 | `GET /api/spend` | the spend ledger: total, cap, remaining, calls per model with token counts, live versus fixture calls |
 
 Every response carries `X-Request-ID`. Send your own to have it echoed back and used in the logs

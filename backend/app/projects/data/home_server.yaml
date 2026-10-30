@@ -1,0 +1,39 @@
+id: home_server
+label: Home server and backup
+goal: A machine on the shelf that keeps the family's photos and documents backed up and serves them to every device, from a laptop and the drives you already own.
+result: a laptop with an external drive, running a file service with nightly backups, reachable from the phones and the other computers in the house
+effort: medium
+skills: [basic computer setup, networking]
+opens_devices: false
+typical_cost: {low: 0, high: 90, currency: USD}
+requirements:
+  - key: server
+    label: A laptop or a small computer that stays on
+    kind: item
+    item_types: [laptop, notebook, mini pc, desktop]
+    blocking: true
+  - key: storage
+    label: An external drive, or a second internal one
+    kind: item
+    item_types: [hard drive, ssd, external drive, drive]
+    blocking: true
+  - key: network
+    label: A switch or a router with a spare wired port
+    kind: item
+    item_types: [switch, network switch, router]
+    blocking: false
+  - key: memory
+    label: Spare RAM for the file cache, if the laptop takes it
+    kind: item
+    item_types: [ram, memory, ram module, so-dimm]
+    blocking: false
+steps:
+  - Install a small Linux on the laptop with a file service and a backup tool; set the lid to do nothing when closed.
+  - Plug the drive in, make one shared folder per person and one for the photos.
+  - Point every phone's photo backup and every computer's documents folder at it; run the first backup overnight.
+  - Set a nightly copy of the shared folders to the second drive, and restore one file to prove it works.
+safety:
+  - One copy is no backup; the second drive is the point of the build.
+sources:
+  - the file service's guide
+  - the backup tool's guide

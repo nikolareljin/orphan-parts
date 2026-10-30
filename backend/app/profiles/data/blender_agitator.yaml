@@ -1,0 +1,86 @@
+id: blender_agitator
+label: Blender or frappé maker agitator
+description: >
+  The rod that mixes the drink in a blender, a milk frother or a frappé maker: a metal rod with
+  two tabs or pins at the top that lock into the drive, and a disc, a whisk or blades at the
+  bottom. The whole rod is the part. Fit is decided by the rod, the tabs that couple it to the
+  drive and the length that reaches the cup; a worn plastic rod is often replaced by an
+  all-metal one of the same dimensions, so the material is a rule here. When no rod of the
+  same dimensions exists, the search is for another agitator of the same drive, or another
+  device whose rod fits this base.
+features:
+  - key: rod_diameter
+    label: Rod diameter
+    tolerance_mm: 0.2
+    how: >
+      Photograph the rod from the side with a ruler lying along it in the same plane. Mark the
+      ruler over a known length, then the two edges of the rod in its middle.
+  - key: rod_length
+    label: Rod length
+    tolerance_mm: 1.0
+    how: >
+      Same side photo, the whole rod in the frame: mark the top of the tabs and the far end of
+      the mixing head.
+  - key: tab_width
+    label: Coupling tab width
+    tolerance_mm: 0.2
+    how: >
+      Photograph the top of the rod straight on with the ruler beside the tabs. Mark the two
+      edges of one tab across its width.
+  - key: tab_span
+    label: Span across the two tabs
+    tolerance_mm: 0.3
+    how: >
+      Same top photo: mark the outer edge of one tab and the outer edge of the other, the widest
+      distance across the pair, which is what the drive's slot takes.
+  - key: tab_length
+    label: Coupling tab length
+    tolerance_mm: 0.5
+    how: >
+      Side photo of the top end with the ruler along the rod: mark where a tab starts and where
+      it ends along the rod.
+  - key: head_diameter
+    label: Head diameter
+    tolerance_mm: 0.5
+    how: >
+      Photograph the mixing head straight on with the ruler across it. Mark the widest span of
+      the disc, the whisk or the blade sweep.
+rules:
+  - key: model_number
+    label: Model number
+    kind: equal
+    hard: false
+    identity: true
+    question: Is there a model number on the base or on the rod?
+  - key: rod_diameter
+    label: Rod diameter
+    kind: within
+    question: What is the diameter of the rod, with a ruler or caliper?
+  - key: tab_span
+    label: Span across the two tabs
+    kind: within
+    question: How wide is the pair of tabs at the top, outer edge to outer edge?
+  - key: tab_width
+    label: Coupling tab width
+    kind: within
+    hard: false
+    question: How wide is one tab?
+  - key: tab_length
+    label: Coupling tab length
+    kind: within
+    hard: false
+    question: How long are the tabs along the rod?
+  - key: rod_length
+    label: Rod length
+    kind: within
+    hard: false
+    question: How long is the whole rod, tabs to head?
+  - key: head_diameter
+    label: Head diameter
+    kind: at_most
+    hard: false
+    question: How wide is the mixing head? It has to clear the cup.
+  - key: material
+    label: Material
+    kind: equal
+    question: Is the rod metal throughout, or does the rod, the tabs or the head carry plastic?
