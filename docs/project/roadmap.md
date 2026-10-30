@@ -4,9 +4,7 @@ What follows the hackathon scope, in rough order.
 
 ## The core, completed
 
-- **Build pack.** A versioned document per project, Markdown and PDF, with a date and an input
-  digest, stale when a critical input changes; a progress checklist; an outcome record with the
-  test, the date and the limitations.
+- **Build pack as a PDF**, and candidate listings cited by page in it.
 - **Ranking across candidates.** Several candidates for one need compared side by side, with the
   fit, the price and the open questions of each.
 - **Android app.** Capture into the same inventory with the phone camera, hold to talk, a

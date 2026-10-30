@@ -1,6 +1,7 @@
 """Shapes of build and reuse: what the owner prefers, what a template asks for, what the model
 proposes, and what a project becomes once items are allocated."""
 
+from datetime import UTC, date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -10,6 +11,7 @@ CURRENCY = r"^[A-Z]{3}$"
 TEXT_MAX = 2000
 LINE_MAX = 200
 PRICE_MAX = 10_000_000
+DATE = r"^\d{4}-\d{2}-\d{2}$"
 
 Effort = Literal["low", "medium", "high"]
 Purchase = Literal["used", "new", "either"]
@@ -131,6 +133,69 @@ class Requirement(BaseModel):
     profile: str
 
 
+class OutcomeBase(BaseModel):
+    """What was built and how it was tested: the owner's record, in their words."""
+
+    configuration: str = Field(min_length=1, max_length=TEXT_MAX)
+    test: str = Field(min_length=1, max_length=TEXT_MAX)
+    tested_on: str = Field(pattern=DATE)
+    working: bool
+    limitations: str = Field(default="", max_length=TEXT_MAX)
+
+    @field_validator("configuration", "test")
+    @classmethod
+    def _said(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("must not be blank")
+        return value
+
+    @field_validator("limitations")
+    @classmethod
+    def _trimmed_text(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("tested_on")
+    @classmethod
+    def _a_real_day(cls, value: str) -> str:
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("tested_on must be a real date, YYYY-MM-DD") from exc
+        return value
+
+
+class OutcomeCreate(OutcomeBase):
+    """The record as sent: a day that has happened, by the clock of the host."""
+
+    @field_validator("tested_on")
+    @classmethod
+    def _a_day_that_was(cls, value: str) -> str:
+        if date.fromisoformat(value) > datetime.now(UTC).date():
+            raise ValueError("tested_on cannot be in the future")
+        return value
+
+
+class Outcome(OutcomeBase):
+    """The record as kept: read back as written, whatever the clock says since."""
+
+    recorded_at: str
+    shared: bool = False
+
+
+class ShareChange(BaseModel):
+    shared: bool
+
+
+class ShareText(BaseModel):
+    text: str
+
+
+class ProgressChange(BaseModel):
+    step: int = Field(ge=0, description="the step's position, from 0")
+    done: bool
+
+
 class Project(BaseModel):
     id: int
     template: str
@@ -149,6 +214,8 @@ class Project(BaseModel):
     steps: list[str]
     safety: list[str]
     dropped: list[str] = Field(description="lines the model wrote that the inventory does not back")
+    progress: list[bool] = Field(default=[], description="one flag per step")
+    outcome: Outcome | None = None
     model: str
     from_fixture: bool
     cost_usd: float
@@ -169,6 +236,18 @@ class Budget(BaseModel):
 class ProjectList(BaseModel):
     projects: list[Project]
     budget: Budget
+
+
+class Pack(BaseModel):
+    """One written build pack; stale once the project, an item on it or the budget changed."""
+
+    id: int
+    project_id: int
+    version: int
+    digest: str
+    stale: bool
+    markdown: str
+    created_at: str
 
 
 class SelectRequest(BaseModel):

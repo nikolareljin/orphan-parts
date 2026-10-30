@@ -712,3 +712,20 @@ button.link {
 .build .actions {
   margin-top: 0.75rem;
 }
+
+.build .progress label {
+  display: inline;
+}
+
+.build .packs,
+.build .outcome {
+  margin-top: 0.75rem;
+}
+
+.build .share textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}

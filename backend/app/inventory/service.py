@@ -581,14 +581,15 @@ class Inventory:
             )
 
     def committed_elsewhere(self, item_id: int, project_id: int) -> list[sqlite3.Row]:
-        """The other selected projects an item is committed to; a deleted item holds nothing."""
+        """The other projects an item is committed to: selected, being built or done; a deleted
+        item holds nothing."""
         with self.store.connect() as conn:
             return conn.execute(
                 "SELECT a.project_id, p.title FROM allocations a"
                 " JOIN projects p ON p.id = a.project_id"
                 " JOIN items i ON i.id = a.item_id AND i.deleted_at IS NULL"
                 " WHERE a.item_id = ? AND a.committed = 1 AND a.project_id != ?"
-                " AND p.status IN ('selected', 'building')",
+                " AND p.status IN ('selected', 'building', 'done')",
                 (item_id, project_id),
             ).fetchall()
 
@@ -612,6 +613,37 @@ class Inventory:
                 "DELETE FROM allocations WHERE project_id = ? AND item_id = ?",
                 (project_id, item_id),
             )
+
+    def add_pack(self, project_id: int, digest: str, markdown: str) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            self._project(conn, project_id)
+            last = conn.execute(
+                "SELECT COALESCE(MAX(version), 0) FROM packs WHERE project_id = ?", (project_id,)
+            ).fetchone()[0]
+            cur = conn.execute(
+                "INSERT INTO packs (project_id, version, digest, markdown, created_at)"
+                " VALUES (?,?,?,?,?)",
+                (project_id, int(last) + 1, digest, markdown, now()),
+            )
+            found: sqlite3.Row = conn.execute(
+                "SELECT * FROM packs WHERE id = ?", (cur.lastrowid,)
+            ).fetchone()
+            return found
+
+    def packs(self, project_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            return conn.execute(
+                "SELECT * FROM packs WHERE project_id = ? ORDER BY version", (project_id,)
+            ).fetchall()
+
+    def pack(self, pack_id: int) -> sqlite3.Row:
+        with self.store.connect() as conn:
+            row: sqlite3.Row | None = conn.execute(
+                "SELECT * FROM packs WHERE id = ?", (pack_id,)
+            ).fetchone()
+            if row is None:
+                raise NotFoundError(f"no pack {pack_id}")
+            return row
 
     def _project(self, conn: sqlite3.Connection, project_id: int) -> sqlite3.Row:
         row: sqlite3.Row | None = conn.execute(

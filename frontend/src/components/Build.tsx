@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { ApiError, api, type Budget, type Conflict, type ItemSummary, type Preferences, type Project, type TemplateSummary } from '../lib/api'
+import { ApiError, api, type Budget, type Conflict, type ItemSummary, type Pack, type Preferences, type Project, type TemplateSummary } from '../lib/api'
 import { usd } from '../lib/format'
 import {
   EFFORTS,
@@ -11,11 +11,16 @@ import {
   effortLabel,
   missing,
   money,
-  numberOrNull, numberProblem,
+  numberOrNull,
+  numberProblem,
+  packLabel,
+  progressText,
   skillsFromText,
   skillsToText,
   statusLabel,
   statusTone,
+  stepDone,
+  todayIso,
 } from '../lib/projects'
 
 function message(err: unknown): string {
@@ -323,8 +328,23 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
   const [conflicts, setConflicts] = useState<Conflict[]>([])
   const [items, setItems] = useState<ItemSummary[]>([])
   const [picked, setPicked] = useState<Record<string, string>>({})
+  const [packs, setPacks] = useState<Pack[]>([])
+  const [ticks, setTicks] = useState<boolean[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+
+  // a tick shows at once and is reconciled with what the project says once it is saved
+  useEffect(() => {
+    setTicks(project?.progress ?? [])
+  }, [project])
+
+  // the packs written so far; reloaded with the project, since a change marks them stale
+  const loadPacks = useCallback(() => {
+    api.build
+      .packs(id)
+      .then(setPacks)
+      .catch(() => undefined)
+  }, [id])
 
   // the items an open requirement may be filled with: not gone, not for sale or giving away
   useEffect(() => {
@@ -349,17 +369,40 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
     }
   }, [id])
 
-  async function act(call: () => Promise<Project>) {
-    if (busy) return
+  useEffect(() => {
+    loadPacks()
+  }, [loadPacks])
+
+  // Every change goes through here; it says whether the server took it, so a control shown
+  // ahead of the answer can go back to what the project says.
+  async function act(call: () => Promise<Project>): Promise<boolean> {
+    if (busy) return false
     setBusy(true)
     setError('')
     setConflicts([])
     try {
       setProject(await call())
       onChanged()
+      loadPacks()
+      return true
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 409) setConflicts(conflictsOf(err.body))
       else setError(message(err))
+      return false
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function writePack() {
+    if (busy) return
+    setBusy(true)
+    setError('')
+    try {
+      await api.build.writePack(id)
+      loadPacks()
+    } catch (err: unknown) {
+      setError(message(err))
     } finally {
       setBusy(false)
     }
@@ -368,6 +411,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
   if (!project) return <p className="muted">Loading…</p>
   const open = missing(project)
   const active = project.status !== 'abandoned' && project.status !== 'done'
+  const underway = project.status === 'selected' || project.status === 'building' || project.status === 'done'
 
   return (
     <article className="project-panel" aria-label={`Project ${project.title}`}>
@@ -466,7 +510,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
           ))}
         </ul>
       )}
-      {project.steps.length > 0 && (
+      {project.steps.length > 0 && !underway && (
         <details>
           <summary>Steps</summary>
           <ol>
@@ -476,6 +520,65 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
           </ol>
           {project.sources.length > 0 && <p className="muted">Guidance: {project.sources.join('; ')}</p>}
         </details>
+      )}
+      {project.steps.length > 0 && underway && (
+        <>
+          <h4>
+            Steps <span className="muted">{progressText(project)}</span>
+          </h4>
+          <ol className="progress" aria-label="Progress">
+            {project.steps.map((s, i) => (
+              <li key={s}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={stepDone({ progress: ticks }, i)}
+                    disabled={busy || project.status === 'done'}
+                    onChange={(e) => {
+                      const before = ticks
+                      const next = project.steps.map((_, n) => (n === i ? e.target.checked : stepDone({ progress: ticks }, n)))
+                      setTicks(next)
+                      void act(() => api.build.setProgress(id, i, e.target.checked)).then((ok) => {
+                        if (!ok) setTicks(before)
+                      })
+                    }}
+                  />{' '}
+                  {s}
+                </label>
+              </li>
+            ))}
+          </ol>
+          {project.sources.length > 0 && <p className="muted">Guidance: {project.sources.join('; ')}</p>}
+        </>
+      )}
+      {underway && (
+        <section className="packs" aria-label="Build pack">
+          <h4>Build pack</h4>
+          <p className="muted">
+            One document from what stands now: goal, items with their accepted values, what is still needed, costs, steps, safety, unknowns and limits.
+            Written by the rules, nothing is asked of a model; a change to an item, the project or the budget marks it stale.
+          </p>
+          <div className="row">
+            <button type="button" disabled={busy} onClick={() => void writePack()}>
+              Write the build pack
+            </button>
+          </div>
+          {packs.length > 0 && (
+            <ul aria-label="Packs">
+              {packs.map((p) => (
+                <li key={p.id}>
+                  <a href={api.build.packUrl(p.id)} download>
+                    Download
+                  </a>{' '}
+                  {packLabel(p)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+      {(project.status === 'building' || project.status === 'done') && (
+        <OutcomeSection project={project} busy={busy} onAct={act} />
       )}
       {project.dropped.length > 0 && (
         <p className="muted" aria-label="Dropped lines">
@@ -526,5 +629,123 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
         )}
       </div>
     </article>
+  )
+}
+
+
+// What was built and how it was tested, in the owner's words; working marks the project done.
+function OutcomeSection({ project, busy, onAct }: { project: Project; busy: boolean; onAct: (call: () => Promise<Project>) => Promise<boolean> }) {
+  const [configuration, setConfiguration] = useState(project.outcome?.configuration ?? '')
+  const [test, setTest] = useState(project.outcome?.test ?? '')
+  const [testedOn, setTestedOn] = useState(project.outcome?.tested_on ?? todayIso())
+  const [working, setWorking] = useState(project.outcome?.working ?? true)
+  const [limitations, setLimitations] = useState(project.outcome?.limitations ?? '')
+  const [shareText, setShareText] = useState('')
+  const [shareError, setShareError] = useState('')
+  const outcome = project.outcome
+  const shared = outcome?.shared ?? false
+  const [shareOn, setShareOn] = useState(shared)
+
+  useEffect(() => {
+    setShareOn(shared)
+  }, [shared])
+
+  useEffect(() => {
+    if (!shared) {
+      setShareText('')
+      return
+    }
+    let cancelled = false
+    api.build
+      .shareText(project.id)
+      .then((t) => {
+        if (cancelled) return
+        setShareText(t.text)
+        setShareError('')
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setShareError(message(err))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [project.id, shared, project.version])
+
+  function record(event: FormEvent) {
+    event.preventDefault()
+    void onAct(() => api.build.recordOutcome(project.id, { configuration, test, tested_on: testedOn, working, limitations }))
+  }
+
+  return (
+    <section className="outcome" aria-label="Outcome">
+      <h4>Outcome</h4>
+      {outcome && (
+        <p className="meta" aria-label="Recorded outcome">
+          Tested {outcome.tested_on}: {outcome.working ? 'working' : 'not working'}. {outcome.configuration}; {outcome.test}
+          {outcome.limitations ? `; limits: ${outcome.limitations}` : ''}
+        </p>
+      )}
+      {project.status === 'building' && (
+        <form onSubmit={record} aria-label="Record the outcome">
+          <div className="row">
+            <label className="wide">
+              <span>What was set up</span>
+              <input value={configuration} maxLength={2000} placeholder="the tool seated on the wand" onChange={(e) => setConfiguration(e.target.value)} />
+            </label>
+            <label className="wide">
+              <span>How it was tested</span>
+              <input value={test} maxLength={2000} placeholder="ran it over the stairs for a minute" onChange={(e) => setTest(e.target.value)} />
+            </label>
+          </div>
+          <div className="row">
+            <label>
+              <span>Tested on</span>
+              <input value={testedOn} placeholder="YYYY-MM-DD" onChange={(e) => setTestedOn(e.target.value)} />
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={working} onChange={(e) => setWorking(e.target.checked)} />
+              <span>It works</span>
+            </label>
+            <label>
+              <span>Limits</span>
+              <input value={limitations} maxLength={2000} onChange={(e) => setLimitations(e.target.value)} />
+            </label>
+            <button type="submit" disabled={busy || !configuration.trim() || !test.trim()}>
+              Record the outcome
+            </button>
+          </div>
+        </form>
+      )}
+      {outcome && (
+        <div className="share">
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={shareOn}
+              disabled={busy}
+              onChange={(e) => {
+                const wanted = e.target.checked
+                setShareOn(wanted)
+                void onAct(() => api.build.setShared(project.id, wanted)).then((ok) => {
+                  if (!ok) setShareOn(!wanted)
+                })
+              }}
+            />
+            <span>Share the outcome: the kinds of items, the result, the set-up, the test and the limits; no names, values, places or prices</span>
+          </label>
+          {shared && shareText && (
+            <label className="wide">
+              <span>Text to share</span>
+              <textarea aria-label="Share text" readOnly value={shareText} rows={6} />
+            </label>
+          )}
+          {shareError && (
+            <p className="error" role="alert">
+              {shareError}
+            </p>
+          )}
+        </div>
+      )}
+    </section>
   )
 }

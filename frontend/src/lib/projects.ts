@@ -1,4 +1,4 @@
-import type { Budget, Conflict, Effort, Preferences, Project, ProjectStatus, Requirement } from './api'
+import type { Budget, Conflict, Effort, Pack, Preferences, Project, ProjectStatus, Requirement } from './api'
 
 export const EFFORTS: { value: Effort; label: string }[] = [
   { value: 'low', label: 'an hour or so' },
@@ -112,4 +112,24 @@ export function conflictsOf(body: unknown): Conflict[] {
 
 export function conflictText(conflicts: Conflict[]): string {
   return conflicts.map((c) => `${c.item_name} is committed to "${c.project_title}"`).join('; ')
+}
+
+// Where a pack stands: the version, the day, and whether its inputs changed since.
+export function packLabel(pack: Pick<Pack, 'version' | 'created_at' | 'stale'>): string {
+  const day = pack.created_at.slice(0, 10)
+  return `version ${pack.version}, ${day}${pack.stale ? ', stale: an input changed since' : ''}`
+}
+
+// Progress is kept per step; a project written before the steps had flags has none yet.
+export function stepDone(project: Pick<Project, 'progress'>, index: number): boolean {
+  return project.progress[index] === true
+}
+
+export function progressText(project: Pick<Project, 'steps' | 'progress'>): string {
+  const done = project.steps.filter((_, i) => stepDone(project, i)).length
+  return `${done} of ${project.steps.length} steps done`
+}
+
+export function todayIso(): string {
+  return new Date().toISOString().slice(0, 10)
 }

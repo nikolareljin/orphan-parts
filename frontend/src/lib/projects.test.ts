@@ -9,7 +9,11 @@ import {
   missing,
   money,
   numberOrNull,
+  packLabel,
+  progressText,
   skillsFromText,
+  stepDone,
+  todayIso,
   skillsToText,
   statusLabel,
   statusTone,
@@ -94,5 +98,21 @@ describe('numberProblem', () => {
     expect(numberProblem('abc', 'The budget')).toBe('The budget must be a number')
     expect(numberProblem('-5', 'The radius')).toBe('The radius cannot be below 0')
     expect(numberProblem('1e999', 'The budget')).toBe('The budget must be a number')
+  })
+})
+
+describe('packs and progress', () => {
+  it('labels a pack by version and day and says when it is stale', () => {
+    expect(packLabel({ version: 2, created_at: '2026-10-29T18:00:00+00:00', stale: false })).toBe('version 2, 2026-10-29')
+    expect(packLabel({ version: 1, created_at: '2026-10-28T09:00:00+00:00', stale: true })).toBe('version 1, 2026-10-28, stale: an input changed since')
+  })
+  it('counts the steps done, treating missing flags as not done', () => {
+    const project = { steps: ['a', 'b', 'c'], progress: [true] }
+    expect(stepDone(project, 0)).toBe(true)
+    expect(stepDone(project, 2)).toBe(false)
+    expect(progressText(project)).toBe('1 of 3 steps done')
+  })
+  it('writes today as a date the API takes', () => {
+    expect(todayIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })

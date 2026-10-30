@@ -51,8 +51,9 @@ rules, dated, and placed where it stands, with the seller's questions as a messa
 **Build and reuse.** Say what you want from a build; Muse Spark proposes projects from
 templates kept as data, reading your inventory through tools, and the rules keep only what
 names items you have. Select a project to commit its items, one build per item, with a budget
-across the selected set; a missing piece becomes a search. The build pack, versioned and stale
-when an input changes, follows. [Build and reuse](guides/reuse.md).
+across the selected set; a missing piece becomes a search. A build pack written by the rules
+from what stands, versioned and stale when an input changes; the outcome in your words, shared
+only as a redacted text and only when you say so. [Build and reuse](guides/reuse.md).
 
 ## Any item
 

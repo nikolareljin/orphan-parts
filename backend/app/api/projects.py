@@ -1,17 +1,22 @@
 from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.api.deps import PlannerDep
 from app.api.model_errors import as_http
 from app.projects import (
     AllocationConflictError,
     FillRequest,
+    OutcomeCreate,
+    Pack,
     Preferences,
+    ProgressChange,
     Project,
     ProjectList,
     ProjectsError,
     ProposeRequest,
     SelectRequest,
+    ShareChange,
+    ShareText,
     TemplateSummary,
 )
 
@@ -124,5 +129,78 @@ def fill(project_id: int, key: str, request: FillRequest, planner: PlannerDep) -
     kind the requirement takes. A search open for it is marked found."""
     try:
         return planner.fill(project_id, key, request)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
+
+
+@router.post("/projects/{project_id}/pack", response_model=Pack, status_code=201)
+def write_pack(project_id: int, planner: PlannerDep) -> Pack:
+    """The build pack from what stands now, written by the rules: goal, the items with their
+    accepted values (never a serial, a location or a note), what is still needed with its
+    search, costs with dates, steps with progress, safety, unknowns, guidance, limitations and
+    the outcome; versioned, with a digest of its inputs."""
+    try:
+        return planner.write_pack(project_id)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
+
+
+@router.get("/projects/{project_id}/packs", response_model=list[Pack])
+def packs(project_id: int, planner: PlannerDep) -> list[Pack]:
+    """Every pack written for the project, each `stale` when its inputs changed since."""
+    return planner.packs_of(project_id)
+
+
+@router.get("/packs/{pack_id}.md", response_class=Response)
+def pack_markdown(pack_id: int, planner: PlannerDep) -> Response:
+    """The pack as a Markdown file to keep."""
+    found = planner.pack(pack_id)
+    name = f"build-pack-{found.project_id}-v{found.version}.md"
+    return Response(
+        found.markdown,
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{name}"'},
+    )
+
+
+@router.get("/packs/{pack_id}", response_model=Pack)
+def pack(pack_id: int, planner: PlannerDep) -> Pack:
+    return planner.pack(pack_id)
+
+
+@router.post("/projects/{project_id}/progress", response_model=Project)
+def progress(project_id: int, change: ProgressChange, planner: PlannerDep) -> Project:
+    """Tick or untick one step of a selected or building project."""
+    try:
+        return planner.set_progress(project_id, change.step, change.done)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
+
+
+@router.post("/projects/{project_id}/outcome", response_model=Project)
+def outcome(project_id: int, record: OutcomeCreate, planner: PlannerDep) -> Project:
+    """What was built and how it was tested, in your words; a working result marks the project
+    done, a failed test keeps it building with the record kept."""
+    try:
+        return planner.record_outcome(project_id, record)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
+
+
+@router.post("/projects/{project_id}/outcome/share", response_model=Project)
+def share(project_id: int, change: ShareChange, planner: PlannerDep) -> Project:
+    """Whether the outcome may be shown to others; off by default."""
+    try:
+        return planner.set_share(project_id, change)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
+
+
+@router.get("/projects/{project_id}/outcome/share", response_model=ShareText)
+def share_text(project_id: int, planner: PlannerDep) -> ShareText:
+    """The outcome for other people, once shared: the kinds of items, the result, the set-up,
+    the test and the limits; no names, ids, values, places or prices."""
+    try:
+        return ShareText(text=planner.share_text(project_id))
     except ProjectsError as exc:
         raise _error(exc) from exc
