@@ -25,26 +25,42 @@ set -euo pipefail
 
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
-# .env is read for the deploy settings only when the shell does not already set them: the
-# names below and nothing else, so the backend's own settings never leak into a deploy.
+# .env is read for the deploy settings, the names given and nothing else, so the backend's own
+# settings never leak into a deploy. A name the shell already sets is left alone; in the file
+# the last line for a name wins, as Docker Compose reads it: quotes around a value dropped, an
+# unquoted value cut at " #", a Windows line ending dropped, an empty value skipped.
 load_env() {
   [[ -f "$root/.env" ]] || return 0
-  local line key value
-  while IFS= read -r line; do
+  local names="|$1|" shell_set="|" key value line
+  local IFS_old="$IFS"
+  IFS='|'
+  for key in $1; do [[ -n "${!key:-}" ]] && shell_set+="$key|"; done
+  IFS="$IFS_old"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
     key="${line%%=*}"
+    [[ "$names" == *"|$key|"* && "$line" == *=* ]] || continue
+    [[ "$shell_set" == *"|$key|"* ]] && continue
     value="${line#*=}"   # the first = divides; any later one is part of the value
-    value="${value%\"}"; value="${value#\"}"
-    [[ -z "$value" || -n "${!key:-}" ]] || export "$key=$value"
-  done < <(grep -E "^($1)=" "$root/.env" || true)
+    case "$value" in
+      \"*\") value="${value#\"}"; value="${value%\"}" ;;
+      \'*\') value="${value#\'}"; value="${value%\'}" ;;
+      *) value="${value%% #*}" ;;
+    esac
+    [[ -n "$value" ]] && export "$key=$value"
+  done < "$root/.env"
+  return 0
 }
 
 if [[ "${1:-}" == hosted ]]; then
   shift
   load_env 'MODAL_TOKEN_ID|MODAL_TOKEN_SECRET|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID|MODEL_API_KEY_DEMO|DEMO_ACCESS_CODE_HOSTED|WEB_ORIGIN|PAGES_PROJECT|API_URL|SPEND_CAP_USD_HOSTED|OPL_FAKE_API_HOSTED|OPL_MIN_CONTAINERS'
-  # the host's own code, cap and mode are kept apart from this machine's in .env
-  [[ -n "${DEMO_ACCESS_CODE_HOSTED:-}" ]] && export DEMO_ACCESS_CODE="$DEMO_ACCESS_CODE_HOSTED"
-  [[ -n "${SPEND_CAP_USD_HOSTED:-}" ]] && export SPEND_CAP_USD="$SPEND_CAP_USD_HOSTED"
-  [[ -n "${OPL_FAKE_API_HOSTED:-}" ]] && export OPL_FAKE_API="$OPL_FAKE_API_HOSTED"
+  # the host's code, cap and mode come from the _HOSTED names only (the shell's or .env's);
+  # this machine's DEMO_ACCESS_CODE, SPEND_CAP_USD and OPL_FAKE_API never reach the host, and
+  # an empty one leaves the host's default (no code, a cap of 20, recorded answers)
+  export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE_HOSTED:-}"
+  export SPEND_CAP_USD="${SPEND_CAP_USD_HOSTED:-}"
+  export OPL_FAKE_API="${OPL_FAKE_API_HOSTED:-}"
   exec bash "$root/scripts/deploy-hosted.sh" "$@"
 fi
 target="all"

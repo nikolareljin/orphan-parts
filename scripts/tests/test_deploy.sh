@@ -87,17 +87,36 @@ test_deploy_hosted_reads_its_names_from_env_and_the_shell_wins() {
   dir="$(mktemp -d)" || { assert_true false; return; }
   mkdir -p "$dir/scripts"
   # a stand-in for deploy-hosted.sh that prints what it was handed
-  printf '#!/usr/bin/env bash\necho "args=$*"\necho "MODAL_TOKEN_ID=${MODAL_TOKEN_ID:-}"\necho "DEMO_ACCESS_CODE=${DEMO_ACCESS_CODE:-}"\necho "SPEND_CAP_USD=${SPEND_CAP_USD:-}"\necho "WEB_ORIGIN=${WEB_ORIGIN:-}"\necho "MODEL_API_KEY=${MODEL_API_KEY:-}"\n' > "$dir/scripts/deploy-hosted.sh"
-  printf 'MODEL_API_KEY=local-only\nMODAL_TOKEN_ID=from-env\nDEMO_ACCESS_CODE=machine-code\nDEMO_ACCESS_CODE_HOSTED=host-code-long\nSPEND_CAP_USD_HOSTED=15\nWEB_ORIGIN=https://orphan-parts.pages.dev\nCLOUDFLARE_API_TOKEN=\n' > "$dir/.env"
-  out="$(env -u MODAL_TOKEN_ID -u DEMO_ACCESS_CODE -u SPEND_CAP_USD -u WEB_ORIGIN -u MODEL_API_KEY ROOT="$dir" bash "$_deploy" hosted backend)"
+  printf '#!/usr/bin/env bash\necho "args=$*"\nfor n in MODAL_TOKEN_ID MODAL_TOKEN_SECRET CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID DEMO_ACCESS_CODE SPEND_CAP_USD OPL_FAKE_API WEB_ORIGIN MODEL_API_KEY; do echo "$n=${!n:-}"; done\n' > "$dir/scripts/deploy-hosted.sh"
+  {
+    printf 'MODEL_API_KEY=local-only\n'
+    printf 'MODAL_TOKEN_ID=first\nMODAL_TOKEN_ID=from-env\n'        # the last line wins
+    printf "MODAL_TOKEN_SECRET='quoted value'\n"                     # quotes dropped
+    printf 'CLOUDFLARE_API_TOKEN=tok # a note\n'                     # an unquoted value's comment dropped
+    printf 'CLOUDFLARE_ACCOUNT_ID=acct\r\n'                          # a Windows line ending dropped
+    printf 'DEMO_ACCESS_CODE=machine-code\nSPEND_CAP_USD=99\nOPL_FAKE_API=1\n'
+    printf 'DEMO_ACCESS_CODE_HOSTED=host-code-long\nSPEND_CAP_USD_HOSTED=15\nOPL_FAKE_API_HOSTED=0\n'
+    printf 'WEB_ORIGIN=https://orphan-parts.pages.dev\nAPI_URL=\n'
+  } > "$dir/.env"
+  out="$(env -u MODAL_TOKEN_ID -u MODAL_TOKEN_SECRET -u CLOUDFLARE_API_TOKEN -u CLOUDFLARE_ACCOUNT_ID -u DEMO_ACCESS_CODE -u SPEND_CAP_USD -u OPL_FAKE_API -u WEB_ORIGIN -u MODEL_API_KEY -u DEMO_ACCESS_CODE_HOSTED -u SPEND_CAP_USD_HOSTED -u OPL_FAKE_API_HOSTED ROOT="$dir" bash "$_deploy" hosted backend)"
   assert_true grep -q '^args=backend$' <<<"$out"
   assert_true grep -q '^MODAL_TOKEN_ID=from-env$' <<<"$out"
+  assert_true grep -q '^MODAL_TOKEN_SECRET=quoted value$' <<<"$out"
+  assert_true grep -q '^CLOUDFLARE_API_TOKEN=tok$' <<<"$out"
+  assert_true grep -qx 'CLOUDFLARE_ACCOUNT_ID=acct' <<<"$out"
   assert_true grep -q '^DEMO_ACCESS_CODE=host-code-long$' <<<"$out"   # the host's, not this machine's
   assert_true grep -q '^SPEND_CAP_USD=15$' <<<"$out"
+  assert_true grep -q '^OPL_FAKE_API=0$' <<<"$out"
   assert_true grep -q '^WEB_ORIGIN=https://orphan-parts.pages.dev$' <<<"$out"
   assert_true grep -q '^MODEL_API_KEY=$' <<<"$out"                    # never handed to the host
-  # the shell wins over .env
-  out="$(env -u DEMO_ACCESS_CODE MODAL_TOKEN_ID=from-shell ROOT="$dir" bash "$_deploy" hosted)"
+  # the shell wins over .env, for a plain name and for a _HOSTED one
+  out="$(env -u DEMO_ACCESS_CODE MODAL_TOKEN_ID=from-shell DEMO_ACCESS_CODE_HOSTED=shell-host-code ROOT="$dir" bash "$_deploy" hosted)"
   assert_true grep -q '^MODAL_TOKEN_ID=from-shell$' <<<"$out"
-  [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
+  assert_true grep -q '^DEMO_ACCESS_CODE=shell-host-code$' <<<"$out"
+  # no _HOSTED value anywhere: this machine's code, cap and mode still never reach the host
+  grep -v '_HOSTED=' "$dir/.env" > "$dir/.env.new" && mv "$dir/.env.new" "$dir/.env"
+  out="$(env -u DEMO_ACCESS_CODE_HOSTED -u SPEND_CAP_USD_HOSTED -u OPL_FAKE_API_HOSTED DEMO_ACCESS_CODE=exported-machine-code SPEND_CAP_USD=77 ROOT="$dir" bash "$_deploy" hosted)"
+  assert_true grep -q '^DEMO_ACCESS_CODE=$' <<<"$out"
+  assert_true grep -q '^SPEND_CAP_USD=$' <<<"$out"
+  _deploy_cleanup "$dir"
 }

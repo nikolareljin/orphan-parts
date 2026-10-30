@@ -68,9 +68,9 @@ laptop and the secret on Modal is written from one place. It is inert until the 
 variable `HOSTED_DEPLOY` is `true`; then it runs on **Run workflow** (choose `both`, `backend`
 or `web`) and after every release tag. Its two jobs call `scripts/deploy-hosted.sh`, which
 also runs from a shell as `./dev deploy hosted [secret|backend|web|all]` (which reads the
-same names from your git-ignored `.env`, listed with empty values in `.env.example`, the shell
-winning; the host's code, cap and mode as `DEMO_ACCESS_CODE_HOSTED`, `SPEND_CAP_USD_HOSTED` and
-`OPL_FAKE_API_HOSTED` so they never mix with this machine's) with the same
+same names from your git-ignored `.env`, listed in `.env.example` with every secret empty, the
+shell winning; the host's code, cap and mode come only from `DEMO_ACCESS_CODE_HOSTED`,
+`SPEND_CAP_USD_HOSTED` and `OPL_FAKE_API_HOSTED`, so this machine's own never reach the host) with the same
 settings in the environment and this machine's `modal` and `wrangler` logins:
 
 1. **backend**: `secret` writes the Modal secret `orphan-parts` from the settings below, each
