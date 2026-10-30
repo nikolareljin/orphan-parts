@@ -8,6 +8,7 @@ import Modal from './components/Modal'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
 
 import { reachableFromAPhone } from './lib/pairing'
+import { DEFAULT_LIMITS } from './lib/photos'
 import { demoText } from './lib/access'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
@@ -128,6 +129,8 @@ export default function App() {
         <section className="card">
           <h2>Inbox</h2>
           <Inbox
+            limits={status.kind === 'ok' ? status.version.limits : DEFAULT_LIMITS}
+            demo={demo}
             onOpenItem={(id) => {
               setOpenItem(id)
               setSaved((n) => n + 1)

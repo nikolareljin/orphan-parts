@@ -19,6 +19,7 @@ export interface Readiness {
 }
 
 export interface Limits {
+  max_clip_mb: number
   max_photos: number
   max_upload_mb: number
 }
@@ -918,6 +919,13 @@ export const api = {
   },
   captures: {
     list: () => getJson<{ captures: Capture[] }>('/api/captures'),
+    // the bundle the phone sends, from this computer: photos, one clip, a name and a line
+    send: (photos: File[], clip: File | null, request: { name: string; note: string }) =>
+      postForm<Capture>('/api/captures', [
+        ...photos.map((p): FormPart => ['photos', p]),
+        ...(clip ? [['clip', clip] as FormPart] : []),
+        ['request', JSON.stringify({ ...request, find_label: true })],
+      ]),
     get: (id: number) => getJson<Capture>(`/api/captures/${id}`),
     process: (id: number) => sendJson<Capture>('POST', `/api/captures/${id}/process`),
     remove: (id: number) => sendJson<void>('DELETE', `/api/captures/${id}`),
