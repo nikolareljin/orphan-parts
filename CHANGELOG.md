@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Fixed
+- The frappé maker's agitator in the demo set asks for a metal replacement: the material on the need side is the one wanted, the worn rod's plastic is a fault note, so an all-metal rod of the same dimensions passes and a plastic one is a conflict.
+
 ### Security
 - No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
 

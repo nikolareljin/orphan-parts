@@ -83,4 +83,4 @@ rules:
   - key: material
     label: Material
     kind: equal
-    question: Is the rod metal throughout, or does the rod, the tabs or the head carry plastic?
+    question: Is the rod metal throughout, or does the rod, the tabs or the head carry plastic? (On the need side this is the material wanted in a replacement.)
