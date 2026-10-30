@@ -488,16 +488,7 @@ class Planner:
                 continue
         return out
 
-    def digest(self, project: Project) -> str:
-        return packs.digest_for(project, self.items_on(project), self.preferences())
-
-    def write_pack(self, project_id: int) -> Pack:
-        """The pack from what stands now: the rules write it, nothing is asked of a model."""
-        project = self.project(project_id)
-        if project.status in ("proposed", "shortlisted", "abandoned"):
-            raise ProjectsError("a build pack is written for a selected project")
-        items = self.items_on(project)
-        prefs = self.preferences()
+    def searches_of(self, project: Project) -> dict[int, Any]:
         searches: dict[int, Any] = {}
         for r in project.requirements:
             if r.search_id is None:
@@ -509,12 +500,31 @@ class Planner:
                 )
             except LookupError:
                 continue
-        digest = packs.digest_for(project, items, prefs)
-        version = len(self.inventory.packs(project_id)) + 1
-        markdown = packs.render(
-            project, items, prefs, self.projects().budget, searches, version, digest
+        return searches
+
+    def digest(self, project: Project) -> str:
+        return packs.digest_for(
+            project,
+            self.items_on(project),
+            self.preferences(),
+            self.projects().budget,
+            self.searches_of(project),
         )
-        return self.pack_of(self.inventory.add_pack(project_id, digest, markdown), digest)
+
+    def write_pack(self, project_id: int) -> Pack:
+        """The pack from what stands now: the rules write it, nothing is asked of a model."""
+        with self._lock:
+            project = self.project(project_id)
+            if project.status in ("proposed", "shortlisted", "abandoned"):
+                raise ProjectsError("a build pack is written for a selected project")
+            items = self.items_on(project)
+            prefs = self.preferences()
+            budget = self.projects().budget
+            searches = self.searches_of(project)
+            digest = packs.digest_for(project, items, prefs, budget, searches)
+            version = len(self.inventory.packs(project_id)) + 1
+            markdown = packs.render(project, items, prefs, budget, searches, version, digest)
+            return self.pack_of(self.inventory.add_pack(project_id, digest, markdown), digest)
 
     def packs_of(self, project_id: int) -> list[Pack]:
         current = self.digest(self.project(project_id))
@@ -555,7 +565,7 @@ class Planner:
         """The owner's record of what was built and how it was tested. A working result marks
         the project done; a failed test keeps it building, with the record kept."""
         row = self.inventory.project(project_id)
-        if row["status"] not in ("building", "done"):
+        if row["status"] != "building":
             raise ProjectsError("an outcome is recorded on a project being built")
         content = json.loads(row["content"])
         content["outcome"] = {
