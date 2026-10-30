@@ -69,9 +69,8 @@ which still triggers `release.yml`.
 4. pushes them to GHCR as `ghcr.io/<owner>/orphan-parts/backend:0.2.0` and
    `.../frontend:0.2.0` (plus `latest`), nothing is pushed if the smoke test fails,
 5. creates a GitHub release with those notes,
-6. then two jobs that stay inert until there is something for them: `android` builds the
-   release APK and attaches it to the release once `android/gradlew` exists in the tree;
-   `deploy` runs `scripts/deploy.sh web` against the host when the repository variable
+6. then `android` builds the release APK with `scripts/deploy.sh android` and attaches it to
+   the release as `orphan-parts-<version>.apk`, and `deploy`, inert until there is a host, runs `scripts/deploy.sh web` against the host when the repository variable
    `DEPLOY_ENABLED` is `true` and the secrets `DEPLOY_HOST` (`user@host`), `DEPLOY_PATH` and
    `DEPLOY_SSH_KEY` are set. See [Deployment](../operations/deployment.md).
 
@@ -84,6 +83,12 @@ Only a tag, or the tag workflow, triggers it; no image is built or pushed for ot
 requests or merges. The images are the release artifact: the demo host pulls them, and a
 tagged version can be run anywhere without a build. See
 [Deployment](../operations/deployment.md).
+
+## `android.yml`
+
+The app's checks, only when `android/`, `scripts/android.sh` or `VERSION` changed: the unit
+tests on the JVM and the debug APK, with the JDK and the SDK the runner already has. The
+smoke run on a device is a local step (`./dev android smoke`), not a CI one.
 
 ## `docs.yml`
 

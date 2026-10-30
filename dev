@@ -25,6 +25,8 @@
 #                      the tag starts the release workflow
 #   deploy [web|android|all] [--version x.y.z]
 #                      put a published release on the host, and build the APK when there is one
+#   android <build|test|release|install|smoke>
+#                      the app: unit tests, the APKs, an install, a smoke run on a device
 #   shell <service>    open a shell in a running service
 #   help               this text
 #
@@ -264,6 +266,8 @@ cmd_release() { bash "$ROOT/scripts/release.sh" "$@"; }
 
 cmd_deploy() { bash "$ROOT/scripts/deploy.sh" "$@"; }
 
+cmd_android() { bash "$ROOT/scripts/android.sh" "$@"; }
+
 cmd_shell() {
   local svc="${1:-backend}"
   compose exec "$svc" sh
@@ -286,6 +290,7 @@ case "$cmd" in
   version) cmd_version "$@" ;;
   release) cmd_release "$@" ;;
   deploy) cmd_deploy "$@" ;;
+  android) cmd_android "$@" ;;
   shell) cmd_shell "$@" ;;
   help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
   *) die "unknown command: $cmd (try ./dev help)" 2 ;;

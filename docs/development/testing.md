@@ -130,6 +130,14 @@ that records it; what is not set up skipped or refused).
 
 ## Fixture mode and recorded fixtures
 
+The Android app has unit tests on the JVM (`./dev android test`): the client's requests as
+they go on the wire (the access call and the bearer token it keeps, the photo and the
+recording as multipart, the item with the whole reading, the error text read off a 422), the
+multipart framing, the WAV header and sizes, and the settings' URL. The smoke run
+(`./dev android smoke`) installs the debug APK on the connected phone or a headless emulator
+(`ANDROID_AVD`), launches the app, confirms its activity is on screen and keeps a screenshot;
+`scripts/tests/test_android.sh` checks that script with stand-ins for gradlew and adb.
+
 `OPL_FAKE_API=1` makes the Model API client serve recorded responses from
 `backend/tests/fixtures/api/<endpoint>/`. A file named after the request digest matches one exact
 request; a file named after the operation (`extract.json`) answers every request for that

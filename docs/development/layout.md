@@ -22,8 +22,17 @@ frontend/
   Dockerfile          build + nginx
   nginx.conf          static files, API proxy
 
+android/
+  app/src/main/kotlin/com/orphanparts/lens/
+    api/              the backend by its paths: transport, multipart, client
+    audio/            hold-to-talk recording, WAV framing
+    ui/               the three pages: backend, capture, talk
+  app/src/test/       unit tests on the JVM
+  build.gradle.kts, settings.gradle.kts, gradlew
+
 scripts/
   lib/                bash helper modules used by ./dev
+  android.sh          the app's tests, APKs, install and smoke run (./dev android)
   release-tag.sh      the version a release branch names, checked before it becomes a tag
   release-notes.sh    the notes of one release, assembled from the changelog and the history
   release.sh          tag VERSION on main and push the tag, by hand (./dev release)
@@ -34,7 +43,7 @@ VERSION               the version, the one place it is read from by hand
 docker/docs/          image that builds and serves the docs site
 docs/, mkdocs.yml     this site
 overrides/            the theme override: the share metadata every page carries
-.github/workflows/    ci.yml (checks), tag-release.yml (merged release/x.y.z -> tag), release.yml (tags to GHCR + GitHub release), docs.yml (Pages)
+.github/workflows/    ci.yml (checks), android.yml (the app's checks), tag-release.yml (merged release/x.y.z -> tag), release.yml (tags to GHCR + GitHub release + APK), docs.yml (Pages)
 dev                   command runner
 docker-compose.yml    development stack
 docker-compose.prod.yml
