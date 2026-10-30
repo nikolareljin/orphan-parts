@@ -67,8 +67,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             }
         )
         prober = ModelApiClient(quick, ledger)
-        probe = await prober.check()
-        await prober.aclose()
+        try:
+            probe = await prober.check()
+        finally:
+            await prober.aclose()
         if not probe.get("reachable") and probe.get("status") not in KEY_FAILURES:
             log.warning(
                 "the API did not answer the probe; staying live",

@@ -177,7 +177,15 @@ def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
     spec.loader.exec_module(module)
     module.RELOAD_EVERY_S = 3600.0
 
-    with TestClient(module.web()) as c:
+    try:
+        _drive_the_volume(module, calls, refuse)
+    finally:
+        config_module.get_settings.cache_clear()
+
+
+def _drive_the_volume(module: object, calls: list[str], refuse: dict[str, bool]) -> None:
+    origin = {"Origin": "http://localhost:5173"}  # the default CORS origin
+    with TestClient(module.web()) as c:  # type: ignore[attr-defined]
         assert c.get("/healthz").status_code == 200
         assert calls == ["reload"]  # the first read: read back, nothing to commit
         assert c.get("/healthz").status_code == 200
@@ -188,12 +196,13 @@ def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
         assert c.app.state.settings.sqlite_journal_mode == "DELETE"
         calls.clear()
         refuse["reload"] = True
-        refused = c.post("/api/items", json={"item_type": "kettle"})
+        refused = c.post("/api/items", json={"item_type": "kettle"}, headers=origin)
         assert refused.status_code == 503 and refused.headers["retry-after"] == "2"
+        # inside the CORS layer: a browser on the web app's origin can read the answer
+        assert refused.headers["access-control-allow-origin"] == origin["Origin"]
         assert calls == ["reload"]  # nothing written, nothing committed
         assert c.get("/api/items").status_code == 200  # a read goes on regardless
         assert len(c.get("/api/items").json()) == 1
-    config_module.get_settings.cache_clear()
 
 
 def test_project_templates_are_packaged() -> None:
