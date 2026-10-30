@@ -651,10 +651,13 @@ export interface Access {
   expires_at: number
 }
 
-// A 401 means the session is gone: the shell is told, so it asks for the code again.
+// A 401 means the session is gone: the token kept for it is dropped and the shell is told,
+// so it asks for the code again.
 export const ACCESS_REQUIRED_EVENT = 'opl-access-required'
 function noteStatus(status: number): void {
-  if (status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event(ACCESS_REQUIRED_EVENT))
+  if (status !== 401) return
+  keepToken('')
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(ACCESS_REQUIRED_EVENT))
 }
 
 export class ApiError extends Error {

@@ -2,13 +2,16 @@
 settings from one secret. Deployed with ``./dev deploy modal`` (``modal deploy
 deploy/modal_app.py``); the web app on Cloudflare Pages calls the URL this prints.
 
-The secret ``orphan-parts`` holds MODEL_API_KEY, DEMO_ACCESS_CODE, SPEND_CAP_USD, OPL_FAKE_API
-and CORS_ORIGINS. Without a key the service runs in fixture mode (recorded answers, nothing
+The secret ``orphan-parts`` holds MODEL_API_KEY, DEMO_ACCESS_CODE, SPEND_CAP_USD, OPL_FAKE_API,
+CORS_ORIGINS, DEMO_COOKIE_SECURE and DEMO_TRUST_PROXY (Modal's proxy forwards the visitor's
+address; without the flag every visitor would share the proxy's). Without a key the service runs in fixture mode (recorded answers, nothing
 spent); with a key that does not answer, the startup probe does the same and says so.
 """
 
 import asyncio
+import logging
 import os
+import time
 from pathlib import Path
 
 import modal
@@ -29,6 +32,7 @@ image = (
 )
 
 data = modal.Volume.from_name("orphan-parts-data", create_if_missing=True)
+RELOAD_EVERY_S = 30.0  # how stale the web container's view of the Volume may be
 
 
 @app.function(
@@ -45,6 +49,8 @@ data = modal.Volume.from_name("orphan-parts-data", create_if_missing=True)
 def web():  # type: ignore[no-untyped-def]
     os.environ.setdefault("DATA_DIR", "/data")
     os.environ.setdefault("LOG_FORMAT", "json")
+    # the Volume is a network filesystem: SQLite's write-ahead log does not work on one
+    os.environ.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
     if not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
     from starlette.middleware.base import BaseHTTPMiddleware
@@ -52,18 +58,31 @@ def web():  # type: ignore[no-untyped-def]
     from app.main import create_app
 
     fastapi_app = create_app()
+    log = logging.getLogger("app.modal")
+    last_reload = 0.0
 
-    class CommitWrites(BaseHTTPMiddleware):  # type: ignore[misc]
-        """What a container wrote reaches the Volume at once, not only on shutdown."""
+    class VolumeSync(BaseHTTPMiddleware):  # type: ignore[misc]
+        """What another container committed (``load_demo``) reaches this one before any
+        write of its own and within RELOAD_EVERY_S otherwise, and what this container wrote
+        reaches the Volume at once, not only on shutdown."""
 
         async def dispatch(self, request, call_next):  # type: ignore[no-untyped-def]
+            nonlocal last_reload
+            writes = request.method in ("POST", "PUT", "PATCH", "DELETE")
+            if writes or time.monotonic() - last_reload > RELOAD_EVERY_S:
+                # blocking I/O, off the loop; a file another request holds open makes
+                # the reload refuse, and the next one does it
+                try:
+                    await asyncio.to_thread(data.reload)
+                    last_reload = time.monotonic()
+                except Exception as exc:  # noqa: BLE001 - the Volume's own error types
+                    log.info("volume reload skipped: %s", exc)
             response = await call_next(request)
-            if request.method in ("POST", "PUT", "PATCH", "DELETE") and response.status_code < 500:
-                # the commit is blocking I/O; off the loop so other requests are not held
+            if writes and response.status_code < 500:
                 await asyncio.to_thread(data.commit)
             return response
 
-    fastapi_app.add_middleware(CommitWrites)
+    fastapi_app.add_middleware(VolumeSync)
     return fastapi_app
 
 
@@ -77,9 +96,11 @@ def load_demo(reset: bool = True) -> int:  # type: ignore[no-untyped-def]
     """The demo set loaded into the host's inventory, in the mode the secret says (fixture
     mode replays the recordings shipped with the image and spends nothing):
     ``modal run deploy/modal_app.py::load_demo`` (``--no-reset`` adds to what is there).
-    The web container keeps serving meanwhile; it reads the new file on its next request."""
+    The web container keeps serving meanwhile and picks the set up before its next write
+    and within half a minute otherwise."""
     os.environ.setdefault("DATA_DIR", "/data")
     os.environ.setdefault("LOG_FORMAT", "text")
+    os.environ.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
     if not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
     from app.demo.__main__ import main

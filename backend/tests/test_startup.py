@@ -53,6 +53,24 @@ def test_a_key_that_does_not_answer_puts_the_service_on_recorded_answers(
         assert len(calls) == 1
 
 
+def test_a_busy_api_at_the_probe_keeps_live_mode(tmp_path: Path, monkeypatch: object) -> None:
+    import app.main as main_module
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(503, json={"error": {"message": "busy"}})
+
+    real = main_module.ModelApiClient
+
+    class Probed(real):  # type: ignore[misc,valid-type]
+        def __init__(self, settings: Settings, ledger: object, **kw: object) -> None:
+            super().__init__(settings, ledger, transport=httpx.MockTransport(handler))  # type: ignore[arg-type]
+
+    monkeypatch.setattr(main_module, "ModelApiClient", Probed)  # type: ignore[attr-defined]
+    with TestClient(create_app(live(tmp_path, model_api_max_attempts=1))) as c:
+        # a 5xx, a timeout or a 429 is the API's day, not the key's: the mode stays
+        assert c.get("/readyz").json()["model_api"] == "live"
+
+
 def test_the_probe_can_be_turned_off(tmp_path: Path, monkeypatch: object) -> None:
     import app.main as main_module
 

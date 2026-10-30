@@ -65,7 +65,7 @@ def current_fields(assertions: list[Assertion]) -> dict[str, Assertion]:
 
 class Inventory:
     def __init__(self, settings: Settings) -> None:
-        self.store = Store(settings.inventory_db_path)
+        self.store = Store(settings.inventory_db_path, settings.sqlite_journal_mode)
 
     # creation
 

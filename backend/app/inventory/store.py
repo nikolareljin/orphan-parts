@@ -206,8 +206,9 @@ class SchemaTooNewError(RuntimeError):
 class Store:
     """One connection per operation under one lock: one owner, one process, no surprises."""
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, journal_mode: str = "WAL") -> None:
         self.path = path
+        self.journal_mode = journal_mode
         self._lock = threading.Lock()
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as conn:
@@ -228,7 +229,7 @@ class Store:
             conn = sqlite3.connect(self.path)
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA foreign_keys = ON")
-            conn.execute("PRAGMA journal_mode = WAL")
+            conn.execute(f"PRAGMA journal_mode = {self.journal_mode}")
             try:
                 with conn:
                     yield conn

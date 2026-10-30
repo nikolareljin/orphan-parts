@@ -201,6 +201,14 @@ def test_store_survives_a_restart_and_refuses_a_newer_schema(settings: Settings)
         Store(settings.inventory_db_path)
 
 
+def test_the_journal_mode_is_a_setting(settings: Settings) -> None:
+    kept = Inventory(settings.model_copy(update={"sqlite_journal_mode": "DELETE"}))
+    with kept.store.connect() as conn:
+        assert conn.execute("PRAGMA journal_mode").fetchone()[0] == "delete"
+    with Inventory(settings).store.connect() as conn:
+        assert conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
+
+
 def test_a_version_one_file_is_upgraded_in_place(settings: Settings) -> None:
     path = settings.inventory_db_path
     path.parent.mkdir(parents=True, exist_ok=True)
