@@ -84,13 +84,21 @@ dialog.modal::backdrop {
 @media (prefers-color-scheme: dark) {
   dialog.modal {
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.12),
       0 12px 28px rgba(0, 0, 0, 0.5),
       0 40px 90px rgba(0, 0, 0, 0.7);
   }
 
   dialog.modal::backdrop {
     background: rgba(2, 4, 8, 0.78);
+  }
+}
+
+/* a lighter blur on a phone, where a wide blur over the whole page costs the most */
+@media (max-width: 600px) {
+  dialog.modal::backdrop {
+    -webkit-backdrop-filter: blur(6px) saturate(0.8);
+    backdrop-filter: blur(6px) saturate(0.8);
   }
 }
 

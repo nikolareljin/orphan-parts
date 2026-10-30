@@ -5,7 +5,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## Unreleased
 
 ### Changed
-- Dialogs stand clear of the page: a deeper, layered shadow around the panel and a darker, more blurred see-through backdrop behind it, in light and dark mode.
+- Dialogs stand clear of the page: a deeper, layered shadow around the panel and a darker, more blurred see-through backdrop behind it, in light and dark mode; in dark mode a light hairline edge outlines the panel, and on a phone the backdrop blurs less.
 
 ### Security
 - No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
