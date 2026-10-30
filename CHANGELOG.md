@@ -5,7 +5,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## Unreleased
 
 ### Changed
-- The logo is larger where it stands for the app: the Android icon is the viewfinder on its dark ground, filling the launcher shape (no white rim); the web header shows the mark at the height of the name and the tagline. `scripts/app-icon.sh` renders the icon PNGs from `docs/assets/logo.svg`.
+- The logo is larger where it stands for the app: the Android icon is the viewfinder on its dark ground, filling the launcher shape (no white rim); the web header shows the same viewfinder crop at the height of the name and the tagline, while the browser tab keeps the whole logo. `scripts/app-icon.sh` renders the icon PNGs and writes the header's mark from `docs/assets/logo.svg`.
 - Dialogs stand clear of the page: a deeper, layered shadow around the panel and a darker, more blurred see-through backdrop behind it, in light and dark mode; in dark mode a light hairline edge outlines the panel, and on a phone the backdrop blurs less.
 
 ### Added

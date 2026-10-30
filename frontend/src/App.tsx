@@ -79,7 +79,7 @@ export default function App() {
     <main className="shell">
       <header className="top">
         <div className="brand">
-          <img src="/favicon.svg" alt="" width="48" height="48" />
+          <img src="/brand.svg" alt="" width="48" height="48" />
           <div>
             <h1>Orphan Parts Lens</h1>
             <p className="tagline">Show it, ask it, sell it, or find the one that fits.</p>

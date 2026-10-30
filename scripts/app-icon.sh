@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# app-icon.sh: the Android launcher icon, rendered from docs/assets/logo.svg with Inkscape.
+# app-icon.sh: the app's icon, cut from docs/assets/logo.svg: the Android launcher icons (rendered
+# with Inkscape) and the web header's mark.
 #
 # The adaptive icon (Android 8.0 and newer, what every supported phone shows) is two layers on a
 # 108dp canvas of which a launcher shows the middle 72dp or so under its own mask:
@@ -10,25 +11,36 @@
 #                logo's own gradient bled to the edges, so that no frame or seam shows
 #
 # The legacy icons (ic_launcher.png, ic_launcher_round.png) are the same composition clipped to a
-# rounded square and a circle, with the usual 2dp margin of a 48dp icon.
+# rounded square and a circle, with the usual 2dp margin of a 48dp icon. The web header's mark
+# (frontend/public/brand.svg) is that rounded square without the margin, kept as SVG; the browser
+# tab keeps the whole logo (favicon.svg).
 #
-#   app-icon.sh [--check]    write the PNGs under android/app/src/main/res/mipmap-*/;
-#                            --check only says whether Inkscape is there
+#   app-icon.sh [--check]    write the PNGs under android/app/src/main/res/mipmap-*/ and
+#                            frontend/public/brand.svg; --check only says whether Inkscape is there
 #
 # Environment:
-#   ROOT   the repository (default: the parent of this script's directory)
+#   ROOT       the repository (default: the parent of this script's directory)
+#   INKSCAPE   the command (default: inkscape; tests point it at a stand-in)
 set -euo pipefail
 
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 fail() { printf 'app-icon: %s\n' "$*" >&2; exit 1; }
 say() { printf 'app-icon: %s\n' "$*"; }
 
+case "${1:-}" in
+  ""|--check) ;;
+  *) printf 'app-icon: usage: app-icon.sh [--check]\n' >&2; exit 2 ;;
+esac
+
 logo="$root/docs/assets/logo.svg"
 res="$root/android/app/src/main/res"
+web="$root/frontend/public"
+inkscape="${INKSCAPE:-inkscape}"
 [[ -f "$logo" ]] || fail "no logo at $logo"
 [[ -d "$res" ]] || fail "no app resources at $res"
-command -v inkscape >/dev/null 2>&1 || fail "inkscape is not installed (apt install inkscape)"
-[[ "${1:-}" == "--check" ]] && { say "inkscape $(inkscape --version 2>/dev/null | head -1 | cut -d' ' -f2)"; exit 0; }
+[[ -d "$web" ]] || fail "no web assets at $web"
+command -v "$inkscape" >/dev/null 2>&1 || fail "inkscape is not installed (apt install inkscape)"
+[[ "${1:-}" == "--check" ]] && { say "inkscape $("$inkscape" --version 2>/dev/null | head -1 | cut -d' ' -f2)"; exit 0; }
 
 # The logo's geometry: the viewfinder is centered at (CX, CY) and its outer ring, stroke
 # included, reaches RING units from there.
@@ -66,7 +78,7 @@ crop() {
 }
 
 render() {  # render <svg> <png> <px>
-  inkscape --export-type=png --export-filename="$2" --export-width="$3" --export-height="$3" \
+  "$inkscape" --export-type=png --export-filename="$2" --export-width="$3" --export-height="$3" \
     --export-background-opacity=0 "$1" >/dev/null 2>&1 || fail "inkscape could not render $2"
 }
 
@@ -80,6 +92,8 @@ iy="$(calc "$CY - $inner / 2")"
 legacy_side="$(calc "$VISIBLE_DP * $LEGACY_DP / $LEGACY_INNER_DP")"
 crop "$legacy_side" "<rect x=\"$ix\" y=\"$iy\" width=\"$inner\" height=\"$inner\" rx=\"$(calc "$inner / 5")\" />" > "$work/square.svg"
 crop "$legacy_side" "<circle cx=\"$CX\" cy=\"$CY\" r=\"$(calc "$inner / 2")\" />" > "$work/round.svg"
+crop "$VISIBLE_DP" "<rect x=\"$ix\" y=\"$iy\" width=\"$inner\" height=\"$inner\" rx=\"$(calc "$inner / 5")\" />" > "$web/brand.svg"
+say "web: frontend/public/brand.svg"
 
 # density: pixels per dp
 for density in mdpi:1 hdpi:1.5 xhdpi:2 xxhdpi:3 xxxhdpi:4; do
