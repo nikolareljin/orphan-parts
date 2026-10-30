@@ -57,6 +57,7 @@ export interface Extraction {
   model: string
   from_fixture: boolean
   cost_usd: number
+  enhanced: boolean
 }
 
 export interface Box {

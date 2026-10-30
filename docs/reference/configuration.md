@@ -25,6 +25,8 @@ stops the service with a clear message instead of failing on the first user requ
 | `IMAGE_MAX_PX` | `1280` | | photos are downscaled to this long edge before upload |
 | `SEGMENT_MAX_PX` | `800` | | the copy SAM 3.1 sees is downscaled to this long edge; boxes are scaled back onto the photo |
 | `MAX_PHOTOS` | `4` | | photos accepted per item |
+| `EXTRACT_ENHANCE` | `1` | | contrast stretched and edges sharpened on what goes to the model; what is kept is the photo as taken. Changing it changes what the model is shown, so fixtures recorded for a photo stop matching and the operation's fallback answers instead: record the set again |
+| `EXTRACT_BLUR_THRESHOLD` | `150` | | the sharpness (variance of the Laplacian on a 512 px copy) under which a reading warns that the label looks blurred |
 | `RETENTION_HOURS` | `24` | | reserved for a purge of stored photos; nothing but measurement photos is kept today, and no purge runs |
 | `CORS_ORIGINS` | `http://localhost:5173` | | comma-separated browser origins allowed to call the API |
 | `DATA_DIR` | `./data` | | uploads, the spend ledger and the SQLite database |

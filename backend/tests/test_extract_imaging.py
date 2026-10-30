@@ -91,3 +91,50 @@ def test_big_jpeg_is_still_downscaled_exactly() -> None:
     # the reduced-scale decode must not change the final size
     out = prepare(make_photo(6000, 4000), max_px=1280, max_bytes=12 * MB)
     assert dimensions(out) == (1280, 853)
+
+
+def test_enhance_keeps_the_size_and_sharpness_tells_text_from_blur() -> None:
+    from PIL import Image, ImageDraw, ImageFilter
+
+    from app.extract.imaging import dimensions, enhance, sharpness
+
+    img = Image.new("RGB", (640, 480), (230, 230, 230))
+    draw = ImageDraw.Draw(img)
+    for i in range(12):
+        draw.text((20, 20 + i * 35), "OUTPUT 19.5V 3.33A MODEL OP065-19-333", fill=(20, 20, 20))
+    sharp = BytesIO()
+    img.save(sharp, "JPEG")
+    blurred = BytesIO()
+    img.filter(ImageFilter.GaussianBlur(4)).save(blurred, "JPEG")
+    assert sharpness(sharp.getvalue()) > 300 > sharpness(blurred.getvalue())
+    # a patch with nothing on it scores low whatever its shade: the frame's border is not an edge
+    for shade in ((200, 200, 200), (0, 0, 0), (255, 255, 255), (128, 128, 128)):
+        flat = BytesIO()
+        Image.new("RGB", (300, 200), shade).save(flat, "JPEG")
+        assert sharpness(flat.getvalue()) < 60, shade
+    # a sharp label in one corner of a wide frame reads as the label, not as the frame
+    frame = Image.new("RGB", (1600, 1200), (235, 235, 235))
+    frame.paste(img.resize((960, 720)), (40, 40))
+    corner = BytesIO()
+    frame.save(corner, "JPEG")
+    assert sharpness(corner.getvalue()) > 150
+    tiny = BytesIO()
+    Image.new("RGB", (3, 3), (0, 0, 0)).save(tiny, "PNG")
+    assert sharpness(tiny.getvalue()) == 0.0
+    # one sharp thing beside a blurred label (a finger, an edge) does not pass for the label
+    smudged = img.filter(ImageFilter.GaussianBlur(4))
+    ImageDraw.Draw(smudged).rectangle((560, 400, 620, 460), fill=(0, 0, 0))
+    edge = BytesIO()
+    smudged.save(edge, "JPEG")
+    assert sharpness(edge.getvalue()) < 150
+    better = enhance(sharp.getvalue())
+    assert dimensions(better) == (640, 480)
+    assert better[:2] == b"\xff\xd8"  # a JPEG
+    assert better != sharp.getvalue()
+    # the copy the model reads is encoded once, and scored before the help
+    from app.extract.imaging import read_copy
+
+    helped, score = read_copy(blurred.getvalue(), max_px=1280, max_bytes=MB, enhance=True)
+    plain, same = read_copy(blurred.getvalue(), max_px=1280, max_bytes=MB, enhance=False)
+    assert score == same == sharpness(blurred.getvalue())
+    assert helped != plain and dimensions(helped) == (640, 480)

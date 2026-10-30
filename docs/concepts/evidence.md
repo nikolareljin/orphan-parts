@@ -32,6 +32,15 @@ they work for any field set.
 4. Warnings are added when no part or model number was read and when any field is below 0.5
    confidence. Warnings travel with the result; nothing is silently filled in.
 
+## What the model is shown
+
+Before a label crop (or a whole photo, when the label was not found first) goes to the
+model, its contrast is stretched and its edges sharpened a little, so faint print reads
+better; the reading says so with `enhanced`. What is kept is always the photo as taken. The
+sharpest of the images read is scored (the variance of its Laplacian); under
+`EXTRACT_BLUR_THRESHOLD` the reading carries a warning that the label looks blurred or shows
+little detail, so the person retakes it closer and steadier rather than trusting a weak read.
+
 ## Regions
 
 A segmentation result is the other half of the evidence: one region per match with its concept

@@ -6,7 +6,7 @@ import anyio
 
 from app.config import Settings
 from app.extract.fields import FIELD_BY_NAME, field_guide
-from app.extract.imaging import BadImageError, prepare
+from app.extract.imaging import BadImageError, read_copy
 from app.extract.normalize import normalize
 from app.extract.schema import Evidence, Extraction, LabelReading, Source
 from app.model_api import ModelApiClient, ModelResponse, image_part, text_part, user_message
@@ -55,13 +55,27 @@ class Extractor:
             raise BadImageError(f"at most {s.max_photos} crops per request")
         max_bytes = s.max_upload_mb * 1024 * 1024
 
-        def prepare_all() -> list[bytes]:
-            return [
-                prepare(p, max_px=s.image_max_px, max_bytes=max_bytes) for p in [*photos, *crops]
-            ]
+        def prepare_all() -> tuple[list[bytes], float]:
+            # what the model reads: the crops when there are any, the photos otherwise; those
+            # are enhanced when asked, and the sharpest of them (before any help) decides the
+            # blur warning; the rest go as taken
+            ready: list[bytes] = []
+            scores: list[float] = []
+            for n, p in enumerate([*photos, *crops]):
+                is_read = n >= len(photos) if crops else True
+                data, score = read_copy(
+                    p,
+                    max_px=s.image_max_px,
+                    max_bytes=max_bytes,
+                    enhance=is_read and s.extract_enhance,
+                )
+                ready.append(data)
+                if is_read:
+                    scores.append(score)
+            return ready, max(scores)
 
         # decoding and re-encoding is CPU work; keep it off the event loop
-        prepared = await anyio.to_thread.run_sync(prepare_all)
+        prepared, score = await anyio.to_thread.run_sync(prepare_all)
         parts = [
             text_part(prompt(len(crops))),
             *(image_part(p, "image/jpeg") for p in prepared),
@@ -82,6 +96,17 @@ class Extractor:
             crops=len(crops),
             source="label_crop" if crops else "photo",
         )
+        if score < s.extract_blur_threshold:
+            extraction = extraction.model_copy(
+                update={
+                    "warnings": [
+                        *extraction.warnings,
+                        "the label looks blurred or shows little detail; a closer, steadier photo"
+                        " reads better",
+                    ]
+                }
+            )
+        extraction = extraction.model_copy(update={"enhanced": s.extract_enhance})
         log.info(
             "extracted",
             extra={

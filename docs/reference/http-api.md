@@ -9,7 +9,7 @@ The same OpenAPI document is rendered below.
 
 | Path | Purpose |
 |---|---|
-| `POST /api/extract` | multipart `photos` (one to `MAX_PHOTOS` images, each at most `MAX_UPLOAD_MB`) and optional `crops` (label crops from `/api/segment`): reads the label into typed fields, each with `value`, `unit`, `confidence`, `source` (`photo`, or `label_crop` when crops were sent) and `raw`, plus `item_type`, `label_text`, `warnings`, the counts of photos and crops, the model used, `from_fixture` and `cost_usd` |
+| `POST /api/extract` | multipart `photos` (one to `MAX_PHOTOS` images, each at most `MAX_UPLOAD_MB`) and optional `crops` (label crops from `/api/segment`): reads the label into typed fields, each with `value`, `unit`, `confidence`, `source` (`photo`, or `label_crop` when crops were sent) and `raw`, plus `item_type`, `label_text`, `warnings`, the counts of photos and crops, the model used, `from_fixture`, `cost_usd` and `enhanced` (whether what the model read was contrast-stretched and sharpened; a blurred label adds a line to `warnings`) |
 | `POST /api/segment` | multipart `photo` (one image) and optional repeated `concepts` (default `item`, `label`, `connector`; an unknown key is sent to the model as its own phrase): one region per match with `concept`, `box` (half-open pixels of the prepared photo), `confidence`, `coverage`, a JPEG `crop` data URL and the mask outline as `svg_path`; plus the `overlay` (the photo with the masks drawn over it), `warnings`, `width`, `height`, the model, `from_fixture` and `cost_usd` |
 
 Errors, for both: `400` for a bad or oversized photo (by upload size or pixel count), a HEIC
