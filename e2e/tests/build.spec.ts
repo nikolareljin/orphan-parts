@@ -101,7 +101,8 @@ test('preferences are kept, proposals come from the inventory, and selection com
   const share = again.getByRole('textbox', { name: 'Share text' })
   await expect(share).toHaveValue(/Built from: hdmi cable, keyboard, laptop, monitor\./)
   await expect(share).toHaveValue(/a full homework session/)
-  await expect(share).not.toHaveValue(/Old laptop/)
+  await expect(share).toHaveValue(/Homework desk from the laptop and the monitor/)
+  await expect(share).not.toHaveValue(/old laptop/i)
 
   await page.getByRole('button', { name: 'Find a part' }).click()
   await expect(page.getByRole('table', { name: 'Searches' })).toContainText('A cable between the two')

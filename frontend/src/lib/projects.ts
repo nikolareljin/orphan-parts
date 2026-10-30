@@ -66,6 +66,17 @@ export function numberOrNull(text: string): number | null {
   return Number.isFinite(value) && value >= 0 ? value : null
 }
 
+// What is wrong with a number field, or null: a blank is fine, anything that is not a number
+// at or above zero is said rather than saved as "not set".
+export function numberProblem(text: string, label: string): string | null {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+  const value = Number(trimmed)
+  if (!Number.isFinite(value)) return `${label} must be a number`
+  if (value < 0) return `${label} cannot be below 0`
+  return null
+}
+
 export function money(amount: number, currency: string): string {
   const rounded = Number.isInteger(amount) ? String(amount) : amount.toFixed(2)
   return `${rounded} ${currency}`

@@ -4,7 +4,9 @@ item is committed twice."""
 
 import json
 import logging
+import re
 import threading
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
@@ -107,13 +109,34 @@ def item_line(item: Item) -> dict[str, Any]:
     }
 
 
+def _words(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+", text.lower())
+
+
 def fits(requirement_types: list[str], item: Item) -> bool:
-    """Whether an item can fill a requirement: its type names one of the kinds asked for. The
-    name is the owner's label and does not count; a toaster called "old laptop" is a toaster."""
+    """Whether an item can fill a requirement: its type ends in one of the kinds asked for, as
+    whole words ("hdmi cable" is a cable, "crevice tool" a tool or a crevice tool; "headphones"
+    are not a phone, a "tv stand" is not a tv). The name is the owner's label and does not
+    count; a toaster called "old laptop" is a toaster."""
     if not requirement_types:
         return True
-    kind = item.item_type.lower()
-    return any(t.lower() in kind for t in requirement_types)
+    kind = _words(item.item_type)
+    for wanted in requirement_types:
+        words = _words(wanted)
+        if words and kind[-len(words) :] == words:
+            return True
+    return False
+
+
+@dataclass
+class Realised:
+    """A proposal the inventory backs, ready to be written: nothing is inserted until every
+    proposal of the call is known, so each project carries its share of the call's cost."""
+
+    template: Template
+    title: str
+    content: dict[str, Any]
+    allocations: list[tuple[int, str, str]]
 
 
 class Planner:
@@ -163,7 +186,7 @@ class Planner:
         if name == "item_details":
             try:
                 item = self.inventory.get(int(args.get("item_id", 0)))
-            except (LookupError, ValueError):
+            except (LookupError, ValueError, TypeError):
                 return json.dumps({"error": "no such item"})
             line = item_line(item)
             line.update(
@@ -206,7 +229,7 @@ class Planner:
         by_name: dict[str, Item] = {}
         for item in usable:
             by_name.setdefault(item.name.strip().lower(), item)
-        projects: list[Project] = []
+        realised: list[Realised] = []
         seen: set[str] = set()
         for proposal in response.parsed.proposals[: request.count]:
             if proposal.template in seen:
@@ -218,11 +241,20 @@ class Planner:
                     "proposal dropped: unknown template", extra={"template": proposal.template}
                 )
                 continue
-            project = self.realise(template, proposal, by_id, by_name, prefs, response.response)
-            if project is None:
+            ready = self.realise(template, proposal, by_id, by_name, prefs, response.response)
+            if ready is None:
                 continue
             seen.add(proposal.template)
-            projects.append(project)
+            realised.append(ready)
+        # the call's cost (every step of the loop) is shared by the projects it produced
+        share = round(response.response.cost_usd / len(realised), 6) if realised else 0.0
+        projects: list[Project] = []
+        for ready in realised:
+            ready.content["cost_usd"] = share
+            row = self.inventory.add_project(
+                ready.template.id, ready.title, json.dumps(ready.content), ready.allocations
+            )
+            projects.append(self.project_of(row))
         log.info(
             "proposed",
             extra={
@@ -241,7 +273,7 @@ class Planner:
         by_name: dict[str, Item],
         prefs: Preferences,
         response: Any,
-    ) -> Project | None:
+    ) -> Realised | None:
         """A proposal becomes a project only where the inventory backs it: every allocation
         names a usable item that fits the requirement; nothing else is shown."""
         req_by_key = {r.key: r for r in template.requirements}
@@ -250,7 +282,10 @@ class Planner:
         taken: set[int] = set()
         for a in proposal.allocations:
             req = req_by_key.get(a.requirement)
-            item = by_id.get(a.item_id) or by_name.get(a.item_name.strip().lower())
+            # an id names one item; the name is only for a proposal that gave no id, so an id
+            # the inventory cannot use is never re-pointed at another item of the same name
+            by_name_only = by_name.get(a.item_name.strip().lower())
+            item = by_id.get(a.item_id) if a.item_id else by_name_only
             if req is None or item is None:
                 dropped.append(
                     f"{a.requirement}: {a.item_name or a.item_id} is not in the inventory"
@@ -297,13 +332,12 @@ class Planner:
             "from_fixture": response.from_fixture,
             "cost_usd": response.cost_usd,
         }
-        row = self.inventory.add_project(
-            template.id,
+        return Realised(
+            template,
             proposal.title.strip()[:200] or template.label,
-            json.dumps(content),
+            content,
             [(item_id, key, why) for item_id, _name, key, why in allocations],
         )
-        return self.project_of(row)
 
     # --- projects ---------------------------------------------------------------
 
@@ -361,6 +395,14 @@ class Planner:
                 )
         if conflicts and not take:
             raise AllocationConflictError(conflicts)
+        for c in conflicts:
+            # a build under way keeps its items: every blocking requirement passed before it
+            # started, and taking one would leave it in a state it cannot be in
+            if str(self.inventory.project(c.project_id)["status"]) == "building":
+                raise ProjectsError(
+                    f"{c.item_name} is being built into {c.project_title!r};"
+                    " finish or abandon that first"
+                )
         for c in conflicts:
             self.inventory.release_allocation(c.project_id, c.item_id)
             self.mark_missing(c.project_id, c.item_id)
@@ -437,11 +479,15 @@ class Planner:
     def set_status(self, project_id: int, status: str, *, commit: bool) -> Project:
         with self._lock:
             row = self.inventory.project(project_id)
+            was_committed = str(row["status"]) in ("selected", "building", "done")
             updated = self.inventory.update_project(project_id, status, row["content"])
             self.inventory.set_committed(project_id, commit)
-            # the status is written first: an item is reserved by what a selected project holds
-            for a in self.inventory.allocations(project_id):
-                self.reserve(int(a["item_id"]))
+            # the status is written first: an item is reserved by what a selected project
+            # holds. Availability is touched only when a commitment begins or ends; a proposal
+            # shortlisted or abandoned leaves what the owner set alone.
+            if commit or was_committed:
+                for a in self.inventory.allocations(project_id):
+                    self.reserve(int(a["item_id"]))
             return self.project_of(updated)
 
     def reserve(self, item_id: int) -> None:
@@ -453,7 +499,13 @@ class Planner:
 
     def search_for(self, project_id: int, key: str) -> Project:
         """A missing requirement becomes a search request, with the budget left as its ceiling."""
+        with self._lock:
+            return self._search_for(project_id, key)
+
+    def _search_for(self, project_id: int, key: str) -> Project:
         row = self.inventory.project(project_id)
+        if row["status"] in ("done", "abandoned"):
+            raise ProjectsError("the project is over")
         content = json.loads(row["content"])
         req = next((r for r in content["requirements"] if r["key"] == key), None)
         if req is None:
@@ -463,13 +515,15 @@ class Planner:
         if req["search_id"] is not None:
             raise ProjectsError(f"a search is open for {key} already")
         budget = self.projects().budget
+        # the budget left is the ceiling; a budget spent is a ceiling of nothing, not none
+        left = None if budget.remaining is None else max(0.0, budget.remaining)
         search = self.finder.create(
             SearchCreate(
                 profile=req["profile"] or "generic_item",
                 title=f"{req['label']} for {row['title']}"[:200],
-                max_price=budget.remaining if budget.remaining and budget.remaining > 0 else None,
+                max_price=left,
                 currency=budget.currency,
-                budget_left=budget.remaining if budget.remaining and budget.remaining > 0 else None,
+                budget_left=left,
             )
         )
         req["search_id"] = search.id
@@ -546,6 +600,10 @@ class Planner:
         )
 
     def set_progress(self, project_id: int, step: int, done: bool) -> Project:
+        with self._lock:
+            return self._set_progress(project_id, step, done)
+
+    def _set_progress(self, project_id: int, step: int, done: bool) -> Project:
         row = self.inventory.project(project_id)
         if row["status"] not in ("selected", "building"):
             raise ProjectsError("progress is kept on a selected or building project")
@@ -564,15 +622,23 @@ class Planner:
     def record_outcome(self, project_id: int, outcome: OutcomeCreate) -> Project:
         """The owner's record of what was built and how it was tested. A working result marks
         the project done; a failed test keeps it building, with the record kept."""
-        row = self.inventory.project(project_id)
-        if row["status"] != "building":
+        with self._lock:
+            return self._record_outcome(project_id, outcome)
+
+    def _record_outcome(self, project_id: int, outcome: OutcomeCreate) -> Project:
+        # read as a project first: an item deleted since is noticed and its requirement opened
+        project = self.project(project_id)
+        if project.status != "building":
             raise ProjectsError("an outcome is recorded on a project being built")
+        if outcome.working:
+            # done means built: the same bar as advancing, so the two routes agree
+            open_keys = [r.key for r in project.requirements if r.blocking and r.state != "pass"]
+            if open_keys:
+                raise ProjectsError(f"still needed before done: {', '.join(open_keys)}")
+        row = self.inventory.project(project_id)
         content = json.loads(row["content"])
-        content["outcome"] = {
-            **outcome.model_dump(),
-            "recorded_at": now_iso(),
-            "shared": bool((content.get("outcome") or {}).get("shared", False)),
-        }
+        # a new record is a new text: sharing is off until the owner says so for this one
+        content["outcome"] = {**outcome.model_dump(), "recorded_at": now_iso(), "shared": False}
         status = "done" if outcome.working else "building"
         self.inventory.update_project(project_id, status, json.dumps(content))
         if status == "done":
@@ -580,6 +646,10 @@ class Planner:
         return self.project(project_id)
 
     def set_share(self, project_id: int, change: ShareChange) -> Project:
+        with self._lock:
+            return self._set_share(project_id, change)
+
+    def _set_share(self, project_id: int, change: ShareChange) -> Project:
         row = self.inventory.project(project_id)
         content = json.loads(row["content"])
         if not content.get("outcome"):
@@ -593,7 +663,9 @@ class Planner:
         project = self.project(project_id)
         if project.outcome is None or not project.outcome.shared:
             raise ProjectsError("the outcome is not shared")
-        return packs.share_text(project, self.items_on(project))
+        # every item the owner has is a name to keep out, not only those still on the project
+        known = [(s.name, s.item_type) for s in self.inventory.list_items()]
+        return packs.share_text(project, self.items_on(project), known)
 
     def project_of(self, row: Any) -> Project:
         content = json.loads(row["content"])
