@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  numberProblem,
   budgetText,
   canStart,
   conflictText,
@@ -83,5 +84,15 @@ describe('conflicts', () => {
     expect(conflictText(list)).toBe('Old laptop is committed to "Homework desk"')
     expect(conflictsOf(undefined)).toEqual([])
     expect(conflictsOf({ conflicts: 'no' })).toEqual([])
+  })
+})
+
+describe('numberProblem', () => {
+  it('says what is wrong instead of saving nothing', () => {
+    expect(numberProblem('', 'The budget')).toBeNull()
+    expect(numberProblem(' 50 ', 'The budget')).toBeNull()
+    expect(numberProblem('abc', 'The budget')).toBe('The budget must be a number')
+    expect(numberProblem('-5', 'The radius')).toBe('The radius cannot be below 0')
+    expect(numberProblem('1e999', 'The budget')).toBe('The budget must be a number')
   })
 })
