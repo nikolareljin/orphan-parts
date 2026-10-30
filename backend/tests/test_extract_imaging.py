@@ -107,9 +107,20 @@ def test_enhance_keeps_the_size_and_sharpness_tells_text_from_blur() -> None:
     blurred = BytesIO()
     img.filter(ImageFilter.GaussianBlur(4)).save(blurred, "JPEG")
     assert sharpness(sharp.getvalue()) > 300 > sharpness(blurred.getvalue())
-    flat = BytesIO()
-    Image.new("RGB", (300, 200), (200, 200, 200)).save(flat, "JPEG")
-    assert sharpness(flat.getvalue()) < 150
+    # a patch with nothing on it scores low whatever its shade: the frame's border is not an edge
+    for shade in ((200, 200, 200), (0, 0, 0), (255, 255, 255), (128, 128, 128)):
+        flat = BytesIO()
+        Image.new("RGB", (300, 200), shade).save(flat, "JPEG")
+        assert sharpness(flat.getvalue()) < 60, shade
+    # a sharp label in one corner of a wide frame reads as the label, not as the frame
+    frame = Image.new("RGB", (1600, 1200), (235, 235, 235))
+    frame.paste(img.resize((640, 480)), (40, 40))
+    corner = BytesIO()
+    frame.save(corner, "JPEG")
+    assert sharpness(corner.getvalue()) > 150
+    tiny = BytesIO()
+    Image.new("RGB", (3, 3), (0, 0, 0)).save(tiny, "PNG")
+    assert sharpness(tiny.getvalue()) == 0.0
     better = enhance(sharp.getvalue())
     assert dimensions(better) == (640, 480)
     assert better[:2] == b"\xff\xd8"  # a JPEG

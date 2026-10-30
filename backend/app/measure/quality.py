@@ -23,6 +23,16 @@ def sharpness_at(photo: bytes, points: list[Point], window: int = WINDOW_PX) -> 
             left = int(max(0, min(p.x - window // 2, gray.width - window)))
             top = int(max(0, min(p.y - window // 2, gray.height - window)))
             box = (left, top, min(left + window, gray.width), min(top + window, gray.height))
+            # the outermost pixel ring is the filter's copy of the photo, not an edge
+            box = (
+                max(1, box[0]),
+                max(1, box[1]),
+                min(gray.width - 1, box[2]),
+                min(gray.height - 1, box[3]),
+            )
+            if box[2] - box[0] < 2 or box[3] - box[1] < 2:
+                scores.append(0.0)
+                continue
             scores.append(float(ImageStat.Stat(lap.crop(box)).var[0]))
     return min(scores) if scores else 0.0
 
