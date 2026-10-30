@@ -87,6 +87,24 @@ class DemoSet(BaseModel):
         return items
 
     def check(self) -> None:
+        """What the services would refuse is refused here, before anything is loaded or spent:
+        an item's texts and fields must pass the inventory's own rules."""
+        from app.inventory.schema import FieldCreate, ItemCreate
+
+        for i in self.items:
+            try:
+                ItemCreate(
+                    name=i.name,
+                    item_type=i.item_type or "item",
+                    condition=i.condition,
+                    faults=i.faults,
+                    tests_done=i.tests_done,
+                    accessories=i.accessories,
+                )
+                for field, value in i.fields.items():
+                    FieldCreate(field=field, value=value)
+            except ValueError as exc:
+                raise ValueError(f"item {i.key!r}: {exc}") from exc
         keys = {i.key for i in self.items}
         for s in self.searches:
             if s.need and s.need not in keys:

@@ -6,8 +6,8 @@ back, and the proposal brief. Everything the model answers for this set is recor
 replayed from then on, so the demo costs nothing to run.
 
 ```bash
-./dev demo-scrub ~/raw-photos      # re-encoded copies into demo/photos/, no metadata; WAV notes copied
-./dev record-fixtures              # with a key: one run, every answer kept under backend/tests/fixtures
+./dev demo-scrub ~/raw-photos      # re-encoded copies into demo/photos/, WAV notes into demo/notes/
+./dev record-fixtures              # with a key: the inventory reset, one run, every answer kept under backend/tests/fixtures
 ./dev demo                         # the inventory reset and the set loaded, in fixture mode
 ```
 

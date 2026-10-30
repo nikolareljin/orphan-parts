@@ -387,6 +387,23 @@ async def test_record_mode_saves_a_fixture_that_replays(tmp_path: Path) -> None:
     assert second.from_fixture is True
 
 
+async def test_each_recording_gets_its_own_transcribe_fixture(tmp_path: Path) -> None:
+    recording = Settings(
+        OPL_FAKE_API=False,
+        OPL_RECORD_FIXTURES=True,
+        model_api_key=SAMPLE_VALUE,
+        fixtures_dir=tmp_path / "fixtures",
+        _env_file=None,
+    )
+    heard = {"transcript": "one", "audioDurationMs": 1000}
+    h = Harness(recording, lambda _: httpx.Response(200, json=heard))
+    await h.client.transcribe(b"RIFF one")
+    await h.client.transcribe(b"RIFF two")
+    assert len(list((tmp_path / "fixtures").rglob("*.json"))) == 2
+    # the key names the recording; the request on the wire carries the bytes, not the digest
+    assert b"audio_sha256" not in h.requests[-1].content
+
+
 # --- models and readiness -----------------------------------------------------
 
 

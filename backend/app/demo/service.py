@@ -40,11 +40,13 @@ def load_set(path: Path) -> DemoSet:
     return found
 
 
-def scrub(raw_dir: Path, out_dir: Path) -> list[str]:
+def scrub(raw_dir: Path, out_dir: Path, notes_dir: Path | None = None) -> list[str]:
     """Raw photos re-encoded without any metadata, long side at most SCRUB_MAX_PX, as JPEGs
-    under out_dir; WAV notes copied as they are; anything else left behind with a note. The
-    raw directory is never written to."""
+    under out_dir; WAV notes copied as they are into notes_dir (out_dir when none is given);
+    anything else left behind with a note. The raw directory is never written to."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    notes_dir = notes_dir or out_dir
+    notes_dir.mkdir(parents=True, exist_ok=True)
     notes: list[str] = []
     for src in sorted(p for p in raw_dir.iterdir() if p.is_file()):
         suffix = src.suffix.lower()
@@ -57,8 +59,8 @@ def scrub(raw_dir: Path, out_dir: Path) -> list[str]:
             (out_dir / f"{src.stem}.jpg").write_bytes(data)
             notes.append(f"{src.name} -> {src.stem}.jpg ({len(data) // 1024} KB, no metadata)")
         elif suffix in NOTE_SUFFIXES:
-            shutil.copyfile(src, out_dir / src.name)
-            notes.append(f"{src.name} -> {src.name} (copied)")
+            shutil.copyfile(src, notes_dir / src.name)
+            notes.append(f"{src.name} -> {notes_dir.name}/{src.name} (copied)")
         else:
             notes.append(f"{src.name}: not a photo or a WAV note; left out")
     return notes
@@ -161,17 +163,21 @@ class Loader:
                 out.skipped.append(f"{item.key}: photo {name} missing")
                 continue
             photos.append(file.read_bytes())
-        spec = ItemCreate(
-            name=item.name,
-            item_type=item.item_type,
-            profile=item.profile,
-            condition=item.condition,
-            faults=item.faults,
-            tests_done=item.tests_done,
-            accessories=item.accessories,
-            intent=item.intent,
-            availability=item.availability,
-        )
+        try:
+            spec = ItemCreate(
+                name=item.name,
+                item_type=item.item_type,
+                profile=item.profile,
+                condition=item.condition,
+                faults=item.faults,
+                tests_done=item.tests_done,
+                accessories=item.accessories,
+                intent=item.intent,
+                availability=item.availability,
+            )
+        except ValueError as exc:
+            out.skipped.append(f"{item.key}: {exc}")
+            return None
         if photos:
             try:
                 reading = await self.extractor.extract(photos)
@@ -192,7 +198,10 @@ class Loader:
                 if assertion.review == "proposed":
                     self.inventory.review(created.id, assertion.id, "accepted")
         for field, value in item.fields.items():
-            self.inventory.add_field(created.id, FieldCreate(field=field, value=value))
+            try:
+                self.inventory.add_field(created.id, FieldCreate(field=field, value=value))
+            except ValueError as exc:
+                out.skipped.append(f"{item.key}: field {field}: {exc}")
         if item.voice_note:
             file = base / item.voice_note
             if not file.is_file():
