@@ -3,6 +3,7 @@ import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, 
 import { fieldLabel, percent, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
+import Decide from './Decide'
 import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
@@ -392,6 +393,8 @@ function ItemPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => v
       {item.components.length > 0 && (
         <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
       )}
+
+      <Decide item={item} onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note))} />
 
       <Measure item={item} onMeasured={() => void apply(() => api.items.get(item.id))} />
 

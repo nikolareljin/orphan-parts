@@ -800,6 +800,55 @@ button.link {
   padding-left: 1.25rem;
 }
 
+/* decide what it becomes */
+.decide .rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0 0;
+}
+
+.decide .rows dt {
+  font-weight: 600;
+}
+
+.decide .rows dd {
+  margin: 0;
+}
+
+.decide .rows button.link {
+  padding-left: 0;
+}
+
+.decide .searches,
+.decide .uses ul {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.decide .uses li {
+  margin: 0.35rem 0;
+}
+
+.decide .decided {
+  margin: 0 0 0.25rem;
+}
+
+.decide .choices button {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 0;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.decide .choices button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* prepare to sell or give away */
 .listing .draft-text {
   width: 100%;
