@@ -77,8 +77,6 @@ test_app_icon_refuses_an_unknown_option() {
   assert_eq "$rc" "2"
 }
 
-
-
 test_app_icon_keeps_the_icons_when_inkscape_writes_nothing() {
   local dir
   dir="$(mktemp -d)" || { assert_true false; return; }
@@ -110,33 +108,49 @@ STUB
   _app_icon_cleanup "$dir"
 }
 
-# Each way a logo can stop fitting the crop's edits is refused with a line, before anything is
-# written: the frame's id renamed, its close before its open, a second shape at the frame's
-# indent, the viewBox changed, a second </defs>, a second </svg>; and a crop that comes out with
-# two bled grounds or not well-formed.
+# Each way a logo can stop fitting the crop's edits is refused before anything is written, with
+# the line that says which: the logo's shape (the frame's id renamed; its close moved before its
+# open; a second id="rect51"; another shape folded into the frame; a second shape at the frame's
+# indent; the viewBox changed; a second </defs>; a second </svg>), or the crop (two bled grounds;
+# not well-formed, checked with python3, so skipped without it).
+_app_icon_refused() {  # _app_icon_refused <sed edit> <expected line>
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  sed -i "$1" "$dir/docs/assets/logo.svg"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_true grep -q -- "$2" <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
+  assert_false test -e "$dir/frontend/public/brand.svg"
+  assert_false test -e "$dir/inkscape.log"
+  _app_icon_cleanup "$dir"
+}
+
 test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
-  local dir edit
+  local edit shape='is not shaped as crop() expects'
   for edit in \
     's/id="rect51"/id="frame"/' \
-    '0,/^  <rect$/s//  <rect id="rect51" \/>\n  <rect/' \
+    's/^     id="rect51" \/>$/     id="frame" \/>/; 0,/^  <rect$/s//     id="rect51" \/>\n  <rect/' \
+    '0,/^  <g$/s//  <g id="rect51" \/>\n  <g/' \
+    's/^     id="rect51" \/>$/     id="frame" \/>\n  <circle fill="red"\n     id="rect51" \/>/' \
     's|^  <rect$|  <rect\n     id="extra" />\n  <rect|' \
     's/viewBox="0 0 512 512"/viewBox="0 0 512 512.0"/' \
     's|</defs>|</defs><defs></defs>|' \
-    's|</svg>|<svg></svg></svg>|' \
-    's|^  </defs>$|  </defs>\n  <rect fill="url(#bgGrad)" />|' \
-    's|^  </defs>$|  </defs>\n  <text>a \& b</text>|'; do
-    # the last two fit the logo's shape and break only the crop: a second bled ground, and a
-    # document that does not parse (checked with python3, so skipped without it)
-    [[ "$edit" == *'<text>'* ]] && ! command -v python3 >/dev/null 2>&1 && continue
-    dir="$(mktemp -d)" || { assert_true false; return; }
-    _app_icon_tree "$dir"
-    sed -i "$edit" "$dir/docs/assets/logo.svg"
-    assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
-    assert_true grep -q 'update crop()' <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
-    assert_false test -e "$dir/frontend/public/brand.svg"
-    assert_false test -e "$dir/inkscape.log"
-    _app_icon_cleanup "$dir"
+    's|</svg>|<svg></svg></svg>|'; do
+    _app_icon_refused "$edit" "$shape"
   done
+  _app_icon_refused 's|^  </defs>$|  </defs>\n  <rect fill="url(#bgGrad)" />|' 'did not take'
+  if command -v python3 >/dev/null 2>&1; then
+    _app_icon_refused 's|^  </defs>$|  </defs>\n  <text>a \& b</text>|' 'not well-formed'
+  fi
+}
+
+test_app_icon_takes_a_logo_with_a_trailing_blank_line() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  printf '\n' >> "$dir/docs/assets/logo.svg"
+  assert_true env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  _app_icon_cleanup "$dir"
 }
 
 # A render that fails half-way (the fourth call, the first hdpi one) leaves every icon and the
