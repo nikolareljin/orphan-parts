@@ -53,14 +53,15 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
 ## On a phone in five steps
 
 1. **Install the app** on an Android 8.0 or newer phone. Over a USB cable, one command on the
-   computer: `scripts/phone-install.sh` (`scripts\phone-install.ps1` on Windows), with
-   **Developer options** and **USB debugging** turned on. Or, with no computer, the APK from
+   computer from a clone: `scripts/phone-install.sh` (`scripts\phone-install.ps1` on
+   Windows), with **Developer options** and **USB debugging** turned on. Or, with no computer, the APK from
    the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) opened on
    the phone, with installing from the browser allowed (**Allow from this source**).
 2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`, when it is
    deployed; or `./dev up` and http://localhost:5173 on your own computer. To pair a phone
    with a local server, open the site at the computer's network address, not `localhost`.
-3. **Sign in**: **Sign in with the code** in the header, then the access code.
+3. **Sign in**: **Sign in with the code** in the header, then the access code. A local stack
+   has no door until `./dev gate on`, which prints a code; without it, go on to step 4.
 4. **Pair the phone**: at the foot of the page, **Pair the phone** shows a QR code. In the
    app, on the **Backend** tab, tap **Scan to pair**, then **Check**.
 5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
