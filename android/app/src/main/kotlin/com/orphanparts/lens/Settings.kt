@@ -27,6 +27,9 @@ fun pairingFrom(text: String, current: Settings): Settings? {
     } catch (_: Exception) {
         return null
     }
+    // ours carries the origin and says whether the demo is gated; any other QR with a url is
+    // somebody else's and not a pairing code
+    if (!json.has("gated")) return null
     val url = normalizeBaseUrl(json.optString("url"))
     if (url.isEmpty()) return null
     return Settings(baseUrl = url, accessCode = current.accessCode, token = json.optString("token"))

@@ -17,10 +17,14 @@ def _pairing(origin: str, gate: GateDep) -> Pairing:
 
 
 @router.get("/pair", response_model=Pairing)
-def pair(gate: GateDep, origin: str = Query(description="the web app's origin")) -> Pairing:
+def pair(
+    response: Response, gate: GateDep, origin: str = Query(description="the web app's origin")
+) -> Pairing:
     """What the phone needs: the origin to talk to and, when the demo is gated, a session of
     its own. Reached only with a session, so only someone already in can hand the phone one."""
-    return _pairing(origin, gate)
+    found = _pairing(origin, gate)
+    response.headers["Cache-Control"] = "no-store"
+    return found
 
 
 @router.get("/pair.svg", response_class=Response)

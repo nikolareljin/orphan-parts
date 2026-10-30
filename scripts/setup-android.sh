@@ -19,7 +19,11 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$here/lib/lib.sh"
 
 check_only=0
-[[ "${1:-}" == "--check" ]] && check_only=1
+case "${1:-}" in
+  "") ;;
+  --check) check_only=1 ;;
+  *) printf 'setup-android: usage: setup-android.sh [--check]\n' >&2; exit 2 ;;
+esac
 
 TOOLS_BUILD=15859902
 TOOLS_SHA_LINUX=4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583
@@ -88,6 +92,8 @@ else
     esac
     url="${TOOLS_URL:-https://dl.google.com/android/repository/$name}"
     tmp="$(mktemp -d)"
+    # a download that stops half-way, or a checksum that does not match, leaves nothing behind
+    trap 'rm -rf "$tmp"' EXIT
     say "downloading the command-line tools ($name)"
     "$curl_cmd" -fsSL "$url" -o "$tmp/$name"
     got="$(sha256sum "$tmp/$name" 2>/dev/null | awk '{print $1}' || shasum -a 256 "$tmp/$name" | awk '{print $1}')"
@@ -114,7 +120,9 @@ if [[ -x "$sdkmanager_cmd" ]]; then
     else
       say "installing $pkg"
       yes 2>/dev/null | "$sdkmanager_cmd" --sdk_root="$sdk" --licenses >/dev/null 2>&1 || true
-      "$sdkmanager_cmd" --sdk_root="$sdk" "$pkg" >/dev/null
+      # no terminal to ask on: a licence still unaccepted fails here with its line, never a
+      # prompt waiting behind a hidden stdout
+      "$sdkmanager_cmd" --sdk_root="$sdk" "$pkg" </dev/null >/dev/null || fail "$pkg did not install (a licence not accepted, or no network)"
       [[ -d "$dir" ]] || fail "$pkg not found under $sdk after the install"
       log_ok "$pkg"
     fi

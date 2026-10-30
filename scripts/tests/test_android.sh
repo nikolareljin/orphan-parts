@@ -159,3 +159,29 @@ test_no_device_at_all_points_at_the_page_that_says_how() {
   assert_true grep -q "guides/android/#allow-the-phone" <<<"$out"
   _android_cleanup "$dir"
 }
+
+test_serial_prints_the_picked_device_and_nothing_else() {
+  local dir out
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _android_tree "$dir"
+  # two phones, the second picked without a terminal: stdout is the serial, the list goes to stderr
+  cat > "$dir/bin/adb" <<EOF
+#!/usr/bin/env bash
+case "\$*" in
+  "devices -l") printf 'List of devices attached\nAAA111                 device product:a model:one device:a transport_id:1\nBBB222                 device product:b model:two device:b transport_id:2\n' ;;
+esac
+EOF
+  chmod +x "$dir/bin/adb"
+  out="$(env ROOT="$dir" ADB="$dir/bin/adb" ANDROID_PICK=2 ANDROID_NO_TTY=1 bash "$_android" serial 2>/dev/null)"
+  assert_eq "$out" "BBB222"
+  # one phone: its serial, no question asked
+  cat > "$dir/bin/adb" <<EOF
+#!/usr/bin/env bash
+case "\$*" in
+  "devices -l") printf 'List of devices attached\nAAA111                 device product:a model:one device:a transport_id:1\n' ;;
+esac
+EOF
+  out="$(env ROOT="$dir" ADB="$dir/bin/adb" bash "$_android" serial 2>/dev/null)"
+  assert_eq "$out" "AAA111"
+  _android_cleanup "$dir"
+}

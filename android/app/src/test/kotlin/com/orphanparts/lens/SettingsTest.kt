@@ -40,6 +40,7 @@ class PairingTest {
         val current = Settings("", "", "")
         assertNull(pairingFrom("hello", current))
         assertNull(pairingFrom("""{"token":"x"}""", current))
+        assertNull(pairingFrom("""{"url":"http://somebody.example/app"}""", current))
         assertNull(pairingFrom("", current))
     }
 }
