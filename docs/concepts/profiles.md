@@ -7,11 +7,11 @@ posting.
 
 Three profiles ship:
 
-- `power_adapter`: the deep one, used in the demo.
-- `usb_c_charger`: data only, to show a new category needs no code.
+- `vacuum_attachment`: the deep one, used in the demo; the opening and the insertion depth decide fit.
+- `power_adapter`: volts, amps, polarity and the plug's two diameters.
 - `generic_item`: the fallback for anything not yet specialised; free-form attributes, no strict verdicts.
 
-The first photo is classified into a profile automatically, or the user picks one.
+The owner picks the profile on an item, on a search request or on the **Does it fit?** panel.
 See [Creating a new category](../guides/new-category.md) and the
 [profile schema](../reference/profile-schema.md).
 

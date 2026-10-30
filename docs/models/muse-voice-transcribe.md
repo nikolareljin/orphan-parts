@@ -1,6 +1,6 @@
 # Muse Voice Transcribe
 
-Transcribes seller voice notes in the web app and voice messages sent to the WhatsApp agent, with vocabulary biasing toward brand names and part-number patterns.
+Transcribes voice notes from the web app and from the phone, kept on the item as the owner's words.
 
 ## Built so far
 

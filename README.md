@@ -86,12 +86,10 @@ Changes go through pull requests; a release is a pull request from a `release/x.
 
 | Model | Job |
 |---|---|
-| Muse Spark | reads labels and listings into structured fields, writes listing drafts, searches the web for prices with citations, explains verdicts |
+| Muse Spark | reads labels and listings into structured fields, writes listing drafts, searches the web for prices with citations, proposes projects through tools |
 | SAM 3.1 | isolates the item, its label and its connector in photos |
 | Muse Voice Transcribe | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
-| Muse Wonder | plans the buyer comparison and drafts new category profiles, later |
-| Muse Image | background cleanup of the cover photo, always labeled, later |
-| Muse Glimmer, Muse Spark Open | on-device pre-check and alternative extraction provider, later |
+| Muse Wonder, Muse Image, Muse Glimmer, Muse Spark Open | considered, not used in this version; the docs say what for |
 
 Built with Muse Code.
 

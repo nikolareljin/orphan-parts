@@ -82,11 +82,9 @@ See the [Quickstart](start/quickstart.md).
 
 | Model | Job in the app |
 |---|---|
-| [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, listing drafts, price search with citations, explanations |
+| [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, listing drafts, price search with citations, project proposals through tools |
 | [SAM 3.1](models/sam-3-1.md) | isolates item, label and connector in photos |
 | [Muse Voice Transcribe](models/muse-voice-transcribe.md) | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
-| [Muse Wonder](models/muse-wonder.md) | plans the buyer comparison, drafts new profiles, later |
-| [Muse Image](models/muse-image.md) | background cleanup of the cover photo, always labeled, later |
-| [Muse Glimmer](models/muse-glimmer.md), [Muse Spark Open](models/muse-spark-open.md) | on-device pre-check and alternative provider, later |
+| [Muse Wonder](models/muse-wonder.md), [Muse Image](models/muse-image.md), [Muse Glimmer](models/muse-glimmer.md), [Muse Spark Open](models/muse-spark-open.md) | considered, not used in this version; each page says what for |
 
 Development uses Muse Code; see [Working with Muse Code](development/muse-code.md).

@@ -13,15 +13,17 @@
   allowances per visitor and per day on every call that spends, a per-address limit on every
   request, an operator's switch, and the forwarded address trusted only when told to.
 
-## Planned with the features that need them
+## Not in this version
 
-- `X-Hub-Signature-256` verification on the WhatsApp and Messenger webhooks.
-- Retention purge of uploads after `RETENTION_HOURS`.
+- No inbound webhooks: there is no messaging channel, so nothing verifies a platform signature.
+- No purge on a timer: nothing but the measurement photos is kept, so `RETENTION_HOURS` has no
+  job behind it yet.
 
 ## Threat model
 
-The service handles photos of objects and the text of listings. It stores no accounts and no
-payment data. The assets worth protecting are the Model API key, the user's photos while they
-are retained, and any Meta platform tokens a user chooses to configure for catalog push.
+The service handles photos of objects, the text of listings, and what the owner says about
+their things. It stores no accounts and no payment data, and holds no platform token. The
+assets worth protecting are the Model API key, the inventory (the measurement photos and the
+owner's own words in it) and, on a public demo, the access code and the spend.
 
 Reports: see `SECURITY.md` in the repository.
