@@ -5,6 +5,7 @@ owner's line, kept until the owner deletes them."""
 import json
 import logging
 import shutil
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +22,30 @@ from app.segment import Segmenter
 
 log = logging.getLogger("app.captures")
 
-MP4_BRANDS = (b"ftyp",)
+# The brands an MP4 or 3GP file announces after ``ftyp``: what the phone's camera writes and
+# a browser plays. HEIC photos, M4A audio and MOV files carry ``ftyp`` too and are not clips.
+MP4_BRANDS = frozenset(
+    {
+        b"isom",
+        b"iso2",
+        b"iso4",
+        b"iso5",
+        b"iso6",
+        b"mp41",
+        b"mp42",
+        b"avc1",
+        b"M4V ",
+        b"3gp4",
+        b"3gp5",
+        b"3gp6",
+        b"3gp7",
+        b"3ge6",
+        b"3gg6",
+        b"3gr6",
+        b"3gs6",
+        b"3g2a",
+    }
+)
 
 
 class CaptureError(ValueError):
@@ -29,8 +53,8 @@ class CaptureError(ValueError):
 
 
 def looks_like_video(data: bytes) -> bool:
-    """An MP4 or 3GP container: the ``ftyp`` box within the first bytes."""
-    return len(data) > 12 and data[4:8] in MP4_BRANDS
+    """An MP4 or 3GP container: the ``ftyp`` box within the first bytes, with a video brand."""
+    return len(data) > 12 and data[4:8] == b"ftyp" and data[8:12] in MP4_BRANDS
 
 
 class Captures:
@@ -49,6 +73,9 @@ class Captures:
         self.voice = voice
         self.root = settings.data_dir / "captures"
         self._busy: set[int] = set()  # captures being read right now, one read each
+        # the check of the busy set and the step after it are one: a delete and a read of the
+        # same capture cannot both pass
+        self._guard = threading.Lock()
 
     def folder(self, capture_id: int) -> Path:
         return self.root / str(capture_id)
@@ -102,6 +129,11 @@ class Captures:
             "model": "",
             "cost_usd": 0.0,
         }
+        kept = len(self.inventory.captures())
+        if kept >= self.settings.max_captures:
+            raise CaptureError(
+                f"the inbox holds at most {self.settings.max_captures} captures; delete some first"
+            )
         row = self.inventory.add_capture(json.dumps(content))
         folder = self.folder(int(row["id"]))
         try:
@@ -143,15 +175,25 @@ class Captures:
             raise NotFoundError(f"capture {capture_id} has no note")
         return (self.folder(capture_id) / name).read_bytes()
 
+    def media_path(self, capture_id: int, name: str) -> Path:
+        """Where a clip or a note is, for a route that streams it (and takes a byte range)."""
+        found = self.capture(capture_id)
+        if name == "clip.mp4" and not found.clip:
+            raise NotFoundError(f"capture {capture_id} has no clip")
+        if name == "note.wav" and not found.audio:
+            raise NotFoundError(f"capture {capture_id} has no note")
+        return self.folder(capture_id) / name
+
     def delete(self, capture_id: int) -> None:
         """The files go and the row is hidden; an item made from it stays."""
-        self.inventory.capture(capture_id)
-        if capture_id in self._busy:
-            raise CaptureError("being read right now; delete it once that is done")
+        with self._guard:
+            self.inventory.capture(capture_id)
+            if capture_id in self._busy:
+                raise CaptureError("being read right now; delete it once that is done")
+            self.inventory.delete_capture(capture_id)
         folder = self.folder(capture_id)
         if folder.is_dir() and folder.parent == self.root:
             shutil.rmtree(folder)
-        self.inventory.delete_capture(capture_id)
 
     # --- processing -------------------------------------------------------------
 
@@ -159,13 +201,14 @@ class Captures:
         """The photos read (the label found first when asked), the item created with the
         reading, the note transcribed onto it, the line kept as its notes. A failure is
         recorded on the capture and raised; the media stays for another try."""
-        row = self.inventory.capture(capture_id)
-        content = json.loads(row["content"])
-        if content["item_id"] is not None:
-            raise CaptureError("already processed; the item is there")
-        if capture_id in self._busy:
-            raise CaptureError("being read right now; the item will be there in a moment")
-        self._busy.add(capture_id)
+        with self._guard:
+            row = self.inventory.capture(capture_id)
+            content = json.loads(row["content"])
+            if content["item_id"] is not None:
+                raise CaptureError("already processed; the item is there")
+            if capture_id in self._busy:
+                raise CaptureError("being read right now; the item will be there in a moment")
+            self._busy.add(capture_id)
         try:
             return await self._process(capture_id, content)
         finally:
@@ -187,9 +230,9 @@ class Captures:
             if photos:
                 crops: list[bytes] = []
                 if content["find_label"]:
-                    crops = await self.label_crops(photos[0])
+                    crops, cost = await self.label_crops(photos[0])
                 reading = await self.extractor.extract(photos, crops)
-                model, cost = reading.model, reading.cost_usd
+                model, cost = reading.model, cost + reading.cost_usd
                 spec = spec.model_copy(
                     update={
                         "extraction": reading,
@@ -233,19 +276,20 @@ class Captures:
         log.info("capture processed", extra={"capture_id": capture_id, "item_id": item.id})
         return self.capture_of(updated)
 
-    async def label_crops(self, photo: bytes) -> list[bytes]:
-        """The label crop from the first photo, as the web form sends it; none when the label
-        is not found or segmentation fails, and the photos are read whole."""
+    async def label_crops(self, photo: bytes) -> tuple[list[bytes], float]:
+        """The label crop from the first photo, as the web form sends it, and what finding it
+        cost; none when the label is not found or segmentation fails, and the photos are
+        read whole."""
         try:
             result = await self.segmenter.segment(photo, ["label"])
         except (ModelApiError, BadImageError, ValueError) as exc:
             log.info("label not found first", extra={"reason": str(exc)[:200]})
-            return []
+            return [], 0.0
         crops: list[bytes] = []
         for region in result.regions:
             if region.concept == "label" and region.crop.startswith("data:"):
                 crops.append(_data_url_bytes(region.crop))
-        return crops[:1]
+        return crops[:1], result.cost_usd
 
     def capture_of(self, row: Any) -> Capture:
         content = json.loads(row["content"])

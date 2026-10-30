@@ -102,7 +102,8 @@ class Client(private val baseUrl: String, private val transport: Transport, priv
         if (clip != null) body.file("clip", "clip.mp4", "video/mp4", clip)
         if (audio != null) body.file("audio", "note.wav", "audio/wav", audio)
         body.text("request", JSONObject().put("name", name).put("note", note).put("find_label", true).toString())
-        return parseCapture(send("POST", "/api/captures", body.bytes(), body.contentType))
+        // streamed: the clip goes to the connection as it is, never copied into a second buffer
+        return parseCapture(JSONObject(check(transport.send("POST", baseUrl + "/api/captures", headers(body.contentType), body))))
     }
 
     fun captures(): List<Capture> {

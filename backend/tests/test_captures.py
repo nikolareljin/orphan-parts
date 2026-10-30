@@ -51,6 +51,11 @@ def test_a_video_is_known_by_its_box() -> None:
     assert looks_like_video(mp4_bytes())
     assert not looks_like_video(make_photo())
     assert not looks_like_video(b"short")
+    # ftyp alone is not a video: a HEIC photo, an M4A recording or a MOV file say it too
+    for brand in (b"heic", b"mif1", b"M4A ", b"qt  "):
+        other = (24).to_bytes(4, "big") + b"ftyp" + brand + b"\0" * 512
+        assert not looks_like_video(other), brand
+    assert looks_like_video((24).to_bytes(4, "big") + b"ftyp3gp4" + b"\0" * 512)
 
 
 async def test_a_capture_is_kept_as_sent_and_processed_into_an_item(
@@ -221,6 +226,8 @@ async def test_the_label_is_found_first_when_asked(live_settings: Settings) -> N
     done = await captures.process(kept.id)
     assert [m for m in calls if "sam" in m] and [m for m in calls if "spark" in m]
     assert done.cost_usd > 0
+    # the capture's figure is the whole read: the label found and the fields read
+    assert done.cost_usd == pytest.approx(client.ledger.total_usd, abs=1e-6)
     item = inventory.get(done.item_id or 0)
     assert any(a.source == "label_crop" for a in item.assertions)
 
@@ -276,3 +283,37 @@ def test_captures_folder_is_under_the_data_dir(settings: Settings) -> None:
     captures = service(settings)
     assert captures.folder(7) == settings.data_dir / "captures" / "7"
     assert isinstance(captures.folder(7), Path)
+
+
+def test_the_route_refuses_an_empty_clip_and_a_full_inbox(client: TestClient) -> None:
+    request = {"request": json.dumps({"note": "x", "find_label": False})}
+    empty = client.post(
+        "/api/captures",
+        files=[("clip", ("clip.mp4", b"", "video/mp4"))],
+        data=request,
+    )
+    assert empty.status_code == 422 and "empty" in empty.json()["detail"]
+    settings: Settings = client.app.state.settings
+    client.app.state.settings = settings.model_copy(update={"max_captures": 1})
+    client.app.state.captures.settings = client.app.state.settings
+    first = client.post("/api/captures", data=request)
+    assert first.status_code == 201, first.text
+    full = client.post("/api/captures", data=request)
+    assert full.status_code == 422 and "at most 1 captures" in full.json()["detail"]
+    client.delete(f"/api/captures/{first.json()['id']}")
+    assert client.post("/api/captures", data=request).status_code == 201
+
+
+def test_the_clip_streams_with_byte_ranges(client: TestClient) -> None:
+    sent = client.post(
+        "/api/captures",
+        files=[("clip", ("clip.mp4", mp4_bytes(4096), "video/mp4"))],
+        data={"request": json.dumps({"find_label": False})},
+    )
+    assert sent.status_code == 201, sent.text
+    cid = sent.json()["id"]
+    whole = client.get(f"/api/captures/{cid}/clip")
+    assert whole.status_code == 200 and whole.headers["content-type"].startswith("video/mp4")
+    assert whole.headers.get("accept-ranges") == "bytes" and len(whole.content) == 4096
+    part = client.get(f"/api/captures/{cid}/clip", headers={"Range": "bytes=0-99"})
+    assert part.status_code == 206 and len(part.content) == 100
