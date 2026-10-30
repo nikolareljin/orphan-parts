@@ -12,9 +12,14 @@ captures*. Allowances, a daily cap, upload limits and a spend cap stand behind t
 Two kinds of code open the same door. The configured `DEMO_ACCESS_CODE` (twelve characters at
 least) is the master code; with it empty there is no gate at all, which is the setting for a
 machine of your own. To try the gate there, `./dev gate on [--label <who>] [--days N]` writes a
-master code into `.env` when it has none, restarts the backend with it and issues a code for
-the phone, printing both; `./dev gate show` prints the master again and `./dev gate off` clears
-it. The command refuses to run in CI. Beside it, **codes issued as records**: `./dev keys issue --label judges
+master code into `.env` when it has none, restarts the backend with it (or starts the backend
+alone when the stack is down; `./dev up` afterwards keeps the gate, since the code is in `.env`)
+and issues a code for the phone (label `phone`, 7 days by default), printing both. A second
+`gate on` while that code is current stops at the issue step, the gate on with the master
+printed: `./dev keys revoke phone` first, or pass another `--label`. `./dev gate show` prints
+the master again and `./dev gate off` clears it. The command refuses to run in CI, and when the
+shell sets a `DEMO_ACCESS_CODE` other than the one in `.env` (Compose would prefer the shell's).
+Beside it, **codes issued as records**: `./dev keys issue --label judges
 --days 7` prints a code once (`opl_` and 24 random bytes) and keeps only its SHA-256 hash with
 the label and the expiry; `./dev keys list` shows each record and whether it is current,
 expired or revoked; `./dev keys revoke judges` ends one. The running backend reads the same

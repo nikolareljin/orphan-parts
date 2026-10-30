@@ -6,21 +6,38 @@ project_root() {
   (cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 }
 
+# _env_value <raw>: a dotenv value as Compose reads it: inside quotes, the text up to the closing
+# quote; unquoted, cut at a " #" comment and trimmed at the end.
+_env_value() {
+  local v="$1" q
+  case "$v" in
+    \"*|\'*)
+      q="${v:0:1}"; v="${v:1}"
+      [[ "$v" == *"$q"* ]] && v="${v%"$q"*}"
+      ;;
+    *)
+      v="${v%%[[:space:]]#*}"
+      v="${v%"${v##*[![:space:]]}"}"
+      ;;
+  esac
+  printf '%s' "$v"
+}
+
 # env_load [file]: export KEY=value lines from a dotenv file. Ignores comments and blank lines.
-# Quotes around values are stripped. Existing exported variables win over the file.
+# Values are read as _env_value does. Existing exported variables win over the file.
 env_load() {
   local file="${1:-$(project_root)/.env}"
   [[ -f "$file" ]] || return 0
   local line key value
   while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
     line="${line#"${line%%[![:space:]]*}"}"
     [[ -z "$line" || "$line" == \#* ]] && continue
     line="${line#export }"
     key="${line%%=*}"
     value="${line#*=}"
     [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
-    value="${value%\"}"; value="${value#\"}"
-    value="${value%\'}"; value="${value#\'}"
+    value="$(_env_value "$value")"
     if [[ -z "${!key+x}" ]]; then
       export "$key=$value"
     fi
@@ -28,36 +45,37 @@ env_load() {
 }
 
 # env_get KEY [file]: print one value from a dotenv file without exporting anything.
-# Empty output when the file or the key is missing. Quotes are stripped as in env_load.
+# Empty output when the file or the key is missing. The value is read as in env_load; a key
+# given twice yields the last line, as Compose takes it; a CR at the end of a line (a file
+# saved with Windows line endings) is dropped in both.
 env_get() {
   local want="$1" file="${2:-$(project_root)/.env}"
   [[ -f "$file" ]] || return 0
-  local line key value
+  local line key value="" found=0
   while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
     line="${line#"${line%%[![:space:]]*}"}"
     [[ -z "$line" || "$line" == \#* ]] && continue
     line="${line#export }"
     key="${line%%=*}"
     [[ "$key" == "$want" ]] || continue
-    value="${line#*=}"
-    value="${value%\"}"; value="${value#\"}"
-    value="${value%\'}"; value="${value#\'}"
-    printf '%s' "$value"
-    return 0
+    value="$(_env_value "${line#*=}")"; found=1
   done < "$file"
+  [[ $found -eq 0 ]] || printf '%s' "$value"
 }
 
 # env_set KEY VALUE [file]: write one value into a dotenv file: the key's line replaced where it
 # stands (indented or with `export `, as env_get reads it; a second line for the same key is
 # dropped, since Compose would read the last one), or appended when there is none; comments and
-# every other line untouched, the file's inode and mode kept. A file it creates is readable by
-# its owner alone (600). The new text is put together in a temporary file beside the target,
-# removed on failure and on exit, so the value never lands elsewhere. The value is written as
-# it is; a value with spaces or # should be quoted by the caller.
+# every other line untouched (a replaced line that ended in CRLF still does), the file's inode
+# and mode kept. A file it creates is readable by its owner alone (600). The new text is put
+# together in a temporary file beside the target, removed on failure and on exit, so the value
+# never lands elsewhere. The value is written as it is; a value with spaces or # should be
+# quoted by the caller (env_get and Compose both take the quotes off).
 _env_set_tmp=""
 _env_set_cleanup() { [[ -z "$_env_set_tmp" ]] || rm -f -- "$_env_set_tmp"; _env_set_tmp=""; }
 env_set() {
-  local key="$1" value="$2" file="${3:-$(project_root)/.env}" done=0 line rest rc=0
+  local key="$1" value="$2" file="${3:-$(project_root)/.env}" done=0 line rest cr rc=0
   if [[ ! -f "$file" ]]; then
     (umask 077 && : > "$file") || return 1
     chmod 600 "$file" || return 1
@@ -71,7 +89,8 @@ env_set() {
       rest="${rest#export }"
       if [[ "$rest" == "$key="* ]]; then
         [[ $done -eq 1 ]] && continue
-        printf '%s=%s\n' "$key" "$value"; done=1
+        cr=""; [[ "$line" == *$'\r' ]] && cr=$'\r'
+        printf '%s=%s%s\n' "$key" "$value" "$cr"; done=1
       else
         printf '%s\n' "$line"
       fi

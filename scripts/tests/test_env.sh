@@ -90,3 +90,27 @@ test_env_set_replaces_an_indented_key_and_makes_new_files_private() {
   assert_eq "$(find "$dir" -name '.env.*' | wc -l | tr -d ' ')" "0"
   [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
 }
+
+test_env_set_and_env_get_agree_on_quotes_crlf_and_special_values() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  printf 'A=1\r\nDEMO_ACCESS_CODE=old\r\nB=2\r\n' > "$dir/.env"
+  assert_eq "$(env_get DEMO_ACCESS_CODE "$dir/.env")" "old"
+  env_set DEMO_ACCESS_CODE new "$dir/.env"
+  assert_eq "$(env_get DEMO_ACCESS_CODE "$dir/.env")" "new"
+  assert_eq "$(env_get B "$dir/.env")" "2"
+  assert_eq "$(grep -c $'\r$' "$dir/.env")" "3"
+  env_set Q '"a b # c"' "$dir/.env"
+  assert_eq "$(env_get Q "$dir/.env")" "a b # c"
+  env_set E 'x=y=z' "$dir/.env"
+  assert_eq "$(env_get E "$dir/.env")" "x=y=z"
+  # read as Compose reads it: a " #" comment after an unquoted value, the text inside quotes,
+  # the last of two lines for one key
+  printf 'C=abc # a note\nH=abc#def\nS='"'"'one two'"'"' # x\nD="q # r" # s\nT=1\nT=2\n' > "$dir/c.env"
+  assert_eq "$(env_get C "$dir/c.env")" "abc"
+  assert_eq "$(env_get H "$dir/c.env")" "abc#def"
+  assert_eq "$(env_get S "$dir/c.env")" "one two"
+  assert_eq "$(env_get D "$dir/c.env")" "q # r"
+  assert_eq "$(env_get T "$dir/c.env")" "2"
+  [[ "$dir" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$dir"
+}
