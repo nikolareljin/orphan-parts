@@ -177,6 +177,9 @@ class Planner:
         # one change to the projects at a time: a selection checks the other projects' holds
         # and then commits, and two selections of one item must not both pass the check
         self._lock = threading.RLock()
+        # the last proposal call: what the model wrote and what the rules kept of it
+        self.last_proposed = 0
+        self.last_kept = 0
 
     # --- preferences --------------------------------------------------------
 
@@ -246,6 +249,7 @@ class Planner:
             max_steps=MAX_STEPS,
             op="propose",
         )
+        self.last_proposed = len(response.parsed.proposals)
         by_id = {i.id: i for i in usable}
         by_name: dict[str, Item] = {}
         for item in usable:
@@ -276,11 +280,12 @@ class Planner:
                 ready.template.id, ready.title, json.dumps(ready.content), ready.allocations
             )
             projects.append(self.project_of(row))
+        self.last_kept = len(projects)
         log.info(
             "proposed",
             extra={
-                "proposed": len(response.parsed.proposals),
-                "kept": len(projects),
+                "proposed": self.last_proposed,
+                "kept": self.last_kept,
                 "usd": response.response.cost_usd,
             },
         )

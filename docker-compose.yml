@@ -21,6 +21,7 @@ services:
     volumes:
       - ./backend:/app
       - ./demo:/demo
+      - ./eval:/eval
       - ./deploy:/deploy:ro
       - app-data:/data
     ports:

@@ -2,6 +2,12 @@
 # written by `./dev demo-scrub <raw dir>` (re-encoded, no metadata). `./dev record-fixtures`
 # runs the set once with a key and keeps every model answer; `./dev demo` replays it.
 # A photo named here that is not present is skipped with a note, so the set loads either way.
+# An item's `expect:` block is what `./dev eval` scores the load against: values the reading
+# should give, the verdict the rules should reach against another item, how many kept
+# proposals should use it. Fit and proposal expectations come from the rules and the owner
+# values written here; the adapter's expected fields are the values in the extract stub
+# (backend/tests/fixtures/api/responses/extract.json), which answers every label read until
+# the set is recorded with its own photos. A photo that is not present scores as not read.
 title: a drawer of idle things
 currency: USD
 country: US
@@ -17,6 +23,8 @@ items:
     tests_done: ran for a minute, suction fine
     fields:
       wand_outer_diameter: "32"
+    expect:
+      proposals_min: 1
   - key: tool_fits
     name: Crevice tool, the one that fits
     item_type: crevice tool
@@ -25,6 +33,9 @@ items:
     photos: [photos/vac_tool1_c.jpg]
     fields:
       opening_inner_diameter: "32.2"
+    expect:
+      # the wand's outer diameter is the needed opening inner diameter, in the rule's terms
+      fit: {against: vacuum, verdict: fits, values: {opening_inner_diameter: "32"}}
   - key: tool_near
     name: Crevice tool, the near miss
     item_type: crevice tool
@@ -33,6 +44,8 @@ items:
     photos: [photos/vac_tool2_c.jpg]
     fields:
       opening_inner_diameter: "35"
+    expect:
+      fit: {against: vacuum, verdict: conflict, values: {opening_inner_diameter: "32"}}
   - key: laptop_old
     name: Old laptop
     item_type: laptop
@@ -40,6 +53,8 @@ items:
     photos: [photos/laptop1_b.jpg]
     condition: boots, battery weak
     tests_done: booted to the desktop
+    expect:
+      proposals_min: 1
   - key: laptop_second
     name: Second laptop, cracked screen
     item_type: laptop
@@ -59,6 +74,8 @@ items:
     item_type: monitor
     intent: build
     condition: works, one HDMI input
+    expect:
+      proposals_min: 1
   - key: phone
     name: Broken phone
     item_type: phone
@@ -75,6 +92,14 @@ items:
     intent: keep
     photos: [photos/psu1_b.jpg]
     voice_note: notes/note_adapter.wav
+    expect:
+      # the extract stub's values; replace them with what the recording of psu1_b.jpg reads
+      fields:
+        brand: Orbital Power
+        model_number: OP-65N
+        output_voltage: 19.5 V
+        output_current: 3.33 A
+        output_power: 65 W
   - key: keyboard
     name: USB keyboard
     item_type: keyboard

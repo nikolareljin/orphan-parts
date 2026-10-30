@@ -36,7 +36,7 @@ DEFAULT_SET = Path("demo/set.yaml")
 def _repo_root() -> Path:
     here = Path(__file__).resolve()
     for parent in here.parents:
-        if (parent / "demo").is_dir() or (parent / ".git").is_dir():
+        if (parent / "demo" / "set.yaml").is_file() or (parent / ".git").exists():
             return parent
     return Path.cwd()
 

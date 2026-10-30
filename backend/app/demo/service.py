@@ -122,7 +122,8 @@ class Loader:
         out = Outcome(mode=self.settings.model_api_mode)
         self.currency, self.country = demo.currency, demo.country
         stubs_before = self.client.fixture_fallbacks
-        ids: dict[str, int] = {}
+        # the set's keys to the ids the inventory gave, kept for whoever scores the run
+        self.ids = ids = {}
         for item in demo.items:
             item_id = await self.load_item(item, base, out)
             if item_id is not None:
@@ -295,6 +296,7 @@ class Loader:
     # the set's currency and country, read once per run
     currency: str = "USD"
     country: str = ""
+    ids: dict[str, int] = {}
 
 
 def reset(settings: Settings) -> list[str]:
