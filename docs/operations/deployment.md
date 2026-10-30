@@ -24,9 +24,10 @@ curl -fsS https://<the url>/readyz
 That is the by-hand path; the workflow under *From GitHub Actions* below does the same from
 the repository's settings.
 
-`deploy/modal_app.py` builds the image from `backend/pyproject.toml`, adds `backend/app`, mounts
-the volume `orphan-parts-data` at `/data` (the inventory file, the captures, the spend ledger)
-and reads the secret. One container (`max_containers=1`: one writer for the database, one
+`deploy/modal_app.py` builds the image from `backend/pyproject.toml`, adds `backend/app`, the
+recorded answers under `backend/tests/fixtures` (fixture mode on the host replays them) and
+the demo set under `demo/`, mounts the volume `orphan-parts-data` at `/data` (the inventory
+file, the captures, the spend ledger) and reads the secret. One container (`max_containers=1`: one writer for the database, one
 counter for the demo gate), kept warm (`min_containers=1`; `OPL_MIN_CONTAINERS=0` at deploy
 time lets it scale to zero, with a cold start of some seconds on the first request after an
 idle quarter hour). A write is committed to the volume as soon as its request succeeds.
@@ -35,7 +36,11 @@ nothing spent); with a key that does not answer at startup (401, 402, 403, a net
 the service runs in fixture mode too and `/readyz` reports `fixture (key failed)` until a
 restart with a working key (`OPL_KEY_PROBE=0` turns that probe off). Changing the secret takes
 a redeploy. `modal app logs orphan-parts` streams the log; `modal volume ls orphan-parts-data`
-lists the data.
+lists the data. The demo set goes into the host's inventory with
+`modal run deploy/modal_app.py::load_demo` (the inventory reset first; `--no-reset` adds to
+it), the same load as `./dev demo` on a machine of your own, in the mode the secret says;
+record the set's fixtures and commit them before the deploy, or the load answers from the
+operations' stubs and says so.
 
 ### The web app on Cloudflare Pages
 
