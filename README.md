@@ -38,7 +38,7 @@ profiles, with a generic one for anything else.
   a listing, your own word. An observation stays "to confirm" until you accept it.
 - **A ruler, not a guess.** A dimension comes from marks on a photo with a scale reference and
   explicit geometry; a blurred, oblique or unreferenced capture is refused with the reason.
-- **Rules decide, the model explains.** Does it fit? ends in one verdict from a ladder; an
+- **Rules decide, the model reads.** Does it fit? ends in one verdict from a ladder; an
   unknown is never a pass, and a conflict is never talked away.
 - **Four price figures, never merged.** Asking, sold, what you reported, and the model's
   estimate, each with its page and date; weak evidence is called weak.
@@ -86,7 +86,7 @@ Changes go through pull requests; a release is a pull request from a `release/x.
 
 | Model | Job |
 |---|---|
-| Muse Spark | reads labels and listings into structured fields, writes listing drafts, searches the web for prices with citations, explains verdicts |
+| Muse Spark | reads labels and listings into structured fields, writes listing drafts, searches the web for prices with citations |
 | SAM 3.1 | isolates the item, its label and its connector in photos |
 | Muse Voice Transcribe | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
 | Muse Wonder | plans the buyer comparison and drafts new category profiles, later |
