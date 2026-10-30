@@ -4,6 +4,7 @@ run replays them. Photos are given to the services as they would be uploaded, so
 match on the request digest holds for the files in the set."""
 
 import logging
+import shutil
 import wave
 from pathlib import Path
 
