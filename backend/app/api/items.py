@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.api.deps import InventoryDep, PhotosDep, ProfilesDep
 from app.inventory import (
@@ -16,6 +17,7 @@ from app.inventory import (
     ReviewChange,
     VersionConflictError,
 )
+from app.ops.door import live_request
 from app.profiles import Profiles, UnknownProfileError
 
 router = APIRouter(prefix="/api/items", tags=["inventory"])
@@ -57,13 +59,25 @@ def create_item(spec: ItemCreate, inventory: InventoryDep, profiles: ProfilesDep
 
 @router.get("", response_model=list[ItemSummary])
 def list_items(inventory: InventoryDep) -> list[ItemSummary]:
-    """Every item that is not deleted, newest first. Location and notes stay off the list."""
-    return inventory.list_items()
+    """Every item that is not deleted, newest first; for the demo visitor, the public ones.
+    Location and notes stay off the list."""
+    return inventory.list_items(public_only=not live_request.get())
 
 
 @router.get("/{item_id}", response_model=Item)
 def get_item(item_id: int, inventory: InventoryDep) -> Item:
-    return inventory.get(item_id)
+    return inventory.get(item_id, public_only=not live_request.get())
+
+
+class PublicMark(BaseModel):
+    public: bool
+
+
+@router.post("/{item_id}/public", response_model=Item)
+def mark_item_public(item_id: int, mark: PublicMark, inventory: InventoryDep) -> Item:
+    """Shown to the demo visitor (the item, its values and its photos; never its location or
+    notes), or private again. The owner's hand, item by item."""
+    return inventory.set_public(item_id, mark.public)
 
 
 @router.patch("/{item_id}", response_model=Item)

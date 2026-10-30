@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -199,6 +199,11 @@ CREATE TABLE access_keys (
 );
 """
 
+_SCHEMA_V10 = """
+ALTER TABLE items ADD COLUMN public INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE captures ADD COLUMN public INTEGER NOT NULL DEFAULT 0;
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -209,6 +214,7 @@ MIGRATIONS: dict[int, str] = {
     7: _SCHEMA_V7,
     8: _SCHEMA_V8,
     9: _SCHEMA_V9,
+    10: _SCHEMA_V10,
 }
 
 

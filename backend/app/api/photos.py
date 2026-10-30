@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app.api.deps import PhotosDep
 from app.api.model_errors import as_http
 from app.extract.imaging import BadImageError
+from app.ops.door import live_request
 from app.photos import PhotoError
 
 router = APIRouter(prefix="/api/items", tags=["inventory"])
@@ -21,11 +22,13 @@ class PhotoCount(BaseModel):
 @router.get("/{item_id}/photos", response_model=PhotoCount)
 def item_photos(item_id: int, photos: PhotosDep) -> PhotoCount:
     """How many photos are kept with the item; each is at ``/photos/{n}``, 1 first."""
+    photos.inventory.get(item_id, public_only=not live_request.get())
     return PhotoCount(count=photos.count(item_id))
 
 
 @router.get("/{item_id}/photos/{n}", response_class=Response)
 def item_photo(item_id: int, n: int, photos: PhotosDep) -> Response:
+    photos.inventory.get(item_id, public_only=not live_request.get())
     return Response(
         photos.read(item_id, n),
         media_type="image/jpeg",

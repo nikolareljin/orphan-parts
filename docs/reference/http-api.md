@@ -35,6 +35,7 @@ separated `components`, and a `version` that every write increments.
 | `GET /api/items/{id}/events` | the history: actor, time, change, version |
 | `GET /api/items/{id}/photos` | how many photos are kept with the item (`count`); an item read from a capture has the capture's, an item saved from the web form the label photos it was read from |
 | `GET /api/items/{id}/photos/{n}` | one of them as JPEG, `1` first, never cached; `404` past the count |
+| `POST /api/items/{id}/public`, `POST /api/captures/{id}/public` | `{public}`: shown to the demo visitor (the item or capture, its values and photos; never a location, a note, a clip or a draft) or private again; the demo visitor's `GET` on items and captures lists the public ones and answers 404 for the rest |
 | `POST /api/items/{id}/photos` | multipart `uploads`, one to `MAX_PHOTOS` in all on the item: re-encoded on the way in, metadata dropped; `201` with the new `count`; `422` over the limit, `400` for a file that is not an image |
 
 Errors: `404` for an unknown item or assertion, `409` on a version mismatch, `422` for a value
