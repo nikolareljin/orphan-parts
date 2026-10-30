@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Changed
+- The README, the docs home, the roadmap, the limitations and the site description now say what the product is: a private inventory of what you own, four paths on it (catalog, sell and give away, find the one that fits, and build and reuse to follow), what is built and what comes next.
+
 ### Added
 - Demo gate: with `DEMO_ACCESS_CODE` set, every page and API call needs a session opened with the code at `POST /api/access` (a cookie, or the token as a bearer header), signed with a key derived from the code and stored nowhere; so many tries per address; every call that spends is counted per session and hour (`DEMO_VISITOR_CALLS_PER_HOUR`) and for everyone per day (`DEMO_DAILY_CALLS`), over which the answer is 429 with `Retry-After`; every request has a per-address limit; `DEMO_PAUSED=1` refuses what spends; `/readyz` reports the gate under `demo`; behind nginx the forwarded address counts when `DEMO_TRUST_PROXY=1`. The web app asks for the code and again on any 401.
 - Missing items: `POST /api/searches` records what an item needs (or values written in under a profile) with a top price, currency and radius, and hands off a Marketplace search for the owner to run; `POST /api/searches/{id}/candidates` takes a listing brought back as text (Muse Spark reads it into fields, with the profile's rule keys), as a screenshot (read by the extractor) or as typed values, dates it, assesses it by the profile's rules and names its state from the ladder; recheck, withdraw, and `GET /api/candidates/{id}/questions`, the rules' questions as a message to the seller. Nothing is fetched or posted; a link is kept as given. The Find a part page.
