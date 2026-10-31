@@ -114,6 +114,9 @@ The shorter items, in rough order.
   evidence tasks per participant.
 - **Reuse or recycle fallback.** A repair cafe or an e-waste drop-off when a part has no resale
   value.
+- **Accounts and proper sign-in** instead of a shared access code: a person signs in as
+  themselves, and what they may see and change follows from that
+  ([Demo access](../operations/demo-access.md)).
 - **Storage.** SQLite and local files serve one household; Postgres and object storage are the
   path when more than one does ([Data model](../reference/data-model.md)).
 

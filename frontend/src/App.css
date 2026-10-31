@@ -1623,6 +1623,14 @@ button.link {
   header.top {
     align-items: flex-start;
   }
+  .header-end {
+    width: 100%;
+  }
+  /* on a phone the door takes its own line above the pages, at the right */
+  .header-end .door {
+    order: -1;
+    margin-left: auto;
+  }
   .nav {
     width: 100%;
     overflow-x: auto;
@@ -2055,4 +2063,29 @@ footer.service .pair img {
   .item-actions {
     margin-left: 0;
   }
+}
+
+/* the pages and the header's door: one control on a gated server, a quiet note on an open
+   one, kept out of the pages' strip so it never scrolls away with them */
+.header-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.header-end .door {
+  white-space: nowrap;
+  padding: 0.45rem 0.7rem;
+}
+
+.header-end .door-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.gate-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
 }
