@@ -352,7 +352,8 @@ def training_lines(inventory: Inventory, items: Iterable[Item] | None = None) ->
         accepted = {
             k: {"value": a.value, "unit": a.unit}
             for k, a in current_fields(item.assertions).items()
-            if a.provenance == "observed" and a.review == "accepted"
+            # a model read off the device a part came from is not this item's label
+            if a.provenance == "observed" and a.review == "accepted" and k not in PARENT_FIELDS
         }
         if not accepted:
             continue
