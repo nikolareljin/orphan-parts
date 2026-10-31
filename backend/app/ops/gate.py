@@ -248,7 +248,8 @@ class Gate:
         pairing, which lasts PAIR_TOKEN_MINUTES; the key is the issued record's id (``0`` for
         the master code) and the binding signs in its issue time, so revoking the record ends
         the sessions it opened and a record with the same id after a reset is a stranger. The
-        signature covers the rest and is checked before the record is read."""
+        signature covers the rest and is checked before the record is read (for this shape;
+        the old one signs the issue time itself, so its record is read first)."""
         door = "2" if pairing else str(int(live))
         seconds = self.pair_seconds if pairing else self.session_seconds
         exp = int((time.time() if now is None else now) + seconds)
@@ -276,7 +277,9 @@ class Gate:
         if int(exp_text) <= moment:
             return None
         head = token.rsplit(".", 1)[0]
-        # a forged token ends here, before any record is read
+        # a forged token of this shape ends here, before any record is read (one of the old
+        # shape, taken for DEMO_SESSION_HOURS after a start, reads its record first: the
+        # record's issue time is part of what it signs)
         if not hmac.compare_digest(sig, self._mac("v2:" + head, 32)):
             return None
         kid = int(kid_text)

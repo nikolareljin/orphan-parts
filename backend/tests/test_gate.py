@@ -375,7 +375,7 @@ def test_demo_settings_are_checked(tmp_path: Path) -> None:
         gated_settings(tmp_path, demo_daily_calls=0)
 
 
-def test_a_forged_token_is_refused_before_any_record_is_read(tmp_path: Path) -> None:
+def test_a_forged_new_shape_token_is_refused_before_any_record_is_read(tmp_path: Path) -> None:
     from app.inventory.store import Store
 
     keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
