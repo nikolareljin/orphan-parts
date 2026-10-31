@@ -21,8 +21,9 @@ Orphan Parts Lens starts from a private inventory of the devices, parts and othe
 own. A photo of a label becomes a record you confirm field by field. A photo next to a ruler
 becomes a measurement with its method and uncertainty. From there, a decision written for your
 skills and four paths: keep a catalog, build something with what you have, sell, or give away.
-Facebook Marketplace is the destination both ways: the part you are missing, and the listing for what you let go. Nothing is published
-by a scan, nothing is posted or searched on your behalf, and a number without a source says so.
+Facebook Marketplace is the destination both ways: the part you are missing, and the listing
+for what you let go. Nothing is published by a scan, nothing is posted or searched on your
+behalf, and a number without a source says so.
 
 ## Four paths on one inventory
 
