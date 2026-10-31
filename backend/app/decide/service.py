@@ -32,7 +32,9 @@ from app.decide.schema import (
 )
 from app.find.service import Finder
 from app.inventory import Inventory
+from app.inventory.schema import TEXT_MAX as NOTES_MAX
 from app.inventory.schema import Item
+from app.inventory.service import notes_room
 from app.model_api import ModelApiClient, text_part, user_message
 from app.projects.pack import private_field
 from app.projects.schema import Preferences
@@ -201,18 +203,31 @@ def decided_line(spec: DecisionCreate) -> str:
     return f"{DECIDED}{spec.choice}: {spec.note}" if spec.note else f"{DECIDED}{spec.choice}"
 
 
-def repair_plan(scenarios: Scenarios) -> str:
+MORE = "… (more in the scenarios)"
+
+
+def repair_plan(scenarios: Scenarios, room: int = NOTES_MAX) -> str:
     """The keep and fix card as a few lines for the item's notes: the steps, the parts, the
-    cost and the time. Empty when the card says it is not worth fixing or has no steps."""
+    cost and the time, in at most ``room`` characters. When it does not fit, whole steps are
+    left out from the end and the plan ends with a line saying the rest is in the scenarios;
+    empty when the card says it is not worth fixing, has no steps, or not even its heading
+    fits."""
     card = scenarios.keep_fix
     if not card.worth_fixing or not card.steps:
         return ""
-    lines = [f"Repair plan (scenarios v{scenarios.version}, {card.difficulty}):"]
-    lines.extend(f"{n}. {step}" for n, step in enumerate(card.steps, start=1))
-    if card.parts:
-        lines.append(f"Parts: {'; '.join(card.parts)}")
-    lines.append(f"Cost: {card.cost}. Time: {card.time}.")
-    return "\n".join(lines)
+    head = f"Repair plan (scenarios v{scenarios.version}, {card.difficulty}):"
+    tail = [f"Parts: {'; '.join(card.parts)}"] if card.parts else []
+    tail.append(f"Cost: {card.cost}. Time: {card.time}.")
+    steps = [f"{n}. {step}" for n, step in enumerate(card.steps, start=1)]
+    whole = "\n".join([head, *steps, *tail])
+    if len(whole) <= room:
+        return whole
+    for kept in range(len(steps) - 1, -1, -1):
+        cut = "\n".join([head, *steps[:kept], *tail, MORE])
+        if len(cut) <= room:
+            return cut
+    bare = f"{head}\n{MORE}"
+    return bare if len(bare) <= room else ""
 
 
 # what the model wrote for the cards is shown as it is, so each text is cut to its bound and
@@ -240,15 +255,34 @@ def _cut_keep_fix(card: KeepFix) -> KeepFix:
     )
 
 
-# the brief lists the other items as "kind (count)"; a card names the kind
-_COUNT = re.compile(r"\s*\(\d+\)$")
+# the brief lists the other items as "kind (count)", and a card may copy the count with it:
+# "(1)", "(x1)", "( 2 )", with a trailing full stop or comma
+_COUNT = re.compile(r"\s*\(\s*x?\s*\d+\s*\)\s*[.,;]?\s*$", re.I)
+
+
+def kind_named(text: str) -> str:
+    """The kind an entry of a card's with_items names, without a count copied from the brief."""
+    return _COUNT.sub("", text.strip()).strip()
+
+
+def owned_items(texts: list[str], kinds: list[str]) -> list[str]:
+    """A card's with_items as the kinds the owner has: each entry without its count, matched
+    to an owned kind whatever its letter case, each kind once; an entry that names nothing the
+    owner has is dropped."""
+    by_key = {kind.casefold(): kind for kind in kinds}
+    found: list[str] = []
+    for text in texts:
+        kind = by_key.get(kind_named(text).casefold())
+        if kind is not None and kind not in found:
+            found.append(kind)
+    return found
 
 
 def _cut_reuse(card: ReuseScenario) -> ReuseScenario:
     return ReuseScenario(
         title=_line(card.title),
         what_it_does=_line(card.what_it_does),
-        with_items=_lines([_COUNT.sub("", t) for t in card.with_items]),
+        with_items=_lines(card.with_items),
         difficulty=card.difficulty,
         why=_line(card.why),
         extra_parts=_lines(card.extra_parts),
@@ -338,17 +372,20 @@ class Decider:
 
     # --- what to do with it, for this owner ---------------------------------------
 
-    def others(self, item_id: int) -> list[str]:
+    def _kinds(self, item_id: int) -> list[tuple[str, int]]:
         """The kinds of item the owner has besides this one, with how many of each, the most
-        of a kind first; what is gone is not counted. Capped, so a large inventory does not
-        become the brief."""
+        of a kind first; what is gone is not counted."""
         counts: dict[str, int] = {}
         for summary in self.inventory.list_items():
             if summary.id == item_id or summary.availability == "gone":
                 continue
             counts[summary.item_type] = counts.get(summary.item_type, 0) + 1
-        ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
-        return [f"{kind} ({n})" for kind, n in ranked[:OTHERS_MAX]]
+        return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+    def others(self, item_id: int) -> list[str]:
+        """The other kinds as the brief names them, "kind (count)"; capped, so a large
+        inventory does not become the brief."""
+        return [f"{kind} ({n})" for kind, n in self._kinds(item_id)[:OTHERS_MAX]]
 
     async def scenarios(self, item_id: int) -> Scenarios:
         item = self.inventory.get(item_id)
@@ -401,7 +438,14 @@ class Decider:
         return self.scenarios_of(rows[-1]) if rows else None
 
     def scenarios_of(self, row: Any) -> Scenarios:
+        """The cards as kept, with each reuse card's with_items read as the kinds the owner has
+        now: the stored row stays as the model wrote it."""
         content = json.loads(row["content"])
+        kinds = [kind for kind, _ in self._kinds(int(row["item_id"]))]
+        content["reuse"] = [
+            {**card, "with_items": owned_items(card["with_items"], kinds)}
+            for card in content["reuse"]
+        ]
         return Scenarios(
             id=int(row["id"]),
             item_id=int(row["item_id"]),
@@ -492,11 +536,18 @@ class Decider:
 
     def decide(self, item_id: int, spec: DecisionCreate) -> Item:
         """The choice, kept as an event. Keep and fix also writes the repair steps of the
-        current scenarios into the item's notes, where the owner reads and edits them."""
+        latest scenarios into the item's notes, where the owner reads and edits them, when the
+        item has not changed since they were written."""
         plan = ""
+        plan_item_version: int | None = None
         if spec.choice == "keep_fix":
             latest = self.latest_scenarios(item_id)
-            plan = repair_plan(latest) if latest is not None and not latest.stale else ""
+            if latest is not None:
+                # written only while the item is still at the version the cards were written
+                # from: the inventory checks it in the transaction that writes the notes
+                room = notes_room(self.inventory.get(item_id).notes)
+                plan = repair_plan(latest, room)
+                plan_item_version = latest.item_version
         item = self.inventory.decide(
             item_id,
             INTENT_FOR[spec.choice],
@@ -504,6 +555,7 @@ class Decider:
             said=bool(spec.note),
             version=spec.version,
             notes_add=plan,
+            plan_item_version=plan_item_version,
         )
         log.info("decided", extra={"item_id": item_id, "choice": spec.choice})
         return item

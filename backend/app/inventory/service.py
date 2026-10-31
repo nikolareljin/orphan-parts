@@ -64,6 +64,17 @@ def current_fields(assertions: list[Assertion]) -> dict[str, Assertion]:
     return out
 
 
+def joined_notes(notes: str, add: str) -> str:
+    """The notes with a block added after a blank line, or the block alone."""
+    add = add.strip()
+    return f"{notes.rstrip()}\n\n{add}" if notes.strip() else add
+
+
+def notes_room(notes: str) -> int:
+    """How many characters a block added to these notes may take."""
+    return TEXT_MAX - (len(notes.rstrip()) + 2 if notes.strip() else 0)
+
+
 class Inventory:
     def __init__(self, settings: Settings) -> None:
         self.store = Store(settings.inventory_db_path, settings.sqlite_journal_mode)
@@ -495,14 +506,18 @@ class Inventory:
         said: bool,
         version: int | None = None,
         notes_add: str = "",
+        plan_item_version: int | None = None,
     ) -> Item:
         """The owner's decision: the intent it implies is set and the decision itself is the
         event line, so the history keeps the why. The version is bumped only when the item
         changes: a new intent, a note (``said``) that gives the item a new why, or text added
-        to the notes (``notes_add``, a repair plan; not added twice). The same choice again,
-        with nothing said, is an event and nothing more; the guidance and the uses written
-        before it stay current. With ``version`` set, a choice made from an older version of
-        the item is refused and nothing is written."""
+        to the notes (``notes_add``, a repair plan). The plan is added only while the item is
+        still at ``plan_item_version``, the version it was written from, checked here in the
+        same transaction, and only when it fits the notes whole (the caller cuts it to
+        ``notes_room``); otherwise the notes stay as they are. The same choice again, with
+        nothing said, is an event and nothing more; the guidance and the uses written before
+        it stay current. With ``version`` set, a choice made from an older version of the item
+        is refused and nothing is written."""
         at = now()
         with self.store.connect() as conn:
             row = self._row(conn, item_id)
@@ -512,13 +527,13 @@ class Inventory:
                 )
             version = int(row["version"])
             notes = str(row["notes"])
-            add = notes_add.strip() if notes_add.strip() not in notes else ""
+            kept = joined_notes(notes, notes_add)
+            add = notes_add.strip() != "" and plan_item_version == version and len(kept) <= TEXT_MAX
             if intent != str(row["intent"]) or said or add:
                 version += 1
                 conn.execute(SET_COLUMN["intent"], (intent, version, at, item_id))
             if add:
-                kept = f"{notes.rstrip()}\n\n{add}" if notes.strip() else add
-                conn.execute(SET_COLUMN["notes"], (kept[:TEXT_MAX], version, at, item_id))
+                conn.execute(SET_COLUMN["notes"], (kept, version, at, item_id))
             self._event(conn, item_id, change, version, at)
             return self._item(conn, item_id)
 

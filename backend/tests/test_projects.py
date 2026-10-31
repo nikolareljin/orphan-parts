@@ -147,6 +147,15 @@ def test_preferences_are_kept_once_and_default_when_unset(planner: Planner) -> N
     assert planner.has_preferences()
 
 
+def test_the_demo_loaders_preferences_are_not_a_profile(planner: Planner) -> None:
+    planner.set_preferences(Preferences(tools="pliers", budget=30), by_demo=True)
+    assert not planner.has_preferences()
+    assert planner.preferences() == Preferences(tools="pliers", budget=30)
+    # the owner saving the form, even with the same answers, makes them a profile
+    planner.set_preferences(planner.preferences())
+    assert planner.has_preferences()
+
+
 def test_skills_are_rated_and_a_plain_name_reads_as_some() -> None:
     prefs = Preferences.model_validate(
         {

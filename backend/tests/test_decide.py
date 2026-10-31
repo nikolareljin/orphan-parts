@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, cast
@@ -21,9 +22,20 @@ from app.decide import (
     suggested,
     templates_for,
 )
-from app.decide.schema import MAX_REUSE
-from app.decide.service import NEEDS_MAX, NO_PROFILE, TEXT_MAX, brief, known_fields
+from app.decide.schema import MAX_REUSE, Scenarios
+from app.decide.service import (
+    MORE,
+    NEEDS_MAX,
+    NO_PROFILE,
+    TEXT_MAX,
+    brief,
+    kind_named,
+    known_fields,
+    owned_items,
+    repair_plan,
+)
 from app.inventory import Inventory
+from app.inventory.schema import TEXT_MAX as NOTES_MAX
 from app.inventory.schema import FieldCreate, ItemCreate, ItemPatch
 from app.main import create_app
 from app.model_api import ModelApiClient
@@ -503,6 +515,7 @@ class _Scenarios:
 async def test_scenarios_are_one_low_effort_call_and_the_text_is_cut(settings: Settings) -> None:
     inventory = Inventory(settings)
     item_id = laptop(inventory)
+    inventory.create(ItemCreate(item_type="monitor", name="Spare monitor"))
     written = ScenariosWriting(
         keep_fix=KeepFix(
             worth_fixing=True,
@@ -609,6 +622,206 @@ def test_keep_and_fix_adds_the_repair_steps_to_the_notes_once(
     # the scenarios are stale now: the same choice again adds nothing, and is no new version
     again = recorded_client.post(f"/api/items/{item_id}/decision", json={"choice": "keep_fix"})
     assert again.json()["notes"] == after["notes"] and again.json()["version"] == after["version"]
+
+
+def test_a_count_copied_from_the_brief_is_not_part_of_the_kind() -> None:
+    for text in (
+        "raspberry pi (1)",
+        "raspberry pi (1) ",
+        "raspberry pi (1).",
+        "raspberry pi (x1)",
+        " raspberry pi ( X 12 ), ",
+        "raspberry pi (2);",
+        "raspberry pi",
+    ):
+        assert kind_named(text) == "raspberry pi", text
+    # a number that is part of the name stays
+    assert kind_named("usb 3 hub") == "usb 3 hub"
+    assert kind_named("monitor (27 inch)") == "monitor (27 inch)"
+
+
+def test_with_items_are_the_kinds_the_owner_has() -> None:
+    kinds = ["raspberry pi", "keyboard", "monitor"]
+    texts = ["Raspberry Pi (1)", "keyboard (1).", "KEYBOARD (x1)", "toaster (1)", "  ", "a monitor"]
+    assert owned_items(texts, kinds) == ["raspberry pi", "keyboard"]
+    assert owned_items(["monitor"], []) == []
+    # the owner's kind as they typed it, matched whatever the case the card wrote
+    assert owned_items(["raspberry PI (2)"], ["Raspberry Pi"]) == ["Raspberry Pi"]
+
+
+def _decider(settings: Settings, inventory: Inventory) -> Decider:
+    return Decider(
+        settings,
+        cast(ModelApiClient, None),
+        inventory,
+        Templates(),
+        cast(Planner, _Owner()),
+        cast(Any, None),
+        cast(Any, None),
+    )
+
+
+def _written(**keep_fix: Any) -> ScenariosWriting:
+    card: dict[str, Any] = {
+        "worth_fixing": True,
+        "problems": ["worn battery"],
+        "steps": ["open the base", "swap the battery"],
+        "difficulty": "easy",
+        "why": "one connector",
+        "parts": ["battery, 40 USD"],
+        "cost": "40 USD",
+        "time": "half an hour",
+    }
+    card.update(keep_fix)
+    return ScenariosWriting(
+        keep_fix=KeepFix(**card),
+        reuse=[_card("desk")],
+        sell=SellCard(selling_points=["boots"], effort="a listing", note=""),
+        recommended="keep_fix",
+        reason="you solder",
+    )
+
+
+def _kept(inventory: Inventory, item_id: int, written: ScenariosWriting) -> None:
+    content = {
+        "profiled": False,
+        **written.model_dump(),
+        "model": "muse-spark",
+        "from_fixture": True,
+        "cost_usd": 0.0,
+    }
+    item = inventory.get(item_id)
+    inventory.add_scenarios(item_id, json.dumps(content), item_version=item.version)
+
+
+def test_a_stored_row_with_counts_reads_as_owned_kinds(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory)
+    for item_type in ("monitor", "keyboard"):
+        inventory.create(ItemCreate(item_type=item_type, name=item_type))
+    written = _written()
+    written.reuse[0].with_items = ["Monitor (1).", "keyboard (x2)", "toaster (1)"]
+    _kept(inventory, item_id, written)
+    read = _decider(settings, inventory).latest_scenarios(item_id)
+    assert read is not None and read.reuse[0].with_items == ["monitor", "keyboard"]
+    # the row stays as the model wrote it
+    stored = json.loads(inventory.scenarios(item_id)[-1]["content"])
+    assert stored["reuse"][0]["with_items"] == ["Monitor (1).", "keyboard (x2)", "toaster (1)"]
+
+
+def _scenarios(**keep_fix: Any) -> Scenarios:
+    written = _written(**keep_fix)
+    return Scenarios(
+        id=1,
+        item_id=1,
+        version=2,
+        item_version=1,
+        stale=False,
+        profiled=True,
+        keep_fix=written.keep_fix,
+        reuse=written.reuse,
+        sell=written.sell,
+        recommended="keep_fix",
+        reason="",
+        model="muse-spark",
+        from_fixture=True,
+        cost_usd=0.0,
+        at="t",
+    )
+
+
+def test_a_repair_not_worth_doing_has_no_plan() -> None:
+    assert repair_plan(_scenarios(worth_fixing=False)) == ""
+    assert repair_plan(_scenarios(steps=[])) == ""
+    whole = repair_plan(_scenarios())
+    assert whole.startswith("Repair plan (scenarios v2, easy):\n1. open the base\n2. swap")
+    assert whole.endswith("Parts: battery, 40 USD\nCost: 40 USD. Time: half an hour.")
+    assert MORE not in whole
+
+
+def test_a_plan_too_long_for_the_notes_leaves_out_whole_steps() -> None:
+    steps = [f"step {n} " + "x" * 150 for n in range(1, 7)]
+    whole = repair_plan(_scenarios(steps=steps))
+    room = len(whole) - 100
+    cut = repair_plan(_scenarios(steps=steps), room)
+    assert len(cut) <= room and cut.endswith(f"Cost: 40 USD. Time: half an hour.\n{MORE}")
+    lines = cut.splitlines()
+    # steps 1 to 5 whole, step 6 left out, no step cut in the middle
+    assert [line[:2] for line in lines[1:6]] == ["1.", "2.", "3.", "4.", "5."]
+    assert all(line == f"{n}. {steps[n - 1]}" for n, line in enumerate(lines[1:6], start=1))
+    assert "6. " not in cut
+    # only the heading fits: the plan says the rest is in the scenarios; nothing fits: empty
+    head = "Repair plan (scenarios v2, easy):"
+    assert repair_plan(_scenarios(steps=steps), len(head) + 1 + len(MORE)) == f"{head}\n{MORE}"
+    assert repair_plan(_scenarios(steps=steps), 10) == ""
+
+
+def test_keep_and_fix_on_long_notes_keeps_them_whole_and_cuts_the_plan(
+    settings: Settings,
+) -> None:
+    inventory = Inventory(settings)
+    long = "n" * (NOTES_MAX - 120)
+    item_id = laptop(inventory, notes=long)
+    _kept(inventory, item_id, _written(steps=[f"step {n} " + "x" * 40 for n in range(6)]))
+    item = _decider(settings, inventory).decide(item_id, DecisionCreate(choice="keep_fix"))
+    assert item.notes.startswith(long + "\n\nRepair plan") and len(item.notes) <= NOTES_MAX
+    assert item.notes.endswith(MORE) and item.intent == "keep"
+
+
+def test_keep_and_fix_after_an_edit_sets_the_intent_and_leaves_the_notes(
+    settings: Settings,
+) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory, notes="from the attic", intent="sell")
+    _kept(inventory, item_id, _written())
+    edited = inventory.update(item_id, ItemPatch(condition="dented"))
+    decider = _decider(settings, inventory)
+    latest = decider.latest_scenarios(item_id)
+    assert latest is not None and latest.stale
+    item = decider.decide(item_id, DecisionCreate(choice="keep_fix"))
+    assert item.notes == "from the attic" and item.intent == "keep"
+    assert item.version == edited.version + 1
+
+
+def test_the_plan_is_written_only_at_the_version_it_was_written_from(
+    settings: Settings,
+) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory, notes="from the attic", intent="sell")
+    at = inventory.get(item_id).version
+    # an older version: nothing added, the intent still set
+    item = inventory.decide(
+        item_id, "keep", "decided: keep_fix", said=False, notes_add="plan", plan_item_version=at - 1
+    )
+    assert item.notes == "from the attic" and item.intent == "keep" and item.version == at + 1
+    # at its version: added once; the same plan again finds the item moved on
+    item = inventory.decide(
+        item_id, "keep", "decided: keep_fix", said=False, notes_add="plan", plan_item_version=at + 1
+    )
+    assert item.notes == "from the attic\n\nplan" and item.version == at + 2
+    again = inventory.decide(
+        item_id, "keep", "decided: keep_fix", said=False, notes_add="plan", plan_item_version=at + 1
+    )
+    assert again.notes == item.notes and again.version == item.version
+    # no version given: no plan
+    none = inventory.decide(item_id, "keep", "decided: keep_fix", said=False, notes_add="plan")
+    assert none.notes == item.notes
+
+
+def test_a_plan_that_does_not_fit_the_notes_is_not_cut_into_them(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    long = "n" * (NOTES_MAX - 10)
+    item_id = laptop(inventory, notes=long)
+    at = inventory.get(item_id).version
+    item = inventory.decide(
+        item_id, "keep", "decided: keep_fix", said=False, notes_add="p" * 9, plan_item_version=at
+    )
+    assert item.notes == long
+    fits = "p" * (NOTES_MAX - len(long) - 2)
+    item = inventory.decide(
+        item_id, "keep", "decided: keep_fix", said=False, notes_add=fits, plan_item_version=at
+    )
+    assert item.notes == f"{long}\n\n{fits}" and len(item.notes) == NOTES_MAX
 
 
 def test_the_demo_visitor_is_refused_scenarios(gated: TestClient) -> None:
