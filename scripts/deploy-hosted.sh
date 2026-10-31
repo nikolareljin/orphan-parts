@@ -7,8 +7,11 @@
 #   secret    writes the Modal secret orphan-parts from the environment (every field, replaced;
 #             a value holding a single quote, a backslash or a newline is refused, since the
 #             dotenv reader cannot carry those; anything else is kept as it is)
-#   backend   deploys deploy/modal_app.py, reads the URL off the output and waits for /readyz
-#             to answer ok with the key answering (a key that failed its probe fails the step)
+#   backend   deploys deploy/modal_app.py, reads the URL off the output, stops the running
+#             containers of the deployed app orphan-parts (a warm container keeps the secret
+#             it started with; the next one reads the secret as it is now) and waits for
+#             /readyz to answer ok with the key answering (a key that failed its probe fails
+#             the step)
 #   web       builds the web app against the backend's URL and publishes frontend/dist to Pages
 #             (refused while a frontend/.env* exists, since Vite would bake its VITE_ names into
 #             the public bundle, and when the build leaves one in dist)
@@ -28,8 +31,10 @@
 #   OPL_MIN_CONTAINERS   read by deploy/modal_app.py at deploy time: 1 keeps the container warm
 #   MODAL_TOKEN_ID, MODAL_TOKEN_SECRET          the modal command's login (or ~/.modal.toml)
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID wrangler's login
-#   MODAL, WRANGLER, NPM, CURL   the commands, options included (tests point them at stand-ins)
-#   READY_TRIES, READY_WAIT      how long backend waits for /readyz (default 12 times 5 s)
+#   MODAL, WRANGLER, NPM, CURL, PYTHON   the commands, options included (tests point them at
+#                        stand-ins; PYTHON reads modal's JSON, default python3)
+#   READY_TRIES, READY_WAIT      how long backend waits for the old containers to go and for
+#                        /readyz (default 12 times 5 s each)
 #   GITHUB_OUTPUT        when set, api_url= and web_url= lines are appended to it
 #   ROOT                 the repository (default: the parent of this script's directory)
 set -euo pipefail
@@ -42,6 +47,18 @@ case "$target" in
 esac
 
 fail() { printf 'deploy-hosted: %s\n' "$*" >&2; exit 1; }
+# untraced CMD...: CMD with xtrace off, on again after if it was on, so bash -x never prints a
+# secret (the same helper as scripts/lib/env.sh; this script stands alone)
+untraced() {
+  local _untraced_x=0 _untraced_rc=0
+  [[ $- == *x* ]] && _untraced_x=1
+  { set +x; } 2>/dev/null
+  # not "|| rc=$?": that would turn errexit off inside CMD; under set -e a failure ends the
+  # script here, as it would have without the wrapper
+  "$@"; _untraced_rc=$?
+  [[ $_untraced_x -eq 0 ]] || set -x
+  return $_untraced_rc
+}
 say() { printf 'deploy-hosted: %s\n' "$*"; }
 origin_ok() { [[ "$1" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$ ]]; }
 
@@ -50,6 +67,9 @@ read -r -a modal_cmd <<<"${MODAL:-modal}"
 read -r -a wrangler_cmd <<<"${WRANGLER:-npx --yes wrangler@4}"
 read -r -a npm_cmd <<<"${NPM:-npm}"
 read -r -a curl_cmd <<<"${CURL:-curl}"
+read -r -a python_cmd <<<"${PYTHON:-python3}"
+# the name in deploy/modal_app.py (modal.App("orphan-parts")), the secret's name too
+app_name="orphan-parts"
 project="${PAGES_PROJECT:-orphan-parts}"
 api_url="${API_URL:-}"
 # the dotenv the secret step writes holds the key and the code: gone when the script ends,
@@ -62,7 +82,9 @@ need_modal() {
     || fail "the modal command is not installed (pip install modal python-dotenv); see docs/operations/deployment.md"
 }
 
-step_secret() {
+# Untraced as a whole: it reads the key and the code and writes them into the dotenv.
+step_secret() { untraced _step_secret; }
+_step_secret() {
   need_modal
   origin_ok "${WEB_ORIGIN:-}" || fail "secret: WEB_ORIGIN must be an https origin (https://<project>.pages.dev)"
   local name value
@@ -111,6 +133,7 @@ step_backend() {
   printf '%s\n' "$out" | tail -5
   url="$(printf '%s\n' "$out" | grep -oE 'https://[A-Za-z0-9.-]+\.modal\.run' | tail -1 || true)"
   [[ -n "$url" ]] || fail "backend: no .modal.run URL in the deploy output"
+  restart_containers
   local ready="" tries="${READY_TRIES:-12}" wait="${READY_WAIT:-5}" i
   for ((i = 1; i <= tries; i++)); do
     ready="$("${curl_cmd[@]}" -fsS -m 20 "$url/readyz" 2>/dev/null)" && break
@@ -127,6 +150,55 @@ step_backend() {
   api_url="$url"
   [[ -n "${GITHUB_OUTPUT:-}" ]] && printf 'api_url=%s\n' "$url" >> "$GITHUB_OUTPUT"
   return 0
+}
+
+# modal_json app NAME | container APP_ID: from modal's --json table on stdin, the id of the
+# deployed app named NAME, or the ids of the containers of APP_ID, one per line. The keys are
+# taken in either spelling modal has used ("App ID" or app_id).
+modal_json() {
+  "${python_cmd[@]}" -c '
+import json, re, sys
+kind, want = sys.argv[1], sys.argv[2]
+def norm(row):
+    return {re.sub(r"[^a-z0-9]+", "_", str(k).lower()).strip("_"): str(v) for k, v in row.items()}
+rows = [norm(r) for r in json.load(sys.stdin) if isinstance(r, dict)]
+for r in rows:
+    if kind == "app" and r.get("description") == want and r.get("state") == "deployed":
+        print(r.get("app_id", ""))
+    elif kind == "container" and r.get("app_id") == want and r.get("container_id"):
+        print(r["container_id"])
+' "$1" "$2"
+}
+
+# restart_containers: a container that is running keeps the secret it started with, and with
+# OPL_MIN_CONTAINERS=1 one always is; each running container of the deployed app is stopped
+# (an ephemeral run of the same app, a load or a keys command, is left alone) and the step
+# waits until they are gone, so the one that answers /readyz next started with the secret as
+# it is now. No container running (scaled to zero) is nothing to do.
+restart_containers() {
+  local out app_id ids id left tries="${READY_TRIES:-12}" wait="${READY_WAIT:-5}" i
+  out="$("${modal_cmd[@]}" app list --json)" || fail "backend: modal app list failed"
+  app_id="$(printf '%s' "$out" | modal_json app "$app_name" | head -1)" \
+    || fail "backend: modal app list did not answer in JSON"
+  [[ -n "$app_id" ]] || fail "backend: no deployed app $app_name in modal app list"
+  out="$("${modal_cmd[@]}" container list --app-id "$app_id" --json)" || fail "backend: modal container list failed"
+  ids="$(printf '%s' "$out" | modal_json container "$app_id")" \
+    || fail "backend: modal container list did not answer in JSON"
+  if [[ -z "$ids" ]]; then
+    say "backend: no container of $app_name running; the next one starts with the current secret"
+    return 0
+  fi
+  while IFS= read -r id; do
+    say "backend: stopping container $id so the next one reads the current secret"
+    "${modal_cmd[@]}" container stop --yes "$id" >/dev/null || fail "backend: modal container stop $id failed"
+  done <<<"$ids"
+  for ((i = 1; i <= tries; i++)); do
+    out="$("${modal_cmd[@]}" container list --app-id "$app_id" --json 2>/dev/null)" || out="[]"
+    left="$(printf '%s' "$out" | modal_json container "$app_id" | grep -Fxf <(printf '%s\n' "$ids") || true)"
+    [[ -z "$left" ]] && { say "backend: the old containers are gone"; return 0; }
+    sleep "$wait"
+  done
+  fail "backend: container(s) ${left//$'\n'/, } still running after $tries tries"
 }
 
 step_web() {

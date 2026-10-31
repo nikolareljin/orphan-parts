@@ -67,7 +67,7 @@
 #   shell <service>    open a shell in a running service
 #   help               this text
 #
-# Flags: -v/--verbose, -d/--debug (set -x)
+# Flags: -v/--verbose, -d/--debug (set -x; values read from .env and secrets are never traced)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -163,7 +163,8 @@ cmd_phone() {
 }
 
 # This machine's address on the local network, for the phone to reach the web app.
-lan_address() {
+lan_address() { untraced _lan_address; }
+_lan_address() {
   local set_in_env
   set_in_env="$(env_get LAN_ADDRESS "$ROOT/.env" 2>/dev/null || true)"
   if [[ -n "${LAN_ADDRESS:-$set_in_env}" ]]; then printf '%s\n' "${LAN_ADDRESS:-$set_in_env}"; return; fi
@@ -173,7 +174,9 @@ lan_address() {
 
 # Without a key the backend refuses to start, by design. Starting the stack to look at it should
 # still work, so with an empty MODEL_API_KEY and fixture mode not asked for, fixture mode it is.
-api_mode_or_fixture() {
+# Untraced as a whole: it reads the key (for presence) from the shell or .env.
+api_mode_or_fixture() { untraced _api_mode_or_fixture; }
+_api_mode_or_fixture() {
   local fake="${OPL_FAKE_API:-$(env_get OPL_FAKE_API "$ROOT/.env")}"
   [[ "$fake" == "1" ]] && return 0
   if [[ -z "${MODEL_API_KEY:-$(env_get MODEL_API_KEY "$ROOT/.env")}" ]]; then
@@ -313,8 +316,7 @@ cmd_live_check() {
     esac
   done
   need_env_file
-  fake="$(_lc_flag OPL_FAKE_API "${OPL_FAKE_API:-$(_lc_quiet env_get OPL_FAKE_API "$ROOT/.env")}")" || exit 1
-  record="$(_lc_flag OPL_RECORD_FIXTURES "${OPL_RECORD_FIXTURES:-$(_lc_quiet env_get OPL_RECORD_FIXTURES "$ROOT/.env")}")" || exit 1
+  untraced _lc_settings || exit 1
   # recording makes real calls and writes their answers into backend/tests/fixtures/api
   [[ "$record" == "0" ]] || die "live-check: the live check does not record fixtures; unset OPL_RECORD_FIXTURES"
   if [[ -n "$against" ]]; then
@@ -324,7 +326,7 @@ cmd_live_check() {
         if [[ "${NATIVE:-0}" == "1" ]]; then against="http://localhost:$BACKEND_PORT"; else against="http://backend:8000"; fi
         ;;
       hosted)
-        against="${API_URL:-$(_lc_quiet env_get API_URL "$ROOT/.env")}"
+        untraced _lc_hosted_url
         [[ -n "$against" ]] || die "live-check: --against hosted needs API_URL (the backend's https URL) in the shell or .env"
         ;;
       http://*|https://*) ;;
@@ -339,7 +341,7 @@ cmd_live_check() {
   [[ -z "${LIVECHECK_ACCESS_CODE:+x}" ]] || pass+=(-e LIVECHECK_ACCESS_CODE)
   if [[ "${NATIVE:-0}" == "1" ]]; then
     venv_ensure "$BACKEND"
-    _lc_quiet env_load "$ROOT/.env"
+    env_load "$ROOT/.env"
     OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 PYTHONPATH="$ROOT" venv_run "$BACKEND" python -m livecheck "${args[@]+"${args[@]}"}"
   else
     docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
@@ -357,21 +359,22 @@ _lc_flag() {
   esac
 }
 
-# _lc_quiet CMD...: run CMD with tracing off (it handles secret values), then trace again if
-# tracing was on.
-_lc_quiet() {
-  local traced=0 rc=0
-  [[ $- == *x* ]] && traced=1
-  { set +x; } 2>/dev/null
-  "$@" || rc=$?
-  [[ $traced -eq 0 ]] || set -x
-  return $rc
+# _lc_settings: fake and record (cmd_live_check's locals) from the shell, else .env, as 1 or 0;
+# run untraced, since it reads .env.
+_lc_settings() {
+  fake="$(_lc_flag OPL_FAKE_API "${OPL_FAKE_API:-$(env_get OPL_FAKE_API "$ROOT/.env")}")" || return 1
+  record="$(_lc_flag OPL_RECORD_FIXTURES "${OPL_RECORD_FIXTURES:-$(env_get OPL_RECORD_FIXTURES "$ROOT/.env")}")" || return 1
+}
+
+# _lc_hosted_url: against (cmd_live_check's local) as API_URL from the shell, else .env; untraced.
+_lc_hosted_url() {
+  against="${API_URL:-$(env_get API_URL "$ROOT/.env")}"
 }
 
 # _lc_has NAME: succeeds when NAME has a value in the shell or a non-empty one in .env; the
 # value is never read into a variable, a trace or an argument.
 _lc_has() {
-  _lc_quiet _lc_has_value "$1"
+  untraced _lc_has_value "$1"
 }
 
 _lc_has_value() {
@@ -382,13 +385,16 @@ _lc_has_value() {
 # Browser checks against the dev stack in fixture mode: no key, no credits. Playwright runs
 # in its own image sharing the frontend container's network, as the host user so every file it
 # writes under e2e/ is yours.
+_e2e_access_code() { export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE:-e2e-demo-access-code}"; }
+
 cmd_e2e() {
   need_env_file
   docker_running || die "docker is not running"
   export OPL_FAKE_API=1
-  # the browser checks go through the demo gate, with a code of their own unless the shell sets one;
-  # the allowances are for people, not for six workers on one address, so they are wide here
-  export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE:-e2e-demo-access-code}"
+  # the browser checks go through the demo gate, with a code of their own unless the shell sets one
+  # (untraced: a code set in the shell is a secret); the allowances are for people, not for six
+  # workers on one address, so they are wide here
+  untraced _e2e_access_code
   export DEMO_REQUESTS_PER_MINUTE=100000 DEMO_VISITOR_CALLS_PER_HOUR=100000 DEMO_DAILY_CALLS=1000000
   # pictures on, answered by the recorded stub like every other call here
   export PICTURE_ENABLED=1
@@ -512,7 +518,9 @@ _gate_backend_port() {
   if [[ "$published" =~ ^[0-9]+$ ]]; then printf '%s\n' "$published"; else printf '%s\n' "$BACKEND_PORT"; fi
 }
 
-cmd_gate() {
+# Untraced as a whole: every branch reads, writes or prints the access code.
+cmd_gate() { untraced _cmd_gate "$@"; }
+_cmd_gate() {
   local usage="usage: ./dev gate on [--label <who>] [--days N] | off | show"
   local what="${1:-}" label="phone" days=7 opts=0 code
   [[ -n "${CI:-}" ]] && die "gate is for this machine only, never CI"

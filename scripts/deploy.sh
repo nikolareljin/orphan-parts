@@ -25,11 +25,26 @@ set -euo pipefail
 
 root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
+# untraced CMD...: CMD with xtrace off, on again after if it was on, so bash -x never prints a
+# value read from .env (the same helper as scripts/lib/env.sh; this script stands alone).
+untraced() {
+  local _untraced_x=0 _untraced_rc=0
+  [[ $- == *x* ]] && _untraced_x=1
+  { set +x; } 2>/dev/null
+  # not "|| rc=$?": that would turn errexit off inside CMD; under set -e a failure ends the
+  # script here, as it would have without the wrapper
+  "$@"; _untraced_rc=$?
+  [[ $_untraced_x -eq 0 ]] || set -x
+  return $_untraced_rc
+}
+
 # .env is read for the deploy settings, the names given and nothing else, so the backend's own
 # settings never leak into a deploy. A name the shell already sets is left alone; in the file
 # the last line for a name wins, as Docker Compose reads it: quotes around a value dropped, an
-# unquoted value cut at " #", a Windows line ending dropped, an empty value skipped.
-load_env() {
+# unquoted value cut at " #", a Windows line ending dropped, an empty value skipped. Untraced:
+# the values are the deploy's keys and tokens.
+load_env() { untraced _load_env "$@"; }
+_load_env() {
   [[ -f "$root/.env" ]] || return 0
   local names="|$1|" shell_set="|" key value line
   local IFS_old="$IFS"
@@ -52,17 +67,21 @@ load_env() {
   return 0
 }
 
-if [[ "${1:-}" == hosted ]]; then
-  shift
-  load_env 'MODAL_TOKEN_ID|MODAL_TOKEN_SECRET|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID|MODEL_API_KEY_DEMO|DEMO_ACCESS_CODE_HOSTED|WEB_ORIGIN|PAGES_PROJECT|API_URL|SPEND_CAP_USD_HOSTED|OPL_FAKE_API_HOSTED|PICTURE_ENABLED_HOSTED|OPL_MIN_CONTAINERS'
-  # the host's code, cap, mode and pictures come from the _HOSTED names only (the shell's or
-  # .env's); this machine's DEMO_ACCESS_CODE, SPEND_CAP_USD, OPL_FAKE_API and PICTURE_ENABLED
-  # never reach the host, and an empty one leaves the host's default (no code, a cap of 20,
-  # recorded answers, pictures off)
+# the host's code, cap, mode and pictures come from the _HOSTED names only (the shell's or
+# .env's); this machine's DEMO_ACCESS_CODE, SPEND_CAP_USD, OPL_FAKE_API and PICTURE_ENABLED
+# never reach the host, and an empty one leaves the host's default (no code, a cap of 20,
+# recorded answers, pictures off). Untraced: the code is a secret.
+hosted_settings() {
   export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE_HOSTED:-}"
   export SPEND_CAP_USD="${SPEND_CAP_USD_HOSTED:-}"
   export OPL_FAKE_API="${OPL_FAKE_API_HOSTED:-}"
   export PICTURE_ENABLED="${PICTURE_ENABLED_HOSTED:-}"
+}
+
+if [[ "${1:-}" == hosted ]]; then
+  shift
+  load_env 'MODAL_TOKEN_ID|MODAL_TOKEN_SECRET|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID|MODEL_API_KEY_DEMO|DEMO_ACCESS_CODE_HOSTED|WEB_ORIGIN|PAGES_PROJECT|API_URL|SPEND_CAP_USD_HOSTED|OPL_FAKE_API_HOSTED|PICTURE_ENABLED_HOSTED|OPL_MIN_CONTAINERS'
+  untraced hosted_settings
   exec bash "$root/scripts/deploy-hosted.sh" "$@"
 fi
 target="all"

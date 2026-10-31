@@ -8,7 +8,11 @@ _hosted="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/deploy-hosted.sh"
 _hosted_cleanup() { [[ -n "${1:-}" && -d "$1" && "$1" == "${TMPDIR:-/tmp}"/* ]] && rm -rf -- "$1"; }
 
 # A tree with the app file, a frontend directory and the four stand-ins. The modal stand-in
-# keeps the dotenv it was given (the secret) and prints a deploy line; wrangler lists the
+# keeps the dotenv it was given (the secret) and prints a deploy line; it lists the deployed
+# app orphan-parts (ap-deployed) beside an ephemeral run of the same name (ap-ephemeral) and,
+# from the file containers ("<app id> <container id>" lines), their containers, as modal
+# 1.6's --json tables; stop takes a container out of that file unless the tree has the flag
+# file stop-sticks; wrangler lists the
 # project only when the tree has a flag file; npm writes dist on build (with a .env in it when
 # the tree has another flag file) and records VITE_API_URL; curl answers readyz from a file.
 _hosted_tree() {
@@ -22,6 +26,29 @@ if [[ "\$1" == secret ]]; then
   for ((i = 1; i <= \$#; i++)); do
     [[ "\${!i}" == --from-dotenv ]] && { j=\$((i + 1)); cp "\${!j}" "$dir/secret.env"; }
   done
+  exit 0
+fi
+if [[ "\$1 \$2" == "app list" ]]; then
+  echo '[{"app_id": "ap-ephemeral", "description": "orphan-parts", "state": "ephemeral", "tasks": "1"},'
+  [[ -f "$dir/no-deployed-app" ]] || echo ' {"app_id": "ap-deployed", "description": "orphan-parts", "state": "deployed", "tasks": "1"},'
+  echo ' {"app_id": "ap-other", "description": "other-app", "state": "deployed", "tasks": "0"}]'
+  exit 0
+fi
+if [[ "\$1 \$2" == "container list" ]]; then
+  want=""; [[ "\$3" == --app-id ]] && want="\$4"
+  sep="["
+  while read -r app task; do
+    [[ -z "\$want" || "\$app" == "\$want" ]] || continue
+    printf '%s{"container_id": "%s", "app_id": "%s", "app_name": "orphan-parts", "start_time": "now"}' "\$sep" "\$task" "\$app"
+    sep=","
+  done < "$dir/containers"
+  [[ "\$sep" == "[" ]] && printf '['
+  echo ']'
+  exit 0
+fi
+if [[ "\$1 \$2" == "container stop" ]]; then
+  [[ "\$3" == --yes ]] || exit 3
+  [[ -f "$dir/stop-sticks" ]] || { grep -v " \$4\$" "$dir/containers" > "$dir/containers.new" || true; mv "$dir/containers.new" "$dir/containers"; }
   exit 0
 fi
 [[ -f "$dir/deploy-fails" ]] && { echo "Error: something"; exit 1; }
@@ -55,6 +82,7 @@ cat "$dir/readyz"
 STUB
   chmod +x "$dir/bin/"*
   printf '{"status":"ok","model_api":"fixture","demo":"gated"}' > "$dir/readyz"
+  printf 'ap-deployed ta-warm\nap-ephemeral ta-keys-run\n' > "$dir/containers"
 }
 
 _hosted_env() {
@@ -104,7 +132,7 @@ test_hosted_backend_deploys_finds_the_url_and_waits_for_readyz() {
   dir="$(mktemp -d)" || { assert_true false; return; }
   _hosted_tree "$dir"
   out="$(_hosted_env "$dir" GITHUB_OUTPUT="$dir/out" bash "$_hosted" backend)" && assert_true true || assert_true false
-  assert_eq "$(cat "$dir/modal.log")" "deploy $dir/deploy/modal_app.py"
+  assert_eq "$(head -1 "$dir/modal.log")" "deploy $dir/deploy/modal_app.py"
   assert_true grep -q '^-fsS -m 20 https://someone--orphan-parts-web.modal.run/readyz$' "$dir/curl.log"
   assert_true grep -q 'backend: https://someone--orphan-parts-web.modal.run is up' <<<"$out"
   assert_eq "$(cat "$dir/out")" "api_url=https://someone--orphan-parts-web.modal.run"
@@ -154,7 +182,7 @@ test_hosted_all_runs_the_three_steps_and_the_web_takes_the_backend_url() {
   dir="$(mktemp -d)" || { assert_true false; return; }
   _hosted_tree "$dir"
   assert_true _hosted_env "$dir" bash "$_hosted" all
-  assert_eq "$(cut -d' ' -f1 "$dir/modal.log" | tr '\n' ' ')" "secret deploy "
+  assert_eq "$(cut -d' ' -f1 "$dir/modal.log" | tr '\n' ' ')" "secret deploy app container container container "
   assert_true grep -q 'run build VITE_API_URL=https://someone--orphan-parts-web.modal.run' "$dir/npm.log"
   assert_true grep -q 'pages deploy' "$dir/wrangler.log"
   assert_false _hosted_env "$dir" bash "$_hosted" elsewhere 2>/dev/null
@@ -183,5 +211,51 @@ test_hosted_web_refuses_a_frontend_env_file_before_the_build_and_in_dist() {
   rm "$dir/env-in-dist" "$dir/frontend/dist/.env.production"
   assert_true _hosted_env "$dir" API_URL=$api bash "$_hosted" web
   assert_true grep -q 'pages deploy' "$dir/wrangler.log"
+  _hosted_cleanup "$dir"
+}
+
+test_hosted_backend_restarts_the_deployed_apps_containers_before_readyz() {
+  local dir out err
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _hosted_tree "$dir"
+  out="$(_hosted_env "$dir" bash "$_hosted" backend)" && assert_true true || assert_true false
+  # deploy, then the deployed app's id, its containers, the stop, the check that it is gone;
+  # the ephemeral run of the same name keeps its container
+  assert_eq "$(tr '\n' '|' < "$dir/modal.log")" "deploy $dir/deploy/modal_app.py|app list --json|container list --app-id ap-deployed --json|container stop --yes ta-warm|container list --app-id ap-deployed --json|"
+  assert_eq "$(cat "$dir/containers")" "ap-ephemeral ta-keys-run"
+  assert_true grep -q 'stopping container ta-warm' <<<"$out"
+  assert_true grep -q 'the old containers are gone' <<<"$out"
+  # readyz is asked only after the restart
+  assert_true grep -q 'is up' <<<"$out"
+  # scaled to zero: nothing to stop, still deployed and checked
+  : > "$dir/modal.log"; : > "$dir/containers"
+  out="$(_hosted_env "$dir" bash "$_hosted" backend)" && assert_true true || assert_true false
+  assert_false grep -q 'container stop' "$dir/modal.log"
+  assert_true grep -q 'no container of orphan-parts running' <<<"$out"
+  # a container that does not go: the step fails after READY_TRIES, before readyz
+  printf 'ap-deployed ta-warm\n' > "$dir/containers"; touch "$dir/stop-sticks"; : > "$dir/curl.log"
+  err="$(_hosted_env "$dir" bash "$_hosted" backend 2>&1 >/dev/null)" && assert_true false || assert_true true
+  assert_true grep -q 'ta-warm still running after 2 tries' <<<"$err"
+  assert_false test -s "$dir/curl.log"
+  rm "$dir/stop-sticks"
+  # no deployed app by that name in the list: refused rather than skipped
+  touch "$dir/no-deployed-app"
+  err="$(_hosted_env "$dir" bash "$_hosted" backend 2>&1 >/dev/null)" && assert_true false || assert_true true
+  assert_true grep -q 'no deployed app orphan-parts' <<<"$err"
+  _hosted_cleanup "$dir"
+}
+
+# bash -x over the whole deploy (./dev -d and deploy.sh hosted in test_trace.sh): the
+# key, the code and the tokens never reach the trace or the output
+test_hosted_never_traces_a_secret() {
+  local dir out
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _hosted_tree "$dir"
+  out="$(_hosted_env "$dir" MODEL_API_KEY_DEMO=leakcheck_key DEMO_ACCESS_CODE=leakcheck_code \
+    MODAL_TOKEN_ID=leakcheck_tid MODAL_TOKEN_SECRET=leakcheck_tsec CLOUDFLARE_API_TOKEN=leakcheck_cf \
+    bash -x "$_hosted" all 2>&1)" && assert_true true || assert_true false
+  assert_true grep -q '^+' <<<"$out"   # traced
+  assert_true grep -q "MODEL_API_KEY='leakcheck_key'" "$dir/secret.env"
+  assert_false grep -q 'leakcheck_' <<<"$out"
   _hosted_cleanup "$dir"
 }
