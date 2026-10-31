@@ -10,7 +10,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `OPL_KEY_PROBE` | `1` | | one `GET /models` at startup in live mode; a key that cannot work (401, 402, 403, 404) puts the service on recorded answers, said on `/readyz`; a busy or failing API changes nothing |
 | `MODEL_API_BASE_URL` | `https://api.meta.ai/v1` | | Model API base URL |
 | `MODEL_SPARK` | `muse-spark-1.3` | | Muse Spark model ID |
-| `MODEL_WONDER` | `muse-wonder-1.0` | | Muse Wonder model ID; listed and checked, no call in this version |
+| `MODEL_WONDER` | `muse-wonder-1.0` | | Muse Wonder model ID; checked by `./dev check-api`, never called in this version, and not listed by `GET /api/version` |
 | `MODEL_IMAGE` | `muse-image-1.0` | | Muse Image model ID; draws a picture of what an item could become when `PICTURE_ENABLED` is set and the owner clicks |
 | `MODEL_VOICE` | `muse-voice-transcribe-1.0` | | Muse Voice Transcribe model ID |
 | `MODEL_SAM` | `sam-3.1` | | SAM model ID |
