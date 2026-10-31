@@ -226,17 +226,19 @@ def test_project_templates_are_packaged() -> None:
 
 
 def test_pairing_with_the_api_origin(client: TestClient) -> None:
+    # the hosted page: another origin, one of CORS_ORIGINS, and the API's own
+    client.headers.update({"Origin": "http://localhost:5173", "Host": "api.example"})
     found = client.get(
-        "/api/pair", params={"origin": "https://site.example", "api": "https://api.example"}
+        "/api/pair", params={"origin": "http://localhost:5173", "api": "https://api.example"}
     ).json()
     assert found["url"] == "https://api.example"
     assert (
         client.get(
-            "/api/pair", params={"origin": "https://site.example", "api": "api.example"}
+            "/api/pair", params={"origin": "http://localhost:5173", "api": "api.example"}
         ).status_code
         == 422
     )
     assert (
-        json.loads(client.get("/api/pair", params={"origin": "https://site.example"}).text)["url"]
-        == "https://site.example"
+        json.loads(client.get("/api/pair", params={"origin": "http://localhost:5173"}).text)["url"]
+        == "http://localhost:5173"
     )

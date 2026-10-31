@@ -24,6 +24,7 @@ startup and refuses to open a file written by a newer version.
 | `uses` | v11 | what an item is good for, one row per asking: `version` per item, the `item_version` it was written from, `content` (the templates the rules found it fills, the model's proposals, the model and the cost), `created_at` |
 | `items.public`, `captures.public` | v10 | `1` when the owner shows the row to the demo visitor (the demo loader marks what it loads); the demo visitor's reads are limited to these rows |
 | `access_keys` | v9 | access codes issued as records: the `hash` (SHA-256), a `label`, when issued, `expires_at`, `revoked_at`; the code itself is shown once and never kept |
+| `access_keys.parent_id`, `access_keys.master` | v12 | for a phone's own code, what paired it: the issued record's id, or a short digest of the master code; the code stands only while that record is unrevoked and unexpired, or while the master code is the same |
 | `captures` | v8 | what the phone sent in one go: `status` (received, processed, failed), `content` (the line, the name, the counts, the item it became, the error), times; the media under `DATA_DIR/captures/<id>/` |
 
 `content` columns hold JSON validated by the Pydantic models of the owning package; the

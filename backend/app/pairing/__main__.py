@@ -1,7 +1,8 @@
 """Command line: python -m app.pairing --origin http://192.168.1.20:5173 [--json]
 
-Prints the pairing QR for the phone (or the payload as JSON with --json), with a session when
-DEMO_ACCESS_CODE is set, from the same settings the service runs with.
+Prints the pairing QR for the phone (or the payload as JSON with --json), with a pairing when
+DEMO_ACCESS_CODE is set (scan it within PAIR_TOKEN_MINUTES), from the same settings the service
+runs with.
 """
 
 import sys
@@ -28,7 +29,8 @@ def main(argv: list[str] | None = None) -> int:
         print(__doc__, file=sys.stderr)
         return 2
     try:
-        found = pairing(origin, Gate(get_settings()))
+        settings = get_settings()
+        found = pairing(origin, Gate(settings))
     except BadOriginError as exc:
         print(f"pairing: {exc}", file=sys.stderr)
         return 1
@@ -38,7 +40,11 @@ def main(argv: list[str] | None = None) -> int:
         print(terminal(found))
         print(
             f"{found.url}"
-            + ("  (with a session for the demo)" if found.gated else "  (no code needed)")
+            + (
+                f"  (with a pairing; scan it within {settings.pair_token_minutes} minutes)"
+                if found.gated
+                else "  (no code needed)"
+            )
         )
     return 0
 

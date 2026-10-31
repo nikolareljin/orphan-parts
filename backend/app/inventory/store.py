@@ -1,12 +1,13 @@
 """SQLite under DATA_DIR: one file, schema versioned, writes serialised."""
 
+import re
 import sqlite3
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -217,6 +218,13 @@ CREATE TABLE uses (
 CREATE INDEX uses_by_item ON uses (item_id);
 """
 
+# version 12: a phone's code names what paired it: the issued record, or a digest of the
+# master code it was claimed under, so it ends when that one does
+_SCHEMA_V12 = """
+ALTER TABLE access_keys ADD COLUMN parent_id INTEGER;
+ALTER TABLE access_keys ADD COLUMN master TEXT;
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -229,7 +237,26 @@ MIGRATIONS: dict[int, str] = {
     9: _SCHEMA_V9,
     10: _SCHEMA_V10,
     11: _SCHEMA_V11,
+    12: _SCHEMA_V12,
 }
+
+
+_ADD_COLUMN = re.compile(r"^ALTER TABLE (\w+) ADD COLUMN (\w+) ")
+
+
+def _without_added_columns(conn: sqlite3.Connection, script: str) -> str:
+    """The step without the columns a file already has: one an earlier build added before it
+    failed to record its version."""
+    kept = []
+    for line in script.splitlines():
+        found = _ADD_COLUMN.match(line)
+        if found is not None:
+            table, column = found.groups()
+            have = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+            if column in have:
+                continue
+        kept.append(line)
+    return "\n".join(kept)
 
 
 class SchemaTooNewError(RuntimeError):
@@ -250,10 +277,11 @@ class Store:
                 raise SchemaTooNewError(
                     f"{path} has schema version {found}; this build knows {SCHEMA_VERSION}"
                 )
-            # each step is one script; a file at version N gets steps N+1 onwards
+            # each step is one transaction with its version, so a step that fails leaves the
+            # file at the version before it; a file at version N gets steps N+1 onwards
             for version in range(found + 1, SCHEMA_VERSION + 1):
-                conn.executescript(MIGRATIONS[version])
-                conn.execute(f"PRAGMA user_version = {version}")
+                step = _without_added_columns(conn, MIGRATIONS[version])
+                conn.executescript(f"BEGIN;\n{step}\nPRAGMA user_version = {version};\nCOMMIT;")
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:

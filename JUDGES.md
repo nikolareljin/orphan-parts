@@ -78,8 +78,9 @@ installs a file you already have.
 
 ## 4. Connect the phone to the server with your code
 
-The pairing code never carries your access code; it carries the server's address and a
-session the server made for the phone.
+The pairing code never carries your access code; it carries the server's address and, once
+you are signed in, a pairing the server made for the phone, good for fifteen minutes. With it
+the app claims an access code of its own, which it keeps.
 
 1. On the phone's browser or on a laptop, open `https://orphan-parts.pages.dev`.
 2. Tap **Sign in with the code** in the header, enter the code, **Enter**. The header line
@@ -87,16 +88,20 @@ session the server made for the phone.
 3. Scroll to the foot of the page and open **Pair the phone**. A QR code is there.
 4. In the app, on the **Backend** tab, tap **Scan to pair** and point the camera at the QR
    code (on a laptop screen, or on the phone's own screenshot opened on another device). The
-   app says **Paired with https://….modal.run (with a session)**.
+   app says **Paired with https://….modal.run; this phone now has a code of its own (phone …,
+   until …)**.
 5. Tap **Check**. It should say **Backend ok, Model API live for the code, recorded otherwise,
-   demo gated. Paired: the session works until it ends.**
+   demo gated. The phone's own code (phone …, until …) opens it.**
 
 **Without Google Play services, or without a second screen:** under the QR code the page
 shows the address to type. On the **Backend** tab type it into **Backend URL**
 (`https://….modal.run`), type your access code into the second field, tap **Save**, then
 **Check**. The answer should end with **The code opens it.**
 
-The phone session lasts twelve hours; after that the app asks you to scan again.
+The phone's own code lasts thirty days, or until the code you were given ends if that is
+sooner, so the phone stays through the gate with no second scan. Scanning the code on a page
+that is not signed in pairs the phone as the demo (recorded answers, nothing kept): sign in
+first.
 
 ## 5. Connect to a local server instead (alternative)
 
@@ -155,4 +160,11 @@ until you delete them; nothing is published or posted anywhere. The details are 
 | The app: "that code points at localhost" | The site was opened at `localhost`; open it at the computer's network address, or use the hosted site |
 | **Check**: "Not reachable" | The phone is off the network the server is on, or the address has a typo; the hosted address is `https://`, a local one `http://…:5173` |
 | **Check**: "The code is refused" | The code was typed wrong or has expired; ask for a new one |
+| "This phone's code has ended or was revoked; scan the code on a signed-in page" | The code you were given has ended or was revoked, or the phone's own was; the app has cleared it from the Backend tab: sign in on the site with a current code and scan its pairing code again |
+| After a scan: "no code of its own: the pairing has ended" | The pairing's minutes ran out before the claim: reload the signed-in page and scan its new code |
+| After a scan: "no code of its own: the code that paired this phone has ended" | The code the page was signed in with has ended or was revoked: sign in again with a current code and scan the new pairing code |
+| After a scan: "no code of its own: … does not claim a phone's code" or "… already" | The pairing was spent or did not come from a scan: reload the signed-in page and scan its new code within fifteen minutes |
+| After a scan: "no code of its own: a phone's own code does not pair another phone" | The page was signed in with a phone's code: sign in with the code you were given and scan again |
+| After a scan: "no code of its own: this code has paired 10 phones already" | Your code has paired as many phones as it may: have one revoked with `./dev keys revoke "phone …"` on the server, or ask for another code |
+| After a scan: "no code of its own: too many tries" | The address has used its code attempts: wait the seconds it names and scan again |
 | A page says "this visitor's hourly allowance is used" | The demo's per-person limit; wait the minutes it names |

@@ -104,7 +104,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.extractor = Extractor(settings, client)
     app.state.segmenter = Segmenter(settings, client)
     app.state.inventory = Inventory(settings)
-    gate.keys = AccessKeys(app.state.inventory.store)
+    gate.keys = AccessKeys(app.state.inventory.store, gate.master_tag)
     app.state.photos = ItemPhotos(settings, app.state.inventory)
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)
@@ -184,7 +184,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["*"],
-        expose_headers=["X-Request-ID"],
+        expose_headers=["X-Request-ID", "X-Pair-Expires-At", "X-Pair-Expires-In"],
     )
     app.add_middleware(RequestContextMiddleware)
     app.include_router(router)

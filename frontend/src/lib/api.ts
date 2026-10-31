@@ -1004,15 +1004,31 @@ export const api = {
       sendJson<Item>('POST', `/api/items/${itemId}/decision`, { choice, note, version }),
   },
   pair: {
-    // the phone talks to the API's own origin when the web app is served elsewhere
-    svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}`),
-    svg: async (origin: string) => {
-      const res = await fetch(api.pair.svgUrl(origin), { headers: authHeaders(), credentials: 'include' })
+    // the phone talks to the API's own origin when the web app is served elsewhere; the door
+    // the page is at goes in too, so the image of one door is never shown for the other
+    svgUrl: (origin: string, door = '') =>
+      apiUrl(
+        `/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}${door ? `&door=${door}` : ''}`,
+      ),
+    // the image, when the pairing in it ends (Unix seconds; 0 when it carries none) and how
+    // many seconds it has left by the server's clock (null when not said). The Referer goes
+    // along whatever the page's own policy: the server draws only an origin it is reached at
+    svg: async (origin: string, door = '') => {
+      const res = await fetch(api.pair.svgUrl(origin, door), {
+        headers: authHeaders(),
+        credentials: 'include',
+        referrerPolicy: 'same-origin',
+      })
       if (!res.ok) {
         noteStatus(res.status)
         throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
       }
-      return await res.text()
+      const left = res.headers.get('X-Pair-Expires-In')
+      return {
+        svg: await res.text(),
+        expiresAt: Number(res.headers.get('X-Pair-Expires-At') ?? 0) || 0,
+        expiresIn: left !== null && Number.isFinite(Number(left)) ? Number(left) : null,
+      }
     },
     get: (origin: string) =>
       getJson<{ url: string; gated: boolean; token: string; expires_at: number }>(

@@ -34,9 +34,11 @@ link: [How it fits together](project/flow.md). Trying it on a phone: the
    the phone; reload the page, then sign in with yours. Without it, go on to step 4.
 4. **Pair the phone**: at the foot of the page, open **Pair the phone** for the QR code. In the
    app, on the **Backend** tab, tap **Scan to pair** and point the camera at the code on a
-   second screen, then **Check**. Without Google Play services or a second screen, type the
-   address shown under the code into **Backend URL** and the access code, if the site has one,
-   into the field under it, then tap **Save** and **Check**.
+   second screen, then **Check**. Signed in, the phone gets an access code of its own on
+   that scan; from a page that is not signed in, the phone joins as the demo. Without Google
+   Play services or a second screen, type the address shown under the code into **Backend
+   URL** and the access code, if the site has one, into the field under it, then tap **Save**
+   and **Check**.
 5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
    **Inbox**.
 

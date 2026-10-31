@@ -25,6 +25,10 @@ data class VoiceNote(val transcript: String, val seconds: Double, val cut: Boole
 
 data class Readiness(val status: String, val modelApi: String, val gated: Boolean)
 
+/** The access code the backend issues to a phone on its first scan, shown once: `gated` false
+ * means there is no gate and nothing to hold. */
+data class PhoneCode(val gated: Boolean, val code: String, val label: String, val expiresAt: String)
+
 /** One bundle sent from the phone, and where the backend stands with it. */
 data class Capture(
     val id: Int,
@@ -45,9 +49,13 @@ class ApiException(val status: Int, message: String) : Exception(message)
 
 /** The backend, by the paths the web app uses; the session token from the access code goes
  * with every call as a bearer header, since the phone keeps no cookies. */
-class Client(private val baseUrl: String, private val transport: Transport, private var token: String = "") {
+class Client(private val baseUrl: String, private val transport: Transport, token: String = "") {
 
-    /** A session from the pairing, used instead of the code. */
+    /** The token every call carries: a pairing, or the session the code opened. */
+    var token: String = token
+        private set
+
+    /** A token held from before (a pairing, or a session kept), used instead of the code. */
     fun useToken(given: String) {
         token = given
     }
@@ -70,8 +78,20 @@ class Client(private val baseUrl: String, private val transport: Transport, priv
         return json.optBoolean("granted", false)
     }
 
-    /** Whether the session this client holds (a pairing) still opens the backend. */
+    /** Whether the token this client holds still opens the backend. */
     fun accessGranted(): Boolean = get("/api/access").optBoolean("granted", false)
+
+    /** The phone's own code, claimed with the pairing this client holds; the backend gives it
+     * once per pairing, and refuses a second claim and a browser's session. */
+    fun phoneCode(): PhoneCode {
+        val json = send("POST", "/api/pair/code", ByteArray(0), "application/json")
+        return PhoneCode(
+            gated = json.optBoolean("gated", false),
+            code = json.optString("code", ""),
+            label = json.optString("label", ""),
+            expiresAt = if (json.isNull("expires_at")) "" else json.optString("expires_at", ""),
+        )
+    }
 
     fun extract(jpeg: ByteArray): Extraction {
         val body = Multipart().file("photos", "capture.jpg", "image/jpeg", jpeg)

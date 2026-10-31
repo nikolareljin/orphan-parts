@@ -229,6 +229,41 @@ def test_a_version_one_file_is_upgraded_in_place(settings: Settings) -> None:
     assert [s.profile for s in Inventory(settings).list_items()] == [""]
 
 
+def test_a_file_left_between_two_columns_of_a_step_opens(settings: Settings) -> None:
+    path = settings.inventory_db_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        for version in range(1, 12):
+            conn.executescript(MIGRATIONS[version])
+        # version 12 began and stopped after its first column, its version not written
+        conn.execute("ALTER TABLE access_keys ADD COLUMN parent_id INTEGER")
+        conn.execute("PRAGMA user_version = 11")
+    Store(path)
+    with sqlite3.connect(path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+        columns = {r[1] for r in conn.execute("PRAGMA table_info(access_keys)")}
+        assert {"parent_id", "master"} <= columns
+
+
+def test_a_step_that_fails_leaves_the_version_before_it(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = settings.inventory_db_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        for version in range(1, 12):
+            conn.executescript(MIGRATIONS[version])
+        conn.execute("PRAGMA user_version = 11")
+    broken = "ALTER TABLE access_keys ADD COLUMN parent_id INTEGER;\nNOT A STATEMENT;"
+    monkeypatch.setitem(MIGRATIONS, 12, broken)
+    with pytest.raises(sqlite3.OperationalError):
+        Store(path)
+    with sqlite3.connect(path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 11
+        columns = {r[1] for r in conn.execute("PRAGMA table_info(access_keys)")}
+        assert "parent_id" not in columns
+
+
 def test_every_editable_column_has_its_fixed_update_statement() -> None:
     from app.inventory.service import EDITABLE, SET_COLUMN
 

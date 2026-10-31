@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from app.config import get_settings
 from app.inventory.store import Store
-from app.keys.service import AccessKeyError, AccessKeys
+from app.keys.service import AccessKeyError, AccessKeys, master_tag
 
 
 def main(argv: Sequence[str] | None = None, keys: AccessKeys | None = None) -> int:
@@ -23,7 +23,10 @@ def main(argv: Sequence[str] | None = None, keys: AccessKeys | None = None) -> i
     revoke = sub.add_parser("revoke", help="end the current code with this label")
     revoke.add_argument("label")
     args = parser.parse_args(argv)
-    keys = keys or AccessKeys(Store(get_settings().inventory_db_path))
+    if keys is None:
+        settings = get_settings()
+        code = settings.demo_access_code.get_secret_value() if settings.demo_access_code else ""
+        keys = AccessKeys(Store(settings.inventory_db_path), master_tag(code))
     try:
         if args.command == "issue":
             code, key = keys.issue(args.label, args.days)
@@ -39,6 +42,8 @@ def main(argv: Sequence[str] | None = None, keys: AccessKeys | None = None) -> i
                     f"{key.id}\t{key.label}\t{key.state()}\tissued {key.created_at}"
                     f"\texpires {key.expires_at or 'never'}"
                     + (f"\trevoked {key.revoked_at}" if key.revoked_at else "")
+                    + (f"\tpaired by #{key.parent_id}" if key.parent_id else "")
+                    + ("\tpaired by the master code" if key.master else "")
                 )
         else:
             key = keys.revoke(args.label)

@@ -86,12 +86,40 @@ its own when reached.
 
 ## The phone
 
-*Pair the phone* at the foot of every page shows a QR code with this web origin and, when
-gated, a session for the phone (`GET /api/pair.svg`); the code needs a session to reach, so
-only someone through the door can hand the phone one, and the access code itself is never in
-the QR. The phone's session ends like any other, after `DEMO_SESSION_HOURS`. A phone with no
-code and no pairing is the demo visitor on a gated host: its captures are refused with the
-line, and the Capture tab says so before anything is sent.
+*Pair the phone* at the foot of every page shows a QR code with this web origin (`GET
+/api/pair.svg`), drawn when the section is opened and redrawn while it stays open. The origin
+must be one this server is reached at, so the QR never points elsewhere: the `Host` the request
+carries (either scheme), the host and port in `X-Forwarded-Host` with the scheme in
+`X-Forwarded-Proto` (the dev server rewrites the `Host` and forwards the one the browser asked
+for; nginx passes it on in both), one in `CORS_ORIGINS`, or the page's `Origin` or `Referer`
+only on a request the browser marks `Sec-Fetch-Site: same-origin`. A browser sends no such mark
+from a plain `http://` page on the LAN, so the proxies' headers are what name it there; another
+site's page is marked cross-site and cannot draw a QR naming itself. For a caller through the
+door the QR carries a pairing as well: a short session of its own kind, good for
+`PAIR_TOKEN_MINUTES` (15, at most 60), that opens the door while it lasts and is the only token
+that claims a phone's code. For those minutes the QR is a live credential: anyone who scans it
+is through the door, so keep it off a projector and out of a recording. The access code itself
+is never in the QR, and the QR stores nothing. On its first scan the app claims a code of its
+own with the pairing (`POST /api/pair/code`, once per pairing; a browser's session is refused
+with 403, and each try counts against the address's `DEMO_CODE_ATTEMPTS`, which a claim that
+works clears, as a correct code does): an issued record labeled `phone` and the first eight
+characters of the pairing's id, good for `PAIR_CODE_DAYS` (30) and never past the code that
+signed the page in. The app then opens a session with that code, as a typed code would, and
+opens a new one with it whenever a session ends, with no second scan.
+
+The phone's code stands only while the code that paired it does. Revoking a guest's code
+(`./dev keys revoke judges`) ends that code, every session it opened and every phone code it
+paired, with their sessions; a guest code that expires does the same. A phone paired from a
+page signed in with the master code ends when `DEMO_ACCESS_CODE` changes. Revoking a phone's
+label (`./dev keys revoke "phone …"`) ends that phone alone. `./dev keys list` shows the phone
+codes beside the rest, each with what paired it, and `ended` for one whose parent has ended. A
+phone's own code does not pair another phone. Two phones need two scans of a fresh page:
+reopening *Pair the phone*, or a reload, draws a new pairing. One code pairs at most
+`PAIR_CODE_MAX` (10) phones with current codes; past that the claim answers 403 until
+`./dev keys revoke "phone …"` ends one or one runs out. For the demo visitor the QR carries the address
+alone: a phone paired from it is the demo visitor too, its captures refused with the line,
+and the Capture tab says so before anything is sent; a scan of a signed-in page later gives
+it a code.
 
 ## The set, at no cost
 

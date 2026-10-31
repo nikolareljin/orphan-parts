@@ -21,6 +21,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,9 @@ import com.orphanparts.lens.SettingsStore
 import com.orphanparts.lens.api.Client
 import com.orphanparts.lens.api.HttpTransport
 import com.orphanparts.lens.api.Readiness
+import com.orphanparts.lens.withoutEndedCode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val PAGES = listOf("Backend", "Capture", "Captures", "Talk")
 
@@ -66,14 +70,41 @@ fun App() {
     // shown on the Backend tab once: leaving the tab clears it, so a return does not replay it
     LaunchedEffect(page) { if (page != 0 && pairLine.second.isNotEmpty()) pairLine = pairLine.first to "" }
 
-    // one client per settings: the session token it holds belongs to that backend and code
-    val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode, settings.token) }
+    // the store is the truth: a claim that lands in the process's scope, or a code that ended,
+    // is read from it here, whichever Activity started it
+    DisposableEffect(store) {
+        val stop = store.observe { settings = store.load() }
+        onDispose { stop() }
+    }
+    // a claim's line, shown on the Backend tab without moving to it, then emptied
+    LaunchedEffect(Unit) {
+        claimLine.collect { line ->
+            if (line.isNotEmpty()) {
+                pairLine = pairLine.first + 1 to line
+                claimLine.value = ""
+            }
+        }
+    }
+    LaunchedEffect(Unit) { retryClaimAtStart(store) }
+
+    // one client per settings: the token it holds belongs to that backend and code
+    val session = remember(settings) {
+        val held = settings
+        Session(
+            Client(held.baseUrl, HttpTransport()),
+            held.accessCode,
+            held.token,
+            held.ownCode,
+            onCodeEnded = { withoutEndedCode(store.load(), held.accessCode)?.let { store.save(it) } },
+        )
+    }
 
     LaunchedEffect(session) {
         service = serviceLine(settings.baseUrl, null, null)
         if (!settings.ready) return@LaunchedEffect
+        // readiness is an open path: asked on the bare client, so it never sends the code
         service = try {
-            serviceLine(settings.baseUrl, session.call { it.readiness() }, null)
+            serviceLine(settings.baseUrl, withContext(Dispatchers.IO) { session.client.readiness() }, null)
         } catch (e: Exception) {
             serviceLine(settings.baseUrl, null, "not reachable: ${describe(e)}")
         }
@@ -104,7 +135,7 @@ fun App() {
                     Spacer(Modifier.width(8.dp))
                     // pair again from any page: the scanner, then the Backend tab shows the outcome
                     QrButton {
-                        scanToPair(context, settings, onSaved = { saved ->
+                        scanToPair(context, store, onSaved = { saved ->
                             store.save(saved)
                             settings = store.load()
                         }) { line ->
@@ -139,10 +170,10 @@ fun App() {
                 }
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
                     when (page) {
-                        0 -> SettingsScreen(settings, session, pairLine) { saved ->
+                        0 -> SettingsScreen(settings, store, pairLine, onSaved = { saved ->
                             store.save(saved)
                             settings = store.load()
-                        }
+                        })
                         1 -> CaptureScreen(session) { sent += 1 }
                         2 -> CapturesScreen(session, sent) { itemId ->
                             lastItemId = itemId

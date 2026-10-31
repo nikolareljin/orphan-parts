@@ -23,7 +23,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
 from app.config import Settings
-from app.keys import AccessKeys
+from app.keys import AccessKeys, master_tag
 from app.ops.door import live_request
 
 log = logging.getLogger("app.gate")
@@ -31,7 +31,15 @@ log = logging.getLogger("app.gate")
 COOKIE = "opl_access"
 # What a visitor may read without the code; everything else needs it when a code is set.
 OPEN_PATHS = frozenset(
-    {"/healthz", "/readyz", "/docs", "/openapi.json", "/api/version", "/api/access"}
+    {
+        "/healthz",
+        "/readyz",
+        "/docs",
+        "/openapi.json",
+        "/api/version",
+        "/api/access",
+        "/api/pair/code",
+    }
 )
 # The calls that spend: each one is a Model API call, counted before it is made.
 EXPENSIVE = [
@@ -60,13 +68,22 @@ DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/captures/\d+/photos/\d+$")),
     ("GET", re.compile(r"^/api/profiles(/[A-Za-z0-9_-]+/(features|rules))?$")),
     ("GET", re.compile(r"^/api/templates$")),
+    # the address alone, so a phone joins as the demo visitor too; a session is never in it
+    ("GET", re.compile(r"^/api/pair(\.svg)?$")),
     ("POST", re.compile(r"^/api/extract$")),
     ("POST", re.compile(r"^/api/segment$")),
     ("POST", re.compile(r"^/api/assess$")),
     ("POST", re.compile(r"^/api/measure$")),
 ]
 DEMO_LINE = "demo: the code unlocks saving, drafts, prices, projects and captures"
-_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[01]\.\d{1,12}\.[0-9a-f]{32}$")
+# sid.expiry.door.key.binding.signature. The door: 0 the demo, 1 a session opened with a code,
+# 2 a pairing (a QR's short session, the live door, and the one kind that claims a phone code)
+_TOKEN_RE = re.compile(
+    r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[012]\.\d{1,12}\.[0-9a-f]{16}\.[0-9a-f]{32}$"
+)
+# the shape before the binding, with the record's issue time signed in directly; still verified
+# for the sessions issued before it, which end within DEMO_SESSION_HOURS of a restart
+_OLD_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[01]\.\d{1,12}\.[0-9a-f]{32}$")
 
 
 def demo_allowed(method: str, path: str) -> bool:
@@ -145,16 +162,20 @@ class DailyAllowance:
 
 
 class Session:
-    """Who a current token stands for: its id, whether it opens the live door, and the issued
-    record it came from (0 and an empty stamp for the master code or the demo)."""
+    """Who a current token stands for: its id, whether it opens the live door, the issued
+    record it came from (0 and an empty stamp for the master code or the demo), and whether
+    it is a pairing's short session rather than a browser's."""
 
-    __slots__ = ("kid", "live", "sid", "stamp")
+    __slots__ = ("kid", "live", "pairing", "sid", "stamp")
 
-    def __init__(self, sid: str, live: bool, kid: int = 0, stamp: str = "") -> None:
+    def __init__(
+        self, sid: str, live: bool, kid: int = 0, stamp: str = "", pairing: bool = False
+    ) -> None:
         self.sid = sid
         self.live = live
         self.kid = kid
         self.stamp = stamp
+        self.pairing = pairing
 
 
 class Gate:
@@ -169,7 +190,13 @@ class Gate:
         # changed code ends every session
         self._code_digest = hashlib.sha256(code.encode("utf-8")).digest()
         self._key = hashlib.sha256(b"opl-session:" + code.encode("utf-8")).digest()
+        # what a phone's record keeps of the master code, so rotating it ends those phones
+        self.master_tag = master_tag(code)
         self.session_seconds = settings.demo_session_hours * 3600
+        self.pair_seconds = settings.pair_token_minutes * 60
+        # a token of the old shape was issued before this process started, so it has ended
+        # by then; past it one is refused before anything is read
+        self._old_until = time.time() + self.session_seconds
         self.visitor = Allowance(settings.demo_visitor_calls_per_hour, 3600)
         # the demo visitor's tries cost nothing but work: so many per address and hour
         self.tries = Allowance(settings.demo_visitor_calls_per_hour, 3600)
@@ -201,37 +228,60 @@ class Gate:
     def code_matches(self, given: str) -> bool:
         return self.which_code(given) is not None
 
-    def _sign(self, sid: str, exp: int, live: bool, kid: int, stamp: str) -> str:
-        text = f"{sid}.{exp}.{int(live)}.{kid}.{stamp}".encode()
-        return hmac.new(self._key, text, hashlib.sha256).hexdigest()[:32]
+    def _mac(self, text: str, size: int) -> str:
+        return hmac.new(self._key, text.encode(), hashlib.sha256).hexdigest()[:size]
+
+    def _bind(self, sid: str, stamp: str) -> str:
+        return self._mac(f"bind:{sid}.{stamp}", 16)
 
     def issue(
-        self, now: float | None = None, *, live: bool = True, kid: int = 0, stamp: str = ""
+        self,
+        now: float | None = None,
+        *,
+        live: bool = True,
+        kid: int = 0,
+        stamp: str = "",
+        pairing: bool = False,
     ) -> tuple[str, int]:
-        """A session token and when it ends: ``sid.expiry.door.key.signature``, nothing
-        stored. The door is ``1`` for a session opened with a code; the key is the issued
-        record's id and its issue time is signed in, so revoking the record ends the
-        sessions it opened and a record with the same id after a reset is a stranger;
-        ``0`` for the master code."""
-        exp = int((time.time() if now is None else now) + self.session_seconds)
+        """A session token and when it ends: ``sid.expiry.door.key.binding.signature``,
+        nothing stored. The door is ``1`` for a session opened with a code and ``2`` for a
+        pairing, which lasts PAIR_TOKEN_MINUTES; the key is the issued record's id (``0`` for
+        the master code) and the binding signs in its issue time, so revoking the record ends
+        the sessions it opened and a record with the same id after a reset is a stranger. The
+        signature covers the rest and is checked before the record is read (for this shape;
+        the old one signs the issue time itself, so its record is read first)."""
+        door = "2" if pairing else str(int(live))
+        seconds = self.pair_seconds if pairing else self.session_seconds
+        exp = int((time.time() if now is None else now) + seconds)
         sid = secrets.token_urlsafe(16)
-        sig = self._sign(sid, exp, live, kid, stamp)
-        return f"{sid}.{exp}.{int(live)}.{kid}.{sig}", exp
+        head = f"{sid}.{exp}.{door}.{kid}.{self._bind(sid, stamp)}"
+        return f"{head}.{self._mac('v2:' + head, 32)}", exp
 
     @staticmethod
     def needs_record(token: str) -> bool:
         """Whether verifying this token reads a record (a token from an issued code)."""
-        return bool(_TOKEN_RE.match(token)) and token.split(".")[3] != "0"
+        if _TOKEN_RE.match(token) or _OLD_TOKEN_RE.match(token):
+            return token.split(".")[3] != "0"
+        return False
 
     def verify(self, token: str, now: float | None = None) -> Session | None:
         """The session when the token is ours and current, else None."""
-        if not self.enabled or not token or not _TOKEN_RE.match(token):
+        if not self.enabled or not token:
             return None
-        sid, exp_text, door, kid_text, sig = token.split(".")
-        exp = int(exp_text)
-        if exp <= (time.time() if now is None else now):
+        moment = time.time() if now is None else now
+        if _OLD_TOKEN_RE.match(token):
+            return self._verify_old(token, moment)
+        if not _TOKEN_RE.match(token):
             return None
-        live = door == "1"
+        sid, exp_text, door, kid_text, bind, sig = token.split(".")
+        if int(exp_text) <= moment:
+            return None
+        head = token.rsplit(".", 1)[0]
+        # a forged token of this shape ends here, before any record is read (one of the old
+        # shape, taken for DEMO_SESSION_HOURS after a start, reads its record first: the
+        # record's issue time is part of what it signs)
+        if not hmac.compare_digest(sig, self._mac("v2:" + head, 32)):
+            return None
         kid = int(kid_text)
         stamp = ""
         if kid:
@@ -240,9 +290,25 @@ class Gate:
             if found is None:
                 return None
             stamp = found
-        if not hmac.compare_digest(sig, self._sign(sid, exp, live, kid, stamp)):
+        if not hmac.compare_digest(bind, self._bind(sid, stamp)):
             return None
-        return Session(sid, live, kid, stamp)
+        return Session(sid, door != "0", kid, stamp, pairing=door == "2")
+
+    def _verify_old(self, token: str, now: float) -> Session | None:
+        sid, exp_text, door, kid_text, sig = token.split(".")
+        exp = int(exp_text)
+        if exp <= now or exp > self._old_until:
+            return None
+        kid = int(kid_text)
+        stamp = ""
+        if kid:
+            found = self.keys.stamp(kid) if self.keys is not None else None
+            if found is None:
+                return None
+            stamp = found
+        if not hmac.compare_digest(sig, self._mac(f"{sid}.{exp}.{door}.{kid}.{stamp}", 32)):
+            return None
+        return Session(sid, door == "1", kid, stamp)
 
     # --- who is asking ---------------------------------------------------
 

@@ -84,14 +84,18 @@ def test_sessions_are_signed_bound_to_the_code_and_end(tmp_path: Path) -> None:
     session = gate.verify(token, now=1000.0)
     assert session is not None and session.live is True
     assert gate.verify(token, now=4600.0) is None  # ended
-    sid, exp, door, kid, sig = token.split(".")
-    assert not Gate.needs_record(token) and Gate.needs_record(f"{sid}.{exp}.{door}.3.{sig}")
+    sid, exp, door, kid, bind, sig = token.split(".")
+    assert not Gate.needs_record(token)
+    assert Gate.needs_record(f"{sid}.{exp}.{door}.3.{bind}.{sig}")
     assert door == "1" and kid == "0"
-    assert gate.verify(f"{sid}.{exp}.{door}.{kid}.{'0' * 32}", now=1000.0) is None  # tampered
-    assert gate.verify(f"{sid}.{int(exp) + 9999}.{door}.{kid}.{sig}", now=1000.0) is None
-    assert gate.verify(f"{sid}.{exp}.0.{kid}.{sig}", now=1000.0) is None  # the door is signed
-    assert gate.verify(f"{sid}.{exp}.{door}.7.{sig}", now=1000.0) is None  # the key id too
-    assert gate.verify(f"{sid}.{exp}.{door}.{sig}", now=1000.0) is None  # an old-shape token
+    tampered = f"{sid}.{exp}.{door}.{kid}.{bind}.{'0' * 32}"
+    assert gate.verify(tampered, now=1000.0) is None
+    assert gate.verify(f"{sid}.{int(exp) + 9999}.{door}.{kid}.{bind}.{sig}", now=1000.0) is None
+    assert gate.verify(f"{sid}.{exp}.0.{kid}.{bind}.{sig}", now=1000.0) is None  # the door
+    assert gate.verify(f"{sid}.{exp}.2.{kid}.{bind}.{sig}", now=1000.0) is None  # no pairing
+    assert gate.verify(f"{sid}.{exp}.{door}.7.{bind}.{sig}", now=1000.0) is None  # the key id
+    assert gate.verify(f"{sid}.{exp}.{door}.{kid}.{'0' * 16}.{sig}", now=1000.0) is None
+    assert gate.verify(f"{sid}.{exp}.{door}.{sig}", now=1000.0) is None  # a malformed token
     assert gate.verify("", now=1000.0) is None and gate.verify("nonsense", now=1000.0) is None
     other = Gate(gated_settings(tmp_path, demo_access_code="another-code-entirely"))
     assert other.verify(token, now=1000.0) is None  # a changed code ends every session
@@ -172,7 +176,10 @@ def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) ->
     assert opened.status_code == 200 and opened.json()["granted"] is True
     assert gated.get("/api/items").status_code == 200
     # the phone paired from this session carries the same record
-    phone = gated.get("/api/pair", params={"origin": "http://host:5173"}).json()["token"]
+    web = {"Origin": "http://host:5173", "Sec-Fetch-Site": "same-origin"}
+    phone = gated.get("/api/pair", params={"origin": "http://host:5173"}, headers=web).json()[
+        "token"
+    ]
     bearer = {"Authorization": f"Bearer {phone}"}
     browser = dict(gated.cookies)
     gated.cookies.clear()
@@ -366,3 +373,56 @@ def test_demo_settings_are_checked(tmp_path: Path) -> None:
         gated_settings(tmp_path, demo_access_code="short")
     with pytest.raises(ValueError, match="DEMO_DAILY_CALLS"):
         gated_settings(tmp_path, demo_daily_calls=0)
+
+
+def test_a_forged_new_shape_token_is_refused_before_any_record_is_read(tmp_path: Path) -> None:
+    from app.inventory.store import Store
+
+    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    gate = Gate(gated_settings(tmp_path), keys)
+    _, record = keys.issue("judges", 7)
+    token, _ = gate.issue(kid=record.id, stamp=record.created_at)
+    reads: list[int] = []
+    real = keys.stamp
+
+    def counted(kid: int) -> str | None:
+        reads.append(kid)
+        return real(kid)
+
+    keys.stamp = counted  # type: ignore[method-assign]
+    sid, exp, door, kid, bind, sig = token.split(".")
+    for forged in (
+        f"{sid}.{exp}.{door}.{kid}.{bind}.{'a' * 32}",
+        f"{sid}.{exp}.{door}.99.{bind}.{sig}",
+        f"forgedsid1.{exp}.1.{kid}.{'b' * 16}.{'c' * 32}",
+    ):
+        assert gate.verify(forged) is None
+    assert reads == []
+    # the real one reads its record once, so revoking the record still ends it
+    assert gate.verify(token) is not None and reads == [record.id]
+
+
+def test_a_session_of_the_shape_before_the_binding_still_opens_the_door(tmp_path: Path) -> None:
+    import hashlib
+    import hmac
+    import time
+
+    from app.inventory.store import Store
+
+    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    gate = Gate(gated_settings(tmp_path), keys)
+    _, record = keys.issue("judges", 7)
+    key = hashlib.sha256(b"opl-session:" + CODE.encode()).digest()
+
+    def old(exp: int, kid: int, stamp: str) -> str:
+        text = f"oldsession1.{exp}.1.{kid}.{stamp}".encode()
+        return f"oldsession1.{exp}.1.{kid}." + hmac.new(key, text, hashlib.sha256).hexdigest()[:32]
+
+    soon = int(time.time()) + 600
+    found = gate.verify(old(soon, 0, ""))
+    assert found is not None and found.live and not found.pairing
+    assert gate.verify(old(soon, record.id, record.created_at)) is not None
+    # one ending past what any session issued before this process could reach is not ours
+    assert gate.verify(old(soon + gate.session_seconds, 0, "")) is None
+    keys.revoke("judges")
+    assert gate.verify(old(soon, record.id, record.created_at)) is None

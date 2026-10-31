@@ -7,7 +7,7 @@ import Inventory from './components/Inventory'
 import Modal from './components/Modal'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
 
-import { reachableFromAPhone } from './lib/pairing'
+import { pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
 import { DEFAULT_LIMITS } from './lib/photos'
 import { demoText } from './lib/access'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
@@ -24,9 +24,14 @@ export default function App() {
   const [saved, setSaved] = useState(0)
   const [openItem, setOpenItem] = useState<number | null>(null)
   const [granted, setGranted] = useState<boolean | null>(null)
+  // how many times the footer's pairing code has been opened; 0 while it is closed
+  const [pairOpened, setPairOpened] = useState(0)
   const [gated, setGated] = useState(false)
   const [signIn, setSignIn] = useState(false)
   const [reloads, setReloads] = useState(0)
+  // the footer goes while the API is out of reach and comes back with the code closed: so is
+  // the count, or a closed code would go on drawing pairings
+  if (status.kind !== 'ok' && pairOpened !== 0) setPairOpened(0)
 
   useEffect(() => {
     let cancelled = false
@@ -180,19 +185,19 @@ export default function App() {
             <span>{Object.values(status.version.models).join(', ')}</span>
             <span>{status.ready.data_dir_writable ? 'storage writable' : 'storage read-only'}</span>
             {demoText(status.ready, !demo) && <span>{demoText(status.ready, !demo)}</span>}
-            <details className="pair">
+            <details className="pair" onToggle={(e) => setPairOpened(e.currentTarget.open ? (n) => n + 1 : 0)}>
               <summary>Pair the phone</summary>
-              {demo ? (
-                <p className="muted">The phone pairs with a session of yours: sign in with the code first.</p>
-              ) : (
-              <>
               <p>
-                In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code. It carries this address
-                {status.ready.demo.gated ? ' and a session of its own; the access code stays here.' : '.'}
+                In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code.{' '}
+                {pairingText(status.ready.demo.gated, !demo)}
               </p>
               {reachableFromAPhone(pairOrigin) ? (
                 <>
-                  <PairImage />
+                  {/* drawn only while open, anew on each opening, once the door is known and again when
+                      it changes: a pairing is in it once signed in, and a pairing is a live session */}
+                  {pairOpened > 0 && (granted !== null || !gated) && (
+                    <PairImage key={`${demo ? 'demo' : 'in'}-${pairOpened}`} door={demo ? 'demo' : 'in'} />
+                  )}
                   <p className="muted">
                     Or type <code>{pairOrigin}</code> into the app.
                   </p>
@@ -203,8 +208,6 @@ export default function App() {
                   the phone). Open the web app at the computer's network address and pair from there, or run{' '}
                   <code>./dev phone</code>, which prints a code with that address.
                 </p>
-              )}
-              </>
               )}
             </details>
           </>
@@ -267,25 +270,28 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
 }
 
 
-// The pairing code as an image. Across origins an <img> carries no bearer header, so the SVG
-// is fetched with the session and shown as a data URL; same origin the cookie does it.
-function PairImage() {
-  // across origins the first source would be an unauthenticated fetch of the SVG: none until
-  // the session's copy is in hand
-  const [src, setSrc] = useState(apiBase ? '' : api.pair.svgUrl(window.location.origin))
+// The pairing code as an image, fetched with the session (across origins an <img> carries no
+// bearer header) and shown as a data URL; without a session the backend draws the address
+// alone. While it is shown it is drawn again before the pairing in it ends.
+function PairImage({ door }: { door: string }) {
+  const [src, setSrc] = useState('')
+  const [round, setRound] = useState(0)
   useEffect(() => {
-    if (!apiBase) return
     let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
     api.pair
-      .svg(window.location.origin)
-      .then((text) => {
-        if (!cancelled) setSrc(`data:image/svg+xml;utf8,${encodeURIComponent(text)}`)
+      .svg(window.location.origin, door)
+      .then(({ svg, expiresAt, expiresIn }) => {
+        if (cancelled) return
+        setSrc(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`)
+        timer = setTimeout(() => setRound((n) => n + 1), redrawAfterMs(expiresAt, Date.now(), expiresIn))
       })
       .catch(() => undefined)
     return () => {
       cancelled = true
+      if (timer !== undefined) clearTimeout(timer)
     }
-  }, [])
-  if (!src) return null // the session's copy is on its way
+  }, [door, round])
+  if (!src) return null // on its way
   return <img src={src} alt="Pairing code for the phone" width="220" height="220" />
 }

@@ -1,12 +1,16 @@
 """Access codes as records: issued once, matched by hash, ended by expiry or by hand."""
 
+import hashlib
+import sqlite3
+import threading
+import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from app.inventory.store import Store
-from app.keys import PREFIX, AccessKeyError, AccessKeys, new_code
+from app.keys import PREFIX, AccessKeyError, AccessKeys, master_tag, new_code
 from app.keys.__main__ import main
 
 
@@ -97,3 +101,79 @@ def test_the_command_issues_lists_and_revokes(
     assert "no current code" in capsys.readouterr()[1]
     assert main(["list"], keys) == 0
     assert "revoked" in capsys.readouterr()[0]
+
+
+def test_the_master_tag_is_a_slow_salted_digest() -> None:
+    tag = master_tag("the-master-code")
+    slow = hashlib.pbkdf2_hmac("sha256", b"the-master-code", b"opl-phone-master", 200_000)
+    assert tag == slow[:8].hex() and len(tag) == 16
+    assert tag != hashlib.sha256(b"the-master-code").hexdigest()[:16]
+    assert master_tag("a-new-master-code") != tag and master_tag("") == ""
+
+
+def test_a_revoke_on_another_connection_lands_before_the_claim_reads_its_parent(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "inventory.sqlite3"
+    keys = AccessKeys(Store(path))
+    _, guest = keys.issue("guest", 2)
+    other = sqlite3.connect(path, isolation_level=None)
+    other.execute("BEGIN IMMEDIATE")
+    ended: list[str] = []
+
+    def claim() -> None:
+        try:
+            keys.issue_child("phone racing1", 30, parent=guest.id, stamp=guest.created_at)
+        except AccessKeyError as exc:
+            ended.append(str(exc))
+
+    worker = threading.Thread(target=claim)
+    worker.start()
+    time.sleep(0.3)
+    # the claim waits for the write lock the revoke holds, and reads the parent after it
+    assert worker.is_alive()
+    other.execute("UPDATE access_keys SET revoked_at = ? WHERE id = ?", ("2026-01-01", guest.id))
+    other.execute("COMMIT")
+    other.close()
+    worker.join(10)
+    assert ended == ["the code that paired this phone has ended"]
+    assert [k.label for k in keys.all()] == ["guest"]
+
+
+def test_a_phone_code_is_claimed_once_and_stands_with_its_parent(tmp_path: Path) -> None:
+    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"), master_tag("the-master-code"))
+    _, guest = keys.issue("guest", 2)
+    code, phone = keys.issue_child("phone abcd1234", 30, parent=guest.id, stamp=guest.created_at)
+    assert phone.expires_at == guest.expires_at and phone.parent_id == guest.id
+    assert keys.match(code) == phone and keys.stamp(phone.id) == phone.created_at
+    with pytest.raises(AccessKeyError, match="already"):
+        keys.issue_child("phone abcd1234", 30, parent=guest.id, stamp=guest.created_at)
+    # a stamp that is not the parent's (a reset reused the id) is a parent that has ended
+    with pytest.raises(AccessKeyError, match="has ended"):
+        keys.issue_child("phone other", 30, parent=guest.id, stamp="2026-01-01T00:00:00+00:00")
+    with pytest.raises(AccessKeyError, match="another phone"):
+        keys.issue_child("phone grand", 30, parent=phone.id, stamp=phone.created_at)
+    # a parent that runs out ends the phone's record with it
+    _, aging = keys.issue("aging", 2)
+    _, child = keys.issue_child("phone aging1", 30, parent=aging.id, stamp=aging.created_at)
+    assert keys.stamp(child.id) == child.created_at
+    past = (datetime.now(UTC) - timedelta(seconds=1)).replace(microsecond=0).isoformat()
+    with keys.store.connect() as conn:
+        conn.execute("UPDATE access_keys SET expires_at = ? WHERE id = ?", (past, aging.id))
+    assert keys.stamp(child.id) is None
+    keys.revoke("guest")
+    assert keys.match(code) is None and keys.stamp(phone.id) is None
+    with pytest.raises(AccessKeyError, match="has ended"):
+        keys.issue_child("phone late", 30, parent=guest.id, stamp=guest.created_at)
+    # under the master code: tagged with it, and gone once the tag is another
+    code, phone = keys.issue_child("phone master1", 5, parent=0)
+    assert phone.master and phone.parent_id is None and keys.match(code) == phone
+    rotated = AccessKeys(keys.store, master_tag("a-new-master-code"))
+    assert rotated.match(code) is None and rotated.stamp(phone.id) is None
+    with pytest.raises(AccessKeyError, match="no master code"):
+        AccessKeys(keys.store).issue_child("phone none", 5)
+    # the label is taken for good, revoked or not; a plain issue sees only current codes
+    keys.revoke("phone master1")
+    with pytest.raises(AccessKeyError, match="already"):
+        keys.issue_child("phone master1", 5)
+    keys.issue("phone master1", 1)
