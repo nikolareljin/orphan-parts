@@ -104,15 +104,18 @@ def pairing(
     return Pairing(url=url, gated=True, token=token, expires_at=expires_at)
 
 
-def phone_code(session: Session, keys: AccessKeys, days: int) -> tuple[str, AccessKey]:
+def phone_code(
+    session: Session, keys: AccessKeys, days: int, most: int = 0
+) -> tuple[str, AccessKey]:
     """The phone's own code, claimed with its pairing: an issued record labeled after the
     pairing (``phone`` and the first eight characters of its id), so one pairing claims
     once; the label is kept with the record whatever becomes of it, and a second claim with
     the same pairing is refused for as long as the record exists, revoked or not. It lasts
     ``days``, never past the code that opened the pairing, and stands only while that code
-    does: an issued record revoked or expired, or a master code changed, ends it."""
+    does: an issued record revoked or expired, or a master code changed, ends it. A code
+    with ``most`` current phone codes already pairs no more."""
     return keys.issue_child(
-        f"phone {session.sid[:8]}", days, parent=session.kid, stamp=session.stamp
+        f"phone {session.sid[:8]}", days, parent=session.kid, stamp=session.stamp, most=most
     )
 
 

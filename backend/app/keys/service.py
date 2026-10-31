@@ -94,15 +94,16 @@ class AccessKeys:
             return _insert(conn, label, now, expires)
 
     def issue_child(
-        self, label: str, days: int, *, parent: int = 0, stamp: str = ""
+        self, label: str, days: int, *, parent: int = 0, stamp: str = "", most: int = 0
     ) -> tuple[str, AccessKey]:
         """A phone's code, claimed with a pairing session: ``parent`` is the issued record the
         session came from (``stamp`` its issue time, as signed into the session), or 0 for
         the master code. It lasts ``days`` and never past its parent, and stands only while
         the parent does. The label may never have been used, revoked and expired records
-        included, so one pairing claims once. The parent is read and the record written in
-        one write transaction: a revoke from the command line lands before or after, never
-        between."""
+        included, so one pairing claims once. With ``most`` set, a parent holding that many
+        current phone codes pairs no more until one is revoked or runs out. The parent is
+        read, its phones counted and the record written in one write transaction: a revoke
+        from the command line lands before or after, never between."""
         label = _checked(label, days)
         now = datetime.now(UTC)
         until = now + timedelta(days=days)
@@ -127,6 +128,18 @@ class AccessKeys:
                 master = self.master
             if conn.execute("SELECT 1 FROM access_keys WHERE label = ?", (label,)).fetchone():
                 raise AccessKeyError(f"a code was issued for {label!r} already")
+            if most:
+                paired = conn.execute(
+                    "SELECT COUNT(*) FROM access_keys WHERE revoked_at IS NULL"
+                    " AND (expires_at IS NULL OR expires_at > ?)"
+                    " AND (parent_id = ? OR (parent_id IS NULL AND master = ?))",
+                    (_text(now), parent or None, master),
+                ).fetchone()[0]
+                if paired >= most:
+                    raise AccessKeyError(
+                        f"this code has paired {paired} phones already;"
+                        " revoke one with ./dev keys revoke"
+                    )
             return _insert(conn, label, now, _text(until), parent or None, master)
 
     def all(self) -> list[AccessKey]:

@@ -302,12 +302,36 @@ def test_the_claim_counts_against_the_code_attempts(tmp_path: Path) -> None:
 
 
 def test_claims_that_work_keep_the_address_tries(tmp_path: Path) -> None:
-    with served(gated(tmp_path, demo_code_attempts=5)) as c:
+    # more claims than tries, fewer than the phones one code may pair
+    with served(gated(tmp_path, demo_code_attempts=5, pair_code_max=10)) as c:
         c.post("/api/access", json={"code": CODE})
         tokens = [pair_token(c) for _ in range(8)]
         c.cookies.clear()
         assert [claim(c, token)[0] for token in tokens] == [200] * 8
         assert c.post("/api/access", json={"code": CODE}).status_code == 200
+
+
+def test_one_code_pairs_at_most_pair_code_max_phones(tmp_path: Path) -> None:
+    with served(gated(tmp_path, pair_code_max=2)) as c:
+        keys = c.app.state.gate.keys  # type: ignore[attr-defined]
+        guest, _ = keys.issue("guest", 7)
+        session = c.post("/api/access", json={"code": guest}).json()["token"]
+        c.cookies.clear()
+        labels = [str(claim(c, pair_token(c, session))[1]["label"]) for _ in range(2)]
+        status, refused = claim(c, pair_token(c, session))
+        assert status == 403
+        assert refused["detail"] == (
+            "this code has paired 2 phones already; revoke one with ./dev keys revoke"
+        )
+        # a revoke frees a place
+        keys.revoke(labels[0])
+        assert claim(c, pair_token(c, session))[0] == 200
+        assert claim(c, pair_token(c, session))[0] == 403
+        # the master code counts its own phones, apart from the guest's
+        c.post("/api/access", json={"code": CODE})
+        tokens = [pair_token(c) for _ in range(3)]
+        c.cookies.clear()
+        assert [claim(c, token)[0] for token in tokens] == [200, 200, 403]
 
 
 def test_only_an_origin_this_server_is_reached_at_goes_into_a_pairing(tmp_path: Path) -> None:
@@ -377,6 +401,8 @@ def test_pairing_settings_have_bounds(tmp_path: Path) -> None:
         {"pair_code_days": 3651},
         {"pair_token_minutes": 0},
         {"pair_token_minutes": 61},
+        {"pair_code_max": 0},
+        {"pair_code_max": 101},
     ):
         with pytest.raises(ValueError, match="must be between"):
             gated(tmp_path, **over)

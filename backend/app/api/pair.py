@@ -82,7 +82,8 @@ def pair_code(request: Request, gate: GateDep, settings: SettingsDep) -> PhoneCo
     once: it opens a session through ``POST /api/access`` like a typed code. Without a gate
     there is nothing to give. Each try counts against the address's code attempts (429 once
     spent), and a claim that works clears the count; no live pairing, 401; a browser's
-    session, a second claim, or a pairing whose code has ended, 403."""
+    session, a second claim, a pairing whose code has ended, or a code that has paired
+    PAIR_CODE_MAX phones already, 403."""
     if not gate.enabled:
         return PhoneCode(gated=False)
     ip = gate.client_ip(request)
@@ -99,7 +100,7 @@ def pair_code(request: Request, gate: GateDep, settings: SettingsDep) -> PhoneCo
     if not session.pairing:
         raise HTTPException(status_code=403, detail=BROWSER_CLAIM)
     try:
-        code, key = phone_code(session, gate.keys, settings.pair_code_days)
+        code, key = phone_code(session, gate.keys, settings.pair_code_days, settings.pair_code_max)
     except AccessKeyError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     # a claim that worked is no guess: the address keeps its tries, as with a correct code

@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     pair_token_minutes: int = 15
     # how long the code a phone gets on its first scan lasts; never past the code that paired it
     pair_code_days: int = 30
+    # how many current phone codes one code may have paired; a revoke frees a place
+    pair_code_max: int = 10
     max_photos: int = 4
     # a picture of what an item could become, drawn by Muse Image on a click: off unless set,
     # since every click is a paid call
@@ -107,7 +109,11 @@ class Settings(BaseSettings):
         ):
             if getattr(self, name) < 1:
                 raise ValueError(f"{name.upper()} must be at least 1")
-        for name, most in (("pair_token_minutes", 60), ("pair_code_days", 3650)):
+        for name, most in (
+            ("pair_token_minutes", 60),
+            ("pair_code_days", 3650),
+            ("pair_code_max", 100),
+        ):
             if not 1 <= getattr(self, name) <= most:
                 raise ValueError(f"{name.upper()} must be between 1 and {most}")
         code = self.demo_access_code.get_secret_value() if self.demo_access_code else ""
