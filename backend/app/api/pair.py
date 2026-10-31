@@ -78,11 +78,12 @@ def pair_code(request: Request, gate: GateDep, settings: SettingsDep) -> PhoneCo
     """The phone's own access code, claimed once with the pairing its QR carried and shown
     once: it opens a session through ``POST /api/access`` like a typed code. Without a gate
     there is nothing to give. Each try counts against the address's code attempts (429 once
-    spent); no live pairing, 401; a browser's session, a second claim, or a pairing whose code
-    has ended, 403."""
+    spent), and a claim that works clears the count; no live pairing, 401; a browser's
+    session, a second claim, or a pairing whose code has ended, 403."""
     if not gate.enabled:
         return PhoneCode(gated=False)
-    ok, retry = gate.attempts.take(gate.client_ip(request))
+    ip = gate.client_ip(request)
+    ok, retry = gate.attempts.take(ip)
     if not ok:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -98,5 +99,7 @@ def pair_code(request: Request, gate: GateDep, settings: SettingsDep) -> PhoneCo
         code, key = phone_code(session, gate.keys, settings.pair_code_days)
     except AccessKeyError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
+    # a claim that worked is no guess: the address keeps its tries, as a right code does
+    gate.attempts.forget(ip)
     log.info("a phone claimed its code", extra={"label": key.label})
     return PhoneCode(gated=True, code=code, label=key.label, expires_at=key.expires_at)

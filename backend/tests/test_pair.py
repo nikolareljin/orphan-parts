@@ -292,6 +292,15 @@ def test_the_claim_counts_against_the_code_attempts(tmp_path: Path) -> None:
         assert c.post("/api/access", json={"code": CODE}).status_code == 429
 
 
+def test_claims_that_work_keep_the_address_tries(tmp_path: Path) -> None:
+    with served(gated(tmp_path, demo_code_attempts=5)) as c:
+        c.post("/api/access", json={"code": CODE})
+        tokens = [pair_token(c) for _ in range(8)]
+        c.cookies.clear()
+        assert [claim(c, token)[0] for token in tokens] == [200] * 8
+        assert c.post("/api/access", json={"code": CODE}).status_code == 200
+
+
 def test_only_an_origin_this_server_is_reached_at_goes_into_a_pairing(tmp_path: Path) -> None:
     lan = "http://192.168.1.20:5173"
     evil = {"origin": "https://evil.example"}
