@@ -29,6 +29,9 @@ export default function App() {
   const [gated, setGated] = useState(false)
   const [signIn, setSignIn] = useState(false)
   const [reloads, setReloads] = useState(0)
+  // the footer goes while the API is out of reach and comes back with the code closed: so is
+  // the count, or a closed code would go on drawing pairings
+  if (status.kind !== 'ok' && pairOpened !== 0) setPairOpened(0)
 
   useEffect(() => {
     let cancelled = false
@@ -278,10 +281,10 @@ function PairImage({ door }: { door: string }) {
     let timer: ReturnType<typeof setTimeout> | undefined
     api.pair
       .svg(window.location.origin, door)
-      .then(({ svg, expiresAt }) => {
+      .then(({ svg, expiresAt, expiresIn }) => {
         if (cancelled) return
         setSrc(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`)
-        timer = setTimeout(() => setRound((n) => n + 1), redrawAfterMs(expiresAt, Date.now()))
+        timer = setTimeout(() => setRound((n) => n + 1), redrawAfterMs(expiresAt, Date.now(), expiresIn))
       })
       .catch(() => undefined)
     return () => {
