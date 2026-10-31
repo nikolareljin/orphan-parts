@@ -226,9 +226,10 @@ ALTER TABLE access_keys ADD COLUMN master TEXT;
 """
 
 # version 13: the three scenarios written for the owner (keep and fix, reuse, sell or give
-# away), one answer per asking, written from one item version, kept like the uses
+# away), one answer per asking, written from one item version, kept like the uses; written to
+# run again over a file that already has the table
 _SCHEMA_V13 = """
-CREATE TABLE scenarios (
+CREATE TABLE IF NOT EXISTS scenarios (
     id INTEGER PRIMARY KEY,
     item_id INTEGER NOT NULL REFERENCES items(id),
     version INTEGER NOT NULL,
@@ -236,7 +237,7 @@ CREATE TABLE scenarios (
     content TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
-CREATE INDEX scenarios_by_item ON scenarios (item_id);
+CREATE INDEX IF NOT EXISTS scenarios_by_item ON scenarios (item_id);
 """
 
 MIGRATIONS: dict[int, str] = {
