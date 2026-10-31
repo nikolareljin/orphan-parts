@@ -137,6 +137,8 @@ export interface Item extends ItemSummary {
   fields: Record<string, Assertion>
   assertions: Assertion[]
   components: number[]
+  // served to the demo visitor: location, notes and voice notes left out, never to be saved back
+  redacted?: boolean
 }
 
 export type ItemDetails = Pick<

@@ -247,12 +247,9 @@ class Captures:
                     }
                 )
             else:
-                spec = spec.model_copy(
-                    update={
-                        "item_type": "item",
-                        "name": spec.name or content["note"][:60] or "Capture",
-                    }
-                )
+                # the line stays in the notes, never in the name: a name is shown wherever
+                # the item is, to the demo visitor too once the item is public
+                spec = spec.model_copy(update={"item_type": "item", "name": spec.name or "Capture"})
             item = self.inventory.create(spec)
             if photos:
                 # the item keeps the pictures it was read from, so the capture can go later;
