@@ -135,17 +135,20 @@ def web():  # type: ignore[no-untyped-def]
     secrets=[modal.Secret.from_name("orphan-parts")],
     timeout=1800,
 )
-def load_demo(reset: bool = True) -> int:  # type: ignore[no-untyped-def]
-    """The demo set loaded into the host's inventory, in the mode the secret says (fixture
-    mode replays the recordings shipped with the image and spends nothing):
-    ``modal run deploy/modal_app.py::load_demo`` (``--no-reset`` adds to what is there).
+def load_demo(reset: bool = True, live: bool = False) -> int:  # type: ignore[no-untyped-def]
+    """The demo set loaded into the host's inventory from the recordings shipped with the
+    image, spending nothing, whatever mode the secret says:
+    ``modal run deploy/modal_app.py::load_demo`` (``--no-reset`` adds to what is there;
+    ``--live`` asks the models instead, at their price, when the secret holds a key).
     The web container keeps serving meanwhile and picks the set up before its next write
     and within half a minute otherwise."""
     os.environ.setdefault("DATA_DIR", "/data")
     os.environ.setdefault("LOG_FORMAT", "text")
     os.environ.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
     os.environ.setdefault("DEMO_SET", DEMO_SET)
-    if not os.environ.get("MODEL_API_KEY"):
+    # the recordings answer unless a live load is asked for: a live load spends and writes
+    # answers the recordings (and the samples visitors click) do not hold
+    if not live or not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
     from app.demo.__main__ import main
 

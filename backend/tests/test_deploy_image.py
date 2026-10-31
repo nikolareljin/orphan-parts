@@ -165,3 +165,54 @@ def test_the_image_names_the_demo_set_it_ships(monkeypatch: pytest.MonkeyPatch) 
 
     monkeypatch.setenv("DEMO_SET", values["DEMO_SET"])
     assert Settings(OPL_FAKE_API=True, _env_file=None).demo_set == Path(values["DEMO_SET"])
+
+
+@pytest.mark.parametrize(
+    ("key", "live", "fake"),
+    [("k", False, "1"), ("k", True, None), ("", False, "1"), ("", True, "1")],
+)
+def test_load_demo_replays_the_recordings_unless_asked_live(
+    monkeypatch: pytest.MonkeyPatch, key: str, live: bool, fake: str | None
+) -> None:
+    """A host with a key would answer a plain load live, at a price and with answers the
+    recordings the visitor's samples replay do not hold: load_demo replays unless --live."""
+    import importlib.util
+    import os
+    import sys
+    import types
+
+    import app.demo.__main__ as demo_main
+
+    class Stub:
+        def __getattr__(self, name: str) -> object:
+            return lambda *a, **kw: self
+
+        def function(self, **kw: object) -> object:
+            return lambda f: f
+
+    modal = types.ModuleType("modal")
+    modal.App = lambda name: Stub()  # type: ignore[attr-defined]
+    modal.Image = Stub()  # type: ignore[attr-defined]
+    modal.Volume = Stub()  # type: ignore[attr-defined]
+    modal.Secret = Stub()  # type: ignore[attr-defined]
+    modal.concurrent = lambda **kw: lambda f: f  # type: ignore[attr-defined]
+    modal.asgi_app = lambda **kw: lambda f: f  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "modal", modal)
+    seen: dict[str, object] = {}
+
+    def main(args: list[str]) -> int:
+        seen["fake"] = os.environ.get("OPL_FAKE_API")
+        seen["args"] = args
+        return 0
+
+    monkeypatch.setattr(demo_main, "main", main)
+    for name in ("OPL_FAKE_API", "DATA_DIR", "LOG_FORMAT", "SQLITE_JOURNAL_MODE", "DEMO_SET"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("MODEL_API_KEY", key)
+    spec = importlib.util.spec_from_file_location("modal_app_load_demo", MODAL_APP)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.load_demo(reset=False, live=live) == 0
+    assert seen["fake"] == fake
+    assert "--reset" not in seen["args"]  # type: ignore[operator]
