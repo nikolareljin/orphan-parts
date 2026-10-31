@@ -9,6 +9,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 - Dialogs stand clear of the page: a deeper, layered shadow around the panel and a darker, more blurred see-through backdrop behind it, in light and dark mode; in dark mode a light hairline edge outlines the panel, and on a phone the backdrop blurs less.
 
 ### Added
+- A QR code that opens the newest release's APK: each release attaches the APK a second time as `orphan-parts.apk`, so `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk` is a fixed address; the judges' guide, the README and the docs home show the code (`docs/assets/apk-qr.svg`) with the link; a release is marked the latest only once its APK is attached, and only when it is the highest version.
 - `./dev gate on|off|show`: the access code on your own machine, made when `.env` has none, the backend restarted with the gate, a code for the phone or a guest issued and both printed to copy; never part of a deployment. The scripts read `.env` as Compose does: a ` #` comment after a value, the text inside quotes, the last of a repeated key, Windows line endings.
 ### Fixed
 - Generated pictures are decoded and stripped of metadata before storage; the decision panel links to the picture controls.
