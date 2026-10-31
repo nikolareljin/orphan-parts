@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.projects.skills import STARTER_SKILLS, RatedSkill, rated_skills
+
 KEY = r"^[a-z][a-z0-9_]{0,63}$"
 CURRENCY = r"^[A-Z]{3}$"
 TEXT_MAX = 2000
@@ -21,11 +23,13 @@ RequirementState = Literal["pass", "unknown"]
 
 
 class Preferences(BaseModel):
-    """What the owner wants from a build: a few answers, kept once, read by every proposal."""
+    """What the owner wants from a build and what they can do: a few answers, kept once, read by
+    every proposal and by the scenarios on an item. The skills are rated; a plain name, as the
+    record was kept before the ratings, reads as ``some``."""
 
     interests: str = Field(default="", max_length=TEXT_MAX)
     effort: Effort = "medium"
-    skills: list[str] = Field(default=[], max_length=20)
+    skills: list[RatedSkill] = Field(default=[], max_length=len(STARTER_SKILLS) + 20)
     tools: str = Field(default="", max_length=TEXT_MAX)
     opens_devices: bool = False
     budget: float | None = Field(default=None, ge=0, le=PRICE_MAX)
@@ -33,11 +37,10 @@ class Preferences(BaseModel):
     radius_km: int | None = Field(default=None, ge=0, le=20_000)
     purchase: Purchase = "used"
 
-    @field_validator("skills")
+    @field_validator("skills", mode="before")
     @classmethod
-    def _skills(cls, values: list[str]) -> list[str]:
-        kept = [" ".join(v.split()) for v in values]
-        return [v[:LINE_MAX] for v in kept if v]
+    def _rated(cls, values: object) -> object:
+        return rated_skills(values) if isinstance(values, list) else values
 
 
 class TemplateRequirement(BaseModel):

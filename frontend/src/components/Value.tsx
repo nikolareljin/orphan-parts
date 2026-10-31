@@ -8,8 +8,9 @@ function message(err: unknown): string {
 }
 
 // What it is worth: four quantities kept apart, each with its pages and dates. You set the price.
-// `onGuided` is told when a new guidance is written, so a panel that reads it can read it again.
-export default function Value({ item, onGuided }: { item: Item; onGuided?: () => void }) {
+// `onGuided` is told when a new guidance is written, so a panel that reads it can read it again;
+// `refresh` changes when one was written elsewhere (the Decide panel's sell card).
+export default function Value({ item, refresh = 0, onGuided }: { item: Item; refresh?: number; onGuided?: () => void }) {
   const [guide, setGuide] = useState<Guidance | null>(null)
   const [reports, setReports] = useState<PriceReport[]>([])
   const [currency, setCurrency] = useState('USD')
@@ -42,7 +43,7 @@ export default function Value({ item, onGuided }: { item: Item; onGuided?: () =>
       cancelled = true
     }
     // the item's version too: an edit after the guidance is what makes it stale
-  }, [item.id, item.version])
+  }, [item.id, item.version, refresh])
 
   async function ask(event: FormEvent) {
     event.preventDefault()

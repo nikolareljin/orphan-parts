@@ -860,6 +860,132 @@ button.link {
   cursor: default;
 }
 
+/* what to do with it: three cards side by side, stacked on a phone; the recommended one is
+   outlined in the accent */
+.decide .scenarios {
+  margin: 0 0 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.decide .scenarios .ask {
+  align-items: center;
+}
+
+.decide .scenarios .meta,
+.decide .scenarios .hint,
+.decide .scenarios .recommendation {
+  margin: 0.5rem 0;
+}
+
+.decide .scenarios .hint {
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.decide .scenario-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+@media (max-width: 760px) {
+  .decide .scenario-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.decide .scenario {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+}
+
+.decide .scenario.recommended {
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--card));
+}
+
+.decide .scenario h5 {
+  margin: 0 0 0.5rem;
+  font-size: 0.98rem;
+}
+
+.decide .scenario-body {
+  flex: 1;
+}
+
+.decide .scenario-body p {
+  margin: 0.35rem 0;
+}
+
+.decide .scenario-body ul,
+.decide .scenario-body ol {
+  margin: 0.2rem 0 0.5rem;
+  padding-left: 1.2rem;
+}
+
+.decide .scenario-body li {
+  margin: 0.2rem 0;
+}
+
+.decide .scenario-body ul.reuse {
+  padding-left: 0;
+  list-style: none;
+}
+
+.decide .scenario-body ul.reuse > li + li {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+/* a label on a line of its own above its value, so read and copied text keeps them apart */
+.decide .scenario .label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.decide .scenario .badge.level {
+  margin-left: 0;
+}
+
+.decide .scenario .badge.level.easy {
+  background: #27ae60;
+  color: #fff;
+}
+
+.decide .scenario .badge.level.moderate {
+  background: #f1c40f;
+  color: #1b1f24;
+}
+
+.decide .scenario .badge.level.hard {
+  background: var(--error);
+  color: #fff;
+}
+
+.decide .scenario-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.decide .scenario-actions button + button {
+  background: var(--card);
+  color: var(--accent);
+}
+
 /* prepare to sell or give away */
 .listing .draft-text {
   width: 100%;
@@ -1106,6 +1232,105 @@ button.link {
   box-sizing: border-box;
   display: block;
   margin: 0.25rem 0 0.5rem;
+}
+
+/* the profile: rated skills as a grid of choices, then tools and how the owner works; rows of
+   fields as on the item dialog, the label above each input */
+.profile h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.profile table.skills th,
+.profile table.skills td {
+  padding: 0.35rem 0.4rem;
+}
+
+.profile table.skills td {
+  text-align: center;
+}
+
+.profile table.skills th[scope='row'] {
+  text-align: left;
+  font-weight: 500;
+}
+
+.profile table.skills input[type='radio'] {
+  accent-color: var(--accent);
+}
+
+.profile .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.6rem 0.75rem;
+  align-items: end;
+  margin-top: 0.75rem;
+}
+
+.profile .row > button,
+.profile .row > .muted {
+  justify-self: start;
+}
+
+.profile .row > label:not(.check) {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.profile .row > label:not(.check) > span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.profile .row > label.wide {
+  grid-column: 1 / -1;
+}
+
+.profile input:not([type='checkbox']):not([type='radio']),
+.profile select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+.profile .check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.92rem;
+  align-self: center;
+}
+
+.profile .check input {
+  accent-color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .profile table.skills thead th {
+    font-size: 0.7rem;
+    letter-spacing: 0;
+  }
+
+  .profile table.skills th,
+  .profile table.skills td {
+    padding: 0.3rem 0.15rem;
+  }
+}
+
+.build .skills-line {
+  margin: 0;
+  align-self: center;
+}
+
+.build .skills-line span {
+  font-weight: 600;
 }
 
 /* Build and reuse */

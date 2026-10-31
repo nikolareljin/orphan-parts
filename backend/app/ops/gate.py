@@ -55,6 +55,7 @@ EXPENSIVE = [
     ("POST", re.compile(r"^/api/items/\d+/price$")),
     ("POST", re.compile(r"^/api/items/\d+/picture$")),
     ("POST", re.compile(r"^/api/items/\d+/uses$")),
+    ("POST", re.compile(r"^/api/items/\d+/scenarios$")),
     ("POST", re.compile(r"^/api/searches/\d+/candidates$")),
     ("POST", re.compile(r"^/api/searches/\d+/plan$")),
     ("POST", re.compile(r"^/api/searches/\d+/listings/screenshots$")),

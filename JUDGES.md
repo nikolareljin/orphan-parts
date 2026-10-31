@@ -152,9 +152,11 @@ app, installs it over USB and prints the pairing code in the terminal.
   have. At the end of the item, **Draw it** shows what the item could look like as what you type
   (a picture, labeled as drawn, only when that server has pictures on).
 
-- **Decide**, on the item below its values: what it is, what it is worth, what it is good for
-  (**Ask for ideas**), what would complete it; then **Keep and build**, **Sell**, **Give
-  away** or **Not worth it**, with a note the item keeps.
+- **Decide**, on the item below its values: **What should I do with it?** writes three cards for
+  your profile's rated skills (keep and fix, reuse it, sell or give away) and recommends one;
+  then what it is, what it is worth, what it is good for (**Ask for ideas**), what would
+  complete it; then **Keep and fix**, **Keep and build**, **Sell**, **Give away** or **Not
+  worth it**, with a note the item keeps.
 - **Find a part:** **Plan the search** writes several Marketplace search links you open
   yourself and a match pattern; paste back what you find and the listings are ranked by it.
 - **From a laptop instead of the phone:** the Inbox's **Send a capture** form takes photos

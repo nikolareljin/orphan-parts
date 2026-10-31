@@ -104,7 +104,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
 
   return (
     <section className="listing" aria-label="Prepare to sell or give away">
-      <h4>Prepare to sell or give away</h4>
+      <h4 tabIndex={-1}>Prepare to sell or give away</h4>
       <div className="row">
         <label>
           <span>Voice note (WAV)</span>

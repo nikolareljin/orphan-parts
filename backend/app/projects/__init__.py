@@ -24,9 +24,12 @@ from app.projects.schema import (
     TemplateSummary,
 )
 from app.projects.service import AllocationConflictError, Planner, ProjectsError, fits, item_line
+from app.projects.skills import LEVELS, STARTER_SKILLS, RatedSkill, SkillLevel, skills_line
 from app.projects.templates import Templates, UnknownTemplateError
 
 __all__ = [
+    "LEVELS",
+    "STARTER_SKILLS",
     "Allocation",
     "AllocationConflictError",
     "Budget",
@@ -44,14 +47,17 @@ __all__ = [
     "Proposal",
     "ProposalSet",
     "ProposeRequest",
+    "RatedSkill",
     "Requirement",
     "SelectRequest",
     "ShareChange",
     "ShareText",
+    "SkillLevel",
     "Template",
     "TemplateSummary",
     "Templates",
     "UnknownTemplateError",
     "fits",
     "item_line",
+    "skills_line",
 ]
