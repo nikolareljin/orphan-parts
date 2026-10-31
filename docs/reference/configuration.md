@@ -23,6 +23,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `MODEL_API_RETRY_AFTER_MAX_S` | `30` | | longest wait honoured from a `Retry-After` header |
 | `PROMPT_CACHE_NAME` | `orphan-parts` | | routing key sent with every call for prompt caching |
 | `EXTRACT_REASONING_EFFORT` | `low` | | reasoning effort for label extraction |
+| `MODEL_MAX_OUTPUT_TOKENS` | `0` | | ceiling on the `max_output_tokens` sent with a call: each operation's answer budget plus the room reasoning takes at its effort (1,024 at `minimal`, 4,096 at `low`, 8,192 at `medium`, 16,384 at `high`, 32,768 at `xhigh`), since reasoning tokens count against that cap; `0` = no ceiling. Tokens are billed as used, so the ceiling bounds the worst call, not the usual one |
 | `IMAGE_MAX_PX` | `1280` | | photos are downscaled to this long edge before upload |
 | `SEGMENT_MAX_PX` | `800` | | the copy SAM 3.1 sees is downscaled to this long edge; boxes are scaled back onto the photo |
 | `MAX_PHOTOS` | `4` | | photos accepted per item |
