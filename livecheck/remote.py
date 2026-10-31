@@ -83,6 +83,42 @@ def _extract(http: httpx.Client, photo: bytes, headers: dict[str, str], op: str)
         files=[("photos", ("label.jpg", photo, "image/jpeg"))],
         headers=headers,
     )
+    return _reading(response, op)
+
+
+def _first_sample(http: httpx.Client) -> str:
+    """The first sample photo the host lists, or "" when it lists none."""
+    items = _json(http.get("/api/samples")).get("items")
+    for item in items if isinstance(items, list) else []:
+        photos = item.get("photos") if isinstance(item, dict) else None
+        for found in photos if isinstance(photos, list) else []:
+            sid = found.get("id") if isinstance(found, dict) else None
+            if isinstance(sid, str) and sid:
+                return sid
+    return ""
+
+
+def _sample_extract(http: httpx.Client, op: str) -> Result:
+    """The demo visitor's read: a sample photo of the demo set, by its id."""
+    sid = _first_sample(http)
+    if not sid:
+        return Result(op=op, status=FAIL, note="the host lists no sample photo (GET /api/samples)")
+    return _reading(http.post("/api/extract", data={"sample_ids": [sid]}), op)
+
+
+def _upload_refused(http: httpx.Client, photo: bytes, op: str) -> Result:
+    """A photo of the visitor's own is not read without the code."""
+    response = http.post("/api/extract", files=[("photos", ("label.jpg", photo, "image/jpeg"))])
+    if response.status_code == 403:
+        return Result(op=op, status=PASS, note=_detail(response))
+    return Result(
+        op=op,
+        status=FAIL,
+        note=f"a photo sent without the code was not refused ({_detail(response)})",
+    )
+
+
+def _reading(response: httpx.Response, op: str) -> Result:
     if response.status_code != 200:
         return Result(op=op, status=FAIL, note=_detail(response))
     reading = _json(response)
@@ -185,13 +221,14 @@ def run_remote(http: httpx.Client, *, code: str, max_usd: float, photo: bytes, o
         print(run.total(), file=out)
         return run
 
-    # the demo visitor: recordings only, and no write
+    # the demo visitor: a sample photo on its recording, no photo of its own, and no write
     add(
         _timed(
-            "extract (no code)",
-            lambda: _expect_recorded(_extract(http, photo, {}, "extract (no code)")),
+            "sample (no code)",
+            lambda: _expect_recorded(_sample_extract(http, "sample (no code)")),
         )
     )
+    add(_timed("upload (no code)", lambda: _upload_refused(http, photo, "upload (no code)")))
 
     def write_probe() -> Result:
         response = http.post("/api/items", json=WRITE_PROBE)

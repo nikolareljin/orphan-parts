@@ -6,6 +6,9 @@
 # should give (as printed on the label in the photos), how many kept proposals should use it.
 # The photos are the owner's own, with serial numbers, MAC addresses and keys masked before
 # they were scrubbed; the recordings under backend/tests/fixtures/api are of these files.
+# An item's `picture:` asks Muse Image for a drawing of it as that use (a template id or a few
+# words) once its drafts are written; fixture mode shows the drawing only once a record run
+# has kept it, and says "not recorded yet" until then.
 title: a drawer of idle things
 currency: USD
 country: US
@@ -17,6 +20,7 @@ items:
     item_type: monitor
     intent: build
     photos: [photos/dell-u2419h-label.jpg]
+    picture: a second screen for the kitchen
     expect:
       fields:
         brand: Dell
@@ -27,6 +31,7 @@ items:
     item_type: monitor
     intent: build
     photos: [photos/dell-1800fp-label.jpg]
+    picture: smart_mirror
     expect:
       fields:
         brand: Dell
@@ -51,6 +56,7 @@ items:
     intent: build
     photos: [photos/thinkpad-t510-inside.jpg, photos/thinkpad-t510-label.jpg]
     condition: opened; the keyboard and the palm rest are off
+    picture: home_server
     expect:
       fields:
         brand: Lenovo
@@ -104,6 +110,7 @@ items:
     intent: build
     photos: [photos/tplink-pa2010.jpg, photos/tplink-pa2010-label.jpg]
     condition: still in its plastic wrap; one unit, its twin is missing
+    picture: home_automation_server
     expect:
       fields:
         brand: TP-Link

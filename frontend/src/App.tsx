@@ -176,7 +176,7 @@ export default function App() {
       {view === 'find' && (
         <section className="card">
           <h2>Find a part</h2>
-          <Find />
+          <Find demo={demo} />
         </section>
       )}
 

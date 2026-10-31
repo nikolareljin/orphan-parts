@@ -13,7 +13,9 @@ here needs a development setup; a computer is optional.
   address instead of scanning, as step 4 says.
 - **The access code** you were given (the submission carries it; it is never in this
   repository). Without a code the server is the recorded demo: everything shows, nothing of
-  yours is kept.
+  yours is kept, and instead of uploading a photo you click the demo set's own photos (one,
+  several, or all of one item) to see the answer recorded for each. Signed in, you upload and
+  the photo is read live.
 - **The hosted site:** `https://orphan-parts.pages.dev`. No computer is needed for it.
 - Optional: a computer with a USB cable, for path B in step 3.
 

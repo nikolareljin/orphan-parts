@@ -65,3 +65,12 @@ class FixtureMissingError(ModelApiError):
             "record one with OPL_RECORD_FIXTURES=1 or add <fixtures_dir>/"
             f"{endpoint.strip('/')}/{op}.json"
         )
+
+
+class NoRecordingError(FixtureMissingError):
+    """Only an exact recording may answer (a sample photo's read) and this request has none:
+    the operation's stub is never handed back in its place."""
+
+    def __init__(self, endpoint: str, key: str, op: str) -> None:
+        super().__init__(endpoint, key, op)
+        self.args = (f"no recording of {op} for this request",)

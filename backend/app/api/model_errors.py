@@ -7,9 +7,11 @@ from app.model_api import (
     FixtureMissingError,
     IncompleteResponseError,
     ModelApiError,
+    NoRecordingError,
     SpendCapError,
 )
 from app.ops.door import live_request
+from app.samples import MISSING_LINE
 
 
 def as_http(exc: Exception) -> HTTPException:
@@ -18,6 +20,9 @@ def as_http(exc: Exception) -> HTTPException:
         return HTTPException(status_code=400, detail=str(exc))
     if isinstance(exc, SpendCapError):
         return HTTPException(status_code=503, detail=str(exc))
+    if isinstance(exc, NoRecordingError):
+        # a sample read with nothing recorded for it: said plainly, never a stub's answer
+        return HTTPException(status_code=404, detail=MISSING_LINE)
     if isinstance(exc, FixtureMissingError):
         if not live_request.get():
             return HTTPException(

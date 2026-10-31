@@ -50,6 +50,7 @@ OPEN_PATHS = frozenset(
 EXPENSIVE = [
     ("POST", re.compile(r"^/api/extract$")),
     ("POST", re.compile(r"^/api/segment$")),
+    ("POST", re.compile(r"^/api/samples/read$")),
     ("POST", re.compile(r"^/api/items/\d+/drafts$")),
     ("POST", re.compile(r"^/api/items/\d+/voice$")),
     ("POST", re.compile(r"^/api/items/\d+/price$")),
@@ -65,8 +66,9 @@ EXPENSIVE = [
 ]
 # What the demo visitor may do without the code: look (the items and captures the owner marked
 # public, their values, photos and drawn pictures; never a clip, a note, a location or a
-# draft), and try the stateless readings on recorded answers. Everything that saves, drafts,
-# prices, plans, draws or captures needs the code.
+# draft), and try the stateless readings on recorded answers, on the demo set's sample photos
+# rather than a file of their own. Everything that saves, drafts, prices, plans, draws or
+# captures needs the code.
 DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/items$")),
     ("GET", re.compile(r"^/api/items/\d+$")),
@@ -79,6 +81,11 @@ DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/templates$")),
     # the address alone, so a phone joins as the demo visitor too; a session is never in it
     ("GET", re.compile(r"^/api/pair(\.svg)?$")),
+    # the demo set's photos, listings and notes, and a reading of the photos picked: what the
+    # visitor reads instead of a file of their own
+    ("GET", re.compile(r"^/api/samples$")),
+    ("GET", re.compile(r"^/api/samples/[a-z0-9][a-z0-9-]{0,63}/(file|thumb)$")),
+    ("POST", re.compile(r"^/api/samples/read$")),
     ("POST", re.compile(r"^/api/extract$")),
     ("POST", re.compile(r"^/api/segment$")),
     ("POST", re.compile(r"^/api/assess$")),

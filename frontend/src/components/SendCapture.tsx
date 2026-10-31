@@ -1,6 +1,7 @@
 import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, type Limits } from '../lib/api'
 import { clipProblem, oversized, takePhotos } from '../lib/photos'
+import SignInLine from './SignInLine'
 
 function messageOf(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -9,6 +10,12 @@ function messageOf(err: unknown): string {
 // A capture from this computer instead of the phone: photos, one short video, a name and a
 // line, sent as one bundle to the same inbox the phone fills. The backend reads it on request.
 export default function SendCapture({ limits, demo, onSent }: { limits: Limits; demo: boolean; onSent: () => void }) {
+  // the demo visitor sends nothing: no sample stands in for a capture, so the line alone
+  if (demo) return <SignInLine what="Send a capture from this computer" />
+  return <SendForm limits={limits} onSent={onSent} />
+}
+
+function SendForm({ limits, onSent }: { limits: Limits; onSent: () => void }) {
   const [photos, setPhotos] = useState<File[]>([])
   const [clip, setClip] = useState<File | null>(null)
   const [name, setName] = useState('')
@@ -32,7 +39,7 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    if (busy || demo) return
+    if (busy) return
     if (photos.length === 0 && !clip && !note.trim()) {
       setProblem('Add at least a photo, a video or a line of text.')
       return
@@ -64,12 +71,11 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
           What the phone sends: up to {limits.max_photos} photos of the item and its label, an optional short video, a name and a
           line of text. It waits below until you read it.
         </p>
-        {demo && <p className="muted">Sign in with the access code to send a capture.</p>}
         <div className="row">
           <div className="field">
             <label>
               <span>Photos</span>
-              <input type="file" accept="image/*" multiple onChange={onPhotos} disabled={demo || busy} aria-describedby={`${ids}-photos`} />
+              <input type="file" accept="image/*" multiple onChange={onPhotos} disabled={busy} aria-describedby={`${ids}-photos`} />
             </label>
             <p className="help" id={`${ids}-photos`}>
               Up to {limits.max_photos} images, {limits.max_upload_mb} MB each
@@ -80,7 +86,7 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
               <span>
                 A short video <span className="optional">(optional)</span>
               </span>
-              <input type="file" accept="video/mp4,video/3gpp,.mp4,.3gp" onChange={onClip} disabled={demo || busy} aria-describedby={`${ids}-clip`} />
+              <input type="file" accept="video/mp4,video/3gpp,.mp4,.3gp" onChange={onClip} disabled={busy} aria-describedby={`${ids}-clip`} />
             </label>
             <p className="help" id={`${ids}-clip`}>
               MP4 or 3GP, at most {limits.max_clip_mb} MB
@@ -92,17 +98,17 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
             <span>
               Name <span className="optional">(optional)</span>
             </span>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. laptop charger" disabled={demo || busy} />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. laptop charger" disabled={busy} />
           </label>
           <label>
             <span>
               What you know <span className="optional">(optional)</span>
             </span>
-            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="where it came from, what works, what does not" disabled={demo || busy} />
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="where it came from, what works, what does not" disabled={busy} />
           </label>
         </div>
         <div className="row actions">
-          <button type="submit" disabled={demo || busy}>
+          <button type="submit" disabled={busy}>
             {busy ? 'Sending…' : 'Send'}
           </button>
           {sent && <span className="meta">{sent}</span>}

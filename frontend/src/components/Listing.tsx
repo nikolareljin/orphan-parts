@@ -2,13 +2,14 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, type Draft, type DraftMode, type Item } from '../lib/api'
 import { usd } from '../lib/format'
 import { MODES, draftText, groupLabel, remaining, stepsByGroup } from '../lib/listing'
+import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
 // From a private record to a listing someone else will read: the draft, and the steps before.
-export default function Listing({ item, onChanged }: { item: Item; onChanged: () => void }) {
+export default function Listing({ item, onChanged, demo = false }: { item: Item; onChanged: () => void; demo?: boolean }) {
   const [mode, setMode] = useState<DraftMode>(item.intent === 'give' ? 'give' : 'sell')
   const [holdsData, setHoldsData] = useState(false)
   const [pickup, setPickup] = useState('')
@@ -105,12 +106,17 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
   return (
     <section className="listing" aria-label="Prepare to sell or give away">
       <h4 tabIndex={-1}>Prepare to sell or give away</h4>
-      <div className="row">
-        <label>
-          <span>Voice note (WAV)</span>
-          <input type="file" accept="audio/wav,.wav" onChange={(e) => void onVoice(e)} disabled={busy} />
-        </label>
-      </div>
+      {demo ? (
+        // the demo set carries no voice note to stand in for one of the visitor's own
+        <SignInLine what="Voice note (WAV)" />
+      ) : (
+        <div className="row">
+          <label>
+            <span>Voice note (WAV)</span>
+            <input type="file" accept="audio/wav,.wav" onChange={(e) => void onVoice(e)} disabled={busy} />
+          </label>
+        </div>
+      )}
       {note && (
         <p className="hint">
           Transcribed and saved as condition notes: <q>{note}</q>

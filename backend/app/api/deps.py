@@ -18,6 +18,7 @@ from app.photos import ItemPhotos
 from app.picture import Pictures
 from app.profiles import Profiles
 from app.projects.service import Planner
+from app.samples import SampleReader, Samples
 from app.segment.service import Segmenter
 from app.value.service import Valuer
 
@@ -162,3 +163,19 @@ def app_decider(request: Request) -> Decider:
 
 
 DeciderDep = Annotated[Decider, Depends(app_decider)]
+
+
+def app_samples(request: Request) -> Samples:
+    samples: Samples = request.app.state.samples
+    return samples
+
+
+SamplesDep = Annotated[Samples, Depends(app_samples)]
+
+
+def app_sample_reader(request: Request) -> SampleReader:
+    reader: SampleReader = request.app.state.sample_reader
+    return reader
+
+
+SampleReaderDep = Annotated[SampleReader, Depends(app_sample_reader)]

@@ -13,6 +13,7 @@ import logging
 import random
 import time
 from collections.abc import Awaitable, Callable
+from contextvars import ContextVar
 from typing import Any
 
 import httpx
@@ -24,6 +25,7 @@ from app.model_api.errors import (
     FixtureMissingError,
     IncompleteResponseError,
     ModelApiError,
+    NoRecordingError,
 )
 from app.model_api.fixtures import FixtureStore, request_key
 from app.model_api.ledger import CostLedger, LedgerEntry
@@ -32,6 +34,10 @@ from app.ops.door import live_request
 from app.ops.logging import request_id_var
 
 log = logging.getLogger("app.model_api")
+
+# set while a sample photo is read: in fixture mode only the recording of the exact request
+# answers, and a request with none raises NoRecordingError instead of taking the op's stub
+exact_replay: ContextVar[bool] = ContextVar("exact_replay", default=False)
 
 RESPONSES = "/responses"
 MODELS = "/models"
@@ -571,9 +577,13 @@ class ModelApiClient:
                 return kept.response, True, 1, 0.0
         if self.mode == "fixture":
             fixture = self.fixtures.find(endpoint, keyed, op)
+            if fixture is None and exact_replay.get():
+                raise NoRecordingError(endpoint, request_key(endpoint, keyed), op)
             if fixture is None:
                 raise FixtureMissingError(endpoint, request_key(endpoint, keyed), op)
             if fixture.key != request_key(endpoint, keyed):
+                if exact_replay.get():
+                    raise NoRecordingError(endpoint, request_key(endpoint, keyed), op)
                 self.fixture_fallbacks += 1
             if fixture.status >= 400:
                 err = fixture.response.get("error") or {}

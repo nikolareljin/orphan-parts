@@ -450,11 +450,11 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
       </div>
 
       <div className="item-section" data-section="sell">
-        <Listing item={item} onChanged={() => attempt(() => api.items.get(item.id))} />
+        <Listing item={item} demo={demo} onChanged={() => attempt(() => api.items.get(item.id))} />
       </div>
 
       <div className="item-section" data-section="fit">
-        <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
+        <Measure item={item} demo={demo} onMeasured={() => attempt(() => api.items.get(item.id))} />
         <Assess item={item} />
         {!demo && <ItemSearch item={item} />}
       </div>

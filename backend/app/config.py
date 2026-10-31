@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     record_fixtures: bool = Field(default=False, alias="OPL_RECORD_FIXTURES")
     key_probe: bool = Field(default=True, alias="OPL_KEY_PROBE")
     fixtures_dir: Path = _BACKEND_ROOT / "tests" / "fixtures" / "api"
+    # the demo set beside the backend (the dev stack mounts it at /demo, the Modal image ships
+    # it at /root/demo): its photos are the samples the demo visitor clicks; absent, there are none
+    demo_set: Path = _BACKEND_ROOT.parent / "demo" / "set.yaml"
     spend_cap_usd: float = 25.0
     spend_ledger_file: str = "model_api_spend.jsonl"
     model_api_timeout_s: float = 60.0
