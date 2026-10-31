@@ -444,6 +444,8 @@ export interface SearchPlan {
   phrasings: Phrasing[]
   pattern: string
   pattern_error: string
+  // planned again over the owner's saved pattern: the written one, offered, never applied
+  suggested_pattern: string
   exclusions: string[]
   max_price: number | null
   radius_km: number | null

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, type BroughtListing, type Candidate, type Item, type ListingScore, type PatternResult, type Search } from '../lib/api'
 import { usd } from '../lib/format'
-import { highlightSegments, splitListings, stateLabel, stateTone, verdictLabel, verdictTone } from '../lib/find'
+import { askingPrice, highlightSegments, maxPriceLine, splitListings, stateLabel, stateTone, verdictLabel, verdictTone } from '../lib/find'
 
 const TEST_DELAY_MS = 350
 const MAX_SCREENSHOTS = 6
@@ -110,7 +110,7 @@ export default function SearchPlan({ search, onChanged, onCandidate }: { search:
               ))}
             </ol>
             <p className="meta">
-              {plan.max_price !== null ? `Each link carries the top price, $${plan.max_price}.` : 'No top price set.'}
+              {maxPriceLine(plan.max_price)}
               {plan.radius_km !== null && ` Within ${plan.radius_km} km: set the distance in Marketplace's location filter, the links do not carry it.`}
               {plan.model && ` · ${plan.model} · ${usd(plan.cost_usd)}`}
               {plan.from_fixture && plan.model && <span className="badge">recorded answer</span>}
@@ -223,9 +223,10 @@ function PatternEditor({ search, onSaved }: { search: Search; onSaved: (s: Searc
         }}
       >
         <label className="pattern">
-          <span>Match pattern (regular expression, any case)</span>
+          <span>Words to match (pattern)</span>
           <input
             value={pattern}
+            aria-describedby="pattern-hint"
             maxLength={300}
             spellCheck={false}
             placeholder="OP-?065-?19-?333|19\.5\s*V.{0,20}3\.3\d?\s*A"
@@ -238,8 +239,19 @@ function PatternEditor({ search, onSaved }: { search: Search; onSaved: (s: Searc
         <button type="submit" disabled={!changed || Boolean(tried?.error)}>
           Save pattern
         </button>
-        {saved && !changed && <span className="muted">saved; the listings are ranked by it</span>}
+        {saved && !changed && <span className="muted">Saved. Listings are ranked by it.</span>}
       </form>
+      <p id="pattern-hint" className="meta">
+        advanced: a regular expression
+      </p>
+      {plan?.suggested_pattern && plan.suggested_pattern !== pattern && (
+        <p className="meta suggested">
+          Planned again, Muse Spark suggests <code>{plan.suggested_pattern}</code>; your saved pattern stays until you save another.{' '}
+          <button type="button" className="link" onClick={() => setPattern(plan.suggested_pattern)}>
+            Try the suggestion
+          </button>
+        </p>
+      )}
       {/* read out as it changes while typing, without interrupting */}
       <div className="pattern-live" aria-live="polite">
         {tried?.error && <p className="error">{tried.error}</p>}
@@ -250,7 +262,7 @@ function PatternEditor({ search, onSaved }: { search: Search; onSaved: (s: Searc
         </p>
       )}
       <div className="chips" aria-label="Exclusion words">
-        <span className="muted">Rules a listing out:</span>
+        <span className="muted">Skip listings with:</span>
         {exclusions.map((w) => (
           <span key={w} className="chip">
             {w}
@@ -260,11 +272,11 @@ function PatternEditor({ search, onSaved }: { search: Search; onSaved: (s: Searc
           </span>
         ))}
         <form onSubmit={addWord} className="chip-add">
-          <input value={word} maxLength={40} aria-label="Add an exclusion word" placeholder="add a word" onChange={(e) => setWord(e.target.value)} />
+          <input value={word} maxLength={40} aria-label="Add a word to skip" placeholder="Add a word to skip" onChange={(e) => setWord(e.target.value)} />
         </form>
       </div>
       <label className="wide">
-        <span>Try the pattern on a line</span>
+        <span>Test the pattern</span>
         <textarea rows={2} value={sample} placeholder="paste a listing title or a line of one" onChange={(e) => setSample(e.target.value)} />
       </label>
       {tried?.score && sample.trim() && (
@@ -316,7 +328,7 @@ function BringBack({ searchId, onAdded }: { searchId: number; onAdded: (list: Br
       }}
     >
       <label className="wide">
-        <span>Listings, as pasted: one or several, with a line of dashes (---) or a blank line between them</span>
+        <span>Paste one or more listings (separate them with --- or a blank line)</span>
         <textarea rows={6} maxLength={60000} value={text} placeholder={'DVI-D dual link cable, 6 ft, $5\n---\nVGA monitor cable 6 ft, $3'} onChange={(e) => setText(e.target.value)} />
       </label>
       <div className="row">
@@ -327,7 +339,7 @@ function BringBack({ searchId, onAdded }: { searchId: number; onAdded: (list: Br
         <button type="submit" disabled={busy || pieces.length === 0 || pieces.length > 20}>
           {busy ? 'Working…' : pieces.length > 1 ? `Score ${pieces.length} listings` : 'Score the listing'}
         </button>
-        <span className="muted">free: scored here by the pattern, the exclusion words and the price, no model call</span>
+        <span className="muted">Free: ranked here by your words and price, no model call</span>
       </div>
       <div className="row">
         <label>
@@ -346,7 +358,7 @@ function BringBack({ searchId, onAdded }: { searchId: number; onAdded: (list: Br
         >
           {shots.length > 1 ? `Read ${shots.length} screenshots` : 'Read the screenshot'}
         </button>
-        <span className="muted">one reading each, then scored like pasted text</span>
+        <span className="muted">Each screenshot is read once, then ranked like pasted text</span>
       </div>
       {error && (
         <p className="error" role="alert">
@@ -400,7 +412,7 @@ function Ranked({ searchId, listings, onListings, onCandidate }: { searchId: num
             <li key={b.id} className={`ranked-${b.score.verdict}`} aria-label={`Listing ${b.id}`}>
               <div className="row">
                 <Verdict score={b.score} />
-                {b.score.price !== null && <strong>${b.score.price}</strong>}
+                {b.score.price !== null && <strong>{askingPrice(b.score.price)}</strong>}
                 <span className="muted">{b.score.reasons.join('; ')}</span>
                 <span className="muted">
                   · {b.source_kind === 'screenshot' ? 'screenshot' : 'pasted'}, seen {b.observed_on}
@@ -414,7 +426,7 @@ function Ranked({ searchId, listings, onListings, onCandidate }: { searchId: num
                 <button type="button" className="link" onClick={() => void remove(b)}>
                   Remove
                 </button>
-                {b.candidate_id === null && <span className="muted">one Muse Spark reading, then the rules of the profile</span>}
+                {b.candidate_id === null && <span className="muted">One Muse Spark reading, then the profile&apos;s fit rules</span>}
               </div>
               {candidate && (
                 <div className="fit" aria-label={`Fit of listing ${b.id}`}>
@@ -495,7 +507,7 @@ export function ItemSearch({ item }: { item: Item }) {
         <>
           <p className="meta">
             Search #{search.id}: {search.title}
-            {search.max_price !== null && `, up to $${search.max_price}`}
+            {search.max_price !== null && search.max_price > 0 && `, up to ${askingPrice(search.max_price)}`}
           </p>
           <SearchPlan search={search} onChanged={setSearch} />
         </>
@@ -506,7 +518,7 @@ export function ItemSearch({ item }: { item: Item }) {
             <input value={title} maxLength={200} placeholder="the part this item needs" onChange={(e) => setTitle(e.target.value)} />
           </label>
           <label>
-            <span>Top price ($)</span>
+            <span>Max price ($)</span>
             <input value={maxPrice} inputMode="decimal" onChange={(e) => setMaxPrice(e.target.value)} />
           </label>
           <button type="submit" disabled={!title.trim()}>

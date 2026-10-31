@@ -138,3 +138,17 @@ export function verdictLabel(verdict: ListingVerdict): string {
 export function verdictTone(verdict: ListingVerdict): 'fits' | 'unsure' | 'conflict' {
   return verdict === 'fits' ? 'fits' : verdict === 'no' ? 'conflict' : 'unsure'
 }
+
+const DOLLARS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
+
+// An asking price as people write it: $1,200, $45.50, free. Whole dollars drop the cents.
+export function askingPrice(amount: number): string {
+  if (amount === 0) return 'free'
+  const text = DOLLARS.format(amount)
+  return text.endsWith('.00') ? text.slice(0, -3) : text
+}
+
+// The line under the search links: the max price they include, or none (null or 0 is no limit).
+export function maxPriceLine(maxPrice: number | null): string {
+  return maxPrice !== null && maxPrice > 0 ? `Each link includes your max price, ${askingPrice(maxPrice)}.` : 'No max price set.'
+}

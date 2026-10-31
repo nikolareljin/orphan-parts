@@ -44,16 +44,17 @@ test('a search plan gives phrasings and a pattern, and pasted listings come back
   const link = phrasings.getByRole('link', { name: 'Orbital OP065-19-333' })
   await expect(link).toHaveAttribute('href', /marketplace\/search\/\?query=Orbital\+OP065-19-333&maxPrice=20$/)
   await expect(link).toHaveAttribute('target', '_blank')
-  await expect(plan.getByLabel('Match pattern (regular expression, any case)')).toHaveValue(PATTERN)
+  await expect(plan).toContainText('Each link includes your max price, $20.')
+  await expect(plan.getByLabel('Words to match (pattern)')).toHaveValue(PATTERN)
   await expect(plan.getByLabel('Exclusion words')).toContainText('for parts')
 
   // the live test box: the same engine as the ranking, the match highlighted
-  await plan.getByLabel('Try the pattern on a line').fill('charger 19.5 V / 3.34 A')
+  await plan.getByLabel('Test the pattern').fill('charger 19.5 V / 3.34 A')
   await expect(plan.getByLabel('Pattern test')).toContainText('fits')
   await expect(plan.getByLabel('Pattern test').locator('mark.hit-match')).toHaveText('19.5 V / 3.34 A')
 
   // a refused pattern is read out politely as it is typed, not as an alert
-  const field = plan.getByLabel('Match pattern (regular expression, any case)')
+  const field = plan.getByLabel('Words to match (pattern)')
   const live = plan.locator('.pattern-live[aria-live="polite"]')
   await field.fill('(?<=19.5 )V')
   await expect(live).toContainText('lookbehind')
@@ -63,8 +64,8 @@ test('a search plan gives phrasings and a pattern, and pasted listings come back
 
   // a word added is shown as the backend kept it, with a remove target of 24 px at least
   const words = plan.getByLabel('Exclusion words')
-  await words.getByLabel('Add an exclusion word').fill('worn   out')
-  await words.getByLabel('Add an exclusion word').press('Enter')
+  await words.getByLabel('Add a word to skip').fill('worn   out')
+  await words.getByLabel('Add a word to skip').press('Enter')
   const remove = words.getByRole('button', { name: 'Remove worn out', exact: true })
   await expect(remove).toBeVisible()
   await expect(words.locator('.chip').filter({ hasText: 'worn' })).toHaveText(/^worn out×$/)
@@ -75,13 +76,14 @@ test('a search plan gives phrasings and a pattern, and pasted listings come back
   await expect(words.locator('.chip').filter({ hasText: 'worn' })).toHaveCount(0)
 
   const back = panel.getByRole('form', { name: 'Bring back listings' })
-  await back.getByLabel(/Listings, as pasted/).fill(`${PARTS}\n---\n${FITS}`)
+  await back.getByLabel(/Paste one or more listings/).fill(`${PARTS}\n---\n${FITS}`)
   await back.getByRole('button', { name: 'Score 2 listings' }).click()
 
   const ranked = panel.getByRole('list', { name: 'Listings brought back, ranked' })
   const items = ranked.getByRole('listitem').filter({ has: page.locator('.listing-text') })
   await expect(items).toHaveCount(2)
   await expect(items.nth(0)).toContainText('fits')
+  await expect(items.nth(0).locator('strong')).toHaveText('$15')
   await expect(items.nth(0).locator('mark.hit-match')).toHaveText('19.5V 3.34A')
   await expect(items.nth(1)).toContainText('does not fit')
   await expect(items.nth(1)).toContainText('says "for parts"')
@@ -91,6 +93,17 @@ test('a search plan gives phrasings and a pattern, and pasted listings come back
   const fit = items.nth(0).getByLabel(/Fit of listing/)
   await expect(fit).toContainText('documented candidate')
   await expect(panel.getByRole('table', { name: 'Candidates' })).toContainText('Orbital 65W laptop charger')
+
+  // planning again keeps the pattern the owner saved and offers the written one beside it
+  const mine = '19\\.5\\s?V'
+  await field.fill(mine)
+  await plan.getByRole('button', { name: 'Save pattern' }).click()
+  await expect(plan).toContainText('Saved. Listings are ranked by it.')
+  await plan.getByRole('button', { name: 'Plan again' }).click()
+  await expect(plan.locator('.suggested')).toContainText(PATTERN)
+  await expect(field).toHaveValue(mine)
+  await plan.getByRole('button', { name: 'Try the suggestion' }).click()
+  await expect(field).toHaveValue(PATTERN)
 
   // on a phone the day seen gets its own line, not squeezed beside the button
   await page.setViewportSize({ width: 390, height: 844 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { candidateRequest, highlightSegments, seenText, sourceLabel, splitListings, stateLabel, stateTone, statusLabel, verdictLabel, verdictTone } from './find'
+import { askingPrice, candidateRequest, highlightSegments, maxPriceLine, seenText, sourceLabel, splitListings, stateLabel, stateTone, statusLabel, verdictLabel, verdictTone } from './find'
 
 describe('labels', () => {
   it('names every state, tone, status and source', () => {
@@ -85,5 +85,20 @@ describe('verdicts', () => {
     expect(verdictTone('fits')).toBe('fits')
     expect(verdictTone('maybe')).toBe('unsure')
     expect(verdictTone('no')).toBe('conflict')
+  })
+})
+
+describe('prices', () => {
+  it('writes asking prices with separators, cents only when there are some, and free for 0', () => {
+    expect(askingPrice(1200)).toBe('$1,200')
+    expect(askingPrice(45.5)).toBe('$45.50')
+    expect(askingPrice(1_200_000)).toBe('$1,200,000')
+    expect(askingPrice(0)).toBe('free')
+  })
+
+  it('says no max price when there is none or it is 0', () => {
+    expect(maxPriceLine(20)).toBe('Each link includes your max price, $20.')
+    expect(maxPriceLine(0)).toBe('No max price set.')
+    expect(maxPriceLine(null)).toBe('No max price set.')
   })
 })
