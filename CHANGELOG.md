@@ -6,6 +6,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ### Added
 - **Sign out** in the web header while signed in on a gated host: `DELETE /api/access` clears the session cookie with the attributes it was set with (`HttpOnly`, `SameSite=Strict`, `Secure` when the cookie is), the web app drops the token it keeps across origins even when the call fails, and the page loads again as the demo visitor, the footer's pairing code with it.
+- **Unpair** on the app's Backend tab, shown while the phone holds an address, a code or a session: after a confirmation that names the phone's own code by its label and where it is revoked, the app asks the backend to forget the session (`DELETE /api/access`, a short wait, any answer), empties the address, the code, its label and expiry and the token on disk, cancels a claim still running and shows the empty form. The phone's code stays issued until `./dev keys revoke "phone …"` on the server ends it.
 
 ## 0.3.0 - 2026-10-31
 

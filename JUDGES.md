@@ -104,6 +104,8 @@ sooner, so the phone stays through the gate with no second scan. Scanning the co
 that is not signed in pairs the phone as the demo (recorded answers, nothing kept): sign in
 first.
 
+When you are done testing, **Unpair** on the **Backend** tab releases the phone: it forgets the address, its code and its session; the code itself is revoked on the server with `./dev keys revoke "phone …"`.
+
 ## 5. Connect to a local server instead (alternative)
 
 If you would rather run everything on your own computer (Docker Desktop on macOS or Windows,
