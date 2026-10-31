@@ -29,11 +29,26 @@ permissions:
 jobs:
   app:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      # the Gradle distribution, the dependencies and the build cache (org.gradle.caching)
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties', 'android/**/*.gradle.kts', 'android/gradle.properties', 'android/gradle/*.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
       - name: unit tests and the debug APK
         run: |
           export JAVA_HOME="${JAVA_HOME_17_X64:-${JAVA_HOME_21_X64:-}}"
           [ -n "$JAVA_HOME" ] || { echo "the runner has no JDK 17 or 21"; exit 1; }
           bash scripts/android.sh test
           bash scripts/android.sh build
+      # the daemon lets go of the cache files before they are saved
+      - name: stop Gradle
+        if: always()
+        run: |
+          export JAVA_HOME="${JAVA_HOME_17_X64:-${JAVA_HOME_21_X64:-}}"
+          (cd android && ./gradlew --stop) || true
