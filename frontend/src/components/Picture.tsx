@@ -63,7 +63,7 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
         <>
           <form className="inline" onSubmit={(e) => void draw(e)}>
             <label>
-              <span>as a…</span>
+              <span>Draw it as</span>
               <input value={use} onChange={(e) => setUse(e.target.value)} placeholder="a kitchen recipe display" maxLength={200} />
             </label>
             <button type="submit" disabled={busy || enabled === null}>
@@ -71,12 +71,11 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
             </button>
           </form>
           <p className="hint">
-            Draws an illustration of what the item could become, as what you type or as itself; it is labeled as drawn and is
-            never evidence.
+            Draws what the item could become, or the item itself if left blank. Marked as drawn; never counted as evidence.
           </p>
         </>
       )}
-      {off && !demo && <p className="muted">Pictures of what it could become are off on this server.</p>}
+      {off && !demo && <p className="muted">Drawing pictures is turned off on this server.</p>}
       {error && (
         <p className="error" role="alert">
           {error}

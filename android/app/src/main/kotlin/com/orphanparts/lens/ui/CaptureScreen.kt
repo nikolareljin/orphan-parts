@@ -204,10 +204,10 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
     }
 
     Column {
-        Text("Capture a thing", style = MaterialTheme.typography.titleLarge)
+        Text("Capture an item", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(6.dp))
         Text(
-            "Photos of the item and its label (tap the label in the camera to focus on it, fill the frame), a short clip if it moves or makes a sound, and what you know about it, said or typed. Send it, and the backend reads it into your inventory." +
+            "Photos of the item and its label (tap the label in the camera to focus on it, fill the frame), a short video if it moves or makes a sound, and what you know about it, said or typed. Send it, and the backend reads it into your inventory." +
                 if (session.hasDoor) "" else " No code is set: a gated backend answers this phone as the demo visitor and keeps no capture; type the code or pair on the Backend tab.",
             style = MaterialTheme.typography.bodyMedium,
             color = colors.onSurfaceVariant,
@@ -226,7 +226,7 @@ fun CaptureScreen(session: Session, onSent: (Capture) -> Unit) {
                     takePicture.launch(uri)
                 }
                 Spacer(Modifier.width(8.dp))
-                SecondaryButton(if (clip == null) "Record a clip" else "Clip again", enabled = !busy) {
+                SecondaryButton(if (clip == null) "Record a video" else "Video again", enabled = !busy) {
                     val uri = fileUri("clip-${System.currentTimeMillis()}.mp4")
                     pendingUri = uri.toString()
                     takeClip.launch(uri)
