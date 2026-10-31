@@ -45,26 +45,57 @@ async function openItem(page: Page, name: string) {
   return { panel, listing: panel.getByRole('region', { name: 'Prepare to sell or give away' }) }
 }
 
-test('a sale draft keeps confirmed facts, discloses the faults, and its checklist is kept', async ({ page, request }) => {
-  test.slow() // a draft, a checklist and a second draft, each a model read, with five other workers on the backend
+test.use({ permissions: ['clipboard-read', 'clipboard-write'] })
+
+test('listing details, then the Marketplace handoff: fields to copy, the create page, listed and sold', async ({ page, request }) => {
+  test.slow() // a draft, a checklist and outcomes, each a write, with five other workers on the backend
   const name = `Orbital charger ${stamp}`
   await createAdapter(request, name)
   const { listing } = await openItem(page, name)
-  await listing.getByLabel('Asking price').fill('$15')
-  await listing.getByLabel('Pickup').fill('Astoria, evenings')
-  await listing.getByRole('button', { name: 'Write the draft' }).click()
+  await expect(listing).toContainText('No public API posts a personal Marketplace listing')
+  const form = listing.getByRole('form', { name: 'Listing details' })
+  await form.getByLabel('Condition in your words').fill('works, scuffed case')
+  await form.getByLabel('Power cord').check()
+  await form.getByLabel('Area').fill('12 Oak Street')
+  await form.getByRole('button', { name: 'Save details' }).click()
+  await expect(listing.getByRole('alert')).toContainText('not a street address')
+  await form.getByLabel('Area').fill('Astoria')
+  await form.getByLabel('Asking price (USD)').fill('$15')
+  await form.getByLabel('Lowest you would take (private)').fill('11')
+  await form.getByLabel('Your reason (private)').fill('moving to Denver')
+  await form.getByRole('button', { name: 'Write the draft' }).click()
 
-  const draft = listing.getByRole('status')
-  await expect(draft).toContainText('Orbital 65 W laptop power adapter')
+  const draft = listing.getByRole('region', { name: 'Marketplace handoff' })
+  await expect(draft).toContainText('Marketplace handoff')
   await expect(draft).toContainText('recorded answer')
   const text = draft.getByLabel('Draft text')
   await expect(text).toHaveValue(/Known faults: frayed sleeve near the plug/)
-  await expect(text).toHaveValue(/Not tested; sold as is\./)
-  await expect(text).toHaveValue(/Price: \$15\nPickup: Astoria, evenings$/)
-  await expect(draft.getByRole('list', { name: 'Facts' })).toContainText('from output voltage')
-  await expect(draft.getByRole('list', { name: 'Before posting' })).toContainText('rested on nothing confirmed')
+  await expect(text).toHaveValue(/Included: power cord/)
+  await expect(text).toHaveValue(/Local pickup in Astoria\.$/)
+  await expect(text).not.toHaveValue(/Denver|11/)
+  const fields = draft.getByLabel('Fields to paste')
+  await expect(fields).toContainText('$15')
+  await expect(fields).toContainText('your asking price')
+  await expect(draft.getByLabel('Category', { exact: true })).toHaveValue('Electronics > Computers')
+  await expect(draft.getByLabel('Condition', { exact: true })).toHaveValue('Used - Good')
+  await expect(form).toContainText('Details saved (version 1)')
+
+  await draft.getByRole('button', { name: 'Copy title' }).click()
+  await expect(draft.getByRole('button', { name: 'Copy title' })).toHaveText('Copied')
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Orbital 65 W laptop power adapter/)
+  await draft.getByRole('button', { name: 'Copy price' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('15')
+  await draft.getByLabel('Condition', { exact: true }).selectOption('Used - Fair')
+  await draft.getByRole('button', { name: 'Copy condition' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('Used - Fair')
+  await draft.getByRole('button', { name: 'Copy description' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Known faults: frayed sleeve near the plug')
+
+  const open = draft.getByRole('link', { name: 'Open Marketplace' })
+  await expect(open).toHaveAttribute('href', 'https://www.facebook.com/marketplace/create/item')
+  await expect(open).toHaveAttribute('target', '_blank')
+  await expect(draft).toContainText('Check the preview, then publish.')
   await expect(draft).toContainText('required step(s) left')
-  await expect(draft.getByRole('link', { name: 'Open Marketplace' })).toHaveAttribute('href', /facebook\.com\/marketplace\/create\/item/)
 
   // the tick is a write; wait for it to land before the page reloads
   await Promise.all([
@@ -73,24 +104,53 @@ test('a sale draft keeps confirmed facts, discloses the faults, and its checklis
   ])
   await page.reload()
   const again = await openItem(page, name)
-  await expect(again.listing.getByRole('status').getByLabel(/Clean the outside/)).toBeChecked()
+  const kept = again.listing.getByRole('region', { name: 'Marketplace handoff' })
+  await expect(kept.getByLabel(/Clean the outside/)).toBeChecked()
+  await expect(again.listing.getByLabel('Area', { exact: true })).toHaveValue('Astoria')
+  // written again from the same details: a new draft, no new details version
+  await again.listing.getByRole('button', { name: 'Write the draft' }).click()
+  await expect(kept).toContainText('draft 2')
+  await expect(again.listing.getByRole('form', { name: 'Listing details' })).toContainText('Details saved (version 1)')
+
+  const after = kept.getByLabel('After posting')
+  await after.getByLabel('Listing link (optional)').fill('https://www.facebook.com/marketplace/item/1234567890/')
+  await after.getByRole('button', { name: 'Mark as listed' }).click()
+  await expect(after).toContainText('listed on')
+  // listed again at a lower price, then sold: the buttons wait for each write
+  await after.getByLabel('Price (USD)').fill('14')
+  await after.getByRole('button', { name: 'Listed again at $14' }).click()
+  await expect(after.getByRole('listitem')).toHaveCount(2)
+  await after.getByLabel('Price (USD)').fill('0')
+  await expect(after.getByRole('button', { name: /^Listed again/ })).toBeDisabled()
+  await after.getByLabel('Price (USD)').fill('13')
+  await after.getByRole('button', { name: 'Mark as sold' }).click()
+  await expect(after).toContainText('sold on')
+  await expect(after).toContainText('at $13')
+  await expect(listing.getByRole('alert')).toHaveCount(0)
 })
 
-test('a give-away draft is free, lists uses and adds the data steps', async ({ page, request }) => {
+test('a give-away is free under Free Stuff, worded for pickup, with the data steps', async ({ page, request }) => {
   const name = `Old tablet ${stamp}`
   await createAdapter(request, name)
   const { listing } = await openItem(page, name)
-  await listing.getByLabel('Give away').check()
-  await listing.getByLabel(/Holds personal data/).check()
-  await listing.getByLabel('Pickup').fill('porch')
-  await listing.getByRole('button', { name: 'Write the draft' }).click()
+  const form = listing.getByRole('form', { name: 'Listing details' })
+  await form.getByLabel('Give away').check()
+  await expect(form.getByLabel('Asking price (USD)')).toHaveCount(0)
+  await form.getByLabel('Personal data on it').selectOption('wiped')
+  await form.getByLabel('Area').fill('11105')
+  await form.getByRole('button', { name: 'Write the draft' }).click()
 
-  const draft = listing.getByRole('status')
+  const draft = listing.getByRole('region', { name: 'Marketplace handoff' })
   await expect(draft).toContainText('Free: Orbital 65 W laptop power adapter')
+  await expect(draft).toContainText('Free (0)')
+  await expect(draft.getByLabel('Category', { exact: true })).toHaveValue('Free Stuff')
   await expect(draft).toContainText('Could be useful for: Spare charger')
-  await expect(draft.getByLabel('Draft text')).toHaveValue(/Free to collect\. Pickup: porch$/)
+  await expect(draft.getByLabel('Draft text')).toHaveValue(/Data: signed out of every account and wiped\./)
+  await expect(draft.getByLabel('Draft text')).toHaveValue(/Free\. Local pickup in 11105\.$/)
   await expect(draft).toContainText('Wipe your data')
   await expect(draft.getByLabel(/Factory reset/)).toBeVisible()
+  await draft.getByRole('button', { name: 'Mark as given' }).click()
+  await expect(draft.getByLabel('After posting')).toContainText('given on')
 })
 
 test('a voice note is transcribed and kept as the owner’s words', async ({ page, request }) => {

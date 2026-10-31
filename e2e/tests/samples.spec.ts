@@ -95,3 +95,39 @@ test('signed in: the file inputs are back', async ({ page }) => {
   await page.getByText('Send a capture from this computer').click()
   await expect(page.locator('input[type="file"]')).not.toHaveCount(0)
 })
+
+test('access check failing: no file input on any upload page', async ({ page }) => {
+  test.skip(!code, 'the stack runs without a gate')
+  // the tab never hears back from GET /api/access; unknown reads as the visitor
+  await page.route('**/api/access', (route) => route.abort())
+  await page.goto('/')
+  await open(page, 'Read a label')
+  await expect(page.getByRole('group', { name: 'EVGA GeForce 9800 GT graphics card' })).toBeVisible()
+  await expect(page.locator('input[type="file"]')).toHaveCount(0)
+  await open(page, 'Inbox')
+  await expect(page.getByText(signInLine)).toBeVisible()
+  await expect(page.locator('input[type="file"]')).toHaveCount(0)
+  await open(page, 'Find a part')
+  await expect(page.getByText(signInLine)).toBeVisible()
+  await expect(page.locator('input[type="file"]')).toHaveCount(0)
+})
+
+test('access check slow: the inputs wait for the answer, then show for the owner', async ({ page }) => {
+  test.skip(!code, 'the stack runs without a gate')
+  expect((await page.request.post('/api/access', { data: { code } })).ok()).toBe(true)
+  let release: () => void = () => undefined
+  const held = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/api/access', async (route) => {
+    await held
+    await route.continue()
+  })
+  await page.goto('/')
+  await open(page, 'Read a label')
+  await expect(page.getByRole('group', { name: 'EVGA GeForce 9800 GT graphics card' })).toBeVisible()
+  await expect(page.locator('input[type="file"]')).toHaveCount(0)
+  release()
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
+  await expect(page.getByLabel('Photos of the label')).toBeVisible()
+})

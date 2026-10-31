@@ -467,7 +467,7 @@ function ItemPanel({
       </div>
 
       <div className="item-section" data-section="sell">
-        <Listing item={item} demo={samplesOnly} onChanged={() => attempt(() => api.items.get(item.id))} />
+        <Listing item={item} readOnly={readOnly} samplesOnly={samplesOnly} onChanged={() => attempt(() => api.items.get(item.id))} />
       </div>
 
       <div className="item-section" data-section="fit">

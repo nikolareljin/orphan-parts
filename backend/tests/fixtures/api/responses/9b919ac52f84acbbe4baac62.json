@@ -1,0 +1,327 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-sell",
+  "model": "muse-spark-1.3",
+  "digest": "9b919ac52f84acbbe4baac62",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: sell\nMarketplace: Facebook Marketplace, United States\nname: Sun flat panel monitor\nitem_type: monitor\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nConfirmed fields (key: value):\n- brand: Sun microsystems\n- part_number: 365-1429-01\n- input_voltage: 100-240 V\n- certifications: CULUS LISTED, CE, FCC, VCCI, CCC, TUV SUD, TCO'03\nPhotos: 2, numbered 1 to 2 in the order attached\nCategories (one path): Electronics; Electronics > Computers; Electronics > Cell Phones; Electronics > Cameras; Electronics > Video Games & Consoles; Electronics > Printers, Scanners & Fax Machines; Electronics > Monitors; Electronics > Audio; Electronics > TV & Video; Home Goods; Home Goods > Kitchen & Dining; Home Goods > Furniture; Home Improvement Supplies; Home Improvement Supplies > Tools; Home Improvement Supplies > Electrical; Garden & Outdoor; Sporting Goods; Toys & Games; Musical Instruments; Office Supplies; Auto Parts; Baby & Kids; Pet Supplies; Arts & Crafts; Hobbies; Free Stuff\nConditions (one): New; Used - Like New; Used - Good; Used - Fair\nField keys a fact may name: brand, part_number, input_voltage, certifications, name, item_type",
+            "type": "input_text"
+          },
+          {
+            "text": "Photo 1",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,0c98f219d701e83e",
+            "type": "input_image"
+          },
+          {
+            "text": "Photo 2",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,0d9fd8c12d05afc4",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for used items. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 1100,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ],
+          "type": "object",
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "title": "DraftWriting",
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae5a8cdb651f45117934182",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793435853.0,
+    "completed_at": 1793435853.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae5a8cdb651f45117934182:rs_12d92d7d-1eda-41ae-87ab-32f7dc8fd586",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_115f0d1b-34bb-444c-94b6-35c10105b1b2",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"category\": \"Electronics > Monitors\", \"condition\": \"Used - Good\", \"description\": \"Sun microsystems color flat panel display. Part number 365-1429-01. Input voltage 100-240 V.\", \"facts\": [{\"field\": \"brand\", \"text\": \"Brand is Sun microsystems\"}, {\"field\": \"part_number\", \"text\": \"Part number 365-1429-01\"}, {\"field\": \"name\", \"text\": \"Sun flat panel monitor\"}, {\"field\": \"item_type\", \"text\": \"Item type is monitor\"}, {\"field\": \"input_voltage\", \"text\": \"Input voltage 100-240 V\"}, {\"field\": \"certifications\", \"text\": \"Certifications CULUS LISTED, CE, FCC, VCCI, CCC, TUV SUD, TCO'03\"}], \"photo_order\": [{\"photo\": 1, \"reason\": \"Shows brand and ratings label\"}, {\"photo\": 2, \"reason\": \"Shows part number label\"}], \"tags\": [\"sun\", \"microsystems\", \"monitor\", \"flat panel\", \"display\", \"color display\", \"365-1429-01\"], \"title\": \"Sun microsystems 365-1429-01 Color Flat Panel Display\", \"uses\": [\"computer display\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for used items. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 1586,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 1297,
+      "output_tokens_details": {
+        "reasoning_tokens": 1017
+      },
+      "total_tokens": 2883
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 5196
+  },
+  "status": 200
+}

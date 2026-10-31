@@ -112,6 +112,9 @@ test('a public item shows the visitor neither its location nor its notes', async
   expect((await owner.post(`/api/items/${id}/public`, { data: { public: true } })).ok()).toBe(true)
   const mine = (await (await owner.get(`/api/items/${id}`)).json()) as { location: string; notes: string }
   expect(mine).toMatchObject({ location: 'garage shelf B', notes: 'paid 40 for it' })
+  // and listing details with a lowest price and a reason, which are the owner's alone
+  const listing = { area: 'Astoria', asking_price: 35, lowest_price: 27, reason: 'moving to Denver' }
+  expect((await owner.put(`/api/items/${id}/sell-details`, { data: listing })).ok()).toBe(true)
 
   try {
     // the visitor's API answer carries neither
@@ -135,6 +138,12 @@ test('a public item shows the visitor neither its location nor its notes', async
     // the details are shown, never saved from here
     await expect(panel.getByRole('button', { name: 'Save details' })).toHaveCount(0)
     await expect(panel.locator('textarea[name="faults"]')).not.toBeEditable()
+    // the listing section reads and writes nothing for the visitor
+    const sell = panel.getByRole('region', { name: 'Prepare to sell or give away' })
+    await expect(sell).toContainText('Sign in with the code to prepare a listing.')
+    await expect(sell.getByRole('button', { name: 'Write the draft' })).toHaveCount(0)
+    await expect(panel).not.toContainText('Denver')
+    expect((await page.request.get(`/api/items/${id}/sell-details`)).status()).toBe(403)
 
     // a session opened in another tab shares the cookie; this page, loaded as the visitor,
     // still offers no save, and the owner's values stay as they were
@@ -142,6 +151,9 @@ test('a public item shows the visitor neither its location nor its notes', async
     await expect(panel.getByRole('button', { name: 'Save details' })).toHaveCount(0)
     const kept = (await (await owner.get(`/api/items/${id}`)).json()) as { location: string; notes: string }
     expect(kept).toMatchObject({ location: 'garage shelf B', notes: 'paid 40 for it' })
+    const details = (await (await owner.get(`/api/items/${id}/sell-details`)).json()) as { version: number; details: typeof listing }
+    expect(details.version).toBe(1)
+    expect(details.details).toMatchObject(listing)
   } finally {
     // the data volume outlives the run: the item leaves the public shelf
     await owner.post(`/api/items/${id}/public`, { data: { public: false } })

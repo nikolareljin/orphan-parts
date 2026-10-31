@@ -1,0 +1,53 @@
+# Facebook Marketplace (US): the categories and conditions a draft may name.
+#
+# Source: the public category index at https://www.facebook.com/marketplace/categories/ and the
+# category pages under https://www.facebook.com/marketplace/category/, as indexed in October
+# 2026. `seen: true` marks a name found on those pages; `seen: false` marks a name in common
+# use that could not be confirmed there. Marketplace changes its picker without notice, so the
+# owner checks the category on the create page; the draft's choice is a starting point and the
+# field stays editable.
+#
+# Each category is "Top" or "Top > Sub". The draft picks one path from this file and nothing else.
+categories:
+  - name: Electronics
+    seen: true
+    subcategories:
+      - {name: Computers, seen: true, holds: "desktops, laptops, monitors, keyboards, parts"}
+      - {name: Cell Phones, seen: true, holds: "phones, chargers, cases"}
+      - {name: Cameras, seen: true, holds: "cameras, lenses, flashes"}
+      - {name: Video Games & Consoles, seen: true, holds: "consoles, controllers, games"}
+      - {name: "Printers, Scanners & Fax Machines", seen: true, holds: "printers, scanners"}
+      - {name: Monitors, seen: false, holds: "computer monitors and displays"}
+      - {name: Audio, seen: false, holds: "speakers, headphones, amplifiers, turntables"}
+      - {name: TV & Video, seen: false, holds: "televisions, projectors, players"}
+  - name: Home Goods
+    seen: true
+    subcategories:
+      - {name: Kitchen & Dining, seen: false, holds: "appliances, cookware"}
+      - {name: Furniture, seen: true, holds: "tables, chairs, shelves"}
+  - name: Home Improvement Supplies
+    seen: true
+    subcategories:
+      - {name: Tools, seen: false, holds: "power tools, hand tools"}
+      - {name: Electrical, seen: false, holds: "fixtures, wiring, switches"}
+  - {name: Garden & Outdoor, seen: true}
+  - {name: Sporting Goods, seen: false}
+  - {name: Toys & Games, seen: true}
+  - {name: Musical Instruments, seen: true}
+  - {name: Office Supplies, seen: true}
+  - {name: Auto Parts, seen: false}
+  - {name: Baby & Kids, seen: false}
+  - {name: Pet Supplies, seen: true}
+  - {name: Arts & Crafts, seen: false}
+  - {name: Hobbies, seen: true}
+  # a give-away lists at price 0; Free Stuff is where buyers browse for it
+  - {name: Free Stuff, seen: true}
+
+# The four used-item conditions on the create page, best first.
+conditions:
+  - New
+  - Used - Like New
+  - Used - Good
+  - Used - Fair
+
+free_category: Free Stuff

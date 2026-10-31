@@ -48,15 +48,18 @@ describe('the demo visitor gets no file input', () => {
     const pages = [
       html(createElement(ExtractForm, { demo: true })),
       html(createElement(SendCapture, { limits: DEFAULT_LIMITS, demo: true, onSent: noop })),
-      html(createElement(Listing, { item, demo: true, onChanged: noop })),
+      html(createElement(Listing, { item, readOnly: true, onChanged: noop })),
       html(createElement(Measure, { item, demo: true, onMeasured: noop })),
       html(createElement(Find, { demo: true })),
+      // access not known yet: the owner's listing form, still without the voice note input
+      html(createElement(Listing, { item, samplesOnly: true, onChanged: noop })),
     ]
     for (const page of pages) expect(page).not.toContain('type="file"')
     // where no sample stands in, one line says what opens it
     expect(pages[1]).toContain(SIGN_IN_LINE)
     expect(pages[2]).toContain(SIGN_IN_LINE)
     expect(pages[4]).toContain(SIGN_IN_LINE)
+    expect(pages[5]).toContain(SIGN_IN_LINE)
   })
 
   it('and the owner gets them back', () => {

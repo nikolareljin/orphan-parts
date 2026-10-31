@@ -8,6 +8,7 @@ from app.decide.service import Decider
 from app.extract.service import Extractor
 from app.find.service import Finder
 from app.inventory.service import Inventory
+from app.listing.handoff import Handoff
 from app.listing.service import Lister
 from app.listing.voice import VoiceNotes
 from app.match.service import Assessor
@@ -91,6 +92,14 @@ def app_lister(request: Request) -> Lister:
 
 
 ListerDep = Annotated[Lister, Depends(app_lister)]
+
+
+def app_handoff(request: Request) -> Handoff:
+    handoff: Handoff = request.app.state.handoff
+    return handoff
+
+
+HandoffDep = Annotated[Handoff, Depends(app_handoff)]
 
 
 def app_voice(request: Request) -> VoiceNotes:
