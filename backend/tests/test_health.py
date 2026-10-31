@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app import __version__
 from app.api.routes import _writable
 from app.config import Settings
+from app.main import create_app
 
 
 def test_healthz_answers_ok(client: TestClient) -> None:
@@ -87,3 +88,17 @@ def test_model_api_client_is_ready_on_startup(client: TestClient) -> None:
     state = client.app.state  # type: ignore[attr-defined]
     assert state.model_api.mode == "fixture"
     assert state.ledger.cap_usd == 25.0
+
+
+def test_api_docs_are_served_by_default(client: TestClient) -> None:
+    assert client.get("/docs").status_code == 200
+    assert "/readyz" in client.get("/openapi.json").json()["paths"]
+
+
+def test_api_docs_off_answers_404_and_the_service_stays_up(settings: Settings) -> None:
+    hosted = settings.model_copy(update={"api_docs": False})
+    with TestClient(create_app(hosted)) as c:
+        for path in ("/docs", "/redoc", "/openapi.json"):
+            assert c.get(path).status_code == 404, path
+        assert c.get("/readyz").status_code == 200
+        assert c.get("/healthz").json() == {"status": "ok"}
