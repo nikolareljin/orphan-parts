@@ -164,3 +164,20 @@ describe('api.pair.svgUrl', () => {
     expect(api.pair.svgUrl(origin, 'in')).toContain('&door=in')
   })
 })
+
+describe('api.pair.svg', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('reads the pairing end and the seconds it has left off the image', async () => {
+    const headers = { 'X-Pair-Expires-At': '1800000000', 'X-Pair-Expires-In': '900' }
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => new Response('<svg/>', { headers })))
+    expect(await api.pair.svg('http://192.168.1.20:5173', 'in')).toEqual({ svg: '<svg/>', expiresAt: 1800000000, expiresIn: 900 })
+  })
+
+  it('says null for the seconds left when the server does not say them', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => new Response('<svg/>')))
+    expect(await api.pair.svg('http://192.168.1.20:5173')).toEqual({ svg: '<svg/>', expiresAt: 0, expiresIn: null })
+  })
+})

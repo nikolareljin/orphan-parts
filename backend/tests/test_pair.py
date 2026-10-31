@@ -142,6 +142,8 @@ def test_pair_routes_need_a_session_when_gated(settings: Settings, tmp_path: Pat
         image = c.get("/api/pair.svg", params={"origin": "http://host:5173"})
         ends = int(image.headers["x-pair-expires-at"])
         assert 14 * 60 < ends - datetime.now(UTC).timestamp() <= 15 * 60
+        # and how long it has left by the server's clock, for a page whose clock is off
+        assert 14 * 60 < int(image.headers["x-pair-expires-in"]) <= 15 * 60
         c.cookies.clear()
 
 
@@ -393,6 +395,18 @@ def test_only_an_origin_this_server_is_reached_at_goes_into_a_pairing(tmp_path: 
     with TestClient(create_app(settings), base_url="https://api.example") as c:
         found = c.get("/api/pair", params={"origin": pages, "api": "https://api.example"})
         assert found.status_code == 200 and found.json()["url"] == "https://api.example"
+        # the page on Pages reads the pairing's end from the image across origins
+        c.post("/api/access", json={"code": CODE})
+        image = c.get(
+            "/api/pair.svg",
+            params={"origin": pages, "api": "https://api.example"},
+            headers={"Origin": pages},
+        )
+        assert image.status_code == 200
+        assert image.headers["access-control-allow-origin"] == pages
+        assert image.headers["access-control-allow-credentials"] == "true"
+        exposed = image.headers["access-control-expose-headers"].lower()
+        assert "x-pair-expires-at" in exposed and "x-pair-expires-in" in exposed
 
 
 def test_pairing_settings_have_bounds(tmp_path: Path) -> None:

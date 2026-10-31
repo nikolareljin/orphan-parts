@@ -1,4 +1,5 @@
 import logging
+import time
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from fastapi.responses import Response
@@ -18,6 +19,7 @@ from app.pairing import (
 router = APIRouter(prefix="/api", tags=["ops"])
 log = logging.getLogger("app.gate")
 PAIR_EXPIRES = "X-Pair-Expires-At"
+PAIR_EXPIRES_IN = "X-Pair-Expires-In"
 PAIRING_ENDED = "the pairing has ended; reload the signed-in page and scan its new code"
 BROWSER_CLAIM = "a browser's session does not claim a phone's code; scan the QR code with the app"
 
@@ -68,11 +70,13 @@ def pair_svg(
     api: str = Query(default="", description="the API's origin, when it is not the web app's"),
 ) -> Response:
     """The same, as a QR code the phone scans; when it carries a pairing, X-Pair-Expires-At
-    says when that ends (Unix seconds), so the page draws a new one before then."""
+    says when that ends (Unix seconds) and X-Pair-Expires-In how many seconds are left, by
+    this server's clock, so the page draws a new one before then whatever its own says."""
     found = _pairing(request, origin, gate, settings, api)
     headers = {"Cache-Control": "no-store"}
     if found.expires_at:
         headers[PAIR_EXPIRES] = str(found.expires_at)
+        headers[PAIR_EXPIRES_IN] = str(max(0, found.expires_at - int(time.time())))
     return Response(svg(found), media_type="image/svg+xml", headers=headers)
 
 

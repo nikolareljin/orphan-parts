@@ -1010,9 +1010,9 @@ export const api = {
       apiUrl(
         `/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}${door ? `&door=${door}` : ''}`,
       ),
-    // the image, and when the pairing in it ends (Unix seconds; 0 when it carries none). The
-    // Referer goes along whatever the page's own policy: the server draws only an origin it
-    // is reached at
+    // the image, when the pairing in it ends (Unix seconds; 0 when it carries none) and how
+    // many seconds it has left by the server's clock (null when not said). The Referer goes
+    // along whatever the page's own policy: the server draws only an origin it is reached at
     svg: async (origin: string, door = '') => {
       const res = await fetch(api.pair.svgUrl(origin, door), {
         headers: authHeaders(),
@@ -1023,7 +1023,12 @@ export const api = {
         noteStatus(res.status)
         throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
       }
-      return { svg: await res.text(), expiresAt: Number(res.headers.get('X-Pair-Expires-At') ?? 0) || 0 }
+      const left = res.headers.get('X-Pair-Expires-In')
+      return {
+        svg: await res.text(),
+        expiresAt: Number(res.headers.get('X-Pair-Expires-At') ?? 0) || 0,
+        expiresIn: left !== null && Number.isFinite(Number(left)) ? Number(left) : null,
+      }
     },
     get: (origin: string) =>
       getJson<{ url: string; gated: boolean; token: string; expires_at: number }>(
