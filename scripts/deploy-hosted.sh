@@ -81,6 +81,8 @@ step_secret() {
     printf "DEMO_COOKIE_SECURE='1'\n"
     # Modal's proxy forwards the visitor's address: counted per visitor, not per proxy
     printf "DEMO_TRUST_PROXY='1'\n"
+    # the host serves no API docs: /docs and /openapi.json answer 404 there
+    printf "API_DOCS='0'\n"
   } > "$file"
   local ok=0
   "${modal_cmd[@]}" secret create orphan-parts --from-dotenv "$file" --force && ok=1

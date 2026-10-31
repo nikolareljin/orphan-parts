@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     picture_enabled: bool = False
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
+    # the interactive API docs (/docs, /openapi.json): served on a machine of your own; the
+    # hosted demo turns them off in its secret, and those paths answer 404 there
+    api_docs: bool = True
     data_dir: Path = Path("./data")
     # WAL needs shared memory between the connections, which a network filesystem
     # cannot give; DELETE there (Modal's volume sets it)
