@@ -31,6 +31,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `EXTRACT_BLUR_THRESHOLD` | `150` | | the sharpness (variance of the Laplacian on a 512 px copy) under which a reading warns that the label looks blurred |
 | `RETENTION_HOURS` | `24` | | reserved for a purge of stored photos; nothing but measurement photos is kept today, and no purge runs |
 | `CORS_ORIGINS` | `http://localhost:5173` | | comma-separated browser origins allowed to call the API, named one by one (`*` is refused: calls carry credentials) |
+| `API_DOCS` | `1` | | serve the interactive API docs at `/docs` and the schema at `/openapi.json`; `0` makes both answer 404 (the hosted demo's secret sets it) |
 | `DATA_DIR` | `./data` | | uploads, the spend ledger and the SQLite database |
 | `MAX_UPLOAD_MB` | `12` | | upload size limit per file |
 | `MAX_CLIP_MB` | `60` | | size limit for a clip sent with a capture |

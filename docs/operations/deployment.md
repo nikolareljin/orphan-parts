@@ -13,10 +13,10 @@ Docker images yourself on a host of your own, which stays supported.
 ### The backend on Modal
 
 ```bash
-pipx install modal && modal setup          # once, a browser login
+pipx install modal && pipx inject modal python-dotenv && modal setup   # once, a browser login
 modal secret create orphan-parts \
   MODEL_API_KEY=... DEMO_ACCESS_CODE=... SPEND_CAP_USD=20 OPL_FAKE_API=1 \
-  CORS_ORIGINS=https://orphan-parts.pages.dev DEMO_COOKIE_SECURE=1 DEMO_TRUST_PROXY=1
+  CORS_ORIGINS=https://orphan-parts.pages.dev DEMO_COOKIE_SECURE=1 DEMO_TRUST_PROXY=1 API_DOCS=0
 ./dev deploy modal                         # modal deploy deploy/modal_app.py; prints the URL
 curl -fsS https://<the url>/readyz
 ```
@@ -38,7 +38,10 @@ otherwise; while a file on the volume is open in another request the read-back i
 when another container commits is committed over it; load the set before the demo opens. The database runs with `SQLITE_JOURNAL_MODE=DELETE` there: the write-ahead log
 needs shared memory that a network filesystem cannot give. `DEMO_TRUST_PROXY=1` in the
 secret makes the gate count visitors by the address Modal's proxy forwards, not by the
-proxy's own. Without `MODEL_API_KEY` in the secret the service runs in fixture mode
+proxy's own. `API_DOCS=0` there means the host serves no API docs: `/docs`, `/redoc` and
+`/openapi.json` answer 404 on the hosted demo (on a machine of your own they stay on; the
+docs site's copy of the schema is generated locally at build time, not fetched from the
+host). Without `MODEL_API_KEY` in the secret the service runs in fixture mode
 (recorded answers, nothing spent); with a key that cannot work (401, 402, 403, or 404 on a
 wrong URL at startup), the service runs in fixture mode too and `/readyz` reports `fixture
 (key failed)` until a restart with a working key (`OPL_KEY_PROBE=0` turns that probe off);

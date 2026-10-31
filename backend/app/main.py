@@ -163,11 +163,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_format, settings.log_level)
 
+    docs = settings.api_docs
     app = FastAPI(
         title="Orphan Parts Lens",
         version=__version__,
         description="Show it, ask it, sell it, or find the one that fits.",
         lifespan=lifespan,
+        docs_url="/docs" if docs else None,
+        redoc_url="/redoc" if docs else None,
+        openapi_url="/openapi.json" if docs else None,
     )
     app.state.settings = settings
     app.state.gate = Gate(settings)
