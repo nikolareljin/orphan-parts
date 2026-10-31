@@ -990,7 +990,13 @@ button.link {
   font-size: 0.85rem;
 }
 
+/* the remove button: a 24 px target at least, however small the chip's text */
 .search-plan .chip button.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
   color: var(--muted);
   padding: 0 0.3rem;
   font-size: 1rem;
@@ -1001,6 +1007,25 @@ button.link {
 .search-plan .chip-add input {
   width: 9rem;
   font-size: 0.85rem;
+}
+
+/* a narrow screen: the day seen and the screenshots each get the full width */
+@media (max-width: 600px) {
+  .search-plan .bring-back .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-plan .bring-back .row > label {
+    display: grid;
+    gap: 0.3rem;
+  }
+  .search-plan .bring-back .row input {
+    width: 100%;
+    min-width: 0;
+  }
+  .search-plan .bring-back .row > button {
+    align-self: flex-start;
+  }
 }
 
 .search-plan .ranked > li {

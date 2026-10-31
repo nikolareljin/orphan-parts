@@ -52,6 +52,28 @@ test('a search plan gives phrasings and a pattern, and pasted listings come back
   await expect(plan.getByLabel('Pattern test')).toContainText('fits')
   await expect(plan.getByLabel('Pattern test').locator('mark.hit-match')).toHaveText('19.5 V / 3.34 A')
 
+  // a refused pattern is read out politely as it is typed, not as an alert
+  const field = plan.getByLabel('Match pattern (regular expression, any case)')
+  const live = plan.locator('.pattern-live[aria-live="polite"]')
+  await field.fill('(?<=19.5 )V')
+  await expect(live).toContainText('lookbehind')
+  await expect(plan.locator('[role="alert"]')).toHaveCount(0)
+  await field.fill(PATTERN)
+  await expect(live).toBeEmpty()
+
+  // a word added is shown as the backend kept it, with a remove target of 24 px at least
+  const words = plan.getByLabel('Exclusion words')
+  await words.getByLabel('Add an exclusion word').fill('worn   out')
+  await words.getByLabel('Add an exclusion word').press('Enter')
+  const remove = words.getByRole('button', { name: 'Remove worn out', exact: true })
+  await expect(remove).toBeVisible()
+  await expect(words.locator('.chip').filter({ hasText: 'worn' })).toHaveText(/^worn out×$/)
+  const target = await remove.boundingBox()
+  expect(target?.width ?? 0).toBeGreaterThanOrEqual(24)
+  expect(target?.height ?? 0).toBeGreaterThanOrEqual(24)
+  await remove.click()
+  await expect(words.locator('.chip').filter({ hasText: 'worn' })).toHaveCount(0)
+
   const back = panel.getByRole('form', { name: 'Bring back listings' })
   await back.getByLabel(/Listings, as pasted/).fill(`${PARTS}\n---\n${FITS}`)
   await back.getByRole('button', { name: 'Score 2 listings' }).click()
@@ -69,4 +91,11 @@ test('a search plan gives phrasings and a pattern, and pasted listings come back
   const fit = items.nth(0).getByLabel(/Fit of listing/)
   await expect(fit).toContainText('documented candidate')
   await expect(panel.getByRole('table', { name: 'Candidates' })).toContainText('Orbital 65W laptop charger')
+
+  // on a phone the day seen gets its own line, not squeezed beside the button
+  await page.setViewportSize({ width: 390, height: 844 })
+  const day = await back.getByLabel('Seen on').boundingBox()
+  const score = await back.getByRole('button', { name: /Score/ }).boundingBox()
+  expect(day?.width ?? 0).toBeGreaterThanOrEqual(200)
+  expect(score?.y ?? 0).toBeGreaterThanOrEqual((day?.y ?? 0) + (day?.height ?? 0))
 })

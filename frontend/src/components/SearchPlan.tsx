@@ -180,7 +180,13 @@ function PatternEditor({ search, onSaved }: { search: Search; onSaved: (s: Searc
   async function save(next: { pattern?: string; exclusions?: string[] }) {
     setError('')
     try {
-      onSaved(await api.find.editPlan(search.id, next))
+      const kept = await api.find.editPlan(search.id, next)
+      // the chips and the pattern as the backend kept them: trimmed, lower-cased, one of each
+      if (kept.plan) {
+        setExclusions(kept.plan.exclusions)
+        if (next.pattern !== undefined) setPattern(kept.plan.pattern)
+      }
+      onSaved(kept)
       setSaved(true)
     } catch (err: unknown) {
       setError(message(err))
@@ -234,11 +240,10 @@ function PatternEditor({ search, onSaved }: { search: Search; onSaved: (s: Searc
         </button>
         {saved && !changed && <span className="muted">saved; the listings are ranked by it</span>}
       </form>
-      {tried?.error && (
-        <p className="error" role="alert">
-          {tried.error}
-        </p>
-      )}
+      {/* read out as it changes while typing, without interrupting */}
+      <div className="pattern-live" aria-live="polite">
+        {tried?.error && <p className="error">{tried.error}</p>}
+      </div>
       {error && (
         <p className="error" role="alert">
           {error}
