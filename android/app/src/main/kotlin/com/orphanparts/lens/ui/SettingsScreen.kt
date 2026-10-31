@@ -114,6 +114,7 @@ fun scanToPair(
                         "Paired with ${paired.baseUrl}" + when {
                             !gated -> "."
                             paired.ownCode -> "; it keeps its own code (${paired.codeName})."
+                            paired.accessCode.isNotBlank() -> "; it keeps the code typed on the Backend tab."
                             else -> " as the demo visitor: nothing it sends is kept. Sign in on the web app and scan its code to give this phone a code of its own."
                         },
                     )
@@ -184,7 +185,7 @@ fun SettingsScreen(
             if (settings.ownCode && code == settings.accessCode && normalizeBaseUrl(url) == settings.baseUrl) {
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "This phone holds a code of its own, ${settings.codeName}; on the server, ./dev keys revoke \"${settings.codeLabel}\" ends it, as does revoking the code that paired it.",
+                    "This phone holds a code of its own, ${settings.codeName}; it ends with ./dev keys revoke \"${settings.codeLabel}\" on the server, or when the code that paired it ends.",
                     style = MaterialTheme.typography.bodySmall,
                     color = muted,
                 )
