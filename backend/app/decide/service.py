@@ -34,7 +34,7 @@ from app.find.service import Finder
 from app.inventory import Inventory
 from app.inventory.schema import TEXT_MAX as NOTES_MAX
 from app.inventory.schema import Item
-from app.inventory.service import notes_room
+from app.inventory.service import DECIDED, notes_room
 from app.model_api import ModelApiClient, text_part, user_message
 from app.projects.pack import private_field
 from app.projects.schema import Preferences
@@ -55,7 +55,6 @@ NEEDS_MAX = 6
 # how many kinds of item the scenarios brief names from the rest of the inventory
 OTHERS_MAX = 40
 DETAIL_KEYS = ("condition", "faults", "tests_done", "accessories")
-DECIDED = "decided: "
 EFFORT_WORDS = {
     "low": "an hour or so of tinkering is fun, no more",
     "medium": "an afternoon of tinkering is fun",
@@ -206,6 +205,11 @@ def decided_line(spec: DecisionCreate) -> str:
 MORE = "… (more in the scenarios)"
 
 
+def plan_heading(version: int) -> str:
+    """How a repair plan from the scenarios of this version starts in the notes."""
+    return f"Repair plan (scenarios v{version},"
+
+
 def repair_plan(scenarios: Scenarios, room: int = NOTES_MAX) -> str:
     """The keep and fix card as a few lines for the item's notes: the steps, the parts, the
     cost and the time, in at most ``room`` characters. When it does not fit, whole steps are
@@ -215,7 +219,7 @@ def repair_plan(scenarios: Scenarios, room: int = NOTES_MAX) -> str:
     card = scenarios.keep_fix
     if not card.worth_fixing or not card.steps:
         return ""
-    head = f"Repair plan (scenarios v{scenarios.version}, {card.difficulty}):"
+    head = f"{plan_heading(scenarios.version)} {card.difficulty}):"
     tail = [f"Parts: {'; '.join(card.parts)}"] if card.parts else []
     tail.append(f"Cost: {card.cost}. Time: {card.time}.")
     steps = [f"{n}. {step}" for n, step in enumerate(card.steps, start=1)]
@@ -451,7 +455,8 @@ class Decider:
             item_id=int(row["item_id"]),
             version=int(row["version"]),
             item_version=int(row["item_version"]),
-            stale=int(row["item_version"]) != int(row["current_item_version"]),
+            stale=bool(row["changed_since"]),
+            steps_in_notes=plan_heading(int(row["version"])) in str(row["current_notes"]),
             at=row["created_at"],
             **content,
         )

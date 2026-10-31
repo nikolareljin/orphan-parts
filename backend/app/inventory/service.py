@@ -64,6 +64,10 @@ def current_fields(assertions: list[Assertion]) -> dict[str, Assertion]:
     return out
 
 
+# the history line of a decision; decisions are not changes to what the item is
+DECIDED = "decided: "
+
+
 def joined_notes(notes: str, add: str) -> str:
     """The notes with a block added after a blank line, or the block alone."""
     add = add.strip()
@@ -446,9 +450,13 @@ class Inventory:
 
     # what was written for an item and kept with the item version it was written from: the
     # uses and the scenarios share one shape and one way in, each in its own table
+    # ``changed_since``: the item was changed after the version it was written from by
+    # anything but a decision; choosing what the item becomes does not change what it is
     _WRITTEN_SELECT = (
-        "SELECT w.*, i.version AS current_item_version FROM {table} w"
-        " JOIN items i ON i.id = w.item_id"
+        "SELECT w.*, i.version AS current_item_version, i.notes AS current_notes,"
+        " EXISTS (SELECT 1 FROM events e WHERE e.item_id = w.item_id"
+        " AND e.version > w.item_version AND e.change NOT LIKE '" + DECIDED + "%')"
+        " AS changed_since FROM {table} w JOIN items i ON i.id = w.item_id"
     )
 
     def _add_written(
@@ -511,13 +519,14 @@ class Inventory:
         """The owner's decision: the intent it implies is set and the decision itself is the
         event line, so the history keeps the why. The version is bumped only when the item
         changes: a new intent, a note (``said``) that gives the item a new why, or text added
-        to the notes (``notes_add``, a repair plan). The plan is added only while the item is
-        still at ``plan_item_version``, the version it was written from, checked here in the
-        same transaction, and only when it fits the notes whole (the caller cuts it to
-        ``notes_room``); otherwise the notes stay as they are. The same choice again, with
-        nothing said, is an event and nothing more; the guidance and the uses written before
-        it stay current. With ``version`` set, a choice made from an older version of the item
-        is refused and nothing is written."""
+        to the notes (``notes_add``, a repair plan). The plan is added only while nothing but
+        decisions has changed the item since ``plan_item_version``, the version it was
+        written from, checked here in the same transaction; only when it fits the notes whole
+        (the caller cuts it to ``notes_room``); and not when the notes already hold its first
+        line. Otherwise the notes stay as they are. The same choice again, with nothing said,
+        is an event and nothing more; the guidance and the uses written before it stay
+        current. With ``version`` set, a choice made from an older version of the item is
+        refused and nothing is written."""
         at = now()
         with self.store.connect() as conn:
             row = self._row(conn, item_id)
@@ -528,7 +537,14 @@ class Inventory:
             version = int(row["version"])
             notes = str(row["notes"])
             kept = joined_notes(notes, notes_add)
-            add = notes_add.strip() != "" and plan_item_version == version and len(kept) <= TEXT_MAX
+            head = notes_add.strip().split("\n", 1)[0]
+            add = (
+                head != ""
+                and plan_item_version is not None
+                and not self._changed_since(conn, item_id, plan_item_version)
+                and head not in notes
+                and len(kept) <= TEXT_MAX
+            )
             if intent != str(row["intent"]) or said or add:
                 version += 1
                 conn.execute(SET_COLUMN["intent"], (intent, version, at, item_id))
@@ -536,6 +552,14 @@ class Inventory:
                 conn.execute(SET_COLUMN["notes"], (kept, version, at, item_id))
             self._event(conn, item_id, change, version, at)
             return self._item(conn, item_id)
+
+    def _changed_since(self, conn: sqlite3.Connection, item_id: int, version: int) -> bool:
+        """Whether anything but a decision changed the item after ``version``."""
+        found = conn.execute(
+            "SELECT 1 FROM events WHERE item_id = ? AND version > ? AND change NOT LIKE ?",
+            (item_id, version, DECIDED + "%"),
+        ).fetchone()
+        return found is not None
 
     # missing-item searches and their candidates; a search may name the item it is for
 

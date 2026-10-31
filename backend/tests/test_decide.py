@@ -619,9 +619,37 @@ def test_keep_and_fix_adds_the_repair_steps_to_the_notes_once(
     assert recorded_client.get(f"/api/items/{item_id}/decide").json()["last"]["choice"] == (
         "keep_fix"
     )
-    # the scenarios are stale now: the same choice again adds nothing, and is no new version
+    # the decision is no change to the item: the cards stay current and say the steps are in
+    # the notes; the same choice again adds nothing, and is no new version
+    view = recorded_client.get(f"/api/items/{item_id}/decide").json()["scenarios"]
+    assert view["stale"] is False and view["steps_in_notes"] is True
     again = recorded_client.post(f"/api/items/{item_id}/decision", json={"choice": "keep_fix"})
     assert again.json()["notes"] == after["notes"] and again.json()["version"] == after["version"]
+    # an edit of the owner's makes them stale
+    recorded_client.patch(f"/api/items/{item_id}", json={"condition": "dented"})
+    view = recorded_client.get(f"/api/items/{item_id}/decide").json()["scenarios"]
+    assert view["stale"] is True and view["steps_in_notes"] is True
+
+
+def test_a_decision_leaves_the_scenarios_current_and_the_plan_still_applies(
+    settings: Settings,
+) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory, notes="from the attic")
+    _kept(inventory, item_id, _written())
+    decider = _decider(settings, inventory)
+    # reuse it first: the intent changes, the item version moves, the cards stay current
+    moved = decider.decide(item_id, DecisionCreate(choice="keep_build", note="maybe a desk"))
+    latest = decider.latest_scenarios(item_id)
+    assert latest is not None and latest.item_version < moved.version
+    assert not latest.stale and not latest.steps_in_notes
+    # then keep and fix after all: the steps go in, once
+    item = decider.decide(item_id, DecisionCreate(choice="keep_fix"))
+    assert item.notes.startswith("from the attic\n\nRepair plan (scenarios v1, easy):")
+    latest = decider.latest_scenarios(item_id)
+    assert latest is not None and not latest.stale and latest.steps_in_notes
+    again = decider.decide(item_id, DecisionCreate(choice="keep_fix"))
+    assert again.notes == item.notes and again.version == item.version
 
 
 def test_a_count_copied_from_the_brief_is_not_part_of_the_kind() -> None:
@@ -789,20 +817,32 @@ def test_the_plan_is_written_only_at_the_version_it_was_written_from(
     inventory = Inventory(settings)
     item_id = laptop(inventory, notes="from the attic", intent="sell")
     at = inventory.get(item_id).version
-    # an older version: nothing added, the intent still set
+    # an older version, with the field added since: nothing added, the intent still set
     item = inventory.decide(
         item_id, "keep", "decided: keep_fix", said=False, notes_add="plan", plan_item_version=at - 1
     )
     assert item.notes == "from the attic" and item.intent == "keep" and item.version == at + 1
-    # at its version: added once; the same plan again finds the item moved on
+    # at its version, with only a decision since: added once; the same plan again finds its
+    # first line in the notes
     item = inventory.decide(
-        item_id, "keep", "decided: keep_fix", said=False, notes_add="plan", plan_item_version=at + 1
+        item_id, "keep", "decided: keep_fix", said=False, notes_add="plan", plan_item_version=at
     )
     assert item.notes == "from the attic\n\nplan" and item.version == at + 2
     again = inventory.decide(
-        item_id, "keep", "decided: keep_fix", said=False, notes_add="plan", plan_item_version=at + 1
+        item_id,
+        "keep",
+        "decided: keep_fix",
+        said=False,
+        notes_add="plan\nmore",
+        plan_item_version=at,
     )
     assert again.notes == item.notes and again.version == item.version
+    # an edit since its version: nothing added
+    edited = inventory.update(item_id, ItemPatch(condition="dented"))
+    late = inventory.decide(
+        item_id, "keep", "decided: keep_fix", said=False, notes_add="other", plan_item_version=at
+    )
+    assert late.notes == item.notes and late.version == edited.version
     # no version given: no plan
     none = inventory.decide(item_id, "keep", "decided: keep_fix", said=False, notes_add="plan")
     assert none.notes == item.notes

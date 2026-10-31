@@ -96,7 +96,12 @@ class Scenarios(BaseModel):
     item_id: int
     version: int = Field(description="per item; a new request bumps it")
     item_version: int
-    stale: bool = Field(description="the item changed since the cards were written")
+    stale: bool = Field(
+        description="the item changed since the cards were written; a decision is no change"
+    )
+    steps_in_notes: bool = Field(
+        default=False, description="the keep and fix steps of these cards are in the item's notes"
+    )
     profiled: bool = Field(description="written for the owner's profile, not an average person")
     keep_fix: KeepFix
     reuse: list[ReuseScenario]
