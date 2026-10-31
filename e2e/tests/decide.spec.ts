@@ -22,6 +22,9 @@ async function openItem(page: Page, name: string) {
 }
 
 test('the decide panel gathers the rows, asks for ideas, and keeps the choice on the item', async ({ page, request }) => {
+  // the whole decide flow in one test: ideas, a price guidance, a decision and a reload; it
+  // runs near the default limit while the other workers share the backend
+  test.slow()
   const name = `Old laptop ${stamp}`
   await createLaptop(request, name)
   const { panel, decide } = await openItem(page, name)
