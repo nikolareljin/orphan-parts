@@ -463,9 +463,11 @@ def test_the_http_proof_reads_a_gated_host_on_recordings(tmp_path: Path) -> None
         run = remote.run_remote(http, code=GATE_CODE, max_usd=0.25, photo=make_photo(), out=out)
     by_op = {r.op: r for r in run.results}
     assert by_op["access"].status == "PASS"
-    # the visitor: a recorded answer, and no write
-    assert by_op["extract (no code)"].status == "PASS", by_op["extract (no code)"].note
-    assert "from_fixture=True" in by_op["extract (no code)"].note
+    # the visitor: a sample's recorded answer, no photo of its own read, and no write
+    assert by_op["sample (no code)"].status == "PASS", by_op["sample (no code)"].note
+    assert "from_fixture=True" in by_op["sample (no code)"].note
+    assert by_op["upload (no code)"].status == "PASS", by_op["upload (no code)"].note
+    assert "Sign in with the access code" in by_op["upload (no code)"].note
     assert by_op["write (no code)"].status == "PASS"
     assert "HTTP 403" in by_op["write (no code)"].note
     # the code opens a session; a host on recordings has no live models behind the door,

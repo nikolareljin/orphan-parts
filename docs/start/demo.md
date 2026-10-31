@@ -14,10 +14,13 @@ brought back (written examples labelled as such), and the proposal brief. Three 
 
 ```bash
 ./dev demo-scrub ~/raw-photos   # re-encoded copies into demo/photos/, WAV notes into demo/notes/
-./dev record-fixtures           # with a key: the inventory reset, one run, every answer kept;
-                                # a run that stopped half-way picks up where it was (what is
-                                # recorded is replayed, not bought again) and fails when a part
-                                # of the set was skipped; delete a fixture file to record it afresh
+./dev record-fixtures           # with a key: the inventory reset, one run, every answer kept,
+                                # then every reading a sample click can ask for (each photo
+                                # alone, each item's photos together, with the label found first
+                                # and without); a run that stopped half-way picks up where it was
+                                # (what is recorded is replayed, not bought again) and fails when
+                                # a part of the set was skipped; delete a fixture file to record
+                                # it afresh
 ./dev demo                      # the inventory reset and the set loaded, in fixture mode
 ```
 
@@ -26,13 +29,23 @@ accepted, drafts, guidance, searches with their candidates and the proposals in 
 every take and every visitor starts from the same screen. Once the fixtures for the set are
 recorded, the demo spends nothing: the service line at the foot of every page says *recorded answers only (nothing spent)*.
 The fixtures are keyed on what is sent, so a change to `EXTRACT_ENHANCE` or `IMAGE_MAX_PX` means
-recording again. A photo not in the set gets the recorded answer for that operation, which is why the public
-demo is the set, not an open reader. The set loads with whatever files are present; a photo
-named but missing is skipped with a note.
+recording again. On a gated host the public demo is the set, not an open reader: a visitor
+without the code picks the set's photos in a gallery instead of uploading (see
+[Demo access](../operations/demo-access.md)), and each answer is the recording of that exact
+photo; a selection with none says so. `docker compose run --rm backend python -m app.demo
+samples --set /demo/set.yaml` checks in fixture mode that every sample has its recordings. The
+set loads with whatever files are present; a photo named but missing is skipped with a note.
+
+An item may name a `picture:` (a template id such as `smart_mirror`, or a few words), drawn by
+Muse Image after its drafts; four items of the set do. A drawing is a paid call, so a live load
+draws it only with `PICTURE_ENABLED=1` (`./dev record-fixtures` sets it for its run). Fixture
+mode shows a drawing only once a record run has kept it, and until then the load says *not
+recorded yet* for it and shows none, never the stub image as a drawing.
 
 ## 1. Read a label and save it
 
-**Read a label** takes up to four photos. With *Find the label in the photo first* on, SAM 3.1 finds the
+**Read a label** takes up to four photos (signed out on a gated host, a gallery of the set's
+photos to click instead, one reading per item or photo). With *Find the label in the photo first* on, SAM 3.1 finds the
 item, the label and the connector and the overlay shows where; Muse Spark reads the label crop
 into typed fields, each with its confidence and its source. **Save privately** makes it an item
 in [My inventory](../guides/inventory.md): every observed value waits for you to confirm or

@@ -16,6 +16,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `MODEL_SAM` | `sam-3.1` | | SAM model ID |
 | `OPL_FAKE_API` | `0` | | `1` serves recorded fixtures and never calls the Model API |
 | `OPL_RECORD_FIXTURES` | `0` | | `1` calls the Model API and saves every response as a fixture |
+| `DEMO_SET` | `demo/set.yaml` beside the backend | | the demo set whose photos are the samples the demo visitor clicks (`GET /api/samples`); the dev stack mounts `demo/` at `/demo`, where the default finds it; the Modal image ships it at `/root/demo` and the Modal app sets `DEMO_SET=/root/demo/set.yaml`; a path with no set is an empty gallery |
 | `SPEND_CAP_USD` | `25` | | stop calling the Model API once the ledger reaches this amount |
 | `SPEND_LEDGER_FILE` | `model_api_spend.jsonl` | | ledger file name inside `DATA_DIR` |
 | `MODEL_API_TIMEOUT_S` | `60` | | per-request timeout |

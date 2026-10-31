@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from 'react'
-import { api, type Item, type Measurement, type MeasureResult, type Point, type ProfileFeature } from '../lib/api'
+import { api, type Item, type Measurement, type MeasureResult, type Point, type ProfileFeature, type SampleCatalog } from '../lib/api'
 import { whenText } from '../lib/inventory'
 import {
   buildRequest,
@@ -14,6 +14,7 @@ import {
   type ReferenceKind,
   type ReferenceSpec,
 } from '../lib/measure'
+import SampleGallery from './SampleGallery'
 
 const CANVAS_MAX_WIDTH = 640
 const COLOURS = { reference: '#2d6cdf', feature: '#eb5757' }
@@ -23,11 +24,15 @@ function message(err: unknown): string {
 }
 
 // A dimension from a photo: mark the reference and the feature, the geometry does the rest.
-export default function Measure({ item, onMeasured }: { item: Item; onMeasured: () => void }) {
+// The demo visitor marks one of the demo set's photos instead of a file of their own, and the
+// number is shown, not stored.
+export default function Measure({ item, onMeasured, demo = false }: { item: Item; onMeasured: () => void; demo?: boolean }) {
   const [features, setFeatures] = useState<ProfileFeature[]>([])
   const [featureKey, setFeatureKey] = useState('')
   const [customKey, setCustomKey] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
+  const [catalog, setCatalog] = useState<SampleCatalog | null>(null)
+  const [sampleId, setSampleId] = useState<string | null>(null)
   const [image, setImage] = useState<HTMLImageElement | null>(null)
   const [marks, setMarks] = useState<Point[]>([])
   const [spec, setSpec] = useState<ReferenceSpec>({
@@ -67,6 +72,24 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
   }, [item.profile])
 
   useEffect(() => {
+    if (!demo) return
+    let cancelled = false
+    api.samples
+      .list()
+      .then((c) => {
+        if (!cancelled) setCatalog(c)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(message(err))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [demo])
+
+  useEffect(() => {
+    // what was measured and kept is the owner's; the demo visitor's numbers are not stored
+    if (demo) return
     let cancelled = false
     api.items
       .measurements(item.id)
@@ -79,7 +102,7 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
     return () => {
       cancelled = true
     }
-  }, [item.id, item.version])
+  }, [item.id, item.version, demo])
 
   const scale = image ? fitScale(image.naturalWidth, CANVAS_MAX_WIDTH) : 1
 
@@ -141,6 +164,20 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
     img.src = url
   }
 
+  function onSample(ids: string[]) {
+    const id = ids[0] ?? null
+    setSampleId(id)
+    setMarks([])
+    setResult(null)
+    setError('')
+    setImage(null)
+    if (!id) return
+    const img = new Image()
+    img.onload = () => setImage(img)
+    img.onerror = () => setError('The sample photo could not be loaded.')
+    img.src = api.samples.fileUrl(id)
+  }
+
   function onCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
     if (!image || marks.length >= marksNeeded(spec.kind)) return
     const rect = event.currentTarget.getBoundingClientRect()
@@ -170,10 +207,15 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
       : null
 
   async function measure() {
-    if (!photo || !request) return
+    if (!request || (demo ? !sampleId : !photo)) return
     setBusy(true)
     setError('')
     try {
+      if (demo && sampleId) {
+        setResult(await api.measureSample(sampleId, request))
+        return
+      }
+      if (!photo) return
       const stored = await api.items.measure(item.id, photo, request)
       setResult(stored)
       onMeasured()
@@ -208,11 +250,25 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
             <input value={customKey} onChange={(e) => setCustomKey(e.target.value)} placeholder="spout_diameter" />
           </label>
         )}
-        <label>
-          <span>Photo with a ruler or card in it</span>
-          <input type="file" accept="image/*" onChange={onPick} />
-        </label>
+        {!demo && (
+          <label>
+            <span>Photo with a ruler or card in it</span>
+            <input type="file" accept="image/*" onChange={onPick} />
+          </label>
+        )}
       </div>
+      {demo && catalog && catalog.items.length > 0 && (
+        <SampleGallery
+          catalog={catalog}
+          selected={sampleId ? [sampleId] : []}
+          onChange={onSample}
+          multiple={false}
+          legend="Sample photo to mark (one with a ruler in it)"
+        />
+      )}
+      {demo && catalog && catalog.items.length === 0 && (
+        <p className="muted">This server has no sample photos. Sign in with the access code to measure a photo of your own.</p>
+      )}
       {chosen && <p className="hint">{chosen.how}</p>}
 
       <div className="row">

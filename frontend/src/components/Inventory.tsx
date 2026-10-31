@@ -33,11 +33,14 @@ export default function Inventory({
   openId: wanted = null,
   onOpened,
   demo = false,
+  samplesOnly = demo,
 }: {
   refresh: number
   openId?: number | null
   onOpened?: () => void
   demo?: boolean
+  // no upload input (voice note, measure photo) until uploads are known to be open
+  samplesOnly?: boolean
 }) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(wanted)
@@ -118,6 +121,7 @@ export default function Inventory({
             key={openId}
             id={openId}
             demo={demo}
+            samplesOnly={samplesOnly}
             onChanged={() => void load()}
             onClosed={() => {
               setOpenId(null)
@@ -130,7 +134,19 @@ export default function Inventory({
   )
 }
 
-function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolean; onChanged: () => void; onClosed: () => void }) {
+function ItemPanel({
+  id,
+  demo,
+  samplesOnly,
+  onChanged,
+  onClosed,
+}: {
+  id: number
+  demo: boolean
+  samplesOnly: boolean
+  onChanged: () => void
+  onClosed: () => void
+}) {
   const [item, setItem] = useState<Item | null>(null)
   const [events, setEvents] = useState<ItemEvent[] | null>(null)
   const [error, setError] = useState('')
@@ -451,11 +467,11 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
       </div>
 
       <div className="item-section" data-section="sell">
-        <Listing item={item} readOnly={readOnly} onChanged={() => attempt(() => api.items.get(item.id))} />
+        <Listing item={item} readOnly={readOnly} samplesOnly={samplesOnly} onChanged={() => attempt(() => api.items.get(item.id))} />
       </div>
 
       <div className="item-section" data-section="fit">
-        <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
+        <Measure item={item} demo={samplesOnly} onMeasured={() => attempt(() => api.items.get(item.id))} />
         <Assess item={item} />
         {!demo && <ItemSearch item={item} />}
       </div>

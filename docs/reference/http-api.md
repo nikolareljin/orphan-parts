@@ -9,12 +9,28 @@ The same OpenAPI document is rendered below.
 
 | Path | Purpose |
 |---|---|
-| `POST /api/extract` | multipart `photos` (one to `MAX_PHOTOS` images, each at most `MAX_UPLOAD_MB`) and optional `crops` (label crops from `/api/segment`): reads the label into typed fields, each with `value`, `unit`, `confidence`, `source` (`photo`, or `label_crop` when crops were sent) and `raw`, plus `item_type`, `label_text`, `warnings`, the counts of photos and crops, the model used, `from_fixture`, `cost_usd` and `enhanced` (whether what the model read was contrast-stretched and sharpened; a blurred label adds a line to `warnings`) |
-| `POST /api/segment` | multipart `photo` (one image) and optional repeated `concepts` (default `item`, `label`, `connector`; an unknown key is sent to the model as its own phrase): one region per match with `concept`, `box` (half-open pixels of the prepared photo), `confidence`, `coverage`, a JPEG `crop` data URL and the mask outline as `svg_path`; plus the `overlay` (the photo with the masks drawn over it), `warnings`, `width`, `height`, the model, `from_fixture` and `cost_usd` |
+| `POST /api/extract` | multipart `photos` (one to `MAX_PHOTOS` images, each at most `MAX_UPLOAD_MB`), or `sample_ids` (demo sample photo ids, read in their place and answered only by their own recording), and optional `crops` (label crops from `/api/segment`): reads the label into typed fields, each with `value`, `unit`, `confidence`, `source` (`photo`, or `label_crop` when crops were sent) and `raw`, plus `item_type`, `label_text`, `warnings`, the counts of photos and crops, the model used, `from_fixture`, `cost_usd` and `enhanced` (whether what the model read was contrast-stretched and sharpened; a blurred label adds a line to `warnings`) |
+| `POST /api/segment` | multipart `photo` (one image), or `sample_id` (a demo sample photo), and optional repeated `concepts` (default `item`, `label`, `connector`; an unknown key is sent to the model as its own phrase): one region per match with `concept`, `box` (half-open pixels of the prepared photo), `confidence`, `coverage`, a JPEG `crop` data URL and the mask outline as `svg_path`; plus the `overlay` (the photo with the masks drawn over it), `warnings`, `width`, `height`, the model, `from_fixture` and `cost_usd` |
 
 Errors, for both: `400` for a bad or oversized photo (by upload size or pixel count), a HEIC
-file, too many photos or concepts, `422` when the required file field is missing, `502` when the model answer was incomplete or the Model API failed, `503` when the spend
+file, too many photos or concepts, `403` for a file sent by the demo visitor (*Sign in with the
+access code to read your own photos.*), `404` for an unknown sample or a sample with no
+recording (*No recorded answer for this sample yet.*), `422` when neither the file nor the
+sample is sent, or both, `502` when the model answer was incomplete or the Model API failed, `503` when the spend
 cap is reached or fixture mode has no recorded answer. The `detail` text is safe to show.
+
+## Demo samples
+
+The demo set's photos (and its listing texts and voice notes, when present), named by id: what
+the demo visitor reads instead of a file of their own. Open to the visitor; empty where the set
+is not shipped (`DEMO_SET`).
+
+| Path | Purpose |
+|---|---|
+| `GET /api/samples` | the catalog: `items` (the set's things, each with `key`, `name`, `item_type` and its `photos`, each `{id, file, item_key, item_name}`, in the set's order), `listings` (`{id, name, search_key, search_title, asking_price, currency}`) and `notes` (`{id, item_key, item_name}`) |
+| `GET /api/samples/{id}/file` | the sample as stored: the photo (`image/jpeg`), the listing text or the voice note; `404` for an unknown id |
+| `GET /api/samples/{id}/thumb` | a sample photo at most 320 px on its long side, for the gallery |
+| `POST /api/samples/read` | JSON `sample_ids` (sample photo ids) and `find_label` (default `true`): an item whose every photo is picked is one reading of them all, any other photo is read alone, one result each in the catalog's order: `{sample_ids, item_key, item_name, whole_item, segmentation, extraction, missing, note}`, with `segmentation` when the label was found first. The flow is the web app's (SAM 3.1 on the first photo, Muse Spark on the photos and the label crops), on the stored files, so the recording of that exact photo answers; with none, `missing` is `true` and `note` says so instead of a reading. Unknown ids are `404`. Through the code's door each reading past the first is one more call against the allowance |
 
 ## Inventory endpoints
 
@@ -54,11 +70,11 @@ over its bound (names 200 characters, values 500, details and `*_notes` fields 4
 
 | Path | Purpose |
 |---|---|
-| `POST /api/measure` | multipart `photo` and `request` (JSON: `feature`, `profile`, `image` size as marked, `reference` of kind `two_point` with `points` and `length_mm` or `rectangle` with `corners`, `width_mm` and `height_mm`, each with a `tolerance_mm`, the feature `points`, `straight_on`): the result with `accepted`, `value_mm`, `uncertainty_mm`, `method`, `basis`, every `check` with `passed`, `detail` and `blocking`, `redo` when refused, `px_per_mm`, the marks scaled to the stored photo, `tolerance_mm` and `needs_direct_reading` when the profile names the feature. Nothing is stored |
+| `POST /api/measure` | multipart `photo` (or `sample_id`, a demo sample photo; the demo visitor's only way, a file from the visitor is `403`) and `request` (JSON: `feature`, `profile`, `image` size as marked, `reference` of kind `two_point` with `points` and `length_mm` or `rectangle` with `corners`, `width_mm` and `height_mm`, each with a `tolerance_mm`, the feature `points`, `straight_on`): the result with `accepted`, `value_mm`, `uncertainty_mm`, `method`, `basis`, every `check` with `passed`, `detail` and `blocking`, `redo` when refused, `px_per_mm`, the marks scaled to the stored photo, `tolerance_mm` and `needs_direct_reading` when the profile names the feature. Nothing is stored |
 | `POST /api/items/{id}/measurements` | the same, stored on the item; an accepted capture proposes an observed value (source `measurement`) to confirm; `201` with the measurement (`id`, `assertion_id`, `at`) |
 | `GET /api/items/{id}/measurements` | every capture on the item, accepted or refused |
 | `GET /api/items/{id}/measurements/{mid}/photo` | the prepared JPEG the marks refer to |
-| `GET /api/access`, `POST /api/access`, `DELETE /api/access` | the two doors: whether a code is needed (`gated`), whether this caller is through it (`granted`) and whether that reaches the live models (`live`); the code (the configured master or an issued record) for a session: a cookie, and the same `token` in the answer for a caller without cookies; 401 for a wrong code, 429 after too many tries; the end of a session. Without a session on a gated host every request is the demo visitor's: `/healthz`, `/readyz`, `/api/version`, the documentation, the profiles, the templates and the four stateless tries (`/api/extract`, `/api/segment`, `/api/assess` on values written in, `/api/measure`) answer, the tries from the recordings and so many per address and hour (429 over it); everything else is 403 with *demo: the code unlocks saving, drafts, prices, projects and captures*. Through the door: 429 over an allowance with `Retry-After`, 503 for a call that spends while `DEMO_PAUSED` is set. See [Demo access](../operations/demo-access.md) |
+| `GET /api/access`, `POST /api/access`, `DELETE /api/access` | the two doors: whether a code is needed (`gated`), whether this caller is through it (`granted`) and whether that reaches the live models (`live`); the code (the configured master or an issued record) for a session: a cookie, and the same `token` in the answer for a caller without cookies; 401 for a wrong code, 429 after too many tries; the end of a session. Without a session on a gated host every request is the demo visitor's: `/healthz`, `/readyz`, `/api/version`, the documentation, the profiles, the templates and the demo samples and the stateless tries (`/api/samples/read`, `/api/extract`, `/api/segment`, `/api/assess` on values written in, `/api/measure`; the ones that take a photo take a sample id, a file is `403`) answer, the tries from the recordings and so many per address and hour (429 over it); everything else is 403 with *demo: the code unlocks saving, drafts, prices, projects and captures*. Through the door: 429 over an allowance with `Retry-After`, 503 for a call that spends while `DEMO_PAUSED` is set. See [Demo access](../operations/demo-access.md) |
 | `GET /api/profiles` | the shipped category profiles with their feature counts |
 | `GET /api/profiles/{id}` | one profile |
 | `GET /api/profiles/{id}/features` | the features worth measuring, each with `key`, `label`, `unit`, `tolerance_mm` and `how` |

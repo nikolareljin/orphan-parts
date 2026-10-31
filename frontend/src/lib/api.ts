@@ -93,6 +93,61 @@ export interface Segmentation {
   cost_usd: number
 }
 
+// The demo samples: the demo set's photos, grouped by item, that the demo visitor reads in
+// place of a file of their own; a request names them by id.
+export interface SamplePhoto {
+  id: string
+  file: string
+  item_key: string
+  item_name: string
+}
+
+export interface SampleItem {
+  key: string
+  name: string
+  item_type: string
+  photos: SamplePhoto[]
+}
+
+export interface SampleListing {
+  id: string
+  name: string
+  search_key: string
+  search_title: string
+  asking_price: string
+  currency: string
+}
+
+export interface SampleNote {
+  id: string
+  item_key: string
+  item_name: string
+}
+
+export interface SampleCatalog {
+  title: string
+  items: SampleItem[]
+  listings: SampleListing[]
+  notes: SampleNote[]
+}
+
+export interface SampleResult {
+  sample_ids: string[]
+  item_key: string
+  item_name: string
+  // every photo of the item, read together
+  whole_item: boolean
+  segmentation: Segmentation | null
+  extraction: Extraction | null
+  // nothing is recorded for this selection: note says so, and there is no reading
+  missing: boolean
+  note: string
+}
+
+export interface SampleRead {
+  results: SampleResult[]
+}
+
 // Inventory: how a value is known, what the owner means to do, whether a plan may count on it.
 export type Provenance = 'observed' | 'owner_reported' | 'documented' | 'tested' | 'estimated'
 export type Intent = 'keep' | 'build' | 'sell' | 'give'
@@ -1107,6 +1162,13 @@ export const api = {
     ]),
   segment: (photo: File, concepts: string[] = []) =>
     postForm<Segmentation>('/api/segment', [['photo', photo], ...concepts.map((c): FormPart => ['concepts', c])]),
+  samples: {
+    list: () => getJson<SampleCatalog>('/api/samples'),
+    read: (sampleIds: string[], findLabel: boolean) =>
+      sendJson<SampleRead>('POST', '/api/samples/read', { sample_ids: sampleIds, find_label: findLabel }),
+    thumbUrl: (id: string) => apiUrl(`/api/samples/${encodeURIComponent(id)}/thumb`),
+    fileUrl: (id: string) => apiUrl(`/api/samples/${encodeURIComponent(id)}/file`),
+  },
   items: {
     list: () => getJson<ItemSummary[]>('/api/items'),
     get: (id: number) => getJson<Item>(`/api/items/${id}`),
@@ -1285,6 +1347,12 @@ export const api = {
   measure: (photo: File, request: MeasureRequest) =>
     postForm<MeasureResult>('/api/measure', [
       ['photo', photo],
+      ['request', JSON.stringify(request)],
+    ]),
+  // the same on a sample photo, by its id: what the demo visitor measures on; nothing is stored
+  measureSample: (sampleId: string, request: MeasureRequest) =>
+    postForm<MeasureResult>('/api/measure', [
+      ['sample_id', sampleId],
       ['request', JSON.stringify(request)],
     ]),
 }

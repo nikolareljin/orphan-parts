@@ -175,8 +175,8 @@ attempts); before the first call the run names every operation whose ceiling alo
 `--max-usd` (at the default 0.25, `propose` and `price`) and skips it, then stops before one
 whose ceiling would take the run past `--max-usd`, and refuses to start when the spend ledger
 has less headroom than that. It never records fixtures. With `--against` the proof runs over
-HTTP against a running backend: behind a gate, an extract without the code is answered from the
-recordings and a write is refused, then a session with `LIVECHECK_ACCESS_CODE` reads the live
+HTTP against a running backend: behind a gate, a sample photo read without the code is answered from
+its recording, a photo sent without it and a write are refused, then a session with `LIVECHECK_ACCESS_CODE` reads the live
 models and signs out. The access code is used in that mode only; it and the key come from the
 environment (the shell or `.env`), never an argument, and `./dev` passes them on by name
 without reading either value.

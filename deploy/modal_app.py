@@ -36,6 +36,12 @@ NEVER_SHIPPED = [
     "**/keystore.properties",
 ]
 
+# where the image carries the demo set: the backend's default (beside app/, so /demo here)
+# is not it, so web() and load_demo set DEMO_SET to it, for the samples the demo visitor
+# clicks and for the load
+DEMO_DIR = "/root/demo"
+DEMO_SET = f"{DEMO_DIR}/set.yaml"
+
 # the code, the recorded answers (fixture mode replays them: without them every read would
 # fail on the host) and the demo set (loaded on the host with ``load_demo`` below)
 image = (
@@ -45,7 +51,7 @@ image = (
     .add_local_dir(
         str(BACKEND / "tests" / "fixtures"), remote_path="/root/tests/fixtures", ignore=NEVER_SHIPPED
     )
-    .add_local_dir(str(ROOT / "demo"), remote_path="/root/demo", ignore=NEVER_SHIPPED)
+    .add_local_dir(str(ROOT / "demo"), remote_path=DEMO_DIR, ignore=NEVER_SHIPPED)
 )
 
 data = modal.Volume.from_name("orphan-parts-data", create_if_missing=True)
@@ -69,6 +75,7 @@ def web():  # type: ignore[no-untyped-def]
     os.environ.setdefault("LOG_FORMAT", "json")
     # the Volume is a network filesystem: SQLite's write-ahead log does not work on one
     os.environ.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
+    os.environ.setdefault("DEMO_SET", DEMO_SET)
     if not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
     from starlette.middleware import Middleware
@@ -137,11 +144,12 @@ def load_demo(reset: bool = True) -> int:  # type: ignore[no-untyped-def]
     os.environ.setdefault("DATA_DIR", "/data")
     os.environ.setdefault("LOG_FORMAT", "text")
     os.environ.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
+    os.environ.setdefault("DEMO_SET", DEMO_SET)
     if not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
     from app.demo.__main__ import main
 
-    args = ["load", "--set", "/root/demo/set.yaml"]
+    args = ["load", "--set", DEMO_SET]
     if reset:
         args.append("--reset")
     code = main(args)
