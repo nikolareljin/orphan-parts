@@ -8,6 +8,7 @@ import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
 import Measure from './Measure'
+import { ItemSearch } from './SearchPlan'
 import Picture from './Picture'
 import SectionNav, { type SectionEntry } from './SectionNav'
 import Value from './Value'
@@ -455,6 +456,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
       <div className="item-section" data-section="fit">
         <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
         <Assess item={item} />
+        {!demo && <ItemSearch item={item} />}
       </div>
 
       {/* the wrapper stays empty, and hidden, when there is no picture to show */}

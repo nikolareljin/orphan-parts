@@ -1,4 +1,4 @@
-import type { Candidate, CandidateState, SearchStatus, SourceKind } from './api'
+import type { Candidate, CandidateState, Highlight, ListingVerdict, SearchStatus, SourceKind } from './api'
 
 export const SOURCES: { value: SourceKind; label: string }[] = [
   { value: 'text', label: 'Listing text' },
@@ -76,4 +76,79 @@ export function candidateRequest(input: {
     location: input.location,
     url: input.url,
   }
+}
+
+// Several listings pasted at once, one each: split on lines of dashes when there are any (so a
+// listing may keep blank lines inside), otherwise on blank lines. Empty pieces are dropped.
+export function splitListings(text: string): string[] {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n')
+  const dashes = /^\s*[-–—]{3,}\s*$/
+  const byDashes = lines.some((l) => dashes.test(l))
+  const pieces: string[] = []
+  let current: string[] = []
+  for (const line of lines) {
+    const breaks = byDashes ? dashes.test(line) : line.trim() === ''
+    if (breaks) {
+      pieces.push(current.join('\n'))
+      current = []
+    } else {
+      current.push(line)
+    }
+  }
+  pieces.push(current.join('\n'))
+  return pieces.map((p) => p.trim()).filter((p) => p.length > 0)
+}
+
+export interface Segment {
+  text: string
+  kind: 'match' | 'excluded' | null
+}
+
+// The listing text cut into plain and highlighted runs. Offsets are in code points, as the
+// backend counts them, so a listing with an emoji in it highlights the right span; where two
+// highlights overlap, the earlier one keeps the overlap.
+export function highlightSegments(text: string, highlights: Pick<Highlight, 'kind' | 'start' | 'end'>[]): Segment[] {
+  const chars = Array.from(text)
+  const sorted = [...highlights].filter((h) => h.end > h.start).sort((a, b) => a.start - b.start || a.end - b.end)
+  const out: Segment[] = []
+  let at = 0
+  for (const h of sorted) {
+    const start = Math.max(h.start, at)
+    const end = Math.min(h.end, chars.length)
+    if (end <= start) continue
+    if (start > at) out.push({ text: chars.slice(at, start).join(''), kind: null })
+    out.push({ text: chars.slice(start, end).join(''), kind: h.kind })
+    at = end
+  }
+  if (at < chars.length) out.push({ text: chars.slice(at).join(''), kind: null })
+  return out
+}
+
+export function verdictLabel(verdict: ListingVerdict): string {
+  switch (verdict) {
+    case 'fits':
+      return 'fits'
+    case 'maybe':
+      return 'maybe'
+    case 'no':
+      return 'does not fit'
+  }
+}
+
+export function verdictTone(verdict: ListingVerdict): 'fits' | 'unsure' | 'conflict' {
+  return verdict === 'fits' ? 'fits' : verdict === 'no' ? 'conflict' : 'unsure'
+}
+
+const DOLLARS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
+
+// An asking price as people write it: $1,200, $45.50, free. Whole dollars drop the cents.
+export function askingPrice(amount: number): string {
+  if (amount === 0) return 'free'
+  const text = DOLLARS.format(amount)
+  return text.endsWith('.00') ? text.slice(0, -3) : text
+}
+
+// The line under the search links: the max price they include, or none (null or 0 is no limit).
+export function maxPriceLine(maxPrice: number | null): string {
+  return maxPrice !== null && maxPrice > 0 ? `Each link includes your max price, ${askingPrice(maxPrice)}.` : 'No max price set.'
 }
