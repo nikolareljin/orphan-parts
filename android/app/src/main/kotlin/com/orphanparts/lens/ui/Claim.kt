@@ -63,7 +63,8 @@ private val claims = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 private var retriedAtStart = false
 
 /** The claim for a scan, run in the process's scope; the outcome is stored only if the
- * settings still hold the scan it came from, then `onDone` gets the line on the main thread. */
+ * settings still hold the scan it came from, and only then does `onDone` get the line, on the
+ * main thread (a later scan or a typed address says its own). */
 fun startClaim(
     store: SettingsStore,
     paired: Settings,
@@ -72,10 +73,10 @@ fun startClaim(
     onDone: (String) -> Unit,
 ): Job = claims.launch {
     val (claimed, line) = claimPhoneCode(paired, previousUrl, transport)
-    withContext(NonCancellable) {
-        applyClaim(store.load(), paired, claimed)?.let { store.save(it) }
+    val applied = withContext(NonCancellable) {
+        applyClaim(store.load(), paired, claimed)?.also { store.save(it) }
     }
-    withContext(Dispatchers.Main) { onDone(line) }
+    if (applied != null) withContext(Dispatchers.Main) { onDone(line) }
 }
 
 /** On the first start of the process: a pairing still current with no code of its own claimed
