@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import type { Assertion, Item } from './api'
 import { ApiError } from './api'
-import { availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from './inventory'
+import {
+  availabilityLabel,
+  detailsOf,
+  intentLabel,
+  isConflict,
+  mergeDetails,
+  proposedCount,
+  provenanceLabel,
+  reviewLabel,
+  whenText,
+} from './inventory'
 
 const assertion = (id: number, review: Assertion['review']): Assertion => ({
   id,
@@ -73,5 +83,21 @@ describe('isConflict', () => {
     expect(isConflict(new ApiError(409, 'item 1 is at version 3, not 2'))).toBe(true)
     expect(isConflict(new ApiError(404, 'no item 9'))).toBe(false)
     expect(isConflict(new Error('offline'))).toBe(false)
+  })
+})
+
+describe('mergeDetails', () => {
+  const before = { ...item([]), notes: 'from the attic', condition: 'scuffed' }
+  const next = { ...item([]), version: 2, notes: 'from the attic\n\nRepair plan', condition: 'dented', intent: 'keep' as const }
+  it("keeps what the owner typed and has not saved, and takes the server's value elsewhere", () => {
+    const typed = { ...detailsOf(before), notes: 'from the attic, check the fan' }
+    expect(mergeDetails(typed, before, next)).toEqual({ ...detailsOf(next), notes: 'from the attic, check the fan' })
+  })
+  it('takes every server value when nothing was typed', () => {
+    expect(mergeDetails(detailsOf(before), before, next)).toEqual(detailsOf(next))
+  })
+  it('takes every server value after the details were saved', () => {
+    const typed = { ...detailsOf(before), notes: 'typed ' }
+    expect(mergeDetails(typed, null, { ...next, notes: 'typed' })).toEqual({ ...detailsOf(next), notes: 'typed' })
   })
 })

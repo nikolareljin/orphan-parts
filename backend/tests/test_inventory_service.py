@@ -245,6 +245,22 @@ def test_a_file_left_between_two_columns_of_a_step_opens(settings: Settings) -> 
         assert {"parent_id", "master"} <= columns
 
 
+def test_a_file_that_already_has_the_scenarios_table_opens(settings: Settings) -> None:
+    path = settings.inventory_db_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        for version in range(1, 13):
+            conn.executescript(MIGRATIONS[version])
+        # another build's step made the table and its index, its version not kept here
+        conn.executescript(MIGRATIONS[13])
+        conn.execute("PRAGMA user_version = 12")
+    Store(path)
+    with sqlite3.connect(path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+        names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master")}
+        assert {"scenarios", "scenarios_by_item"} <= names
+
+
 def test_a_step_that_fails_leaves_the_version_before_it(
     settings: Settings, monkeypatch: pytest.MonkeyPatch
 ) -> None:
