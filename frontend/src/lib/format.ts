@@ -39,3 +39,11 @@ export function percent(confidence: number): string {
 export function usd(amount: number): string {
   return amount === 0 ? '$0.00' : `$${amount.toFixed(4)}`
 }
+
+/** Whether the label's own text says more than the value shown: a difference in letter case,
+ * spacing or punctuation alone ("cULus" read as "CULUS") is not worth a second line. */
+export function printedDiffers(value: string, raw: string | undefined | null): boolean {
+  if (!raw) return false
+  const plain = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+  return plain(raw) !== plain(value)
+}
