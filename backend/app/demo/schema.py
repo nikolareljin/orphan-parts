@@ -59,6 +59,12 @@ class DemoItem(BaseModel):
     holds_data: bool = False
     asking_price: str = ""
     price: bool = Field(default=False, description="ask for price guidance")
+    picture: str = Field(
+        default="",
+        max_length=200,
+        description="draw a picture of the item as this use (a template id or a few words);"
+        " fixture mode shows it only when a recording of that drawing is kept",
+    )
     expect: Expect | None = Field(default=None, description="what an evaluation run scores")
 
     @field_validator("photos")
@@ -190,7 +196,13 @@ class Outcome(BaseModel):
     searches: int = 0
     candidates: int = 0
     projects: int = 0
+    pictures: int = 0
     skipped: list[str] = []
+    unrecorded: list[str] = Field(
+        default=[],
+        description="what fixture mode leaves out because nothing is recorded for it yet (a"
+        " picture named in the set before a record run); not a skip",
+    )
     cost_usd: float = 0.0
     mode: str = ""
     stub_answers: int = Field(
@@ -203,7 +215,7 @@ class Outcome(BaseModel):
             f"mode {self.mode}: {self.items} item(s) from {self.photos} photo(s),"
             f" {self.voice_notes} voice note(s), {self.drafts} draft(s), {self.guidances}"
             f" guidance(s), {self.searches} search(es) with {self.candidates} candidate(s),"
-            f" {self.projects} project(s); {self.cost_usd:.4f} USD"
+            f" {self.projects} project(s), {self.pictures} picture(s); {self.cost_usd:.4f} USD"
         ]
         if self.stub_answers:
             out.append(
@@ -212,6 +224,7 @@ class Outcome(BaseModel):
                 " the stub's words on the cards"
             )
         out += [f"skipped: {s}" for s in self.skipped]
+        out += [f"not recorded yet: {u}" for u in self.unrecorded]
         return out
 
 

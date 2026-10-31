@@ -1,9 +1,13 @@
-"""Command line: python -m app.demo <load|record|scrub> [options]
+"""Command line: python -m app.demo <load|record|samples|scrub> [options]
 
-  load   [--set demo/set.yaml] [--reset]   load the set through the services, in whatever mode
+  load    [--set demo/set.yaml] [--reset]  load the set through the services, in whatever mode
                                            the settings say (fixture mode replays, no key needed)
-  record [--set demo/set.yaml] [--reset]   the same run with OPL_RECORD_FIXTURES=1 forced, so
-                                           every model answer is written as a fixture; needs a key
+  record  [--set demo/set.yaml] [--reset]  the same run with OPL_RECORD_FIXTURES=1 forced, so
+                                           every model answer is written as a fixture, then every
+                                           reading a sample click can ask for; needs a key
+  samples [--set demo/set.yaml]            only the sample readings: recorded in record mode,
+                                           checked in fixture mode (each one without a recording
+                                           is named, and the exit status is 1)
   scrub  <raw dir> [--out demo/photos] [--notes demo/notes]
                                            raw photos re-encoded without metadata, WAV notes copied
 
@@ -26,8 +30,11 @@ from app.inventory import Inventory
 from app.listing import Lister, VoiceNotes
 from app.match import Assessor
 from app.model_api import CostLedger, ModelApiClient
+from app.picture import Pictures
 from app.profiles import Profiles
 from app.projects import Planner, Templates
+from app.samples import SampleReader, Samples, SamplesOutcome, record_samples
+from app.segment import Segmenter
 from app.value import Valuer
 
 DEFAULT_SET = Path("demo/set.yaml")
@@ -60,6 +67,16 @@ def build_loader(settings: Settings) -> tuple[Loader, ModelApiClient]:
     profiles = Profiles()
     assessor = Assessor(profiles, inventory)
     finder = Finder(settings, client, inventory, profiles, extractor, assessor)
+    templates = Templates()
+    # an item's picture is drawn only with PICTURE_ENABLED (every drawing is a paid call; a
+    # record run turns it on); fixture mode replays a kept drawing whatever it says, at no cost
+    replay = settings.model_api_mode == "fixture"
+    pictures = Pictures(
+        settings.model_copy(update={"picture_enabled": settings.picture_enabled or replay}),
+        client,
+        inventory,
+        templates,
+    )
     loader = Loader(
         settings,
         client,
@@ -69,9 +86,19 @@ def build_loader(settings: Settings) -> tuple[Loader, ModelApiClient]:
         VoiceNotes(settings, client, inventory),
         Valuer(settings, client, inventory),
         finder,
-        Planner(settings, client, inventory, Templates(), finder),
+        Planner(settings, client, inventory, templates, finder),
+        pictures,
     )
     return loader, client
+
+
+def build_sample_reader(settings: Settings, client: ModelApiClient, set_file: Path) -> SampleReader:
+    return SampleReader(
+        settings,
+        Samples(settings, set_file),
+        Extractor(settings, client),
+        Segmenter(settings, client),
+    )
 
 
 async def _run(settings: Settings, demo: DemoSet, base: Path) -> Outcome:
@@ -82,9 +109,18 @@ async def _run(settings: Settings, demo: DemoSet, base: Path) -> Outcome:
         await client.aclose()
 
 
+async def _samples(settings: Settings, set_file: Path) -> SamplesOutcome:
+    ledger = CostLedger(settings.spend_cap_usd, settings.spend_ledger_path)
+    client = ModelApiClient(settings, ledger)
+    try:
+        return await record_samples(build_sample_reader(settings, client, set_file))
+    finally:
+        await client.aclose()
+
+
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
-    if not args or args[0] not in ("load", "record", "scrub"):
+    if not args or args[0] not in ("load", "record", "samples", "scrub"):
         print(__doc__, file=sys.stderr)
         return 2
     what = args.pop(0)
@@ -144,18 +180,28 @@ def main(argv: list[str] | None = None) -> int:
     except (ValueError, yaml.YAMLError) as exc:
         print(f"demo: {path}: {exc}", file=sys.stderr)
         return 1
+    if what == "samples":
+        settings.data_dir.mkdir(parents=True, exist_ok=True)
+        found = asyncio.run(_samples(settings, path))
+        for line in found.lines():
+            print(line)
+        return 1 if found.missing or found.failed else 0
     if do_reset:
         for name in reset(settings):
             print(f"removed {name}")
     outcome = asyncio.run(_run(settings, demo, path.parent))
     for line in outcome.lines():
         print(line)
-    if what == "record" and outcome.skipped:
+    failed = bool(outcome.skipped)
+    if what == "record":
+        # the readings a sample click asks for, kept beside the set's own
+        found = asyncio.run(_samples(settings, path))
+        for line in found.lines():
+            print(line)
+        failed = failed or bool(found.missing or found.failed)
+    if what == "record" and failed:
         # the paid run: what it skipped has no recording, so the run is not done
-        print(
-            f"demo: {len(outcome.skipped)} part(s) of the set were skipped; see above",
-            file=sys.stderr,
-        )
+        print("demo: part of the set or its samples was skipped; see above", file=sys.stderr)
         return 1
     return 0
 

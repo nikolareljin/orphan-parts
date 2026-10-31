@@ -7,6 +7,7 @@ from app.model_api.client import (
     StructuredResponse,
     Transcript,
     citations,
+    exact_replay,
     image_part,
     search_results,
     searches,
@@ -18,6 +19,7 @@ from app.model_api.errors import (
     FixtureMissingError,
     IncompleteResponseError,
     ModelApiError,
+    NoRecordingError,
     SpendCapError,
 )
 from app.model_api.fixtures import FixtureStore
@@ -34,6 +36,7 @@ __all__ = [
     "ModelApiClient",
     "ModelApiError",
     "ModelResponse",
+    "NoRecordingError",
     "PictureResult",
     "SpendCapError",
     "StructuredResponse",
@@ -41,6 +44,7 @@ __all__ = [
     "Usage",
     "citations",
     "cost_usd",
+    "exact_replay",
     "image_part",
     "search_results",
     "searches",

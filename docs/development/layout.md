@@ -7,13 +7,15 @@ backend/
     config.py         settings, validated at startup
     api/              one router per feature (items, photos, extract, segment, measure,
                       assess, drafts, voice, value, decide, find, projects, picture,
-                      captures, pair, profiles, access); routes.py holds the operational paths
+                      captures, pair, samples, profiles, access); routes.py holds the
+                      operational paths
     extract/, segment/, measure/, match/, listing/, value/, decide/, find/, projects/,
     picture/, captures/
                       one package per feature: schema, service, data
     inventory/        the SQLite store, its migrations and the item service
     photos/           the photos kept with an item
     keys/, pairing/   access codes issued as records; the phone's pairing and its own code
+    samples/          the demo set's photos as the visitor's gallery, read by id
     eval/             the evaluation loop over the demo set and the training export
     profiles/         the category profiles as data, and their loader
     demo/             the demo set loaded through the services, recorded once, replayed

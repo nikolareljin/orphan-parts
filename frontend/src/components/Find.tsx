@@ -6,13 +6,20 @@ import { inputLabel, ruleHint } from '../lib/match'
 import { Result } from './Assess'
 import Modal from './Modal'
 import SearchPlan from './SearchPlan'
+import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
 // Find the one that fits: a search the owner runs on Marketplace, and the listings brought back.
-export default function Find() {
+export default function Find({ demo = false }: { demo?: boolean }) {
+  // searches, listings and screenshots are the owner's: the demo visitor reaches none of them
+  if (demo) return <SignInLine />
+  return <Searches />
+}
+
+function Searches() {
   const [searches, setSearches] = useState<Search[]>([])
   const [openId, setOpenId] = useState<number | null>(null)
   const [error, setError] = useState('')

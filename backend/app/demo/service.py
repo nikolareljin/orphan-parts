@@ -20,8 +20,9 @@ from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.listing import Lister, VoiceNotes
 from app.listing.schema import DraftRequest
-from app.model_api import ModelApiClient, ModelApiError
+from app.model_api import ModelApiClient, ModelApiError, NoRecordingError, exact_replay
 from app.photos import ItemPhotos, PhotoError
+from app.picture import Pictures, PicturesOffError
 from app.projects import Planner, ProposeRequest
 from app.value import Valuer
 from app.value.schema import PriceRequest
@@ -105,6 +106,7 @@ class Loader:
         valuer: Valuer,
         finder: Finder,
         planner: Planner,
+        pictures: Pictures | None = None,
     ) -> None:
         self.settings = settings
         self.client = client
@@ -115,6 +117,7 @@ class Loader:
         self.valuer = valuer
         self.finder = finder
         self.planner = planner
+        self.pictures = pictures
         # the set's photos stay with the items they were read from, as a capture's do
         self.photos = ItemPhotos(settings, inventory)
 
@@ -283,6 +286,8 @@ class Loader:
             else:
                 out.drafts += 1
                 out.cost_usd += draft.cost_usd
+        if item.picture:
+            await self.draw(item, created.id, out)
         if item.price:
             try:
                 guidance = await self.valuer.guide(
@@ -294,6 +299,29 @@ class Loader:
                 out.guidances += 1
                 out.cost_usd += guidance.cost_usd
         return created.id
+
+    async def draw(self, item: DemoItem, item_id: int, out: Outcome) -> None:
+        """The item's picture, after its drafts. With a key it is drawn (and kept, in record
+        mode); in fixture mode only the recording of this very drawing answers: without one
+        the picture is left out and listed as not recorded yet, never the stub image passed
+        off as a drawing."""
+        if self.pictures is None:
+            out.skipped.append(f"{item.key}: picture: no pictures service in this run")
+            return
+        token = exact_replay.set(True)
+        try:
+            picture = await self.pictures.draw(item_id, item.picture)
+        except NoRecordingError:
+            out.unrecorded.append(f"{item.key}: picture (one ./dev record-fixtures run draws it)")
+        except PicturesOffError:
+            out.unrecorded.append(f"{item.key}: picture (left out: PICTURE_ENABLED is off)")
+        except (ValueError, LookupError, ModelApiError) as exc:
+            out.skipped.append(f"{item.key}: picture: {exc}")
+        else:
+            out.pictures += 1
+            out.cost_usd += picture.cost_usd
+        finally:
+            exact_replay.reset(token)
 
     # the set's currency and country, read once per run
     currency: str = "USD"

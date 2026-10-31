@@ -61,8 +61,9 @@
 #   record-fixtures [--keep]
 #                      reset the inventory and load the set once with the key from the shell
 #                      or .env, keeping every model answer as a fixture
-#                      (OPL_RECORD_FIXTURES=1); spends credits once; --keep adds to what is
-#                      there
+#                      (OPL_RECORD_FIXTURES=1), the sample readings and the pictures the set
+#                      names (PICTURE_ENABLED=1) included; spends credits once; --keep adds to
+#                      what is there
 #   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
 #                      WAV notes copied into demo/notes/
 #   shell <service>    open a shell in a running service
@@ -665,7 +666,7 @@ cmd_record_fixtures() {
   fi
   stop_backend_for_run
   # shellcheck disable=SC2086
-  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 ${key_env[@]+"${key_env[@]}"} backend python -m app.demo record --set /demo/set.yaml $reset
+  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 -e PICTURE_ENABLED=1 ${key_env[@]+"${key_env[@]}"} backend python -m app.demo record --set /demo/set.yaml $reset
   log_ok "fixtures recorded under backend/tests/fixtures/api; review and commit them"
 }
 

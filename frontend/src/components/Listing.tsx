@@ -26,6 +26,7 @@ import {
   type CopyKey,
 } from '../lib/listing'
 import GatedImage from './GatedImage'
+import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -33,7 +34,18 @@ function message(err: unknown): string {
 
 // From a private record to a Facebook Marketplace listing the owner posts: what the owner adds,
 // the draft in Marketplace's shape, the fields to paste, and what happened after.
-export default function Listing({ item, readOnly = false, onChanged }: { item: Item; readOnly?: boolean; onChanged: () => void }) {
+// samplesOnly: no file input until uploads are known to be open (the visitor, or access not known yet)
+export default function Listing({
+  item,
+  readOnly = false,
+  samplesOnly = readOnly,
+  onChanged,
+}: {
+  item: Item
+  readOnly?: boolean
+  samplesOnly?: boolean
+  onChanged: () => void
+}) {
   const [mode, setMode] = useState<DraftMode>(item.intent === 'give' ? 'give' : 'sell')
   const [details, setDetails] = useState<SellDetails>(emptyDetails)
   const [saved, setSaved] = useState<number | null>(null)
@@ -218,6 +230,8 @@ export default function Listing({ item, readOnly = false, onChanged }: { item: I
         <h4 tabIndex={-1}>Prepare to sell or give away</h4>
         <p className="hint limit">{HARD_LIMIT}</p>
         <p className="meta">Sign in with the code to prepare a listing.</p>
+        {/* the demo set carries no voice note to stand in for one of the visitor's own */}
+        <SignInLine what="Voice note (WAV)" />
       </section>
     )
 
@@ -314,10 +328,14 @@ export default function Listing({ item, readOnly = false, onChanged }: { item: I
               </label>
             </>
           )}
-          <label>
-            <span>Voice note (WAV)</span>
-            <input type="file" accept="audio/wav,.wav" onChange={(e) => void onVoice(e)} disabled={busy} />
-          </label>
+          {samplesOnly ? (
+            <SignInLine what="Voice note (WAV)" />
+          ) : (
+            <label>
+              <span>Voice note (WAV)</span>
+              <input type="file" accept="audio/wav,.wav" onChange={(e) => void onVoice(e)} disabled={busy} />
+            </label>
+          )}
         </div>
         {note && (
           <p className="hint">

@@ -70,6 +70,8 @@ def test_daily_allowance_counts_everyone_until_midnight() -> None:
 
 def test_expensive_names_the_calls_that_spend() -> None:
     assert expensive("POST", "/api/extract")
+    assert expensive("POST", "/api/samples/read")
+    assert not expensive("GET", "/api/samples")
     assert expensive("POST", "/api/items/12/price")
     assert expensive("POST", "/api/searches/3/candidates")
     assert not expensive("GET", "/api/items/12/price")
@@ -138,8 +140,15 @@ def test_without_a_session_the_visitor_is_the_demo(gated: TestClient) -> None:
     for path in ("/healthz", "/readyz", "/api/version", "/openapi.json", "/docs", "/api/profiles"):
         assert gated.get(path).status_code == 200, path
     assert gated.get("/api/profiles/power_adapter/rules").status_code == 200
-    tried = gated.post("/api/extract", files=[("photos", ("p.jpg", make_photo(), "image/jpeg"))])
+    # a try is on a sample of the demo set; a photo of the visitor's own is not read
+    tried = gated.post("/api/extract", data={"sample_ids": ["dell-u2419h-label"]})
     assert tried.status_code not in (401, 403), tried.text
+    upload = gated.post("/api/extract", files=[("photos", ("p.jpg", make_photo(), "image/jpeg"))])
+    assert upload.status_code == 403 and "Sign in with the access code" in upload.json()["detail"]
+    assert gated.get("/api/samples").status_code == 200
+    assert demo_allowed("POST", "/api/samples/read")
+    assert demo_allowed("GET", "/api/samples/dell-u2419h-label/thumb")
+    assert not demo_allowed("GET", "/api/samples/../set.yaml/file")
     assert gated.get("/api/access").json()["granted"] is False
     assert gated.get("/readyz").json()["demo"]["gated"] is True
     assert demo_allowed("POST", "/api/assess") and demo_allowed("POST", "/api/measure")
@@ -320,7 +329,7 @@ def test_what_spends_is_counted_per_visitor_and_per_day(tmp_path: Path) -> None:
         # the demo visitor's tries are recordings: not counted, not refused by the allowance
         kept = dict(c.cookies)
         c.cookies.clear()
-        tried = c.post("/api/extract", files=photo)
+        tried = c.post("/api/extract", data={"sample_ids": ["dell-u2419h-label"]})
         assert tried.status_code != 429, tried.text
         assert c.get("/readyz").json()["demo"]["daily_used"] == 2
         c.cookies.update(kept)
@@ -460,6 +469,10 @@ DEMO_ROUTES = {
     ("get", "/api/templates"),
     ("get", "/api/pair"),
     ("get", "/api/pair.svg"),
+    ("get", "/api/samples"),
+    ("get", "/api/samples/{sample_id}/file"),
+    ("get", "/api/samples/{sample_id}/thumb"),
+    ("post", "/api/samples/read"),
     ("post", "/api/extract"),
     ("post", "/api/segment"),
     ("post", "/api/assess"),
@@ -472,6 +485,7 @@ def _concrete(path: str, item_id: int, capture_id: int) -> str:
         path.replace("{item_id}", str(item_id))
         .replace("{capture_id}", str(capture_id))
         .replace("{profile_id}", "power_adapter")
+        .replace("{sample_id}", "dell-u2419h-label")
         .replace("{n}", "1")
     )
 

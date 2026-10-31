@@ -131,7 +131,7 @@ the run, so the item dialog draws its picture from the recorded stub. The runner
 frontend container's network and runs as the host user; results, traces and videos land under
 `e2e/test-results/`. Specs live in `e2e/tests/`, one per surface (`extract`, `inventory`,
 `measure`, `assess`, `value`, `listing`, `decide`, `find`, `search-plan`, `build`, `inbox`, and
-`access` and `door` for the two doors), and address the page by role and label, the way a user
+`access`, `door` and `samples` for the two doors and the visitor's gallery), and address the page by role and label, the way a user
 does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather
 than the default five: six workers share one backend process, and while the segmentation test
 decodes masks in pure Python every other read waits a second or two.
@@ -177,8 +177,8 @@ attempts); before the first call the run names every operation whose ceiling alo
 `--max-usd` (at the default 0.25, `propose` and `price`) and skips it, then stops before one
 whose ceiling would take the run past `--max-usd`, and refuses to start when the spend ledger
 has less headroom than that. It never records fixtures. With `--against` the proof runs over
-HTTP against a running backend: behind a gate, an extract without the code is answered from the
-recordings and a write is refused, then a session with `LIVECHECK_ACCESS_CODE` reads the live
+HTTP against a running backend: behind a gate, a sample photo read without the code is answered from
+its recording, a photo sent without it and a write are refused, then a session with `LIVECHECK_ACCESS_CODE` reads the live
 models and signs out. The access code is used in that mode only; it and the key come from the
 environment (the shell or `.env`), never an argument, and `./dev` passes them on by name
 without reading either value.

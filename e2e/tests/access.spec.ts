@@ -5,7 +5,16 @@ import { grayPng } from './png'
 test.use({ storageState: { cookies: [], origins: [] } })
 
 const code = process.env.E2E_ACCESS_CODE ?? ''
-const sampleLine = 'Recorded answer for a sample photo, not a reading of yours.'
+const sampleLine = 'Recorded answer for this sample.'
+
+// the visitor clicks a photo of the demo set; there is no upload to make
+async function readASample(page: Page) {
+  await expect(page.locator('input[type="file"]')).toHaveCount(0)
+  await page.getByRole('checkbox', { name: 'Dell U2419H monitor, 24 inch, photo 1 of 1' }).check()
+  await page.getByLabel('Find the label in the photo first (SAM 3.1; helps with busy photos)').uncheck()
+  await page.getByRole('button', { name: 'Read the label' }).click()
+  await expect(page.getByRole('table', { name: 'Evidence' })).toBeVisible()
+}
 
 async function readALabel(page: Page) {
   await page.getByLabel('Photos of the label').setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: grayPng() })
@@ -25,7 +34,7 @@ test('without a session the pages are the demo, and the code opens the rest', as
   await expect(page.getByRole('alert')).toHaveCount(0)
   await page.getByRole('button', { name: 'Read a label' }).click()
   // a recorded answer says so in plain words for the visitor, above the result
-  await readALabel(page)
+  await readASample(page)
   await expect(page.getByRole('note').filter({ hasText: sampleLine })).toBeVisible()
 
   await page.getByRole('button', { name: 'Sign in with the code' }).click()
@@ -70,12 +79,16 @@ test('the API answers the demo visitor with recordings and refuses every write',
   expect(write.status()).toBe(403)
   const open = await request.get('/api/version')
   expect(open.status()).toBe(200)
-  // the headline of the demo door: a try is answered, from the recordings, and spends nothing
-  const tried = await request.post('/api/extract', {
-    multipart: { photos: { name: 'label.png', mimeType: 'image/png', buffer: grayPng() } },
-  })
+  // the headline of the demo door: a sample is answered, from its recording, and spends nothing
+  const tried = await request.post('/api/extract', { multipart: { sample_ids: 'dell-u2419h-label' } })
   expect(tried.status()).toBe(200)
   expect(((await tried.json()) as { from_fixture: boolean }).from_fixture).toBe(true)
+  // a photo of the visitor's own is not read
+  const upload = await request.post('/api/extract', {
+    multipart: { photos: { name: 'label.png', mimeType: 'image/png', buffer: grayPng() } },
+  })
+  expect(upload.status()).toBe(403)
+  expect(((await upload.json()) as { detail: string }).detail).toBe('Sign in with the access code to read your own photos.')
   // an item by its id is the inventory, not a try
   const peek = await request.post('/api/assess', { data: { need: { item_id: 1 }, candidate: { values: {} } } })
   expect(peek.status()).toBe(403)

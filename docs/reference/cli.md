@@ -45,9 +45,11 @@ reads a label and prints the extraction as JSON; fixture mode needs no key.
 and, with `--out`, writes `overlay.jpg` and one crop per region.
 `python -m app.pairing --origin http://192.168.1.20:5173 [--json]` prints the pairing code for
 the phone, with a pairing (good for `PAIR_TOKEN_MINUTES`) when the demo is gated.
-`python -m app.demo <load|record|scrub>` is what the three demo commands run inside the
+`python -m app.demo <load|record|scrub|samples>` is what the three demo commands run inside the
 container: `load [--set FILE] [--reset]`, `record [--set FILE] [--reset]`,
-`scrub <raw dir> [--out DIR]`.
+`scrub <raw dir> [--out DIR]`; `samples [--set FILE]` records only the readings a sample click can ask
+for in record mode, and in fixture mode checks that each has its recording (exit 1 when one is
+missing).
 `python -m app.eval <run|export|diff>` is behind `./dev eval`: `run [--set FILE] [--out DIR] [--keep]`
 scores a load, `export [--out DIR]` writes `train.jsonl` from the accepted reads, `diff a.json b.json`
 puts two reports side by side.

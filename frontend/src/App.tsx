@@ -11,7 +11,7 @@ import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type 
 import { pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
 import { DEFAULT_LIMITS } from './lib/photos'
 import { demoText } from './lib/access'
-import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs, type AccessState, type KnownAccess } from './lib/door'
+import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs, uploadsAllowed, type AccessState, type KnownAccess } from './lib/door'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
 
@@ -130,6 +130,8 @@ export default function App() {
   const door = doorOf(access)
   // the demo door: gated, and no session; the code opens the rest
   const demo = isDemo(access)
+  // every upload surface shows the samples or the sign-in line until uploads are known to be open
+  const samplesOnly = !uploadsAllowed(access)
   // the dialog belongs to the way in: once the door turns (a check, a sign-in) it closes
   if (signIn && door !== 'sign-in') setSignIn(false)
 
@@ -207,7 +209,7 @@ export default function App() {
           <h2>Read a label</h2>
           <ExtractForm
             limits={status.kind === 'ok' ? status.version.limits : undefined}
-            demo={demo}
+            demo={samplesOnly}
             liveModels={status.kind === 'ok' && status.ready.demo.live_models}
             onSaved={() => {
               setSaved((n) => n + 1)
@@ -222,7 +224,7 @@ export default function App() {
           <h2>Inbox</h2>
           <Inbox
             limits={status.kind === 'ok' ? status.version.limits : DEFAULT_LIMITS}
-            demo={demo}
+            demo={samplesOnly}
             onOpenItem={(id) => {
               setOpenItem(id)
               setSaved((n) => n + 1)
@@ -235,14 +237,14 @@ export default function App() {
       {view === 'inventory' && (
         <section className="card">
           <h2>My inventory</h2>
-          <Inventory refresh={saved} openId={openItem} onOpened={() => setOpenItem(null)} demo={demo} />
+          <Inventory refresh={saved} openId={openItem} onOpened={() => setOpenItem(null)} demo={demo} samplesOnly={samplesOnly} />
         </section>
       )}
 
       {view === 'find' && (
         <section className="card">
           <h2>Find a part</h2>
-          <Find />
+          <Find demo={samplesOnly} />
         </section>
       )}
 

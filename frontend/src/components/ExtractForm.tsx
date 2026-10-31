@@ -2,7 +2,7 @@ import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
-import SampleNotice from './SampleNotice'
+import SampleRead from './SampleRead'
 import SegmentView from './SegmentView'
 
 type State =
@@ -16,17 +16,21 @@ function messageOf(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
-export default function ExtractForm({
-  limits = DEFAULT_LIMITS,
-  demo = false,
-  liveModels = false,
-  onSaved,
-}: {
+type FormProps = {
   limits?: Limits
   demo?: boolean
   liveModels?: boolean
   onSaved?: (item: Item) => void
-}) {
+}
+
+// The demo visitor clicks the demo set's photos; signed in (or on a machine of your own),
+// photos are uploaded and read live where the server has a key.
+export default function ExtractForm(props: FormProps) {
+  if (props.demo) return <SampleRead liveModels={props.liveModels} />
+  return <UploadForm {...props} />
+}
+
+function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
   const [files, setFiles] = useState<File[]>([])
   const [dropped, setDropped] = useState(0)
   const [findFirst, setFindFirst] = useState(true)
@@ -142,11 +146,6 @@ export default function ExtractForm({
       {/* the live region stays mounted, so results landing in it are announced */}
       <div aria-live="polite">
         {note && <p className="hint">{note}</p>}
-        <SampleNotice
-          fromFixture={Boolean(segmentation?.from_fixture || (state.kind === 'done' && state.result.from_fixture))}
-          demo={demo}
-          liveModels={liveModels}
-        />
         {segmentation && <SegmentView result={segmentation} />}
         {state.kind === 'done' && (
           <>

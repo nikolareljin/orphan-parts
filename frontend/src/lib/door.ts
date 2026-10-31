@@ -24,6 +24,13 @@ export function isDemo(access: KnownAccess): boolean {
   return access !== null && access.gated && !access.granted
 }
 
+// Whether the upload inputs may show: only once the server has said so, signed in or open.
+// Unknown (no answer yet, or every try failed) reads as the visitor: the samples and the
+// sign-in line, never a file input the server would refuse.
+export function uploadsAllowed(access: KnownAccess): boolean {
+  return access !== null && (!access.gated || access.granted)
+}
+
 // What the tab knows right after the person acts, before the server is asked again.
 export const SIGNED_IN: AccessState = { gated: true, granted: true }
 export const SIGNED_OUT: AccessState = { gated: true, granted: false }

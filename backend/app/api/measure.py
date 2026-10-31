@@ -3,8 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, status
 from pydantic import ValidationError
 
-from app.api.deps import InventoryDep, MeasurerDep
+from app.api.deps import InventoryDep, MeasurerDep, SamplesDep
 from app.api.model_errors import as_http
+from app.api.samples import sample_photos, visitor_files
 from app.measure import MeasureRequest, MeasureResult
 from app.measure.schema import Measurement
 from app.profiles import UnknownProfileError
@@ -18,10 +19,10 @@ RequestPart = Annotated[
 
 
 async def _read(
-    photo: UploadFile, request: str, measurer: MeasurerDep
+    photo: UploadFile | None, request: str, measurer: MeasurerDep, sample: bytes | None = None
 ) -> tuple[bytes, MeasureRequest]:
     max_mb = measurer.settings.max_upload_mb
-    if photo.size is not None and photo.size > max_mb * 1024 * 1024:
+    if photo is not None and photo.size is not None and photo.size > max_mb * 1024 * 1024:
         raise HTTPException(status_code=400, detail=f"the photo is larger than {max_mb} MB")
     try:
         spec = MeasureRequest.model_validate_json(request)
@@ -37,14 +38,32 @@ async def _read(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
             ) from exc
-    return await photo.read(), spec
+    if sample is not None:
+        return sample, spec
+    return (await photo.read() if photo is not None else b""), spec
 
 
 @router.post("/measure", response_model=MeasureResult)
-async def measure(photo: PhotoPart, request: RequestPart, measurer: MeasurerDep) -> MeasureResult:
+async def measure(
+    request: RequestPart,
+    measurer: MeasurerDep,
+    samples: SamplesDep,
+    photo: Annotated[
+        UploadFile | None,
+        File(description="The photo the points were marked on; the demo visitor sends sample_id"),
+    ] = None,
+    sample_id: Annotated[
+        str | None,
+        Form(description="A sample photo id from GET /api/samples, in place of photo"),
+    ] = None,
+) -> MeasureResult:
     """A dimension from marked points and a scale reference, or the reasons the capture was
     refused. Nothing is stored."""
-    data, spec = await _read(photo, request, measurer)
+    visitor_files(photo is not None)
+    if (photo is None) == (sample_id is None):
+        raise HTTPException(status_code=422, detail="send photo or sample_id, one of the two")
+    sample = sample_photos(samples, [sample_id])[0] if sample_id is not None else None
+    data, spec = await _read(photo, request, measurer, sample)
     try:
         result, _ = await measurer.measure(data, spec)
     except Exception as exc:

@@ -92,10 +92,11 @@ tokens, the cost, and on failure the exception's one-line message (never a reque
 **`--against local|hosted|URL`** runs the proof over HTTP against a running backend, as a browser
 or the phone would. `local` is the stack on this machine (the backend service by name from
 inside the compose network, `localhost:8000` with `NATIVE=1`); `hosted` is `API_URL` from the
-shell or `.env`. Behind a gate it shows what the gate is for: an extract without the code is
-answered from the recordings (`from_fixture` true) and a write (`POST /api/items`) is refused
-with 403, so no code means no spend; then it signs in with the code, reads the same photo on
-the live models (`from_fixture` false), confirms `GET /api/access` says `live`, and signs out
+shell or `.env`. Behind a gate it shows what the gate is for: without the code a sample photo
+of the demo set (the first `GET /api/samples` lists) is read from its recording
+(`from_fixture` true), a photo sent as a file is refused with 403 and a write
+(`POST /api/items`) is refused with 403, so no code means no spend; then it signs in with the
+code, reads the photo on the live models (`from_fixture` false), confirms `GET /api/access` says `live`, and signs out
 (`DELETE /api/access`). Should the write go through (a broken gate), the probe item it made is
 deleted again and the step still fails. On a host without a gate every caller is the owner, and
 only the live reading is checked. The URL must be https, but for `localhost`, `127.0.0.1` and

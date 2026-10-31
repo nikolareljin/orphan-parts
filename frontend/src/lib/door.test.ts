@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs } from './door'
+import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs, uploadsAllowed } from './door'
 
 describe('doorOf', () => {
   it('offers the way in while access is unknown', () => {
@@ -29,6 +29,17 @@ describe('isDemo', () => {
     expect(isDemo(SIGNED_OUT)).toBe(true)
     expect(isDemo(SIGNED_IN)).toBe(false)
     expect(isDemo({ gated: false, granted: true })).toBe(false)
+  })
+})
+
+describe('uploadsAllowed', () => {
+  it('keeps every upload input away until the server says signed in or open', () => {
+    // no answer yet, or every try failed: the visitor's samples and lines, never a file input
+    expect(uploadsAllowed(null)).toBe(false)
+    expect(uploadsAllowed(SIGNED_OUT)).toBe(false)
+    expect(uploadsAllowed(SIGNED_IN)).toBe(true)
+    expect(uploadsAllowed({ gated: false, granted: true })).toBe(true)
+    expect(uploadsAllowed({ gated: false, granted: false })).toBe(true)
   })
 })
 

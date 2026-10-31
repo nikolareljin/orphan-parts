@@ -3,7 +3,8 @@
 One deployment, two doors. The **access code** opens the live door: the full inventory and,
 when the host has a Meta Model API key, the live models. Without it a visitor is the
 **demo**: the pages are there to look at, the stateless readings (a label, a crop, a fit, a
-measurement) are answered from the recorded set and cost nothing, and nothing is kept. Every
+measurement) run on the demo set's own photos, clicked in a gallery, are answered from the
+recordings made of those photos and cost nothing, and nothing is kept. Every
 write is refused with one line: *demo: the code unlocks saving, drafts, prices, projects and
 captures*. Allowances, a daily cap, upload limits and a spend cap stand behind the live door.
 
@@ -51,16 +52,40 @@ Which code opened a session is logged by its label, never the code itself.
 
 Without a session on a gated host, every request is the demo visitor's. Open to the visitor:
 the open paths (`/healthz`, `/readyz`, `/api/version`, `/api/access`, the API documentation),
-the profiles and their rules, the templates, and the four stateless tries: `POST /api/extract`,
-`/api/segment`, `/api/assess` (on values written in; an item by its id is the inventory and
-answers 403), `/api/measure`, each so many times per address and hour
-(`DEMO_VISITOR_CALLS_PER_HOUR`, 429 over it). Everything else answers `403` with the line
+the profiles and their rules, the templates, the demo samples (`GET /api/samples` and each
+sample's file and thumbnail), and the stateless tries: `POST /api/samples/read`,
+`/api/extract`, `/api/segment`, `/api/assess` (on values written in; an item by its id is the
+inventory and answers 403), `/api/measure`, each so many times per address and hour
+(`DEMO_VISITOR_CALLS_PER_HOUR`, 429 over it). The tries that take a photo take a sample, by its
+id, never a file: a photo, a crop or a measurement photo sent by the visitor answers `403`
+with *Sign in with the access code to read your own photos.* Everything else answers `403` with the line
 above (the items and captures the owner marked public are the exception: their values,
 photos and drawn pictures are shown, never a location, a note, a clip or a draft; the demo set loads as public):
 the rest of the inventory, the captures, the searches, the projects, every save, draft, price,
 proposal, picture drawn and capture. The web app shows the pages, a *Sign in with the code* link in the
 header, and the line on whatever a visitor tries to save; the phone says the same on its
 Capture tab when no code is set.
+
+**The samples.** The visitor reads the demo set's photos, not their own: the web app shows no
+file input, drop zone or record button to a visitor anywhere. *Read a label* is a gallery of
+the set's 19 photos, grouped by item, each with a checkbox, *Select all photos of this item*
+and **Read the label** (with *Find the label in the photo first* as before). An item's every
+photo picked is one reading of them all, the one the set was loaded with; any other photo is
+read on its own, and several readings are shown side by side, each under *Recorded answer for
+this sample.* The server reads the stored file the id names and runs the normal flow (SAM 3.1
+on the first photo, Muse Spark on the photos and the label crops), so the recording made of
+that exact photo answers. Only an exact recording answers a sample: a selection with none says
+*No recorded answer for this sample yet.* rather than passing an operation's stub off as a
+reading. *Measure* in the item dialog marks a sample photo (the geometry needs no recording);
+the Inbox's capture form, the listing's voice note and *Find a part* show one line, *Sign in
+with the access code to use this.*, since the set has no sample a visitor could send there and
+those routes are behind the code. Signed in, every upload is back and read live where the
+server has a key. The set's photos are the samples wherever the set is shipped (`DEMO_SET`, by
+default `demo/set.yaml` beside the backend, which the dev stack mounts; the Modal image ships
+the set at `/root/demo` and the Modal app sets `DEMO_SET` to it); without it the gallery says there are none.
+A reading of several samples costs the visitor one try per reading (an item's group is one), so
+a large selection is paid for as the readings it makes; a reading answered from the recordings
+is kept in memory, and the same pick again is answered without decoding anything.
 
 The header always carries one door on a gated host: *Sign in with the code* without a session
 (and while the browser has not heard back from `GET /api/access` yet), *Sign out* with one. The
@@ -176,7 +201,9 @@ code or a token; a session opened is logged with the code's label. See
 
 `./dev e2e` starts the stack with a code of its own (`DEMO_ACCESS_CODE` set in the shell
 overrides it; the value in `.env` is not used for the run), opens one session before the run
-and gives it to every test, and `tests/access.spec.ts` starts without one to check both doors.
+and gives it to every test, and `tests/access.spec.ts` and `tests/samples.spec.ts` start
+without one to check both doors: no file input for the visitor, the gallery, several samples
+read side by side with their own answers, and the inputs back once signed in.
 
 Local gate labels must be one line, 1 to 60 characters. Invalid labels are refused before any local setting or running service changes. Duplicate settings use the last value in the file; exported shell settings still take priority. Quoted values end before a trailing comment.
 
