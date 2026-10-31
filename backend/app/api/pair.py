@@ -102,7 +102,7 @@ def pair_code(request: Request, gate: GateDep, settings: SettingsDep) -> PhoneCo
         code, key = phone_code(session, gate.keys, settings.pair_code_days)
     except AccessKeyError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
-    # a claim that worked is no guess: the address keeps its tries, as a right code does
+    # a claim that worked is no guess: the address keeps its tries, as with a correct code
     gate.attempts.forget(ip)
     log.info("a phone claimed its code", extra={"label": key.label})
     return PhoneCode(gated=True, code=code, label=key.label, expires_at=key.expires_at)

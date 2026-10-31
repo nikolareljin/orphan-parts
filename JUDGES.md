@@ -160,6 +160,8 @@ until you delete them; nothing is published or posted anywhere. The details are 
 | The app: "that code points at localhost" | The site was opened at `localhost`; open it at the computer's network address, or use the hosted site |
 | **Check**: "Not reachable" | The phone is off the network the server is on, or the address has a typo; the hosted address is `https://`, a local one `http://…:5173` |
 | **Check**: "The code is refused" | The code was typed wrong or has expired; ask for a new one |
-| "This phone's code has ended or was revoked" | The code you were given has ended or was revoked, or the phone's own was: sign in on the site with a current code and scan its pairing code again |
+| "This phone's code has ended or was revoked; scan the code on a signed-in page" | The code you were given has ended or was revoked, or the phone's own was; the app has cleared it from the Backend tab: sign in on the site with a current code and scan its pairing code again |
+| After a scan: "no code of its own: the pairing has ended" | The pairing's minutes ran out before the claim: reload the signed-in page and scan its new code |
+| After a scan: "no code of its own: the code that paired this phone has ended" | The code the page was signed in with has ended or was revoked: sign in again with a current code and scan the new pairing code |
 | After a scan: "no code of its own: … does not claim a phone's code" or "… already" | The pairing was spent or did not come from a scan: reload the signed-in page and scan its new code within fifteen minutes |
 | A page says "this visitor's hourly allowance is used" | The demo's per-person limit; wait the minutes it names |
