@@ -9,11 +9,18 @@ backend does the work; the app talks to it and nothing else.
 **Backend.** The first page is where the backend is. **Scan to pair** reads the code the web
 app shows under *Pair the phone* (at the foot of every page) or the one `./dev phone` prints:
 it carries the web app's address (the web app proxies the API, so one address serves both)
-and, when the demo is gated, a session of its own, so the access code never leaves the
-server. The address and the code can also be typed. **Check** reads `/readyz` and says whether
-the backend answers, which Model API mode it is in and whether the gate is on. What is kept
-stays in the app's private storage; a session from the pairing ends on its own, and the app
-says to scan again.
+and, when the demo is gated and the page is signed in, a session of its own, so the access
+code never leaves the server. On that first scan the app claims an access code of its own
+with the session (`POST /api/pair/code`): a record like any issued code, labeled `phone` and
+the first eight characters of the session's id, good for `PAIR_CODE_DAYS` (30) and never past
+the code that paired it. The session ends on its own; the phone's code then opens a new one,
+with no second scan. The Backend tab names the code by its label and expiry, never the code
+itself, and `./dev keys revoke "phone …"` on the server cuts that phone off. A code scanned
+from a page that is not signed in carries the address alone: the phone is the demo visitor
+there (recorded answers, nothing kept) until it scans a signed-in page. The address and the
+code can also be typed. **Check** reads `/readyz` and says whether the backend answers, which
+Model API mode it is in and whether the gate is on, then which code opens it. What is kept
+stays in the app's private storage.
 
 **Capture.** One session per thing: photos through the system camera app (so the app asks for
 no camera permission; four per capture), a clip of at most 30 seconds through the same app,

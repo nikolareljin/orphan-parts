@@ -1,5 +1,6 @@
 package com.orphanparts.lens
 
+import com.orphanparts.lens.api.PhoneCode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -33,6 +34,33 @@ class PairingTest {
         val open = pairingFrom("""{"url":"https://demo.example/","gated":false,"token":""}""", current)!!
         assertEquals("https://demo.example", open.baseUrl)
         assertEquals("", open.token)
+        assertEquals("the code", open.accessCode)
+    }
+
+    @Test
+    fun a_gated_code_without_a_session_pairs_the_phone_as_the_demo_visitor() {
+        val current = Settings("http://old:8000", "opl_old", "sid.1.sig", "phone abcd1234", "2026-11-29T10:00:00+00:00")
+        val demo = pairingFrom("""{"url":"https://demo.example","gated":true,"token":""}""", current)!!
+        assertEquals(Settings("https://demo.example", ""), demo)
+        assertFalse(demo.ownCode)
+        // a later scan of a signed-in page carries a session again
+        val signedIn = pairingFrom("""{"url":"https://demo.example","gated":true,"token":"sid.2.sig"}""", demo)!!
+        assertEquals("sid.2.sig", signedIn.token)
+        assertEquals("", signedIn.accessCode)
+    }
+
+    @Test
+    fun the_claimed_code_replaces_the_typed_one_and_is_named_by_its_label() {
+        val paired = Settings("https://demo.example", "typed", "sid.1.sig")
+        assertFalse(paired.ownCode)
+        val own = withPhoneCode(paired, PhoneCode(true, "opl_mine", "phone abcd1234", "2026-11-29T10:00:00+00:00"))
+        assertEquals("opl_mine", own.accessCode)
+        assertEquals("sid.1.sig", own.token)
+        assertTrue(own.ownCode)
+        assertEquals("phone abcd1234", own.codeLabel)
+        assertEquals("2026-11-29", own.codeExpiresDay)
+        // a typed code over it is a typed code again
+        assertFalse(own.copy(accessCode = "other", codeLabel = "", codeExpires = "").ownCode)
     }
 
     @Test

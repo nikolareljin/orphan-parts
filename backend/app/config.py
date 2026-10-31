@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     demo_paused: bool = False
     demo_trust_proxy: bool = False
     demo_cookie_secure: bool = False
+    # how long the code a phone gets on its first scan lasts; never past the code that paired it
+    pair_code_days: int = 30
     max_photos: int = 4
     # a picture of what an item could become, drawn by Muse Image on a click: off unless set,
     # since every click is a paid call
@@ -97,6 +99,7 @@ class Settings(BaseSettings):
             "demo_daily_calls",
             "demo_code_attempts",
             "demo_requests_per_minute",
+            "pair_code_days",
         ):
             if getattr(self, name) < 1:
                 raise ValueError(f"{name.upper()} must be at least 1")

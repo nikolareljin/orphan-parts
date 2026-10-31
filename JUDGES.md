@@ -70,8 +70,9 @@ installs a file you already have.
 
 ## 4. Connect the phone to the server with your code
 
-The pairing code never carries your access code; it carries the server's address and a
-session the server made for the phone.
+The pairing code never carries your access code; it carries the server's address and, once
+you are signed in, a session the server made for the phone. With that session the app claims
+an access code of its own, which it keeps.
 
 1. On the phone's browser or on a laptop, open `https://orphan-parts.pages.dev`.
 2. Tap **Sign in with the code** in the header, enter the code, **Enter**. The header line
@@ -79,16 +80,19 @@ session the server made for the phone.
 3. Scroll to the foot of the page and open **Pair the phone**. A QR code is there.
 4. In the app, on the **Backend** tab, tap **Scan to pair** and point the camera at the QR
    code (on a laptop screen, or on the phone's own screenshot opened on another device). The
-   app says **Paired with https://….modal.run (with a session)**.
+   app says **Paired with https://….modal.run; this phone now has a code of its own (phone …,
+   until …)**.
 5. Tap **Check**. It should say **Backend ok, Model API live for the code, recorded otherwise,
-   demo gated. Paired: the session works until it ends.**
+   demo gated. The phone's own code (phone …, until …) opens it.**
 
 **Without Google Play services, or without a second screen:** under the QR code the page
 shows the address to type. On the **Backend** tab type it into **Backend URL**
 (`https://….modal.run`), type your access code into the second field, tap **Save**, then
 **Check**. The answer should end with **The code opens it.**
 
-The phone session lasts twelve hours; after that the app asks you to scan again.
+The phone's own code lasts thirty days, so the phone stays through the gate after the
+pairing session's twelve hours with no second scan. Scanning the code on a page that is not
+signed in pairs the phone as the demo (recorded answers, nothing kept): sign in first.
 
 ## 5. Connect to a local server instead (alternative)
 

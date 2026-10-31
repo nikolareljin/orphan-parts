@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reachableFromAPhone } from './pairing'
+import { pairingText, reachableFromAPhone } from './pairing'
 
 describe('reachableFromAPhone', () => {
   it('accepts a network address and a public origin', () => {
@@ -17,5 +17,16 @@ describe('reachableFromAPhone', () => {
     expect(reachableFromAPhone('http://[::1]:8000')).toBe(false)
     expect(reachableFromAPhone('http://app.localhost')).toBe(false)
     expect(reachableFromAPhone('not a url')).toBe(false)
+  })
+})
+
+describe('pairingText', () => {
+  it('says what the code carries in each of the three states', () => {
+    expect(pairingText(false, false)).toBe('It carries this address.')
+    expect(pairingText(false, true)).toBe('It carries this address.')
+    expect(pairingText(true, false)).toContain('the phone joins as the demo')
+    expect(pairingText(true, false)).toContain('Sign in here first')
+    expect(pairingText(true, true)).toContain('an access code of its own')
+    expect(pairingText(true, true)).toContain('stays here')
   })
 })

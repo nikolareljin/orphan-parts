@@ -97,3 +97,20 @@ def test_the_command_issues_lists_and_revokes(
     assert "no current code" in capsys.readouterr()[1]
     assert main(["list"], keys) == 0
     assert "revoked" in capsys.readouterr()[0]
+
+
+def test_a_code_claimed_once_takes_its_label_for_good(tmp_path: Path) -> None:
+    keys = keys_in(tmp_path)
+    until = datetime.now(UTC) + timedelta(days=2)
+    code, key = keys.issue("phone abcd1234", until=until, once=True)
+    assert key.expires_at == until.replace(microsecond=0).isoformat()
+    assert keys.get(key.id) == key and keys.get(9999) is None
+    with pytest.raises(AccessKeyError, match="already"):
+        keys.issue("phone abcd1234", until=until, once=True)
+    keys.revoke("phone abcd1234")
+    with pytest.raises(AccessKeyError, match="already"):
+        keys.issue("phone abcd1234", until=until, once=True)
+    keys.issue("phone abcd1234", 1)  # a plain issue sees only current codes, as before
+    with pytest.raises(AccessKeyError, match="passed"):
+        keys.issue("late", until=datetime.now(UTC) - timedelta(seconds=1))
+    assert keys.match(code) is None

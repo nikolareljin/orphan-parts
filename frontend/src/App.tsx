@@ -7,7 +7,7 @@ import Inventory from './components/Inventory'
 import Modal from './components/Modal'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
 
-import { reachableFromAPhone } from './lib/pairing'
+import { pairingText, reachableFromAPhone } from './lib/pairing'
 import { DEFAULT_LIMITS } from './lib/photos'
 import { demoText } from './lib/access'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
@@ -182,17 +182,14 @@ export default function App() {
             {demoText(status.ready, !demo) && <span>{demoText(status.ready, !demo)}</span>}
             <details className="pair">
               <summary>Pair the phone</summary>
-              {demo ? (
-                <p className="muted">The phone pairs with a session of yours: sign in with the code first.</p>
-              ) : (
-              <>
               <p>
-                In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code. It carries this address
-                {status.ready.demo.gated ? ' and a session of its own; the access code stays here.' : '.'}
+                In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code.{' '}
+                {pairingText(status.ready.demo.gated, !demo)}
               </p>
               {reachableFromAPhone(pairOrigin) ? (
                 <>
-                  <PairImage />
+                  {/* the code changes with the door: a session is in it once signed in, so it is drawn again */}
+                  <PairImage key={demo ? 'demo' : 'in'} />
                   <p className="muted">
                     Or type <code>{pairOrigin}</code> into the app.
                   </p>
@@ -203,8 +200,6 @@ export default function App() {
                   the phone). Open the web app at the computer's network address and pair from there, or run{' '}
                   <code>./dev phone</code>, which prints a code with that address.
                 </p>
-              )}
-              </>
               )}
             </details>
           </>
@@ -268,10 +263,11 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
 
 
 // The pairing code as an image. Across origins an <img> carries no bearer header, so the SVG
-// is fetched with the session and shown as a data URL; same origin the cookie does it.
+// is fetched with the session and shown as a data URL; same origin the cookie does it. Without
+// a session either way the backend draws the address alone.
 function PairImage() {
-  // across origins the first source would be an unauthenticated fetch of the SVG: none until
-  // the session's copy is in hand
+  // across origins the first source would be a fetch of the SVG without the session: none
+  // until the session's copy is in hand
   const [src, setSrc] = useState(apiBase ? '' : api.pair.svgUrl(window.location.origin))
   useEffect(() => {
     if (!apiBase) return

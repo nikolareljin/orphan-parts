@@ -86,12 +86,21 @@ its own when reached.
 
 ## The phone
 
-*Pair the phone* at the foot of every page shows a QR code with this web origin and, when
-gated, a session for the phone (`GET /api/pair.svg`); the code needs a session to reach, so
-only someone through the door can hand the phone one, and the access code itself is never in
-the QR. The phone's session ends like any other, after `DEMO_SESSION_HOURS`. A phone with no
-code and no pairing is the demo visitor on a gated host: its captures are refused with the
-line, and the Capture tab says so before anything is sent.
+*Pair the phone* at the foot of every page shows a QR code with this web origin
+(`GET /api/pair.svg`). For a caller through the door it carries a session for the phone as
+well; the access code itself is never in the QR, and the QR stores nothing. On its first scan
+the app claims a code of its own with that session (`POST /api/pair/code`, once per pairing
+session): an issued record labeled `phone` and the first eight characters of the session's
+id, good for `PAIR_CODE_DAYS` (30), and never past the code that opened the session (a
+session from an issued code gives a phone code that ends with that record; one whose record
+has ended gives nothing). The phone's session ends like any other, after
+`DEMO_SESSION_HOURS`; the phone then opens a new one with its code, with no second scan.
+`./dev keys list` shows the phone codes beside the rest, and `./dev keys revoke "phone …"`
+cuts one phone off with every session it opened. Two phones need two scans of a fresh page:
+a reload draws a new session into the code. For the demo visitor the QR carries the address
+alone: a phone paired from it is the demo visitor too, its captures refused with the line,
+and the Capture tab says so before anything is sent; a scan of a signed-in page later gives
+it a code.
 
 ## The set, at no cost
 

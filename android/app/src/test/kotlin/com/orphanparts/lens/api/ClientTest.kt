@@ -55,6 +55,21 @@ class ClientTest {
     }
 
     @Test
+    fun the_phone_claims_its_own_code_with_the_pairing_session() {
+        val (c, t) = client(
+            HttpResponse(200, """{"gated":true,"code":"opl_mine","label":"phone abcd1234","expires_at":"2026-11-29T10:00:00+00:00"}"""),
+            HttpResponse(200, """{"gated":false,"code":"","label":"","expires_at":null}"""),
+        )
+        c.useToken("sid.exp.1.0.sig")
+        val own = c.phoneCode()
+        assertEquals(PhoneCode(true, "opl_mine", "phone abcd1234", "2026-11-29T10:00:00+00:00"), own)
+        assertEquals("POST", t.sent[0].method)
+        assertEquals("http://backend:8000/api/pair/code", t.sent[0].url)
+        assertEquals("Bearer sid.exp.1.0.sig", t.sent[0].headers["Authorization"])
+        assertEquals(PhoneCode(false, "", "", ""), c.phoneCode())
+    }
+
+    @Test
     fun extract_sends_the_photo_as_multipart_and_reads_the_fields() {
         val (c, t) = client(
             HttpResponse(

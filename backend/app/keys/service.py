@@ -55,9 +55,19 @@ class AccessKeys:
     def __init__(self, store: Store) -> None:
         self.store = store
 
-    def issue(self, label: str, days: int | None = None) -> tuple[str, AccessKey]:
-        """A new code for ``label``, shown once; ``days`` from now it stops working, or never
-        when not given. Returns the code and its record."""
+    def issue(
+        self,
+        label: str,
+        days: int | None = None,
+        *,
+        until: datetime | None = None,
+        once: bool = False,
+    ) -> tuple[str, AccessKey]:
+        """A new code for ``label``, shown once; ``days`` from now it stops working, or at
+        ``until`` when that is given instead, or never when neither is. Returns the code and
+        its record. With ``once`` the label may never have been used, revoked and expired
+        records included: a phone claims its code under its pairing session's name, and a
+        revoked phone must not claim again with the session it still holds."""
         label = label.strip()
         if not label:
             raise AccessKeyError("the label is blank")
@@ -66,9 +76,20 @@ class AccessKeys:
         if days is not None and days < 1:
             raise AccessKeyError("days must be at least 1")
         now = datetime.now(UTC)
-        expires = _text(now + timedelta(days=days)) if days is not None else None
+        if until is not None:
+            if until <= now:
+                raise AccessKeyError("the expiry has passed")
+            expires: str | None = _text(until)
+        else:
+            expires = _text(now + timedelta(days=days)) if days is not None else None
         code = new_code()
         with self.store.connect() as conn:
+            if once:
+                taken = conn.execute(
+                    "SELECT 1 FROM access_keys WHERE label = ?", (label,)
+                ).fetchone()
+                if taken:
+                    raise AccessKeyError(f"a code was issued for {label!r} already")
             taken = conn.execute(
                 "SELECT 1 FROM access_keys WHERE label = ? AND revoked_at IS NULL"
                 " AND (expires_at IS NULL OR expires_at > ?)",
@@ -84,6 +105,12 @@ class AccessKeys:
                 "SELECT * FROM access_keys WHERE id = ?", (cur.lastrowid,)
             ).fetchone()
         return code, _key_of(row)
+
+    def get(self, kid: int) -> AccessKey | None:
+        """The record with this id, whatever its state, or None."""
+        with self.store.connect() as conn:
+            row = conn.execute("SELECT * FROM access_keys WHERE id = ?", (kid,)).fetchone()
+        return _key_of(row) if row is not None else None
 
     def all(self) -> list[AccessKey]:
         with self.store.connect() as conn:

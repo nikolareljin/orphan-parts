@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +67,7 @@ fun App() {
     // shown on the Backend tab once: leaving the tab clears it, so a return does not replay it
     LaunchedEffect(page) { if (page != 0 && pairLine.second.isNotEmpty()) pairLine = pairLine.first to "" }
 
+    val scope = rememberCoroutineScope()
     // one client per settings: the session token it holds belongs to that backend and code
     val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode, settings.token) }
 
@@ -104,7 +106,7 @@ fun App() {
                     Spacer(Modifier.width(8.dp))
                     // pair again from any page: the scanner, then the Backend tab shows the outcome
                     QrButton {
-                        scanToPair(context, settings, onSaved = { saved ->
+                        scanToPair(context, settings, scope, onSaved = { saved ->
                             store.save(saved)
                             settings = store.load()
                         }) { line ->

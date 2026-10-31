@@ -31,7 +31,15 @@ log = logging.getLogger("app.gate")
 COOKIE = "opl_access"
 # What a visitor may read without the code; everything else needs it when a code is set.
 OPEN_PATHS = frozenset(
-    {"/healthz", "/readyz", "/docs", "/openapi.json", "/api/version", "/api/access"}
+    {
+        "/healthz",
+        "/readyz",
+        "/docs",
+        "/openapi.json",
+        "/api/version",
+        "/api/access",
+        "/api/pair/code",
+    }
 )
 # The calls that spend: each one is a Model API call, counted before it is made.
 EXPENSIVE = [
@@ -60,6 +68,8 @@ DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/captures/\d+/photos/\d+$")),
     ("GET", re.compile(r"^/api/profiles(/[A-Za-z0-9_-]+/(features|rules))?$")),
     ("GET", re.compile(r"^/api/templates$")),
+    # the address alone, so a phone joins as the demo visitor too; a session is never in it
+    ("GET", re.compile(r"^/api/pair(\.svg)?$")),
     ("POST", re.compile(r"^/api/extract$")),
     ("POST", re.compile(r"^/api/segment$")),
     ("POST", re.compile(r"^/api/assess$")),
