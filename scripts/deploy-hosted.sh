@@ -10,6 +10,8 @@
 #   backend   deploys deploy/modal_app.py, reads the URL off the output and waits for /readyz
 #             to answer ok with the key answering (a key that failed its probe fails the step)
 #   web       builds the web app against the backend's URL and publishes frontend/dist to Pages
+#             (refused while a frontend/.env* exists, since Vite would bake its VITE_ names into
+#             the public bundle, and when the build leaves one in dist)
 #   all       secret, backend, web, in that order; web takes the URL backend found
 #
 # Environment:
@@ -132,9 +134,18 @@ step_web() {
   if [[ "$WEB_ORIGIN" == *.pages.dev && "$WEB_ORIGIN" != "$pages" ]]; then
     fail "web: WEB_ORIGIN is $WEB_ORIGIN but the project $project publishes at $pages"
   fi
+  # Vite reads frontend/.env, .env.local, .env.production and .env.production.local and bakes
+  # every VITE_ name in them into the public bundle: one lying there is refused, not built
+  local stray
+  if stray="$(cd "$root/frontend" && compgen -G '.env*')"; then
+    fail "web: frontend/${stray//$'\n'/, frontend/} would be read by Vite and its VITE_ names baked into the public bundle; remove it first"
+  fi
   say "web: building the web app against $api_url"
   (cd "$root/frontend" && VITE_API_URL="$api_url" "${npm_cmd[@]}" ci && VITE_API_URL="$api_url" "${npm_cmd[@]}" run build)
   [[ -d "$root/frontend/dist" ]] || fail "web: no frontend/dist after the build"
+  # whatever the build or a tool left there: nothing named .env goes up with the bundle
+  stray="$(find "$root/frontend/dist" -name '.env*' 2>/dev/null)"
+  [[ -z "$stray" ]] || fail "web: frontend/dist holds ${stray//$'\n'/, }; nothing is uploaded"
   local projects
   projects="$("${wrangler_cmd[@]}" pages project list 2>/dev/null || true)"
   if ! grep -qE "(^|[[:space:]|])$project([[:space:]|]|$)" <<<"$projects"; then

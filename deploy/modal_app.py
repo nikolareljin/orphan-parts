@@ -22,14 +22,30 @@ BACKEND = ROOT / "backend"
 
 app = modal.App("orphan-parts")
 
+# never in the image, wherever one turns up under the three directories: a local secret file,
+# a key, a signing store, a Python cache (dockerignore patterns; the settings come from the secret)
+NEVER_SHIPPED = [
+    "**/.env",
+    "**/.env.*",
+    "**/__pycache__",
+    "**/*.pyc",
+    "**/*.pem",
+    "**/*.key",
+    "**/*.jks",
+    "**/*.keystore",
+    "**/keystore.properties",
+]
+
 # the code, the recorded answers (fixture mode replays them: without them every read would
 # fail on the host) and the demo set (loaded on the host with ``load_demo`` below)
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install_from_pyproject(str(BACKEND / "pyproject.toml"))
-    .add_local_dir(str(BACKEND / "app"), remote_path="/root/app")
-    .add_local_dir(str(BACKEND / "tests" / "fixtures"), remote_path="/root/tests/fixtures")
-    .add_local_dir(str(ROOT / "demo"), remote_path="/root/demo")
+    .add_local_dir(str(BACKEND / "app"), remote_path="/root/app", ignore=NEVER_SHIPPED)
+    .add_local_dir(
+        str(BACKEND / "tests" / "fixtures"), remote_path="/root/tests/fixtures", ignore=NEVER_SHIPPED
+    )
+    .add_local_dir(str(ROOT / "demo"), remote_path="/root/demo", ignore=NEVER_SHIPPED)
 )
 
 data = modal.Volume.from_name("orphan-parts-data", create_if_missing=True)
