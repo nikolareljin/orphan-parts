@@ -15,6 +15,7 @@ import threading
 import time
 from collections import deque
 from collections.abc import Awaitable, Callable
+from contextvars import ContextVar
 from datetime import UTC, datetime
 
 from fastapi import Request, Response
@@ -27,6 +28,10 @@ from app.keys import AccessKeys, master_tag
 from app.ops.door import live_request
 
 log = logging.getLogger("app.gate")
+
+# whom the call that spends was counted against, while it is served: a route that makes more
+# than one model call (screenshots, one reading each) counts the rest with charge_more
+spend_key: ContextVar[str | None] = ContextVar("spend_key", default=None)
 
 COOKIE = "opl_access"
 # What a visitor may read without the code; everything else needs it when a code is set.
@@ -116,7 +121,8 @@ class Allowance:
         for k in gone:
             del self._hits[k]
 
-    def take(self, key: str, now: float | None = None) -> tuple[bool, int]:
+    def take(self, key: str, now: float | None = None, count: int = 1) -> tuple[bool, int]:
+        """Count ``count`` hits, all or none: refused when fewer than that are left."""
         now = time.monotonic() if now is None else now
         with self._lock:
             self._takes += 1
@@ -125,10 +131,22 @@ class Allowance:
             hits = self._hits.setdefault(key, deque())
             while hits and now - hits[0] >= self.seconds:
                 hits.popleft()
-            if len(hits) >= self.limit:
-                return False, max(1, int(self.seconds - (now - hits[0])) + 1)
-            hits.append(now)
+            if len(hits) + count > self.limit:
+                if not hits:
+                    return False, int(self.seconds)
+                # the wait until enough of the window has passed for count more
+                index = min(len(hits) - 1, max(0, len(hits) + count - self.limit - 1))
+                return False, max(1, int(self.seconds - (now - hits[index])) + 1)
+            hits.extend([now] * count)
             return True, 0
+
+    def give_back(self, key: str, count: int) -> None:
+        """Uncount the last ``count`` hits of a call that was refused after all."""
+        with self._lock:
+            hits = self._hits.get(key)
+            if hits:
+                for _ in range(min(count, len(hits))):
+                    hits.pop()
 
     def forget(self, key: str) -> None:
         with self._lock:
@@ -149,13 +167,18 @@ class DailyAllowance:
         if today != self._day:
             self._day, self._used = today, 0
 
-    def take(self) -> bool:
+    def take(self, count: int = 1) -> bool:
+        """Count ``count`` hits, all or none."""
         with self._lock:
             self._roll()
-            if self._used >= self.limit:
+            if self._used + count > self.limit:
                 return False
-            self._used += 1
+            self._used += count
             return True
+
+    def give_back(self, count: int) -> None:
+        with self._lock:
+            self._used = max(0, self._used - count)
 
     @property
     def used(self) -> int:
@@ -333,6 +356,25 @@ class Gate:
         return request.cookies.get(COOKIE, "")
 
 
+def charge_more(gate: Gate, count: int) -> tuple[str, int] | None:
+    """Count ``count`` more calls against whoever this request was counted against, all or
+    none. Refused, the one the gate counted for the request is given back as well and the
+    answer is (why, seconds to wait); None when they are counted or nothing was."""
+    key = spend_key.get()
+    if key is None or count <= 0:
+        return None
+    ok, retry = gate.visitor.take(key, count=count)
+    if not ok:
+        gate.visitor.give_back(key, 1)
+        gate.daily.give_back(1)
+        return f"this visitor's hourly allowance has fewer than {count + 1} calls left", retry
+    if not gate.daily.take(count):
+        gate.visitor.give_back(key, count + 1)
+        gate.daily.give_back(1)
+        return f"the demo's daily allowance has fewer than {count + 1} calls left", 0
+    return None
+
+
 def _refused(status: int, detail: str, retry_after: int = 0) -> Response:
     headers = {"Retry-After": str(retry_after)} if retry_after else {}
     return JSONResponse({"detail": detail}, status_code=status, headers=headers)
@@ -398,8 +440,12 @@ class GateMiddleware(BaseHTTPMiddleware):
             if not gate.daily.take():
                 log.info("limit: daily calls", extra={"path": path})
                 return _refused(429, "the demo's daily allowance is used up; back tomorrow (UTC)")
+            spent = spend_key.set(visitor)
+        else:
+            spent = spend_key.set(None)
         token = live_request.set(live)
         try:
             return await call_next(request)
         finally:
             live_request.reset(token)
+            spend_key.reset(spent)

@@ -1,8 +1,12 @@
 """Missing items: a search request the owner runs on Marketplace by handoff, candidates brought
 back as text, a screenshot or typed values, each assessed by the profile's rules and dated."""
 
+import asyncio
 import json
 import logging
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
@@ -16,6 +20,7 @@ from app.find.plan import (
     MIN_PHRASINGS,
     PHRASING_MAX,
     RANK,
+    SCAN_MAX,
     WHY_MAX,
     PatternError,
     Score,
@@ -61,20 +66,20 @@ LISTING_INSTRUCTIONS = (
 
 
 PLAN_OUTPUT_TOKENS = 700
-# listings one search keeps for scoring; the oldest go first past it
-MAX_LISTINGS = 100
+# listings one search keeps for scoring; past it the oldest go first, the ones not yet checked
+# before the ones Check fit has read
+MAX_LISTINGS = 50
 PLAN_INSTRUCTIONS = (
     "You plan a search of second-hand listings for one needed part or device. Write 3 to 6"
     " search phrasings a seller might have put in a listing title: the plain name, synonyms,"
     " the part or model number in the ways it gets written, the devices it is sold for, seller"
     " wording and common misspellings; each with one line on what it finds that the others"
     " miss. A phrasing is a few words for a search box that takes words, not operators or"
-    " quotes. Then one match pattern: a Python regular expression, applied case-insensitively"
+    " quotes. Then one match pattern: an RE2 regular expression, applied case-insensitively"
     " to a listing's text, that a listing which fits the need matches, built from the part"
     " number with optional separators or the deciding values with their units. Keep it under"
-    " 200 characters; use bounded gaps such as .{0,20} and classes such as [-\\s]?; never .* or"
-    " .+, never a repeated group that repeats or branches inside such as (a+)+ or (a|b)+,"
-    " never two open-ended repeats side by side, no backreferences. Then the words or short"
+    " 200 characters; use short gaps such as .{0,20} and classes such as [-\\s]?; no"
+    " lookarounds, no backreferences, no comments and no inline flags. Then the words or short"
     " phrases in a listing that rule it out: for parts, broken, not working, and any that name"
     " a variant that does not fit. Never invent a part or model number the need does not give."
 )
@@ -134,6 +139,19 @@ def ranked(listings: list[BroughtListing]) -> list[BroughtListing]:
             -b.id,
         ),
     )
+
+
+def capped(entries: list[dict[str, Any]], fresh: set[int]) -> list[dict[str, Any]]:
+    """At most MAX_LISTINGS, in the order they came: past it the oldest go first, the ones not
+    yet checked before the ones with a candidate; the ones just brought back stay."""
+    over = len(entries) - MAX_LISTINGS
+    if over <= 0:
+        return entries
+    old = [e for e in entries if int(e["id"]) not in fresh]
+    order = [e for e in old if e.get("candidate_id") is None]
+    order += [e for e in old if e.get("candidate_id") is not None]
+    gone = {int(e["id"]) for e in order[:over]}
+    return [e for e in entries if int(e["id"]) not in gone]
 
 
 def clean_phrasings(
@@ -206,6 +224,17 @@ class Finder:
         self.profiles = profiles
         self.extractor = extractor
         self.assessor = assessor
+        # one lock per search around every read-modify-write of its plan and listings, so a
+        # pattern saved while listings come in loses neither
+        self._locks: dict[int, threading.RLock] = {}
+        self._locks_guard = threading.Lock()
+
+    @contextmanager
+    def held(self, search_id: int) -> Iterator[None]:
+        with self._locks_guard:
+            lock = self._locks.setdefault(search_id, threading.RLock())
+        with lock:
+            yield
 
     # --- searches ------------------------------------------------------------
 
@@ -248,20 +277,23 @@ class Finder:
         return self.search_of(self.inventory.search(search_id))
 
     def update(self, search_id: int, patch: SearchPatch) -> Search:
-        row = self.inventory.search(search_id)
-        content = json.loads(row["content"])
-        if patch.notes is not None:
-            content["notes"] = patch.notes
-        status = patch.status or str(row["status"])
-        return self.search_of(self.inventory.update_search(search_id, status, json.dumps(content)))
+        with self.held(search_id):
+            row = self.inventory.search(search_id)
+            content = json.loads(row["content"])
+            if patch.notes is not None:
+                content["notes"] = patch.notes
+            status = patch.status or str(row["status"])
+            row = self.inventory.update_search(search_id, status, json.dumps(content))
+        return self.search_of(row)
 
     def search_of(self, row: Any) -> Search:
-        content = json.loads(row["content"])
+        # the head is the content without the listings, so a list of searches parses no listing
+        content = json.loads(row["head"])
         plan = content.pop("plan", None)
-        listings = content.pop("listings", [])
+        content.pop("listings", None)
         return Search(
             plan=SearchPlan(**plan) if plan else None,
-            listings=len(listings),
+            listings=int(row["listing_count"]),
             id=int(row["id"]),
             need_item_id=row["need_item_id"],
             profile=row["profile"],
@@ -348,11 +380,21 @@ class Finder:
             "search plan",
             extra={"search_id": search_id, "usd": response.cost_usd, "refused": bool(error)},
         )
-        return self._keep_plan(search_id, plan)
+        # scoring every listing again, and the lock, stay off the event loop
+        return await asyncio.to_thread(self._keep_plan, search_id, plan)
 
     def edit_plan(self, search_id: int, edit: PlanEdit) -> Search:
         """The owner's pattern and words. A search with no plan yet gets one here, with the
         title as its one phrasing, so a pattern can be written without a model call."""
+        if edit.pattern is not None and edit.pattern.strip():
+            try:
+                validate_pattern(edit.pattern)
+            except PatternError as exc:
+                raise FindError(str(exc)) from exc
+        with self.held(search_id):
+            return self._edit_plan(search_id, edit)
+
+    def _edit_plan(self, search_id: int, edit: PlanEdit) -> Search:
         search = self.search(search_id)
         plan = search.plan or SearchPlan(
             phrasings=clean_phrasings(
@@ -369,28 +411,22 @@ class Finder:
         )
         update: dict[str, Any] = {"edited_at": stamp()}
         if edit.pattern is not None:
-            pattern = edit.pattern.strip()
-            if pattern:
-                try:
-                    validate_pattern(pattern)
-                except PatternError as exc:
-                    raise FindError(str(exc)) from exc
-            update |= {"pattern": pattern, "pattern_error": ""}
+            update |= {"pattern": edit.pattern.strip(), "pattern_error": ""}
         if edit.exclusions is not None:
             update["exclusions"] = clean_exclusions(edit.exclusions)
         return self._keep_plan(search_id, plan.model_copy(update=update))
 
     def _keep_plan(self, search_id: int, plan: SearchPlan) -> Search:
         """Store the plan and score every listing brought back again by it."""
-        row = self.inventory.search(search_id)
-        content = json.loads(row["content"])
-        content["plan"] = plan.model_dump()
         compiled = compiled_or_none(plan.pattern)
-        for entry in content.get("listings", []):
-            entry["score"] = self._score(entry["text"], compiled, plan).model_dump()
-        return self.search_of(
-            self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
-        )
+        with self.held(search_id):
+            row = self.inventory.search(search_id)
+            content = json.loads(row["content"])
+            content["plan"] = plan.model_dump()
+            for entry in content.get("listings", []):
+                entry["score"] = self._score(entry["text"], compiled, plan).model_dump()
+            row = self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
+        return self.search_of(row)
 
     def _score(self, text: str, compiled: Any, plan: SearchPlan | None) -> ListingScore:
         exclusions = plan.exclusions if plan else list(DEFAULT_EXCLUSIONS)
@@ -415,30 +451,34 @@ class Finder:
     def _add_listings(
         self, search_id: int, texts: list[tuple[str, str]], observed_on: str
     ) -> list[BroughtListing]:
-        row = self.inventory.search(search_id)
-        if row["status"] == "closed":
-            raise FindError("the search is closed; reopen it to bring listings back")
-        content = json.loads(row["content"])
-        plan = SearchPlan(**content["plan"]) if content.get("plan") else None
-        compiled = compiled_or_none(plan.pattern) if plan else None
-        entries: list[dict[str, Any]] = content.setdefault("listings", [])
-        next_id = max((int(e["id"]) for e in entries), default=0) + 1
-        added_at = stamp()
-        for i, (kind, text) in enumerate(texts):
-            entries.append(
-                {
-                    "id": next_id + i,
-                    "source_kind": kind,
-                    "text": text,
-                    "observed_on": observed_on or today(),
-                    "added_at": added_at,
-                    "candidate_id": None,
-                    "score": self._score(text, compiled, plan).model_dump(),
-                }
-            )
-        content["listings"] = entries[-MAX_LISTINGS:]
-        self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
-        return self.listings(search_id)
+        """Kept as far as the pattern reads them (SCAN_MAX), scored, at most MAX_LISTINGS."""
+        with self.held(search_id):
+            row = self.inventory.search(search_id)
+            if row["status"] == "closed":
+                raise FindError("the search is closed; reopen it to bring listings back")
+            content = json.loads(row["content"])
+            plan = SearchPlan(**content["plan"]) if content.get("plan") else None
+            compiled = compiled_or_none(plan.pattern) if plan else None
+            entries: list[dict[str, Any]] = content.setdefault("listings", [])
+            next_id = max((int(e["id"]) for e in entries), default=0) + 1
+            added_at = stamp()
+            for i, (kind, whole) in enumerate(texts):
+                text = whole.strip()[:SCAN_MAX]
+                entries.append(
+                    {
+                        "id": next_id + i,
+                        "source_kind": kind,
+                        "text": text,
+                        "observed_on": observed_on or today(),
+                        "added_at": added_at,
+                        "candidate_id": None,
+                        "score": self._score(text, compiled, plan).model_dump(),
+                    }
+                )
+            fresh = set(range(next_id, next_id + len(texts)))
+            content["listings"] = capped(entries, fresh)
+            self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
+            return self.listings(search_id)
 
     def add_listings(self, search_id: int, back: ListingsBack) -> list[BroughtListing]:
         """Pasted listings, scored where they stand; nothing is read by a model."""
@@ -459,25 +499,27 @@ class Finder:
                 values = [f"{k} {e.value} {e.unit}".strip() for k, e in reading.fields.items()]
                 text = "; ".join(values)
             if text:
-                texts.append(("screenshot", text[:8000]))
+                texts.append(("screenshot", text))
         if not texts:
             raise FindError("no text could be read from the screenshots")
-        return self._add_listings(search_id, texts, observed_on)
+        # scoring, and the lock, stay off the event loop
+        return await asyncio.to_thread(self._add_listings, search_id, texts, observed_on)
 
     def listings(self, search_id: int) -> list[BroughtListing]:
         content = json.loads(self.inventory.search(search_id)["content"])
         return ranked([BroughtListing(**e) for e in content.get("listings", [])])
 
     def remove_listing(self, search_id: int, listing_id: int) -> list[BroughtListing]:
-        row = self.inventory.search(search_id)
-        content = json.loads(row["content"])
-        entries = content.get("listings", [])
-        kept = [e for e in entries if int(e["id"]) != listing_id]
-        if len(kept) == len(entries):
-            raise NotFoundError(f"no listing {listing_id} on search {search_id}")
-        content["listings"] = kept
-        self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
-        return self.listings(search_id)
+        with self.held(search_id):
+            row = self.inventory.search(search_id)
+            content = json.loads(row["content"])
+            entries = content.get("listings", [])
+            kept = [e for e in entries if int(e["id"]) != listing_id]
+            if len(kept) == len(entries):
+                raise NotFoundError(f"no listing {listing_id} on search {search_id}")
+            content["listings"] = kept
+            self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
+            return self.listings(search_id)
 
     async def check_listing(self, search_id: int, listing_id: int) -> Candidate:
         """Check fit: the listing becomes a candidate, read by Muse Spark and assessed by the
@@ -488,15 +530,19 @@ class Finder:
         if found.candidate_id is not None:
             return self.candidate(found.candidate_id)
         candidate = await self.add_candidate(
-            search_id, CandidateCreate(text=found.text[:8000], observed_on=found.observed_on)
+            search_id, CandidateCreate(text=found.text, observed_on=found.observed_on)
         )
-        row = self.inventory.search(search_id)
-        content = json.loads(row["content"])
-        for entry in content.get("listings", []):
-            if int(entry["id"]) == listing_id:
-                entry["candidate_id"] = candidate.id
-        self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
+        await asyncio.to_thread(self._remember_candidate, search_id, listing_id, candidate.id)
         return candidate
+
+    def _remember_candidate(self, search_id: int, listing_id: int, candidate_id: int) -> None:
+        with self.held(search_id):
+            row = self.inventory.search(search_id)
+            content = json.loads(row["content"])
+            for entry in content.get("listings", []):
+                if int(entry["id"]) == listing_id:
+                    entry["candidate_id"] = candidate_id
+            self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
 
     # --- candidates ----------------------------------------------------------
 

@@ -112,7 +112,7 @@ class SearchPlan(BaseModel):
     one out. The links are opened by the owner; the pattern runs here, on what comes back."""
 
     phrasings: list[Phrasing]
-    pattern: str = Field(description="Python regular expression, case-insensitive; may be empty")
+    pattern: str = Field(description="RE2 regular expression, case-insensitive; may be empty")
     pattern_error: str = Field(default="", description="why the written pattern was refused")
     exclusions: list[str]
     max_price: float | None

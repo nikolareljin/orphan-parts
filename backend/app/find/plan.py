@@ -4,39 +4,62 @@ and automating it is against its terms, so the plan is links the owner opens and
 app applies to the listings the owner brings back. Marketplace's own search box takes words,
 not regular expressions.
 
-The pattern runs on Python's ``re``, which backtracks and has no timeout, so it is checked
-before it is compiled: bounded length, no backreferences, and none of the shapes that make a
-backtracking engine run away (a repeated group that repeats or branches inside, an open-ended
-``.*``, two open-ended repeats side by side, too many open-ended repeats in all). The text it
-runs over is bounded too."""
+The pattern and the exclusion words run on RE2, which matches in time linear in the text: no
+pattern, however it is written, backtracks. The checks here are for the messages the owner
+reads, not for safety: a bounded length, none of what RE2 does not have (lookarounds,
+backreferences, ``\\C``), no comments and no inline flags but ``(?i)``, and counted repeats
+kept small, since RE2's work per character grows with the size of the compiled pattern. The
+text it runs over is bounded too."""
 
 import re
 from dataclasses import dataclass
+from functools import lru_cache
+from typing import Any
+
+import re2
 
 MAX_PATTERN_LEN = 300
+# what a pattern may expand to: each atom counts one and a counted repeat {n,m} multiplies
+# what it repeats by m; RE2's work per character of text grows with it
+MAX_PATTERN_WEIGHT = 400
 MAX_PHRASINGS = 6
 MIN_PHRASINGS = 3
 PHRASING_MAX = 120
 WHY_MAX = 200
 MAX_EXCLUSIONS = 20
 EXCLUSION_MAX = 40
-# open-ended repeats (*, +, {n,}) one pattern may carry
-MAX_UNBOUNDED = 6
-# the most of a listing the pattern and the exclusions are run over
+# the most of a listing that is kept, and that the pattern and the exclusions are run over
 SCAN_MAX = 4000
 # what rules a listing out unless the owner says otherwise
 DEFAULT_EXCLUSIONS = ["for parts", "parts only", "broken", "not working", "does not work"]
 
+# The price parsing runs on fixed patterns over at most SCAN_MAX characters. A dollar sign
+# right after a letter is another dollar (CA$, AU$), except US$.
 _PRICE = re.compile(
-    r"\$\s?(\d{1,3}(?:,\d{3})+|\d{1,7})(?:\.(\d{1,2}))?"
-    r"|\b(\d{1,3}(?:,\d{3})+|\d{1,7})(?:\.(\d{1,2}))?\s?(?:usd|dollars|bucks)\b",
+    r"(?:(?<![A-Za-z])|(?<![A-Za-z]US)(?<=US))\$\s?(\d{1,3}(?:,\d{3})+|\d{1,7})(?:\.(\d{1,2}))?"
+    r"(k(?![a-z]))?"
+    r"|\b(\d{1,3}(?:,\d{3})+|\d{1,7})(?:\.(\d{1,2}))?(k)?\s?(?:usd|dollars|bucks)\b",
     re.IGNORECASE,
 )
+# a number that goes on after a space in groups of three, as in "$1 200": not read as $1
+_GROUP_AFTER = re.compile(r"[ \xa0\u202f]\d{3}(?!\w)")
+_GROUP_BEFORE = re.compile(r"\d[ \xa0\u202f]$")
 _FREE = re.compile(r"\bfree\b", re.IGNORECASE)
+# "smoke-free", "pet free": free of something, not free to take
+_FREE_OF = re.compile(
+    r"(?:-|\b(?:smoke|pet|dust|hands|bpa|lead|rust|stain|odou?r|damage|scratch|crack|tax"
+    r"|duty|hassle|worry|trouble|cruelty|gluten|latex|fragrance)\s+)$",
+    re.IGNORECASE,
+)
+# "free shipping", "free home delivery", "free-standing": something else that is free
+_FREE_WITH = re.compile(
+    r"\s*(?:-\w|(?:local\s+|home\s+)?(?:shipping|delivery|returns?|gifts?)\b|home\b)",
+    re.IGNORECASE,
+)
 
 
 class PatternError(ValueError):
-    """The pattern cannot be used: it does not compile, is too long, or could run away."""
+    """The pattern cannot be used: it does not compile, is too long, or uses what is refused."""
 
 
 @dataclass(frozen=True)
@@ -58,56 +81,72 @@ class Score:
     reasons: list[str]
 
 
-@dataclass
-class _Group:
-    repeats: bool = False  # holds a repeat (or a group that does)
-    branches: bool = False  # holds a | (or a group that does)
+def _options() -> Any:
+    options = re2.Options()
+    options.case_sensitive = False
+    # a refused pattern is answered to the owner, not written to the server's log
+    options.log_errors = False
+    return options
 
 
-def _quantifier(pattern: str, i: int) -> tuple[int, bool, bool]:
-    """The quantifier starting at ``i``, if any: (its length, whether it repeats more than
-    once, whether it is open-ended). A lazy or possessive suffix is part of it."""
+_OPTIONS = _options()
+
+_REFUSED_GROUPS = (
+    ("(?=", "a lookahead such as (?=...) is not supported; match the words themselves"),
+    ("(?!", "a negative lookahead such as (?!...) is not supported; use an exclusion word"),
+    ("(?<=", "a lookbehind such as (?<=...) is not supported; match the words themselves"),
+    ("(?<!", "a negative lookbehind such as (?<!...) is not supported; use an exclusion word"),
+    ("(?P=", "backreferences are not supported"),
+    ("(?#", "comments (?#...) are refused"),
+)
+
+
+def _count(pattern: str, i: int) -> tuple[int, int]:
+    """The quantifier starting at ``i``, if any: (its length, the factor it multiplies what it
+    repeats by). ``*``, ``+`` and ``?`` loop or skip and count one; ``{n,m}`` counts m, ``{n}``
+    and ``{n,}`` count n. A lazy suffix is part of it."""
     if i >= len(pattern):
-        return 0, False, False
+        return 0, 1
     ch = pattern[i]
-    length, repeats, unbounded = 0, False, False
-    if ch in "*+":
-        length, repeats, unbounded = 1, True, True
-    elif ch == "?":
+    length, factor = 0, 1
+    if ch in "*+?":
         length = 1
     elif ch == "{":
-        found = re.match(r"\{(\d*)(,?)(\d*)\}", pattern[i:])
+        found = re.match(r"\{(\d{1,6})(,?)(\d{0,6})\}", pattern[i:])
         if found is None:
-            return 0, False, False  # a literal brace
+            return 0, 1  # a literal brace
         low, comma, high = found.groups()
         length = found.end()
-        if comma and not high:
-            repeats = unbounded = True
-        else:
-            top = int(high or low or "0")
-            repeats = top > 1
-    if length and pattern[i + length : i + length + 1] in ("?", "+"):
+        factor = max(1, int(high) if comma and high else int(low))
+    if length and pattern[i + length : i + length + 1] == "?":
         length += 1
-    return length, repeats, unbounded
+    return length, factor
 
 
-def check_shape(pattern: str) -> None:
-    """Raise PatternError for a shape that backtracks without end on text that nearly
-    matches: ``(a+)+``, ``(.*)*``, ``(\\w+\\s?)*``, ``(a|aa)+``, ``.*`` and ``\\d+\\d+``."""
-    stack: list[_Group] = [_Group()]
-    unbounded_total = 0
-    previous_open = False  # the atom before this one carried an open-ended repeat
-    i = 0
-    n = len(pattern)
+def check_pattern(pattern: str) -> None:
+    """Raise PatternError, with a line the owner can act on, for what RE2 lacks or what is
+    refused here: lookarounds, backreferences, ``\\C``, comments, inline flags other than
+    ``(?i)``, and counted repeats that expand past MAX_PATTERN_WEIGHT. Whether the rest
+    compiles is RE2's to say."""
+    stack: list[int] = [0]  # the weight of each open group, the whole pattern at the bottom
+    i, n = 0, len(pattern)
     while i < n:
         ch = pattern[i]
-        atom: str | None = None
-        group: _Group | None = None
+        weight = 1
         if ch == "\\":
-            if i + 1 < n and pattern[i + 1] in "123456789":
-                raise PatternError("backreferences are not used here")
-            atom = "escape"
-            i += 2
+            nxt = pattern[i + 1 : i + 2]
+            if nxt in tuple("123456789") or nxt in ("k", "g"):
+                raise PatternError("backreferences are not supported")
+            if nxt == "C":
+                raise PatternError("\\C (any byte) is refused; use . for any character")
+            if nxt in ("p", "P") and pattern[i + 2 : i + 3] == "{":
+                close = pattern.find("}", i)
+                i = n if close < 0 else close + 1
+            elif nxt == "Q":
+                close = pattern.find("\\E", i + 2)
+                i = n if close < 0 else close + 2
+            else:
+                i += 2 if nxt not in ("p", "P") else 3
         elif ch == "[":
             j = i + 1
             if j < n and pattern[j] == "^":
@@ -115,76 +154,70 @@ def check_shape(pattern: str) -> None:
             if j < n and pattern[j] == "]":
                 j += 1  # a ] first in the class is a literal
             while j < n and pattern[j] != "]":
-                j += 2 if pattern[j] == "\\" else 1
-            atom = "class"
+                if pattern.startswith("[:", j):
+                    close = pattern.find(":]", j + 2)
+                    j = n if close < 0 else close + 2
+                else:
+                    j += 2 if pattern[j] == "\\" else 1
             i = j + 1
         elif ch == "(":
-            if pattern.startswith("(?P=", i):
-                raise PatternError("backreferences are not used here")
-            stack.append(_Group())
-            previous_open = False
+            if pattern.startswith("(?", i):
+                for start, line in _REFUSED_GROUPS:
+                    if pattern.startswith(start, i):
+                        raise PatternError(line)
+                if pattern.startswith("(?i)", i):
+                    i += 4
+                    continue
+                named = re.match(r"\(\?P?<[A-Za-z_]", pattern[i:])
+                if not pattern.startswith("(?:", i) and named is None:
+                    raise PatternError(
+                        "inline flags other than (?i) are refused; the pattern already"
+                        " matches in any case"
+                    )
+            stack.append(0)
             i += 1
             continue
         elif ch == ")":
             if len(stack) == 1:
                 raise PatternError("the pattern does not compile: unbalanced parenthesis")
-            group = stack.pop()
-            atom = "group"
+            weight = max(1, stack.pop())
             i += 1
-        elif ch == "|":
-            stack[-1].branches = True
-            previous_open = False
-            i += 1
-            continue
-        elif ch in "^$":
-            previous_open = False
+        elif ch in "|^$":
             i += 1
             continue
         else:
-            atom = "dot" if ch == "." else "char"
             i += 1
-        length, repeats, unbounded = _quantifier(pattern, i)
+        length, factor = _count(pattern, i)
         i += length
-        if group is not None:
-            if repeats and group.repeats:
-                raise PatternError(
-                    "a repeated group that repeats inside, such as (a+)+, is refused"
-                )
-            if repeats and group.branches:
-                raise PatternError(
-                    "a repeated group with alternatives, such as (a|ab)+, is refused;"
-                    " a character class such as [-\\s] does the same safely"
-                )
-            parent = stack[-1]
-            parent.repeats = parent.repeats or group.repeats or repeats
-            parent.branches = parent.branches or group.branches
-        elif repeats:
-            stack[-1].repeats = True
-        if unbounded:
-            if atom == "dot":
-                raise PatternError("an open-ended .* or .+ is refused; write .{0,40}")
-            if previous_open:
-                raise PatternError("two open-ended repeats side by side are refused")
-            unbounded_total += 1
-        previous_open = unbounded
-    if len(stack) != 1:
-        raise PatternError("the pattern does not compile: missing ), unterminated subpattern")
-    if unbounded_total > MAX_UNBOUNDED:
-        raise PatternError(f"more than {MAX_UNBOUNDED} open-ended repeats (*, +, {{n,}})")
+        stack[-1] += weight * factor
+        if stack[-1] > MAX_PATTERN_WEIGHT:
+            raise PatternError(
+                f"the counted repeats expand past {MAX_PATTERN_WEIGHT} steps ({{0,40}} counts"
+                " 40, a group repeated {1,5} counts five times what is inside); use smaller"
+                " counts, or + for an open-ended run"
+            )
 
 
-def validate_pattern(pattern: str) -> re.Pattern[str]:
+def compile_pattern(text: str) -> Any:
+    """The pattern compiled by RE2, case-insensitive, or a PatternError with RE2's reason."""
+    try:
+        return re2.compile(text, _OPTIONS)
+    except re2.error as exc:
+        reason = exc.args[0] if exc.args else exc
+        if isinstance(reason, bytes):
+            reason = reason.decode("utf-8", "replace")
+        raise PatternError(f"the pattern does not compile: {reason}") from exc
+
+
+def validate_pattern(pattern: str) -> Any:
     """The pattern compiled, case-insensitive, or a PatternError saying what is wrong."""
     text = pattern.strip()
     if not text:
         raise PatternError("the pattern is empty")
     if len(text) > MAX_PATTERN_LEN:
         raise PatternError(f"the pattern is longer than {MAX_PATTERN_LEN} characters")
-    check_shape(text)
-    try:
-        compiled = re.compile(text, re.IGNORECASE)
-    except re.error as exc:
-        raise PatternError(f"the pattern does not compile: {exc}") from exc
+    check_pattern(text)
+    compiled = compile_pattern(text)
     if compiled.search("") is not None:
         raise PatternError("the pattern matches empty text, so it would match every listing")
     return compiled
@@ -202,32 +235,63 @@ def clean_exclusions(words: list[str]) -> list[str]:
     return seen
 
 
-def exclusion_pattern(word: str) -> re.Pattern[str]:
-    """The word or phrase as written, on word boundaries, any run of spaces between words."""
-    parts = [re.escape(p) for p in word.split()]
-    return re.compile(r"(?<!\w)" + r"\s+".join(parts) + r"(?!\w)", re.IGNORECASE)
+# a letter, a digit or an underscore in any script: what a word is made of
+_WORD = r"\pL\pN\pM_"
+
+
+@lru_cache(maxsize=512)
+def exclusion_pattern(word: str) -> Any:
+    """The word or phrase as written, any run of spaces between words, not inside another
+    word; the phrase itself is group 1."""
+    parts = [re2.escape(p) for p in word.split()]
+    body = r"[\s\p{Z}]+".join(parts)
+    return re2.compile(f"(?:^|[^{_WORD}])({body})(?:[^{_WORD}]|$)", _OPTIONS)
+
+
+def _free(text: str) -> bool:
+    """'free' said of the item: not "smoke-free", "pet free" or "free shipping"."""
+    for found in _FREE.finditer(text):
+        before = text[max(0, found.start() - 20) : found.start()]
+        after = text[found.end() : found.end() + 30]
+        if not _FREE_OF.search(before) and not _FREE_WITH.match(after):
+            return True
+    return False
 
 
 def price_of(text: str) -> float | None:
-    """The first asking price the text states, in dollars; 0 for 'free'."""
-    found = _PRICE.search(text)
-    if found:
-        whole = (found.group(1) or found.group(3)).replace(",", "")
-        cents = found.group(2) or found.group(4) or ""
-        return float(f"{whole}.{cents}" if cents else whole)
-    if _FREE.search(text):
-        return 0.0
-    return None
+    """The asking price, in dollars: the last one the text states, so "was $40 now $15" is 15;
+    a k after the number is thousands; 0 for 'free' when no number is given. A number that
+    goes on in groups of three after a space ("$1 200") is not guessed at: None."""
+    prices = list(_PRICE.finditer(text))
+    if not prices:
+        return 0.0 if _free(text) else None
+    found = prices[-1]
+    if found.group(1) is not None:
+        whole, cents, thousands = found.group(1), found.group(2), found.group(3)
+        if _GROUP_AFTER.match(text, found.end(2) if cents else found.end(1)) and not thousands:
+            return None
+    else:
+        whole, cents, thousands = found.group(4), found.group(5), found.group(6)
+        if _GROUP_BEFORE.search(text, 0, found.start()):
+            return None
+    value = float(f"{whole.replace(',', '')}.{cents}" if cents else whole.replace(",", ""))
+    return round(value * 1000, 2) if thousands else value
+
+
+def money(value: float) -> str:
+    """Dollars as people write them: $1,200 or $9.50, never 1.2e+06."""
+    return f"${value:,.0f}" if value == int(value) else f"${value:,.2f}"
 
 
 def score_listing(
     text: str,
-    compiled: re.Pattern[str] | None,
+    compiled: Any,
     exclusions: list[str],
     max_price: float | None,
 ) -> Score:
     """Where a listing stands before any model reads it: the words that rule it out, the price
-    against the limit, and whether the pattern matches. Free, and done for every listing."""
+    against the limit (none when it is 0 or unset), and whether the pattern matches. Free, and
+    done for every listing; RE2 keeps every search linear in the text."""
     scan = text[:SCAN_MAX]
     hits: list[Hit] = []
     reasons: list[str] = []
@@ -236,7 +300,7 @@ def score_listing(
         found = exclusion_pattern(word).search(scan)
         if found:
             excluded.append(word)
-            hits.append(Hit("excluded", found.start(), found.end(), found.group(0)))
+            hits.append(Hit("excluded", found.start(1), found.end(1), found.group(1)))
     matched: bool | None = None
     if compiled is not None:
         found = compiled.search(scan)
@@ -249,15 +313,15 @@ def score_listing(
         price_ok = price <= max_price
     if excluded:
         reasons.append("says " + ", ".join(f'"{w}"' for w in excluded))
-    if price_ok is False:
-        reasons.append(f"asks ${price:g}, over the limit of ${max_price:g}")
+    if price_ok is False and price is not None and max_price is not None:
+        reasons.append(f"asks {money(price)}, over the limit of {money(max_price)}")
     if excluded or price_ok is False:
         verdict = "no"
     elif matched:
         verdict = "fits"
         reasons.append("matches the pattern")
-        if price_ok:
-            reasons.append(f"${price:g} is within the limit")
+        if price_ok and price is not None:
+            reasons.append(f"{money(price)} is within the limit")
         elif price is None:
             reasons.append("no price stated")
     else:

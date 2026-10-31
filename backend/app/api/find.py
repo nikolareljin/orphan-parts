@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
 
-from app.api.deps import FinderDep
+from app.api.deps import FinderDep, GateDep
 from app.api.model_errors import as_http
 from app.find import (
     BroughtListing,
@@ -20,6 +20,7 @@ from app.find import (
     SellerQuestions,
 )
 from app.find.schema import seen_day
+from app.ops.gate import charge_more
 
 router = APIRouter(prefix="/api", tags=["find"])
 
@@ -124,10 +125,12 @@ async def add_listing_screenshots(
     search_id: int,
     screenshots: ScreenshotsPart,
     finder: FinderDep,
+    gate: GateDep,
     observed_on: SeenPart = "",
 ) -> list[BroughtListing]:
     """Screenshots of listings, up to six: each is read into text by the extractor (one call
-    each) and scored like a pasted listing."""
+    each, each counted against the allowance; refused whole when fewer are left) and scored
+    like a pasted listing."""
     if not screenshots or len(screenshots) > MAX_SCREENSHOTS:
         raise HTTPException(status_code=422, detail=f"one to {MAX_SCREENSHOTS} screenshots")
     try:
@@ -140,6 +143,15 @@ async def add_listing_screenshots(
         if shot.size is not None and shot.size > max_mb * 1024 * 1024:
             raise HTTPException(status_code=400, detail=f"a screenshot is larger than {max_mb} MB")
         shots.append(await shot.read())
+    # the gate counted the request as one call; each further screenshot is one more reading
+    refused = charge_more(gate, len(shots) - 1)
+    if refused is not None:
+        why, retry = refused
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"{len(shots)} screenshots are {len(shots)} readings and {why}; send fewer",
+            headers={"Retry-After": str(retry)} if retry else None,
+        )
     try:
         return await finder.add_screenshots(search_id, shots, seen)
     except FindError as exc:

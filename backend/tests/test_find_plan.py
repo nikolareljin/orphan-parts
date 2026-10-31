@@ -1,5 +1,9 @@
 import json
+import subprocess
+import sys
+import threading
 import time
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -20,16 +24,18 @@ from app.find import (
     score_listing,
     validate_pattern,
 )
-from app.find.plan import MAX_PATTERN_LEN, SCAN_MAX, clean_exclusions, price_of
+from app.find.plan import MAX_PATTERN_LEN, SCAN_MAX, clean_exclusions, money, price_of
 from app.find.schema import Phrasing
-from app.find.service import clean_phrasings
+from app.find.service import MAX_LISTINGS, clean_phrasings
 from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
+from app.main import create_app
 from app.match import Assessor
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import demo_allowed, expensive
 from app.profiles import Profiles
 from tests.conftest import RECORDED_FIXTURES, make_photo
+from tests.test_gate import CODE, gated_settings
 
 pytestmark = pytest.mark.anyio
 
@@ -46,26 +52,116 @@ def test_the_example_pattern_is_accepted_and_case_insensitive() -> None:
     assert not compiled.search("20V 3.25A")
 
 
+# Patterns that freeze a backtracking engine on text that nearly matches, each with the unit
+# its adversarial text repeats: open repeats side by side, optional separators between them,
+# [\s\S]+, bounded repeats nested or in a row, the .{0,40} gaps.
+ADVERSARIAL = [
+    (r"\w+a\w+a\w+x", "a"),
+    (r"\w+a\w+x", "a"),
+    (r"\d+[.]?\d+[.]?\d+x", "1"),
+    (r"\w+\s?\w+\s?\w+!", "a"),
+    (r"\w+\s?\w+!", "a"),
+    (r"\w*a\w*a\w*a\w*x", "a"),
+    (r"[\s\S]+a[\s\S]+a[\s\S]+x", "a"),
+    (r"[^\n]+a[^\n]+a[^\n]+x", "a"),
+    (r"(?:\w+)a(?:\w+)a(?:\w+)x", "a"),
+    (r"(?:\w+a){3}x", "a"),
+    (r"(?:a|a){0,30}b", "a"),
+    (r"(a{0,30}){0,30}b", "a"),
+    (r"(?:a{1,10}){1,10}x", "a"),
+    (r"\w{0,99}\w{0,99}\w{0,99}x", "a"),
+    (r"\w{0,999}\w{0,999}\w{0,999}x", "a"),
+    (r"\w{0,9999}\w{0,9999}x", "a"),
+    (r"\w{0,4000}a\w{0,4000}a\w{0,4000}x", "a"),
+    (r"[a-z]{1,40}[a-z]{1,40}[a-z]{1,40}[a-z]{1,40}x", "a"),
+    (r"(?=\w+a\w+a\w+x)", "a"),
+    (r"\w+?a\w+?a\w+?x", "a"),
+    (r"\w++a\w++x", "a"),
+    (r"[^x]+a[^x]+a[^x]+y", "a"),
+    (r"\S+-\S+-\S+-\S+z", "a-"),
+    (r"a+b?a+b?a+b?x", "a"),
+    (r"\w{1,}a\w{1,}a\w{1,}x", "a"),
+    (r"(?:a|\w){0,50}x", "a"),
+    (r"(?:\w{0,40}\s?){0,5}x", "a"),
+    (r"(?:[a-z]\d?){0,60}x", "a"),
+    (r"\d+\.?\d*\s?v", "1"),
+    (r"\d+\.?\d*\s?v.{0,20}\d+\.?\d*\s?a", "1"),
+    (r"\d+\s?\d+\s?\d+w", "1"),
+    (r"\d+\s?\d+w", "1 "),
+    (r"[a-z ]+charger[a-z ]+adapter", "charger "),
+    (r"\w+\W?\w+x", "a"),
+    (r"\d+-?\d+-?\d+-?\d+x", "1"),
+    (r"\d.{0,40}\d.{0,40}\d.{0,40}\d.{0,40}x", "1"),
+    (r".{0,60}.{0,60}.{0,60}x", "a"),
+]
+
+_TIMING = """
+import json, sys, time
+from app.find.plan import PatternError, score_listing, validate_pattern
+for pattern, unit in json.loads(sys.argv[1]):
+    try:
+        compiled = validate_pattern(pattern)
+    except PatternError:
+        print(json.dumps([pattern, None]), flush=True)
+        continue
+    text = (unit * 4000)[:4000]
+    started = time.perf_counter()
+    score_listing(text, compiled, ["for parts", "broken"], None)
+    print(json.dumps([pattern, time.perf_counter() - started]), flush=True)
+"""
+
+
+def test_every_adversarial_pattern_is_refused_or_answers_in_linear_time() -> None:
+    # in a child process: a backtracking engine holds the interpreter until it is killed
+    try:
+        run = subprocess.run(
+            [sys.executable, "-c", _TIMING, json.dumps(ADVERSARIAL)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=Path(__file__).resolve().parents[1],
+            check=True,
+        )
+    except subprocess.TimeoutExpired as exc:
+        done = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        pytest.fail(f"a pattern ran for more than 30 s on 4,000 characters, after: {done[-300:]}")
+    timings = dict(json.loads(line) for line in run.stdout.splitlines())
+    assert set(timings) == {p for p, _ in ADVERSARIAL}
+    slow = {p: t for p, t in timings.items() if t is not None and t > 0.2}
+    assert slow == {}
+    # the shapes that froze the backtracking engine are accepted now, and quick
+    for pattern in (r"\w+a\w+x", r"\d+-?\d+-?\d+-?\d+x", r"[\s\S]+a[\s\S]+a[\s\S]+x"):
+        assert timings[pattern] is not None
+    # counted repeats that expand too far are refused
+    assert timings[r"(a{0,30}){0,30}b"] is None
+    assert timings[r"\w{0,999}\w{0,999}\w{0,999}x"] is None
+
+
 @pytest.mark.parametrize(
-    "pattern",
+    ("pattern", "why"),
     [
-        "(a+)+",
-        "(.*)*",
-        r"(\w+\s?)*",
-        "(a|aa)+",
-        r"(?:\d+-)+x",
-        "(a{2,})+",
-        "((ab)*c)+",
-        "(a|b){2,5}",
-        ".*charger",
-        "charger.+",
-        r"\d+\d+",
-        r"\s*\s+",
-        r"a\d+b\d+c\d+d\d+e\d+f\d+g\d+",
+        ("(?=charger)", "lookahead"),
+        ("(?!broken)charger", "lookahead"),
+        ("(?<=19.5)V", "lookbehind"),
+        ("(?<!not )working", "lookbehind"),
+        (r"(a)\1", "backreference"),
+        ("(?P<x>a)(?P=x)", "backreference"),
+        ("(?#a comment)charger", "comments"),
+        ("(?x) char ger", "inline flags"),
+        ("(?s)a.b", "inline flags"),
+        ("(?i:dvi)", "inline flags"),
+        ("(?-i)DVI", "inline flags"),
+        (r"\Cx", "any byte"),
+        (r"\w{0,999}x", "expand past"),
+        (r"(a{0,30}){0,30}b", "expand past"),
+        (r"(?:\w{0,20}\s){1,30}x", "expand past"),
+        (r"\w++x", "compile"),
     ],
 )
-def test_shapes_that_run_away_are_refused(pattern: str) -> None:
-    with pytest.raises(PatternError):
+def test_what_the_engine_lacks_or_could_expand_is_refused_with_a_reason(
+    pattern: str, why: str
+) -> None:
+    with pytest.raises(PatternError, match=why):
         validate_pattern(pattern)
 
 
@@ -89,6 +185,14 @@ def test_long_empty_broken_and_backreferencing_patterns_are_refused() -> None:
 
 def test_safe_shapes_pass() -> None:
     for pattern in (
+        # refused by the old checks, harmless on a linear-time engine
+        "(a+)+",
+        ".*charger",
+        r"\d+\d+",
+        r"(\w+\s?)*charger",
+        "(?i)dvi",
+        r"\pL+ cable",
+        r"(?:\w{0,40}\s?){0,5}x",
         r"(?:op)?-?065",
         r"[+*]{1,3}",  # quantifier characters inside a class are literals
         r"(foo|bar)?\s*baz",
@@ -106,6 +210,48 @@ def test_an_accepted_pattern_stays_fast_on_text_that_nearly_matches() -> None:
     score = score_listing(hostile, compiled, [], None)
     assert time.monotonic() - started < 2.0
     assert score.matched is False
+
+
+def test_offsets_count_code_points_as_the_highlighting_does() -> None:
+    plug = chr(0x1F50C)  # one code point, two UTF-16 units, four UTF-8 bytes
+    text = f"{plug}{plug} DVI-D dual link, for parts"
+    score = score_listing(text, validate_pattern("dvi-d"), ["for parts"], None)
+    match = next(h for h in score.hits if h.kind == "match")
+    excluded = next(h for h in score.hits if h.kind == "excluded")
+    assert (match.start, match.end) == (3, 8) and text[match.start : match.end] == "DVI-D"
+    assert text[excluded.start : excluded.end] == excluded.text == "for parts"
+
+
+def test_exclusions_match_any_case_and_whole_words_only() -> None:
+    capitals = score_listing("Orbital charger, FOR PARTS ONLY", None, ["for parts"], None)
+    assert capitals.verdict == "no" and capitals.excluded == ["for parts"]
+    assert capitals.hits[0].text == "FOR PARTS"
+    assert score_listing("brokenly honest seller", None, ["broken"], None).excluded == []
+    assert score_listing("unbroken seal", None, ["broken"], None).excluded == []
+    assert score_listing("screen broken.", None, ["broken"], None).excluded == ["broken"]
+    spaced = "sold for" + chr(0xA0) + "parts"
+    assert score_listing(spaced, None, ["for parts"], None).excluded == ["for parts"]
+
+
+def test_only_the_first_scan_max_characters_are_read() -> None:
+    compiled = validate_pattern("dvi-d")
+    assert score_listing("x" * (SCAN_MAX - 5) + "DVI-D", compiled, [], None).matched
+    beyond = "x" * SCAN_MAX + " DVI-D for parts $5"
+    late = score_listing(beyond, compiled, ["for parts"], 1)
+    assert late.matched is False and late.excluded == [] and late.price is None
+
+
+def test_a_price_at_the_limit_fits_and_zero_is_no_limit() -> None:
+    compiled = validate_pattern("dvi")
+    at = score_listing("DVI cable $20", compiled, [], 20)
+    assert at.verdict == "fits" and at.price_ok is True
+    assert "$20 is within the limit" in at.reasons
+    assert score_listing("DVI cable $20.01", compiled, [], 20).verdict == "no"
+    unlimited = score_listing("DVI cable $900", compiled, [], 0)
+    assert unlimited.verdict == "fits" and unlimited.price_ok is None
+    dear = score_listing("Desk, $1,200,000", None, [], 1000)
+    assert dear.reasons == ["asks $1,200,000, over the limit of $1,000"]
+    assert money(1_200_000.0) == "$1,200,000" and money(9.5) == "$9.50"
 
 
 def test_scoring_ranks_by_pattern_exclusions_and_price() -> None:
@@ -138,7 +284,26 @@ def test_prices_are_read_as_dollars() -> None:
     assert price_of("$ 9.50 firm") == 9.5
     assert price_of("40 bucks") == 40
     assert price_of("free to a good home") == 0
+    assert price_of("FREE, pick up today") == 0
     assert price_of("6 ft cable") is None
+    # a k after the number is thousands
+    assert price_of("$1.2k firm") == 1200
+    assert price_of("1.5k usd") == 1500
+    assert price_of("$5 kit included") == 5
+    # free of something, or something else free, is not a price; a number wins over free
+    for text in ("smoke-free", "pet free", "smoke-free home", "free shipping", "free delivery"):
+        assert price_of(text) is None, text
+    assert price_of("free home delivery") is None
+    assert price_of("free delivery, $30") == 30
+    # another dollar is not a US one
+    assert price_of("CA$30") is None
+    assert price_of("US$30") == 30
+    # the last price stated is the asking one
+    assert price_of("was $40 now $15") == 15
+    # a number in groups of three after a space is not guessed at
+    assert price_of("$1 200") is None
+    assert price_of("1 200 dollars") is None
+    assert price_of("$15 100W charger") == 15
 
 
 def test_search_links_are_encoded_one_per_phrasing() -> None:
@@ -218,8 +383,8 @@ async def test_the_recorded_plan_is_kept_and_ranks_what_comes_back(finder: Finde
     again = finder.listings(search.id)
     assert again[0].text == WRONG and again[0].score.verdict == "fits"
     assert next(b for b in again if b.text == PARTS).score.verdict == "no"
-    with pytest.raises(FindError, match=r"\(a\+\)\+"):
-        finder.edit_plan(search.id, PlanEdit(pattern="(a+)+"))
+    with pytest.raises(FindError, match="comments"):
+        finder.edit_plan(search.id, PlanEdit(pattern="(?#x)20V"))
     # Check fit: one reading, the rules' verdict, the same candidate when asked again
     candidate = await finder.check_listing(search.id, again[0].id)
     assert candidate.assessment is not None
@@ -239,7 +404,7 @@ async def test_a_pattern_written_by_hand_needs_no_plan_call(finder: Finder) -> N
     edited = finder.edit_plan(search.id, PlanEdit(pattern=r"dual[-\s]?link"))
     assert edited.plan is not None and edited.plan.model == ""
     assert [p.text for p in edited.plan.phrasings] == ["DVI-D dual link cable"]
-    tried = finder.test_pattern(PatternTest(pattern="(.*)*", text="x"))
+    tried = finder.test_pattern(PatternTest(pattern="(?x)dual link", text="x"))
     assert tried.score is None and "refused" in tried.error
     line = finder.test_pattern(
         PatternTest(pattern="dual link", exclusions=["vga"], text="Dual link DVI, $4", max_price=10)
@@ -254,7 +419,7 @@ async def test_a_written_pattern_that_fails_the_checks_is_not_kept(
     folder.mkdir(parents=True)
     recorded = json.loads((RECORDED_FIXTURES / "responses" / "search-plan.json").read_text())
     text = json.loads(recorded["response"]["output"][1]["content"][0]["text"])
-    text |= {"pattern": r"(\w+\s?)*charger", "exclusions": []}
+    text |= {"pattern": r"(?=charger)\w+", "exclusions": []}
     recorded["response"]["output"][1]["content"][0]["text"] = json.dumps(text)
     (folder / "search-plan.json").write_text(json.dumps(recorded))
     inventory = Inventory(settings)
@@ -271,7 +436,7 @@ async def test_a_written_pattern_that_fails_the_checks_is_not_kept(
     search = finder.create(SearchCreate(profile="power_adapter", title="adapter"))
     plan = (await finder.plan(search.id)).plan
     assert plan is not None and plan.pattern == ""
-    assert "was refused" in plan.pattern_error and "repeats inside" in plan.pattern_error
+    assert "was refused" in plan.pattern_error and "lookahead" in plan.pattern_error
     assert plan.exclusions == ["for parts", "parts only", "broken", "not working", "does not work"]
 
 
@@ -354,3 +519,83 @@ def test_the_brief_carries_the_need_and_nothing_that_identifies_the_item(finder:
     assert "Needed: 65 W adapter" in brief and "output current 3.33" in brief
     assert "output voltage 19.5" in brief and "Top price: 20 USD" in brief
     assert "barrel plug is 4.5 mm" in brief and "SN-PRIVATE-1" not in brief
+
+
+def test_listings_are_kept_trimmed_and_capped_checked_ones_last_to_go(finder: Finder) -> None:
+    search = finder.create(SearchCreate(profile="generic_item", title="DVI-D cable"))
+    first = finder.add_listings(search.id, ListingsBack(texts=["DVI-D " + "y" * SCAN_MAX]))
+    assert len(first[0].text) == SCAN_MAX
+    finder._remember_candidate(search.id, first[0].id, 77)
+    for batch in range(3):
+        finder.add_listings(
+            search.id, ListingsBack(texts=[f"cable {batch}-{i} $3" for i in range(20)])
+        )
+    kept = finder.listings(search.id)
+    assert len(kept) == MAX_LISTINGS == 50
+    ids = {b.id for b in kept}
+    # 61 in all: the checked one stays, the eleven oldest unchecked go
+    assert first[0].id in ids and not ids & set(range(2, 13)) and 13 in ids
+    assert finder.search(search.id).listings == MAX_LISTINGS
+    # every one kept is checked: the one just brought back still stays, the oldest checked goes
+    for b in kept:
+        finder._remember_candidate(search.id, b.id, 78)
+    oldest = min(b.id for b in kept)
+    latest = finder.add_listings(search.id, ListingsBack(texts=["DVI-D new $4"]))
+    ids = {b.id for b in latest}
+    assert len(ids) == MAX_LISTINGS and max(ids) == 62 and oldest not in ids
+
+
+def test_a_pattern_saved_while_listings_come_in_loses_neither(
+    finder: Finder, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    search = finder.create(SearchCreate(profile="generic_item", title="DVI-D cable"))
+    finder.edit_plan(search.id, PlanEdit(pattern="dvi"))
+    real = finder.inventory.update_search
+
+    def slow(search_id: int, status: str, content: str) -> object:
+        time.sleep(0.05)  # both read before either writes, unless the search is locked
+        return real(search_id, status, content)
+
+    monkeypatch.setattr(finder.inventory, "update_search", slow)
+    start = threading.Barrier(2)
+
+    def patch() -> None:
+        start.wait()
+        finder.edit_plan(search.id, PlanEdit(pattern=r"dual[-\s]?link"))
+
+    def post() -> None:
+        start.wait()
+        finder.add_listings(search.id, ListingsBack(texts=["dual link DVI-D, $5"]))
+
+    threads = [threading.Thread(target=patch), threading.Thread(target=post)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(10)
+    after = finder.search(search.id)
+    assert after.plan is not None and after.plan.pattern == r"dual[-\s]?link"
+    assert after.listings == 1
+
+
+def test_each_screenshot_is_counted_against_the_allowance(tmp_path: Path) -> None:
+    settings = gated_settings(
+        tmp_path, fixtures_dir=RECORDED_FIXTURES, demo_visitor_calls_per_hour=3
+    )
+    with TestClient(create_app(settings)) as c:
+        c.post("/api/access", json={"code": CODE})
+        made = c.post("/api/searches", json={"profile": "generic_item", "title": "cable"})
+        url = f"/api/searches/{made.json()['id']}/listings/screenshots"
+
+        def shots(n: int) -> list[tuple[str, tuple[str, bytes, str]]]:
+            return [("screenshots", (f"{i}.jpg", make_photo(), "image/jpeg")) for i in range(n)]
+
+        four = c.post(url, files=shots(4))
+        assert four.status_code == 429 and "4 screenshots are 4 readings" in four.json()["detail"]
+        # refused whole: nothing counted, the one the gate took given back
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 0
+        two = c.post(url, files=shots(2))
+        assert two.status_code == 201, two.text
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 2
+        assert c.post(url, files=shots(2)).status_code == 429
+        assert c.post(url, files=shots(1)).status_code == 201
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 3
