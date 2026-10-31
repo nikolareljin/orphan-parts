@@ -16,3 +16,5 @@ data
 *.sqlite3-*
 *.log
 .git
+# belt and braces: the live check is outside this build context anyway (./dev live-check mounts it)
+livecheck
