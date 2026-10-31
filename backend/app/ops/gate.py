@@ -46,26 +46,29 @@ OPEN_PATHS = frozenset(
         "/api/pair/code",
     }
 )
-# The calls that spend: each one is a Model API call, counted before it is made.
+# The calls that spend: each one is a Model API call, counted before it is made. An id segment
+# is matched as any segment, not as digits: the router also takes `+1`, `01` or `1 ` (`%20`) for
+# an id, and such a path must still be counted, limited and paused like the plain one.
 EXPENSIVE = [
     ("POST", re.compile(r"^/api/extract$")),
     ("POST", re.compile(r"^/api/segment$")),
-    ("POST", re.compile(r"^/api/items/\d+/drafts$")),
-    ("POST", re.compile(r"^/api/items/\d+/voice$")),
-    ("POST", re.compile(r"^/api/items/\d+/price$")),
-    ("POST", re.compile(r"^/api/items/\d+/picture$")),
-    ("POST", re.compile(r"^/api/items/\d+/scenarios/\d+/reuse/\d+/picture$")),
-    ("POST", re.compile(r"^/api/projects/\d+/picture$")),
-    ("POST", re.compile(r"^/api/items/\d+/uses$")),
-    ("POST", re.compile(r"^/api/items/\d+/scenarios$")),
-    ("POST", re.compile(r"^/api/searches/\d+/candidates$")),
-    ("POST", re.compile(r"^/api/searches/\d+/plan$")),
-    ("POST", re.compile(r"^/api/searches/\d+/listings/screenshots$")),
-    ("POST", re.compile(r"^/api/searches/\d+/listings/\d+/check$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/drafts$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/voice$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/price$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/picture$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/scenarios/[^/]+/reuse/[^/]+/picture$")),
+    ("POST", re.compile(r"^/api/projects/[^/]+/picture$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/uses$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/scenarios$")),
+    ("POST", re.compile(r"^/api/searches/[^/]+/candidates$")),
+    ("POST", re.compile(r"^/api/searches/[^/]+/plan$")),
+    ("POST", re.compile(r"^/api/searches/[^/]+/listings/screenshots$")),
+    ("POST", re.compile(r"^/api/searches/[^/]+/listings/[^/]+/check$")),
     ("POST", re.compile(r"^/api/projects/propose$")),
-    ("POST", re.compile(r"^/api/captures/\d+/process$")),
+    ("POST", re.compile(r"^/api/captures/[^/]+/process$")),
 ]
-# What the demo visitor may do without the code: look (the items and captures the owner marked
+# What the demo visitor may do without the code (an id here is plain digits, so an odd spelling
+# of one is refused rather than let through): look (the items and captures the owner marked
 # public, their values, photos and drawn pictures; never a clip, a note, a location or a
 # draft), and try the stateless readings on recorded answers. Everything that saves, drafts,
 # prices, plans, draws or captures needs the code.
@@ -98,11 +101,11 @@ _OLD_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}\.\d{1,12}\.[01]\.\d{1,12}\.[0-
 
 
 def demo_allowed(method: str, path: str) -> bool:
-    return any(m == method and p.match(path) for m, p in DEMO_ALLOWED)
+    return any(m == method and p.fullmatch(path) for m, p in DEMO_ALLOWED)
 
 
 def expensive(method: str, path: str) -> bool:
-    return any(m == method and p.match(path) for m, p in EXPENSIVE)
+    return any(m == method and p.fullmatch(path) for m, p in EXPENSIVE)
 
 
 class Allowance:

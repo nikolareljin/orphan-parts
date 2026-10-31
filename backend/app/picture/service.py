@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import os
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -44,7 +44,7 @@ PART_VALUES = 3
 VALUE_MAX = 60
 TAIL = "on a plain background, no text, no logos, no people"
 # what an item cost or would fetch is the owner's business, never part of a picture
-MONEY_WORDS = ("price", "cost", "paid", "msrp")
+MONEY_WORDS = ("price", "cost", "paid", "msrp", "value", "worth", "resale", "retail")
 
 
 class PicturesOffError(RuntimeError):
@@ -120,17 +120,51 @@ def finished_prompt(title: str, parts: list[str], about: str) -> str:
     return f"{head}; {line}, {TAIL}" if line else f"{head}, {TAIL}"
 
 
-def project_prompt(project: Project, items: list[Item]) -> str:
-    """A project as built: its title, the items allocated to it, and what it results in."""
-    return finished_prompt(project.title, [part_of(i) for i in items], project.result)
+# an owner's name for an item and the kind to say instead
+Named = tuple[str, str]
+
+
+def named(items: list[Item], others: Sequence[Named] = ()) -> list[Named]:
+    return [(i.name, i.item_type or "item") for i in items] + list(others)
+
+
+def without_names(text: str, names: list[Named]) -> str:
+    """A text the model wrote, with each item's name (the owner's words, which its brief
+    carried) said as the kind of item instead, whatever its letter case or spacing."""
+    # the longest first, so a name inside another is not left half-said
+    for name, kind in sorted(names, key=lambda pair: -len(pair[0].strip())):
+        words = name.split()
+        if len(" ".join(words)) < 2:
+            continue
+        pattern = r"\s+".join(re.escape(word) for word in words)
+        said = (kind or "item").replace("\\", "\\\\")
+        text = re.sub(pattern, said, text, flags=re.IGNORECASE)
+    return text
+
+
+def project_prompt(project: Project, items: list[Item], others: Sequence[Named] = ()) -> str:
+    """A project as built: its title, the items allocated to it, and what it results in; no
+    item's name, even where the model's title or result repeats one (``others``: the rest of
+    the inventory's names, which the proposal could read too)."""
+    names = named(items, [*others, *((a.item_name, "item") for a in project.allocations)])
+    return finished_prompt(
+        without_names(project.title, names),
+        [part_of(i) for i in items],
+        without_names(project.result, names),
+    )
 
 
 def card_prompt(scenarios: Scenarios, card: int, item: Item) -> str:
     """A reuse card as built: its title, the item it is about and the kinds of item it names
     from the rest of the inventory (a kind alone: the card does not say which one), and what
-    it does."""
+    it does; the item's name, which the scenarios brief carried, is said as its kind."""
     reuse = scenarios.reuse[card]
-    return finished_prompt(reuse.title, [part_of(item), *reuse.with_items], reuse.what_it_does)
+    names = named([item])
+    return finished_prompt(
+        without_names(reuse.title, names),
+        [part_of(item), *reuse.with_items],
+        without_names(reuse.what_it_does, names),
+    )
 
 
 def _numbered(folder: Path) -> list[tuple[int, Path]]:
@@ -288,9 +322,10 @@ class Pictures:
                 items.append(self.inventory.get(item_id))
             except NotFoundError:
                 continue  # an item deleted since is not drawn
+        others = [(i.name, i.item_type) for i in self.inventory.list_items()]
         return await self._draw(
             self.project_folder(project.id),
-            project_prompt(project, items),
+            project_prompt(project, items, others),
             _line(project.title, TITLE_MAX) or "project",
             lambda: None,
         )

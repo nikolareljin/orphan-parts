@@ -10,7 +10,7 @@ process is exactly the one in the code.
 |---|---|
 | Auth | `Authorization: Bearer $MODEL_API_KEY` from settings. The key never appears in logs, errors or `repr()`; error text that echoes it is redacted. |
 | Timeouts | `MODEL_API_TIMEOUT_S` per request, 10 s to connect. |
-| Retries | 429, 500 and 503 are retried up to `MODEL_API_MAX_ATTEMPTS` with exponential backoff and jitter (0.5 s, 1 s, 2 s...). A `Retry-After` header is honoured, capped at `MODEL_API_RETRY_AFTER_MAX_S`. 400, 401, 402, 403, 404 and 413 are never retried. Timeouts and connection errors count as retryable. |
+| Retries | 429, 500 and 503 are retried up to `MODEL_API_MAX_ATTEMPTS` with exponential backoff and jitter (0.5 s, 1 s, 2 s...). A `Retry-After` header is honoured, capped at `MODEL_API_RETRY_AFTER_MAX_S`. 400, 401, 402, 403, 404 and 413 are never retried. Timeouts and connection errors count as retryable. A picture (Muse Image) is tried once, never retried, so one click never bills twice. |
 | Spend cap | Before each live call the ledger must be under `SPEND_CAP_USD`, otherwise `SpendCapError` is raised and nothing is sent. |
 | Cost ledger | Every call appends one line to `DATA_DIR/model_api_spend.jsonl` with tokens, price, attempts and the request ID; `GET /api/spend` and `/readyz` read the totals. |
 | Output cap | `max_output_tokens` from a caller is the answer budget; the request carries it plus a reasoning headroom by effort (1,024 `minimal`, 4,096 `low`, 8,192 `medium`, 16,384 `high`, 32,768 `xhigh`; 4,096 with no effort), under `MODEL_MAX_OUTPUT_TOKENS` when set, since reasoning tokens count against the cap. A response that still stops at the cap raises with the operation, the tokens used and the reasoning share. |

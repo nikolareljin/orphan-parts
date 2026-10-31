@@ -364,3 +364,102 @@ def test_the_draw_routes_are_in_the_openapi_document(client: TestClient) -> None
         "/api/items/{item_id}/scenarios/{scenarios_id}/reuse/{card}/pictures/{n}",
     ):
         assert path in paths
+
+
+# --- what the model wrote never carries a name -------------------------------------------
+
+
+def test_an_item_name_the_model_repeated_is_said_as_its_kind(settings: Settings) -> None:
+    from app.projects.schema import Project
+
+    inventory = Inventory(settings)
+    laptop = inventory.get(private_laptop(inventory))
+    scenarios = _scenarios()
+    scenarios.reuse = [
+        ReuseScenario(
+            title="NIK'S  work LAPTOP as a recipe display",
+            what_it_does="mount nik's work laptop on the wall",
+            with_items=["monitor"],
+            difficulty="easy",
+            why="",
+            extra_parts=[],
+            cost="",
+            time="",
+        )
+    ]
+    prompt = card_prompt(scenarios, 0, laptop)
+    assert "nik" not in prompt.lower() and "work laptop" not in prompt.lower()
+    assert prompt.startswith("a semi-realistic illustration of laptop as a recipe display")
+    assert "; mount laptop on the wall, " in prompt
+
+    project = Project.model_validate(
+        {
+            **_project_fields(),
+            "title": "Desk from Nik's work laptop and Grandma's TV",
+            "result": "Nik's work laptop drives Grandma's TV",
+            "allocations": [
+                {
+                    "item_id": laptop.id,
+                    "item_name": laptop.name,
+                    "requirement": "computer",
+                    "committed": False,
+                    "why": "",
+                },
+                {
+                    "item_id": 99,
+                    "item_name": "Grandma's TV",
+                    "requirement": "screen",
+                    "committed": False,
+                    "why": "",
+                },
+            ],
+        }
+    )
+    prompt = project_prompt(project, [laptop], [("Spare monitor", "monitor")])
+    assert "Nik" not in prompt and "Grandma" not in prompt
+    assert prompt.startswith("a semi-realistic illustration of Desk from laptop and item")
+
+
+def _project_fields() -> dict[str, Any]:
+    return {
+        "id": 1,
+        "template": "homework_workstation",
+        "title": "",
+        "status": "proposed",
+        "version": 1,
+        "result": "",
+        "requirements": [],
+        "allocations": [],
+        "effort": "low",
+        "skills": [],
+        "spend_estimate": 0.0,
+        "currency": "USD",
+        "unknowns": [],
+        "sources": [],
+        "steps": [],
+        "safety": [],
+        "dropped": [],
+        "model": "muse-spark",
+        "from_fixture": True,
+        "cost_usd": 0.0,
+        "created_at": "t",
+        "updated_at": "t",
+    }
+
+
+def test_money_and_device_ids_stay_out_of_a_part(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    item = inventory.create(ItemCreate(item_type="phone"))
+    for key, value in (
+        ("storage", "64 GB"),
+        ("resale_value", "120"),
+        ("est_worth", "130"),
+        ("retail", "499"),
+        ("service_tag", "7XK2Q1"),
+        ("imsi", "IMSI-PRIVATE"),
+        ("iccid", "ICCID-PRIVATE"),
+        ("meid", "MEID-PRIVATE"),
+    ):
+        inventory.add_field(item.id, FieldCreate(field=key, value=value, provenance="tested"))
+    part = part_of(inventory.get(item.id))
+    assert part == "phone (storage 64 GB)"

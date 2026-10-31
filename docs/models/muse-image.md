@@ -27,9 +27,13 @@ set-up for homework, on a plain background, no text, no logos, no people*. For a
 the card's title, what it does, this item (its kind and up to three accepted values) and the
 kinds of item the card names from the rest of the inventory; for a project, its title, what it
 results in and the items allocated to it (each its kind and up to three accepted values). A
-value that identifies an item (serial, MAC, IMEI, by the same filter as above) or names a price
-never goes out, nor a name, the location or the notes. The title is cut to 120 characters, the
-line to 200, a value to 60, and at most six parts are named, each once.
+value that identifies an item (serial, MAC, IMEI, IMSI, ICCID, MEID, service tag, by the same
+filter as above) or names money (price, cost, paid, MSRP, value, worth, resale, retail) never
+goes out, nor the location or the notes. The title and the line are the model's words, and the
+model read the items' names in its brief, so each item's name in them, in any letter case, is
+replaced by its kind before the prompt goes out (*Nik's work laptop* becomes *laptop*). The
+title is cut to 120 characters, the line to 200, a value to 60, and at most six parts are
+named, each once.
 
 ## When it is called
 
@@ -50,7 +54,9 @@ writes into the Modal secret ([deployment](../operations/deployment.md)).
 - **Request.** `POST /v1/images/generations`, JSON: `model` (`MODEL_IMAGE`, `muse-image-1.0`),
   `prompt`, `n` 1, `size` `1024x1024`, `response_format` `b64_json`, `output_format` `jpeg`,
   `reasoning_strength` `low` (the model's own refinement pass is skipped: a sketch of a use, not
-  a product shot).
+  a product shot). One try, never retried: an image that timed out may still have been drawn
+  and billed, so a retry could charge one click twice; the error is shown and the owner
+  decides whether to click again.
 - **Response.** `data[0].b64_json` decoded to the JPEG (an answer that is not a JPEG, `FF D8 FF`
   first, is an incomplete answer: nothing is kept, the call is still charged); `revised_prompt`
   kept on the result; `usage` (input and output tokens) kept in the ledger entry. Fixture mode
