@@ -55,7 +55,7 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   const decided = decide.getByRole('status', { name: 'Decision made' })
   await expect(decided).toContainText('Sell')
   await expect(decided).toContainText('worth a listing')
-  await expect(panel.getByLabel('Plan')).toHaveValue('sell')
+  await expect(panel.getByRole('combobox', { name: /^Plan/ })).toHaveValue('sell')
   await expect(panel.getByRole('region', { name: 'Prepare to sell or give away' }).getByLabel('Sell')).toBeChecked()
 
   // the history has the line, and the panel reads it back after a reload

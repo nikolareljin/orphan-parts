@@ -25,7 +25,7 @@ provenance, so a later reader can see what the label said and what you corrected
 | Condition, known faults, tests done, included accessories | free text, yours |
 | Plan | keep, use in a build, sell, give away |
 | Availability | available, reserved (a plan counts on it), gone |
-| Where it is, notes | private; shown only on the item page, never in a draft or a shared record |
+| Where it is kept, notes | private; shown only on the item page, never in a draft or a shared record |
 
 Every edit bumps the item's version and records an event. The page sends the version it last
 saw with each change; if the item changed in between, the write is refused and the page shows
@@ -34,7 +34,7 @@ the current state instead of overwriting it.
 ## Parts of a whole
 
 A removable part can be separated into its own record with **Separate a part into its own item**: a camera module
-from a broken phone, the cable from a charger. The part gets the parent's intent and a link
+from a broken phone, the cable from a charger. The part gets the parent's plan and a link
 back; the parent's faults note what left, so a later plan does not count on a whole device that
 is no longer whole.
 

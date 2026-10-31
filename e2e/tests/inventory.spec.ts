@@ -90,7 +90,7 @@ test('intent, an owner value, a separated part and the history', async ({ page, 
   const panel = page.getByRole('article', { name: `Item ${webcam}` })
   await expect(panel).toContainText('No photos saved with this item.')
 
-  await panel.getByLabel('Plan').selectOption('sell')
+  await panel.getByRole('combobox', { name: /^Plan/ }).selectOption('sell')
   await expect(items.getByRole('row', { name: webcam })).toContainText('Sell')
   await expect(panel).toContainText('version 2')
 
@@ -163,11 +163,11 @@ test('a write refused because the item changed in between reloads the item', asy
   const elsewhere = await request.patch(`/api/items/${id}`, { data: { condition: 'flickers', version: 1 } })
   expect(elsewhere.status()).toBe(200)
 
-  await panel.getByLabel('Plan').selectOption('give')
+  await panel.getByRole('combobox', { name: /^Plan/ }).selectOption('give')
   await expect(panel.getByRole('alert')).toContainText('was reloaded')
   await expect(panel).toContainText('version 2')
   await expect(panel.getByRole('textbox', { name: 'Condition', exact: true })).toHaveValue('flickers')
-  await expect(panel.getByLabel('Plan')).toHaveValue('keep')
+  await expect(panel.getByRole('combobox', { name: /^Plan/ })).toHaveValue('keep')
 })
 
 test('a failed save keeps the reading on the page', async ({ page }) => {

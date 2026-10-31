@@ -1,8 +1,10 @@
-// The line at the top of a recorded result shown to the demo visitor (a gated server, no
-// session): the answer is the one recorded for the sample, not a reading of anything new.
-// Empty otherwise; signed in, the small "recorded answer" badge is enough.
-export const SAMPLE_LINE = 'Recorded answer for this sample photo. Sign in with the access code to read your own.'
+// The line above a recorded reading shown to the demo visitor (a gated server, no session).
+// Every photo gets the answer recorded for a sample, the visitor's own too. Signing in reads
+// live only where the server has a key, so the way to a real reading is offered only then.
+export const SAMPLE_LINE = 'Recorded answer for a sample photo, not a reading of yours.'
+export const SAMPLE_SIGN_IN = ' Sign in with the access code to read your own.'
 
-export function sampleLine(fromFixture: boolean, demo: boolean): string {
-  return fromFixture && demo ? SAMPLE_LINE : ''
+export function sampleLine(fromFixture: boolean, demo: boolean, liveModels = false): string {
+  if (!fromFixture || !demo) return ''
+  return liveModels ? SAMPLE_LINE + SAMPLE_SIGN_IN : SAMPLE_LINE
 }

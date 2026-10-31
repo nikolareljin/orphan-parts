@@ -37,6 +37,6 @@ export function evidenceText(guide: Guidance): string {
   const reported = guide.quantities.find((q) => q.kind === 'reported')?.count ?? 0
   const parts = [`${backed} similar listing${backed === 1 ? '' : 's'} with a source`]
   if (reported) parts.push(`${reported} sale${reported === 1 ? '' : 's'} you reported`)
-  if (guide.dropped) parts.push(`${guide.dropped} without a source left out`)
+  if (guide.dropped) parts.push(`${guide.dropped} left out`)
   return parts.join(', ')
 }

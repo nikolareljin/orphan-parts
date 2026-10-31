@@ -276,7 +276,7 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
       {spec.kind === 'two_point' && (
         <label className="check">
           <input type="checkbox" checked={straightOn} onChange={(e) => setStraightOn(e.target.checked)} />
-          <span>Taken straight on, with the ruler level with what is measured</span>
+          <span>Taken straight on, with the ruler in the same plane as what is measured (touching it)</span>
         </label>
       )}
 

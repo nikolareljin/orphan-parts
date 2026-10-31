@@ -13,7 +13,7 @@ answered and adds one answer of its own. Nothing is decided for you; the last ro
 |---|---|---|
 | What it is | the kind of item and how many of its values you have accepted, with a link down to the values | the inventory |
 | What it is worth | the latest price guidance in a line: the typical asking figure (the estimate's when nothing was asked), the strategy to start from, weak evidence and *item changed since* when either applies; **Ask what it is worth**, shown when none was made, takes you to the Value panel's form, where the currency and the place are yours to give; the row reads the new guidance as soon as the panel writes it | Muse Spark proposes, the rules keep what a page backs; see [Value an item](value.md) |
-| What it is good for | the project templates in the catalog with a requirement this kind of item fills, named with the requirement; then **Ask for ideas** | the templates are the rules, from the item's type against each requirement's kinds; the ideas are the model's proposals and the panel says so |
+| What it is good for | the project templates in the catalog with a requirement this kind of item fills, named with the requirement; then **Ask for ideas** | the templates are the rules, from the item's type against each requirement's kinds; the ideas are the model's proposals, shown under *Ideas from the model* |
 | Parts it still needs | the open searches from this item with their candidate counts, the Marketplace search to run, and a link to [Find a part](search.md) | the inventory |
 | What it could look like | a link to the picture section | draw on request when enabled |
 | Decision | **Keep and build**, **Sell**, **Give away**, **Not worth it**, with a note; an item a selected project counts on says so first: *Reserved by <project>: selling or giving it away breaks that build* | you |
@@ -28,7 +28,7 @@ item is edited (including while the request is running), and is shown under the 
 is: the rules did not check it, and a part the tests do not call working is not working because
 an idea assumes it.
 
-The decision sets the item's plan, its intent (**Keep and build** to *build*, **Sell** and **Give away**
+The decision sets the item's **Plan** (`intent` in the API: **Keep and build** to *build*, **Sell** and **Give away**
 to the same, **Not worth it** to *keep*, with the note saying why) and writes
 `decided: <choice>: <note>` into the item's history, so the why is kept beside the what. The
 version is bumped when the intent changes or a note is given; the same choice said again with

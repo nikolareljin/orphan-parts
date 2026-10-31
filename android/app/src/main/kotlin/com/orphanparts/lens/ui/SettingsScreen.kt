@@ -209,7 +209,7 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = code,
                 onValueChange = { code = it },
-                label = { Text("Access code (without it you get the demo)") },
+                label = { Text("Access code (if the server has one; without it you get the demo)") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 colors = fieldColors(),

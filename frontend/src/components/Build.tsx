@@ -70,7 +70,7 @@ export default function Build() {
         </p>
       )}
       {projects.length === 0 ? (
-        <p className="muted">No projects yet. Ask for ideas above; they are built from items in your inventory.</p>
+        <p className="muted">No projects yet. Press Propose above; ideas only use items in your inventory.</p>
       ) : (
         <table className="evidence" aria-label="Projects">
           <thead>

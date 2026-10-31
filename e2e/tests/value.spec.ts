@@ -28,7 +28,7 @@ test('price guidance keeps the four figures apart and backs every comparable wit
   const guide = value.getByRole('status')
   await expect(guide).toContainText('recorded answer')
   await expect(guide).toContainText('1 search')
-  await expect(guide).toContainText('4 similar listings with a source, 1 without a source left out')
+  await expect(guide).toContainText('4 similar listings with a source, 1 left out')
   const table = guide.getByRole('table', { name: 'Quantities' })
   await expect(table.getByRole('row', { name: /asking prices seen/ })).toContainText('12.50 USD to 22 USD')
   await expect(table.getByRole('row', { name: /sold prices seen/ })).toContainText('15 USD')

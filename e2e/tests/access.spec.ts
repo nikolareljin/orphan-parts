@@ -5,7 +5,7 @@ import { grayPng } from './png'
 test.use({ storageState: { cookies: [], origins: [] } })
 
 const code = process.env.E2E_ACCESS_CODE ?? ''
-const sampleLine = 'Recorded answer for this sample photo'
+const sampleLine = 'Recorded answer for a sample photo, not a reading of yours.'
 
 async function readALabel(page: Page) {
   await page.getByLabel('Photos of the label').setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: grayPng() })
@@ -38,7 +38,7 @@ test('without a session the pages are the demo, and the code opens the rest', as
   await gate.getByLabel('Access code').fill(code)
   await gate.getByRole('button', { name: 'Enter' }).click()
   await expect(page.getByRole('button', { name: 'Sign in with the code' })).toHaveCount(0)
-  await expect(page.getByText(/Demo: \d+ of \d+ calls used today/)).toBeVisible()
+  await expect(page.getByText(/Live calls: \d+ of \d+ used today/)).toBeVisible()
   // signed in, the same recorded reading carries only its small badge
   await readALabel(page)
   await expect(page.getByText('recorded answer', { exact: true })).toBeVisible()

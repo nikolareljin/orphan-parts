@@ -18,7 +18,7 @@ describe('demoText', () => {
   it('says nothing without a gate and the counts with one', () => {
     expect(demoText(ready({ gated: false, paused: false, daily_used: 0, daily_cap: 300, visitor_cap_per_hour: 20 }))).toBe('')
     expect(demoText(ready({ gated: true, paused: false, daily_used: 12, daily_cap: 300, visitor_cap_per_hour: 20 }))).toBe(
-      'Demo: 12 of 300 calls used today (20 per visitor per hour)',
+      'Live calls: 12 of 300 used today (20 per visitor per hour)',
     )
     expect(demoText(ready({ gated: true, paused: true, daily_used: 12, daily_cap: 300, visitor_cap_per_hour: 20 }))).toContain('paused by the operator')
     expect(demoText(ready({ gated: false, paused: true, daily_used: 0, daily_cap: 300, visitor_cap_per_hour: 20 }))).toBe('paused by the operator')

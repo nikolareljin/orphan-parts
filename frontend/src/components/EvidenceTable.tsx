@@ -1,12 +1,10 @@
 import type { Extraction } from '../lib/api'
 import { fieldLabel, orderedFields, percent, printedDiffers, usd, withUnit } from '../lib/format'
-import SampleNotice from './SampleNotice'
 
-export default function EvidenceTable({ result, demo = false }: { result: Extraction; demo?: boolean }) {
+export default function EvidenceTable({ result }: { result: Extraction }) {
   const rows = orderedFields(result.fields)
   return (
     <section className="result">
-      <SampleNotice fromFixture={result.from_fixture} demo={demo} />
       <h3>{result.item_type}</h3>
       <p className="meta">
         {result.model} · {result.photos} {result.photos === 1 ? 'photo' : 'photos'}

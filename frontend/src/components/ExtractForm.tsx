@@ -2,6 +2,7 @@ import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
+import SampleNotice from './SampleNotice'
 import SegmentView from './SegmentView'
 
 type State =
@@ -18,10 +19,12 @@ function messageOf(err: unknown): string {
 export default function ExtractForm({
   limits = DEFAULT_LIMITS,
   demo = false,
+  liveModels = false,
   onSaved,
 }: {
   limits?: Limits
   demo?: boolean
+  liveModels?: boolean
   onSaved?: (item: Item) => void
 }) {
   const [files, setFiles] = useState<File[]>([])
@@ -139,10 +142,15 @@ export default function ExtractForm({
       {/* the live region stays mounted, so results landing in it are announced */}
       <div aria-live="polite">
         {note && <p className="hint">{note}</p>}
-        {segmentation && <SegmentView result={segmentation} demo={demo} />}
+        <SampleNotice
+          fromFixture={Boolean(segmentation?.from_fixture || (state.kind === 'done' && state.result.from_fixture))}
+          demo={demo}
+          liveModels={liveModels}
+        />
+        {segmentation && <SegmentView result={segmentation} />}
         {state.kind === 'done' && (
           <>
-            <EvidenceTable result={state.result} demo={demo} />
+            <EvidenceTable result={state.result} />
             <div className="save">
               {state.saved ? (
                 <>

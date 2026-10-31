@@ -24,7 +24,7 @@ Tap **Sign in with the code**, type the access code, **Enter**.
 ![The Access code dialog: sign in with the access code; a field for the code and the Enter button](../assets/pairing/web-sign-in-dialog.png){ width=480 }
 
 Signed in, the link is gone from the header and the footer counts the day's calls instead:
-`Demo: 0 of 300 calls used today (20 per visitor per hour)`. The inventory is the full one now, not
+`Live calls: 0 of 300 used today (20 per visitor per hour)`. The inventory is the full one now, not
 the public items only.
 
 ![The web app signed in: no sign-in link in the header; the footer counts calls](../assets/pairing/web-signed-in.png){ width=480 }
@@ -134,7 +134,7 @@ the recorded set, whatever the photo, and no live model is called. Nothing is ke
 draft, price, project, picture and capture is refused with one line, `demo: the code unlocks
 saving, drafts, prices, projects and captures`. A phone paired from a page that was not signed in is the same visitor: **Check** says
 **Without the code this phone is the demo visitor: nothing it sends is kept.** Each visitor has
-an hourly allowance of calls (`20 per visitor and hour` on a default server) and the server a
+an hourly allowance of calls (`20 per visitor per hour` on a default server) and the server a
 daily one.
 
 ![The web app as the demo: the header offers Sign in with the code; the inventory lists the public demo items](../assets/pairing/web-inventory-demo.png){ width=480 }

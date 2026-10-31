@@ -289,7 +289,7 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
           Search Marketplace
         </a>{' '}
         <span className="muted">opens the search in a new tab for you to run; nothing is fetched or posted from here. Then bring a listing back below.</span>
-        {search.max_price !== null && ` · top price ${search.max_price} ${search.currency}`}
+        {search.max_price !== null && ` · max price ${search.max_price} ${search.currency}`}
         {search.radius_km !== null && ` · within ${search.radius_km} km`}
       </p>
       {Object.keys(search.spec).length > 0 && (

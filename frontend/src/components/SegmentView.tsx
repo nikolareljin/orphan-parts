@@ -1,11 +1,9 @@
 import type { Segmentation } from '../lib/api'
 import { percent, usd } from '../lib/format'
-import SampleNotice from './SampleNotice'
 
-export default function SegmentView({ result, demo = false }: { result: Segmentation; demo?: boolean }) {
+export default function SegmentView({ result }: { result: Segmentation }) {
   return (
     <section className="segments">
-      <SampleNotice fromFixture={result.from_fixture} demo={demo} />
       <p className="meta">
         {result.model} · {result.regions.length} {result.regions.length === 1 ? 'region' : 'regions'} ·{' '}
         {usd(result.cost_usd)}

@@ -141,6 +141,7 @@ export default function App() {
           <ExtractForm
             limits={status.kind === 'ok' ? status.version.limits : undefined}
             demo={demo}
+            liveModels={status.kind === 'ok' && status.ready.demo.live_models}
             onSaved={() => {
               setSaved((n) => n + 1)
               setView('inventory')

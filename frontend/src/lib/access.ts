@@ -11,7 +11,7 @@ export function demoText(ready: Readiness, granted = true): string {
   if (d.gated && !granted) {
     parts.push(d.live_models ? 'Demo: recorded answers only. Sign in to save and use the live models' : 'Demo: recorded answers only. Sign in to save')
   } else if (d.gated) {
-    parts.push(`Demo: ${d.daily_used} of ${d.daily_cap} calls used today (${d.visitor_cap_per_hour} per visitor per hour)`)
+    parts.push(`Live calls: ${d.daily_used} of ${d.daily_cap} used today (${d.visitor_cap_per_hour} per visitor per hour)`)
   }
   if (d.paused) parts.push('paused by the operator')
   return parts.join('; ')
