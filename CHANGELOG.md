@@ -4,6 +4,8 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+## 0.3.1 - 2026-10-31
+
 ### Changed
 - `GET /api/version`, and with it the footer of every page, lists only the models the app calls (Muse Spark, Muse Image, Muse Voice Transcribe, SAM 3.1); Muse Wonder stays a setting checked by `./dev check-api` and is no longer named there.
 - The judges' guide (`JUDGES.md`, *For judges* on the docs site) starts with a fast path on the hosted app, and every docs page describes the current app; the pairing screenshots are regenerated.
