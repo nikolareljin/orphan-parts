@@ -149,7 +149,7 @@ app, installs it over USB and prints the pairing code in the terminal.
   values.
 - **My inventory:** confirm or reject each value, measure a feature against a ruler, ask
   **Does it fit?**, prepare a listing, ask what it is worth, build something from what you
-  have. Under the photos, **Draw it** shows what the item could look like as what you type
+  have. At the end of the item, **Draw it** shows what the item could look like as what you type
   (a picture, labeled as drawn, only when that server has pictures on).
 
 - **Decide**, on the item below its values: what it is, what it is worth, what it is good for

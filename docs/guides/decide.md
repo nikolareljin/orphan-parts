@@ -15,7 +15,7 @@ answered and adds one answer of its own. Nothing is decided for you; the last ro
 | What it is worth | the latest price guidance in a line: the typical asking figure (the estimate's when nothing was asked), the strategy to start from, weak evidence and *item changed since* when either applies; **Ask what it is worth**, shown when none was made, takes you to the Value panel's form, where the currency and the place are yours to give; the row reads the new guidance as soon as the panel writes it | Muse Spark proposes, the rules keep what a page backs; see [Value an item](value.md) |
 | What it is good for | the project templates in the catalog with a requirement this kind of item fills, named with the requirement; then **Ask for ideas** | the templates are the rules, from the item's type against each requirement's kinds; the ideas are the model's proposals and the panel says so |
 | What would complete it | the open searches from this item with their candidate counts, the Marketplace search to run, and a link to [Find a part](search.md) | the inventory |
-| What it could look like | a link to the picture controls above | draw on request when enabled |
+| What it could look like | a link to the picture controls | draw on request when enabled |
 | Decision | **Keep and build**, **Sell**, **Give away**, **Not worth it**, with a note; an item a selected project counts on says so first: *Reserved by <project>: selling or giving it away breaks that build* | you |
 
 **Ask for ideas** has Muse Spark propose up to three uses for the item: a title, what it would
