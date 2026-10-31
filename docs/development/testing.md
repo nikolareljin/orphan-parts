@@ -70,11 +70,11 @@ optional separators, `[\s\S]+`, nested and long counted repeats, `.{0,40}` gaps)
 answered within 200 ms on 4,000 characters in a child process, so a backtracking engine fails
 the test instead of hanging it; code-point offsets with an emoji, exclusions in capitals and
 not inside a longer word, the 4,000-character cut-off, a price at the limit and a limit of 0,
-the price readings (`k`, *free*, `CA$`, the last price, `$1 200`, thousands separators), the
+the price readings (`k`, *free*, `CA$`, the first price, `$1 200`, thousands separators) and several prices either side of the limit leaving a maybe, the
 links encoded one per phrasing, the plan, screenshot and Check fit routes counted as spending
 and one allowance hit per screenshot, a written pattern that fails the checks not kept, the
 owner's pattern scoring every listing again, listings trimmed and capped at 50, a pattern
-saved while listings come in losing neither, and the routes.
+saved while listings come in losing neither, listing ids never given again, screenshots kept as they are read, two Check fits at once reading once, Plan again keeping the owner's pattern, refused screenshot requests counting nothing, and the routes.
 
 Price guidance is tested against a recorded search-grounded answer (`price`): one search, four
 results, five proposed comparables of which the unbacked one is dropped and said; the four

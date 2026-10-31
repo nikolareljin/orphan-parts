@@ -48,16 +48,21 @@ the notes and the top price) it writes:
   **Copy** beside it. The link carries the query and the top price
   (`MARKETPLACE_SEARCH_URL?query=...&maxPrice=...`); the radius is not in the link, since
   Marketplace's distance follows the location filter you set there.
-- **One match pattern**: a regular expression, applied without regard to case to a listing's
+- **One match pattern** (**Words to match**; advanced: a regular expression), applied without regard to case to a listing's
   text, that a fitting listing matches, such as
   `OP-?065-?19-?333|19\.5\s*V.{0,20}3\.3\d?\s*A` for a 19.5 V, 3.33 A adapter.
   Marketplace's search box does not take regular expressions; the pattern only ranks what you
   bring back.
 - **Exclusion words** that rule a listing out: the usual ones (*for parts*, *parts only*,
   *broken*, *not working*, *does not work*) and the ones written for this need, such as a
-  variant that does not fit. They show as chips; remove one or add your own.
+  variant that does not fit. They show as chips under **Skip listings with**; remove one or
+  add your own.
 
-The plan is kept with the search, next to the listings brought back and the candidates.
+The plan is kept with the search, next to the listings brought back and the candidates. The
+links say the max price they include, or *No max price set* when there is none (a max price of
+0 is none). **Plan again** writes new phrasings but keeps the pattern and the words you saved:
+the newly written pattern is offered beside yours (**Try the suggestion** puts it in the field,
+unsaved), and a written pattern that fails the checks never empties the one already kept.
 
 ## The pattern and its limits
 
@@ -82,7 +87,7 @@ it is checked before it is kept, and refused with a line saying why:
 RE2's `\w`, `\d`, `\s` and `\b` are ASCII; `\pL` matches a letter in any script. The pattern is
 run over the first 4,000 characters of a listing, the part that is kept. A written pattern that
 fails the checks is not kept: the plan says why and the field stays empty for you to fill.
-**Try the pattern on a line** under the field shows, as you type, how a line scores and which
+**Test the pattern** under the field shows, as you type, how a line scores and which
 span matched, through the same checks and engine as the ranking; a refused pattern's reason is
 read out by a screen reader without interrupting. **Save pattern** keeps it and scores every
 listing again.
@@ -92,7 +97,10 @@ listing again.
 Paste one listing or several into **Bring back listings**: a line of dashes (`---`) between
 listings, or a blank line when no listing has blank lines inside. Or choose up to six
 screenshots: each is read into text by the label extractor (one call each, and each counted
-against the hourly and daily allowance; a batch larger than what is left is refused whole).
+against the hourly and daily allowance; a batch larger than what is left is refused whole, and
+a request refused before any reading, for an unknown or closed search or too many or too large
+files, counts nothing). Each screenshot is kept and scored as soon as it is read, so a request
+cut off part way keeps the readings already made.
 A listing is kept up to its first 4,000 characters, and a search keeps at most 50 listings:
 past that the oldest go first, the ones not yet checked before the ones **Check fit** has
 read, and the ones just brought back always stay. Each listing is scored here, without a
@@ -101,12 +109,16 @@ model call:
 - **fits**: the pattern matches, no exclusion word, and the price is within the limit or not
   stated;
 - **maybe**: no exclusion word and within the limit, but the pattern does not match (or there
-  is no pattern yet);
+  is no pattern yet); or the listing states several amounts on both sides of the limit, so
+  which one is asked is yours to read;
 - **does not fit**: an exclusion word is in the text, or the asking price is over the limit.
 
 The limit is the search's top price; a price exactly at it fits, and a top price of 0 (or none)
-means no limit. The asking price is the last dollar amount the listing states, so *was $40, now
-$15* is $15; `$1.2k` is $1,200; `CA$30` and other dollars with a letter before the sign are not
+means no limit. The asking price is the first dollar amount the listing states, as a Marketplace
+listing puts the asking price first: *$20 (retail $50)* is $20, *$45 each or 2 for $80* is $45.
+When other amounts fall on the other side of the limit (*$40, $10 off if you pick up today*
+under a limit of $30), the price decides nothing and the listing stays a maybe, with the
+amounts in its reason. `$1.2k` is $1,200; `CA$30` and other dollars with a letter before the sign are not
 read as US dollars (`US$30` is); *free* counts as $0 only when no amount is given and it is not
 *smoke-free*, *pet free* or *free shipping* (or delivery, or home delivery); and a number that
 goes on in groups of three after a space, such as `$1 200`, is not guessed at. Exclusion words
@@ -120,7 +132,9 @@ by eye. Every listing keeps the day it was seen and the day it was brought back.
 
 **Check fit** on a listing is deliberate: Muse Spark reads it into fields once (the same
 listing-text reading as below), the profile's rules assess it, and the listing becomes a
-candidate with its state and the questions to ask the seller.
+candidate with its state and the questions to ask the seller. Asked again while the first
+reading is still under way, it is refused (409) rather than paid for twice; asked again
+afterwards, it shows the same candidate.
 
 ## From the API
 
