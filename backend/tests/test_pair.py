@@ -311,17 +311,40 @@ def test_only_an_origin_this_server_is_reached_at_goes_into_a_pairing(tmp_path: 
         asked = {"origin": lan, "api": "https://evil.example"}
         same = {"Origin": lan, "Sec-Fetch-Site": "same-origin"}
         assert c.get("/api/pair", params=asked, headers=same).status_code == 422
-        # the page on the network, through a proxy that rewrites the host: its Origin, or the
-        # Referer of the image it loads, on a request the browser marks same-origin
-        assert c.get("/api/pair", params={"origin": lan}, headers=same).json()["token"]
-        lan_image = {"Referer": lan + "/", "Sec-Fetch-Site": "same-origin"}
-        image = c.get("/api/pair.svg", params={"origin": lan}, headers=lan_image)
-        assert image.status_code == 200
-        # the same headers without that mark name nothing
+        # the page on the network through the dev server, which rewrites the Host and forwards
+        # the one the browser asked for; a plain http:// page on the LAN gets no Sec-Fetch-Site
+        vite = {
+            "Host": "backend:8000",
+            "X-Forwarded-Host": "192.168.1.20:5173",
+            "X-Forwarded-Proto": "http",
+            "Referer": lan + "/",
+        }
+        assert c.get("/api/pair", params={"origin": lan}, headers=vite).json()["token"]
+        image = c.get("/api/pair.svg", params={"origin": lan}, headers=vite)
+        assert image.status_code == 200 and image.headers["content-type"] == "image/svg+xml"
+        # the forwarded scheme is the one the page was served over
+        https_lan = {"origin": "https://192.168.1.20:5173"}
+        assert c.get("/api/pair.svg", params=https_lan, headers=vite).status_code == 422
+        # through nginx, which keeps the host and port the browser asked for
+        nginx = {"Host": "192.168.1.20:8080", "X-Forwarded-Host": "192.168.1.20:8080"}
+        found = c.get("/api/pair.svg", params={"origin": "http://192.168.1.20:8080"}, headers=nginx)
+        assert found.status_code == 200
+        assert (
+            c.get(
+                "/api/pair.svg",
+                params={"origin": "http://192.168.1.20:8080"},
+                headers={"Host": "192.168.1.20:8080"},
+            ).status_code
+            == 200
+        )
+        # another site's page loading the image through that same proxy names nothing but it
+        cross = {**vite, "Referer": "https://evil.example/", "Sec-Fetch-Site": "cross-site"}
+        assert c.get("/api/pair.svg", params=evil, headers=cross).status_code == 422
+        # the page's Origin or Referer alone, without the browser's same-origin mark, names nothing
         unmarked = c.get("/api/pair", params={"origin": lan}, headers={"Origin": lan})
         assert unmarked.status_code == 422
-        # behind a proxy that keeps the host the browser asked for
-        assert c.get("/api/pair", params={"origin": lan}, headers={"Host": "192.168.1.20:5173"})
+        lan_image = {"Referer": lan + "/"}
+        assert c.get("/api/pair.svg", params={"origin": lan}, headers=lan_image).status_code == 422
     # the hosted page on another origin, named in CORS_ORIGINS, with the API's own origin
     pages = "https://orphan-parts.pages.dev"
     settings = gated(tmp_path / "hosted", cors_origins=pages)
