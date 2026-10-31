@@ -23,12 +23,12 @@ test('price guidance keeps the four figures apart and backs every comparable wit
   const name = `Priced charger ${stamp}`
   await createAdapter(request, name)
   const { value } = await openItem(page, name)
-  await value.getByRole('button', { name: 'Price guidance' }).click()
+  await value.getByRole('button', { name: 'Get price guidance' }).click()
 
   const guide = value.getByRole('status')
   await expect(guide).toContainText('recorded answer')
   await expect(guide).toContainText('1 search')
-  await expect(guide).toContainText('4 backed comparables, 1 line left out')
+  await expect(guide).toContainText('4 similar listings with a source, 1 left out')
   const table = guide.getByRole('table', { name: 'Quantities' })
   await expect(table.getByRole('row', { name: /asking prices seen/ })).toContainText('12.50 USD to 22 USD')
   await expect(table.getByRole('row', { name: /sold prices seen/ })).toContainText('15 USD')
@@ -48,10 +48,10 @@ test('a sale the owner records counts under its own figure', async ({ page, requ
   await value.getByLabel(/^Price \(USD\)/).fill('16')
   await value.getByLabel('Sold on').fill('2026-09-30')
   await value.getByLabel('Note').fill('a friend')
-  await value.getByRole('button', { name: 'Record' }).click()
+  await value.getByRole('button', { name: 'Add sale' }).click()
   await expect(value.getByRole('list', { name: 'Sales you reported' })).toContainText('16 USD on 2026-09-30')
 
-  await value.getByRole('button', { name: 'Price guidance' }).click()
+  await value.getByRole('button', { name: 'Get price guidance' }).click()
   const row = value.getByRole('status').getByRole('table', { name: 'Quantities' }).getByRole('row', { name: /sales you reported/ })
   await expect(row).toContainText('16 USD')
 })

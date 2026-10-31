@@ -70,7 +70,7 @@ What an item is good for is one call with the strict JSON schema of `UsesWriting
 uses, each with a title, what it would do, what else it needs, the effort and one thing to check
 first. The brief carries the item's accepted values (none that identifies it or its owner), its
 condition, faults, tests and accessories, the owner's preferences and the project templates the
-rules already found it fills. The answer is shown as the model's proposals: each text is trimmed
+rules already found it fills. The answer is shown under *Ideas from the model*: each text is trimmed
 and cut to 200 characters, at most six needs and three uses are kept, and a use without a title
 is dropped. Operation name `uses`, which is also the recorded fixture: three uses for a laptop.
 The code path is `app/decide/service.py`; see [Decide what it becomes](../guides/decide.md).

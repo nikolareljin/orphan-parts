@@ -2,6 +2,7 @@ import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
+import SampleNotice from './SampleNotice'
 import SegmentView from './SegmentView'
 
 type State =
@@ -17,9 +18,13 @@ function messageOf(err: unknown): string {
 
 export default function ExtractForm({
   limits = DEFAULT_LIMITS,
+  demo = false,
+  liveModels = false,
   onSaved,
 }: {
   limits?: Limits
+  demo?: boolean
+  liveModels?: boolean
   onSaved?: (item: Item) => void
 }) {
   const [files, setFiles] = useState<File[]>([])
@@ -120,7 +125,7 @@ export default function ExtractForm({
       <div className="row">
         <label className="check">
           <input type="checkbox" checked={findFirst} onChange={(e) => setFindFirst(e.target.checked)} />
-          <span>Find the label first with SAM 3.1, then read the crop</span>
+          <span>Find the label in the photo first (SAM 3.1; helps with busy photos)</span>
         </label>
       </div>
       <div className="row actions">
@@ -137,6 +142,11 @@ export default function ExtractForm({
       {/* the live region stays mounted, so results landing in it are announced */}
       <div aria-live="polite">
         {note && <p className="hint">{note}</p>}
+        <SampleNotice
+          fromFixture={Boolean(segmentation?.from_fixture || (state.kind === 'done' && state.result.from_fixture))}
+          demo={demo}
+          liveModels={liveModels}
+        />
         {segmentation && <SegmentView result={segmentation} />}
         {state.kind === 'done' && (
           <>
@@ -145,7 +155,7 @@ export default function ExtractForm({
               {state.saved ? (
                 <>
                   <p className="meta">
-                    Saved privately as item #{state.saved.id}, {state.saved.name}. Nothing is published.
+                    Saved to your inventory as item #{state.saved.id}, {state.saved.name}. It is private.
                   </p>
                   {state.saveError && (
                     <p className="error" role="alert">

@@ -10,7 +10,7 @@ export const SOURCES: { value: SourceKind; label: string }[] = [
 export function stateLabel(state: CandidateState): string {
   switch (state) {
     case 'unassessed':
-      return 'not assessed'
+      return 'not checked'
     case 'needs_evidence':
       return 'needs evidence'
     case 'conflicting':
@@ -48,7 +48,7 @@ export function sourceLabel(kind: SourceKind): string {
 
 // When the observation was made and how long it is trusted.
 export function seenText(c: Pick<Candidate, 'observed_on' | 'expires_on' | 'expired'>): string {
-  return c.expired ? `seen ${c.observed_on}, too old since ${c.expires_on}` : `seen ${c.observed_on}, trusted until ${c.expires_on}`
+  return c.expired ? `seen ${c.observed_on}, out of date since ${c.expires_on}` : `seen ${c.observed_on}, valid until ${c.expires_on}`
 }
 
 // The candidate request as the API takes it: only the fields the source kind uses, trimmed.

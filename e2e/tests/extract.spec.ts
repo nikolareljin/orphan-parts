@@ -37,7 +37,7 @@ function greyPng(width = 640, height = 480): Buffer {
   ])
 }
 
-const findFirst = 'Find the label first with SAM 3.1, then read the crop'
+const findFirst = 'Find the label in the photo first (SAM 3.1; helps with busy photos)'
 
 test('a photo becomes an evidence table', async ({ page }) => {
   await page.goto('/')
@@ -63,7 +63,7 @@ test('a photo becomes an evidence table', async ({ page }) => {
   await expect(part).toContainText('OP065-19-333')
   await expect(part).toContainText('as printed: P/N OP065-19-333')
 
-  await expect(page.getByText('recorded answer')).toBeVisible()
+  await expect(page.getByText('recorded answer', { exact: true })).toBeVisible()
   await expect(page.getByText('crops')).toHaveCount(0)
   await page.getByText('Label text').click()
   await expect(page.getByText('OUTPUT: 19.5V 3.33A 65W')).toBeVisible()
@@ -156,5 +156,5 @@ test('a photo over the size limit is refused before it is uploaded', async ({ pa
 
 test('the service line reports fixture mode', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('contentinfo')).toContainText('fixture mode (nothing spent)')
+  await expect(page.getByRole('contentinfo')).toContainText('recorded answers only (nothing spent)')
 })

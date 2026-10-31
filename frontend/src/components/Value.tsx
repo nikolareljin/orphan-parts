@@ -92,10 +92,10 @@ export default function Value({ item, onGuided }: { item: Item; onGuided?: () =>
           </label>
           <label>
             <span>City</span>
-            <input value={city} maxLength={80} placeholder="for local results" onChange={(e) => setCity(e.target.value)} />
+            <input value={city} maxLength={80} placeholder="optional, for local prices" onChange={(e) => setCity(e.target.value)} />
           </label>
           <button type="submit" disabled={busy || currency.length !== 3}>
-            {busy ? 'Working…' : 'Price guidance'}
+            {busy ? 'Working…' : 'Get price guidance'}
           </button>
         </div>
       </form>
@@ -105,8 +105,8 @@ export default function Value({ item, onGuided }: { item: Item; onGuided?: () =>
         </p>
       )}
       {guide && <GuidanceView guide={guide} />}
-      <form onSubmit={(e) => void record(e)} aria-label="Record a sale you know">
-        <h5>Record a sale you know</h5>
+      <form onSubmit={(e) => void record(e)} aria-label="Add a sale you know of">
+        <h5>Add a sale you know of</h5>
         <div className="row">
           <label>
             <span>Price ({currency})</span>
@@ -118,10 +118,10 @@ export default function Value({ item, onGuided }: { item: Item; onGuided?: () =>
           </label>
           <label>
             <span>Note</span>
-            <input value={note} maxLength={200} placeholder="yours, or one you saw" onChange={(e) => setNote(e.target.value)} />
+            <input value={note} maxLength={200} placeholder="your own sale, or one you saw" onChange={(e) => setNote(e.target.value)} />
           </label>
           <button type="submit" disabled={busy || !price || !soldOn}>
-            Record
+            Add sale
           </button>
         </div>
       </form>
@@ -180,7 +180,7 @@ function GuidanceView({ guide }: { guide: Guidance }) {
       </ul>
       {guide.comparables.length > 0 && (
         <>
-          <h5>Comparables</h5>
+          <h5>Similar listings</h5>
           <ul className="comparables" aria-label="Comparables">
             {guide.comparables.map((c, i) => (
               <li key={`${i}:${c.source_url}`}>

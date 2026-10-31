@@ -48,7 +48,7 @@ observations not yet accepted.
 ## In the web app
 
 On an item's page, **Does it fit?** lists the other items under *Needed by*; pick one, or leave
-*Values written in* and fill the rules' fields, then **Check fit**. The verdict, the checks and
+*Values I type below* and fill the rules' fields, then **Check fit**. The verdict, the checks and
 the questions appear under the form.
 
 ## From the API

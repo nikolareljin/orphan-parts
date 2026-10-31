@@ -74,7 +74,7 @@ export default function Inventory({
       )}
       {items === null && !error && <p className="muted">Loading…</p>}
       {items !== null && items.length === 0 && (
-        <p className="muted">Nothing saved yet. Read a label, then save it privately.</p>
+        <p className="muted">No items yet. Read a label and save it to add one.</p>
       )}
       {items !== null && items.length > 0 && (
         <table className="items" aria-label="Items">
@@ -82,7 +82,7 @@ export default function Inventory({
             <tr>
               <th scope="col">Item</th>
               <th scope="col">Fields</th>
-              <th scope="col">Intent</th>
+              <th scope="col">Plan</th>
               <th scope="col">Availability</th>
               <th scope="col">Updated</th>
               <th scope="col">
@@ -209,7 +209,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
       if (isConflict(err)) {
         try {
           show(await api.items.get(id))
-          setError(`${message(err)}. The item was reloaded; make the change again if it still applies.`)
+          setError(`${message(err)}. The item changed meanwhile and was reloaded; make your change again if it still applies.`)
           throw err
         } catch (reloadErr: unknown) {
           if (reloadErr === err) throw err
@@ -282,7 +282,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
         <ItemPhotos id={item.id} />
         <div className="row">
           <label>
-            <span>Intent</span>
+            <span>Plan</span>
             <select
               value={item.intent}
               onChange={(e) =>
@@ -324,7 +324,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
               value={item.profile}
               onChange={(e) => attempt(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
             >
-              <option value="">none yet</option>
+              <option value="">not set</option>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
@@ -399,8 +399,8 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
               ['faults', 'Known faults'],
               ['tests_done', 'Tests done'],
               ['accessories', 'Included accessories'],
-              ['location', 'Where it is (stays private)'],
-              ['notes', 'Notes (stay private)'],
+              ['location', 'Where it is kept (private)'],
+              ['notes', 'Notes (private)'],
             ] as const
           ).map(([key, label]) => (
             <label key={key}>
@@ -461,7 +461,10 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
             checked={item.public}
             onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
           />
-          <span>Public in the demo (what it is, its photos and drawn pictures; never the location or the notes)</span>
+          <span>
+            Show in the public demo{' '}
+            <small className="muted">Visitors without the access code can open this item, its photos and drawings.</small>
+          </span>
         </label>
         <span className="item-actions">
           <button type="button" className="link" onClick={() => void showEvents()}>
@@ -516,7 +519,7 @@ function ItemPhotos({ id }: { id: number }) {
   }, [id])
 
   if (count === null || count < 0) return null
-  if (count === 0) return <p className="muted no-photos">No photo kept with this item.</p>
+  if (count === 0) return <p className="muted no-photos">No photos saved with this item.</p>
   return (
     <div className="item-photos" aria-label="Photos">
       {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
@@ -559,7 +562,7 @@ function AddField({ onAdd }: { onAdd: (spec: { field: string; value: string; uni
       <h4>Add what you know</h4>
       <label>
         <span>Field</span>
-        <input value={field} onChange={(e) => setField(e.target.value)} placeholder="colour" />
+        <input value={field} onChange={(e) => setField(e.target.value)} placeholder="color" />
       </label>
       <label>
         <span>Value</span>
@@ -603,7 +606,7 @@ function AddComponent({ onAdd }: { onAdd: (spec: { name: string; condition: stri
           .catch(() => undefined)
       }}
     >
-      <h4>Separate a part</h4>
+      <h4>Separate a part into its own item</h4>
       <label>
         <span>Part</span>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="power cable" />

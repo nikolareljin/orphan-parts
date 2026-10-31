@@ -140,6 +140,8 @@ export default function App() {
           <h2>Read a label</h2>
           <ExtractForm
             limits={status.kind === 'ok' ? status.version.limits : undefined}
+            demo={demo}
+            liveModels={status.kind === 'ok' && status.ready.demo.live_models}
             onSaved={() => {
               setSaved((n) => n + 1)
               setView('inventory')
@@ -185,10 +187,10 @@ export default function App() {
       )}
 
       <footer className="service" role="contentinfo" aria-label="Service">
-        {status.kind === 'loading' && <span>Checking the API…</span>}
+        {status.kind === 'loading' && <span>Connecting to the server…</span>}
         {status.kind === 'error' && (
           <span className="error">
-            API not reachable: {status.message}. Start it with <code>./dev up</code>.
+            Cannot reach the server: {status.message}. Start it with <code>./dev up</code>.
           </span>
         )}
         {status.kind === 'ok' && (
@@ -196,7 +198,7 @@ export default function App() {
             <span>Orphan Parts Lens {status.version.version}</span>
             <span>
               {status.ready.model_api === 'fixture'
-                ? 'fixture mode (nothing spent)'
+                ? 'recorded answers only (nothing spent)'
                 : `${status.ready.model_api} mode, spent $${status.ready.spend_usd.toFixed(2)} of $${status.ready.spend_cap_usd.toFixed(2)}`}
               {status.ready.paused ? ' (paused: spend cap reached)' : ''}
             </span>
@@ -222,8 +224,8 @@ export default function App() {
                 </>
               ) : (
                 <p className="muted">
-                  The code would carry <code>{pairOrigin}</code>, which the phone cannot reach (on the phone, localhost is
-                  the phone). Open the web app at the computer's network address and pair from there, or run{' '}
+                  This code would contain <code>{pairOrigin}</code>, which the phone cannot reach (on the phone, localhost
+                  means the phone itself). Open the web app at the computer's network address and pair from there, or run{' '}
                   <code>./dev phone</code>, which prints a code with that address.
                 </p>
               )}
@@ -261,11 +263,11 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
 
   return (
     <section className="gate">
-      <h3>The code opens the rest</h3>
+      <h3>Sign in with the access code</h3>
       <p className="muted">
-        Without it this is the demo: recorded answers to try, nothing kept. The code unlocks the inventory, saving, drafts, prices,
-        projects and captures, and the live models when the host has a key. A session lasts a while and keeps nothing about you but
-        the cookie.
+        Without a code you are in the demo: look around and try recorded answers; nothing is saved. The access code unlocks
+        saving, listing drafts, prices, projects, captures and, when the server has a key, the live models. Signing in sets one
+        cookie and stores nothing else about you.
       </p>
       <form onSubmit={(e) => void enter(e)} aria-label="Access code">
         <div className="row">
