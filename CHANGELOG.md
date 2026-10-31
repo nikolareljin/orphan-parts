@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Changed
+- The phone guide, step 1 of the README and the docs home, and the Android guide say the app is not on Google Play: the APK comes from the releases, signed with the build's development key, so Android asks to allow installs from an unknown source (per app under **Install unknown apps** on Android 8 and newer), a Play Protect scan from the Play Store checks it once installed, and an earlier release is uninstalled before the next one, since each release carries a fresh key.
+
 ## 0.3.0 - 2026-10-31
 
 ### Changed
