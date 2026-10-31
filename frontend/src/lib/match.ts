@@ -6,9 +6,9 @@ export function verdictLabel(verdict: Verdict): string {
     case 'EXACT_MATCH':
       return 'Exact match'
     case 'COMPATIBLE_LIKELY':
-      return 'Compatible, likely'
+      return 'Likely compatible'
     case 'VISUALLY_SIMILAR':
-      return 'Looks right, evidence missing'
+      return 'Looks right, not proven'
     case 'CONFLICT':
       return 'Conflict: does not fit'
     case 'INSUFFICIENT_INFO':
@@ -31,13 +31,13 @@ export function statusLabel(status: CheckStatus): string {
 export function ruleHint(rule: ProfileRule): string {
   switch (rule.kind) {
     case 'equal':
-      return rule.identity ? 'same, makes it exact' : 'same'
+      return rule.identity ? 'must match; confirms an exact match' : 'must match'
     case 'within':
       return slack(rule).map((s) => `±${s}`).join(' or ')
     case 'at_least':
-      return slack(rule).length ? `at least, ${slack(rule).join(' or ')} slack` : 'at least'
+      return slack(rule).length ? `at least (${slack(rule).join(' or ')} below is OK)` : 'at least'
     case 'at_most':
-      return slack(rule).length ? `at most, ${slack(rule).join(' or ')} slack` : 'at most'
+      return slack(rule).length ? `at most (${slack(rule).join(' or ')} over is OK)` : 'at most'
   }
 }
 

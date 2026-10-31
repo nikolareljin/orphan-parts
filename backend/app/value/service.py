@@ -364,7 +364,8 @@ class Valuer:
             item_id=int(row["item_id"]),
             version=int(row["version"]),
             item_version=int(row["item_version"]),
-            stale=int(row["item_version"]) != int(row["current_item_version"]),
+            # a decision is no change to what the item is worth
+            stale=bool(row["changed_since"]),
             parts=parts,
             at=row["at"],
             **content,

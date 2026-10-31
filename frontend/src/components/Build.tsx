@@ -15,13 +15,12 @@ import {
   numberProblem,
   packLabel,
   progressText,
-  skillsFromText,
-  skillsToText,
   statusLabel,
   statusTone,
   stepDone,
   todayIso,
 } from '../lib/projects'
+import { skillsLine } from '../lib/profile'
 import Modal from './Modal'
 
 function message(err: unknown): string {
@@ -70,16 +69,16 @@ export default function Build() {
         </p>
       )}
       {projects.length === 0 ? (
-        <p className="muted">No projects yet. Say what you want above and ask for proposals; they are built from what is in your inventory.</p>
+        <p className="muted">No projects yet. Press Propose above; ideas only use items in your inventory.</p>
       ) : (
         <table className="evidence" aria-label="Projects">
           <thead>
             <tr>
               <th scope="col">Project</th>
-              <th scope="col">Stands</th>
+              <th scope="col">Status</th>
               <th scope="col">Items</th>
               <th scope="col">Missing</th>
-              <th scope="col">Spend</th>
+              <th scope="col">Est. cost</th>
               <th scope="col"></th>
             </tr>
           </thead>
@@ -114,7 +113,6 @@ export default function Build() {
 
 function PreferencesForm({ onSaved }: { onSaved: () => void }) {
   const [prefs, setPrefs] = useState<Preferences>(EMPTY_PREFERENCES)
-  const [skills, setSkills] = useState('')
   const [budget, setBudgetText] = useState('')
   const [radius, setRadius] = useState('')
   const [open, setOpen] = useState(false)
@@ -129,7 +127,6 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
       .then((p) => {
         if (cancelled) return
         setPrefs(p)
-        setSkills(skillsToText(p.skills))
         setBudgetText(p.budget === null ? '' : String(p.budget))
         setRadius(p.radius_km === null ? '' : String(p.radius_km))
       })
@@ -154,7 +151,6 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
     try {
       const kept = await api.build.setPreferences({
         ...prefs,
-        skills: skillsFromText(skills),
         budget: numberOrNull(budget),
         radius_km: numberOrNull(radius),
         currency: prefs.currency.trim().toUpperCase() || 'USD',
@@ -178,7 +174,7 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
         </button>
         {!open && (
           <span className="muted">
-            {prefs.interests || 'no interests written'} · {effortLabel(prefs.effort)} ·{' '}
+            {prefs.interests || 'no interests set'} · {effortLabel(prefs.effort)} ·{' '}
             {prefs.budget === null ? 'no budget' : `budget ${money(prefs.budget, prefs.currency)}`}
           </span>
         )}
@@ -206,10 +202,9 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
                 ))}
               </select>
             </label>
-            <label>
-              <span>Skills (comma separated)</span>
-              <input value={skills} maxLength={400} onChange={(e) => setSkills(e.target.value)} />
-            </label>
+            <p className="skills-line">
+              <span>Skills</span> {skillsLine(prefs.skills)} · <a href="#profile">rate them on your Profile</a>
+            </p>
             <label>
               <span>Tools I have</span>
               <input value={prefs.tools} maxLength={2000} onChange={(e) => setPrefs({ ...prefs, tools: e.target.value })} />
@@ -227,7 +222,7 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
               <input value={radius} inputMode="numeric" onChange={(e) => setRadius(e.target.value)} />
             </label>
             <label>
-              <span>Buy</span>
+              <span>Buy parts</span>
               <select value={prefs.purchase} onChange={(e) => setPrefs({ ...prefs, purchase: e.target.value as Preferences['purchase'] })}>
                 <option value="used">used</option>
                 <option value="new">new</option>
@@ -236,7 +231,7 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
             </label>
             <label className="check">
               <input type="checkbox" checked={prefs.opens_devices} onChange={(e) => setPrefs({ ...prefs, opens_devices: e.target.checked })} />
-              <span>I open devices up</span>
+              <span>I am OK opening up devices</span>
             </label>
           </div>
           <div className="row actions">
@@ -281,7 +276,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
       const list = await api.build.propose(count, note)
       setOutcome(
         list.length === 0
-          ? 'Nothing proposed that the inventory backs. Add items, or say more about what you want.'
+          ? 'No idea fits what you own. Add items, or say more about what you want.'
           : `${list.length} proposed${list[0].from_fixture ? '' : ` for ${usd(list.reduce((sum, p) => sum + p.cost_usd, 0))}`}`,
       )
       onProposed(list)
@@ -296,7 +291,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
     <form className="propose fields" onSubmit={(e) => void propose(e)} aria-label="Propose projects">
       <h3>What could I build from what I own?</h3>
       <p className="muted">
-        Muse Spark reads your inventory and the project templates and proposes builds; only what names items you have is shown. Templates:{' '}
+        Muse Spark suggests builds from your inventory and the project templates; only ideas that use items you own are shown. Templates:{' '}
         {templates.map((t) => t.label).join(', ') || '…'}.
       </p>
       <div className="row">
@@ -311,7 +306,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
           </select>
         </label>
         <label>
-          <span>This time</span>
+          <span>Anything else this time</span>
           <input value={note} maxLength={2000} placeholder="something for the kids, nothing with soldering" onChange={(e) => setNote(e.target.value)} />
         </label>
       </div>
@@ -432,7 +427,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
       </div>
       <p>{project.result}</p>
       <p className="meta">
-        Expected spend {money(project.spend_estimate, project.currency)}
+        Estimated cost {money(project.spend_estimate, project.currency)}
         {project.skills.length > 0 && ` · skills: ${project.skills.join(', ')}`}
         {' · '}
         {project.from_fixture ? 'recorded answer' : `${project.model}, ${usd(project.cost_usd)}`}
@@ -462,7 +457,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
                 {r.label}
                 {r.blocking ? '' : ' (optional)'}
                 {r.search_id !== null ? (
-                  <span className="muted"> · search #{r.search_id} open on the Find page</span>
+                  <span className="muted"> · search #{r.search_id} open on Find a part</span>
                 ) : (
                   active && (
                     <>
@@ -477,7 +472,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
                   <span className="fill">
                     {' '}
                     <select aria-label={`Item for ${r.label}`} value={picked[r.key] ?? ''} onChange={(e) => setPicked({ ...picked, [r.key]: e.target.value })}>
-                      <option value="">an item of mine…</option>
+                      <option value="">pick one of my items…</option>
                       {items.map((i) => (
                         <option key={i.id} value={i.id}>
                           #{i.id} {i.name} ({i.item_type})
@@ -525,7 +520,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
               <li key={s}>{s}</li>
             ))}
           </ol>
-          {project.sources.length > 0 && <p className="muted">Guidance: {project.sources.join('; ')}</p>}
+          {project.sources.length > 0 && <p className="muted">Sources: {project.sources.join('; ')}</p>}
         </details>
       )}
       {project.steps.length > 0 && underway && (
@@ -555,15 +550,15 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
               </li>
             ))}
           </ol>
-          {project.sources.length > 0 && <p className="muted">Guidance: {project.sources.join('; ')}</p>}
+          {project.sources.length > 0 && <p className="muted">Sources: {project.sources.join('; ')}</p>}
         </>
       )}
       {underway && (
         <section className="packs" aria-label="Build pack">
           <h4>Build pack</h4>
           <p className="muted">
-            One document from what stands now: goal, items with their accepted values, what is still needed, costs, steps, safety, unknowns and limits.
-            Written by the rules, nothing is asked of a model; a change to an item, the project or the budget marks it stale.
+            One document with the goal, your items and their accepted values, what is still needed, costs, steps, safety notes, open questions and
+            limits. Made from your data with no model call; it goes out of date when an item, the project or the budget changes.
           </p>
           <div className="row">
             <button type="button" disabled={busy} onClick={() => void writePack()}>
@@ -589,7 +584,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
       )}
       {project.dropped.length > 0 && (
         <p className="muted" aria-label="Dropped lines">
-          Left out, as the inventory does not back it: {project.dropped.join('; ')}
+          Left out (not in your inventory): {project.dropped.join('; ')}
         </p>
       )}
 
@@ -620,7 +615,7 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
           </>
         )}
         {project.status === 'selected' && (
-          <button type="button" disabled={busy || !canStart(project)} title={canStart(project) ? '' : 'a blocking requirement is missing'} onClick={() => void act(() => api.build.advance(id, 'building'))}>
+          <button type="button" disabled={busy || !canStart(project)} title={canStart(project) ? '' : 'a required part is still missing'} onClick={() => void act(() => api.build.advance(id, 'building'))}>
             Start building
           </button>
         )}
@@ -689,7 +684,7 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
       {outcome && (
         <p className="meta" aria-label="Recorded outcome">
           Tested {outcome.tested_on}: {outcome.working ? 'working' : 'not working'}. {outcome.configuration}; {outcome.test}
-          {outcome.limitations ? `; limits: ${outcome.limitations}` : ''}
+          {outcome.limitations ? `; limitations: ${outcome.limitations}` : ''}
         </p>
       )}
       {project.status === 'building' && (
@@ -710,7 +705,7 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
               <input value={testedOn} placeholder="YYYY-MM-DD" onChange={(e) => setTestedOn(e.target.value)} />
             </label>
             <label>
-              <span>Limits</span>
+              <span>Limitations</span>
               <input value={limitations} maxLength={2000} onChange={(e) => setLimitations(e.target.value)} />
             </label>
             <label className="check">
@@ -740,7 +735,7 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
                 })
               }}
             />
-            <span>Share the outcome: the kinds of items, the result, the set-up, the test and the limits; no names, values, places or prices</span>
+            <span>Share the outcome (item types, result, setup, test and limitations; no names, values, places or prices)</span>
           </label>
           {shared && shareText && (
             <label className="wide">

@@ -79,7 +79,7 @@ test('the opening of a vacuum tool is measured against a ruler and proposed on t
   await expect(measure.getByRole('combobox', { name: /^Feature/ })).toHaveValue('opening_inner_diameter')
   await expect(measure.getByText(/ruler lying across it/)).toBeVisible()
 
-  await measure.getByLabel('Photo with the reference').setInputFiles({ name: 'opening.png', mimeType: 'image/png', buffer: rulerPng() })
+  await measure.getByLabel('Photo with a ruler or card in it').setInputFiles({ name: 'opening.png', mimeType: 'image/png', buffer: rulerPng() })
   await measure.getByLabel(/Taken straight on/).check()
   const canvas = measure.getByRole('img', { name: 'Photo to mark' })
   await expect(canvas).toBeVisible()
@@ -98,11 +98,11 @@ test('the opening of a vacuum tool is measured against a ruler and proposed on t
   const status = measure.getByRole('status')
   await expect(status).toContainText(/35\.\d ± \d\.\d\d mm/)
   await expect(status).toContainText('two-point scale')
-  await expect(status).toContainText('enter a caliper or ruler reading')
+  await expect(status).toContainText('measure it with a caliper or ruler')
   const row = panel.getByRole('table', { name: 'Fields' }).getByRole('row', { name: /Opening inner diameter/ })
   await expect(row).toContainText('35.0 mm')
   await expect(row).toContainText('to confirm')
-  await expect(measure.getByText('Captures on this item (1)')).toBeVisible()
+  await expect(measure.getByText('Past measurements (1)')).toBeVisible()
 })
 
 test('a capture that is not straight on is refused with the reason', async ({ page, request }) => {
@@ -110,7 +110,7 @@ test('a capture that is not straight on is refused with the reason', async ({ pa
   await createItem(request, { item_type: name, profile: 'vacuum_attachment' })
   const panel = await openItem(page, name)
   const measure = panel.getByRole('region', { name: 'Measure a feature' })
-  await measure.getByLabel('Photo with the reference').setInputFiles({ name: 'opening.png', mimeType: 'image/png', buffer: rulerPng() })
+  await measure.getByLabel('Photo with a ruler or card in it').setInputFiles({ name: 'opening.png', mimeType: 'image/png', buffer: rulerPng() })
   const canvas = measure.getByRole('img', { name: 'Photo to mark' })
   for (const [x, y] of [
     [100, 400],
@@ -122,7 +122,7 @@ test('a capture that is not straight on is refused with the reason', async ({ pa
   }
   await measure.getByRole('button', { name: 'Measure', exact: true }).click()
   const status = measure.getByRole('status')
-  await expect(status).toContainText('Capture refused: no number')
+  await expect(status).toContainText('Could not measure:')
   await expect(status).toContainText('view:')
   await expect(panel.getByRole('table', { name: 'Fields' })).toHaveCount(0)
 })

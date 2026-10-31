@@ -1,7 +1,8 @@
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test'
 
-// Both tests build on items with the names the recorded proposal uses, so they run one after
-// the other and share nothing with the other files.
+// The project tests build on items with the names the recorded proposal uses, and the profile
+// test writes the same preferences record, so they run one after the other and share nothing
+// with the other files.
 test.describe.configure({ mode: 'serial' })
 
 const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
@@ -56,13 +57,13 @@ test('preferences are kept, proposals come from the inventory, and selection com
   await expect(panel.getByRole('list', { name: 'Unknowns' })).toContainText('HDMI output')
   await selectAndCommit(panel)
   await expect(panel.getByRole('list', { name: 'Items on this project' })).toContainText('(committed)')
-  await expect(page.getByLabel('Budget across selected projects')).toContainText(/\d+ selected, expected spend \d+ USD of 50 USD/)
+  await expect(page.getByLabel('Budget across selected projects')).toContainText(/\d+ selected, estimated cost \d+ USD of 50 USD/)
   await expect(panel.getByRole('button', { name: 'Start building' })).toBeDisabled()
 
   // the missing cable becomes a search request on the Find page
   const needed = panel.getByRole('list', { name: 'Missing requirements' })
   await needed.getByRole('button', { name: 'Find it on Marketplace' }).first().click()
-  await expect(needed).toContainText('open on the Find page')
+  await expect(needed).toContainText('open on Find a part')
 
   // the cable, bought and saved, fills the requirement from the inventory; the build can start
   const cable = await request.post('/api/items', { data: { item_type: 'HDMI cable', name: `Cable ${stamp}` } })
@@ -88,13 +89,13 @@ test('preferences are kept, proposals come from the inventory, and selection com
   expect(await file.text()).toContain('# Homework desk from the old laptop and the spare monitor')
   await again.getByRole('list', { name: 'Progress' }).getByRole('checkbox').first().check()
   await expect(again).toContainText('1 of 3 steps done')
-  await expect(packs).toContainText('stale')
+  await expect(packs).toContainText('out of date')
 
   // the outcome, in the owner's words: a working result marks it done, and the share text is redacted
   const outcome = again.getByRole('form', { name: 'Record the outcome' })
   await outcome.getByLabel('What was set up').fill('laptop on the monitor over HDMI')
   await outcome.getByLabel('How it was tested').fill('a full homework session')
-  await outcome.getByLabel('Limits').fill('the laptop fan is loud')
+  await outcome.getByLabel('Limitations').fill('the laptop fan is loud')
   await outcome.getByRole('button', { name: 'Record the outcome' }).click()
   await expect(again).toContainText('done')
   await expect(again.getByLabel('Recorded outcome')).toContainText('working')
@@ -133,4 +134,46 @@ test('an item committed to one build is a conflict for another until it is moved
   await expect(second).toContainText('selected: items committed')
   await second.getByRole('button', { name: 'Abandon' }).click()
   await expect(second).toContainText('abandoned')
+})
+
+test('the profile rates the skills, adds one of your own, and the Build page reads it', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Profile', exact: true }).click()
+  await expect(page).toHaveURL(/#profile$/)
+  const form = page.getByRole('form', { name: 'Profile' })
+  const skills = form.getByRole('table', { name: 'Skills' })
+  // the ten listed, first and last
+  await expect(skills.getByRole('rowheader', { name: 'software', exact: true })).toBeVisible()
+  await expect(skills.getByRole('rowheader', { name: 'home repair', exact: true })).toBeVisible()
+
+  await form.getByLabel('electronics and soldering: confident').check()
+  await form.getByLabel('software: pro').check()
+  await form.getByLabel('plumbing: none').check()
+  const own = `bike repair ${stamp}`
+  await form.getByLabel('Another skill').fill(own)
+  await form.getByLabel('Level').selectOption('some')
+  await form.getByRole('button', { name: 'Add skill' }).click()
+  await expect(skills.getByRole('rowheader', { name: own })).toBeVisible()
+  await form.getByLabel('Tools I have').fill('soldering iron, multimeter')
+  await form.getByRole('button', { name: 'Save profile' }).click()
+  await expect(form).toContainText('saved')
+
+  await page.reload()
+  await expect(form.getByLabel('software: pro')).toBeChecked()
+  await expect(form.getByLabel(`${own}: some`)).toBeChecked()
+  await expect(form.getByLabel('Tools I have')).toHaveValue('soldering iron, multimeter')
+
+  await page.getByRole('button', { name: 'Build and reuse' }).click()
+  const prefs = page.getByRole('form', { name: 'What I want from a build' })
+  await prefs.getByRole('button', { name: 'Edit' }).click()
+  await expect(prefs).toContainText('software: pro, electronics and soldering: confident')
+  await expect(prefs.getByRole('link', { name: 'rate them on your Profile' })).toBeVisible()
+
+  // a skill of your own goes as it came; the listed ones stay
+  await prefs.getByRole('link', { name: 'rate them on your Profile' }).click()
+  await form.getByRole('button', { name: `Remove ${own}` }).click()
+  await form.getByRole('button', { name: 'Save profile' }).click()
+  await expect(form).toContainText('saved')
+  await expect(skills.getByRole('rowheader', { name: own })).toHaveCount(0)
+  await expect(form.getByRole('button', { name: 'Remove software' })).toHaveCount(0)
 })

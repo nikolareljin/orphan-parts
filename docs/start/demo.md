@@ -24,7 +24,7 @@ brought back (written examples labelled as such), and the proposal brief. Three 
 `./dev demo` leaves the stack with the whole set in the inventory, every observed value
 accepted, drafts, guidance, searches with their candidates and the proposals in place, so
 every take and every visitor starts from the same screen. Once the fixtures for the set are
-recorded, the demo spends nothing: the service line at the foot of every page says *fixture mode (nothing spent)*.
+recorded, the demo spends nothing: the service line at the foot of every page says *recorded answers only (nothing spent)*.
 The fixtures are keyed on what is sent, so a change to `EXTRACT_ENHANCE` or `IMAGE_MAX_PX` means
 recording again. A photo not in the set gets the recorded answer for that operation, which is why the public
 demo is the set, not an open reader. The set loads with whatever files are present; a photo
@@ -32,7 +32,7 @@ named but missing is skipped with a note.
 
 ## 1. Read a label and save it
 
-**Read a label** takes up to four photos. With *Find the label first* on, SAM 3.1 finds the
+**Read a label** takes up to four photos. With *Find the label in the photo first* on, SAM 3.1 finds the
 item, the label and the connector and the overlay shows where; Muse Spark reads the label crop
 into typed fields, each with its confidence and its source. **Save privately** makes it an item
 in [My inventory](../guides/inventory.md): every observed value waits for you to confirm or
