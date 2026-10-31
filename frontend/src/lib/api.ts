@@ -426,8 +426,67 @@ export interface Search {
   status: SearchStatus
   handoff_url: string
   candidates: number
+  plan: SearchPlan | null
+  listings: number
   created_at: string
   updated_at: string
+}
+
+export interface Phrasing {
+  text: string
+  why: string
+  url: string
+}
+
+// Phrasings to search with (links the owner opens), the pattern a fitting listing matches and
+// the words that rule one out; the pattern runs on the backend, over the listings brought back.
+export interface SearchPlan {
+  phrasings: Phrasing[]
+  pattern: string
+  pattern_error: string
+  exclusions: string[]
+  max_price: number | null
+  radius_km: number | null
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  planned_at: string
+  edited_at: string
+}
+
+export type ListingVerdict = 'fits' | 'maybe' | 'no'
+
+export interface Highlight {
+  kind: 'match' | 'excluded'
+  // offsets in characters (code points), as the backend counts them
+  start: number
+  end: number
+  text: string
+}
+
+export interface ListingScore {
+  verdict: ListingVerdict
+  matched: boolean | null
+  highlights: Highlight[]
+  excluded: string[]
+  price: number | null
+  price_ok: boolean | null
+  reasons: string[]
+}
+
+export interface BroughtListing {
+  id: number
+  source_kind: 'text' | 'screenshot'
+  text: string
+  observed_on: string
+  added_at: string
+  score: ListingScore
+  candidate_id: number | null
+}
+
+export interface PatternResult {
+  error: string
+  score: ListingScore | null
 }
 
 export interface Candidate {
@@ -976,6 +1035,15 @@ export const api = {
     recheck: (id: number) => sendJson<Candidate>('POST', `/api/candidates/${id}/recheck`),
     withdraw: (id: number) => sendJson<Candidate>('POST', `/api/candidates/${id}/withdraw`),
     questions: (id: number) => getJson<SellerQuestions>(`/api/candidates/${id}/questions`),
+    plan: (id: number) => sendJson<Search>('POST', `/api/searches/${id}/plan`),
+    editPlan: (id: number, edit: { pattern?: string; exclusions?: string[] }) => sendJson<Search>('PATCH', `/api/searches/${id}/plan`, edit),
+    testPattern: (spec: { pattern: string; exclusions: string[]; max_price: number | null; text: string }) => sendJson<PatternResult>('POST', '/api/find/pattern', spec),
+    listings: (id: number) => getJson<BroughtListing[]>(`/api/searches/${id}/listings`),
+    addListings: (id: number, texts: string[], observedOn: string) => sendJson<BroughtListing[]>('POST', `/api/searches/${id}/listings`, { texts, observed_on: observedOn }),
+    addListingScreenshots: (id: number, shots: File[], observedOn: string) =>
+      postForm<BroughtListing[]>(`/api/searches/${id}/listings/screenshots`, [['observed_on', observedOn], ...shots.map((f): FormPart => ['screenshots', f])]),
+    removeListing: (id: number, listingId: number) => sendJson<BroughtListing[]>('DELETE', `/api/searches/${id}/listings/${listingId}`),
+    checkListing: (id: number, listingId: number) => sendJson<Candidate>('POST', `/api/searches/${id}/listings/${listingId}/check`),
   },
   build: {
     preferences: () => getJson<Preferences>('/api/preferences'),

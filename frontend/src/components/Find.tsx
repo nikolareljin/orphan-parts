@@ -5,6 +5,7 @@ import { SOURCES, candidateRequest, seenText, sourceLabel, stateLabel, stateTone
 import { inputLabel, ruleHint } from '../lib/match'
 import { Result } from './Assess'
 import Modal from './Modal'
+import SearchPlan from './SearchPlan'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -305,6 +306,19 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
           {error}
         </p>
       )}
+      <SearchPlan
+        search={search}
+        onChanged={(s) => {
+          setSearch(s)
+          onChanged()
+          load()
+        }}
+        onCandidate={(c) => {
+          load()
+          onChanged()
+          setOpenCandidate(c.id)
+        }}
+      />
       {search.status === 'closed' ? (
         <p className="muted">This search is closed; reopen it to bring a listing back.</p>
       ) : (
