@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from app.config import Settings
 from app.extract import Extractor
@@ -22,12 +23,15 @@ from app.projects import (
     Preferences,
     ProjectsError,
     ProposeRequest,
+    RatedSkill,
     ShareChange,
     Templates,
     UnknownTemplateError,
     fits,
+    skills_line,
 )
 from app.projects import pack as packs
+from app.projects.skills import STARTER_SKILLS
 from tests.conftest import RECORDED_FIXTURES
 
 pytestmark = pytest.mark.anyio
@@ -138,8 +142,53 @@ def test_preferences_are_kept_once_and_default_when_unset(planner: Planner) -> N
     saved = planner.set_preferences(
         Preferences(interests="a quiet desk", effort="low", skills=[" soldering ", ""], budget=50)
     )
-    assert saved.skills == ["soldering"] and saved.budget == 50
+    assert saved.skills == [RatedSkill(skill="soldering", level="some")] and saved.budget == 50
     assert planner.preferences().interests == "a quiet desk"
+    assert planner.has_preferences()
+
+
+def test_skills_are_rated_and_a_plain_name_reads_as_some() -> None:
+    prefs = Preferences.model_validate(
+        {
+            "skills": [
+                "  electronics   and soldering ",
+                {"skill": "plumbing", "level": "none"},
+                {"skill": "Software", "level": "pro"},
+                "software",
+                "   ",
+            ]
+        }
+    )
+    assert [(s.skill, s.level) for s in prefs.skills] == [
+        ("electronics and soldering", "some"),
+        ("plumbing", "none"),
+        ("Software", "pro"),
+    ]
+    assert skills_line(prefs.skills) == (
+        "electronics and soldering: some; plumbing: none; Software: pro"
+    )
+    with pytest.raises(ValidationError):
+        Preferences.model_validate({"skills": [{"skill": "plumbing", "level": "expert"}]})
+    with pytest.raises(ValidationError):
+        Preferences.model_validate({"skills": [42]})
+    assert len(STARTER_SKILLS) == 10 and "3D printing" in STARTER_SKILLS
+
+
+def test_preferences_kept_before_the_ratings_read_back_rated(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    # the record as the form wrote it before the skills were rated: plain names
+    inventory.set_preferences(json.dumps({"effort": "low", "skills": ["soldering", "sewing"]}))
+    planner = Planner(settings, cast(Any, None), inventory, Templates(), cast(Any, None))
+    prefs = planner.preferences()
+    assert prefs.effort == "low"
+    assert [(s.skill, s.level) for s in prefs.skills] == [("soldering", "some"), ("sewing", "some")]
+    # saved again, the record holds the rated shape; the stored row was read, not rewritten
+    assert json.loads(inventory.preferences()["content"])["skills"] == ["soldering", "sewing"]
+    planner.set_preferences(prefs)
+    assert json.loads(inventory.preferences()["content"])["skills"][0] == {
+        "skill": "soldering",
+        "level": "some",
+    }
 
 
 def test_the_tools_show_only_what_a_build_may_use(planner: Planner) -> None:

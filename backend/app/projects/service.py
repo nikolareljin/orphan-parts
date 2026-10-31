@@ -187,6 +187,10 @@ class Planner:
         row = self.inventory.preferences()
         return Preferences(**json.loads(row["content"])) if row else Preferences()
 
+    def has_preferences(self) -> bool:
+        """Whether the owner has filled the form once; the defaults stand for nobody."""
+        return self.inventory.preferences() is not None
+
     def set_preferences(self, prefs: Preferences) -> Preferences:
         row = self.inventory.set_preferences(prefs.model_dump_json())
         return Preferences(**json.loads(row["content"]))
