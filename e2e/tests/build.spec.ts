@@ -57,13 +57,13 @@ test('preferences are kept, proposals come from the inventory, and selection com
   await expect(panel.getByRole('list', { name: 'Unknowns' })).toContainText('HDMI output')
   await selectAndCommit(panel)
   await expect(panel.getByRole('list', { name: 'Items on this project' })).toContainText('(committed)')
-  await expect(page.getByLabel('Budget across selected projects')).toContainText(/\d+ selected, expected spend \d+ USD of 50 USD/)
+  await expect(page.getByLabel('Budget across selected projects')).toContainText(/\d+ selected, estimated cost \d+ USD of 50 USD/)
   await expect(panel.getByRole('button', { name: 'Start building' })).toBeDisabled()
 
   // the missing cable becomes a search request on the Find page
   const needed = panel.getByRole('list', { name: 'Missing requirements' })
   await needed.getByRole('button', { name: 'Find it on Marketplace' }).first().click()
-  await expect(needed).toContainText('open on the Find page')
+  await expect(needed).toContainText('open on Find a part')
 
   // the cable, bought and saved, fills the requirement from the inventory; the build can start
   const cable = await request.post('/api/items', { data: { item_type: 'HDMI cable', name: `Cable ${stamp}` } })
@@ -89,13 +89,13 @@ test('preferences are kept, proposals come from the inventory, and selection com
   expect(await file.text()).toContain('# Homework desk from the old laptop and the spare monitor')
   await again.getByRole('list', { name: 'Progress' }).getByRole('checkbox').first().check()
   await expect(again).toContainText('1 of 3 steps done')
-  await expect(packs).toContainText('stale')
+  await expect(packs).toContainText('out of date')
 
   // the outcome, in the owner's words: a working result marks it done, and the share text is redacted
   const outcome = again.getByRole('form', { name: 'Record the outcome' })
   await outcome.getByLabel('What was set up').fill('laptop on the monitor over HDMI')
   await outcome.getByLabel('How it was tested').fill('a full homework session')
-  await outcome.getByLabel('Limits').fill('the laptop fan is loud')
+  await outcome.getByLabel('Limitations').fill('the laptop fan is loud')
   await outcome.getByRole('button', { name: 'Record the outcome' }).click()
   await expect(again).toContainText('done')
   await expect(again.getByLabel('Recorded outcome')).toContainText('working')

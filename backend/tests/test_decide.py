@@ -253,8 +253,9 @@ def test_the_view_gathers_guidance_uses_searches_and_the_decision(
     assert view["intent"] == "sell"
     assert view["last"]["choice"] == "sell" and view["last"]["note"] == "worth a listing"
     assert view["last"]["version"] == after["version"]
-    # the guidance and the uses were written before the decision: they say the item changed
-    assert view["worth"]["stale"] is True and view["uses"]["stale"] is True
+    # the guidance and the uses were written before the decision: a decision does not change
+    # what the item is worth, so the guidance stays current; the uses say the item changed
+    assert view["worth"]["stale"] is False and view["uses"]["stale"] is True
 
     for choice, intent in (("keep_build", "build"), ("give", "give"), ("not_worth", "keep")):
         changed = recorded_client.post(

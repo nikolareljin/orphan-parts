@@ -9,9 +9,9 @@ export function demoText(ready: Readiness, granted = true): string {
   if (!d.gated && !d.paused) return ''
   const parts: string[] = []
   if (d.gated && !granted) {
-    parts.push(d.live_models ? 'demo: recorded answers; the code unlocks saving and the live models' : 'demo: recorded answers; the code unlocks saving')
+    parts.push(d.live_models ? 'Demo: recorded answers only. Sign in to save and use the live models' : 'Demo: recorded answers only. Sign in to save')
   } else if (d.gated) {
-    parts.push(`demo: ${d.daily_used} of ${d.daily_cap} calls today, ${d.visitor_cap_per_hour} per visitor and hour`)
+    parts.push(`Live calls: ${d.daily_used} of ${d.daily_cap} used today (${d.visitor_cap_per_hour} per visitor per hour)`)
   }
   if (d.paused) parts.push('paused by the operator')
   return parts.join('; ')

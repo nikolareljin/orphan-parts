@@ -16,8 +16,8 @@ describe('labels', () => {
 
 describe('seenText', () => {
   it('says how long an observation is trusted, or since when it is too old', () => {
-    expect(seenText({ observed_on: '2026-10-20', expires_on: '2026-11-03', expired: false })).toBe('seen 2026-10-20, trusted until 2026-11-03')
-    expect(seenText({ observed_on: '2026-01-05', expires_on: '2026-01-19', expired: true })).toBe('seen 2026-01-05, too old since 2026-01-19')
+    expect(seenText({ observed_on: '2026-10-20', expires_on: '2026-11-03', expired: false })).toBe('seen 2026-10-20, valid until 2026-11-03')
+    expect(seenText({ observed_on: '2026-01-05', expires_on: '2026-01-19', expired: true })).toBe('seen 2026-01-05, out of date since 2026-01-19')
   })
 })
 

@@ -66,6 +66,12 @@ def current_fields(assertions: list[Assertion]) -> dict[str, Assertion]:
 
 # the history line of a decision; decisions are not changes to what the item is
 DECIDED = "decided: "
+# whether anything but a decision changed the item after the version a written row (alias
+# ``row``) was written from: what the owner chooses does not change what the item is or is worth
+CHANGED_SINCE = (
+    "EXISTS (SELECT 1 FROM events e WHERE e.item_id = {row}.item_id"
+    " AND e.version > {row}.item_version AND e.change NOT LIKE '" + DECIDED + "%')"
+)
 
 
 def joined_notes(notes: str, add: str) -> str:
@@ -378,8 +384,9 @@ class Inventory:
     # price guidance: stored as written, read back with the item's current version beside it
 
     _GUIDANCE_SELECT = (
-        "SELECT g.*, i.version AS current_item_version FROM price_guidance g"
-        " JOIN items i ON i.id = g.item_id"
+        "SELECT g.*, i.version AS current_item_version,"
+        f" {CHANGED_SINCE.format(row='g')} AS changed_since"
+        " FROM price_guidance g JOIN items i ON i.id = g.item_id"
     )
 
     def add_guidance(self, item_id: int, content: str) -> sqlite3.Row:
@@ -454,9 +461,8 @@ class Inventory:
     # anything but a decision; choosing what the item becomes does not change what it is
     _WRITTEN_SELECT = (
         "SELECT w.*, i.version AS current_item_version, i.notes AS current_notes,"
-        " EXISTS (SELECT 1 FROM events e WHERE e.item_id = w.item_id"
-        " AND e.version > w.item_version AND e.change NOT LIKE '" + DECIDED + "%')"
-        " AS changed_since FROM {table} w JOIN items i ON i.id = w.item_id"
+        f" {CHANGED_SINCE.format(row='w')} AS changed_since"
+        " FROM {table} w JOIN items i ON i.id = w.item_id"
     )
 
     def _add_written(

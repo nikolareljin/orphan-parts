@@ -34,7 +34,7 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
     e.preventDefault()
     if (busy || demo) return
     if (photos.length === 0 && !clip && !note.trim()) {
-      setProblem('A photo, a video or a line: at least one of them.')
+      setProblem('Add at least a photo, a video or a line of text.')
       return
     }
     setBusy(true)
@@ -61,10 +61,10 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
       <details>
         <summary>Send a capture from this computer</summary>
         <p className="muted">
-          The same bundle the phone sends: up to {limits.max_photos} photos of the item and its label, one short video (MP4 or
-          3GP, at most {limits.max_clip_mb} MB), a name and a line. It waits here until you read it.
+          What the phone sends: up to {limits.max_photos} photos of the item and its label, an optional short video, a name and a
+          line of text. It waits below until you read it.
         </p>
-        {demo && <p className="muted">The code unlocks sending; the demo visitor can only look.</p>}
+        {demo && <p className="muted">Sign in with the access code to send a capture.</p>}
         <div className="row">
           <div className="field">
             <label>
@@ -92,7 +92,7 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
             <span>
               Name <span className="optional">(optional)</span>
             </span>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="the thing, in two words" disabled={demo || busy} />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. laptop charger" disabled={demo || busy} />
           </label>
           <label>
             <span>

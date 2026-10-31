@@ -92,8 +92,8 @@ export default function Scenarios({
           </p>
           {!scenarios.profiled && (
             <p className="hint" role="note">
-              Written for an average person: no profile is filled in. <a href="#profile">Fill in your profile</a> for answers
-              that fit your skills.
+              No profile yet, so these are general answers. <a href="#profile">Fill in your profile</a> for advice that fits
+              you.
             </p>
           )}
           <p className="recommendation" role="status" aria-label="Recommendation">
@@ -192,7 +192,7 @@ function KeepFixBody({ card }: { card: KeepFix }) {
 // click and kept with this set of cards.
 function ReuseBody({ set, demo }: { set: ScenarioSet; demo: boolean }) {
   const scenarios: ReuseScenario[] = set.reuse
-  if (scenarios.length === 0) return <p className="muted">No reuse was proposed.</p>
+  if (scenarios.length === 0) return <p className="muted">No reuse ideas came back.</p>
   return (
     <ul className="reuse" aria-label="Reuse scenarios">
       {scenarios.map((r, i) => (
@@ -224,7 +224,7 @@ function SellBody({ card, worth, busy, onPrice }: { card: SellCard; worth: Worth
     <>
       <Lines label="What sells it" lines={card.selling_points} />
       <p>
-        <span className="label">What it takes</span>
+        <span className="label">Effort</span>
         {card.effort}
       </p>
       {card.note && <p className="muted">{card.note}</p>}

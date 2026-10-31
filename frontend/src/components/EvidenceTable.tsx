@@ -22,7 +22,7 @@ export default function EvidenceTable({ result }: { result: Extraction }) {
       )}
 
       {rows.length === 0 ? (
-        <p className="muted">Nothing readable on these photos.</p>
+        <p className="muted">Nothing readable in these photos.</p>
       ) : (
         <table className="evidence" aria-label="Evidence">
           <thead>
