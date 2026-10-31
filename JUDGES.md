@@ -164,4 +164,7 @@ until you delete them; nothing is published or posted anywhere. The details are 
 | After a scan: "no code of its own: the pairing has ended" | The pairing's minutes ran out before the claim: reload the signed-in page and scan its new code |
 | After a scan: "no code of its own: the code that paired this phone has ended" | The code the page was signed in with has ended or was revoked: sign in again with a current code and scan the new pairing code |
 | After a scan: "no code of its own: … does not claim a phone's code" or "… already" | The pairing was spent or did not come from a scan: reload the signed-in page and scan its new code within fifteen minutes |
+| After a scan: "no code of its own: a phone's own code does not pair another phone" | The page was signed in with a phone's code: sign in with the code you were given and scan again |
+| After a scan: "no code of its own: this code has paired 10 phones already" | Your code has paired as many phones as it may: have one revoked with `./dev keys revoke "phone …"` on the server, or ask for another code |
+| After a scan: "no code of its own: too many tries" | The address has used its code attempts: wait the seconds it names and scan again |
 | A page says "this visitor's hourly allowance is used" | The demo's per-person limit; wait the minutes it names |

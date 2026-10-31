@@ -113,8 +113,10 @@ paired, with their sessions; a guest code that expires does the same. A phone pa
 page signed in with the master code ends when `DEMO_ACCESS_CODE` changes. Revoking a phone's
 label (`./dev keys revoke "phone …"`) ends that phone alone. `./dev keys list` shows the phone
 codes beside the rest, each with what paired it, and `ended` for one whose parent has ended. A
-phone's own code does not pair another phone. Two phones need two scans of a fresh page: a
-reload draws a new pairing into the code. For the demo visitor the QR carries the address
+phone's own code does not pair another phone. Two phones need two scans of a fresh page:
+reopening *Pair the phone*, or a reload, draws a new pairing. One code pairs at most
+`PAIR_CODE_MAX` (10) phones with current codes; past that the claim answers 403 until
+`./dev keys revoke "phone …"` ends one or one runs out. For the demo visitor the QR carries the address
 alone: a phone paired from it is the demo visitor too, its captures refused with the line,
 and the Capture tab says so before anything is sent; a scan of a signed-in page later gives
 it a code.
