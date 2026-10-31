@@ -353,6 +353,7 @@ def test_a_photo_of_the_device_is_kept_and_its_model_proposed(
     assert read["provenance"] == "observed"
     assert body["item"]["needs_parent"] is False
     assert c.get(f"/api/items/{item_id}/photos").json()["count"] == 1
+    assert body["item"]["version"] == item.json()["version"] + 1
     assert (
         c.post(
             "/api/items/999/parent-photo", files={"photo": ("a.jpg", make_photo(), "image/jpeg")}
@@ -363,3 +364,35 @@ def test_a_photo_of_the_device_is_kept_and_its_model_proposed(
         f"/api/items/{item_id}/parent-photo", files={"photo": ("a.jpg", b"", "image/jpeg")}
     )
     assert empty.status_code == 400
+
+
+def test_a_device_photo_with_no_model_still_makes_a_new_version(
+    recorded_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.extract import Extraction
+
+    c = recorded_client
+
+    async def nothing(photos: list[bytes], crops: list[bytes] | None = None) -> Extraction:
+        return Extraction(
+            item_type="",
+            label_text="",
+            fields={},
+            warnings=[],
+            photos=1,
+            model="m",
+            from_fixture=True,
+            cost_usd=0.0,
+        )
+
+    monkeypatch.setattr(c.app.state.extractor, "extract", nothing)  # type: ignore[attr-defined]
+    made = c.post("/api/items", json={"item_type": "agitator", "profile": "blender_agitator"})
+    sent = c.post(
+        f"/api/items/{made.json()['id']}/parent-photo",
+        files={"photo": ("base.jpg", make_photo(), "image/jpeg")},
+    )
+    assert sent.status_code == 201, sent.text
+    body = sent.json()
+    assert body["model"] == "" and body["item"]["needs_parent"] is True
+    # the photo row reads the count again: the item is a new version
+    assert body["item"]["version"] == made.json()["version"] + 1

@@ -56,7 +56,9 @@ profile), no model or part number of its own and no device recorded, the item di
   `parent_device_model` (source `photo`) for you to accept.
 
 Either answer, a model number of the part's own, or a link to the device as its parent item
-clears the question; a rejected value does not. The rule lives in the backend
+clears the question; a rejected value does not. Once answered, the dialog says where the part
+came from in a line (*Came from: Hamilton Beach 729*). A photo that gives no model is kept all
+the same, as a new version of the item. The rule lives in the backend
 (`app/inventory/parent.py`) and is served on the item as `needs_parent`, so the web app and the
 phone ask the same. The demo visitor sees the question with no inputs. The device leads the
 part's [web search](search.md#search-the-web) and its search plan: the maker's own part for that

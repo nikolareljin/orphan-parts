@@ -29,6 +29,7 @@ test('a part with no device asks for it, and the answer clears the question', as
   await card.getByRole('button', { name: 'Save' }).click()
   await expect(card).toHaveCount(0)
   await expect(panel.getByRole('table', { name: 'Fields' })).toContainText('Hamilton Beach drink mixer, model 729')
+  await expect(panel.locator('.came-from')).toHaveText('Came from: Hamilton Beach drink mixer, model 729')
 })
 
 test('a photo of the device is kept and the model read off it answers the question', async ({ page, request }) => {
@@ -41,6 +42,7 @@ test('a photo of the device is kept and the model read off it answers the questi
   await expect(card).toHaveCount(0)
   await expect(panel.getByRole('table', { name: 'Fields' })).toContainText('Orbital Power OP-65N')
   await expect(panel.getByRole('img', { name: 'Item photo 1' })).toBeVisible()
+  await expect(panel.locator('.came-from')).toHaveText('Came from: Orbital Power OP-65N')
 })
 
 test('Search the web brings back pages as listings with their links', async ({ page, request }) => {

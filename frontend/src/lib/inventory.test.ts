@@ -5,6 +5,7 @@ import {
   PARENT_PROMPT,
   asksForParent,
   availabilityLabel,
+  cameFrom,
   changedDetails,
   detailsOf,
   intentLabel,
@@ -131,6 +132,15 @@ describe('the device a part came from', () => {
     expect(asksForParent(item([]))).toBe(false)
     expect(asksForParent(null)).toBe(false)
     expect(PARENT_PROMPT).toContain('the label under its base is best')
+  })
+
+  it('says where an answered part came from', () => {
+    const a = (field: string, value: string): Assertion => ({ ...assertion(9, 'accepted'), field, value })
+    expect(cameFrom(item([]))).toBe('')
+    expect(cameFrom({ ...item([]), fields: { parent_device_model: a('parent_device_model', 'Hamilton Beach 729') } })).toBe('Came from: Hamilton Beach 729')
+    expect(
+      cameFrom({ ...item([]), fields: { parent_device_model: a('parent_device_model', 'Hamilton Beach 729'), parent_device: a('parent_device', 'the drink mixer') } }),
+    ).toBe('Came from: Hamilton Beach 729, the drink mixer')
   })
 
   it('says what a photo of the device gave', () => {

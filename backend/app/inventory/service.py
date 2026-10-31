@@ -264,6 +264,16 @@ class Inventory:
             self._event(conn, item_id, f"{field} read as {value} ({source})", version, at)
             return self._item(conn, item_id)
 
+    def note(self, item_id: int, change: str) -> Item:
+        """A change kept beside the item rather than in it (a photo added): a new version and a
+        line in the history, so a page showing the item knows to read it again."""
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            version = self._bump(conn, row, at)
+            self._event(conn, item_id, change, version, at)
+            return self._item(conn, item_id)
+
     def review(self, item_id: int, assertion_id: int, review: Review) -> Item:
         at = now()
         with self.store.connect() as conn:

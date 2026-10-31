@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
-import { asksForParent } from '../lib/inventory'
+import { asksForParent, cameFrom } from '../lib/inventory'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
 import ParentPrompt from './ParentPrompt'
@@ -170,7 +170,11 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
                   <p className="meta">
                     Saved to your inventory as item #{state.saved.id}, {state.saved.name}. It is private.
                   </p>
-                  {asksForParent(state.saved) && <ParentPrompt item={state.saved} readOnly={false} save={answer} />}
+                  {asksForParent(state.saved) ? (
+                    <ParentPrompt item={state.saved} readOnly={false} save={answer} />
+                  ) : (
+                    cameFrom(state.saved) && <p className="meta came-from">{cameFrom(state.saved)}</p>
+                  )}
                   {state.saveError && (
                     <p className="error" role="alert">
                       {state.saveError}

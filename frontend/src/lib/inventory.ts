@@ -91,3 +91,10 @@ export function asksForParent(item: Item | null | undefined): boolean {
 export function parentPhotoLine(model: string): string {
   return model ? `Read from the photo: ${model}. Confirm it in the fields.` : 'No model could be read from the photo. Tell us about the device instead.'
 }
+
+// Once answered, the device a part came from in a line: the model as read or typed, and the
+// owner's words (never sent to the demo visitor). Empty when neither is recorded.
+export function cameFrom(item: Item): string {
+  const said = [item.fields.parent_device_model?.value, item.fields.parent_device?.value].map((v) => v?.trim() ?? '').filter(Boolean)
+  return said.length ? `Came from: ${said.join(', ')}` : ''
+}

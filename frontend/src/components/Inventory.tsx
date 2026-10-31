@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, cameFrom, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
 import GatedImage from './GatedImage'
@@ -295,7 +295,11 @@ function ItemPanel({
 
       <div className="item-section" data-section="facts">
         <h4>Facts</h4>
-        {asksForParent(item) && <ParentPrompt item={item} readOnly={readOnly} save={(action) => apply(action)} />}
+        {asksForParent(item) ? (
+          <ParentPrompt item={item} readOnly={readOnly} save={(action) => apply(action)} />
+        ) : (
+          cameFrom(item) && <p className="meta came-from">{cameFrom(item)}</p>
+        )}
         <ItemPhotos key={item.version} id={item.id} />
         <div className="row">
           <label>

@@ -130,6 +130,7 @@ async def add_parent_photo(
             item_id, PARENT_MODEL, model, confidence=confidence, source="photo", raw=raw
         )
         if model
-        else inventory.get(item_id)
+        # the photo is kept all the same: a new version, so the dialog reads the photos again
+        else inventory.note(item_id, "a photo of the device kept; no model read off it")
     )
     return ParentPhoto(item=item, model=model, extraction=reading)
