@@ -36,7 +36,9 @@ and fix*):
 | Sell or give away | `sell` or `give` | sell or give | the page scrolls to *Prepare to sell or give away*, focused on its heading; see [Seller flow](seller.md) |
 
 The repair steps go into the notes only while the item is as it was when the cards were written,
-checked in the same write as the notes. On cards that say *item changed since* the button reads
+checked in the same write as the notes; a decision is no change to the item, so choosing **Reuse
+it** first and **Keep and fix** after still adds them, once. After they are in, the card says
+*Repair steps added to the notes*. On cards that say *item changed since* the button reads
 **Choose this (without the repair steps)**, with the hint *The item changed since; Ask again to
 add the repair steps*: the choice is recorded and the notes stay as they are. When the notes and
 the plan together would pass the notes' 4,000 characters, whole steps are left out from the end
@@ -53,7 +55,8 @@ location, the notes, a photo, a price or a search. One structured call at low ef
 1,200 tokens of answer.
 
 The last cards are kept on the item with the item version they were written from, like the
-ideas: they say *item changed since* once the item is edited or decided, and **Ask again** writes
+ideas: they say *item changed since* once the item is edited (a decision is no edit, so the
+cards you chose from stay current), and **Ask again** writes
 a new version. The demo visitor is refused, as on every other call that spends.
 
 ### The rows
