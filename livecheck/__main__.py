@@ -13,7 +13,9 @@ import argparse
 import asyncio
 import logging
 import os
+import signal
 import sys
+from types import FrameType
 from urllib.parse import urlsplit
 
 import httpx
@@ -91,11 +93,18 @@ def parse(argv: list[str]) -> argparse.Namespace:
     return args
 
 
+def _terminated(signum: int, frame: FrameType | None) -> None:
+    """SIGTERM (docker stop, a killed compose run) as an ordinary exit: the redacting streams
+    drain their last line at exit, which a signal's default action would skip."""
+    sys.exit(128 + signum)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse(sys.argv[1:] if argv is None else argv)
     # the code from the environment and nowhere else; whatever prints a credential is cut
     code = os.environ.get("LIVECHECK_ACCESS_CODE", "")
     install_redaction(_secrets())
+    signal.signal(signal.SIGTERM, _terminated)
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     try:
         if args.against:

@@ -81,7 +81,8 @@ The check never records fixtures: `OPL_RECORD_FIXTURES` set to anything but off 
 **api** (the default) runs inside the backend image (`compose run ... backend python -m livecheck`)
 with `livecheck/` mounted read-only, or on this machine in the backend's virtualenv with
 `NATIVE=1`, and calls each operation through the service the route
-calls, on one item made from the demo set's `adapter` entry in a temporary inventory. The
+calls, on one item made from the demo set's `adapter` entry in a temporary inventory (named
+there whatever `INVENTORY_DB_FILE` says, so an absolute path never reaches the real one). The
 inputs are the set's own: the item's photo and note when they are under `demo/photos` and
 `demo/notes` (the owner's, written by `./dev demo-scrub`, not committed), else a label drawn
 and a one-second tone made at run time; the listing text is `demo/listings/L1.txt`. Each line
@@ -124,11 +125,16 @@ sets it, so `./dev -d live-check` traces no value. Neither is written to a file,
 printed: the run says `MODEL_API_KEY: set (N chars)` or `missing`, and the same for the code,
 and every line of output goes through a filter that replaces either value, and the key the
 settings read, should anything try to print it; an error message is filtered before it is cut
-short. `scripts/tests/test_livecheck.sh` scans every file under `livecheck/` and the
-`live-check` lines of `./dev` for a key or code assigned a literal value, a long quoted literal,
-an Authorization header with a value, a key prefix, a cloud key id, a JWT, a long hex or base64
-run or an email address, runs gitleaks over the folder when it is installed, and fails unless
-every file in the folder is a tracked `.py` or `.md` file.
+short, and a last line without a line break goes out filtered at exit, a SIGTERM included.
+`scripts/tests/test_livecheck.sh` scans every file under `livecheck/` and the `live-check`
+lines of `./dev` for a key or code assigned a literal value, an environment read with a default
+or a fallback literal, a long quoted literal, an Authorization header with a value, a key
+prefix, a cloud key id, a JWT, a long hex or base64 run or an email address, runs gitleaks over
+the folder (installed in CI, where a missing gitleaks fails the test), and fails unless every
+file in the folder is a tracked `.py` or `.md` file. `backend/tests/test_livecheck.py` reads
+every file's syntax tree for an environment read with a default that is not empty and for a
+literal of 4 or more characters beside a name holding code, key, token, secret, password or
+bearer.
 
 ## Why it is never deployed
 

@@ -67,7 +67,9 @@ class Services:
 
 def _settings(work: Path) -> Settings:
     """The backend's settings with a temporary data directory for the inventory and the
-    pictures, the backend's own ledger file kept, and pictures allowed for the picture op."""
+    pictures, the backend's own ledger file kept, and pictures allowed for the picture op. The
+    inventory file is named again: an absolute INVENTORY_DB_FILE would take the probe item
+    past the temporary directory into the real inventory."""
     base = get_settings()
     ledger_file = base.spend_ledger_path.resolve()
     ledger_file.parent.mkdir(parents=True, exist_ok=True)
@@ -75,6 +77,7 @@ def _settings(work: Path) -> Settings:
         update={
             "data_dir": work,
             "spend_ledger_file": str(ledger_file),
+            "inventory_db_file": "inventory.sqlite3",
             "picture_enabled": True,
         }
     )
