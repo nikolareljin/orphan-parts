@@ -14,7 +14,7 @@ process is exactly the one in the code.
 | Spend cap | Before each live call the ledger must be under `SPEND_CAP_USD`, otherwise `SpendCapError` is raised and nothing is sent. |
 | Cost ledger | Every call appends one line to `DATA_DIR/model_api_spend.jsonl` with tokens, price, attempts and the request ID; `GET /api/spend` and `/readyz` read the totals. |
 | Output cap | `max_output_tokens` from a caller is the answer budget; the request carries it plus a reasoning headroom by effort (1,024 `minimal`, 4,096 `low`, 8,192 `medium`, 16,384 `high`, 32,768 `xhigh`; 4,096 with no effort), under `MODEL_MAX_OUTPUT_TOKENS` when set, since reasoning tokens count against the cap. A response that still stops at the cap raises with the operation, the tokens used and the reasoning share. |
-| Structured output | `respond_structured(Model, ...)` sends the Pydantic model's JSON Schema as `text.format` with `strict: true` (every object closed, every property required) and validates the reply. |
+| Structured output | `respond_structured(Model, ...)` sends the Pydantic model's JSON Schema as `text.format` with `strict: true` (every object closed, every property required) and validates the reply. The answer is read from the final message (`final_text`), since with a search or a tool the model may write a line before the call; `text` keeps every message. |
 | Fixture mode | `OPL_FAKE_API=1`: responses come from `backend/tests/fixtures/api/`, no network, zero cost. |
 | Record mode | `OPL_RECORD_FIXTURES=1`: live calls, and every response is saved as a fixture. |
 | Prompt caching | `prompt_cache_key` is sent on every call so repeated prefixes land on the same backend. |
@@ -31,6 +31,7 @@ result = await client.respond(
     op="extract",
 )
 result.text        # concatenated output_text
+result.final_text  # the last message alone: the answer after any tool calls
 result.usage       # input, cached, output and reasoning tokens
 result.cost_usd    # priced from the published rates
 ```

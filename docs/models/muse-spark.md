@@ -11,8 +11,10 @@ Price guidance is one call with the `web_search` tool and the strict JSON schema
 
 - **Request.** `tools: [{"type": "web_search", "search_context_size": PRICE_SEARCH_CONTEXT}]`,
   with an approximate `user_location` (country from the request or `PRICE_COUNTRY`, city from the
-  request) when one is given, and `include: ["web_search_call.results"]` so the pages the search
-  returned come back with the answer.
+  request) when one is given, `max_tool_calls: PRICE_MAX_SEARCHES` (4) with the same bound said in
+  the instructions, since a guidance left to itself ran eleven or twelve searches and read
+  70,000 to 100,000 input tokens, and `include: ["web_search_call.results"]` so the pages the
+  search returned come back with the answer.
 - **Response.** One `web_search_call` item per search, each with its `results` (title, URL,
   snippet), and `url_citation` annotations on the text. The rules keep a comparable only when
   its page is among those results or citations: the model proposes, the pages decide.
