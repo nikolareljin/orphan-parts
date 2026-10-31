@@ -23,13 +23,16 @@ lists them. The changes written today:
 | `sell draft written (v<n>)` / `give draft written (v<n>)` | a listing draft |
 | `price guidance written (v<n>)` | a guidance |
 | `uses written (v<n>)` | what the item is good for, asked |
-| `decided: <choice>: <note>` | the owner's decision (`keep_build`, `sell`, `give`, `not_worth`), with the note when given; the intent it implies is set in the same change. The version is bumped only when the intent changes or a note is given; the same choice again is the line alone |
+| `scenarios written (v<n>)` | what to do with it, asked: the three cards for the owner's profile |
+| `decided: <choice>: <note>` | the owner's decision (`keep_fix`, `keep_build`, `sell`, `give`, `not_worth`), with the note when given; the intent it implies is set in the same change, and for `keep_fix` the repair steps of the latest scenarios are added to the notes while the item is at the version they were written from. The version is bumped only when the intent changes, a note is given or the notes gain the steps; the same choice again is the line alone |
 | `search opened: <title>` | a missing-item search for what the item needs |
 | `proposed for: <project>` / `put on: <project>` | an allocation, by a proposal or by hand |
 | `deleted` | the item hidden |
 
 Drafts, guidances and packs carry the item or project version they were written from, which is
-how `stale` is decided: a later version means an input changed.
+how `stale` is decided: a later version means an input changed. The scenarios and the price
+guidance on an item are the exception: a later version that only `decided: ` lines account for
+leaves them current, since a decision changes neither what the item is nor what it is worth.
 
 ## The request's trail
 

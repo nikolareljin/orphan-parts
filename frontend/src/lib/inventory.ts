@@ -16,7 +16,7 @@ export const AVAILABILITIES: { value: Availability; label: string }[] = [
 export const PROVENANCES: { value: Provenance; label: string }[] = [
   { value: 'observed', label: 'observed on a photo' },
   { value: 'owner_reported', label: 'stated by the owner' },
-  { value: 'documented', label: 'documented' },
+  { value: 'documented', label: 'from documentation' },
   { value: 'tested', label: 'tested' },
   { value: 'estimated', label: 'estimated' },
 ]
@@ -40,6 +40,23 @@ export function reviewLabel(r: Review): string {
 // Observed values the owner has not looked at yet.
 export function proposedCount(item: Item): number {
   return item.assertions.filter((a) => a.review === 'proposed').length
+}
+
+// The details form: the free-text fields the owner edits on the item.
+export const DETAIL_KEYS = ['condition', 'faults', 'tests_done', 'accessories', 'location', 'notes'] as const
+export type Details = Record<(typeof DETAIL_KEYS)[number], string>
+
+export function detailsOf(item: Item): Details {
+  return Object.fromEntries(DETAIL_KEYS.map((k) => [k, item[k]])) as Details
+}
+
+// The form after the item came back from the server: a field the owner has typed in and not
+// saved keeps what they typed; every other field takes the server's value. Without this a
+// decision, an accepted value or any other change elsewhere on the dialog would wipe the typing.
+export function mergeDetails(typed: Details, before: Item | null, next: Item): Details {
+  const fresh = detailsOf(next)
+  if (before === null) return fresh
+  return Object.fromEntries(DETAIL_KEYS.map((k) => [k, typed[k] !== before[k] ? typed[k] : fresh[k]])) as Details
 }
 
 // "2026-10-28T21:05:11+00:00" shown as a local date and time, without the seconds.

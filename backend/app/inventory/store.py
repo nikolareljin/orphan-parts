@@ -225,18 +225,35 @@ ALTER TABLE access_keys ADD COLUMN parent_id INTEGER;
 ALTER TABLE access_keys ADD COLUMN master TEXT;
 """
 
+# version 13: the three scenarios written for the owner (keep and fix, reuse, sell or give
+# away), one answer per asking, written from one item version, kept like the uses; written to
+# run again over a file that already has the table
+_SCHEMA_V13 = """
+CREATE TABLE IF NOT EXISTS scenarios (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    version INTEGER NOT NULL,
+    item_version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS scenarios_by_item ON scenarios (item_id);
+"""
+
 # version 14: what the owner adds before a Marketplace listing, one version per save, and what
-# happened to the listing after: listed, sold, given
+# happened to the listing after: listed, sold, given. Written to run again over a file that already
+# has the tables: a build of this step numbered it 13, so such a file also gets the scenarios table
+# it skipped
 _SCHEMA_V14 = """
-CREATE TABLE sell_details (
+CREATE TABLE IF NOT EXISTS sell_details (
     id INTEGER PRIMARY KEY,
     item_id INTEGER NOT NULL REFERENCES items(id),
     version INTEGER NOT NULL,
     content TEXT NOT NULL,
     at TEXT NOT NULL
 );
-CREATE INDEX sell_details_by_item ON sell_details (item_id);
-CREATE TABLE marketplace_events (
+CREATE INDEX IF NOT EXISTS sell_details_by_item ON sell_details (item_id);
+CREATE TABLE IF NOT EXISTS marketplace_events (
     id INTEGER PRIMARY KEY,
     item_id INTEGER NOT NULL REFERENCES items(id),
     kind TEXT NOT NULL,
@@ -245,8 +262,8 @@ CREATE TABLE marketplace_events (
     url TEXT NOT NULL DEFAULT '',
     at TEXT NOT NULL
 );
-CREATE INDEX marketplace_events_by_item ON marketplace_events (item_id);
-"""
+CREATE INDEX IF NOT EXISTS marketplace_events_by_item ON marketplace_events (item_id);
+""" + _SCHEMA_V13
 
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
@@ -261,6 +278,7 @@ MIGRATIONS: dict[int, str] = {
     10: _SCHEMA_V10,
     11: _SCHEMA_V11,
     12: _SCHEMA_V12,
+    13: _SCHEMA_V13,
     14: _SCHEMA_V14,
 }
 

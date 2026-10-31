@@ -1,4 +1,4 @@
-"""What the owner adds before a listing is drafted ("Tell us more"). Stored on the item, one
+"""What the owner adds before a listing is drafted ("Listing details"). Stored on the item, one
 version per save. The lowest acceptable price and the reason for selling are the owner's own;
 they never reach the model or the listing text."""
 

@@ -68,9 +68,9 @@ test_hosted_secret_is_written_from_the_environment_with_every_field() {
   local dir
   dir="$(mktemp -d)" || { assert_true false; return; }
   _hosted_tree "$dir"
-  assert_true _hosted_env "$dir" MODEL_API_KEY_DEMO=sample-value DEMO_ACCESS_CODE=judges-code SPEND_CAP_USD=15 OPL_FAKE_API=0 bash "$_hosted" secret
+  assert_true _hosted_env "$dir" MODEL_API_KEY_DEMO=sample-value DEMO_ACCESS_CODE=judges-code SPEND_CAP_USD=15 OPL_FAKE_API=0 PICTURE_ENABLED=1 bash "$_hosted" secret
   assert_true grep -q '^secret create orphan-parts --from-dotenv .* --force$' "$dir/modal.log"
-  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY='sample-value' DEMO_ACCESS_CODE='judges-code' SPEND_CAP_USD='15' OPL_FAKE_API='0' CORS_ORIGINS='https://orphan-parts.pages.dev' DEMO_COOKIE_SECURE='1' DEMO_TRUST_PROXY='1' API_DOCS='0' "
+  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY='sample-value' DEMO_ACCESS_CODE='judges-code' SPEND_CAP_USD='15' OPL_FAKE_API='0' PICTURE_ENABLED='1' CORS_ORIGINS='https://orphan-parts.pages.dev' DEMO_COOKIE_SECURE='1' DEMO_TRUST_PROXY='1' API_DOCS='0' "
   # a value with a dollar, a space or a hash is kept as it is; a single quote, a backslash or
   # a newline is refused (the dotenv reader would drop or bend the value)
   assert_true _hosted_env "$dir" DEMO_ACCESS_CODE='pa$s #word' bash "$_hosted" secret
@@ -83,7 +83,15 @@ test_hosted_secret_is_written_from_the_environment_with_every_field() {
   # nothing set: recorded answers, open, the defaults
   rm -f "$dir/secret.env"
   assert_true _hosted_env "$dir" bash "$_hosted" secret
-  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY='' DEMO_ACCESS_CODE='' SPEND_CAP_USD='20' OPL_FAKE_API='1' CORS_ORIGINS='https://orphan-parts.pages.dev' DEMO_COOKIE_SECURE='1' DEMO_TRUST_PROXY='1' API_DOCS='0' "
+  assert_eq "$(tr '\n' ' ' < "$dir/secret.env")" "MODEL_API_KEY='' DEMO_ACCESS_CODE='' SPEND_CAP_USD='20' OPL_FAKE_API='1' PICTURE_ENABLED='0' CORS_ORIGINS='https://orphan-parts.pages.dev' DEMO_COOKIE_SECURE='1' DEMO_TRUST_PROXY='1' API_DOCS='0' "
+  # pictures are 0 or 1 and nothing else; anything else is refused before modal is called
+  : > "$dir/modal.log"
+  local bad err
+  for bad in 2 yes true on ' 1' "1'"; do
+    err="$(_hosted_env "$dir" PICTURE_ENABLED="$bad" bash "$_hosted" secret 2>&1 >/dev/null)" && assert_true false || assert_true true
+    assert_true grep -q 'PICTURE_ENABLED must be 0 or 1' <<<"$err"
+  done
+  assert_false test -s "$dir/modal.log"
   # the origin has to be https, and present
   assert_false _hosted_env "$dir" WEB_ORIGIN= bash "$_hosted" secret 2>/dev/null
   assert_false _hosted_env "$dir" WEB_ORIGIN=http://orphan-parts.pages.dev bash "$_hosted" secret 2>/dev/null

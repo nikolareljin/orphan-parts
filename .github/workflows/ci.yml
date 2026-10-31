@@ -13,8 +13,32 @@ permissions:
   contents: read
 
 jobs:
-  backend:
+  # What a pull request touches decides which of the slow jobs run; a push to main runs them
+  # all. A job left out by its `if:` reports as skipped, and a skipped job counts as passed
+  # wherever it is a required check.
+  changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.paths.outputs.backend }}
+      web: ${{ steps.paths.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 2   # the merge commit and the base it merges into
+      - id: paths
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"; echo "web=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          bash scripts/ci-changes.sh HEAD^1 HEAD >> "$GITHUB_OUTPUT"
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: backend
@@ -25,15 +49,23 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/pyproject.toml
-      - run: pip install -e ".[dev]"
+      # pytest-xdist only here: the same suite and coverage floor, spread over the runner's cores
+      - run: pip install -e ".[dev]" "pytest-xdist>=3.6,<4"
       - run: ruff check . && ruff format --check .
       - run: mypy app
-      - run: pytest
+      - name: lint and type-check the live check
+        run: ruff check ../livecheck && ruff format --check ../livecheck && mypy ../livecheck
+        env:
+          PYTHONPATH: ..
+      - run: pytest -n auto --dist worksteal
         env:
           OPL_FAKE_API: "1"
 
   frontend:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -49,16 +81,45 @@ jobs:
       - run: npm test -- --run
       - run: npm run build
 
+  # always runs: its tests read files from docs/, frontend/ and livecheck/ as well as scripts/
   scripts:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      # the live check's gitleaks test runs here rather than skipping
+      - name: install gitleaks
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          # the release's published checksum for gitleaks_8.30.1_linux_x64.tar.gz
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          bin="$RUNNER_TEMP/gitleaks-bin"
+          mkdir -p "$bin"
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o "$archive" "$base/$archive"
+          echo "${GITLEAKS_SHA256}  ${archive}" | sha256sum -c -
+          tar -xzf "$archive" -C "$bin" gitleaks && rm -f "$archive"
+          echo "$bin" >> "$GITHUB_PATH"
       - run: bash scripts/tests/run.sh
 
   e2e:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      # the backend image builds while the frontend and Playwright images download, instead of
+      # one after the other inside ./dev e2e, which then finds all three in place
+      - name: build and pull the stack's images
+        run: |
+          docker compose --profile e2e pull --quiet frontend e2e &
+          pull=$!
+          docker compose build backend
+          wait "$pull"
       - run: ./dev e2e
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -69,6 +130,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:

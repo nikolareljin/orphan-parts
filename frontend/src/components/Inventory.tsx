@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
 import GatedImage from './GatedImage'
@@ -73,7 +73,7 @@ export default function Inventory({
       )}
       {items === null && !error && <p className="muted">Loading…</p>}
       {items !== null && items.length === 0 && (
-        <p className="muted">Nothing saved yet. Read a label, then save it privately.</p>
+        <p className="muted">No items yet. Read a label and save it to add one.</p>
       )}
       {items !== null && items.length > 0 && (
         <table className="items" aria-label="Items">
@@ -81,7 +81,7 @@ export default function Inventory({
             <tr>
               <th scope="col">Item</th>
               <th scope="col">Fields</th>
-              <th scope="col">Intent</th>
+              <th scope="col">Plan</th>
               <th scope="col">Availability</th>
               <th scope="col">Updated</th>
               <th scope="col">
@@ -136,7 +136,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   const [details, setDetails] = useState({ condition: '', faults: '', tests_done: '', accessories: '', location: '', notes: '' })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [profiles, setProfiles] = useState<ProfileSummary[]>([])
-  // a guidance written on the Value panel: the Decide panel's worth row reads it again
+  // a guidance written on the Value panel or the Decide panel's sell card: both read it again
   const [guided, setGuided] = useState(0)
 
   useEffect(() => {
@@ -182,16 +182,12 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
     }
   }, [id])
 
-  function show(next: Item) {
+  // The server's item, with what the owner typed in the details and has not saved kept as typed;
+  // a save of the details (``saved``) takes the server's values as they were kept.
+  function show(next: Item, saved = false) {
+    const before = saved ? null : item
     setItem(next)
-    setDetails({
-      condition: next.condition,
-      faults: next.faults,
-      tests_done: next.tests_done,
-      accessories: next.accessories,
-      location: next.location,
-      notes: next.notes,
-    })
+    setDetails((typed) => mergeDetails(typed, before, next))
     setEvents(null)
   }
 
@@ -199,16 +195,16 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   // A write refused because the item changed in between reloads it instead of overwriting.
   // The refusal is shown here and thrown again, so a panel with its own error line says it too
   // and does not carry on as if the change had happened.
-  async function apply(action: () => Promise<Item>) {
+  async function apply(action: () => Promise<Item>, saved = false) {
     try {
-      show(await action())
+      show(await action(), saved)
       setError('')
       onChanged()
     } catch (err: unknown) {
       if (isConflict(err)) {
         try {
           show(await api.items.get(id))
-          setError(`${message(err)}. The item was reloaded; make the change again if it still applies.`)
+          setError(`${message(err)}. The item changed meanwhile and was reloaded; make your change again if it still applies.`)
           throw err
         } catch (reloadErr: unknown) {
           if (reloadErr === err) throw err
@@ -221,8 +217,8 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   }
 
   // The same for a control with nowhere of its own to say a refusal: the error line above says it.
-  function attempt(action: () => Promise<Item>) {
-    void apply(action).catch(() => undefined)
+  function attempt(action: () => Promise<Item>, saved = false) {
+    void apply(action, saved).catch(() => undefined)
   }
 
   async function showEvents() {
@@ -281,7 +277,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
         <ItemPhotos id={item.id} />
         <div className="row">
           <label>
-            <span>Intent</span>
+            <span>Plan</span>
             <select
               value={item.intent}
               onChange={(e) =>
@@ -323,7 +319,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
               value={item.profile}
               onChange={(e) => attempt(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
             >
-              <option value="">none yet</option>
+              <option value="">not set</option>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
@@ -388,7 +384,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           className="details"
           onSubmit={(e: FormEvent) => {
             e.preventDefault()
-            attempt(() => api.items.update(item.id, { ...details, version: item.version }))
+            attempt(() => api.items.update(item.id, { ...details, version: item.version }), true)
           }}
         >
           <h4>Details</h4>
@@ -398,13 +394,13 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
               ['faults', 'Known faults'],
               ['tests_done', 'Tests done'],
               ['accessories', 'Included accessories'],
-              ['location', 'Where it is (stays private)'],
-              ['notes', 'Notes (stay private)'],
+              ['location', 'Where it is kept (private)'],
+              ['notes', 'Notes (private)'],
             ] as const
           ).map(([key, label]) => (
             <label key={key}>
               <span>{label}</span>
-              <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+              <textarea name={key} rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
             </label>
           ))}
           <button type="submit" disabled={!detailsChanged}>
@@ -431,11 +427,12 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           item={item}
           guided={guided}
           onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
+          onGuided={() => setGuided((n) => n + 1)}
         />
       </div>
 
       <div className="item-section" data-section="value">
-        <Value item={item} onGuided={() => setGuided((n) => n + 1)} />
+        <Value item={item} refresh={guided} onGuided={() => setGuided((n) => n + 1)} />
       </div>
 
       <div className="item-section" data-section="sell">
@@ -459,7 +456,10 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
             checked={item.public}
             onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
           />
-          <span>Public in the demo (what it is, its photos and drawn pictures; never the location or the notes)</span>
+          <span>
+            Show in the public demo{' '}
+            <small className="muted">Visitors without the access code can open this item, its photos and drawings.</small>
+          </span>
         </label>
         <span className="item-actions">
           <button type="button" className="link" onClick={() => void showEvents()}>
@@ -514,7 +514,7 @@ function ItemPhotos({ id }: { id: number }) {
   }, [id])
 
   if (count === null || count < 0) return null
-  if (count === 0) return <p className="muted no-photos">No photo kept with this item.</p>
+  if (count === 0) return <p className="muted no-photos">No photos saved with this item.</p>
   return (
     <div className="item-photos" aria-label="Photos">
       {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
@@ -557,7 +557,7 @@ function AddField({ onAdd }: { onAdd: (spec: { field: string; value: string; uni
       <h4>Add what you know</h4>
       <label>
         <span>Field</span>
-        <input value={field} onChange={(e) => setField(e.target.value)} placeholder="colour" />
+        <input value={field} onChange={(e) => setField(e.target.value)} placeholder="color" />
       </label>
       <label>
         <span>Value</span>
@@ -601,7 +601,7 @@ function AddComponent({ onAdd }: { onAdd: (spec: { name: string; condition: stri
           .catch(() => undefined)
       }}
     >
-      <h4>Separate a part</h4>
+      <h4>Separate a part into its own item</h4>
       <label>
         <span>Part</span>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="power cable" />

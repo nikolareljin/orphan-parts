@@ -123,7 +123,9 @@ class Guidance(BaseModel):
     item_id: int
     version: int = Field(description="per item; a new request bumps it")
     item_version: int
-    stale: bool = Field(description="the item changed since the guidance was written")
+    stale: bool = Field(
+        description="the item changed since the guidance was written; a decision is no change"
+    )
     currency: str
     quantities: list[Quantity]
     comparables: list[Comparable] = Field(description="only those a search result backs")

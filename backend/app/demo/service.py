@@ -178,7 +178,7 @@ class Loader:
                 out.cost_usd += candidate.cost_usd
         if demo.propose is not None:
             try:
-                self.planner.set_preferences(demo.propose.preferences)
+                self.planner.set_preferences(demo.propose.preferences, by_demo=True)
                 projects = await self.planner.propose(
                     ProposeRequest(count=demo.propose.count, note=demo.propose.note)
                 )

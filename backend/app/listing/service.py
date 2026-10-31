@@ -314,7 +314,7 @@ class Lister:
         if details is None:
             warnings.append(
                 "no listing details saved yet: condition, what is included, pickup area and"
-                " price come from Tell us more"
+                " price come from Listing details"
             )
 
         title, removed = strip_personal(" ".join(writing.title.split()))

@@ -152,13 +152,15 @@ app, installs it over USB and prints the pairing code in the terminal.
   have. At the end of the item, **Draw it** shows what the item could look like as what you type
   (a picture, labeled as drawn, only when that server has pictures on).
 
-- **Prepare to sell or give away**, on the item: **Tell us more** (condition, what is
+- **Prepare to sell or give away**, on the item: **Listing details** (condition, what is
   included, faults, pickup area, price), **Write the draft** for Facebook Marketplace (US),
   then copy each field, download the photos in order and **Open Marketplace**; you post it
   yourself, since no public API posts a personal listing.
-- **Decide**, on the item below its values: what it is, what it is worth, what it is good for
-  (**Ask for ideas**), what would complete it; then **Keep and build**, **Sell**, **Give
-  away** or **Not worth it**, with a note the item keeps.
+- **Decide**, on the item below its values: **What should I do with it?** writes three cards for
+  your profile's rated skills (keep and fix, reuse it, sell or give away) and recommends one;
+  then what it is, what it is worth, what it is good for (**Ask for ideas**), what would
+  complete it; then **Keep and fix**, **Keep and build**, **Sell**, **Give away** or **Not
+  worth it**, with a note the item keeps.
 - **From a laptop instead of the phone:** the Inbox's **Send a capture** form takes photos
   and a short video (MP4 or 3GP) straight from the computer.
 - **Talk tab:** for an item already in the inventory, hold and say what you know; the

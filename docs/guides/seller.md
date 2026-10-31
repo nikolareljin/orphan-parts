@@ -13,7 +13,7 @@ submits a Facebook page, and the service sends nothing to facebook.com.
 
 **Prepare to sell or give away** is a section of the item's dialog.
 
-1. **Tell us more.** The mode (sell or give away) and what a buyer asks about:
+1. **Listing details.** The listing type (sell or give away) and what a buyer asks about:
 
     | Field | In the listing? |
     |---|---|
@@ -21,7 +21,7 @@ submits a Facebook page, and the service sends nothing to facebook.com.
     | Included: stand, cables, power cord, original box, manual, remote, and other | yes |
     | Known faults or cosmetic issues | yes, always disclosed |
     | Not tested | yes, always disclosed |
-    | Accounts or files: none, signed out and wiped, not wiped yet | yes, when it stores any |
+    | Personal data on it: none stored, signed out and wiped, not wiped yet | yes, when it stores any |
     | Handover: local pickup, shipping or either (a give-away is pickup) | yes |
     | Area: a city, ZIP or neighborhood | yes |
     | Asking price (USD) | in the price field |
@@ -100,7 +100,7 @@ create page is where it is settled. See also [Marketplace handoff](marketplace.m
 
 ### The first steps
 
-Up to four photos go in. With "Find the label first" on, SAM 3.1 finds the item, the label
+Up to four photos go in. With "Find the label in the photo first" on, SAM 3.1 finds the item, the label
 and the connector in the first photo; the overlay and the crops are shown, and the label crop
 goes to Muse Spark with the photos, so every value is sourced `label_crop`. When the label
 cannot be found first, the photos are read whole and the page says why. The evidence table

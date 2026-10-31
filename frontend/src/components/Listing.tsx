@@ -192,13 +192,13 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
 
   return (
     <section className="listing" aria-label="Prepare to sell or give away">
-      <h4>Prepare to sell or give away</h4>
+      <h4 tabIndex={-1}>Prepare to sell or give away</h4>
       <p className="hint limit">{HARD_LIMIT}</p>
-      <form className="tell" aria-label="Tell us more" onSubmit={(e) => void write(e)}>
-        <h5>Tell us more</h5>
+      <form className="tell" aria-label="Listing details" onSubmit={(e) => void write(e)}>
+        <h5>Listing details</h5>
         <div className="row options">
           <fieldset className="choice">
-            <legend>Mode</legend>
+            <legend>Listing type</legend>
             {MODES.map((m) => (
               <label key={m.value} className="check">
                 <input type="radio" name="mode" checked={mode === m.value} onChange={() => setMode(m.value)} />
@@ -247,14 +247,17 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
             <input value={details.untested} onChange={(e) => set('untested', e.target.value)} placeholder="the DVI input" />
           </label>
           <label>
-            <span>Accounts or files</span>
-            <select value={details.data} onChange={(e) => set('data', e.target.value as SellDetails['data'])}>
+            <span>Personal data on it</span>
+            <select value={details.data} aria-describedby="data-hint" onChange={(e) => set('data', e.target.value as SellDetails['data'])}>
               {DATA_STATES.map((d) => (
                 <option key={d.value} value={d.value}>
                   {d.label}
                 </option>
               ))}
             </select>
+            <small id="data-hint" className="muted">
+              Holds personal data (adds steps to wipe it)
+            </small>
           </label>
           <label>
             <span>Area</span>
@@ -268,15 +271,15 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
             <>
               <label>
                 <span>Asking price (USD)</span>
-                <input inputMode="decimal" value={asking} onChange={(e) => setAsking(e.target.value)} placeholder="from price guidance if empty" />
+                <input inputMode="decimal" value={asking} onChange={(e) => setAsking(e.target.value)} placeholder="leave empty to use price guidance" />
               </label>
               <label>
                 <span>Lowest you would take (private)</span>
-                <input inputMode="decimal" value={lowest} onChange={(e) => setLowest(e.target.value)} placeholder="never in the listing" />
+                <input inputMode="decimal" value={lowest} onChange={(e) => setLowest(e.target.value)} placeholder="not shown in the listing" />
               </label>
               <label>
                 <span>Your reason (private)</span>
-                <input value={details.reason} onChange={(e) => set('reason', e.target.value)} placeholder="never in the listing" />
+                <input value={details.reason} onChange={(e) => set('reason', e.target.value)} placeholder="not shown in the listing" />
               </label>
             </>
           )}
@@ -287,8 +290,8 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
         </div>
         {note && (
           <p className="hint">
-            Heard and kept as your words: <q>{note}</q>
-            {noteCut && ' (longer than the field holds; the first part was kept)'}
+            Transcribed and saved as condition notes: <q>{note}</q>
+            {noteCut && ' (too long; only the first part was saved)'}
           </p>
         )}
         <p className="hint">Never a street address, a phone number or an email: buyers write through Marketplace.</p>
@@ -299,7 +302,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
           <button type="button" disabled={busy} onClick={() => void onSave()}>
             Save details
           </button>
-          {saved !== null && <span className="muted">details v{saved} saved</span>}
+          {saved !== null && <span className="muted">Details saved (version {saved})</span>}
         </div>
       </form>
       {error && (
@@ -420,7 +423,7 @@ function Handoff({
         {draft.mode === 'sell' ? 'For sale' : 'Free'} · draft {draft.version} · {draft.model} · {usd(draft.cost_usd)}
         {draft.from_fixture && <span className="badge">recorded answer</span>}
         {draft.stale && <span className="badge">item changed since</span>}
-        {detailsChanged && <span className="badge">details changed since</span>}
+        {detailsChanged && <span className="badge">details changed since this draft</span>}
       </p>
       {draft.warnings.length > 0 && (
         <ul className="warnings" aria-label="Before posting">
@@ -464,6 +467,7 @@ function Handoff({
             Download photos
           </button>
         )}
+        <span className="muted">Paste it into the new-listing form on Marketplace. Nothing is posted from here.</span>
       </div>
       <h5>On Marketplace</h5>
       <ol className="handoff-steps">
@@ -473,7 +477,7 @@ function Handoff({
       </ol>
       {draft.facts.length > 0 && (
         <details className="facts-wrap">
-          <summary>What the text rests on</summary>
+          <summary>Where each line comes from</summary>
           <ul className="facts" aria-label="Facts">
             {draft.facts.map((f, i) => (
               <li key={`${i}:${f.field}`}>
@@ -560,7 +564,7 @@ function Outcomes({
           )}
           {state === '' && (
             <label>
-              <span>Listing address (optional)</span>
+              <span>Listing link (optional)</span>
               <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.facebook.com/marketplace/item/…" />
             </label>
           )}

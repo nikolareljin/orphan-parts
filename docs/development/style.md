@@ -3,7 +3,7 @@
 ## Python
 
 - ruff for linting and formatting, line length 100, rule sets `E F I B UP N W SIM RUF`.
-- mypy strict with the pydantic plugin. `mypy app` must be clean.
+- mypy strict with the pydantic plugin. `mypy app` must be clean, and so must `mypy ../livecheck` (with `PYTHONPATH=..`) from `backend/`.
 - Type hints everywhere; `snake_case` functions, `PascalCase` classes.
 - Comments explain why, not what. No docstring on every function.
 - Settings come from `app.config.Settings`; model IDs are never literals.

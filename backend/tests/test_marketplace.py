@@ -98,7 +98,7 @@ def test_contact_details_are_found_and_taken_out_but_specs_are_not() -> None:
     assert "555" not in text and "Elm" not in text and len(found) == 2
 
 
-# --- Tell us more ------------------------------------------------------------------------
+# --- Listing details ------------------------------------------------------------------------
 
 
 def test_tell_us_more_refuses_a_street_address_and_contact_details() -> None:

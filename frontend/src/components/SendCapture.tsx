@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, type Limits } from '../lib/api'
 import { clipProblem, oversized, takePhotos } from '../lib/photos'
 
@@ -16,6 +16,7 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
   const [problem, setProblem] = useState('')
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState('')
+  const ids = useId()
 
   function onPhotos(e: ChangeEvent<HTMLInputElement>) {
     const { kept, dropped } = takePhotos(Array.from(e.target.files ?? []), limits.max_photos)
@@ -33,7 +34,7 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
     e.preventDefault()
     if (busy || demo) return
     if (photos.length === 0 && !clip && !note.trim()) {
-      setProblem('A photo, a video or a line: at least one of them.')
+      setProblem('Add at least a photo, a video or a line of text.')
       return
     }
     setBusy(true)
@@ -56,31 +57,51 @@ export default function SendCapture({ limits, demo, onSent }: { limits: Limits; 
   }
 
   return (
-    <form className="send-capture" onSubmit={(e) => void onSubmit(e)} aria-label="Send a capture">
+    <form className="send-capture fields" onSubmit={(e) => void onSubmit(e)} aria-label="Send a capture">
       <details>
         <summary>Send a capture from this computer</summary>
         <p className="muted">
-          The same bundle the phone sends: up to {limits.max_photos} photos of the item and its label, one short video (MP4 or
-          3GP, at most {limits.max_clip_mb} MB), a name and a line. It waits here until you read it.
+          What the phone sends: up to {limits.max_photos} photos of the item and its label, an optional short video, a name and a
+          line of text. It waits below until you read it.
         </p>
-        {demo && <p className="muted">The code unlocks sending; the demo visitor can only look.</p>}
-        <label className="field">
-          <span>Photos</span>
-          <input type="file" accept="image/*" multiple onChange={onPhotos} disabled={demo || busy} />
-        </label>
-        <label className="field">
-          <span>A short video (optional)</span>
-          <input type="file" accept="video/mp4,video/3gpp,.mp4,.3gp" onChange={onClip} disabled={demo || busy} />
-        </label>
-        <label className="field">
-          <span>Name (optional)</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="the thing, in two words" disabled={demo || busy} />
-        </label>
-        <label className="field">
-          <span>What you know (optional)</span>
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="where it came from, what works, what does not" disabled={demo || busy} />
-        </label>
+        {demo && <p className="muted">Sign in with the access code to send a capture.</p>}
         <div className="row">
+          <div className="field">
+            <label>
+              <span>Photos</span>
+              <input type="file" accept="image/*" multiple onChange={onPhotos} disabled={demo || busy} aria-describedby={`${ids}-photos`} />
+            </label>
+            <p className="help" id={`${ids}-photos`}>
+              Up to {limits.max_photos} images, {limits.max_upload_mb} MB each
+            </p>
+          </div>
+          <div className="field">
+            <label>
+              <span>
+                A short video <span className="optional">(optional)</span>
+              </span>
+              <input type="file" accept="video/mp4,video/3gpp,.mp4,.3gp" onChange={onClip} disabled={demo || busy} aria-describedby={`${ids}-clip`} />
+            </label>
+            <p className="help" id={`${ids}-clip`}>
+              MP4 or 3GP, at most {limits.max_clip_mb} MB
+            </p>
+          </div>
+        </div>
+        <div className="row">
+          <label>
+            <span>
+              Name <span className="optional">(optional)</span>
+            </span>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. laptop charger" disabled={demo || busy} />
+          </label>
+          <label>
+            <span>
+              What you know <span className="optional">(optional)</span>
+            </span>
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="where it came from, what works, what does not" disabled={demo || busy} />
+          </label>
+        </div>
+        <div className="row actions">
           <button type="submit" disabled={demo || busy}>
             {busy ? 'Sending…' : 'Send'}
           </button>

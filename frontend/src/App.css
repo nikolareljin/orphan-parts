@@ -333,45 +333,10 @@ dd {
 }
 
 /* extract form */
-.extract .field {
-  display: grid;
-  gap: 0.35rem;
-  margin-bottom: 0.5rem;
-}
-
 .extract .files {
-  margin: 0 0 0.5rem;
+  margin: var(--field-gap) 0 0;
   padding-left: 1.25rem;
   color: var(--muted);
-}
-
-.extract .hint {
-  margin: 0 0 0.75rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.extract .check {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin: 0 0 0.75rem;
-  font-size: 0.95rem;
-}
-
-.extract button {
-  background: var(--accent);
-  color: var(--on-accent);
-  border: 0;
-  border-radius: 8px;
-  padding: 0.55rem 1rem;
-  font: inherit;
-  cursor: pointer;
-}
-
-.extract button:disabled {
-  opacity: 0.55;
-  cursor: default;
 }
 
 /* segmentation */
@@ -569,14 +534,9 @@ table.evidence tbody th {
 
 /* save privately */
 .save {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  margin-top: var(--group-gap);
 }
 
-.save label,
 .inline label,
 .details label,
 .item .row label {
@@ -585,7 +545,6 @@ table.evidence tbody th {
   font-size: 0.9rem;
 }
 
-.save input,
 .inline input,
 .inline select,
 .details textarea,
@@ -901,6 +860,132 @@ button.link {
   cursor: default;
 }
 
+/* what to do with it: three cards side by side, stacked on a phone; the recommended one is
+   outlined in the accent */
+.decide .scenarios {
+  margin: 0 0 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.decide .scenarios .ask {
+  align-items: center;
+}
+
+.decide .scenarios .meta,
+.decide .scenarios .hint,
+.decide .scenarios .recommendation {
+  margin: 0.5rem 0;
+}
+
+.decide .scenarios .hint {
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.decide .scenario-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+@media (max-width: 760px) {
+  .decide .scenario-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.decide .scenario {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+}
+
+.decide .scenario.recommended {
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--card));
+}
+
+.decide .scenario h5 {
+  margin: 0 0 0.5rem;
+  font-size: 0.98rem;
+}
+
+.decide .scenario-body {
+  flex: 1;
+}
+
+.decide .scenario-body p {
+  margin: 0.35rem 0;
+}
+
+.decide .scenario-body ul,
+.decide .scenario-body ol {
+  margin: 0.2rem 0 0.5rem;
+  padding-left: 1.2rem;
+}
+
+.decide .scenario-body li {
+  margin: 0.2rem 0;
+}
+
+.decide .scenario-body ul.reuse {
+  padding-left: 0;
+  list-style: none;
+}
+
+.decide .scenario-body ul.reuse > li + li {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+/* a label on a line of its own above its value, so read and copied text keeps them apart */
+.decide .scenario .label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.decide .scenario .badge.level {
+  margin-left: 0;
+}
+
+.decide .scenario .badge.level.easy {
+  background: #27ae60;
+  color: #fff;
+}
+
+.decide .scenario .badge.level.moderate {
+  background: #f1c40f;
+  color: #1b1f24;
+}
+
+.decide .scenario .badge.level.hard {
+  background: var(--error);
+  color: #fff;
+}
+
+.decide .scenario-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.decide .scenario-actions button + button {
+  background: var(--card);
+  color: var(--accent);
+}
+
 /* prepare to sell or give away */
 .listing .draft-text {
   width: 100%;
@@ -1160,6 +1245,105 @@ button.link {
   margin: 0.25rem 0 0.5rem;
 }
 
+/* the profile: rated skills as a grid of choices, then tools and how the owner works; rows of
+   fields as on the item dialog, the label above each input */
+.profile h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.profile table.skills th,
+.profile table.skills td {
+  padding: 0.35rem 0.4rem;
+}
+
+.profile table.skills td {
+  text-align: center;
+}
+
+.profile table.skills th[scope='row'] {
+  text-align: left;
+  font-weight: 500;
+}
+
+.profile table.skills input[type='radio'] {
+  accent-color: var(--accent);
+}
+
+.profile .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.6rem 0.75rem;
+  align-items: end;
+  margin-top: 0.75rem;
+}
+
+.profile .row > button,
+.profile .row > .muted {
+  justify-self: start;
+}
+
+.profile .row > label:not(.check) {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.profile .row > label:not(.check) > span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.profile .row > label.wide {
+  grid-column: 1 / -1;
+}
+
+.profile input:not([type='checkbox']):not([type='radio']),
+.profile select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+.profile .check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.92rem;
+  align-self: center;
+}
+
+.profile .check input {
+  accent-color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .profile table.skills thead th {
+    font-size: 0.7rem;
+    letter-spacing: 0;
+  }
+
+  .profile table.skills th,
+  .profile table.skills td {
+    padding: 0.3rem 0.15rem;
+  }
+}
+
+.build .skills-line {
+  margin: 0;
+  align-self: center;
+}
+
+.build .skills-line span {
+  font-weight: 600;
+}
+
 /* Build and reuse */
 .build .preferences,
 .build .propose {
@@ -1238,8 +1422,8 @@ button.link {
   margin-bottom: 1rem;
 }
 
-.send-capture details > *:not(summary) {
-  margin-top: 0.5rem;
+.send-capture details > p {
+  margin: 0.5rem 0 0;
 }
 
 .send-capture summary {
@@ -1462,22 +1646,29 @@ footer.service .pair img {
   margin: 0 0 0.75rem;
 }
 
-/* rows of controls: side by side, wrapping; a row of fields is a grid, the label above each
-   input and the action button on the inputs' baseline */
-.item .row {
+/* the form layout, shared by the item dialog (.item) and the forms on the pages (.fields):
+   rows of controls sit side by side and wrap; a row of fields is a responsive grid with the
+   label text above each control, inputs full width, and one gap between fields (--field-gap)
+   and a wider one between groups (--group-gap); checkboxes and radios sit on the line with
+   their text; a file input is its button and its file name on one line, a help line under it */
+:is(.item, .fields) .row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.75rem;
-  margin-top: 0.75rem;
+  gap: var(--field-gap);
+  margin-top: var(--field-gap);
 }
 
-.item .row:has(> label:not(.check)),
+:is(.item, .fields) .row:has(> label:not(.check), > .field),
 .item form.inline {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 0.6rem 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--field-min), 100%), 1fr));
+  gap: var(--field-gap);
   align-items: end;
+}
+
+.item {
+  --field-min: 12rem;
 }
 
 .item form.inline {
@@ -1489,22 +1680,31 @@ footer.service .pair img {
   margin-bottom: 0;
 }
 
-.item .row:has(> label:not(.check)) > button,
+:is(.item, .fields) .row:has(> label:not(.check), > .field) > button,
 .item form.inline > button {
   justify-self: start;
 }
 
-.item .row > label:not(.check),
+:is(.item, .fields) .row > label:not(.check),
+:is(.item, .fields) .field,
+:is(.item, .fields) .field > label,
 .item form.inline > label,
 .item .details > label,
 .item .needed > label {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.3rem;
   min-width: 0;
   font-size: 0.9rem;
 }
 
-.item .row > label:not(.check) > span,
+/* a field with a help line: the label and the control at the top, the help at the bottom */
+:is(.item, .fields) .field:has(> .help) {
+  align-self: start;
+}
+
+:is(.item, .fields) .row > label:not(.check) > span,
+:is(.item, .fields) .field > span,
+:is(.item, .fields) .field > label > span,
 .item form.inline > label > span,
 .item .details > label > span,
 .item .needed > label > span {
@@ -1512,15 +1712,50 @@ footer.service .pair img {
   font-size: 0.85rem;
 }
 
-.item .row:has(> label:not(.check)) > .hint,
-.item .row:has(> label:not(.check)) > .error {
+:is(.item, .fields) .optional {
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+:is(.item, .fields) .help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+:is(.item, .fields) .row .wide {
+  grid-column: 1 / -1;
+}
+
+/* one field alone on its row keeps a readable width */
+.fields .row > :only-child:not(.wide) {
+  max-width: 30rem;
+}
+
+:is(.item, .fields) .row:has(> label:not(.check), > .field) > .hint,
+:is(.item, .fields) .row:has(> label:not(.check), > .field) > .error {
   grid-column: 1 / -1;
   margin: 0;
 }
 
+/* the actions of a form: their own row, under the fields, on the left */
+.fields .row.actions {
+  display: flex;
+  margin: var(--group-gap) 0 0;
+}
+
+.fields > :first-child {
+  margin-top: 0;
+}
+
+.fields .error {
+  margin: var(--field-gap) 0 0;
+}
+
 .item .details {
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 0.6rem 0.75rem;
+  --field-min: 14rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--field-min), 100%), 1fr));
+  gap: var(--field-gap);
 }
 
 .item .details > h4,
@@ -1532,9 +1767,9 @@ footer.service .pair img {
   margin-bottom: 0;
 }
 
-.item input:not([type='checkbox']):not([type='radio']):not([type='file']),
-.item select,
-.item textarea {
+:is(.item, .fields) input:not([type='checkbox']):not([type='radio']):not([type='file']),
+:is(.item, .fields) select,
+:is(.item, .fields) textarea {
   width: 100%;
   min-width: 0;
   font: inherit;
@@ -1545,17 +1780,37 @@ footer.service .pair img {
   color: var(--fg);
 }
 
-.item input[type='file'] {
+:is(.item, .fields) input[type='file'] {
+  width: 100%;
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
   font: inherit;
   font-size: 0.9rem;
+  color: var(--fg);
+}
+
+:is(.item, .fields) input[type='file']::file-selector-button {
+  font: inherit;
+  margin-right: 0.6rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+:is(.item, .fields) input[type='file']:disabled::file-selector-button {
+  opacity: 0.55;
+  cursor: default;
 }
 
 /* a checkbox or a radio sits on the line with its text, never above it */
-.item label:has(> input[type='checkbox']),
-.item label:has(> input[type='radio']),
-.item .check {
+:is(.item, .fields) label:has(> input[type='checkbox']),
+:is(.item, .fields) label:has(> input[type='radio']),
+:is(.item, .fields) .check {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -1565,8 +1820,14 @@ footer.service .pair img {
   font-size: 0.92rem;
 }
 
-.item input[type='checkbox'],
-.item input[type='radio'] {
+/* in a grid of fields, a checkbox lines up with the inputs beside it */
+:is(.item, .fields) .row:has(> label:not(.check), > .field) > .check {
+  align-self: end;
+  padding-bottom: 0.55rem;
+}
+
+:is(.item, .fields) input[type='checkbox'],
+:is(.item, .fields) input[type='radio'] {
   flex: none;
   width: auto;
   margin: 0.2rem 0 0;
@@ -1574,7 +1835,7 @@ footer.service .pair img {
 }
 
 /* a radio group on one line: "Mode: (•) Sell ( ) Give away" */
-.item fieldset.choice {
+:is(.item, .fields) fieldset.choice {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1585,7 +1846,7 @@ footer.service .pair img {
   border: 0;
 }
 
-.item fieldset.choice legend {
+:is(.item, .fields) fieldset.choice legend {
   float: left; /* laid out as one of the flex items, not as the box's caption */
   padding: 0;
   margin: 0;
@@ -1593,7 +1854,7 @@ footer.service .pair img {
   font-size: 0.9rem;
 }
 
-.item fieldset.choice legend::after {
+:is(.item, .fields) fieldset.choice legend::after {
   content: ':';
 }
 

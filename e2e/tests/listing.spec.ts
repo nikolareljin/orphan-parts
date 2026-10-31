@@ -53,7 +53,7 @@ test('tell us more, then the Marketplace handoff: fields to copy, the create pag
   await createAdapter(request, name)
   const { listing } = await openItem(page, name)
   await expect(listing).toContainText('No public API posts a personal Marketplace listing')
-  const form = listing.getByRole('form', { name: 'Tell us more' })
+  const form = listing.getByRole('form', { name: 'Listing details' })
   await form.getByLabel('Condition in your words').fill('works, scuffed case')
   await form.getByLabel('Power cord').check()
   await form.getByLabel('Area').fill('12 Oak Street')
@@ -78,7 +78,7 @@ test('tell us more, then the Marketplace handoff: fields to copy, the create pag
   await expect(fields).toContainText('your asking price')
   await expect(draft.getByLabel('Category', { exact: true })).toHaveValue('Electronics > Computers')
   await expect(draft.getByLabel('Condition', { exact: true })).toHaveValue('Used - Good')
-  await expect(form).toContainText('details v1 saved')
+  await expect(form).toContainText('Details saved (version 1)')
 
   await draft.getByRole('button', { name: 'Copy title' }).click()
   await expect(draft.getByRole('button', { name: 'Copy title' })).toHaveText('Copied')
@@ -109,7 +109,7 @@ test('tell us more, then the Marketplace handoff: fields to copy, the create pag
   await expect(again.listing.getByLabel('Area', { exact: true })).toHaveValue('Astoria')
 
   const after = kept.getByLabel('After posting')
-  await after.getByLabel('Listing address (optional)').fill('https://www.facebook.com/marketplace/item/1234567890/')
+  await after.getByLabel('Listing link (optional)').fill('https://www.facebook.com/marketplace/item/1234567890/')
   await after.getByRole('button', { name: 'Mark as listed' }).click()
   await expect(after).toContainText('listed on')
   await after.getByLabel('Price (USD)').fill('13')
@@ -122,10 +122,10 @@ test('a give-away is free under Free Stuff, worded for pickup, with the data ste
   const name = `Old tablet ${stamp}`
   await createAdapter(request, name)
   const { listing } = await openItem(page, name)
-  const form = listing.getByRole('form', { name: 'Tell us more' })
+  const form = listing.getByRole('form', { name: 'Listing details' })
   await form.getByLabel('Give away').check()
   await expect(form.getByLabel('Asking price (USD)')).toHaveCount(0)
-  await form.getByLabel('Accounts or files').selectOption('wiped')
+  await form.getByLabel('Personal data on it').selectOption('wiped')
   await form.getByLabel('Area').fill('11105')
   await form.getByRole('button', { name: 'Write the draft' }).click()
 
@@ -147,7 +147,7 @@ test('a voice note is transcribed and kept as the owner’s words', async ({ pag
   await createAdapter(request, name)
   const { panel, listing } = await openItem(page, name)
   await listing.getByLabel('Voice note (WAV)').setInputFiles({ name: 'note.wav', mimeType: 'audio/wav', buffer: silenceWav() })
-  await expect(listing.getByText(/Heard and kept as your words/)).toContainText('Case is scuffed')
+  await expect(listing.getByText(/Transcribed and saved as condition notes/)).toContainText('Case is scuffed')
   const row = panel.getByRole('table', { name: 'Fields' }).getByRole('row', { name: /Condition notes/ })
   await expect(row).toContainText('Case is scuffed')
   await expect(row).toContainText('stated by the owner')

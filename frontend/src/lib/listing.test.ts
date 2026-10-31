@@ -29,7 +29,7 @@ const step = (key: string, group: Step['group'], done = false, required = true):
 describe('labels', () => {
   it('names the modes and the step groups', () => {
     expect(modeLabel('give')).toBe('Give away')
-    expect(groupLabel('data')).toBe('Your data')
+    expect(groupLabel('data')).toBe('Wipe your data')
   })
 })
 

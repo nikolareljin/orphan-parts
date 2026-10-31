@@ -197,6 +197,10 @@ async def test_guidance_keeps_four_quantities_apart_from_the_recorded_search(
     assert guide.weak is False and guide.weak_reason == ""
     assert [s.price for s in guide.strategies] == [12, 18, 22]
     assert guide.parts is None
+    # a decision is no change to what it is worth: the guidance stays current
+    moved = valuer.inventory.decide(item_id, "sell", "decided: sell: worth a listing", said=True)
+    assert moved.version > guide.item_version
+    assert valuer.guidances(item_id)[0].stale is False
     # the item changed since: stale; a report counts in the next guidance
     valuer.inventory.add_field(item_id, FieldCreate(field="colour", value="black"))
     assert valuer.guidances(item_id)[0].stale is True
