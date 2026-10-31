@@ -24,9 +24,11 @@ hold is not proposed, and a toaster called "old laptop" does not become a laptop
 **Templates are data.** A project is a YAML file under `backend/app/projects/data/`: what it is
 for, the practical result, the effort and skills, a typical cost, the requirements (each with
 the kinds of item that fill it, whether it blocks the build, and the profile a search for it
-runs under), the steps, the safety lines and the guidance by name. Five ship: a homework
-workstation, a document camera for calls, a home music setup, a vacuum restored with a fitting
-tool, and a laptop with a broken screen used as a desktop. The model never changes them.
+runs under), the steps, the safety lines and the guidance by name. Ten ship: a homework
+workstation, a home server and backup, a home automation server, a smart mirror, a document
+camera for calls, a home music setup, a retro console on the TV, an arcade coffee table, a
+laptop with a broken screen used as a desktop, and a vacuum restored with a fitting tool. The
+model never changes them.
 
 **Projects.** A proposal becomes a project in the **proposed** state with exploratory
 allocations. **Shortlist** it, or **Select** it: selection commits its items, and a committed

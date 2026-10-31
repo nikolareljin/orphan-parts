@@ -129,8 +129,10 @@ Playwright runs in its official image against the dev stack with the backend in 
 so the browser sees exactly what a user sees and no credit is spent; `PICTURE_ENABLED` is on for
 the run, so the item dialog draws its picture from the recorded stub. The runner shares the
 frontend container's network and runs as the host user; results, traces and videos land under
-`e2e/test-results/`. Specs live in `e2e/tests/` and address the page by role and label, the way
-a user does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather
+`e2e/test-results/`. Specs live in `e2e/tests/`, one per surface (`extract`, `inventory`,
+`measure`, `assess`, `value`, `listing`, `decide`, `find`, `search-plan`, `build`, `inbox`, and
+`access` and `door` for the two doors), and address the page by role and label, the way a user
+does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather
 than the default five: six workers share one backend process, and while the segmentation test
 decodes masks in pure Python every other read waits a second or two.
 

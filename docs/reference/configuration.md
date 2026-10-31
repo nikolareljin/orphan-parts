@@ -16,6 +16,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `MODEL_SAM` | `sam-3.1` | | SAM model ID |
 | `OPL_FAKE_API` | `0` | | `1` serves recorded fixtures and never calls the Model API |
 | `OPL_RECORD_FIXTURES` | `0` | | `1` calls the Model API and saves every response as a fixture |
+| `FIXTURES_DIR` | `backend/tests/fixtures/api` | | where the recorded answers are read from in fixture mode and written to in record mode |
 | `SPEND_CAP_USD` | `25` | | stop calling the Model API once the ledger reaches this amount |
 | `SPEND_LEDGER_FILE` | `model_api_spend.jsonl` | | ledger file name inside `DATA_DIR` |
 | `MODEL_API_TIMEOUT_S` | `60` | | per-request timeout |
@@ -66,6 +67,30 @@ stops the service with a clear message instead of failing on the first user requ
 | `LOG_LEVEL` | `INFO` | | Python log level |
 
 Keys are `SecretStr` values: they never appear in logs, error messages or `repr()`.
+
+## Read by `./dev` and the deploy scripts
+
+These are not backend settings: `./dev` and the scripts under `scripts/` read them from the
+shell or `.env`. The backend container is handed `.env` as a whole and ignores them.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `BACKEND_PORT`, `FRONTEND_PORT`, `DOCS_PORT` | `8000`, `5173`, `8001` | the host ports of the development stack ([Local development](../development/local.md)) |
+| `NATIVE` | | `1` runs `./dev test` and the live check on the host instead of in Docker |
+| `E2E_KEEP`, `E2E_VIDEO` | | `1` leaves the stack up after `./dev e2e`; `on` records every test ([Testing](../development/testing.md)) |
+| `DOCS_GIT_DATES` | `true` | `false` builds the docs without the page dates, for a git worktree |
+| `LAN_ADDRESS` | the first address found | this machine's address in the pairing code `./dev phone` prints |
+| `ANDROID_HOME`, `ANDROID_SERIAL`, `ANDROID_AVD` | `~/Android/Sdk` | the Android SDK, which device to use, an emulator for the smoke run ([Android app](../guides/android.md)) |
+| `KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` | | the release key for the APK; without them the release build uses the debug key |
+| `LIVECHECK_ACCESS_CODE` | | the access code `./dev live-check --against` signs in with |
+| `DEPLOY_HOST`, `DEPLOY_PATH`, `IMAGE_PREFIX` | | `./dev deploy` onto a host over ssh ([Deployment](../operations/deployment.md)) |
+| `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | | the hosted demo's deploy credentials |
+| `MODEL_API_KEY_DEMO`, `DEMO_ACCESS_CODE_HOSTED`, `SPEND_CAP_USD_HOSTED`, `OPL_FAKE_API_HOSTED`, `PICTURE_ENABLED_HOSTED` | | the hosted backend's key, code, cap, mode and picture switch, kept apart from this machine's |
+| `WEB_ORIGIN`, `PAGES_PROJECT`, `API_URL`, `OPL_MIN_CONTAINERS`, `HOSTED_DEPLOY` | see `.env.example` | the origin browsers use for the hosted web app and its Pages project, the backend URL for a web-only deploy, whether the backend stays warm (`1`), and the switch that lets the deploy workflow run |
+
+`BASETEN_API_KEY`, `FIREWORKS_API_KEY`, `FIREWORKS_BASE_URL` and the `SPARK_OPEN_*` names in
+`.env.example` belong to a second model route that is planned and read by no code yet
+([Next steps](../project/next.md)).
 
 ## Modes
 

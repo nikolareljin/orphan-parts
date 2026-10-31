@@ -1,13 +1,16 @@
 # Search
 
-Find a component or a device by text: part numbers, model names, specs. Results are grounded in
-search with citations and dates, and anything that cannot be verified says so.
+Find the part an item is missing on Facebook Marketplace: a search plan of links you open
+yourself, the listings you bring back ranked by a match pattern, and each one you pick checked
+by the category's rules. Nothing is searched, fetched or posted for you.
 
 ## Built so far
 
 **Find a part**: a search request for something you need, run on Marketplace by you. Say what
-is needed, as another item's requirements (a laptop that needs an adapter, a vacuum that lost
-its tool) or as values written in under a profile, with a top price, a currency and a radius.
+is needed, as another item's requirements (a laptop that needs an adapter, a frappé maker
+whose agitator wore out) or as values written in under a profile, with a top price, a currency
+and a radius. The page is behind the access code: the demo visitor sees *Sign in with the
+access code to use this.* in its place.
 The request carries one link, **Search Marketplace**, that opens the search for you to run;
 the service searches nothing, fetches nothing and posts nothing, and never implies a signed-in
 session. A link you bring back is kept as given and never opened.
@@ -142,7 +145,7 @@ afterwards, it shows the same candidate.
 curl -s -X POST localhost:8000/api/searches -H 'content-type: application/json' \
   -d '{"need_item_id": 3, "title": "65 W laptop adapter", "max_price": 25}'
 curl -s -X POST localhost:8000/api/searches/1/candidates \
-  -F 'request={"text": "Orbital 65W charger 19.5V 3.34A, centre positive, $15, Astoria", "observed_on": "2026-10-20"}'
+  -F 'request={"text": "Orbital 65W charger 19.5V 3.34A, center positive, $15", "observed_on": "2026-10-20"}'
 curl -s localhost:8000/api/candidates/1/questions
 curl -s -X POST localhost:8000/api/searches/1/plan
 curl -s -X PATCH localhost:8000/api/searches/1/plan -H 'content-type: application/json' \

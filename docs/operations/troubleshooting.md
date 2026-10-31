@@ -27,6 +27,17 @@ The backend is still starting or failed. `./dev logs backend` shows why.
 
 ## Docs site does not publish
 
-GitHub Pages on a personal account publishes only from public repositories. The `docs` workflow
-still builds and uploads the site on every push so the build is verified; publishing starts once
-the repository is public and Pages is set to "GitHub Actions" as the source.
+The `docs` workflow builds the site with `mkdocs build --strict` and publishes it to GitHub
+Pages from `main`; a broken link or a missing page fails the build. `./dev docs-build` runs the
+same build locally. In a git worktree, where the page dates cannot be read,
+`DOCS_GIT_DATES=false ./dev docs-build` skips them.
+
+## "Sign in with the access code to read your own photos."
+
+The demo visitor's photo was refused: without the code, **Read a label** and **Measure a
+feature** take the demo set's own photos from the gallery. Sign in to upload.
+
+## A sample says "No recorded answer for this sample yet."
+
+The demo set has no recording for that exact selection. `./dev record-fixtures` (with a key)
+records every reading a sample click can ask for.

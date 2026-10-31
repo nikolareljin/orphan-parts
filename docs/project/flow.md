@@ -43,7 +43,9 @@ out, and the rods listed to replace it.
    all-metal rod of the same size is a documented candidate (`COMPATIBLE_LIKELY`), the plastic
    rod fails on its material and its diameter and the metal one with wider tabs on the span
    (`CONFLICT`), and the listing with no measurements needs evidence (`INSUFFICIENT_INFO`).
-   **Ask the seller** turns the open questions into a message.
+   **Ask the seller** turns the open questions into a message. With the code, **Plan the
+   search** writes the Marketplace search links and a match pattern, and listings pasted back
+   are ranked by it before any is read.
    [Find a part](../guides/search.md), [Verdict ladder](../concepts/verdicts.md).
 
 ## Another path: the homework desk
@@ -70,9 +72,10 @@ out, and the rods listed to replace it.
 - The hosted site: [orphan-parts.pages.dev](https://orphan-parts.pages.dev).
 - The release, with the Android app as an APK:
   [github.com/nikolareljin/orphan-parts/releases/latest](https://github.com/nikolareljin/orphan-parts/releases/latest).
-- The app on your phone in ten minutes:
-  [On your phone in ten minutes](https://nikolareljin.github.io/orphan-parts/start/judges/);
+- The two-minute fast path, the app on your phone and the access code:
+  [For judges](../start/judges.md);
   from a machine of your own, the [Quickstart](../start/quickstart.md).
 
-The hosted demo answers every visitor from recorded answers for the demo set and keeps
-nothing; the access code opens the live models and saving. [Demo access](../operations/demo-access.md).
+Without the access code the hosted demo lets every visitor click the demo set's photos,
+answers each from its recording and keeps nothing; the code opens uploads, the live models and
+saving. [Demo access](../operations/demo-access.md).

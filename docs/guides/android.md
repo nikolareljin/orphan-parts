@@ -69,7 +69,7 @@ the APK installs from the release page as an app from an unknown source, signed 
 build's development key rather than a store key, and a Play Protect scan from the Play Store
 checks it once installed; each release carries a fresh key, so an earlier release is
 uninstalled before the next one installs.
-[On your phone in ten minutes](../start/judges.md) is the path for a phone with no development
+[For judges](../start/judges.md) is the path for a phone with no development
 setup (download on the phone, or `scripts/phone-install.sh` / `scripts/phone-install.ps1` over
 USB, which bring their own `adb`). The app runs on Android 8.0 and newer; the QR scanner needs
 Google Play services, the typed address works everywhere. On Windows the development path below

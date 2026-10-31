@@ -85,8 +85,9 @@ doors get the recordings; the code still decides who may save.
 ## Allowances on what spends
 
 Every call through the live door that reaches the Model API (reading a label or a listing,
-finding the label, writing a draft, a voice note, price guidance, a proposal, a capture read)
-is counted before it is made: `DEMO_VISITOR_CALLS_PER_HOUR` (20) per session, and
+finding the label, writing a draft, a voice note, price guidance, the decision cards, the
+uses, a search plan, a listing screenshot or **Check fit**, a proposal, a drawing, a capture
+read) is counted before it is made: `DEMO_VISITOR_CALLS_PER_HOUR` (20) per session, and
 `DEMO_DAILY_CALLS` (300) for everyone per UTC day. Over either, the answer is 429 with
 `Retry-After` and a line that says which allowance ran out. The demo visitor's tries are
 recordings and are not counted. Reads and writes to the inventory are not counted here; every
@@ -141,12 +142,12 @@ it a code.
 
 ## The set, at no cost
 
-The public demo is the recorded set (`./dev demo` on the machine that
-runs the stack, [Demo walkthrough](../start/demo.md)):
-with `OPL_FAKE_API=1` on the host nothing is sent to the models and nothing is spent, whoever
-visits. Live mode is a window the operator opens with a key and `SPEND_CAP_USD` set to the
-amount they accept for it; the ledger survives restarts, so the cap counts across them. The
-demo visitor never reaches the key either way.
+The public demo is the recorded set (`./dev demo` on the machine that runs the stack,
+`modal run deploy/modal_app.py::load_demo` on the hosted one;
+[Demo walkthrough](../start/demo.md)). The demo visitor never reaches the key: their answers
+are the recordings, whoever visits. Through the code's door, a host with a key spends up to
+`SPEND_CAP_USD`; the ledger survives restarts, so the cap counts across them. With
+`OPL_FAKE_API=1` on the host nothing is sent to the models at all, through either door.
 
 ## Across origins
 

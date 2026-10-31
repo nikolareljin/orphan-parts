@@ -1,13 +1,13 @@
 ---
-description: Where Orphan Parts Lens would be used and how life gets a little better, with a table of numbers we made up.
+description: Where Orphan Parts Lens would be used and how life gets a little better, with a table of numbers made up for a smile.
 ---
 
 # Why you would want this
 
 Somewhere in your home there is a drawer. You know the one. It holds eleven chargers, four of
 which belong to devices that left the household years ago, a cable with a plug on each end that
-you have never seen anywhere else, and a vacuum attachment for a vacuum that may or may not be
-the one in the closet. Nobody opens the drawer on purpose. Orphan Parts Lens is for the drawer,
+you have never seen anywhere else, and the agitator of a frappé maker that stopped mixing two
+summers ago. Nobody opens the drawer on purpose. Orphan Parts Lens is for the drawer,
 and for everything like it.
 
 ## Where it would live
@@ -56,7 +56,7 @@ it is still on the floor; decide what it is in the new place, with the photos be
   approve, posted by you. A search is one you run. Prices come with their sources, and a number
   without one says so.
 
-## Numbers we made up, honestly
+## Numbers made up, honestly
 
 | Statistic | Value |
 |---|---|
@@ -64,7 +64,7 @@ it is still on the floor; decide what it is in the new place, with the photos be
 | HDMI cables per household that have never met a monitor | 3.7 |
 | Odds that a mystery charger fits anything you still own | 1 in 9 |
 | Minutes of "where is the thing" avoided per week | 23 |
-| Vacuums in the world waiting on the one tool that would fix them | 11 million |
+| Kitchen machines in the world waiting on the one part that would fix them | 11 million |
 | Working laptops known only as "the old one" | 1 per adult |
 | Trips for the part that turned out to be the other one, per repair | 1.3 |
 | Items given away with the note "works, probably" | too many |
@@ -76,10 +76,11 @@ that is rather the point.
 ## Try it
 
 - The hosted site: [orphan-parts.pages.dev](https://orphan-parts.pages.dev). Every visitor
-  sees the demo set on recorded answers; the access code opens the live models and saving.
+  clicks the demo set's photos and sees the answers recorded for them; the access code opens
+  uploads, the live models and saving.
 - The release, with the Android app as an APK:
   [github.com/nikolareljin/orphan-parts/releases/latest](https://github.com/nikolareljin/orphan-parts/releases/latest).
-- The app on your phone in ten minutes:
-  [On your phone in ten minutes](https://nikolareljin.github.io/orphan-parts/start/judges/).
+- The two-minute fast path, the app on your phone and the access code:
+  [For judges](../start/judges.md).
 
 How the pieces connect is on [How it fits together](flow.md).

@@ -26,6 +26,8 @@ startup and refuses to open a file written by a newer version.
 | `items.public`, `captures.public` | v10 | `1` when the owner shows the row to the demo visitor (the demo loader marks what it loads); the demo visitor's reads are limited to these rows |
 | `access_keys` | v9 | access codes issued as records: the `hash` (SHA-256), a `label`, when issued, `expires_at`, `revoked_at`; the code itself is shown once and never kept |
 | `access_keys.parent_id`, `access_keys.master` | v12 | for a phone's own code, what paired it: the issued record's id, or a short digest of the master code; the code stands only while that record is unrevoked and unexpired, or while the master code is the same |
+| `sell_details` | v14 | the listing details per item, one row per save: `version` and `content` (condition in the owner's words, what is included, faults, what was not tested, the data line, handover, area, asking price, and the private lowest price and reason, never sent to a model or a visitor) |
+| `marketplace_events` | v14 | what happened after posting: `kind` (`listed`, `sold`, `given`), `on_date`, `price`, the listing `url` when given |
 | `captures` | v8 | what the phone sent in one go: `status` (received, processed, failed), `content` (the line, the name, the counts, the item it became, the error), times; the media under `DATA_DIR/captures/<id>/` |
 
 `content` columns hold JSON validated by the Pydantic models of the owning package; the

@@ -3,9 +3,10 @@
 The Android app sends photos, clips and notes to the same backend the web app talks to. Pairing
 tells the app where that backend is and, when the page is signed in, gives the phone an access
 code of its own. The screens below come from a stack running on a computer with the gate on,
-in fixture mode (recorded answers, nothing spent), and from the app on an Android emulator.
-The hosted site looks the same; where these say `fixture`, its footer and **Check** on the
-phone say `live for the code, recorded otherwise`.
+in fixture mode (recorded answers, nothing spent), with the demo set loaded, and from the
+app on an Android emulator. The hosted site looks the same; where **Check** on the phone says
+`fixture` here, it says `live for the code, recorded otherwise` there, and the footer's
+`recorded answers only (nothing spent)` becomes the spend so far against the cap.
 
 The address in the pictures is the computer's network address with the port the stack was
 started on. The hosted site's address is `https://orphan-parts.pages.dev`.
@@ -15,20 +16,27 @@ started on. The hosted site's address is `https://orphan-parts.pages.dev`.
 Open the hosted site, or a local stack at the computer's network address (for example
 `http://192.168.1.20:5173`; not `localhost`, which on the phone is the phone). While the
 server has a gate and the page is not signed in, the header ends with **Sign in with the
-code**, and the foot of the page says `Demo: recorded answers only. Sign in to save`.
+code**, **Read a label** is a gallery of the demo set's photos to pick from instead of an
+upload, and the foot of the page, under the gallery, says
+`Demo: recorded answers only. Sign in to save` (on a server with a key, such as the hosted
+one, `... Sign in to save and use the live models`).
 
-![The web app signed out: the header ends with Sign in with the code; the footer says demo, recorded answers](../assets/pairing/web-sign-in.png){ width=480 }
+![The web app signed out: the header ends with Sign in with the code; Read a label shows the demo set's sample photos](../assets/pairing/web-sign-in.png){ width=480 }
 
-Tap **Sign in with the code**, type the access code, **Enter**. For now, signing in uses an
-access code only; proper accounts come later ([Next steps](../project/next.md)).
+Tap **Sign in with the code**. The **Access code** dialog says what the code unlocks (saving,
+listing drafts, prices, projects, captures and, when the server has a key, the live models)
+and that signing in sets one cookie and stores nothing else. Type the access code, **Enter**.
+For now, signing in uses an access code only; proper accounts come later
+([Next steps](../project/next.md)).
 
-![The Access code dialog: sign in with the access code; a field for the code and the Enter button](../assets/pairing/web-sign-in-dialog.png){ width=480 }
+![The Access code dialog: Sign in with the access code, an empty field for the code and the Enter button](../assets/pairing/web-sign-in-dialog.png){ width=480 }
 
-Signed in, the header shows **Sign out** in its place and the footer counts the day's calls instead:
+Signed in, the header shows **Sign out** in its place, **Read a label** takes your own photos,
+and the footer counts the day's calls instead:
 `Live calls: 0 of 300 used today (20 per visitor per hour)`. The inventory is the full one now, not
 the public items only.
 
-![The web app signed in: no sign-in link in the header; the footer counts calls](../assets/pairing/web-signed-in.png){ width=480 }
+![The web app signed in: Sign out in the header, the upload form, the footer counting calls](../assets/pairing/web-signed-in.png){ width=480 }
 
 ## 2. Open Pair the phone
 
@@ -47,7 +55,8 @@ section is opened, and again before the pairing in it ends.
 *The QR code in this picture is blurred: it carried a live pairing when the screen was taken.*
 
 **Signed out,** the code carries the address alone: the phone joins as the demo. The line under
-the heading says so, and asks for a sign-in first when the phone should get a code of its own.
+the heading says so (*It contains only this server's address, so the phone opens the demo.
+Sign in here first to sign the phone in too.*).
 
 ![The footer signed out: Pair the phone open, a code that carries the address alone](../assets/pairing/web-pair-signed-out.png){ width=480 }
 
@@ -62,8 +71,8 @@ phone cannot reach, and names the two ways out (the computer's network address, 
 
 ## 3. Scan to pair
 
-In the app (installed as [On your phone in ten minutes](judges.md) says), open the **Backend**
-tab. Its first card is **Where the inventory lives**, with **Scan to pair**; the icon at the
+In the app ([installed](judges.md#install-the-android-app) from the latest release), open the
+**Backend** tab. Its first card is **Where the inventory lives**, with **Scan to pair**; the icon at the
 top right of every tab opens the same scanner.
 
 ![The app's Backend tab before pairing: Scan to pair, the two fields to type an address and a code, Save and Check](../assets/pairing/android-backend.png){ width=300 }
@@ -85,14 +94,18 @@ Then tap **Check**. With a code of its own the answer is **Backend ok, Model API
 code, recorded otherwise, demo gated. The phone's own code (phone …, until …) opens it.**
 (`Model API fixture` on a stack in fixture mode.) The phone's code lasts thirty days, or until the code that paired it ends if
 that is sooner; one access code pairs at most ten phones. The tab names the code the phone
-holds, by label and end date, and how to end it on the server.
+holds, by label and end date, and how to end it on the server. **Unpair**, beside **Save** and
+**Check** once the phone has an address, makes the phone forget the address, its code and its
+session after a confirmation; the code itself stays valid until it is revoked on the server
+(`./dev keys revoke "phone …"`). Release 0.3.0 of the app predates **Unpair**.
 
 ## 4. Type the address instead
 
 Without Google Play services, or without a second screen to show the code on, type what the
 code carries. On the **Backend** tab, under **Or type it**: the address from under the QR code
-into **Backend URL**, the access code into the field under it, then **Save**. The code is shown
-as dots while it is typed.
+into **Backend URL**, the access code into the field under it (*Access code (if the server has
+one; without it you get the demo)*), then **Save**. The code is shown as dots while it is
+typed.
 
 ![The Backend tab with the address typed into Backend URL and the access code in the second field](../assets/pairing/android-typed.png){ width=300 }
 
@@ -107,10 +120,11 @@ replaces it with a code of the phone's own.
 
 ## 5. Send a photo
 
-On the **Capture** tab, **Take a photo** opens the camera; the photo comes back as a thumbnail
-under the buttons, and the status line says it is ready.
+On the **Capture** tab (*Capture an item*), **Take a photo** opens the camera; the photo comes
+back as a thumbnail under the buttons and the button reads **Another photo (1/4)**. **Record a
+video** and **Hold to talk** add a short video and a spoken note in the same way.
 
-![The Capture tab with one photo taken, shown as a thumbnail](../assets/pairing/android-capture.png){ width=300 }
+![The Capture tab with one photo taken: Another photo (1/4) and the thumbnail](../assets/pairing/android-capture.png){ width=300 }
 
 Scroll down and tap **Send**. The status line says **Sent as capture #1: 1 photo(s). See
 Captures.**
@@ -129,9 +143,10 @@ show and keep.
 
 **Without the code** the web app and the phone are the demo. The pages all open. **My
 inventory** lists the items the owner marked public (the demo set loads as public), with their
-values, photos and drawn pictures, and never a clip, a note, a location or a draft. A try
-(**Read a label**, a crop, **Does it fit?** on values typed in, a measurement) is answered from
-the recorded set, whatever the photo, and no live model is called. Nothing is kept: every save,
+values, photos and drawn pictures, and never a clip, a note, a location or a draft. There is
+no upload: **Read a label** and **Measure a feature** take the demo set's own photos, picked in
+a gallery, and each answer is the recording made of that exact photo; no live model is
+called. Nothing is kept: every save,
 draft, price, project, picture and capture is refused with one line, `demo: the code unlocks
 saving, drafts, prices, projects and captures`. A phone paired from a page that was not signed in is the same visitor: **Check** says
 **Without the code this phone is the demo visitor: nothing it sends is kept.** Each visitor has
@@ -151,7 +166,7 @@ their lifetimes and how to revoke one are on [Demo access](../operations/demo-ac
 | | Without the code | With the code |
 |---|---|---|
 | Inventory | The public demo items | Everything, yours included |
-| A label read, a crop, a fit, a measurement | Recorded answers, whatever the photo | Your photos, read by the live models when the server has a key |
+| A label read, a measurement | The demo set's photos, each answered by its own recording | Your photos, read by the live models when the server has a key |
 | Saving, drafts, prices, projects, pictures | Refused | Kept |
 | Captures from the phone | Refused | In the Inbox |
 | What the server keeps about you | Nothing | The session cookie |

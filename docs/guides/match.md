@@ -8,14 +8,15 @@ written in. No model takes part.
 ## Two sides
 
 - **The need**: what the part must satisfy. Either another inventory item (the laptop that needs
-  an adapter, the vacuum that lost its tool, with the required values recorded on it under
-  *Add what you know*), or values written straight into the form.
+  an adapter, the frappé maker whose agitator wore out, with the required values recorded on it
+  under *Add what you know*), or values written straight into the form.
 - **The candidate**: the item whose page you are on. Its values are the ones it currently shows:
   accepted ones first, else the latest observation still to confirm, each with its provenance.
   A value that came from a [measurement](measure.md) carries its uncertainty into the check.
 
 Needed values are written in the candidate's terms: for a vacuum tool, the needed
-`opening_inner_diameter` is the wand's outer diameter. A side can be an item and values at
+`opening_inner_diameter` is the wand's outer diameter; for an agitator, the needed `tab_span`
+is the worn rod's own span, the one the drive takes. A side can be an item and values at
 once; a written value replaces the item's for that key. Numbers are compared in the rule's
 unit: a value on either side recorded or written in another unit (`3300 mA` against a rule in
 amps) stays unknown and asks for the right one.
@@ -49,7 +50,9 @@ observations not yet accepted.
 
 On an item's page, **Does it fit?** lists the other items under *Needed by*; pick one, or leave
 *Values I type below* and fill the rules' fields, then **Check fit**. The verdict, the checks and
-the questions appear under the form.
+the questions appear under the form. The item is the candidate, so the panel is behind the
+access code; the demo visitor's tries go through `POST /api/assess` with values on both
+sides.
 
 ## From the API
 

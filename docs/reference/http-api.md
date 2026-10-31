@@ -1,7 +1,7 @@
 # HTTP API
 
-Interactive documentation is served by the running backend at http://localhost:8000/docs.
-The same OpenAPI document is rendered below.
+Interactive documentation is served by a local backend at http://localhost:8000/docs (the hosted
+one turns it off with `API_DOCS=0`). The same OpenAPI document is rendered below.
 
 <swagger-ui src="openapi.json"/>
 
@@ -122,7 +122,7 @@ Errors: `400` for a bad photo, `404` for an unknown item, measurement or profile
 | `GET /api/pair?origin=&api=`, `GET /api/pair.svg?origin=&api=` | what the phone needs to talk to this backend: the web origin given, or `api` when the backend has an origin of its own (a scheme, a host, an optional port, nothing more), and, when the demo is gated, a pairing as `token` with `expires_at` (a session of `PAIR_TOKEN_MINUTES`, at most 60, that claims the phone's code) for a browser through the door, or an empty `token` for the demo visitor and for a pairing, whose phone pairs as the demo visitor; as JSON or as a QR code, the image with `X-Pair-Expires-At` (the pairing's end, Unix seconds) and `X-Pair-Expires-In` (the seconds it has left by the server's clock, for a page whose own clock is off) when it carries one, both readable across origins; the access code never leaves the server and nothing is stored; 422 for an origin that is malformed or not one this server is reached at (the request's `Host`, a proxy's `X-Forwarded-Host` with the scheme in `X-Forwarded-Proto`, its `Origin` or `Referer` only when the browser marks it `Sec-Fetch-Site: same-origin`, or `CORS_ORIGINS`) |
 | `POST /api/pair/code` | the phone's own access code, claimed with the pairing as the bearer token and shown once: `code`, `label` (`phone` and the first eight characters of the pairing's id), `expires_at` (`PAIR_CODE_DAYS`, never past the code that signed the page in); one claim per pairing; the code stands while that code does (revoked, expired, or a changed master code ends it); `gated: false` and no code without a gate; 429 once the address's code attempts are spent; 401 without a live pairing; a successful claim clears the address's count; 403 for a browser's session, a second claim, a phone's own code, when the code that paired the phone has ended, or when that code has `PAIR_CODE_MAX` phones with current codes already |
 | `GET /healthz` | process is up |
-| `GET /readyz` | config loaded, Model API mode (`live`, `record` or `fixture`; `fixture (key failed)` when the key did not answer the startup probe), data directory writable, spend so far against the cap, `paused` once the cap is reached |
+| `GET /readyz` | config loaded, Model API mode (`live`, `record` or `fixture`; `fixture (key failed)` when the key did not answer the startup probe; `... for the code, recorded otherwise` behind a gate with a key), data directory writable, spend so far against the cap, `paused` once the cap is reached, and the gate under `demo`: `gated`, `live_models`, `paused` (the operator's switch), `daily_used`, `daily_cap`, `visitor_cap_per_hour` |
 | `GET /api/version` | package version, the configured model IDs, the upload `limits` (`max_photos`, `max_upload_mb`, `max_clip_mb`) the web forms follow, and `pictures`, whether an item's picture may be drawn (`PICTURE_ENABLED`) |
 | `GET /api/spend` | the spend ledger: total, cap, remaining, calls per model with token counts, live versus fixture calls |
 

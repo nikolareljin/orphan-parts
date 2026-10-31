@@ -4,7 +4,7 @@ description: What building Orphan Parts Lens in nine days taught its owner, from
 
 # Lessons learned
 
-Notes from the [dated log](hackathon.md), written by the owner, in the order they were learned.
+Notes from the [dated log](hackathon.md), in the order they were learned.
 
 **The rules decide; the model proposes.** A confident wrong fit costs a trip across town and a
 part that goes back in the drawer. So Muse Spark reads labels and listings and writes drafts,
@@ -15,13 +15,19 @@ a pass.
 **Record every model answer, and the demo costs nothing.** The demo set is data: the photos,
 what the owner knows, the searches, the brief. One run with a key keeps every answer as a
 fixture; `./dev demo` replays it. Every visitor sees the same screen, the tests run on the same
-recordings, and the spend ledger stays where I left it. A fixture is keyed on what is sent, so a
+recordings, and the spend ledger does not move. A fixture is keyed on what is sent, so a
 change to the image size means recording again; that is a price worth paying.
 
 **Two doors beat one switch.** The first gate was on or off. Now the access code opens the live
 models and saving, and everyone else is the demo visitor: the recorded answers from a twin of
 the model client, and one line on every write. The same deployment serves the judges and anyone
 with the link, and the key is never reached without the code.
+
+**A visitor should click the set, not upload.** With an open upload, a visitor's own photo got
+the recorded answer of some other photo, which read as a wrong reading. The visitor now picks
+the demo set's photos in a gallery and each answer is the recording of that exact photo; a
+selection with none says so instead of passing a stub off as a reading. Uploads are for the
+code's door.
 
 **The phone is a capture device and nothing else.** Photos, a clip, a spoken note, a line,
 Send. No model logic, no inventory on the phone; the backend reads a capture when asked. That
@@ -44,8 +50,8 @@ worse.
 two marks on the reference and two on the feature, and geometry does the rest; the uncertainty
 follows from the marks and the reference's tolerance. A blurred or oblique capture is refused
 with the reason. A measured 4.55 ± 0.3 mm against a rule of 4.5 ± 0.1 mm is unknown, not a
-pass, and asks for a caliper. That cost an afternoon and saved a lot of confidence I would
-otherwise have faked.
+pass, and asks for a caliper. That cost an afternoon and saved a lot of confidence that would
+otherwise have been faked.
 
 **One SQLite file and plain files.** Items, assertions, events and measurements in one database
 under `DATA_DIR`; captures and photos as files beside it. Every value with its provenance,
@@ -67,7 +73,7 @@ whose key is wrong.
 **Stacked pull requests, reviewed in passes.** Each feature on its own branch and pull request,
 each one read through in passes before it merged, the next branch forward-merged with what
 landed. The changelog and the dated log grew with each merge instead of at the end. Slower per
-feature, and the only reason I could say on day four what day two had done.
+feature, and the only reason what landed on day two was still clear on day four.
 
 **What time did not allow: the Meta Glasses app.** It was planned: hands-free capture of an
 item and its label through the glasses' camera, the spoken note, the same Inbox. It was dropped

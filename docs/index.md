@@ -9,9 +9,9 @@ Meta's Muse models.
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
 [Built during the hackathon](project/hackathon.md). One diagram of the whole, every box a
-link: [How it fits together](project/flow.md). Trying it on a phone: the
-[five steps](#on-a-phone-in-five-steps) below, or the long version,
-[On your phone in ten minutes](start/judges.md).
+link: [How it fits together](project/flow.md). Judging it: [For judges](start/judges.md)
+starts with a two-minute fast path on the hosted app. Trying it on a phone: the
+[five steps](#on-a-phone-in-five-steps) below.
 
 ## On a phone in five steps
 
@@ -29,8 +29,7 @@ link: [How it fits together](project/flow.md). Trying it on a phone: the
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
-2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`, when it is
-   deployed; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
+2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
    with a local server, open the site at the computer's network address, not `localhost`
    (for example `http://192.168.1.20:5173`), with the phone on the same network.
 3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
@@ -47,14 +46,13 @@ link: [How it fits together](project/flow.md). Trying it on a phone: the
 5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
    **Inbox**.
 
-Every phone screen, and what to do when a step fails:
-[On your phone in ten minutes](start/judges.md).
+What to do when a step fails: [For judges](start/judges.md#if-something-does-not-work).
 
 ## The problem
 
 Drawers and shelves hold devices, chargers, tools and parts nobody can name, price or match any
-more. They sit unsold because writing an honest listing is work, and a vacuum stays without its
-attachment because nobody can say which one fits. Listings for the same thing differ in one
+more. They sit unsold because writing an honest listing is work, and a frappé maker stays
+without its agitator because nobody can say which rod fits. Listings for the same thing differ in one
 detail, and the wrong one is a trip wasted. Working devices get thrown out for lack of a plan.
 
 ## Four paths on one inventory
@@ -78,45 +76,60 @@ category profile, and ends in one verdict from the [ladder](concepts/verdicts.md
 never a pass, a conflict is never talked away, and every unknown becomes a question for the
 seller. [Does it fit?](guides/match.md).
 
-**Sell and give away.** A preparation checklist, with data-removal steps when the item holds
-data. Price guidance from sourced comparables: asking, sold, what you reported and the model's
-estimate, each with its page and date, never merged; weak evidence is called weak. A listing
-draft written by Muse Spark from confirmed values only, with the disclosures the rules append;
-a voice note kept as your words. The Marketplace create page, by handoff.
+**Decide.** **What should I do with it?** has Muse Spark write three cards for the item and
+for your [profile](guides/profile.md), your skills rated from *none* to *pro*: keep and fix
+(the likely problem, the steps at your level, the parts, cost and time, or that it is not worth
+fixing), reuse it (two or three builds with what else you own) and sell or give away, with one
+recommendation. The choice is kept as the item's plan and leads to the section that follows.
+[Decide what it becomes](guides/decide.md).
+
+**Sell and give away.** Listing details: condition, what is included, faults, what was not
+tested, handover and area, the asking price; the lowest price you would take and your reason
+stay private. Price guidance from sourced comparables: asking, sold, what you reported and the
+model's estimate, each with its page and date, never merged; weak evidence is called weak. A
+Facebook Marketplace (US) draft written by Muse Spark from confirmed values only, in
+Marketplace's fields, with the disclosures the rules append; each field to copy, the photos as
+a zip in order, the create page by handoff, then listed, sold or given recorded on the item.
 [Seller flow](guides/seller.md), [Value an item](guides/value.md).
 
-**Find the one that fits.** What an item needs becomes a search you run on Marketplace. Bring a
-listing back as its text, a screenshot or the values you know; it is read, assessed by the same
-rules, dated, and placed where it stands, with the seller's questions as a message.
-[Find a part](guides/search.md).
+**Find the one that fits.** What an item needs becomes a search plan: three to six Marketplace
+search links you run and a match pattern. Listings brought back as text or screenshots are
+ranked by the pattern, the exclusion words and the price with no model call; **Check fit**
+reads one into a candidate, assessed by the same rules, dated and placed where it stands, with
+the seller's questions as a message. [Find a part](guides/search.md).
 
 **Build and reuse.** Say what you want from a build; Muse Spark proposes projects from
 templates kept as data, reading your inventory through tools, and the rules keep only what
 names items you have. Select a project to commit its items, one build per item, with a budget
 across the selected set; a missing piece becomes a search. A build pack written by the rules
-from what stands, versioned and stale when an input changes; the outcome in your words, shared
-only as a redacted text and only when you say so. [Build and reuse](guides/reuse.md).
+from what stands, versioned and stale when an input changes; **Draw it** for how the finished
+project could look; the outcome in your words, shared only as a redacted text and only when
+you say so. [Build and reuse](guides/reuse.md).
 
 ## Any item
 
 A category is a data file, a [profile](concepts/profiles.md), that names the fields that matter,
 the features worth measuring with their tolerances and how to capture them, and the rules that
-decide a fit. Power adapters and vacuum attachments ship as profiles; anything else goes through
-a generic one until a profile exists for it.
+decide a fit. Power adapters, blender and frappé maker agitators, and vacuum attachments ship
+as profiles; anything else goes through a generic one until a profile exists for it.
 
 ## Where it runs
 
-On the web today, behind an access code when it is public: a demo you can leave running, with
-allowances per visitor and per day, a spend cap and an operator's switch
-([Demo access](operations/demo-access.md)). On the phone, a photo into the same inventory and a
+On the web today, behind an access code when it is public: a demo you can leave running.
+Without the code a visitor clicks the demo set's own photos and sees the answer recorded for
+each, at no cost; the code opens uploads and the live models, with allowances per visitor and
+per day, a spend cap and an operator's switch ([Demo access](operations/demo-access.md)). On the phone, a photo into the same inventory and a
 voice note kept as your words and read back ([Android app](guides/android.md)); hands-free
 through Meta glasses, later. One backend serves all of them.
 
 ## In sixty seconds
 
-1. `./dev up`
-2. Open http://localhost:5173 and drop in a photo of a power adapter's label.
-3. Save it privately, confirm the values, and ask whether the adapter in a listing fits.
+1. `./dev up`, then `./dev demo` to load the demo set (recorded answers, nothing spent).
+2. Open http://localhost:5173 and read a label: one of the set's photos under `demo/photos/`,
+   answered from its recording, or, with `MODEL_API_KEY` in `.env`, a photo of your own read
+   live.
+3. Save it privately, confirm the values, and open **Decide** on the item, or ask under
+   **Does it fit?** whether a listed part fits.
 
 See the [Quickstart](start/quickstart.md).
 
@@ -124,10 +137,10 @@ See the [Quickstart](start/quickstart.md).
 
 | Model | Job in the app |
 |---|---|
-| [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, listing drafts, price search with citations, project proposals through tools |
+| [Muse Spark](models/muse-spark.md) | label and listing reading into typed fields, decision cards, listing drafts, search plans, price search with citations, project proposals through tools |
 | [SAM 3.1](models/sam-3-1.md) | isolates item, label and connector in photos |
 | [Muse Voice Transcribe](models/muse-voice-transcribe.md) | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
-| [Muse Image](models/muse-image.md) | a picture of what an item could become, drawn only on a click when the switch is on; illustrative, never evidence |
+| [Muse Image](models/muse-image.md) | a picture of what an item could become or of a finished project, drawn only on a click when the switch is on; illustrative, never evidence |
 | [Muse Wonder](models/muse-wonder.md), [Muse Glimmer](models/muse-glimmer.md), [Muse Spark Open](models/muse-spark-open.md) | considered, not used in this version; each page says what for |
 
 Development uses Muse Code; see [Working with Muse Code](development/muse-code.md).

@@ -9,7 +9,7 @@ flowchart LR
     E --> C[Confirm<br/>the owner, per value]
     C --> D{Draft or compare}
     D -->|seller| L[Listing draft]
-    D -->|buyer| M[Deterministic matcher + explanation]
+    D -->|buyer| M[Deterministic matcher + seller questions]
 ```
 
 1. **Segment.** SAM 3.1 finds the item, its label and its connector, one concept per call.
@@ -25,8 +25,8 @@ flowchart LR
    grounding is used where a page can back a figure: price guidance keeps only the comparables
    a search result backs ([Value an item](../guides/value.md)).
 4. **Draft or compare.** Sellers get a listing draft written from confirmed values only. Buyers
-   get a verdict per candidate from the rule-driven matcher, explained by the model but never
-   overridden by it.
+   get a verdict per candidate from the rule-driven matcher, with the line that decided it and
+   the questions for the seller written by the rules; no model takes part in the verdict.
 
 Each step is one call the owner makes; nothing runs on its own. When the label cannot be found
 first, the photos are read whole and the page says so; when a value is unknown, it stays

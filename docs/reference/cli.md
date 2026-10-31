@@ -6,6 +6,7 @@
 |---|---|
 | `./dev setup [--check] [--android]` | checks Docker, Python, Node and what the app's build needs, creates `.env` from `.env.example` if missing; `--android` installs the JDK and the Android command-line tools; `--check` changes nothing |
 | `./dev phone [--release]` | builds the app, installs it on the connected phone, launches it and prints the pairing code (the stack must be up) |
+| `./dev android <build\|test\|release\|install\|smoke>` | the Android app: the debug APK, the unit tests on the JVM, the release APK (with the release key when one is given), an install on the connected phone or running emulator, and a smoke run that installs, launches, keeps a screenshot and stops (`ANDROID_AVD` boots a headless emulator when no phone is connected); see [Android app](../guides/android.md) |
 | `./dev up` | starts the Docker stack and waits for the backend to be healthy; with no `MODEL_API_KEY` in `.env` it starts in fixture mode (recorded answers) and says so |
 | `./dev up --build` | rebuilds the images first |
 | `./dev up --with-glimmer` | also starts the local Muse Glimmer server (openweight profile) |
@@ -16,6 +17,7 @@
 | `./dev test [backend\|frontend\|scripts]` | the full check suite, in the images |
 | `./dev e2e` | Playwright against the dev stack in fixture mode; `E2E_KEEP=1` leaves the stack running, `E2E_VIDEO=on` records every test |
 | `./dev check-api` | one `GET /models` with the key from `.env`; prints the mode, the reachable models and the spend ledger |
+| `./dev live-check [--ops a,b,...] [--max-usd N] [--against local\|hosted\|URL] [--keep-going]` | one real call per Model API operation the product makes, through its own services with the demo set's inputs, each line with the model, the tokens and the cost; spends real credit, at most `--max-usd` (default 0.25); `--against` runs the same proof over HTTP against a running backend, signed in with `LIVECHECK_ACCESS_CODE` from the environment; `OPL_FAKE_API=1` replays the recordings and spends nothing; never records fixtures ([Testing](../development/testing.md), `livecheck/README.md`) |
 | `./dev lint` | ruff, mypy, eslint, tsc |
 | `./dev fmt` | ruff format, eslint --fix |
 | `./dev docs` | serves the docs site at :8001 with live reload |
@@ -35,6 +37,7 @@
 | `./dev record-fixtures [--keep]` | resets the inventory (`--keep` adds instead) and loads the set once with the key from the shell or `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`; spends credits once; the backend is stopped for it and started again however the run ends |
 | `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes into `demo/notes/` |
 | `./dev shell [service]` | shell in a running service |
+| `./dev help` | every command with its options (also `-h`, `--help`) |
 
 `python -m app.extract <photo> [<photo> ...]` (inside the backend container or the native venv)
 reads a label and prints the extraction as JSON; fixture mode needs no key.

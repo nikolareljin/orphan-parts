@@ -13,29 +13,35 @@ Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
 on the docs site). One diagram of the whole, every box a link:
 [How it fits together](https://nikolareljin.github.io/orphan-parts/project/flow/).
-**Trying it on a phone?** [Five steps](#on-a-phone-in-five-steps) below; the long version,
-with the phone's own screens and no development setup, is [JUDGES.md](JUDGES.md).
+**Judging it?** [JUDGES.md](JUDGES.md) starts with a two-minute fast path on the hosted app,
+then the Android app and the access code. **Trying it on a phone?**
+[Five steps](#on-a-phone-in-five-steps) below.
 
 Orphan Parts Lens starts from a private inventory of the devices, parts and other things you
 own. A photo of a label becomes a record you confirm field by field. A photo next to a ruler
-becomes a measurement with its method and uncertainty. From there, four paths: keep a catalog,
-build something with what you have, sell, or give away. Facebook Marketplace is the destination
-both ways: the part you are missing, and the listing for what you let go. Nothing is published
+becomes a measurement with its method and uncertainty. From there, a decision written for your
+skills and four paths: keep a catalog, build something with what you have, sell, or give away.
+Facebook Marketplace is the destination both ways: the part you are missing, and the listing for what you let go. Nothing is published
 by a scan, nothing is posted or searched on your behalf, and a number without a source says so.
 
 ## Four paths on one inventory
 
 | Path | What it does | Where it stands |
 |---|---|---|
-| Catalog | read the label, confirm or reject each value, add what you know, keep condition, faults, tests, parts, intent and availability, measure a feature against a ruler | built |
-| Sell and give away | a preparation checklist, price guidance from sourced comparables with the four figures kept apart, a listing draft that discloses what the rules require, a voice note kept as your words, the Marketplace create page by handoff | built |
-| Find the one that fits | what an item needs, a Marketplace search you run, listings brought back as text, a screenshot or values you know, each assessed by the category's rules and dated, the seller's questions as a message | built |
+| Catalog | read the label, confirm or reject each value, add what you know, keep condition, faults, tests, parts, plan and availability, measure a feature against a ruler | built |
+| Sell and give away | listing details (condition, what is included, faults, handover, area, price; the lowest price and the reason stay private), price guidance from sourced comparables with the four figures kept apart, a Facebook Marketplace (US) draft in its fields with the disclosures the rules require, each field to copy, the photos as a zip in order, the create page by handoff, and what happened after (listed, sold, given) | built |
+| Find the one that fits | what an item needs; a search plan of Marketplace search links you run and a match pattern; listings brought back as text or screenshots, ranked by the pattern with no model call; one read into a candidate, assessed by the category's rules and dated, the seller's questions as a message | built |
 | Build and reuse | what you want from a build, project proposals grounded in what you own with every allocation checked against the inventory, items committed to one selected build at a time, a budget across the selected set, missing pieces as searches, a versioned build pack that goes stale when an input changes, the outcome in your words | built |
+
+Before a path, **Decide**: three cards for the item and your rated skills (keep and fix with
+the steps at your level, reuse it with what else you own, sell or give away), one
+recommendation, and the choice kept as the item's plan; **Draw it** shows how a finished
+project could look.
 
 Underneath, one engine answers five questions with evidence: Identify, Value, List, Find, Reuse.
 A category is a data file, a profile, that names the fields, the features worth measuring with
-their tolerances, and the rules that decide a fit. Power adapters and vacuum attachments ship as
-profiles, with a generic one for anything else.
+their tolerances, and the rules that decide a fit. Power adapters, blender and frappé maker
+agitators, and vacuum attachments ship as profiles, with a generic one for anything else.
 
 ## What makes it trustworthy
 
@@ -47,8 +53,10 @@ profiles, with a generic one for anything else.
   unknown is never a pass, and a conflict is never talked away.
 - **Four price figures, never merged.** Asking, sold, what you reported, and the model's
   estimate, each with its page and date; weak evidence is called weak.
-- **A demo you can leave running.** An access code, allowances per visitor and per day, a
-  per-address limit, a spend cap and an operator's switch.
+- **A demo you can leave running.** Without the access code a visitor clicks the demo set's
+  own photos and gets the answer recorded for each, at no cost; the code opens uploads and the
+  live models behind allowances per visitor and per day, a per-address limit, a spend cap and
+  an operator's switch.
 
 Documentation: https://nikolareljin.github.io/orphan-parts/
 
@@ -68,8 +76,7 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
-2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`, when it is
-   deployed; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
+2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
    with a local server, open the site at the computer's network address, not `localhost`
    (for example `http://192.168.1.20:5173`), with the phone on the same network.
 3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
@@ -87,7 +94,8 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
 5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
    **Inbox**.
 
-Every phone screen, and what to do when a step fails: [JUDGES.md](JUDGES.md).
+Every step pictured: [Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/);
+what to do when a step fails: [JUDGES.md](JUDGES.md#if-something-does-not-work).
 
 ## Quickstart
 
@@ -128,10 +136,10 @@ Changes go through pull requests; a release is a pull request from a `release/x.
 
 | Model | Job |
 |---|---|
-| Muse Spark | reads labels and listings into structured fields, writes listing drafts, searches the web for prices with citations, proposes projects through tools |
+| Muse Spark | reads labels and listings into structured fields; writes the decision cards, listing drafts and search plans; searches the web for prices with citations; proposes projects through tools |
 | SAM 3.1 | isolates the item, its label and its connector in photos |
 | Muse Voice Transcribe | voice notes kept as the owner's words, from the web and from the phone; spoken questions later |
-| Muse Image | a picture of what an item could become, drawn only when you click and the switch is on; illustrative, never evidence |
+| Muse Image | a picture of what an item could become or of a finished project, drawn only when you click and the switch is on; illustrative, never evidence |
 | Muse Wonder, Muse Glimmer, Muse Spark Open | considered, not used in this version; the docs say what for |
 
 Built with Muse Code.
@@ -141,7 +149,13 @@ Built with Muse Code.
 ```
 backend/    FastAPI service (Python 3.12)
 frontend/   React + Vite app (Node 24)
+android/    the Android app (Kotlin, Jetpack Compose)
+demo/       the demo set: photos, listings, set.yaml
+deploy/     the backend on Modal
 docs/       MkDocs site, published to GitHub Pages
+e2e/        Playwright browser checks
+eval/       where ./dev eval writes the demo set's score
+livecheck/  one real Model API call per operation (./dev live-check)
 scripts/    bash helpers used by ./dev, the release and deploy scripts
 docker/     images that are not part of backend/ or frontend/
 ```

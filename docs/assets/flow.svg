@@ -68,7 +68,7 @@
     <text class="fl-s" x="46" y="352">the Inbox's send form</text>
   </a>
   <text class="fl-m" x="46" y="374">photos, a note, a line</text>
-  <a href="../../guides/seller/#the-first-steps">
+  <a href="../../guides/seller/#before-the-draft">
     <text class="fl-s" x="46" y="406">the label form</text>
   </a>
   <text class="fl-m" x="46" y="428">four photos, read now</text>
@@ -110,7 +110,7 @@
     <text class="fl-s" x="556" y="226">the photos beside them</text>
     <text class="fl-s" x="556" y="260">what you know yourself</text>
     <text class="fl-s" x="556" y="294">condition and faults</text>
-    <text class="fl-s" x="556" y="314">intent, availability</text>
+    <text class="fl-s" x="556" y="314">plan, availability</text>
   </a>
   <a href="../../guides/measure/">
     <rect class="fl-rules" x="556" y="344" width="148" height="80" rx="6"/>
@@ -191,7 +191,7 @@
   </a>
   <a href="../../guides/marketplace/">
     <rect class="fl-hand" x="796" y="602" width="300" height="22" rx="6"/>
-    <text class="fl-p" x="806" y="618">a Marketplace search, run by you</text>
+    <text class="fl-p" x="806" y="618">Marketplace search links, run by you</text>
   </a>
   <a href="../../guides/search/">
     <rect class="fl-model" x="796" y="632" width="150" height="24" rx="6"/>
@@ -209,7 +209,7 @@
   <a href="../../operations/demo-access/">
     <rect class="fl-door-demo" x="610" y="684" width="560" height="60" rx="10"/>
     <text class="fl-t" x="626" y="710">The demo visitor</text>
-    <text class="fl-s" x="626" y="732">recorded answers for the demo set, nothing kept;</text>
+    <text class="fl-s" x="626" y="732">the demo set's photos, recorded answers;</text>
     <text class="fl-e" x="982" y="732">every write refused</text>
   </a>
   <text class="fl-m" x="30" y="668">Two doors on one deployment</text>

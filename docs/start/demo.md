@@ -57,30 +57,44 @@ one with wider tabs is rejected on the span, and the listing with no measurement
 ## 4. Find the missing piece
 
 **Find a part** records what the agitator needs (all metal, a 4 mm rod, two tabs 9 mm across)
-and hands off a Marketplace search for you to run.
-A listing brought back as its text is read by Muse Spark into fields, dated, assessed by the
-same rules and placed where it stands; **Ask the seller** turns the open questions into a
-message. [Find a part](../guides/search.md).
+with a top price. **Plan the search** has Muse Spark write three to six Marketplace search links
+you open yourself, a match pattern and the words that rule a listing out. Listings pasted back
+are ranked by the pattern and the price with no model call; **Check fit** has Muse Spark read
+one into fields, dated, assessed by the same rules and placed where it stands, and **Ask the
+seller** turns the open questions into a message. [Find a part](../guides/search.md).
 
-## 5. What could the monitors become?
+## 5. What should become of it?
+
+On any item, **Decide**, **What should I do with it?**: Muse Spark writes three cards for the
+item and for the owner's [profile](../guides/profile.md), its skills rated from *none* to *pro*:
+keep and fix (the likely problem, the steps at that level, the parts, cost and time), reuse it
+(two or three builds with what else the owner has) and sell or give away, with one
+recommendation. **Choose this** keeps the choice as the item's plan and moves to the section it
+leads to. [Decide what it becomes](../guides/decide.md).
+
+## 6. What could the monitors become?
 
 **Build and reuse**: say what you want from a build, ask for proposals, and Muse Spark reads the
 inventory through tools and proposes projects from templates kept as data; only what names
 items you own is shown: a homework workstation on the 24 inch Dell and a smart mirror for the hall on the
 18 inch one. Select the homework workstation: its items are committed, the budget line says what
 is left, the missing cable becomes a search, and the build pack is one document from
-what stands. Record the outcome once it works. [Build and reuse](../guides/reuse.md).
+what stands. **Draw it** has Muse Image draw how the finished desk could look, one image call,
+captioned as drawn. Record the outcome once it works. [Build and reuse](../guides/reuse.md).
 
-## 6. Sell the graphics card, give the processor away
+## 7. Sell the graphics card, give the processor away
 
 On the graphics card, **What is it worth?** has Muse Spark search for listings and sales of the
 same model and keeps only the comparables a page backs; asking, sold, reported and estimated
-stay four numbers. **Prepare to sell** writes an honest draft from confirmed values with the
-disclosures the rules append; the slot 1 processor goes as a free-pickup draft, and the older
-ThinkPad as one with the data-removal steps. **Open Marketplace** hands the draft over; posting is yours.
+stay four numbers. Under **Prepare to sell or give away**, **Listing details** take the
+condition, what is included, the faults, the handover and the area and the asking price;
+**Write the draft** has Muse Spark write a Facebook Marketplace (US) draft from confirmed values,
+with the disclosures the rules append; the slot 1 processor goes as a free-pickup draft, and
+the older ThinkPad as one with the data-removal steps. Each field has **Copy**, **Download
+photos** zips them in order, and **Open Marketplace** opens the create page; posting is yours.
 [Value an item](../guides/value.md), [Seller flow](../guides/seller.md).
 
-## 7. On the phone
+## 8. On the phone
 
 The Android app points at the same backend: a photo of a label read and saved into the same
 inventory, and a voice note held to the item, kept as your words and read back.
