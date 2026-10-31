@@ -84,13 +84,12 @@ suspend fun check(
 /** The phone's camera reads the pairing code the web app (or ./dev phone) shows; what it
  * carries becomes the settings, and one line says what happened. A code with a pairing is
  * saved at once, then the phone claims its own code with it in the process's scope and the
- * store is written again (`onClaimed` says so); a code without one (the demo visitor's page)
- * pairs the phone as the demo, keeping its own code for the same backend. */
+ * store is written again (the app observes it); a code without one (the demo visitor's page)
+ * pairs the phone as the demo, keeping its own or typed code for the same backend. */
 fun scanToPair(
     context: android.content.Context,
     store: SettingsStore,
     onSaved: (Settings) -> Unit,
-    onClaimed: (String) -> Unit,
     onStatus: (String) -> Unit,
 ) {
     val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
@@ -120,7 +119,7 @@ fun scanToPair(
                     )
                 } else {
                     onStatus("Paired with ${paired.baseUrl} (with a pairing); claiming a code of its own…")
-                    startClaim(store, paired, before.baseUrl, onDone = onClaimed)
+                    startClaim(store, paired, before.baseUrl)
                 }
             }
         }
@@ -136,7 +135,6 @@ fun SettingsScreen(
     store: SettingsStore,
     note: Pair<Int, String> = 0 to "", // a line from elsewhere (the header's scan) to show
     onSaved: (Settings) -> Unit,
-    onClaimed: (String) -> Unit,
 ) {
     val context = LocalContext.current
     var url by remember(settings) { mutableStateOf(settings.baseUrl) }
@@ -156,7 +154,7 @@ fun SettingsScreen(
                 color = muted,
             )
             Spacer(Modifier.height(12.dp))
-            PrimaryButton("Scan to pair") { scanToPair(context, store, onSaved, onClaimed) { status = it } }
+            PrimaryButton("Scan to pair") { scanToPair(context, store, onSaved) { status = it } }
         }
         Spacer(Modifier.height(12.dp))
         Panel {

@@ -1,6 +1,7 @@
 package com.orphanparts.lens
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.orphanparts.lens.api.PhoneCode
 import org.json.JSONObject
 import java.net.InetAddress
@@ -151,13 +152,24 @@ class SettingsStore(context: Context) {
         codeExpires = prefs.getString("code_expires", "") ?: "",
     )
 
-    fun save(settings: Settings) {
-        prefs.edit()
+    /** Written in the background, or on disk before it returns when `durable` (a claimed code,
+     * which the backend will not hand out again). */
+    fun save(settings: Settings, durable: Boolean = false) {
+        val edit = prefs.edit()
             .putString("base_url", normalizeBaseUrl(settings.baseUrl))
             .putString("access_code", settings.accessCode.trim())
             .putString("token", settings.token.trim())
             .putString("code_label", settings.codeLabel.trim())
             .putString("code_expires", settings.codeExpires.trim())
-            .apply()
+        if (durable) edit.commit() else edit.apply()
+    }
+
+    /** `onChange` on the main thread whenever the stored settings change, whoever wrote them;
+     * the returned function stops it. The listener is held here: the preferences keep only a
+     * weak reference to it. */
+    fun observe(onChange: () -> Unit): () -> Unit {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> onChange() }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        return { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 }

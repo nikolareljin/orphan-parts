@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -42,7 +43,8 @@ suspend fun claimPhoneCode(paired: Settings, previousUrl: String, transport: Tra
         val own = try {
             client.phoneCode()
         } catch (e: Exception) {
-            return@withContext paired to "$where (with a pairing); no code of its own: ${describe(e)}."
+            val why = if (e is ApiException && e.status == 401) CLAIM_ENDED else describe(e)
+            return@withContext paired to "$where (with a pairing); no code of its own: $why."
         }
         if (!own.gated || own.code.isBlank()) return@withContext paired to "$where."
         val claimed = withPhoneCode(paired, own)
@@ -58,33 +60,39 @@ suspend fun claimPhoneCode(paired: Settings, previousUrl: String, transport: Tra
     }
 
 /** Claims outlive the screen that started them: the scope is the process's, the result is
- * written to the store whatever happens to the caller, and the UI reads the store again. */
+ * written to the store whatever happens to the caller, and the UI observes the store, so an
+ * Activity created since sees it too. */
 private val claims = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 private var retriedAtStart = false
 
-/** The claim for a scan, run in the process's scope; the outcome is stored only if the
- * settings still hold the scan it came from, and only then does `onDone` get the line, on the
- * main thread (a later scan or a typed address says its own). */
+/** The line of the last claim stored, for the Backend tab: the UI shows it and empties it. */
+val claimLine = MutableStateFlow("")
+
+/** The claim for a scan, run in the process's scope; the outcome is stored, on disk before
+ * anything else, only if the settings still hold the scan it came from, and only then is its
+ * line set (a later scan or a typed address says its own). */
 fun startClaim(
     store: SettingsStore,
     paired: Settings,
     previousUrl: String,
     transport: Transport = HttpTransport(),
-    onDone: (String) -> Unit,
 ): Job = claims.launch {
     val (claimed, line) = claimPhoneCode(paired, previousUrl, transport)
     val applied = withContext(NonCancellable) {
-        applyClaim(store.load(), paired, claimed)?.also { store.save(it) }
+        applyClaim(store.load(), paired, claimed)?.also { store.save(it, durable = true) }
     }
-    if (applied != null) withContext(Dispatchers.Main) { onDone(line) }
+    if (applied != null) claimLine.value = line
 }
 
-/** On the first start of the process: a pairing still current with no code of its own claimed
- * (the app was closed while it claimed) is claimed once more. */
-fun retryClaimAtStart(store: SettingsStore, onDone: (String) -> Unit) {
+/** Whether the settings hold a claim the app was closed during: a pairing still current with
+ * no code of its own claimed. */
+fun shouldRetryClaim(held: Settings, nowSeconds: Long = System.currentTimeMillis() / 1000): Boolean =
+    held.ready && !held.ownCode && isPairingToken(held.token) && !tokenEnded(held.token, nowSeconds)
+
+/** On the first start of the process: a claim the app was closed during is claimed once more. */
+fun retryClaimAtStart(store: SettingsStore) {
     if (retriedAtStart) return
     retriedAtStart = true
     val held = store.load()
-    if (!held.ready || held.ownCode || !isPairingToken(held.token) || tokenEnded(held.token)) return
-    startClaim(store, held, held.baseUrl, onDone = onDone)
+    if (shouldRetryClaim(held)) startClaim(store, held, held.baseUrl)
 }

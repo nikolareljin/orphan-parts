@@ -85,4 +85,35 @@ class ClaimTest {
         assertFalse(line.contains("until"))
         assertEquals("phone ffff0000", next.codeName)
     }
+
+    @Test
+    fun a_claim_whose_session_does_not_open_keeps_the_code_and_no_token() = runBlocking {
+        val (next, line) = claimPhoneCode(Settings(url, "", pairing), url, transport(claimed, null))
+        assertEquals("opl_new", next.accessCode)
+        assertEquals("", next.token)
+        assertTrue(line.contains("now has a code of its own"))
+        val (refused, _) = claimPhoneCode(Settings(url, "", pairing), url, transport(claimed, HttpResponse(429, """{"detail":"too many tries; wait 9 s"}""")))
+        assertEquals("", refused.token)
+    }
+
+    @Test
+    fun an_ended_pairing_says_to_reload_the_page_and_scan_its_new_code() = runBlocking {
+        val paired = Settings(url, "", pairing)
+        val t = transport(HttpResponse(401, """{"detail":"the pairing has ended"}"""))
+        val (left, line) = claimPhoneCode(paired, url, t)
+        assertEquals(paired, left)
+        assertTrue(line.endsWith("no code of its own: $CLAIM_ENDED."))
+    }
+
+    @Test
+    fun only_a_current_pairing_without_a_code_of_its_own_is_claimed_again_at_start() {
+        val now = 1_000L
+        val held = "sid.${now + 60}.2.0.0123456789abcdef.${"a".repeat(32)}"
+        assertTrue(shouldRetryClaim(Settings(url, "", held), now))
+        assertTrue(shouldRetryClaim(Settings(url, "opl_typed", held), now))
+        assertFalse(shouldRetryClaim(Settings(url, "", held), now + 60))
+        assertFalse(shouldRetryClaim(Settings(url, "opl_mine", held, "phone abcd1234"), now))
+        assertFalse(shouldRetryClaim(Settings(url, "", "sid.${now + 60}.1.0.0123456789abcdef.${"a".repeat(32)}"), now))
+        assertFalse(shouldRetryClaim(Settings("", "", held), now))
+    }
 }

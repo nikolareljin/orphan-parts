@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
  * served as the demo visitor, so this is how a write says the token in hand no longer opens. */
 const val DEMO_REFUSAL = "demo:"
 const val PAIRING_ENDED = "the pairing has ended; scan the code again"
+const val CLAIM_ENDED = "the pairing has ended; reload the signed-in page and scan its new code"
 const val OWN_CODE_ENDED = "this phone's code has ended or was revoked; scan the code on a signed-in page"
 
 /** The client and what opens the backend: the token in hand (a pairing, or a session opened
