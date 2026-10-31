@@ -13,11 +13,25 @@ from typing import Any, TextIO
 
 import httpx
 
+from app.config import Settings
 from app.extract.service import MAX_OUTPUT_TOKENS as EXTRACT_OUT
 from livecheck.ceilings import tokens
-from livecheck.report import FAIL, HEADER, PASS, SKIP, RefusedError, Result, Run, one_line, said
+from livecheck.report import (
+    FAIL,
+    HEADER,
+    PASS,
+    SKIP,
+    RefusedError,
+    Result,
+    Run,
+    one_line,
+    redact,
+    said,
+)
 
 WRITE_PROBE = {"item_type": "live check probe"}
+# the settings a host runs with when it sets none of its own
+HOST_DEFAULTS = Settings.model_construct()
 
 
 def _detail(response: httpx.Response) -> str:
@@ -29,7 +43,8 @@ def _detail(response: httpx.Response) -> str:
     detail = body.get("detail") if isinstance(body, dict) else None
     text = f"HTTP {response.status_code}"
     if isinstance(detail, str) and detail:
-        text += f": {detail[:120]}"
+        # redacted before it is cut, so no secret's head survives the cut
+        text += f": {redact(' '.join(detail.split()))[:120]}"
     return text
 
 
@@ -39,6 +54,17 @@ def _json(response: httpx.Response) -> dict[str, Any]:
     except ValueError:
         return {}
     return body if isinstance(body, dict) else {}
+
+
+def _remove_probe(http: httpx.Client, created: httpx.Response) -> str:
+    """Delete the item a write that should have been refused made; what came of it, in words."""
+    item_id = _json(created).get("id")
+    if not isinstance(item_id, int):
+        return "no item id in the answer, nothing removed"
+    gone = http.delete(f"/api/items/{item_id}")
+    if gone.status_code in (200, 204):
+        return f"probe item {item_id} removed"
+    return f"probe item {item_id} left in place ({_detail(gone)})"
 
 
 def _timed(op: str, fn: Callable[[], Result]) -> Result:
@@ -109,8 +135,16 @@ def run_remote(http: httpx.Client, *, code: str, max_usd: float, photo: bytes, o
         f" this run at most ${max_usd:.2f}",
         file=out,
     )
-    # the host's own output cap is not known from here: the ceiling is without one
-    most = tokens("muse-spark", EXTRACT_OUT, 0, images=1)
+    # the host's own settings are not known from here: the ceiling is without an output cap,
+    # at the defaults for the extract effort and the attempts
+    most = tokens(
+        "muse-spark",
+        EXTRACT_OUT,
+        0,
+        effort=HOST_DEFAULTS.extract_reasoning_effort,
+        images=1,
+        attempts=HOST_DEFAULTS.model_api_max_attempts,
+    )
     if host_live and headroom < max_usd:
         raise RefusedError(
             f"the host's spend cap leaves ${headroom:.4f}, below --max-usd {max_usd:.2f}"
@@ -164,10 +198,14 @@ def run_remote(http: httpx.Client, *, code: str, max_usd: float, photo: bytes, o
         if response.status_code == 403:
             return Result(op="write (no code)", status=PASS, note=_detail(response))
         if response.status_code < 400:
+            # the gate is broken: take the probe item back out, and fail all the same
             return Result(
                 op="write (no code)",
                 status=FAIL,
-                note=f"a write without the code was accepted (HTTP {response.status_code})",
+                note=(
+                    f"a write without the code was accepted (HTTP {response.status_code});"
+                    f" {_remove_probe(http, response)}"
+                ),
             )
         return Result(op="write (no code)", status=FAIL, note=_detail(response))
 

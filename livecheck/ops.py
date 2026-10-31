@@ -3,6 +3,7 @@ from the demo set in a temporary inventory. The spend ledger is the backend's ow
 the check spends counts against SPEND_CAP_USD like any other call."""
 
 import logging
+import math
 import tempfile
 import time
 from collections.abc import Awaitable, Callable
@@ -18,6 +19,7 @@ from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.listing import Lister
 from app.listing.schema import DraftRequest
+from app.listing.voice import VoiceNotes
 from app.match import Assessor
 from app.model_api import CostLedger, ModelApiClient
 from app.picture import Pictures
@@ -28,7 +30,7 @@ from app.segment import Segmenter
 from app.value import Valuer
 from app.value.schema import PriceRequest
 from livecheck import inputs
-from livecheck.ceilings import ceiling
+from livecheck.ceilings import Ceiling, ceiling
 from livecheck.report import FAIL, HEADER, PASS, SKIP, RefusedError, Result, Run, one_line, said
 
 # cheapest first; picture (Muse Image, priced per image) only when asked for by name
@@ -54,6 +56,7 @@ class Services:
     planner: Planner
     pictures: Pictures
     decider: Decider
+    voice: VoiceNotes
     item_id: int
     photo: bytes
     audio: bytes
@@ -123,6 +126,7 @@ def _wire(settings: Settings, client: ModelApiClient, ledger: CostLedger, out: T
         planner=planner,
         pictures=Pictures(settings, client, inventory, templates),
         decider=Decider(settings, client, inventory, templates, planner, valuer, finder),
+        voice=VoiceNotes(settings, client, inventory),
         item_id=created.id,
         photo=photo,
         audio=audio,
@@ -146,8 +150,12 @@ async def _segment(s: Services) -> str:
 
 
 async def _transcribe(s: Services) -> str:
-    heard = await s.client.transcribe(s.audio)
-    return f"{heard.seconds:.1f}s heard, {len(heard.text)} chars, from_fixture={heard.from_fixture}"
+    # the route's own service: the length check before the call, the empty check after it
+    heard = await s.voice.note(s.item_id, s.audio)
+    return (
+        f"{heard.seconds:.1f}s heard, {len(heard.transcript)} chars,"
+        f" from_fixture={heard.from_fixture}"
+    )
 
 
 async def _listing_text(s: Services) -> str:
@@ -201,7 +209,7 @@ CALLS: dict[str, Callable[[Services], Awaitable[str]]] = {
 # --- the run -------------------------------------------------------------------------------
 
 
-async def _one(s: Services, op: str) -> Result:
+async def _one(s: Services, op: str, live: bool) -> Result:
     before = len(s.ledger.entries())
     started = time.perf_counter()
     try:
@@ -212,6 +220,10 @@ async def _one(s: Services, op: str) -> Result:
         status = FAIL
     ms = round((time.perf_counter() - started) * 1000, 1)
     entries = s.ledger.entries()[before:]
+    if live and status == PASS and not any(not e.fixture for e in entries):
+        # a live pass is a call the API answered and billed, not a recording or a cache
+        status = FAIL
+        note = f"no live call on the ledger for this op; {note}"
     return Result(
         op=op,
         model=entries[-1].model if entries else "-",
@@ -225,11 +237,31 @@ async def _one(s: Services, op: str) -> Result:
     )
 
 
+def plan(ops: list[str], ceilings: dict[str, Ceiling], beyond: list[str], max_usd: float) -> str:
+    """What the guard will do with ``ops`` at ``max_usd``, said before the first call."""
+    total = sum(c.usd for c in ceilings.values())
+    if total <= max_usd:
+        return f"ceilings: ${total:.4f} for {len(ops)} ops, under --max-usd {max_usd:.2f}"
+    text = f"ceilings: ${total:.4f} for {len(ops)} ops, above --max-usd {max_usd:.2f};"
+    if beyond:
+        named = ", ".join(
+            f"{op} (${ceilings[op].usd:.4f}; alone: --ops {op} --max-usd"
+            f" {math.ceil(ceilings[op].usd * 100) / 100:.2f})"
+            for op in beyond
+        )
+        text += f" skipped, each above it on its own: {named};"
+    return text + " the rest run while what is spent plus the next ceiling stays under it"
+
+
 async def run_api(ops: list[str], max_usd: float, keep_going: bool, out: TextIO) -> Run:
     """Every operation asked for, once each, cheapest first; the lines printed as they come."""
     with tempfile.TemporaryDirectory(prefix="livecheck-") as tmp:
         settings = _settings(Path(tmp))
         key = settings.model_api_key.get_secret_value() if settings.model_api_key else ""
+        if settings.record_fixtures:
+            # record mode makes real calls and writes what they answer into the recordings;
+            # refused even beside OPL_FAKE_API, which would only hide it
+            raise RefusedError("the live check does not record fixtures; unset OPL_RECORD_FIXTURES")
         live = settings.model_api_mode == "live"
         ledger = CostLedger(settings.spend_cap_usd, settings.spend_ledger_path)
         print(said("MODEL_API_KEY", key), file=out)
@@ -256,24 +288,35 @@ async def run_api(ops: list[str], max_usd: float, keep_going: bool, out: TextIO)
             else:
                 print("fixture mode: recorded answers, nothing spent, the guard is off", file=out)
             s = _wire(settings, client, ledger, out)
+            seconds = inputs.wav_seconds(s.audio)
+            ceilings = {op: ceiling(op, settings, audio_seconds=seconds) for op in ops}
+            beyond = [op for op in ops if ceilings[op].usd > max_usd]
+            if live:
+                print(plan(ops, ceilings, beyond, max_usd), file=out)
             run = Run()
             print(file=out)
             print(HEADER, file=out)
             stop = False
             for op in ops:
+                most = ceilings[op]
+                if live and op in beyond:
+                    run.results.append(
+                        Result(
+                            op=op,
+                            model=most.model,
+                            note=(
+                                f"ceiling ${most.usd:.4f} ({most.why}) is above --max-usd"
+                                f" {max_usd:.2f} on its own"
+                            ),
+                            planned=True,
+                        )
+                    )
+                    print(run.results[-1].line(), file=out)
+                    continue
                 if stop:
                     run.results.append(Result(op=op, note="not run"))
                     print(run.results[-1].line(), file=out)
                     continue
-                most = ceiling(
-                    op,
-                    spark=settings.model_spark,
-                    sam=settings.model_sam,
-                    voice=settings.model_voice,
-                    image=settings.model_image,
-                    audio_seconds=inputs.wav_seconds(s.audio),
-                    cap=settings.model_max_output_tokens,
-                )
                 if live and run.spent + most.usd > max_usd:
                     run.results.append(
                         Result(
@@ -289,7 +332,7 @@ async def run_api(ops: list[str], max_usd: float, keep_going: bool, out: TextIO)
                     print(run.results[-1].line(), file=out)
                     stop = not keep_going
                     continue
-                result = await _one(s, op)
+                result = await _one(s, op, live)
                 run.results.append(result)
                 print(result.line(), file=out)
                 if result.status == FAIL and not keep_going:

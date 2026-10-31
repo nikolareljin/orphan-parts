@@ -24,8 +24,9 @@
 #                      and cost (spends real credit, at most --max-usd, default 0.25); with
 #                      --against, the same proof over HTTP against a running backend, signed
 #                      in with LIVECHECK_ACCESS_CODE from the environment; OPL_FAKE_API=1
-#                      replays the recordings and spends nothing (livecheck/README.md)
-#   e2e              Playwright against the dev stack in fixture mode (E2E_KEEP=1 leaves it up)
+#                      replays the recordings and spends nothing; never records fixtures
+#                      (livecheck/README.md)
+#   e2e                Playwright against the dev stack in fixture mode (E2E_KEEP=1 leaves it up)
 #   lint               ruff, mypy, eslint, tsc
 #   fmt                ruff format, eslint --fix
 #   docs               serve the docs site at :8001 with live reload
@@ -292,12 +293,15 @@ cmd_check_api() {
 }
 
 # One call per Model API operation, through the product's own code, in the backend image with
-# livecheck/ mounted read-only (never in an image). Live mode is the shell's or .env's key and
-# OPL_FAKE_API unset or 0; OPL_FAKE_API=1 replays the recordings. The access code for --against
-# is LIVECHECK_ACCESS_CODE from the shell or .env, read by name and passed on, never an argument.
+# livecheck/ mounted read-only (never in an image). Live mode is a key in the shell or .env and
+# OPL_FAKE_API off; OPL_FAKE_API on replays the recordings; recording is always off. No secret
+# value is read here, so none can reach a trace (-d) or an argument list: .env is read with
+# tracing off (env_get walks every line of it), the key is checked for presence only, and both
+# it and the code reach the check by name, from the shell when set there, else from .env (the
+# container's env_file, or env_load natively).
 cmd_live_check() {
   local usage="usage: ./dev live-check [--ops a,b,...] [--max-usd N] [--against local|hosted|URL] [--keep-going]"
-  local against="" args=() pass=()
+  local against="" args=() pass=() fake record
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --ops|--max-usd) [[ $# -ge 2 && -n "$2" ]] || die "$1 needs a value"; args+=("$1" "$2"); shift 2 ;;
@@ -309,11 +313,10 @@ cmd_live_check() {
     esac
   done
   need_env_file
-  local fake="${OPL_FAKE_API:-$(env_get OPL_FAKE_API "$ROOT/.env")}"
-  [[ "$fake" == "1" ]] || fake=0
-  # the two names the check may use, from the shell first, then .env; nothing else is read here
-  local key="${MODEL_API_KEY:-$(env_get MODEL_API_KEY "$ROOT/.env")}"
-  local code="${LIVECHECK_ACCESS_CODE:-$(env_get LIVECHECK_ACCESS_CODE "$ROOT/.env")}"
+  fake="$(_lc_flag OPL_FAKE_API "${OPL_FAKE_API:-$(_lc_quiet env_get OPL_FAKE_API "$ROOT/.env")}")" || exit 1
+  record="$(_lc_flag OPL_RECORD_FIXTURES "${OPL_RECORD_FIXTURES:-$(_lc_quiet env_get OPL_RECORD_FIXTURES "$ROOT/.env")}")" || exit 1
+  # recording makes real calls and writes their answers into backend/tests/fixtures/api
+  [[ "$record" == "0" ]] || die "live-check: the live check does not record fixtures; unset OPL_RECORD_FIXTURES"
   if [[ -n "$against" ]]; then
     case "$against" in
       local)
@@ -321,28 +324,59 @@ cmd_live_check() {
         if [[ "${NATIVE:-0}" == "1" ]]; then against="http://localhost:$BACKEND_PORT"; else against="http://backend:8000"; fi
         ;;
       hosted)
-        against="${API_URL:-$(env_get API_URL "$ROOT/.env")}"
+        against="${API_URL:-$(_lc_quiet env_get API_URL "$ROOT/.env")}"
         [[ -n "$against" ]] || die "live-check: --against hosted needs API_URL (the backend's https URL) in the shell or .env"
         ;;
       http://*|https://*) ;;
       *) die "$usage" ;;
     esac
     args+=(--against "$against")
-  elif [[ "$fake" != "1" && -z "$key" ]]; then
+  elif [[ "$fake" != "1" ]] && ! _lc_has MODEL_API_KEY; then
     die "live-check: MODEL_API_KEY is empty; set it in .env for a live run, or OPL_FAKE_API=1 for the dry run on recordings"
   fi
-  # both go by the environment, never on a command line: compose copies a name given without
-  # a value from the shell, and a value set in the shell wins over .env, as elsewhere in dev
-  [[ -z "${MODEL_API_KEY:-}" ]] || pass+=(-e MODEL_API_KEY)
-  if [[ -n "$code" ]]; then export LIVECHECK_ACCESS_CODE="$code"; pass+=(-e LIVECHECK_ACCESS_CODE); fi
+  # by name only: compose copies a name given without a value from the shell
+  [[ -z "${MODEL_API_KEY:+x}" ]] || pass+=(-e MODEL_API_KEY)
+  [[ -z "${LIVECHECK_ACCESS_CODE:+x}" ]] || pass+=(-e LIVECHECK_ACCESS_CODE)
   if [[ "${NATIVE:-0}" == "1" ]]; then
     venv_ensure "$BACKEND"
-    env_load "$ROOT/.env"
-    OPL_FAKE_API="$fake" PYTHONPATH="$ROOT" venv_run "$BACKEND" python -m livecheck "${args[@]+"${args[@]}"}"
+    _lc_quiet env_load "$ROOT/.env"
+    OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 PYTHONPATH="$ROOT" venv_run "$BACKEND" python -m livecheck "${args[@]+"${args[@]}"}"
   else
     docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
-    compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e PYTHONPATH=/opt/livecheck "${pass[@]+"${pass[@]}"}" backend python -m livecheck "${args[@]+"${args[@]}"}"
+    compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 -e PYTHONPATH=/opt/livecheck "${pass[@]+"${pass[@]}"}" backend python -m livecheck "${args[@]+"${args[@]}"}"
   fi
+}
+
+# _lc_flag NAME VALUE: a yes/no setting as 1 or 0; 1/true/yes/on and 0/false/no/off/empty in
+# any case, anything else refused with a line rather than read as either.
+_lc_flag() {
+  case "$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|on) printf '1' ;;
+    0|false|no|off|"") printf '0' ;;
+    *) log_error "live-check: $1 must be 1/true/yes/on or 0/false/no/off"; return 1 ;;
+  esac
+}
+
+# _lc_quiet CMD...: run CMD with tracing off (it handles secret values), then trace again if
+# tracing was on.
+_lc_quiet() {
+  local traced=0 rc=0
+  [[ $- == *x* ]] && traced=1
+  { set +x; } 2>/dev/null
+  "$@" || rc=$?
+  [[ $traced -eq 0 ]] || set -x
+  return $rc
+}
+
+# _lc_has NAME: succeeds when NAME has a value in the shell or a non-empty one in .env; the
+# value is never read into a variable, a trace or an argument.
+_lc_has() {
+  _lc_quiet _lc_has_value "$1"
+}
+
+_lc_has_value() {
+  [[ -n "${!1:-}" ]] && return 0
+  grep -Eq "^[[:space:]]*(export[[:space:]]+)?$1=[[:space:]]*([^[:space:]#\"']|\"[^\"]|'[^'])" "$ROOT/.env" 2>/dev/null
 }
 
 # Browser checks against the dev stack in fixture mode: no key, no credits. Playwright runs
