@@ -119,6 +119,16 @@ test('a public item shows the visitor neither its location nor its notes', async
     await expect(panel.getByText('Notes (private)')).toHaveCount(0)
     await expect(panel).not.toContainText('garage shelf B')
     await expect(panel).not.toContainText('paid 40 for it')
+    // the details are shown, never saved from here
+    await expect(panel.getByRole('button', { name: 'Save details' })).toHaveCount(0)
+    await expect(panel.locator('textarea[name="faults"]')).not.toBeEditable()
+
+    // a session opened in another tab shares the cookie; this page, loaded as the visitor,
+    // still offers no save, and the owner's values stay as they were
+    expect((await page.request.post('/api/access', { data: { code } })).ok()).toBe(true)
+    await expect(panel.getByRole('button', { name: 'Save details' })).toHaveCount(0)
+    const kept = (await (await owner.get(`/api/items/${id}`)).json()) as { location: string; notes: string }
+    expect(kept).toMatchObject({ location: 'garage shelf B', notes: 'paid 40 for it' })
   } finally {
     // the data volume outlives the run: the item leaves the public shelf
     await owner.post(`/api/items/${id}/public`, { data: { public: false } })

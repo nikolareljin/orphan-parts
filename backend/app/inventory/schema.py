@@ -83,9 +83,18 @@ class Item(ItemSummary):
     fields: dict[str, Assertion]
     assertions: list[Assertion]
     components: list[int]
+    redacted: bool = Field(
+        default=False,
+        description="served to the demo visitor: location, notes and voice notes left out, so"
+        " a client must not save these values back",
+    )
 
     # For the demo visitor the location and the notes are blank and the voice notes are left
     # out, wherever the item is answered; the owner gets it whole.
+    @field_serializer("redacted")
+    def _redacted(self, value: bool) -> bool:
+        return for_visitor()
+
     @field_serializer("location", "notes")
     def _owner_text(self, value: str) -> str:
         return "" if for_visitor() else value

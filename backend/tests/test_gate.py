@@ -518,6 +518,7 @@ def test_the_owner_gets_a_public_item_and_capture_whole(gated: TestClient) -> No
     item, capture = _public_records(gated)
     got = gated.get(f"/api/items/{item}").json()
     assert got["location"] == SECRETS[0] and got["notes"] == SECRETS[1]
+    assert got["redacted"] is False
     assert got["fields"]["condition_notes"]["value"] == SECRETS[2]
     assert any(a["source"] == "voice_note" for a in got["assertions"])
     kept = gated.get(f"/api/captures/{capture}").json()
@@ -539,6 +540,7 @@ def test_the_demo_visitor_never_gets_a_location_a_note_a_clip_or_a_voice_note(
     assert body["name"] == "Desk lamp" and body["condition"] == "works"
     assert body["fields"]["color"]["value"] == "green"
     assert body["location"] == "" and body["notes"] == ""
+    assert body["redacted"] is True  # so the page never saves these blanks back
     assert "condition_notes" not in body["fields"]
     assert all(a["source"] != "voice_note" for a in body["assertions"])
     listed = gated.get("/api/items").json()
@@ -576,3 +578,22 @@ def test_no_route_the_demo_visitor_reaches_carries_the_owners_text(gated: TestCl
         text = answer.content.decode("utf-8", "replace")
         for secret in SECRETS:
             assert secret not in text, (path, secret)
+
+
+def test_a_save_after_a_demo_load_leaves_the_location_and_notes_alone(gated: TestClient) -> None:
+    # a page loaded as the visitor, then a session opened in another tab (the cookie is shared):
+    # the page sends only what was changed, and the owner's location and notes stay
+    item, _ = _public_records(gated)
+    owner = dict(gated.cookies)
+    gated.cookies.clear()
+    seen = gated.get(f"/api/items/{item}").json()
+    assert seen["redacted"] is True
+    for name, value in owner.items():
+        gated.cookies.set(name, value)
+    saved = gated.patch(
+        f"/api/items/{item}", json={"faults": "flickers", "version": seen["version"]}
+    )
+    assert saved.status_code == 200, saved.text
+    after = gated.get(f"/api/items/{item}").json()
+    assert after["faults"] == "flickers"
+    assert after["location"] == SECRETS[0] and after["notes"] == SECRETS[1]
