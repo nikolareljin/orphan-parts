@@ -80,7 +80,8 @@ installs a file you already have.
 
 The pairing code never carries your access code; it carries the server's address and, once
 you are signed in, a pairing the server made for the phone, good for fifteen minutes. With it
-the app claims an access code of its own, which it keeps.
+the app claims an access code of its own, which it keeps. Every screen of this step, pictured:
+[Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/).
 
 1. On the phone's browser or on a laptop, open `https://orphan-parts.pages.dev`.
 2. Tap **Sign in with the code** in the header, enter the code, **Enter**. The header line

@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- A pictured guide to pairing the phone with the web app (`docs/start/pairing.md`): sign in, the footer's pairing code signed in and signed out, the scan, the typed address, a photo sent to the Inbox, and what a visitor gets with the code and without it; linked from the judges' guide, the README and the docs home.
+
 ## 0.3.0 - 2026-10-31
 
 ### Changed
