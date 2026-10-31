@@ -19,13 +19,20 @@ scan. The claim finishes even if the app is put away, and a pairing left unclaim
 on the next start while it lasts. The Backend tab names the code by its label and expiry, never
 the code itself. On the server, `./dev keys revoke "phone …"` cuts that phone off, and revoking
 the code that paired it ends it too; the app then says this phone's code has ended or was
-revoked, sends it no more and clears it from the Backend tab. A claimed code replaces a code
-typed on the Backend tab. A scan for another backend drops the code held for the old one. A
-code scanned from a page that is not signed in carries the address alone: the phone is the demo
-visitor there (recorded answers, nothing kept) until it scans a signed-in page. The address and
-the code can also be typed. **Check** reads `/readyz` and says whether the backend answers,
-which Model API mode it is in and whether the gate is on, then which code opens it. What is
-kept stays in the app's private storage.
+revoked, sends it no more and clears it from the Backend tab. **Unpair**, on the same tab,
+releases the phone from its own side: after a confirmation the app asks the backend to forget
+the session (`DELETE /api/access`, what Sign out calls) and empties what the pairing left, the
+address, the code, its label and expiry and the session, so the tab shows the empty form; a
+claim still running lands on nothing, and the next start finds no pairing to claim again. The
+phone's own code stays issued, since the app may not revoke it: on the server,
+`./dev keys revoke "phone …"` (`./dev keys --hosted revoke "phone …"` for the hosted demo)
+ends it, with its sessions, at once. A claimed code replaces a code typed on the Backend tab.
+A scan for another backend drops the code held for the old one. A code scanned from a page
+that is not signed in carries the address alone: the phone is the demo visitor there (recorded
+answers, nothing kept) until it scans a signed-in page. The address and the code can also be
+typed. **Check** reads `/readyz` and says whether the backend answers, which Model API mode it
+is in and whether the gate is on, then which code opens it. What is kept stays in the app's
+private storage.
 
 **Capture.** One session per thing: photos through the system camera app (so the app asks for
 no camera permission; four per capture), a clip of at most 30 seconds through the same app,

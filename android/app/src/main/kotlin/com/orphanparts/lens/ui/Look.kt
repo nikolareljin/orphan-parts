@@ -177,19 +177,21 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean 
     ) { Text(text) }
 }
 
-/** Outlined in the accent on the card color: every other action. */
+/** Outlined in the accent on the card color: every other action; in the error tone, one that
+ * takes something away. */
 @Composable
-fun SecondaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
+fun SecondaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean = true, tone: Tone = Tone.Accent, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val color = if (tone == Tone.Error) colors.error else colors.primary
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
         shape = MaterialTheme.shapes.small,
-        border = BorderStroke(1.dp, if (enabled) colors.primary else colors.outline),
+        border = BorderStroke(1.dp, if (enabled) color else colors.outline),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = colors.surface,
-            contentColor = colors.primary,
+            contentColor = color,
             disabledContainerColor = colors.surface,
             disabledContentColor = colors.onSurfaceVariant,
         ),

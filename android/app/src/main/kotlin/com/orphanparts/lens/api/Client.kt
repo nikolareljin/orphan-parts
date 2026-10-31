@@ -81,6 +81,17 @@ class Client(private val baseUrl: String, private val transport: Transport, toke
     /** Whether the token this client holds still opens the backend. */
     fun accessGranted(): Boolean = get("/api/access").optBoolean("granted", false)
 
+    /** Ends this client's hold on its session, as Sign out does in the browser: a backend that
+     * keeps the session in a cookie drops it; ours stores nothing, so the token runs to its own
+     * expiry. The token goes with the call and is forgotten here. */
+    fun leave() {
+        try {
+            check(transport.send("DELETE", baseUrl + "/api/access", headers(null), null))
+        } finally {
+            token = ""
+        }
+    }
+
     /** The phone's own code, claimed with the pairing this client holds; the backend gives it
      * once per pairing, and refuses a second claim and a browser's session. */
     fun phoneCode(): PhoneCode {

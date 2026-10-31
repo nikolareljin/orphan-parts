@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,6 +94,14 @@ fun startClaim(
     val (claimed, line) = claimPhoneCode(paired, previousUrl, transport) { keep(it) }
     val applied = withContext(NonCancellable) { keep(claimed) }
     if (applied != null) claimLine.value = line
+}
+
+/** On an unpair: what a pairing left outside the store goes too. A claim still running is
+ * canceled (its outcome would land on the emptied store and not apply, by `applyClaim`), and
+ * a line not yet shown is dropped. */
+fun forgetClaims() {
+    claims.coroutineContext.cancelChildren()
+    claimLine.value = ""
 }
 
 /** Whether the settings hold a claim the app was closed during: a pairing still current with
