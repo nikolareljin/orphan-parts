@@ -389,6 +389,14 @@ def test_only_an_origin_this_server_is_reached_at_goes_into_a_pairing(tmp_path: 
         assert unmarked.status_code == 422
         lan_image = {"Referer": lan + "/"}
         assert c.get("/api/pair.svg", params={"origin": lan}, headers=lan_image).status_code == 422
+        # with the mark, the Referer alone names the page: an <img> sends no Origin
+        marked = {"Referer": lan + "/", "Sec-Fetch-Site": "same-origin"}
+        assert c.get("/api/pair.svg", params={"origin": lan}, headers=marked).status_code == 200
+        # a chain of proxies lists hosts in X-Forwarded-Host; the first is the browser's
+        chain = {"Host": "backend:8000", "X-Forwarded-Host": "192.168.1.20:5173, proxy:80"}
+        assert c.get("/api/pair", params={"origin": lan}, headers=chain).status_code == 200
+        proxy = c.get("/api/pair", params={"origin": "http://proxy:80"}, headers=chain)
+        assert proxy.status_code == 422
     # the hosted page on another origin, named in CORS_ORIGINS, with the API's own origin
     pages = "https://orphan-parts.pages.dev"
     settings = gated(tmp_path / "hosted", cors_origins=pages)

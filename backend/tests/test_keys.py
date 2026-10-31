@@ -153,6 +153,14 @@ def test_a_phone_code_is_claimed_once_and_stands_with_its_parent(tmp_path: Path)
         keys.issue_child("phone other", 30, parent=guest.id, stamp="2026-01-01T00:00:00+00:00")
     with pytest.raises(AccessKeyError, match="another phone"):
         keys.issue_child("phone grand", 30, parent=phone.id, stamp=phone.created_at)
+    # a parent that runs out ends the phone's record with it
+    _, aging = keys.issue("aging", 2)
+    _, child = keys.issue_child("phone aging1", 30, parent=aging.id, stamp=aging.created_at)
+    assert keys.stamp(child.id) == child.created_at
+    past = (datetime.now(UTC) - timedelta(seconds=1)).replace(microsecond=0).isoformat()
+    with keys.store.connect() as conn:
+        conn.execute("UPDATE access_keys SET expires_at = ? WHERE id = ?", (past, aging.id))
+    assert keys.stamp(child.id) is None
     keys.revoke("guest")
     assert keys.match(code) is None and keys.stamp(phone.id) is None
     with pytest.raises(AccessKeyError, match="has ended"):
