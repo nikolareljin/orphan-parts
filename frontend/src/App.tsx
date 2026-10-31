@@ -194,13 +194,6 @@ export default function App() {
         </section>
       )}
 
-      {view === 'profile' && (
-        <section className="card">
-          <h2>Profile</h2>
-          <Profile />
-        </section>
-      )}
-
       <footer className="service" role="contentinfo" aria-label="Service">
         {status.kind === 'loading' && <span>Connecting to the server…</span>}
         {status.kind === 'error' && (
