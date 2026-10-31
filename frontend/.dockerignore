@@ -11,5 +11,5 @@ test-results
 playwright-report
 *.log
 .git
-# the live check at the repository root, never in the web image
+# belt and braces: the live check is outside this build context anyway
 livecheck

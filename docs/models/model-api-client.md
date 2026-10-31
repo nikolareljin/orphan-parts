@@ -111,6 +111,7 @@ reach and the ledger totals. No tokens are spent.
 
 Goes one step further and spends: one real call per operation the product makes, through its
 own services, each line with the model that answered, the tokens and the cost from this price
-table, held under `--max-usd` (default 0.25) and the ledger's headroom. `OPL_FAKE_API=1` runs
-the same on the recordings for nothing. [Testing](../development/testing.md#the-live-check)
+table, held under `--max-usd` (default 0.25; an operation whose ceiling alone is above it is
+named and skipped before the first call) and the ledger's headroom. `OPL_FAKE_API=1` runs the
+same on the recordings for nothing. [Testing](../development/testing.md#the-live-check)
 says what it covers; `livecheck/README.md` in the repository has the price per operation.

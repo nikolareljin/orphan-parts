@@ -48,8 +48,8 @@ demo/
 
 livecheck/
   README.md           the live check: one real Model API call per operation (./dev live-check),
-                      its price table, its two modes; mounted read-only into the backend
-                      container, never in an image
+                      its price table, its two modes; mounted read-only into every
+                      development backend container, never in an image or deployed
 
 scripts/
   lib/                bash helper modules used by ./dev
