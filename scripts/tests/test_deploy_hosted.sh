@@ -48,6 +48,7 @@ if [[ "\$1 \$2" == "container list" ]]; then
 fi
 if [[ "\$1 \$2" == "container stop" ]]; then
   [[ "\$3" == --yes ]] || exit 3
+  [[ -f "$dir/stop-errs" ]] && { grep -v " \$4\$" "$dir/containers" > "$dir/containers.new" || true; mv "$dir/containers.new" "$dir/containers"; echo "Error: container not found" >&2; exit 1; }
   [[ -f "$dir/stop-sticks" ]] || { grep -v " \$4\$" "$dir/containers" > "$dir/containers.new" || true; mv "$dir/containers.new" "$dir/containers"; }
   exit 0
 fi
@@ -238,6 +239,12 @@ test_hosted_backend_restarts_the_deployed_apps_containers_before_readyz() {
   assert_true grep -q 'ta-warm still running after 2 tries' <<<"$err"
   assert_false test -s "$dir/curl.log"
   rm "$dir/stop-sticks"
+  # a stop that errs for a container already gone: the wait finds it gone and the step goes on
+  touch "$dir/stop-errs"
+  out="$(_hosted_env "$dir" bash "$_hosted" backend 2>/dev/null)" && assert_true true || assert_true false
+  assert_true grep -q 'answered an error; checking whether it is gone' <<<"$out"
+  assert_true grep -q 'the old containers are gone' <<<"$out"
+  rm "$dir/stop-errs"
   # no deployed app by that name in the list: refused rather than skipped
   touch "$dir/no-deployed-app"
   err="$(_hosted_env "$dir" bash "$_hosted" backend 2>&1 >/dev/null)" && assert_true false || assert_true true

@@ -190,12 +190,18 @@ restart_containers() {
   fi
   while IFS= read -r id; do
     say "backend: stopping container $id so the next one reads the current secret"
-    "${modal_cmd[@]}" container stop --yes "$id" >/dev/null || fail "backend: modal container stop $id failed"
+    # one that ended on its own since the list refuses the stop; the wait below is the check
+    "${modal_cmd[@]}" container stop --yes "$id" >/dev/null \
+      || say "backend: modal container stop $id answered an error; checking whether it is gone"
   done <<<"$ids"
+  left="$ids"
   for ((i = 1; i <= tries; i++)); do
-    out="$("${modal_cmd[@]}" container list --app-id "$app_id" --json 2>/dev/null)" || out="[]"
-    left="$(printf '%s' "$out" | modal_json container "$app_id" | grep -Fxf <(printf '%s\n' "$ids") || true)"
-    [[ -z "$left" ]] && { say "backend: the old containers are gone"; return 0; }
+    # a list that fails or does not parse proves nothing: asked again after the pause
+    if out="$("${modal_cmd[@]}" container list --app-id "$app_id" --json 2>/dev/null)" \
+      && out="$(printf '%s' "$out" | modal_json container "$app_id")"; then
+      left="$(grep -Fxf <(printf '%s\n' "$ids") <<<"$out" || true)"
+      [[ -z "$left" ]] && { say "backend: the old containers are gone"; return 0; }
+    fi
     sleep "$wait"
   done
   fail "backend: container(s) ${left//$'\n'/, } still running after $tries tries"
