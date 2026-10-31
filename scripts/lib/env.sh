@@ -6,6 +6,21 @@ project_root() {
   (cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 }
 
+# untraced CMD...: run CMD (a function or a command, in this shell) with xtrace off, then turn
+# xtrace on again if it was on. Everything that reads a value out of .env or holds a secret runs
+# under it, so ./dev -d (set -x) or bash -x never prints such a value. A function that assigns
+# a value from .env to a variable is wrapped whole: the assignment would be traced too.
+untraced() {
+  local _untraced_x=0 _untraced_rc=0
+  [[ $- == *x* ]] && _untraced_x=1
+  { set +x; } 2>/dev/null
+  # not "|| rc=$?": that would turn errexit off inside CMD; under set -e a failure ends the
+  # script here, as it would have without the wrapper
+  "$@"; _untraced_rc=$?
+  [[ $_untraced_x -eq 0 ]] || set -x
+  return $_untraced_rc
+}
+
 # _env_value <raw>: a dotenv value as Compose reads it: inside quotes, the text up to the closing
 # quote; unquoted, cut at a " #" comment and trimmed at the end.
 _env_value() {
@@ -25,7 +40,8 @@ _env_value() {
 
 # env_load [file]: export KEY=value lines from a dotenv file. Ignores comments and blank lines.
 # Values are read as _env_value does. Existing exported variables win over the file.
-env_load() {
+env_load() { untraced _env_load "$@"; }
+_env_load() {
   local file="${1:-$(project_root)/.env}"
   [[ -f "$file" ]] || return 0
   local line key value loaded=" "
@@ -50,7 +66,8 @@ env_load() {
 # Empty output when the file or the key is missing. The value is read as in env_load; a key
 # given twice yields the last line, as Compose takes it; a CR at the end of a line (a file
 # saved with Windows line endings) is dropped in both.
-env_get() {
+env_get() { untraced _env_get "$@"; }
+_env_get() {
   local want="$1" file="${2:-$(project_root)/.env}"
   [[ -f "$file" ]] || return 0
   local line key value="" found=0
@@ -77,7 +94,8 @@ env_get() {
 # quoted by the caller (env_get and Compose both take the quotes off).
 _env_set_tmp=""
 _env_set_cleanup() { [[ -z "$_env_set_tmp" ]] || rm -f -- "$_env_set_tmp"; _env_set_tmp=""; }
-env_set() {
+env_set() { untraced _env_set "$@"; }
+_env_set() {
   local key="$1" value="$2" file="${3:-$(project_root)/.env}" done=0 line rest cr rc=0
   [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ && "$value" != *$'\n'* && "$value" != *$'\r'* ]] || return 1
   if [[ ! -f "$file" ]]; then

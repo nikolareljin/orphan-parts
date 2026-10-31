@@ -13,7 +13,7 @@ Docker images yourself on a host of your own, which stays supported.
 ### The backend on Modal
 
 ```bash
-pipx install modal && pipx inject modal python-dotenv && modal setup   # once, a browser login
+pipx install 'modal>=1.6.3' && pipx inject modal python-dotenv && modal setup   # once, a browser login
 modal secret create orphan-parts \
   MODEL_API_KEY=... DEMO_ACCESS_CODE=... SPEND_CAP_USD=20 OPL_FAKE_API=1 \
   CORS_ORIGINS=https://orphan-parts.pages.dev DEMO_COOKIE_SECURE=1 DEMO_TRUST_PROXY=1 API_DOCS=0
@@ -51,7 +51,12 @@ wrong URL at startup), the service runs in fixture mode too and `/readyz` report
 (key failed)` until a restart with a working key (`OPL_KEY_PROBE=0` turns that probe off);
 the deploy step treats that answer as a failure, so the web app is never built against a
 backend whose key is wrong. An API that is busy or down at startup (429, 5xx, a timeout)
-changes nothing: every request retries on its own. Changing the secret takes a redeploy. `modal app logs orphan-parts` streams the log; `modal volume ls orphan-parts-data`
+changes nothing: every request retries on its own. A running container keeps the secret it
+started with, and with `min_containers=1` one is always running, so a changed secret applies only
+once that container is replaced: `./dev deploy hosted backend` (and the workflow) does that on
+every deploy (see *From GitHub Actions*); after `modal secret create` and `./dev deploy modal`
+by hand, stop it yourself with `modal container list --json` and `modal container stop --yes
+<container id>` for each container of the deployed app. `modal app logs orphan-parts` streams the log; `modal volume ls orphan-parts-data`
 lists the data. The demo set goes into the host's inventory with
 `modal run deploy/modal_app.py::load_demo` (the inventory reset first; `--no-reset` adds to
 it), the same load as `./dev demo` on a machine of your own, in the mode the secret says;
@@ -84,7 +89,17 @@ settings in the environment and this machine's `modal` and `wrangler` logins:
    value quoted so that a `$`, a space or a `#` in a code or a key is kept as it is, and a
    value holding a single quote, a backslash or a newline refused before anything is written (every
    field, replaced), then `backend` runs `modal deploy deploy/modal_app.py`, reads the URL off
-   the output and waits for `/readyz` to answer `ok`;
+   the output, restarts the app's running containers and waits for `/readyz` to answer `ok`;
+   the restart is what makes a changed secret apply, since a warm container
+   (`OPL_MIN_CONTAINERS=1`) keeps the secret it started with: the step finds the deployed app
+   `orphan-parts` with `modal app list --json`, stops each of its containers from `modal
+   container list --app-id <id> --json` with `modal container stop --yes` (an ephemeral run
+   of the same app, a `load_demo` or `keys` command, is left alone), and waits until they are
+   gone (`READY_TRIES` times `READY_WAIT` seconds, 12 times 5 by default) before it asks
+   `/readyz`, so the answer comes from a container that read the current secret; a container
+   that does not go fails the step. With no container running (scaled to zero) there is
+   nothing to stop. It needs the modal command 1.6.3 or later (the workflow installs that); no
+   secret value is printed, only container ids;
 2. **web**: builds the web app against that URL and publishes `frontend/dist` to the Pages
    project, creating the project when it does not exist yet.
 
@@ -112,8 +127,8 @@ here; the values live there and in the operator's password manager.
 
 A `WEB_ORIGIN` on `pages.dev` that is not the project's own is refused before anything is
 published, so the backend never allows one origin while browsers use another. The workflow
-uses only `actions/checkout`, `actions/setup-python` and `actions/setup-node`; `modal` is
-installed with pip and `wrangler` runs with `npx`. The ssh deploy job of the release workflow
+uses only `actions/checkout`, `actions/setup-python` and `actions/setup-node`; `modal`
+(1.6.3 or later, below 2) is installed with pip and `wrangler` runs with `npx`. The ssh deploy job of the release workflow
 is a different path (a host of your own) and stays inert on its own switch.
 
 Across origins the gate's cookie cannot travel, so the web app keeps the session token from
