@@ -6,3 +6,14 @@ answers. Outside a request it is True, so commands and tests behave as the owner
 from contextvars import ContextVar
 
 live_request: ContextVar[bool] = ContextVar("live_request", default=True)
+
+# What the owner keeps to themselves on a record the demo visitor may read: where an item is,
+# its notes and the voice notes said about it, a capture's line, clip and spoken note. The
+# shapes blank these whenever they are serialized for the demo visitor, so every route that
+# answers the visitor (and any added later) leaves them out without remembering to.
+PRIVATE_SOURCES = frozenset({"voice_note"})
+
+
+def for_visitor() -> bool:
+    """Whether what is being answered goes to the demo visitor."""
+    return not live_request.get()

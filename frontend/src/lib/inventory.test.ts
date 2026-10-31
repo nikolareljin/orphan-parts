@@ -3,6 +3,7 @@ import type { Assertion, Item } from './api'
 import { ApiError } from './api'
 import {
   availabilityLabel,
+  changedDetails,
   detailsOf,
   intentLabel,
   isConflict,
@@ -99,5 +100,22 @@ describe('mergeDetails', () => {
   it('takes every server value after the details were saved', () => {
     const typed = { ...detailsOf(before), notes: 'typed ' }
     expect(mergeDetails(typed, null, { ...next, notes: 'typed' })).toEqual({ ...detailsOf(next), notes: 'typed' })
+  })
+})
+
+describe('changedDetails', () => {
+  const loaded = { ...item([]), location: 'garage shelf B', notes: 'paid 40', faults: '' }
+  it('sends only the fields that were changed, never an untouched location or notes', () => {
+    const body = changedDetails({ ...detailsOf(loaded), faults: 'flickers' }, loaded)
+    expect(body).toEqual({ faults: 'flickers' })
+    expect(body).not.toHaveProperty('location')
+    expect(body).not.toHaveProperty('notes')
+  })
+  it('sends a location or notes the owner did change, a clearing included', () => {
+    expect(changedDetails({ ...detailsOf(loaded), notes: '' }, loaded)).toEqual({ notes: '' })
+  })
+  it('sends nothing from an item served redacted to the demo visitor', () => {
+    const seen = { ...loaded, location: '', notes: '', redacted: true }
+    expect(changedDetails({ ...detailsOf(seen), faults: 'flickers', notes: 'typed' }, seen)).toEqual({})
   })
 })

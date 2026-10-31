@@ -1070,6 +1070,140 @@ button.link {
   margin-top: 0.75rem;
 }
 
+/* the search plan: phrasings, the pattern, listings brought back and ranked */
+.search-plan > section + section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.search-plan .phrasings,
+.search-plan .ranked {
+  margin: 0.25rem 0 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.search-plan .phrasings li {
+  margin: 0.3rem 0;
+  overflow-wrap: anywhere;
+}
+
+.search-plan .pattern {
+  flex: 1 1 20rem;
+}
+
+.search-plan .pattern input {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.search-plan .chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.6rem 0;
+}
+
+.search-plan .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.25rem 0.1rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.85rem;
+}
+
+/* the remove button: a 24 px target at least, however small the chip's text */
+.search-plan .chip button.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  color: var(--muted);
+  padding: 0 0.3rem;
+  font-size: 1rem;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.search-plan .chip-add input {
+  width: 9rem;
+  font-size: 0.85rem;
+}
+
+/* a narrow screen: the day seen and the screenshots each get the full width */
+@media (max-width: 600px) {
+  .search-plan .bring-back .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-plan .bring-back .row > label {
+    display: grid;
+    gap: 0.3rem;
+  }
+  .search-plan .bring-back .row input {
+    width: 100%;
+    min-width: 0;
+  }
+  .search-plan .bring-back .row > button {
+    align-self: flex-start;
+  }
+}
+
+.search-plan .ranked > li {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid #f1c40f;
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.search-plan .ranked > li.ranked-fits {
+  border-left-color: #27ae60;
+}
+
+.search-plan .ranked > li.ranked-no {
+  border-left-color: var(--error);
+}
+
+.search-plan .listing-text {
+  margin: 0.4rem 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 9rem;
+  overflow-y: auto;
+  font-size: 0.9rem;
+}
+
+.search-plan mark {
+  border-radius: 3px;
+  padding: 0 0.1rem;
+  color: inherit;
+}
+
+.search-plan mark.hit-match {
+  background: color-mix(in srgb, #27ae60 35%, transparent);
+}
+
+.search-plan mark.hit-excluded {
+  background: color-mix(in srgb, var(--error) 30%, transparent);
+  text-decoration: line-through;
+}
+
+.search-plan .fit {
+  margin-top: 0.4rem;
+}
+
+.search-plan .questions {
+  margin: 0.2rem 0;
+  padding-left: 1.25rem;
+}
+
 .badge.state.fits {
   background: #27ae60;
   color: #fff;
