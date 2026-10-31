@@ -89,6 +89,14 @@ class FindError(ValueError):
     """The request cannot be served as given (no profile, an unknown profile, a bad candidate)."""
 
 
+class BusyError(FindError):
+    """The same work is already under way (Check fit reading the same listing)."""
+
+
+# how long a Check fit in progress holds its listing; one older than this was cut off
+CHECKING_SECONDS = 300
+
+
 def today() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%d")
 
@@ -290,7 +298,8 @@ class Finder:
         # the head is the content without the listings, so a list of searches parses no listing
         content = json.loads(row["head"])
         plan = content.pop("plan", None)
-        content.pop("listings", None)
+        for kept_apart in ("listings", "checking", "next_listing_id"):
+            content.pop(kept_apart, None)
         return Search(
             plan=SearchPlan(**plan) if plan else None,
             listings=int(row["listing_count"]),
@@ -338,7 +347,9 @@ class Finder:
 
     async def plan(self, search_id: int) -> Search:
         """One Muse Spark call: the phrasings, the pattern and the exclusion words. A pattern
-        that fails the checks is not kept; the plan says why and the owner writes one."""
+        that fails the checks is not kept; the plan says why. Planned again, the pattern and the
+        words the owner saved stay, the written pattern offered beside them, and a refused one
+        never empties a pattern already kept."""
         search = self.search(search_id)
         result = await self.client.respond_structured(
             PlanWriting,
@@ -358,6 +369,14 @@ class Finder:
                 "",
                 f"the written pattern {written.pattern.strip()[:80]!r} was refused: {exc}",
             )
+        exclusions = clean_exclusions([*DEFAULT_EXCLUSIONS, *written.exclusions])
+        before, suggested, edited_at = search.plan, "", ""
+        if before is not None and before.edited_at:
+            # the owner's own pattern and words stay; the written pattern is offered
+            suggested = pattern if pattern != before.pattern else ""
+            pattern, exclusions, edited_at = before.pattern, before.exclusions, before.edited_at
+        elif before is not None and not pattern:
+            pattern = before.pattern
         plan = SearchPlan(
             phrasings=clean_phrasings(
                 written.phrasings,
@@ -367,8 +386,10 @@ class Finder:
             ),
             pattern=pattern,
             pattern_error=error,
+            suggested_pattern=suggested,
             # the usual words first, then the ones written for this need; the owner prunes
-            exclusions=clean_exclusions([*DEFAULT_EXCLUSIONS, *written.exclusions]),
+            exclusions=exclusions,
+            edited_at=edited_at,
             max_price=search.max_price,
             radius_km=search.radius_km,
             model=response.model,
@@ -411,7 +432,11 @@ class Finder:
         )
         update: dict[str, Any] = {"edited_at": stamp()}
         if edit.pattern is not None:
-            update |= {"pattern": edit.pattern.strip(), "pattern_error": ""}
+            update |= {
+                "pattern": edit.pattern.strip(),
+                "pattern_error": "",
+                "suggested_pattern": "",
+            }
         if edit.exclusions is not None:
             update["exclusions"] = clean_exclusions(edit.exclusions)
         return self._keep_plan(search_id, plan.model_copy(update=update))
@@ -460,7 +485,12 @@ class Finder:
             plan = SearchPlan(**content["plan"]) if content.get("plan") else None
             compiled = compiled_or_none(plan.pattern) if plan else None
             entries: list[dict[str, Any]] = content.setdefault("listings", [])
-            next_id = max((int(e["id"]) for e in entries), default=0) + 1
+            # ids only go up, so one removed is never given to another listing
+            next_id = max(
+                int(content.get("next_listing_id", 1)),
+                max((int(e["id"]) for e in entries), default=0) + 1,
+            )
+            content["next_listing_id"] = next_id + len(texts)
             added_at = stamp()
             for i, (kind, whole) in enumerate(texts):
                 text = whole.strip()[:SCAN_MAX]
@@ -487,11 +517,12 @@ class Finder:
     async def add_screenshots(
         self, search_id: int, shots: list[bytes], observed_on: str
     ) -> list[BroughtListing]:
-        """Screenshots of listings: the extractor reads each into text (one call each), then the
-        text is scored like a pasted listing."""
+        """Screenshots of listings: the extractor reads each into text (one call each), and each
+        is kept and scored like a pasted listing as soon as it is read, so a request cut off
+        part way keeps the readings it paid for."""
         if self.search(search_id).status == "closed":
             raise FindError("the search is closed; reopen it to bring listings back")
-        texts: list[tuple[str, str]] = []
+        kept: list[BroughtListing] | None = None
         for shot in shots:
             reading = await self.extractor.extract([shot])
             text = reading.label_text.strip()
@@ -499,11 +530,13 @@ class Finder:
                 values = [f"{k} {e.value} {e.unit}".strip() for k, e in reading.fields.items()]
                 text = "; ".join(values)
             if text:
-                texts.append(("screenshot", text))
-        if not texts:
+                # scoring, and the lock, stay off the event loop
+                kept = await asyncio.to_thread(
+                    self._add_listings, search_id, [("screenshot", text)], observed_on
+                )
+        if kept is None:
             raise FindError("no text could be read from the screenshots")
-        # scoring, and the lock, stay off the event loop
-        return await asyncio.to_thread(self._add_listings, search_id, texts, observed_on)
+        return kept
 
     def listings(self, search_id: int) -> list[BroughtListing]:
         content = json.loads(self.inventory.search(search_id)["content"])
@@ -524,23 +557,54 @@ class Finder:
     async def check_listing(self, search_id: int, listing_id: int) -> Candidate:
         """Check fit: the listing becomes a candidate, read by Muse Spark and assessed by the
         profile's rules, with the seller questions; the listing remembers which candidate."""
-        found = next((b for b in self.listings(search_id) if b.id == listing_id), None)
-        if found is None:
-            raise NotFoundError(f"no listing {listing_id} on search {search_id}")
+        found = await asyncio.to_thread(self._start_check, search_id, listing_id)
         if found.candidate_id is not None:
             return self.candidate(found.candidate_id)
-        candidate = await self.add_candidate(
-            search_id, CandidateCreate(text=found.text, observed_on=found.observed_on)
-        )
+        try:
+            candidate = await self.add_candidate(
+                search_id, CandidateCreate(text=found.text, observed_on=found.observed_on)
+            )
+        except BaseException:
+            await asyncio.to_thread(self._remember_candidate, search_id, listing_id, None)
+            raise
         await asyncio.to_thread(self._remember_candidate, search_id, listing_id, candidate.id)
         return candidate
 
-    def _remember_candidate(self, search_id: int, listing_id: int, candidate_id: int) -> None:
+    def _start_check(self, search_id: int, listing_id: int) -> BroughtListing:
+        """The listing to check, marked as being read so a second Check fit on it is refused
+        rather than paid for twice; a listing already checked comes back as it is."""
         with self.held(search_id):
             row = self.inventory.search(search_id)
             content = json.loads(row["content"])
+            entry = next(
+                (e for e in content.get("listings", []) if int(e["id"]) == listing_id), None
+            )
+            if entry is None:
+                raise NotFoundError(f"no listing {listing_id} on search {search_id}")
+            listing = BroughtListing(**entry)
+            if listing.candidate_id is not None:
+                return listing
+            checking: dict[str, str] = content.setdefault("checking", {})
+            since = checking.get(str(listing_id))
+            if since and datetime.now(UTC) - datetime.fromisoformat(since) < timedelta(
+                seconds=CHECKING_SECONDS
+            ):
+                raise BusyError("Check fit is already reading this listing")
+            checking[str(listing_id)] = stamp()
+            self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
+            return listing
+
+    def _remember_candidate(
+        self, search_id: int, listing_id: int, candidate_id: int | None
+    ) -> None:
+        """The candidate a listing became (None when the reading failed); either way the
+        listing is no longer being read."""
+        with self.held(search_id):
+            row = self.inventory.search(search_id)
+            content = json.loads(row["content"])
+            content.get("checking", {}).pop(str(listing_id), None)
             for entry in content.get("listings", []):
-                if int(entry["id"]) == listing_id:
+                if int(entry["id"]) == listing_id and candidate_id is not None:
                     entry["candidate_id"] = candidate_id
             self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
 

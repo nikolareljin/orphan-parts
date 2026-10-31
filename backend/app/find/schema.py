@@ -114,6 +114,10 @@ class SearchPlan(BaseModel):
     phrasings: list[Phrasing]
     pattern: str = Field(description="RE2 regular expression, case-insensitive; may be empty")
     pattern_error: str = Field(default="", description="why the written pattern was refused")
+    suggested_pattern: str = Field(
+        default="",
+        description="planned again over the owner's saved pattern: the written one, offered",
+    )
     exclusions: list[str]
     max_price: float | None
     radius_km: int | None

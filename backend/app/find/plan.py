@@ -139,7 +139,7 @@ def check_pattern(pattern: str) -> None:
                 raise PatternError("backreferences are not supported")
             if nxt == "C":
                 raise PatternError("\\C (any byte) is refused; use . for any character")
-            if nxt in ("p", "P") and pattern[i + 2 : i + 3] == "{":
+            if nxt in ("p", "P", "x") and pattern[i + 2 : i + 3] == "{":
                 close = pattern.find("}", i)
                 i = n if close < 0 else close + 1
             elif nxt == "Q":
@@ -258,14 +258,8 @@ def _free(text: str) -> bool:
     return False
 
 
-def price_of(text: str) -> float | None:
-    """The asking price, in dollars: the last one the text states, so "was $40 now $15" is 15;
-    a k after the number is thousands; 0 for 'free' when no number is given. A number that
-    goes on in groups of three after a space ("$1 200") is not guessed at: None."""
-    prices = list(_PRICE.finditer(text))
-    if not prices:
-        return 0.0 if _free(text) else None
-    found = prices[-1]
+def _amount(text: str, found: re.Match[str]) -> float | None:
+    """One stated amount in dollars, or None when it is not guessed at."""
     if found.group(1) is not None:
         whole, cents, thousands = found.group(1), found.group(2), found.group(3)
         if _GROUP_AFTER.match(text, found.end(2) if cents else found.end(1)) and not thousands:
@@ -276,6 +270,22 @@ def price_of(text: str) -> float | None:
             return None
     value = float(f"{whole.replace(',', '')}.{cents}" if cents else whole.replace(",", ""))
     return round(value * 1000, 2) if thousands else value
+
+
+def amounts_in(text: str) -> list[float | None]:
+    """Every dollar amount the text states, in order; None for one not guessed at."""
+    return [_amount(text, found) for found in _PRICE.finditer(text)]
+
+
+def price_of(text: str) -> float | None:
+    """The asking price, in dollars: the first amount the text states, as a Marketplace listing
+    puts the asking price first ("$20 (retail $50)" is 20, "$45 each or 2 for $80" is 45); a
+    k after the number is thousands; 0 for 'free' when no number is given. A number that goes
+    on in groups of three after a space ("$1 200") is not guessed at: None."""
+    stated = amounts_in(text)
+    if not stated:
+        return 0.0 if _free(text) else None
+    return stated[0]
 
 
 def money(value: float) -> str:
@@ -309,14 +319,30 @@ def score_listing(
             hits.append(Hit("match", found.start(), found.end(), found.group(0)))
     price = price_of(scan)
     price_ok: bool | None = None
+    # several amounts on both sides of the limit ("$40, $10 off for pickup", "$20, retail
+    # $50"): which one is asked is the owner's to read, so the price decides nothing
+    mixed = False
     if price is not None and max_price is not None and max_price > 0:
         price_ok = price <= max_price
+        others = {a for a in amounts_in(scan) if a is not None}
+        if any((a <= max_price) != price_ok for a in others):
+            mixed, price_ok = True, None
     if excluded:
         reasons.append("says " + ", ".join(f'"{w}"' for w in excluded))
     if price_ok is False and price is not None and max_price is not None:
         reasons.append(f"asks {money(price)}, over the limit of {money(max_price)}")
+    if mixed:
+        stated = sorted({a for a in amounts_in(scan) if a is not None})
+        reasons.append(
+            "states several prices (" + ", ".join(money(a) for a in stated) + "), some over"
+            f" the limit of {money(max_price or 0)}; check which one is asked"
+        )
     if excluded or price_ok is False:
         verdict = "no"
+    elif mixed:
+        verdict = "maybe"
+        if compiled is not None:
+            reasons.append("matches the pattern" if matched else "does not match the pattern")
     elif matched:
         verdict = "fits"
         reasons.append("matches the pattern")

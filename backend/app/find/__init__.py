@@ -18,10 +18,11 @@ from app.find.schema import (
     SearchPlan,
     SellerQuestions,
 )
-from app.find.service import Finder, FindError, handoff_url, seller_message, state_for
+from app.find.service import BusyError, Finder, FindError, handoff_url, seller_message, state_for
 
 __all__ = [
     "BroughtListing",
+    "BusyError",
     "Candidate",
     "CandidateCreate",
     "FindError",

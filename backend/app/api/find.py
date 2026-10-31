@@ -7,6 +7,7 @@ from app.api.deps import FinderDep, GateDep
 from app.api.model_errors import as_http
 from app.find import (
     BroughtListing,
+    BusyError,
     Candidate,
     CandidateCreate,
     FindError,
@@ -20,7 +21,8 @@ from app.find import (
     SellerQuestions,
 )
 from app.find.schema import seen_day
-from app.ops.gate import charge_more
+from app.inventory import NotFoundError
+from app.ops.gate import charge_more, give_back_request
 
 router = APIRouter(prefix="/api", tags=["find"])
 
@@ -36,6 +38,8 @@ MAX_SCREENSHOTS = 6
 
 
 def _find_error(exc: FindError) -> HTTPException:
+    if isinstance(exc, BusyError):
+        return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
     return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc))
 
 
@@ -129,20 +133,36 @@ async def add_listing_screenshots(
     observed_on: SeenPart = "",
 ) -> list[BroughtListing]:
     """Screenshots of listings, up to six: each is read into text by the extractor (one call
-    each, each counted against the allowance; refused whole when fewer are left) and scored
-    like a pasted listing."""
+    each, each counted against the allowance; refused whole when fewer are left) and kept and
+    scored like a pasted listing as soon as it is read."""
+
+    def refuse(code: int, detail: str) -> HTTPException:
+        # refused before any model call: the call the gate counted is given back
+        give_back_request(gate)
+        return HTTPException(status_code=code, detail=detail)
+
     if not screenshots or len(screenshots) > MAX_SCREENSHOTS:
-        raise HTTPException(status_code=422, detail=f"one to {MAX_SCREENSHOTS} screenshots")
+        raise refuse(422, f"one to {MAX_SCREENSHOTS} screenshots")
     try:
         seen = seen_day(observed_on)
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=f"observed_on: {exc}") from exc
-    max_mb = finder.settings.max_upload_mb
+        raise refuse(422, f"observed_on: {exc}") from exc
+    try:
+        search = finder.search(search_id)
+    except NotFoundError as exc:
+        raise refuse(404, str(exc)) from exc
+    if search.status == "closed":
+        raise refuse(422, "the search is closed; reopen it to bring listings back")
+    most = finder.settings.max_upload_mb * 1024 * 1024
     shots: list[bytes] = []
     for shot in screenshots:
-        if shot.size is not None and shot.size > max_mb * 1024 * 1024:
-            raise HTTPException(status_code=400, detail=f"a screenshot is larger than {max_mb} MB")
-        shots.append(await shot.read())
+        data = b"" if shot.size is not None and shot.size > most else await shot.read()
+        if not data or len(data) > most:
+            raise refuse(
+                400,
+                f"a screenshot is empty or larger than {finder.settings.max_upload_mb} MB",
+            )
+        shots.append(data)
     # the gate counted the request as one call; each further screenshot is one more reading
     refused = charge_more(gate, len(shots) - 1)
     if refused is not None:

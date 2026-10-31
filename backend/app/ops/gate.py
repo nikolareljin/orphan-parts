@@ -375,6 +375,17 @@ def charge_more(gate: Gate, count: int) -> tuple[str, int] | None:
     return None
 
 
+def give_back_request(gate: Gate) -> None:
+    """Uncount the call the gate counted for this request, when the route refuses it before
+    any model call (an unknown or closed search, too many or too large files)."""
+    key = spend_key.get()
+    if key is None:
+        return
+    gate.visitor.give_back(key, 1)
+    gate.daily.give_back(1)
+    spend_key.set(None)
+
+
 def _refused(status: int, detail: str, retry_after: int = 0) -> Response:
     headers = {"Retry-After": str(retry_after)} if retry_after else {}
     return JSONResponse({"detail": detail}, status_code=status, headers=headers)

@@ -1,9 +1,11 @@
+import asyncio
 import json
 import subprocess
 import sys
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -12,6 +14,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.extract import Extractor
 from app.find import (
+    BusyError,
     Finder,
     FindError,
     ListingsBack,
@@ -26,6 +29,7 @@ from app.find import (
 )
 from app.find.plan import MAX_PATTERN_LEN, SCAN_MAX, clean_exclusions, money, price_of
 from app.find.schema import Phrasing
+from app.find.schema import SearchPlan as PlanModel
 from app.find.service import MAX_LISTINGS, clean_phrasings
 from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
@@ -156,6 +160,8 @@ def test_every_adversarial_pattern_is_refused_or_answers_in_linear_time() -> Non
         (r"(a{0,30}){0,30}b", "expand past"),
         (r"(?:\w{0,20}\s){1,30}x", "expand past"),
         (r"\w++x", "compile"),
+        (r"\x{61}{999}", "expand past"),
+        (r"(\x{1}{300}){2}", "expand past"),
     ],
 )
 def test_what_the_engine_lacks_or_could_expand_is_refused_with_a_reason(
@@ -298,8 +304,11 @@ def test_prices_are_read_as_dollars() -> None:
     # another dollar is not a US one
     assert price_of("CA$30") is None
     assert price_of("US$30") == 30
-    # the last price stated is the asking one
-    assert price_of("was $40 now $15") == 15
+    # the first amount is the asking one: a listing states it first
+    assert price_of("$40, $10 off if you pick up today") == 40
+    assert price_of("$20 (retail $50)") == 20
+    assert price_of("$45 each or 2 for $80") == 45
+    assert price_of("2 batteries $60 (will sell separately for $35)") == 60
     # a number in groups of three after a space is not guessed at
     assert price_of("$1 200") is None
     assert price_of("1 200 dollars") is None
@@ -438,6 +447,13 @@ async def test_a_written_pattern_that_fails_the_checks_is_not_kept(
     assert plan is not None and plan.pattern == ""
     assert "was refused" in plan.pattern_error and "lookahead" in plan.pattern_error
     assert plan.exclusions == ["for parts", "parts only", "broken", "not working", "does not work"]
+    # a refused pattern never empties one already kept, the owner's or a plan's
+    finder._keep_plan(search.id, plan.model_copy(update={"pattern": "adapter"}))
+    again = (await finder.plan(search.id)).plan
+    assert again is not None and again.pattern == "adapter" and "was refused" in again.pattern_error
+    finder.edit_plan(search.id, PlanEdit(pattern=r"19\.5\s?V"))
+    mine = (await finder.plan(search.id)).plan
+    assert mine is not None and mine.pattern == r"19\.5\s?V" and mine.suggested_pattern == ""
 
 
 def test_plan_and_listing_routes(recorded_client: TestClient) -> None:
@@ -599,3 +615,133 @@ def test_each_screenshot_is_counted_against_the_allowance(tmp_path: Path) -> Non
         assert c.post(url, files=shots(2)).status_code == 429
         assert c.post(url, files=shots(1)).status_code == 201
         assert c.get("/readyz").json()["demo"]["daily_used"] == 3
+
+
+def test_several_prices_either_side_of_the_limit_leave_the_price_undecided() -> None:
+    compiled = validate_pattern("battery|charger|cable")
+    cases = {
+        "charger $40, $10 off if you pick up today": (30, 40, [10, 40]),
+        "charger $20 (retail $50)": (30, 20, [20, 50]),
+        "cable $45 each or 2 for $80": (50, 45, [45, 80]),
+        "2 battery packs $60 (will sell separately for $35)": (50, 60, [35, 60]),
+    }
+    for text, (limit, first, stated) in cases.items():
+        score = score_listing(text, compiled, [], limit)
+        assert score.price == first, text
+        assert score.verdict == "maybe" and score.price_ok is None, text
+        assert "states several prices" in score.reasons[0], text
+        assert all(f"${a}" in score.reasons[0] for a in stated), text
+    # all on one side: the price decides as before
+    assert score_listing("charger $20 (retail $30)", compiled, [], 50).verdict == "fits"
+    assert score_listing("charger $60 (retail $90)", compiled, [], 50).verdict == "no"
+    # an exclusion word still rules it out
+    assert (
+        score_listing("charger $40, $60 new, for parts", compiled, ["for parts"], 50).verdict
+        == "no"
+    )
+
+
+async def test_screenshots_are_kept_as_they_are_read(
+    finder: Finder, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    search = finder.create(SearchCreate(profile="generic_item", title="DVI-D cable"))
+    reads = 0
+
+    async def extract(shots: list[bytes]) -> SimpleNamespace:
+        nonlocal reads
+        reads += 1
+        if reads == 2:
+            raise RuntimeError("cut off")
+        return SimpleNamespace(label_text=f"DVI-D cable {reads}, $4", fields={})
+
+    monkeypatch.setattr(finder.extractor, "extract", extract)
+    with pytest.raises(RuntimeError):
+        await finder.add_screenshots(search.id, [b"a", b"b", b"c"], "")
+    kept = finder.listings(search.id)
+    assert [b.text for b in kept] == ["DVI-D cable 1, $4"]
+
+
+def test_listing_ids_are_never_given_again(finder: Finder) -> None:
+    search = finder.create(SearchCreate(profile="generic_item", title="DVI-D cable"))
+    added = finder.add_listings(search.id, ListingsBack(texts=["one $1", "two $2"]))
+    newest = max(b.id for b in added)
+    finder.remove_listing(search.id, newest)
+    again = finder.add_listings(search.id, ListingsBack(texts=["three $3"]))
+    assert max(b.id for b in again) == newest + 1
+    assert finder.search(search.id).listings == 2
+
+
+async def test_check_fit_twice_at_once_reads_the_listing_once(
+    finder: Finder, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    search = finder.create(SearchCreate(profile="power_adapter", title="65 W adapter"))
+    listing = finder.add_listings(search.id, ListingsBack(texts=[FITS]))[0]
+    real = finder.add_candidate
+    calls = 0
+
+    async def slow(*args: object, **kwargs: object) -> object:
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0.1)
+        return await real(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(finder, "add_candidate", slow)
+    first, second = await asyncio.gather(
+        finder.check_listing(search.id, listing.id),
+        finder.check_listing(search.id, listing.id),
+        return_exceptions=True,
+    )
+    assert calls == 1
+    assert sorted(type(r).__name__ for r in (first, second)) == ["BusyError", "Candidate"]
+    made = first if isinstance(second, BusyError) else second
+    assert (await finder.check_listing(search.id, listing.id)).id == made.id  # type: ignore[union-attr]
+    assert calls == 1
+
+
+async def test_a_failed_check_fit_frees_the_listing(
+    finder: Finder, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    search = finder.create(SearchCreate(profile="power_adapter", title="65 W adapter"))
+    listing = finder.add_listings(search.id, ListingsBack(texts=[FITS]))[0]
+    real = finder.add_candidate
+
+    async def broken(*args: object, **kwargs: object) -> object:
+        raise RuntimeError("no answer")
+
+    monkeypatch.setattr(finder, "add_candidate", broken)
+    with pytest.raises(RuntimeError):
+        await finder.check_listing(search.id, listing.id)
+    monkeypatch.setattr(finder, "add_candidate", real)
+    assert (await finder.check_listing(search.id, listing.id)).assessment is not None
+
+
+async def test_planning_again_keeps_the_owners_pattern_and_offers_the_new_one(
+    finder: Finder,
+) -> None:
+    search = finder.create(SearchCreate(profile="power_adapter", title="65 W adapter"))
+    first = (await finder.plan(search.id)).plan
+    assert first is not None and first.pattern == EXAMPLE and first.suggested_pattern == ""
+    finder.edit_plan(search.id, PlanEdit(pattern=r"20\s?V", exclusions=["frayed"]))
+    again = (await finder.plan(search.id)).plan
+    assert again is not None and again.pattern == r"20\s?V" and again.exclusions == ["frayed"]
+    assert again.suggested_pattern == EXAMPLE and again.edited_at
+    assert PlanModel(**again.model_dump()).suggested_pattern == EXAMPLE
+    # saving clears the offer
+    saved = finder.edit_plan(search.id, PlanEdit(pattern=EXAMPLE)).plan
+    assert saved is not None and saved.suggested_pattern == ""
+
+
+def test_refused_screenshot_requests_cost_nothing(tmp_path: Path) -> None:
+    settings = gated_settings(tmp_path, fixtures_dir=RECORDED_FIXTURES)
+    with TestClient(create_app(settings)) as c:
+        c.post("/api/access", json={"code": CODE})
+        made = c.post("/api/searches", json={"profile": "generic_item", "title": "cable"}).json()
+        photo = ("screenshots", ("p.jpg", make_photo(), "image/jpeg"))
+        seven = c.post(f"/api/searches/{made['id']}/listings/screenshots", files=[photo] * 7)
+        assert seven.status_code == 422
+        unknown = c.post("/api/searches/999/listings/screenshots", files=[photo])
+        assert unknown.status_code == 404
+        c.patch(f"/api/searches/{made['id']}", json={"status": "closed"})
+        closed = c.post(f"/api/searches/{made['id']}/listings/screenshots", files=[photo] * 2)
+        assert closed.status_code == 422 and "closed" in closed.json()["detail"]
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 0
