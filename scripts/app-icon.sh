@@ -91,7 +91,9 @@ render() {  # render <svg> <png> <px>
 # viewBox, the end of the defs, the frame, and the end of the document. The defs close at the
 # top level before the frame, so the bled ground goes under the artwork; the frame is the one
 # '  <rect' line, then attribute lines only, closed by '     id="rect51" />', so the range that
-# drops it takes nothing else. The logo is read as Inkscape saves it, with LF line endings. A
+# drops it takes nothing else (an attribute Inkscape appends after the id is refused, not taken).
+# The bled ground paints with the logo's own bgGrad, so that has to be there, and the clip's id,
+# icon-shape, must not be. The logo is read as Inkscape saves it, with LF line endings. A
 # logo saved another way is refused before anything is written, instead of coming out broken,
 # uncropped, covered or with a shape of it dropped.
 
@@ -112,10 +114,12 @@ frame_fits() {
 logo_fits() {
   [[ "$(count 'viewBox="0 0 512 512"')" == 1 && "$(count '^   viewBox="0 0 512 512"$')" == 1 &&
      "$(count '^  <rect$')" == 1 && "$(count 'id="rect51"')" == 1 &&
-     "$(count '</defs>')" == 1 && "$(count '</svg>')" == 1 ]] &&
+     "$(count '</defs>')" == 1 && "$(count '</svg>')" == 1 &&
+     "$(count 'id="bgGrad"')" == 1 && "$(count 'icon-shape')" == 0 ]] &&
     frame_fits ||
     fail "$logo is not shaped as crop() expects (the root's viewBox, one </defs> before the" \
-      "frame, one frame '  <rect' of attributes ending at id=\"rect51\", one </svg>); update crop()"
+      "frame, one frame '  <rect' of attributes ending at id=\"rect51\", one </svg>, the" \
+      "gradient bgGrad, no id icon-shape); update crop()"
 }
 
 # A crop is used only when its edits took: the new viewBox once, the frame gone, the bled ground

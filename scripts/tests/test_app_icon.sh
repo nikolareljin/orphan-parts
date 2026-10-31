@@ -112,15 +112,18 @@ STUB
 # the line that says which: the logo's shape (the frame's id renamed; its close moved before its
 # open; a second id="rect51"; another shape folded into the frame; a second shape at the frame's
 # indent; the viewBox changed; a second </defs>; a second </svg>; the defs closing after the frame;
-# the only viewBox not the root's), or the crop (two bled grounds;
-# not well-formed, checked with python3, so skipped without it).
+# the only viewBox not the root's; a second viewBox beside the root's; a second defs after the
+# frame; the gradient renamed; the clip's id taken), or the crop (two bled grounds; not
+# well-formed, checked with python3, so skipped without it). No refusal is a shell error.
 _app_icon_refused() {  # _app_icon_refused <sed edit> <expected line>
-  local dir
+  local dir out
   dir="$(mktemp -d)" || { assert_true false; return; }
   _app_icon_tree "$dir"
   sed -i "$1" "$dir/docs/assets/logo.svg"
   assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
-  assert_true grep -q -- "$2" <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
+  out="$(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)" || true
+  assert_true grep -q -- "$2" <<< "$out"
+  assert_false grep -q 'syntax error' <<< "$out"
   assert_false test -e "$dir/frontend/public/brand.svg"
   assert_false test -e "$dir/inkscape.log"
   _app_icon_cleanup "$dir"
@@ -138,7 +141,11 @@ test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
     's|</defs>|</defs><defs></defs>|' \
     's|</svg>|<svg></svg></svg>|' \
     '/^  <\/defs>$/d; s|^     id="rect51" />$|     id="rect51" />\n  </defs>|' \
-    's/^   viewBox="0 0 512 512"$/   width="512"/; s|^  </defs>$|    <pattern viewBox="0 0 512 512" />\n  </defs>|'; do
+    's/^   viewBox="0 0 512 512"$/   width="512"/; s|^  </defs>$|    <pattern viewBox="0 0 512 512" />\n  </defs>|' \
+    's|^  </defs>$|    <pattern viewBox="0 0 512 512" />\n  </defs>|' \
+    's|^     id="rect51" />$|&\n  <defs></defs>|' \
+    's/bgGrad/frameGrad/g' \
+    's|^  </defs>$|    <clipPath id="icon-shape" />\n  </defs>|'; do
     _app_icon_refused "$edit" "$shape"
   done
   _app_icon_refused 's|^  </defs>$|  </defs>\n  <rect fill="url(#bgGrad)" />|' 'did not take'
@@ -147,8 +154,8 @@ test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
   fi
 }
 
-# What an Inkscape save can add is taken: a trailing blank line, a namespaced attribute on the
-# frame.
+# What a save can add is taken: a trailing blank line, a namespaced attribute on the frame
+# before its closing id.
 test_app_icon_takes_a_logo_saved_again() {
   local dir edit
   for edit in '$a\\' 's/^     id="rect51" \/>$/     inkscape:label="frame"\n     id="rect51" \/>/'; do
