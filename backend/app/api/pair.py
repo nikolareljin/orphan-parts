@@ -5,19 +5,34 @@ from fastapi.responses import Response
 
 from app.api.deps import GateDep, SettingsDep
 from app.keys import AccessKeyError
-from app.pairing import BadOriginError, Pairing, PhoneCode, pairing, phone_code, svg
+from app.pairing import (
+    BadOriginError,
+    Pairing,
+    PhoneCode,
+    pairing,
+    phone_code,
+    served_origins,
+    svg,
+)
 
 router = APIRouter(prefix="/api", tags=["ops"])
 log = logging.getLogger("app.gate")
+BROWSER_CLAIM = "a browser's session does not claim a phone's code; scan the QR code with the app"
 
 
-def _pairing(request: Request, origin: str, gate: GateDep, api: str = "") -> Pairing:
+def _pairing(
+    request: Request, origin: str, gate: GateDep, settings: SettingsDep, api: str = ""
+) -> Pairing:
     session = gate.verify(gate.token_of(request)) if gate.enabled else None
-    if session is not None and not session.live:
+    # only a browser through the door hands out a pairing; a pairing does not beget another
+    if session is not None and (not session.live or session.pairing):
         session = None
+    served = served_origins(request.headers, settings.cors_origin_list)
     try:
         kid, stamp = (session.kid, session.stamp) if session is not None else (0, "")
-        return pairing(origin, gate, api, kid=kid, stamp=stamp, visitor=session is None)
+        return pairing(
+            origin, gate, api, kid=kid, stamp=stamp, visitor=session is None, served=served
+        )
     except BadOriginError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
@@ -29,13 +44,15 @@ def pair(
     request: Request,
     response: Response,
     gate: GateDep,
+    settings: SettingsDep,
     origin: str = Query(description="the web app's origin"),
     api: str = Query(default="", description="the API's origin, when it is not the web app's"),
 ) -> Pairing:
     """What the phone needs: the origin to talk to and, when the demo is gated and the caller
-    is through the door, a session of its own. The demo visitor gets the origin alone, so a
-    phone paired from an anonymous page is the demo visitor as well."""
-    found = _pairing(request, origin, gate, api)
+    is through the door, a pairing of its own (PAIR_TOKEN_MINUTES long). The demo visitor gets
+    the origin alone, so a phone paired from an anonymous page is the demo visitor as well.
+    Both origins must be ones this server is reached at: the request's own, or CORS_ORIGINS."""
+    found = _pairing(request, origin, gate, settings, api)
     response.headers["Cache-Control"] = "no-store"
     return found
 
@@ -44,12 +61,13 @@ def pair(
 def pair_svg(
     request: Request,
     gate: GateDep,
+    settings: SettingsDep,
     origin: str = Query(description="the web app's origin"),
     api: str = Query(default="", description="the API's origin, when it is not the web app's"),
 ) -> Response:
     """The same, as a QR code the phone scans."""
     return Response(
-        svg(_pairing(request, origin, gate, api)),
+        svg(_pairing(request, origin, gate, settings, api)),
         media_type="image/svg+xml",
         headers={"Cache-Control": "no-store"},
     )
@@ -57,15 +75,25 @@ def pair_svg(
 
 @router.post("/pair/code", response_model=PhoneCode)
 def pair_code(request: Request, gate: GateDep, settings: SettingsDep) -> PhoneCode:
-    """The phone's own access code, claimed once with the session its pairing carried and
-    shown once: it opens a session through ``POST /api/access`` like a typed code after the
-    pairing's session ends. Without a gate there is nothing to give; without a session, 401;
-    a second claim, or a session whose code has ended, 403."""
+    """The phone's own access code, claimed once with the pairing its QR carried and shown
+    once: it opens a session through ``POST /api/access`` like a typed code. Without a gate
+    there is nothing to give. Each try counts against the address's code attempts (429 once
+    spent); no live pairing, 401; a browser's session, a second claim, or a pairing whose code
+    has ended, 403."""
     if not gate.enabled:
         return PhoneCode(gated=False)
+    ok, retry = gate.attempts.take(gate.client_ip(request))
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"too many tries; wait {retry} s",
+            headers={"Retry-After": str(retry)},
+        )
     session = gate.verify(gate.token_of(request))
     if session is None or not session.live or gate.keys is None:
         raise HTTPException(status_code=401, detail="the pairing has ended; scan the code again")
+    if not session.pairing:
+        raise HTTPException(status_code=403, detail=BROWSER_CLAIM)
     try:
         code, key = phone_code(session, gate.keys, settings.pair_code_days)
     except AccessKeyError as exc:

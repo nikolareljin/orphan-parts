@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     demo_paused: bool = False
     demo_trust_proxy: bool = False
     demo_cookie_secure: bool = False
+    # the session a pairing QR carries lasts minutes: long enough to scan and claim
+    pair_token_minutes: int = 15
     # how long the code a phone gets on its first scan lasts; never past the code that paired it
     pair_code_days: int = 30
     max_photos: int = 4
@@ -99,10 +101,12 @@ class Settings(BaseSettings):
             "demo_daily_calls",
             "demo_code_attempts",
             "demo_requests_per_minute",
-            "pair_code_days",
         ):
             if getattr(self, name) < 1:
                 raise ValueError(f"{name.upper()} must be at least 1")
+        for name, most in (("pair_token_minutes", 1440), ("pair_code_days", 3650)):
+            if not 1 <= getattr(self, name) <= most:
+                raise ValueError(f"{name.upper()} must be between 1 and {most}")
         code = self.demo_access_code.get_secret_value() if self.demo_access_code else ""
         if code and len(code) < 12:
             raise ValueError("DEMO_ACCESS_CODE must be at least 12 characters")

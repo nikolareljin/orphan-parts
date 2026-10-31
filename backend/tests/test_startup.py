@@ -226,6 +226,8 @@ def test_project_templates_are_packaged() -> None:
 
 
 def test_pairing_with_the_api_origin(client: TestClient) -> None:
+    # the hosted page: another origin, which the browser names, and the API's own
+    client.headers.update({"Origin": "https://site.example", "Host": "api.example"})
     found = client.get(
         "/api/pair", params={"origin": "https://site.example", "api": "https://api.example"}
     ).json()

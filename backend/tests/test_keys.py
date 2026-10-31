@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from app.inventory.store import Store
-from app.keys import PREFIX, AccessKeyError, AccessKeys, new_code
+from app.keys import PREFIX, AccessKeyError, AccessKeys, master_tag, new_code
 from app.keys.__main__ import main
 
 
@@ -99,18 +99,32 @@ def test_the_command_issues_lists_and_revokes(
     assert "revoked" in capsys.readouterr()[0]
 
 
-def test_a_code_claimed_once_takes_its_label_for_good(tmp_path: Path) -> None:
-    keys = keys_in(tmp_path)
-    until = datetime.now(UTC) + timedelta(days=2)
-    code, key = keys.issue("phone abcd1234", until=until, once=True)
-    assert key.expires_at == until.replace(microsecond=0).isoformat()
-    assert keys.get(key.id) == key and keys.get(9999) is None
+def test_a_phone_code_is_claimed_once_and_stands_with_its_parent(tmp_path: Path) -> None:
+    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"), master_tag("the-master-code"))
+    _, guest = keys.issue("guest", 2)
+    code, phone = keys.issue_child("phone abcd1234", 30, parent=guest.id, stamp=guest.created_at)
+    assert phone.expires_at == guest.expires_at and phone.parent_id == guest.id
+    assert keys.match(code) == phone and keys.stamp(phone.id) == phone.created_at
     with pytest.raises(AccessKeyError, match="already"):
-        keys.issue("phone abcd1234", until=until, once=True)
-    keys.revoke("phone abcd1234")
+        keys.issue_child("phone abcd1234", 30, parent=guest.id, stamp=guest.created_at)
+    # a stamp that is not the parent's (a reset reused the id) is a parent that has ended
+    with pytest.raises(AccessKeyError, match="has ended"):
+        keys.issue_child("phone other", 30, parent=guest.id, stamp="2026-01-01T00:00:00+00:00")
+    with pytest.raises(AccessKeyError, match="another phone"):
+        keys.issue_child("phone grand", 30, parent=phone.id, stamp=phone.created_at)
+    keys.revoke("guest")
+    assert keys.match(code) is None and keys.stamp(phone.id) is None
+    with pytest.raises(AccessKeyError, match="has ended"):
+        keys.issue_child("phone late", 30, parent=guest.id, stamp=guest.created_at)
+    # under the master code: tagged with it, and gone once the tag is another
+    code, phone = keys.issue_child("phone master1", 5, parent=0)
+    assert phone.master and phone.parent_id is None and keys.match(code) == phone
+    rotated = AccessKeys(keys.store, master_tag("a-new-master-code"))
+    assert rotated.match(code) is None and rotated.stamp(phone.id) is None
+    with pytest.raises(AccessKeyError, match="no master code"):
+        AccessKeys(keys.store).issue_child("phone none", 5)
+    # the label is taken for good, revoked or not; a plain issue sees only current codes
+    keys.revoke("phone master1")
     with pytest.raises(AccessKeyError, match="already"):
-        keys.issue("phone abcd1234", until=until, once=True)
-    keys.issue("phone abcd1234", 1)  # a plain issue sees only current codes, as before
-    with pytest.raises(AccessKeyError, match="passed"):
-        keys.issue("late", until=datetime.now(UTC) - timedelta(seconds=1))
-    assert keys.match(code) is None
+        keys.issue_child("phone master1", 5)
+    keys.issue("phone master1", 1)

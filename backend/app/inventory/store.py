@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -217,6 +217,13 @@ CREATE TABLE uses (
 CREATE INDEX uses_by_item ON uses (item_id);
 """
 
+# version 12: a phone's code names what paired it: the issued record, or a digest of the
+# master code it was claimed under, so it ends when that one does
+_SCHEMA_V12 = """
+ALTER TABLE access_keys ADD COLUMN parent_id INTEGER;
+ALTER TABLE access_keys ADD COLUMN master TEXT;
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -229,6 +236,7 @@ MIGRATIONS: dict[int, str] = {
     9: _SCHEMA_V9,
     10: _SCHEMA_V10,
     11: _SCHEMA_V11,
+    12: _SCHEMA_V12,
 }
 
 
