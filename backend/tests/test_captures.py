@@ -119,6 +119,10 @@ async def test_a_capture_without_photos_still_becomes_an_item(recorded_settings:
     done2 = await captures.process(spoken.id)
     item2 = captures.inventory.get(done2.item_id or 0)
     assert item2.name == "Capture" and item2.fields["condition_notes"].source == "voice_note"
+    # a line without a name names nothing: it stays in the notes
+    unnamed = captures.create(CaptureCreate(note="behind the paint cans"), [], None, None)
+    item3 = captures.inventory.get((await captures.process(unnamed.id)).item_id or 0)
+    assert item3.name == "Capture" and item3.notes == "behind the paint cans"
 
 
 def test_bundles_are_checked_before_anything_is_kept(recorded_settings: Settings) -> None:

@@ -84,3 +84,54 @@ test('the API answers the demo visitor with recordings and refuses every write',
   const access = (await (await request.get('/api/access')).json()) as { gated: boolean; granted: boolean; live: boolean }
   expect(access).toEqual({ gated: true, granted: false, live: false, token: '', expires_at: 0 })
 })
+
+test('a public item shows the visitor neither its location nor its notes', async ({ page, playwright, baseURL }) => {
+  test.skip(!code, 'the stack runs without a gate')
+  // the owner, signed in on a context of its own, makes an item with both and marks it public
+  const owner = await playwright.request.newContext({ baseURL })
+  expect((await owner.post('/api/access', { data: { code } })).ok()).toBe(true)
+  const name = `Shelf lamp ${Date.now().toString(36)}`
+  const made = await owner.post('/api/items', {
+    data: { name, item_type: 'desk lamp', location: 'garage shelf B', notes: 'paid 40 for it' },
+  })
+  expect(made.status()).toBe(201)
+  const id = ((await made.json()) as { id: number }).id
+  expect((await owner.post(`/api/items/${id}/public`, { data: { public: true } })).ok()).toBe(true)
+  const mine = (await (await owner.get(`/api/items/${id}`)).json()) as { location: string; notes: string }
+  expect(mine).toMatchObject({ location: 'garage shelf B', notes: 'paid 40 for it' })
+
+  try {
+    // the visitor's API answer carries neither
+    const seen = await page.request.get(`/api/items/${id}`)
+    expect(seen.status()).toBe(200)
+    const body = await seen.text()
+    expect(body).not.toContain('garage shelf B')
+    expect(body).not.toContain('paid 40 for it')
+
+    // and the dialog has no box for them
+    await page.goto('/')
+    await page.getByRole('button', { name: 'My inventory' }).click()
+    await page.getByRole('table', { name: 'Items' }).getByRole('row', { name }).getByRole('button', { name: 'Open' }).click()
+    const panel = page.getByRole('article', { name: `Item ${name}` })
+    await expect(panel).toContainText('desk lamp')
+    await expect(panel.getByText('Known faults')).toBeVisible()
+    await expect(panel.getByText('Where it is kept (private)')).toHaveCount(0)
+    await expect(panel.getByText('Notes (private)')).toHaveCount(0)
+    await expect(panel).not.toContainText('garage shelf B')
+    await expect(panel).not.toContainText('paid 40 for it')
+    // the details are shown, never saved from here
+    await expect(panel.getByRole('button', { name: 'Save details' })).toHaveCount(0)
+    await expect(panel.locator('textarea[name="faults"]')).not.toBeEditable()
+
+    // a session opened in another tab shares the cookie; this page, loaded as the visitor,
+    // still offers no save, and the owner's values stay as they were
+    expect((await page.request.post('/api/access', { data: { code } })).ok()).toBe(true)
+    await expect(panel.getByRole('button', { name: 'Save details' })).toHaveCount(0)
+    const kept = (await (await owner.get(`/api/items/${id}`)).json()) as { location: string; notes: string }
+    expect(kept).toMatchObject({ location: 'garage shelf B', notes: 'paid 40 for it' })
+  } finally {
+    // the data volume outlives the run: the item leaves the public shelf
+    await owner.post(`/api/items/${id}/public`, { data: { public: false } })
+    await owner.dispose()
+  }
+})
