@@ -76,8 +76,8 @@ variable `HOSTED_DEPLOY` is `true`; then it runs on **Run workflow** (choose `bo
 or `web`) and after every release tag. Its two jobs call `scripts/deploy-hosted.sh`, which
 also runs from a shell as `./dev deploy hosted [secret|backend|web|all]` (which reads the
 same names from your git-ignored `.env`, listed in `.env.example` with every secret empty, the
-shell winning; the host's code, cap and mode come only from `DEMO_ACCESS_CODE_HOSTED`,
-`SPEND_CAP_USD_HOSTED` and `OPL_FAKE_API_HOSTED`, so this machine's own never reach the host) with the same
+shell winning; the host's code, cap, mode and pictures come only from `DEMO_ACCESS_CODE_HOSTED`,
+`SPEND_CAP_USD_HOSTED`, `OPL_FAKE_API_HOSTED` and `PICTURE_ENABLED_HOSTED`, so this machine's own never reach the host) with the same
 settings in the environment and this machine's `modal` and `wrangler` logins:
 
 1. **backend**: `secret` writes the Modal secret `orphan-parts` from the settings below, each
@@ -107,6 +107,7 @@ here; the values live there and in the operator's password manager.
 | `API_URL` | optional: the backend URL for a web-only run; a backend job in the same run wins over it |
 | `OPL_FAKE_API` | `1` for recorded answers, `0` for the live models (default `1`) |
 | `SPEND_CAP_USD` | the ledger's cap on the host (default `20`) |
+| `PICTURE_ENABLED` | `1` lets the item dialog draw a picture with Muse Image (one call per click, counted in the ledger), `0` keeps pictures off (default `0`); anything else is refused before the secret is written |
 | `OPL_MIN_CONTAINERS` | `1` keeps the container warm, `0` lets it scale to zero (default `1`) |
 
 A `WEB_ORIGIN` on `pages.dev` that is not the project's own is refused before anything is
