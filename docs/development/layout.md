@@ -46,6 +46,11 @@ demo/
   photos/, notes/     scrubbed photos and WAV notes (written by ./dev demo-scrub)
   listings/           written listing examples, labelled as demo data
 
+livecheck/
+  README.md           the live check: one real Model API call per operation (./dev live-check),
+                      its price table, its two modes; mounted read-only into the backend
+                      container, never in an image
+
 scripts/
   lib/                bash helper modules used by ./dev
   android.sh          the app's tests, APKs, install, launch and smoke run (./dev android, ./dev phone)

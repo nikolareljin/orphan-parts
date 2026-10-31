@@ -104,3 +104,13 @@ Fixtures contain the model's reply and token counts, never the key.
 
 Runs one `GET /models` with the key from `.env` and prints the mode, the models the account can
 reach and the ledger totals. No tokens are spent.
+
+```bash
+./dev live-check
+```
+
+Goes one step further and spends: one real call per operation the product makes, through its
+own services, each line with the model that answered, the tokens and the cost from this price
+table, held under `--max-usd` (default 0.25) and the ledger's headroom. `OPL_FAKE_API=1` runs
+the same on the recordings for nothing. [Testing](../development/testing.md#the-live-check)
+says what it covers; `livecheck/README.md` in the repository has the price per operation.

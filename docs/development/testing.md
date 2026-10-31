@@ -136,6 +136,41 @@ compare link, the images), the release itself (every refusal, a dry run, a tag c
 pushed to a bare origin), and the deploy (the one remote command, with a stand-in for `ssh`
 that records it; what is not set up skipped or refused).
 
+## The live check
+
+```bash
+./dev live-check                         # one real call per operation, at most $0.25
+./dev live-check --ops segment,extract   # a few of them
+./dev live-check --ops picture           # Muse Image, only when named
+OPL_FAKE_API=1 ./dev live-check          # the dry run on the recordings: every op, $0
+./dev live-check --against local         # over HTTP against the stack on this machine
+./dev live-check --against hosted        # over HTTP against API_URL
+```
+
+Everything above runs on recorded answers. The live check is the one command that calls the
+Model API for real, on purpose: each operation the product makes (`segment`, `transcribe`,
+`extract`, `listing-text`, `draft`, `uses`, `propose`, `price`, and `picture` when named) once,
+through the service its route calls, on one item made from the demo set, with a line per
+operation: the model that answered, PASS or FAIL, milliseconds, input, output and reasoning
+tokens, the cost, and the exception's one-line message on failure. A live run spends real
+credit, a few cents for the default set (`price` with its web search and `propose` with its
+tool loop are the dearest, around a cent or two each; `segment` is a quarter of a cent); the
+guard stops before an operation whose ceiling would take the run past `--max-usd`, and the
+run refuses to start when the spend ledger has less headroom than that. With `--against` the
+proof runs over HTTP against a running backend: behind a gate, an extract without the code is
+answered from the recordings and a write is refused, then a session with
+`LIVECHECK_ACCESS_CODE` (from the environment, never an argument) reads the live models and
+signs out.
+
+The check lives in `livecheck/` at the repository root and runs in the backend image with that
+folder mounted read-only; it is in neither image and not on the host. `backend/tests/test_livecheck.py`
+pins that (the Modal image's three directories, no import from the app), runs the dry run as a
+subprocess with a placeholder key and asserts the key never appears in the output, and drives
+the HTTP proof against a gated app on recordings; `scripts/tests/test_livecheck.sh` scans every
+file under `livecheck/` and the `live-check` lines of `./dev` for anything that reads like a key,
+a token, a bearer header, a long hex or base64 run or an email address. `livecheck/README.md`
+has the price table.
+
 ## Fixture mode and recorded fixtures
 
 The Android app has unit tests on the JVM (`./dev android test`): the client's requests as
