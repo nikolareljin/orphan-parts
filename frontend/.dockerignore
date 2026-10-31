@@ -11,3 +11,5 @@ test-results
 playwright-report
 *.log
 .git
+# belt and braces: the live check is outside this build context anyway
+livecheck

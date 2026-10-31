@@ -24,6 +24,8 @@ services:
       - ./demo:/demo
       - ./eval:/eval
       - ./deploy:/deploy:ro
+      # the live check (./dev live-check), read-only and outside the image: never deployed
+      - ./livecheck:/opt/livecheck/livecheck:ro
       - app-data:/data
     ports:
       - "${BACKEND_PORT:-8000}:8000"

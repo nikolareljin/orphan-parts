@@ -143,6 +143,54 @@ compare link, the images), the release itself (every refusal, a dry run, a tag c
 pushed to a bare origin), and the deploy (the one remote command, with a stand-in for `ssh`
 that records it; what is not set up skipped or refused).
 
+## The live check
+
+```bash
+./dev live-check                         # one real call per operation, at most $0.25
+./dev live-check --ops segment,extract   # a few of them
+./dev live-check --ops price --max-usd 0.44  # the price call on its own
+./dev live-check --ops picture           # Muse Image, only when named
+OPL_FAKE_API=1 ./dev live-check          # the dry run on the recordings: the default set, $0
+./dev live-check --against local         # over HTTP against the stack on this machine
+./dev live-check --against hosted        # over HTTP against API_URL
+```
+
+Everything above runs on recorded answers. The live check is the one command that calls the
+Model API for real, on purpose: each operation the product makes (`segment`, `transcribe`,
+`extract`, `listing-text`, `draft`, `uses`, `propose`, `price`, and `picture` when named) once,
+through the service its route calls, on one item made from the demo set, with a line per
+operation: the model that answered, PASS or FAIL, milliseconds, input, output and reasoning
+tokens, the cost, and the exception's one-line message on failure. A live run spends real
+credit: `price`, with its web search, is the dearest at four to seven cents (`PRICE_MAX_SEARCHES` searches), `propose` and its
+tool loop a cent or more, `segment` a quarter of a cent. Each operation has a ceiling (its
+output budget and reasoning headroom, an input allowance, its searches, times the client's
+attempts); before the first call the run names every operation whose ceiling alone is above
+`--max-usd` (at the default 0.25, `propose` and `price`) and skips it, then stops before one
+whose ceiling would take the run past `--max-usd`, and refuses to start when the spend ledger
+has less headroom than that. It never records fixtures. With `--against` the proof runs over
+HTTP against a running backend: behind a gate, an extract without the code is answered from the
+recordings and a write is refused, then a session with `LIVECHECK_ACCESS_CODE` reads the live
+models and signs out. The access code is used in that mode only; it and the key come from the
+environment (the shell or `.env`), never an argument, and `./dev` passes them on by name
+without reading either value.
+
+The check lives in `livecheck/` at the repository root. It runs in a development backend
+container, where `docker-compose.yml` mounts the folder read-only, or on this machine in the
+backend's virtualenv with `NATIVE=1`; it is in no image and never deployed.
+`backend/tests/test_livecheck.py` pins that: the Modal app does not name it and adds the three
+known directories only, both images build from their own directories and copy nothing from
+outside them, the production overlay mounts nothing but the data volume, nothing in the app
+imports it. It also runs the dry run as a subprocess with a placeholder key and asserts the key
+never appears in the output, refuses record mode, checks the redaction, the ceilings and the
+live ledger rule, and drives the HTTP proof against a gated app on recordings.
+`scripts/tests/test_livecheck.sh` scans every file under `livecheck/` and the `live-check`
+lines of `./dev` for anything that reads like a credential, runs gitleaks over the folder when
+it is installed, fails unless the folder holds only tracked `.py` and `.md` files, and runs
+`./dev live-check` against a stand-in `docker` to show that it reads `OPL_FAKE_API` strictly,
+refuses to record, and traces no secret under `-d`. The `livecheck` lines in both
+`.dockerignore` files are belt and braces beside the build contexts. `livecheck/README.md` has
+the price table.
+
 ## Fixture mode and recorded fixtures
 
 The Android app has unit tests on the JVM (`./dev android test`): the client's requests as

@@ -18,6 +18,14 @@
 #   test [backend|frontend|scripts]
 #                      run the full check suite (default: all three)
 #   check-api          confirm the Model API key, the active mode and the spend ledger
+#   live-check [--ops a,b,...] [--max-usd N] [--against local|hosted|URL] [--keep-going]
+#                      one real call per Model API operation the product makes, through its
+#                      own services with the demo set's inputs, each line with model, tokens
+#                      and cost (spends real credit, at most --max-usd, default 0.25); with
+#                      --against, the same proof over HTTP against a running backend, signed
+#                      in with LIVECHECK_ACCESS_CODE from the environment; OPL_FAKE_API=1
+#                      replays the recordings and spends nothing; never records fixtures
+#                      (livecheck/README.md)
 #   e2e                Playwright against the dev stack in fixture mode (E2E_KEEP=1 leaves it up)
 #   lint               ruff, mypy, eslint, tsc
 #   fmt                ruff format, eslint --fix
@@ -248,7 +256,7 @@ test_scripts() {
 test_backend() {
   [[ -d "$BACKEND" ]] || { log_warn "backend: not in this tree yet, skipped"; return 0; }
   log_info "backend: ruff, mypy, pytest"
-  run_in backend sh -c 'ruff check . && ruff format --check . && mypy app && pytest -q'
+  run_in backend sh -c "ruff check . && ruff format --check . && mypy app && $LINT_LIVECHECK && pytest -q"
 }
 
 test_frontend() {
@@ -284,6 +292,93 @@ cmd_check_api() {
   fi
 }
 
+# One call per Model API operation, through the product's own code, in the backend image with
+# livecheck/ mounted read-only (never in an image). Live mode is a key in the shell or .env and
+# OPL_FAKE_API off; OPL_FAKE_API on replays the recordings; recording is always off. No secret
+# value is read here, so none can reach a trace (-d) or an argument list: .env is read with
+# tracing off (env_get walks every line of it), the key is checked for presence only, and both
+# it and the code reach the check by name, from the shell when set there, else from .env (the
+# container's env_file, or env_load natively).
+cmd_live_check() {
+  local usage="usage: ./dev live-check [--ops a,b,...] [--max-usd N] [--against local|hosted|URL] [--keep-going]"
+  local against="" args=() pass=() fake record
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --ops|--max-usd) [[ $# -ge 2 && -n "$2" ]] || die "$1 needs a value"; args+=("$1" "$2"); shift 2 ;;
+      --ops=*|--max-usd=*) args+=("$1"); shift ;;
+      --against) [[ $# -ge 2 && -n "$2" ]] || die "--against needs local, hosted or a URL"; against="$2"; shift 2 ;;
+      --against=*) against="${1#--against=}"; shift ;;
+      --keep-going) args+=("$1"); shift ;;
+      *) die "$usage" ;;
+    esac
+  done
+  need_env_file
+  fake="$(_lc_flag OPL_FAKE_API "${OPL_FAKE_API:-$(_lc_quiet env_get OPL_FAKE_API "$ROOT/.env")}")" || exit 1
+  record="$(_lc_flag OPL_RECORD_FIXTURES "${OPL_RECORD_FIXTURES:-$(_lc_quiet env_get OPL_RECORD_FIXTURES "$ROOT/.env")}")" || exit 1
+  # recording makes real calls and writes their answers into backend/tests/fixtures/api
+  [[ "$record" == "0" ]] || die "live-check: the live check does not record fixtures; unset OPL_RECORD_FIXTURES"
+  if [[ -n "$against" ]]; then
+    case "$against" in
+      local)
+        # inside the compose network the backend is the service by name; natively, this machine
+        if [[ "${NATIVE:-0}" == "1" ]]; then against="http://localhost:$BACKEND_PORT"; else against="http://backend:8000"; fi
+        ;;
+      hosted)
+        against="${API_URL:-$(_lc_quiet env_get API_URL "$ROOT/.env")}"
+        [[ -n "$against" ]] || die "live-check: --against hosted needs API_URL (the backend's https URL) in the shell or .env"
+        ;;
+      http://*|https://*) ;;
+      *) die "$usage" ;;
+    esac
+    args+=(--against "$against")
+  elif [[ "$fake" != "1" ]] && ! _lc_has MODEL_API_KEY; then
+    die "live-check: MODEL_API_KEY is empty; set it in .env for a live run, or OPL_FAKE_API=1 for the dry run on recordings"
+  fi
+  # by name only: compose copies a name given without a value from the shell
+  [[ -z "${MODEL_API_KEY:+x}" ]] || pass+=(-e MODEL_API_KEY)
+  [[ -z "${LIVECHECK_ACCESS_CODE:+x}" ]] || pass+=(-e LIVECHECK_ACCESS_CODE)
+  if [[ "${NATIVE:-0}" == "1" ]]; then
+    venv_ensure "$BACKEND"
+    _lc_quiet env_load "$ROOT/.env"
+    OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 PYTHONPATH="$ROOT" venv_run "$BACKEND" python -m livecheck "${args[@]+"${args[@]}"}"
+  else
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 -e PYTHONPATH=/opt/livecheck "${pass[@]+"${pass[@]}"}" backend python -m livecheck "${args[@]+"${args[@]}"}"
+  fi
+}
+
+# _lc_flag NAME VALUE: a yes/no setting as 1 or 0; 1/true/yes/on and 0/false/no/off/empty in
+# any case, anything else refused with a line rather than read as either.
+_lc_flag() {
+  case "$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|on) printf '1' ;;
+    0|false|no|off|"") printf '0' ;;
+    *) log_error "live-check: $1 must be 1/true/yes/on or 0/false/no/off"; return 1 ;;
+  esac
+}
+
+# _lc_quiet CMD...: run CMD with tracing off (it handles secret values), then trace again if
+# tracing was on.
+_lc_quiet() {
+  local traced=0 rc=0
+  [[ $- == *x* ]] && traced=1
+  { set +x; } 2>/dev/null
+  "$@" || rc=$?
+  [[ $traced -eq 0 ]] || set -x
+  return $rc
+}
+
+# _lc_has NAME: succeeds when NAME has a value in the shell or a non-empty one in .env; the
+# value is never read into a variable, a trace or an argument.
+_lc_has() {
+  _lc_quiet _lc_has_value "$1"
+}
+
+_lc_has_value() {
+  [[ -n "${!1:-}" ]] && return 0
+  grep -Eq "^[[:space:]]*(export[[:space:]]+)?$1=[[:space:]]*([^[:space:]#\"']|\"[^\"]|'[^'])" "$ROOT/.env" 2>/dev/null
+}
+
 # Browser checks against the dev stack in fixture mode: no key, no credits. Playwright runs
 # in its own image sharing the frontend container's network, as the host user so every file it
 # writes under e2e/ is yours.
@@ -310,8 +405,12 @@ cmd_e2e() {
   log_ok "end-to-end checks passed"
 }
 
+# The live check's own lint, from backend/ (its ruff and mypy settings): livecheck/ sits beside
+# the backend in a clone and is mounted read-only at /opt/livecheck/livecheck in the container.
+LINT_LIVECHECK='lc=/opt/livecheck/livecheck; [ -d "$lc" ] || lc=../livecheck; ruff check "$lc" && ruff format --check "$lc" && PYTHONPATH="${lc%/livecheck}" mypy "$lc"'
+
 cmd_lint() {
-  run_in backend sh -c 'ruff check . && ruff format --check . && mypy app'
+  run_in backend sh -c "ruff check . && ruff format --check . && mypy app && $LINT_LIVECHECK"
   run_in frontend sh -c 'npm ci --no-audit --no-fund --loglevel=error && npm run lint && npm run typecheck'
 }
 
@@ -577,6 +676,7 @@ case "$cmd" in
   logs) cmd_logs "$@" ;;
   test) cmd_test "$@" ;;
   check-api) cmd_check_api "$@" ;;
+  live-check) cmd_live_check "$@" ;;
   e2e) cmd_e2e "$@" ;;
   lint) cmd_lint "$@" ;;
   fmt) cmd_fmt "$@" ;;
