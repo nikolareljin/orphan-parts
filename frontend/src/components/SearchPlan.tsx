@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { api, type BroughtListing, type Candidate, type Item, type ListingScore, type PatternResult, type Search } from '../lib/api'
+import { ApiError, api, type BroughtListing, type Candidate, type Item, type ListingScore, type PatternResult, type Search } from '../lib/api'
 import { usd } from '../lib/format'
-import { askingPrice, highlightSegments, maxPriceLine, splitListings, stateLabel, stateTone, verdictLabel, verdictTone } from '../lib/find'
+import { WEB_SIGN_IN, askingPrice, highlightSegments, maxPriceLine, siteOf, splitListings, stateLabel, stateTone, verdictLabel, verdictTone, webLink, webSummary } from '../lib/find'
 
 const TEST_DELAY_MS = 350
 const MAX_SCREENSHOTS = 6
@@ -45,7 +45,18 @@ function Verdict({ score }: { score: ListingScore }) {
 }
 
 // Plan the search, keep the pattern, bring listings back and rank them, check the fit of one.
-export default function SearchPlan({ search, onChanged, onCandidate }: { search: Search; onChanged: (s: Search) => void; onCandidate?: (c: Candidate) => void }) {
+export default function SearchPlan({
+  search,
+  onChanged,
+  onCandidate,
+  demo = false,
+}: {
+  search: Search
+  onChanged: (s: Search) => void
+  onCandidate?: (c: Candidate) => void
+  // the demo visitor: no web search, the line to sign in instead
+  demo?: boolean
+}) {
   const plan = search.plan
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState<number | null>(null)
@@ -123,6 +134,7 @@ export default function SearchPlan({ search, onChanged, onCandidate }: { search:
           </button>
           <span className="muted">one Muse Spark call: phrasings, a match pattern and exclusion words</span>
         </div>
+        <WebSearch searchId={search.id} closed={search.status === 'closed'} demo={demo} onListings={setListings} />
         {/* a new plan starts the editor over; saving a word or the pattern keeps the test line */}
         <PatternEditor key={plan?.model ? plan.planned_at : 'by-hand'} search={search} onSaved={onChanged} />
       </section>
@@ -137,6 +149,51 @@ export default function SearchPlan({ search, onChanged, onCandidate }: { search:
         )}
         {listings.length > 0 && <Ranked searchId={search.id} listings={listings} onListings={setListings} onCandidate={onCandidate} />}
       </section>
+    </div>
+  )
+}
+
+// Search the web for the part: one call per click, the pages found land in the listings with
+// their links. Marketplace is not searched here; its links above stay links.
+function WebSearch({ searchId, closed, demo, onListings }: { searchId: number; closed: boolean; demo: boolean; onListings: (list: BroughtListing[]) => void }) {
+  const [busy, setBusy] = useState(false)
+  const [line, setLine] = useState('')
+  const [signIn, setSignIn] = useState(false)
+  const [error, setError] = useState('')
+
+  async function run() {
+    if (busy) return
+    setBusy(true)
+    setError('')
+    setLine('')
+    try {
+      const result = await api.find.searchWeb(searchId)
+      onListings(result.listings)
+      setLine(webSummary(result))
+    } catch (err: unknown) {
+      // a session that ended meanwhile: the visitor's line, not an error
+      if (err instanceof ApiError && err.status === 403) setSignIn(true)
+      else setError(message(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (demo || signIn) return <p className="muted web-search">{WEB_SIGN_IN}</p>
+  return (
+    <div className="web-search">
+      <div className="row">
+        <button type="button" onClick={() => void run()} disabled={busy || closed}>
+          {busy ? 'Searching…' : 'Search the web'}
+        </button>
+        <span className="muted">one Muse Spark call with web search; the pages it finds come back as listings with their links</span>
+      </div>
+      {line && <p className="meta">{line}</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
@@ -415,8 +472,13 @@ function Ranked({ searchId, listings, onListings, onCandidate }: { searchId: num
                 {b.score.price !== null && <strong>{askingPrice(b.score.price)}</strong>}
                 <span className="muted">{b.score.reasons.join('; ')}</span>
                 <span className="muted">
-                  · {b.source_kind === 'screenshot' ? 'screenshot' : 'pasted'}, seen {b.observed_on}
+                  · {b.source_kind === 'web' ? 'found on the web' : b.source_kind === 'screenshot' ? 'screenshot' : 'pasted'}, seen {b.observed_on}
                 </span>
+                {webLink(b.source_url) && (
+                  <a className="source-link" href={webLink(b.source_url)} target="_blank" rel="noopener noreferrer">
+                    {siteOf(webLink(b.source_url))}
+                  </a>
+                )}
               </div>
               <ListingText text={b.text} score={b.score} />
               <div className="row">

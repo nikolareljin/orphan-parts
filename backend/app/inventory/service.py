@@ -248,6 +248,32 @@ class Inventory:
             self._event(conn, item_id, change, version, at)
             return self._item(conn, item_id)
 
+    def add_observation(
+        self, item_id: int, field: str, value: str, *, confidence: float, source: Source, raw: str
+    ) -> Item:
+        """A value read off a photo, proposed for the owner to accept like any reading."""
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            conn.execute(
+                "INSERT INTO assertions (item_id, field, value, unit, provenance, confidence,"
+                " source, raw, review, at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (item_id, field, value, "", "observed", confidence, source, raw, "proposed", at),
+            )
+            version = self._bump(conn, row, at)
+            self._event(conn, item_id, f"{field} read as {value} ({source})", version, at)
+            return self._item(conn, item_id)
+
+    def note(self, item_id: int, change: str) -> Item:
+        """A change kept beside the item rather than in it (a photo added): a new version and a
+        line in the history, so a page showing the item knows to read it again."""
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            version = self._bump(conn, row, at)
+            self._event(conn, item_id, change, version, at)
+            return self._item(conn, item_id)
+
     def review(self, item_id: int, assertion_id: int, review: Review) -> Item:
         at = now()
         with self.store.connect() as conn:
@@ -1063,6 +1089,9 @@ class Inventory:
             ).fetchall()
         ]
         fields = current_fields(assertions)
+        # imported here: app.inventory.parent imports this package
+        from app.inventory.parent import needs_parent, profile_of
+
         components = [
             int(r["id"])
             for r in conn.execute(
@@ -1092,4 +1121,5 @@ class Inventory:
             assertions=assertions,
             components=components,
             public=bool(row["public"]),
+            needs_parent=needs_parent(fields, row["parent_id"], profile_of(row["profile"])),
         )

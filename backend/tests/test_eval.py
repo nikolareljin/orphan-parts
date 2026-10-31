@@ -41,7 +41,8 @@ async def test_the_run_scores_the_committed_set_and_writes_the_files(
     s = report.summary
     assert s.mode == "fixture" and s.cost_usd == 0.0
     # the set's photos are committed and recorded: every answer is a recording of this set
-    assert s.items == s.items_loaded == 10 and s.photos == 19
+    # 19 of the items and 3 of the device the agitator came from, read once
+    assert s.items == s.items_loaded == 10 and s.photos == 22
     assert s.stub_answers == 0 and s.skipped == []
     assert s.fields_read == 43
     assert (s.expected, s.matches) == (14, 14)

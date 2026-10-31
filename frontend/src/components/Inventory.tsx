@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, cameFrom, photoReadLine, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
 import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
+import ParentPrompt from './ParentPrompt'
 import Measure from './Measure'
 import { ItemSearch } from './SearchPlan'
 import Picture from './Picture'
@@ -294,7 +295,19 @@ function ItemPanel({
 
       <div className="item-section" data-section="facts">
         <h4>Facts</h4>
-        <ItemPhotos id={item.id} />
+        {asksForParent(item) ? (
+          <ParentPrompt item={item} readOnly={readOnly} save={(action) => apply(action)} />
+        ) : (
+          cameFrom(item) && (
+            <div className="came-from-block">
+              <p className="meta came-from">{cameFrom(item)}</p>
+              {photoReadLine(item) && <p className="meta photo-read">{photoReadLine(item)}</p>}
+              {/* the device's photos are the owner's: the demo visitor is never sent them */}
+              {!readOnly && <ItemPhotos key={`device-${item.version}`} id={item.id} device />}
+            </div>
+          )
+        )}
+        <ItemPhotos key={item.version} id={item.id} />
         <div className="row">
           <label>
             <span>Plan</span>
@@ -524,7 +537,7 @@ function ItemPanel({
 // The photos the item was read from (the capture's, or the label photos saved with it), a row
 // of thumbnails above the values to confirm, so each value can be checked against the picture.
 // One click makes a photo large, another shrinks it.
-function ItemPhotos({ id }: { id: number }) {
+function ItemPhotos({ id, device = false }: { id: number; device?: boolean }) {
   const [count, setCount] = useState<number | null>(null)
   const [big, setBig] = useState<number | null>(null)
 
@@ -532,8 +545,8 @@ function ItemPhotos({ id }: { id: number }) {
     let cancelled = false
     setCount(null)
     setBig(null)
-    api.items
-      .photos(id)
+    const counted = device ? api.items.devicePhotos(id) : api.items.photos(id)
+    counted
       .then((p) => {
         if (!cancelled) setCount(p.count)
       })
@@ -543,12 +556,12 @@ function ItemPhotos({ id }: { id: number }) {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, device])
 
   if (count === null || count < 0) return null
-  if (count === 0) return <p className="muted no-photos">No photos saved with this item.</p>
+  if (count === 0) return device ? null : <p className="muted no-photos">No photos saved with this item.</p>
   return (
-    <div className="item-photos" aria-label="Photos">
+    <div className="item-photos" aria-label={device ? 'Photos of the device' : 'Photos'}>
       {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
         <button
           key={n}
@@ -557,7 +570,7 @@ function ItemPhotos({ id }: { id: number }) {
           title={big === n ? 'Shrink' : 'Enlarge'}
           onClick={() => setBig(big === n ? null : n)}
         >
-          <GatedImage src={api.items.photoUrl(id, n)} alt={`Item photo ${n}`} loading="lazy" />
+          <GatedImage src={device ? api.items.devicePhotoUrl(id, n) : api.items.photoUrl(id, n)} alt={device ? `Device photo ${n}` : `Item photo ${n}`} loading="lazy" />
         </button>
       ))}
     </div>

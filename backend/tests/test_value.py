@@ -81,14 +81,17 @@ def test_only_a_comparable_a_page_backs_is_kept() -> None:
     out = output_with(["https://example.org/listings/one/"], ["HTTPS://www.example.org/cited"])
     found = [
         comparable(),
-        comparable(source_url="https://example.org/cited?ref=search#top", price=30),
+        comparable(source_url="https://example.org/cited?utm_source=search#top", price=30),
+        comparable(source_url="https://example.org/cited?id=999", price=35),
         comparable(source_url="https://example.org/nowhere", price=40),
         comparable(price=0),
         comparable(currency="EUR", price=19),
     ]
     kept, dropped, caveats = backed(found, out, "USD")
-    assert [c.price for c in kept] == [20.0, 30.0]  # a query string or fragment is the same page
-    assert dropped == 3
+    # tracking parameters or a fragment are the same page; another query is another page
+    assert [c.price for c in kept] == [20.0, 30.0]
+    assert kept[1].source_url == "HTTPS://www.example.org/cited"  # as the search gave it
+    assert dropped == 4
     assert kept[0].observed  # the day it was seen, when the page gave no date
     assert any("rest on no search result" in c for c in caveats)
     assert any("carried no price" in c for c in caveats)

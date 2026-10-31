@@ -1,4 +1,4 @@
-import type { Candidate, CandidateState, Highlight, ListingVerdict, SearchStatus, SourceKind } from './api'
+import type { Candidate, CandidateState, WebSearchResult, Highlight, ListingVerdict, SearchStatus, SourceKind } from './api'
 
 export const SOURCES: { value: SourceKind; label: string }[] = [
   { value: 'text', label: 'Listing text' },
@@ -151,4 +151,30 @@ export function askingPrice(amount: number): string {
 // The line under the search links: the max price they include, or none (null or 0 is no limit).
 export function maxPriceLine(maxPrice: number | null): string {
   return maxPrice !== null && maxPrice > 0 ? `Each link includes your max price, ${askingPrice(maxPrice)}.` : 'No max price set.'
+}
+
+// In place of the button for the demo visitor.
+export const WEB_SIGN_IN = 'Sign in with the access code to search the web.'
+
+// A link only to a web page: anything else a model wrote is shown as text, never followed.
+export function webLink(url: string | undefined): string {
+  const u = (url ?? '').trim()
+  return /^https?:\/\//i.test(u) ? u : ''
+}
+
+// The site part of a link, for the link's text.
+export function siteOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
+
+// One line on what a web search kept and left out.
+export function webSummary(result: WebSearchResult): string {
+  const found = result.added === 1 ? 'Added 1 page' : `Added ${result.added} pages`
+  const left = result.dropped > 0 ? ` ${result.dropped} left out: no search result showed ${result.dropped === 1 ? 'it' : 'them'}.` : ''
+  const again = result.added === 0 && result.notes.some((n) => n.includes('already')) ? ' Every page found is already in the list.' : ''
+  return `${found} to the listings.${left}${again}`
 }

@@ -12,7 +12,7 @@ from pydantic import (
 )
 
 from app.extract.schema import Extraction, Source
-from app.ops.door import PRIVATE_SOURCES, for_visitor
+from app.ops.door import PRIVATE_FIELDS, PRIVATE_SOURCES, for_visitor
 
 # How a value is known. An observation never goes away: a correction sits beside it.
 Provenance = Literal["observed", "owner_reported", "documented", "tested", "estimated"]
@@ -88,9 +88,15 @@ class Item(ItemSummary):
         description="served to the demo visitor: location, notes and voice notes left out, so"
         " a client must not save these values back",
     )
+    needs_parent: bool = Field(
+        default=False,
+        description="a part that cannot be tied to its device: no model number of its own and"
+        " no device it came from recorded; the app asks for the device",
+    )
 
-    # For the demo visitor the location and the notes are blank and the voice notes are left
-    # out, wherever the item is answered; the owner gets it whole.
+    # For the demo visitor the location and the notes are blank and the voice notes and the
+    # owner's words about the device a part came from are left out, wherever the item is
+    # answered; the owner gets it whole.
     @field_serializer("redacted")
     def _redacted(self, value: bool) -> bool:
         return for_visitor()
@@ -103,13 +109,19 @@ class Item(ItemSummary):
     def _owner_assertions(self, value: list[Assertion]) -> list[Assertion]:
         if not for_visitor():
             return value
-        return [a for a in value if a.source not in PRIVATE_SOURCES]
+        return [
+            a for a in value if a.source not in PRIVATE_SOURCES and a.field not in PRIVATE_FIELDS
+        ]
 
     @field_serializer("fields")
     def _owner_fields(self, value: dict[str, Assertion]) -> dict[str, Assertion]:
         if not for_visitor():
             return value
-        return {k: a for k, a in value.items() if a.source not in PRIVATE_SOURCES}
+        return {
+            k: a
+            for k, a in value.items()
+            if a.source not in PRIVATE_SOURCES and k not in PRIVATE_FIELDS
+        }
 
 
 class ItemCreate(BaseModel):

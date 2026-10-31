@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest'
 import type { Assertion, Item } from './api'
 import { ApiError } from './api'
 import {
+  PARENT_PROMPT,
+  asksForParent,
   availabilityLabel,
+  cameFrom,
   changedDetails,
   detailsOf,
   intentLabel,
   isConflict,
   mergeDetails,
+  parentPhotoLine,
+  photoReadLine,
   proposedCount,
   provenanceLabel,
   reviewLabel,
@@ -117,5 +122,41 @@ describe('changedDetails', () => {
   it('sends nothing from an item served redacted to the demo visitor', () => {
     const seen = { ...loaded, location: '', notes: '', redacted: true }
     expect(changedDetails({ ...detailsOf(seen), faults: 'flickers', notes: 'typed' }, seen)).toEqual({})
+  })
+})
+
+describe('the device a part came from', () => {
+  it('asks only when the server says the part cannot be tied to its device', () => {
+    expect(asksForParent({ ...item([]), needs_parent: true })).toBe(true)
+    expect(asksForParent({ ...item([]), needs_parent: false })).toBe(false)
+    // an item served before the flag existed, or none at all: nothing is asked
+    expect(asksForParent(item([]))).toBe(false)
+    expect(asksForParent(null)).toBe(false)
+    expect(PARENT_PROMPT).toContain('the label under its base is best')
+  })
+
+  it('says where an answered part came from', () => {
+    const a = (field: string, value: string): Assertion => ({ ...assertion(9, 'accepted'), field, value })
+    expect(cameFrom(item([]))).toBe('')
+    expect(cameFrom({ ...item([]), fields: { parent_device_model: a('parent_device_model', 'Hamilton Beach 729') } })).toBe('Came from: Hamilton Beach 729')
+    expect(
+      cameFrom({ ...item([]), fields: { parent_device_model: a('parent_device_model', 'Hamilton Beach 729'), parent_device: a('parent_device', 'the drink mixer') } }),
+    ).toBe('Came from: Hamilton Beach 729, the drink mixer')
+  })
+
+  it('says a model read off the photo is still to confirm', () => {
+    const read = (review: Assertion['review'], source: Assertion['source']): Item => ({
+      ...item([]),
+      fields: { parent_device_model: { ...assertion(9, review), field: 'parent_device_model', value: 'Hamilton Beach 729', source } },
+    })
+    expect(photoReadLine(read('proposed', 'photo'))).toBe('Read from the photo: Hamilton Beach 729. Confirm it in the fields.')
+    expect(photoReadLine(read('accepted', 'photo'))).toBe('')
+    expect(photoReadLine(read('accepted', 'user_edit'))).toBe('')
+    expect(photoReadLine(item([]))).toBe('')
+  })
+
+  it('says what a photo of the device gave', () => {
+    expect(parentPhotoLine('Hamilton Beach 729')).toBe('Read from the photo: Hamilton Beach 729. Confirm it in the fields.')
+    expect(parentPhotoLine('')).toContain('No model could be read')
   })
 })

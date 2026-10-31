@@ -44,5 +44,10 @@ def test_price_settings_are_checked() -> None:
     assert (
         Settings(OPL_FAKE_API=True, price_max_searches=10, _env_file=None).price_max_searches == 10
     )
+    assert Settings(OPL_FAKE_API=True, _env_file=None).part_max_searches == 4
+    for count in (0, 11):
+        with pytest.raises(ValueError, match="PART_MAX_SEARCHES"):
+            Settings(OPL_FAKE_API=True, part_max_searches=count, _env_file=None)
+    assert Settings(OPL_FAKE_API=True, part_max_searches=1, _env_file=None).part_max_searches == 1
     with pytest.raises(ValueError, match="CANDIDATE_DAYS"):
         Settings(OPL_FAKE_API=True, candidate_days=0, _env_file=None)

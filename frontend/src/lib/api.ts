@@ -194,6 +194,15 @@ export interface Item extends ItemSummary {
   components: number[]
   // served to the demo visitor: location, notes and voice notes left out, never to be saved back
   redacted?: boolean
+  // a part that cannot be tied to its device yet: the app asks which device it came from
+  needs_parent?: boolean
+}
+
+// A photo of the device a part came from: kept with the item, the model read off it proposed.
+export interface ParentPhoto {
+  item: Item
+  model: string
+  extraction: Extraction
 }
 
 export type ItemDetails = Pick<
@@ -603,12 +612,26 @@ export interface ListingScore {
 
 export interface BroughtListing {
   id: number
-  source_kind: 'text' | 'screenshot'
+  source_kind: 'text' | 'screenshot' | 'web'
   text: string
   observed_on: string
   added_at: string
   score: ListingScore
   candidate_id: number | null
+  // the page a web search found it on; never fetched by the app
+  source_url?: string
+}
+
+// What one "Search the web" kept: the ranked listings with the new ones in them.
+export interface WebSearchResult {
+  listings: BroughtListing[]
+  added: number
+  dropped: number
+  notes: string[]
+  searches: number
+  model: string
+  from_fixture: boolean
+  cost_usd: number
 }
 
 export interface PatternResult {
@@ -1191,6 +1214,10 @@ export const api = {
         `/api/items/${id}/photos`,
         photos.map((p): FormPart => ['uploads', p]),
       ),
+    // photos of the device a part came from: the owner's, kept apart from the part's own
+    devicePhotos: (id: number) => getJson<PhotoCount>(`/api/items/${id}/device-photos`),
+    devicePhotoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/device-photos/${n}`),
+    addParentPhoto: (id: number, photo: File) => postForm<ParentPhoto>(`/api/items/${id}/parent-photo`, [['photo', photo]]),
     measurements: (id: number) => getJson<Measurement[]>(`/api/items/${id}/measurements`),
     measure: (id: number, photo: File, request: MeasureRequest) =>
       postForm<Measurement>(`/api/items/${id}/measurements`, [
@@ -1245,6 +1272,7 @@ export const api = {
     withdraw: (id: number) => sendJson<Candidate>('POST', `/api/candidates/${id}/withdraw`),
     questions: (id: number) => getJson<SellerQuestions>(`/api/candidates/${id}/questions`),
     plan: (id: number) => sendJson<Search>('POST', `/api/searches/${id}/plan`),
+    searchWeb: (id: number) => sendJson<WebSearchResult>('POST', `/api/searches/${id}/web`),
     editPlan: (id: number, edit: { pattern?: string; exclusions?: string[] }) => sendJson<Search>('PATCH', `/api/searches/${id}/plan`, edit),
     testPattern: (spec: { pattern: string; exclusions: string[]; max_price: number | null; text: string }) => sendJson<PatternResult>('POST', '/api/find/pattern', spec),
     listings: (id: number) => getJson<BroughtListing[]>(`/api/searches/${id}/listings`),

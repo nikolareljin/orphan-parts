@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # how many web searches one price guidance may make: each is billed per query and hands
     # the model pages to read, so the count bounds the cost and the wait of a call
     price_max_searches: int = 4
+    # how many web searches one "Search the web" for a part may make, the same bound on cost
+    # and wait as the price call's, sent as max_tool_calls
+    part_max_searches: int = 4
     price_country: str = ""
     marketplace_create_url: str = "https://www.facebook.com/marketplace/create/item"
     marketplace_search_url: str = "https://www.facebook.com/marketplace/search/"
@@ -108,6 +111,8 @@ class Settings(BaseSettings):
             raise ValueError("PRICE_COUNTRY must be a two-letter ISO 3166-1 code, or empty")
         if not 1 <= self.price_max_searches <= 10:
             raise ValueError("PRICE_MAX_SEARCHES must be between 1 and 10")
+        if not 1 <= self.part_max_searches <= 10:
+            raise ValueError("PART_MAX_SEARCHES must be between 1 and 10")
         if self.candidate_days < 1:
             raise ValueError("CANDIDATE_DAYS must be at least 1")
         if "*" in self.cors_origin_list:

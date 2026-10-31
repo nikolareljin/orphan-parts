@@ -79,3 +79,28 @@ export function whenText(iso: string): string {
 export function isConflict(err: unknown): boolean {
   return err instanceof ApiError && err.status === 409
 }
+
+// The question the app asks about a part it cannot tie to its device.
+export const PARENT_PROMPT = "We couldn't tell which device this part came from. Tell us more about it, or add a photo of that device (the label under its base is best)."
+
+export function asksForParent(item: Item | null | undefined): boolean {
+  return item?.needs_parent === true
+}
+
+// What a photo of the device gave, in a line.
+export function parentPhotoLine(model: string): string {
+  return model ? `Read from the photo: ${model}. Confirm it in the fields.` : 'No model could be read from the photo. Tell us about the device instead.'
+}
+
+// Once answered, the device a part came from in a line: the model as read or typed, and the
+// owner's words (never sent to the demo visitor). Empty when neither is recorded.
+export function cameFrom(item: Item): string {
+  const said = [item.fields.parent_device_model?.value, item.fields.parent_device?.value].map((v) => v?.trim() ?? '').filter(Boolean)
+  return said.length ? `Came from: ${said.join(', ')}` : ''
+}
+
+// While the model read off a photo of the device is still to confirm, the line that says so.
+export function photoReadLine(item: Item): string {
+  const read = item.fields.parent_device_model
+  return read && read.source === 'photo' && read.review === 'proposed' ? parentPhotoLine(read.value) : ''
+}

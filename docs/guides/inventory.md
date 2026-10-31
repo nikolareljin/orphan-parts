@@ -38,6 +38,36 @@ from a broken phone, the cable from a charger. The part gets the parent's plan a
 back; the parent's faults note what left, so a later plan does not count on a whole device that
 is no longer whole.
 
+## The device a part came from
+
+Some parts carry no model number of their own: a blender's agitator, a vacuum's tool. When an
+item has a part profile (`blender_agitator`, `vacuum_attachment`; `part_of_device: true` in the
+profile), no model or part number of its own and no device recorded, the item dialog (and the
+*Read a label* result once saved) asks instead of guessing:
+
+> We couldn't tell which device this part came from. Tell us more about it, or add a photo of
+> that device (the label under its base is best).
+
+- **Device it came from**: a line in your words (brand, model, what it is), saved as the field
+  `parent_device` (source `user_edit`). It is yours like the notes: the demo visitor never gets
+  it, and it goes into no brief but the searches you run for the part.
+- **Add a photo of the device**: one label reading (one Muse Spark call); the brand and model
+  number read off it are proposed as `parent_device_model` (source `photo`) for you to accept,
+  and the dialog says *Read from the photo: ... Confirm it in the fields.* until you do. The
+  photo is kept as a photo of the device, apart from the part's own: it takes none of the
+  part's `MAX_PHOTOS`, never goes into a draft or the photo zip, and the demo visitor never
+  gets it. The dialog shows it under *Came from*.
+
+Either answer, a model number of the part's own, or a link to the device as its parent item
+clears the question; a rejected value does not. Once answered, the dialog says where the part
+came from in a line (*Came from: Hamilton Beach 729*). A photo that gives no model is kept all
+the same, as a new version of the item. The rule lives in the backend
+(`app/inventory/parent.py`) and is served on the item as `needs_parent`, so the web app and the
+phone ask the same. The demo visitor sees the question with no inputs. The device leads the
+part's [web search](search.md#search-the-web) and its search plan: the maker's own part for that
+device first. In the demo set the frappé maker's agitator is answered this way, by the Hamilton
+Beach drink mixer it came off (model 729, type DM01), from its label, its badge and the mixer.
+
 ## Measuring
 
 Under **Measure a feature** a dimension is taken from a photo with a scale reference and, when

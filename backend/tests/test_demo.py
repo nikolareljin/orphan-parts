@@ -392,3 +392,30 @@ async def test_a_search_with_a_need_keeps_its_own_profile(recorded_settings: Set
         await client.aclose()
     assert outcome.searches == 1 and not any("no profile" in x for x in outcome.skipped)
     assert loader.finder.searches()[0].profile == "generic_item"
+
+
+async def test_a_part_is_answered_by_the_device_it_came_from(recorded_settings: Settings) -> None:
+    # the device photos are read only from their own recording, never the extract stub: none is
+    # kept for this photo, so the model the set states is saved as typed and said not recorded
+    loader, client = build_loader(recorded_settings)
+    path = write_set(
+        recorded_settings.data_dir.parent / "demo",
+        "items:\n"
+        "  - key: rod\n    name: Agitator\n    profile: blender_agitator\n"
+        "    parent_photos: [photos/psu.jpg]\n"
+        "    parent_device: the drink mixer\n    parent_device_model: Hamilton Beach 729\n"
+        "  - {key: bare, name: Other agitator, profile: blender_agitator}\n",
+    )
+    try:
+        outcome = await loader.run(load_set(path), path.parent)
+    finally:
+        await client.aclose()
+    assert outcome.stub_answers == 0 and outcome.skipped == []
+    assert any("reading of the device photos" in u for u in outcome.unrecorded)
+    rod = loader.inventory.get(loader.ids["rod"])
+    assert rod.fields["parent_device_model"].value == "Hamilton Beach 729"
+    assert rod.fields["parent_device"].value == "the drink mixer"
+    assert rod.needs_parent is False
+    # the device photo is kept apart from the part's own
+    assert loader.photos.count(rod.id) == 0 and loader.device_photos.count(rod.id) == 1
+    assert loader.inventory.get(loader.ids["bare"]).needs_parent is True

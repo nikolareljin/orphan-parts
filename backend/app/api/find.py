@@ -19,6 +19,7 @@ from app.find import (
     SearchCreate,
     SearchPatch,
     SellerQuestions,
+    WebSearchResult,
 )
 from app.find.schema import seen_day
 from app.inventory import NotFoundError
@@ -78,6 +79,33 @@ async def plan_search(search_id: int, finder: FinderDep) -> Search:
     regular expressions; the pattern is applied here, to the listings brought back."""
     try:
         return await finder.plan(search_id)
+    except FindError as exc:
+        raise _find_error(exc) from exc
+    except Exception as exc:
+        raise as_http(exc) from exc
+
+
+@router.post("/searches/{search_id}/web", response_model=WebSearchResult)
+async def search_web(search_id: int, finder: FinderDep, gate: GateDep) -> WebSearchResult:
+    """Search the web: one Muse Spark call with web search (at most PART_MAX_SEARCHES searches)
+    for pages that offer the part, the device it came from first when it is recorded. Only a
+    page among the search results or the citations is kept; each becomes a listing with its
+    link, ranked by the plan and checked with Check fit like any other. Marketplace is not
+    searched: its links stay links."""
+    try:
+        search = finder.search(search_id)
+    except NotFoundError as exc:
+        # refused before any model call: the call the gate counted is given back
+        give_back_request(gate)
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if search.status == "closed":
+        give_back_request(gate)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="the search is closed; reopen it to search the web",
+        )
+    try:
+        return await finder.search_web(search_id)
     except FindError as exc:
         raise _find_error(exc) from exc
     except Exception as exc:
