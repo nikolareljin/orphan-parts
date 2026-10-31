@@ -329,6 +329,11 @@ def test_one_code_pairs_at_most_pair_code_max_phones(tmp_path: Path) -> None:
         keys.revoke(labels[0])
         assert claim(c, pair_token(c, session))[0] == 200
         assert claim(c, pair_token(c, session))[0] == 403
+        # and so does a phone's code that runs out
+        past = (datetime.now(UTC) - timedelta(seconds=1)).replace(microsecond=0).isoformat()
+        with keys.store.connect() as conn:
+            conn.execute("UPDATE access_keys SET expires_at = ? WHERE label = ?", (past, labels[1]))
+        assert claim(c, pair_token(c, session))[0] == 200
         # the master code counts its own phones, apart from the guest's
         c.post("/api/access", json={"code": CODE})
         tokens = [pair_token(c) for _ in range(3)]
