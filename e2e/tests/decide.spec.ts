@@ -70,6 +70,9 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
 test('what to do with it: three cards for the profile, and a card chosen leads on', async ({ page, request }) => {
   const name = `Scenario laptop ${stamp}`
   await createLaptop(request, name)
+  // a monitor of the owner's, which the recorded reuse card names as "monitor (2)"
+  const monitor = await request.post('/api/items', { data: { item_type: 'monitor', name: `Spare monitor ${stamp}` } })
+  expect(monitor.status()).toBe(201)
   const { panel, decide } = await openItem(page, name)
 
   await decide.getByRole('button', { name: 'What should I do with it?' }).click()
@@ -84,19 +87,27 @@ test('what to do with it: three cards for the profile, and a card chosen leads o
   await expect(fix).toContainText('easy for you')
   await expect(reuse).toContainText('recommended')
   await expect(reuse.getByRole('list', { name: 'Reuse scenarios' }).getByRole('listitem')).toHaveCount(2)
-  await expect(reuse).toContainText('With what you have: monitor')
+  await expect(reuse.getByText(/^With what you have: /).first()).toHaveText(/^With what you have: monitor(, (keyboard|mouse))*$/)
   await expect(sell.getByRole('button', { name: 'Get price guidance' })).toBeVisible()
 
   // the sell card asks the price route; the figure shows on the card
   await sell.getByRole('button', { name: 'Get price guidance' }).click()
   await expect(sell).toContainText(/about \d/)
 
-  // keep and fix: the choice is kept, and the steps land in the notes
-  await fix.getByRole('button', { name: 'Choose this' }).click()
+  // each Choose this is named with its card
+  await expect(reuse.getByRole('button', { name: 'Choose this: Reuse it' })).toBeVisible()
+
+  // keep and fix: the choice is kept, the steps land in the notes, and the focus goes there
+  await fix.getByRole('button', { name: 'Choose this: Keep and fix' }).click()
   await expect(decide.getByRole('status', { name: 'Decision made' })).toContainText('Keep and fix')
   await expect(fix).toContainText('chosen')
-  await expect(panel.getByLabel('Notes (stay private)')).toHaveValue(/Repair plan \(scenarios v1/)
+  const notes = panel.getByLabel('Notes (stay private)')
+  await expect(notes).toHaveValue(/Repair plan \(scenarios v1/)
+  await expect(notes).toBeFocused()
   await expect(cards).toContainText('item changed since')
+  // the cards are stale now: choosing keep and fix again says it comes without the steps
+  await expect(fix.getByRole('button', { name: 'Choose this (without the repair steps): Keep and fix' })).toBeVisible()
+  await expect(fix).toContainText('Ask again to add the repair steps')
 })
 
 test('the decision rows fit a phone dialog', async ({ page, request }) => {

@@ -404,7 +404,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           ).map(([key, label]) => (
             <label key={key}>
               <span>{label}</span>
-              <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+              <textarea name={key} rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
             </label>
           ))}
           <button type="submit" disabled={!detailsChanged}>

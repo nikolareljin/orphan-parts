@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { Worth } from './api'
 import {
   CARDS,
+  LEADS_TO,
+  STALE_FIX_HINT,
   candidatesText,
   cardFor,
   choiceLabel,
@@ -9,6 +11,7 @@ import {
   difficultyLabel,
   effortLabel,
   fillsLine,
+  keepFixLabel,
   recommendationLabel,
   reservedLine,
   worthLine,
@@ -70,13 +73,25 @@ describe('labels', () => {
 })
 
 describe('scenario cards', () => {
-  it('records each card as a choice and leads to its section', () => {
-    expect(CARDS.map((c) => [c.id, c.choice, c.section])).toEqual([
-      ['keep_fix', 'keep_fix', 'facts'],
-      ['reuse', 'keep_build', 'decide'],
-      ['sell', 'sell', 'sell'],
+  it('records each card as a choice', () => {
+    expect(CARDS.map((c) => [c.id, c.choice])).toEqual([
+      ['keep_fix', 'keep_fix'],
+      ['reuse', 'keep_build'],
+      ['sell', 'sell'],
     ])
     expect(choiceLabel('keep_fix')).toBe('Keep and fix')
+  })
+  it('leads each choice to its part of the dialog and focuses there', () => {
+    expect(LEADS_TO.keep_fix).toEqual({ scroll: 'form.details', focus: 'form.details textarea[name="notes"]' })
+    expect(LEADS_TO.keep_build).toEqual({ scroll: '.decide .good-for', focus: '.decide .good-for' })
+    expect(LEADS_TO.sell).toEqual({ scroll: 'section.listing', focus: 'section.listing h4' })
+    expect(LEADS_TO.give).toEqual(LEADS_TO.sell)
+    expect(LEADS_TO.not_worth).toBeUndefined()
+  })
+  it('says when keep and fix comes without the repair steps', () => {
+    expect(keepFixLabel(false)).toBe('Choose this')
+    expect(keepFixLabel(true)).toBe('Choose this (without the repair steps)')
+    expect(STALE_FIX_HINT).toMatch(/Ask again/)
   })
   it('lights the sell card for giving it away', () => {
     expect(cardFor('give')).toBe('sell')

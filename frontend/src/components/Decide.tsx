@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
 import { api, type Decision, type DecisionChoice, type Item, type Uses } from '../lib/api'
-import { CHOICES, candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from '../lib/decide'
+import { CHOICES, LEADS_TO, candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from '../lib/decide'
 import { usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 import Scenarios from './Scenarios'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
-}
-
-// Where a choice leads once it is kept: keep and fix to the details, where the repair steps are
-// added to the notes; reuse to what the item is good for; a sale or a gift to the listing.
-const LEADS_TO: Partial<Record<DecisionChoice, string>> = {
-  keep_fix: 'form.details',
-  keep_build: '.decide .good-for',
-  sell: 'section.listing',
-  give: 'section.listing',
 }
 
 // One place to decide what the item becomes: three scenarios written for the owner, then what it
@@ -129,8 +120,13 @@ export default function Decide({
       await onDecide(choice, note)
       setNote('')
       setDecided((n) => n + 1)
-      const target = LEADS_TO[choice]
-      if (target) document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // scrolled to and focused there, so a keyboard or screen reader user lands where a
+      // pointer user looks
+      const lead = LEADS_TO[choice]
+      if (lead) {
+        document.querySelector(lead.scroll)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        document.querySelector<HTMLElement>(lead.focus)?.focus({ preventScroll: true })
+      }
     } catch (err: unknown) {
       setRefusal(message(err))
     } finally {
@@ -191,7 +187,9 @@ export default function Decide({
             )}
           </dd>
 
-          <dt className="good-for">What it is good for</dt>
+          <dt className="good-for" tabIndex={-1}>
+            What it is good for
+          </dt>
           <dd>
             {item.intent === 'build' && (
               <>

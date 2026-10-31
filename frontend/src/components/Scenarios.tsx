@@ -1,6 +1,16 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import type { DecisionChoice, Decided, KeepFix, ReuseScenario, Scenarios as ScenarioSet, SellCard, Worth } from '../lib/api'
-import { CARDS, cardFor, chosenCard, difficultyLabel, recommendationLabel, worthLine, type ScenarioCard } from '../lib/decide'
+import {
+  CARDS,
+  STALE_FIX_HINT,
+  cardFor,
+  chosenCard,
+  difficultyLabel,
+  keepFixLabel,
+  recommendationLabel,
+  worthLine,
+  type ScenarioCard,
+} from '../lib/decide'
 import { usd } from '../lib/format'
 
 // What to do with it: one button asks Muse Spark for three cards written for this owner (keep
@@ -25,10 +35,13 @@ export default function Scenarios({
   onPrice: () => void
 }) {
   const lit = scenarios ? cardFor(scenarios.recommended) : null
+  const hintId = useId()
   const chosen = last?.choice
 
+  const titleOf = (id: ScenarioCard) => CARDS.find((c) => c.id === id)?.title ?? id
+
   function card(id: ScenarioCard, body: ReactNode, actions: ReactNode) {
-    const title = CARDS.find((c) => c.id === id)?.title ?? id
+    const title = titleOf(id)
     return (
       <article key={id} className={`scenario${lit === id ? ' recommended' : ''}`} aria-label={title}>
         <h5>
@@ -42,9 +55,17 @@ export default function Scenarios({
     )
   }
 
-  function choose(choice: DecisionChoice, label = 'Choose this') {
+  // A "Choose this" is named with its card, so a list of the page's buttons tells them apart;
+  // the visible words lead the name.
+  function choose(choice: DecisionChoice, label: string, id?: ScenarioCard, hint?: string) {
     return (
-      <button type="button" onClick={() => onChoose(choice)} disabled={busy !== ''}>
+      <button
+        type="button"
+        onClick={() => onChoose(choice)}
+        disabled={busy !== ''}
+        aria-label={id ? `${label}: ${titleOf(id)}` : undefined}
+        aria-describedby={hint}
+      >
         {busy === choice ? 'Working…' : label}
       </button>
     )
@@ -75,12 +96,23 @@ export default function Scenarios({
             <strong>Recommended: {recommendationLabel(scenarios.recommended)}.</strong> {scenarios.reason}
           </p>
           <div className="scenario-cards">
-            {card('keep_fix', <KeepFixBody card={scenarios.keep_fix} />, choose('keep_fix'))}
+            {card(
+              'keep_fix',
+              <KeepFixBody card={scenarios.keep_fix} />,
+              <>
+                {choose('keep_fix', keepFixLabel(scenarios.stale), 'keep_fix', scenarios.stale ? hintId : undefined)}
+                {scenarios.stale && (
+                  <span id={hintId} className="hint">
+                    {STALE_FIX_HINT}
+                  </span>
+                )}
+              </>,
+            )}
             {card(
               'reuse',
               <ReuseBody scenarios={scenarios.reuse} />,
               <>
-                {choose('keep_build')}
+                {choose('keep_build', 'Choose this', 'reuse')}
                 {chosen === 'keep_build' && <a href="#build">Plan it in Build and reuse</a>}
               </>,
             )}

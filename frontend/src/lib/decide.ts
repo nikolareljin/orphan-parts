@@ -46,15 +46,32 @@ export function candidatesText(search: OpenSearch): string {
   return search.candidates === 1 ? '1 candidate' : `${search.candidates} candidates`
 }
 
-// The three scenario cards: the title each is shown under, the choice "Choose this" records,
-// and the item dialog section it leads to once chosen.
+// The three scenario cards: the title each is shown under and the choice "Choose this" records.
 export type ScenarioCard = 'keep_fix' | 'reuse' | 'sell'
 
-export const CARDS: { id: ScenarioCard; title: string; choice: DecisionChoice; section: string }[] = [
-  { id: 'keep_fix', title: 'Keep and fix', choice: 'keep_fix', section: 'facts' },
-  { id: 'reuse', title: 'Reuse it', choice: 'keep_build', section: 'decide' },
-  { id: 'sell', title: 'Sell or give away', choice: 'sell', section: 'sell' },
+export const CARDS: { id: ScenarioCard; title: string; choice: DecisionChoice }[] = [
+  { id: 'keep_fix', title: 'Keep and fix', choice: 'keep_fix' },
+  { id: 'reuse', title: 'Reuse it', choice: 'keep_build' },
+  { id: 'sell', title: 'Sell or give away', choice: 'sell' },
 ]
+
+// Where a choice leads once it is kept: the part of the item dialog scrolled to, and what takes
+// the focus there. Keep and fix goes to the notes, where the repair steps are added; reuse to
+// what the item is good for; a sale or a gift to the listing's heading.
+export const LEADS_TO: Partial<Record<DecisionChoice, { scroll: string; focus: string }>> = {
+  keep_fix: { scroll: 'form.details', focus: 'form.details textarea[name="notes"]' },
+  keep_build: { scroll: '.decide .good-for', focus: '.decide .good-for' },
+  sell: { scroll: 'section.listing', focus: 'section.listing h4' },
+  give: { scroll: 'section.listing', focus: 'section.listing h4' },
+}
+
+// The keep and fix button: on cards written before the item last changed, the repair steps are
+// not added to the notes, and the button and its hint say so.
+export const STALE_FIX_HINT = 'The item changed since; Ask again to add the repair steps.'
+
+export function keepFixLabel(stale: boolean): string {
+  return stale ? 'Choose this (without the repair steps)' : 'Choose this'
+}
 
 // The card a recommendation lights up: giving it away is on the sell card.
 export function cardFor(recommended: Recommendation): ScenarioCard {
