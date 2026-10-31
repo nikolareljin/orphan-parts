@@ -113,9 +113,10 @@ frame_fits() {
 }
 # The crop is centered on (CX, CY) and sized by RING, numbers read off the logo: the viewfinder
 # group as saved, with no transform and no style, and its outer ring circle53 at that center with
-# radius plus half its stroke equal to RING. A viewfinder moved or resized in the logo is refused
-# here: a transform Inkscape wrote on the group is flattened first (ungroup, then group again),
-# then CX, CY and RING are set to match the ring.
+# radius plus half its stroke equal to RING, all whole numbers. A viewfinder moved or resized in
+# the logo is refused here. To take it: flatten the transform Inkscape wrote on the group
+# (ungroup, then group again), give the new group back the id lens-viewfinder, round circle53's
+# cx, cy, r and stroke-width to whole numbers, and set CX, CY and RING to match.
 ring_fits() {
   local group ring block r w
   group="$(line_of '^     id="lens-viewfinder">$')"
