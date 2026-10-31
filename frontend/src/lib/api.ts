@@ -726,7 +726,10 @@ export interface Scenarios {
   item_id: number
   version: number
   item_version: number
+  // the item was edited since the cards were written; a decision is no edit
   stale: boolean
+  // the keep and fix steps of these cards are in the item's notes
+  steps_in_notes: boolean
   // written for the owner's profile; false: for an average person, no profile filled in
   profiled: boolean
   keep_fix: KeepFix

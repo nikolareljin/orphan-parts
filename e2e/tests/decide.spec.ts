@@ -97,6 +97,10 @@ test('what to do with it: three cards for the profile, and a card chosen leads o
   // each Choose this is named with its card
   await expect(reuse.getByRole('button', { name: 'Choose this: Reuse it' })).toBeVisible()
 
+  // a detail typed and not saved yet survives the decision below
+  const condition = panel.getByRole('textbox', { name: 'Condition', exact: true })
+  await condition.fill('scuffed lid, one key loose')
+
   // keep and fix: the choice is kept, the steps land in the notes, and the focus goes there
   await fix.getByRole('button', { name: 'Choose this: Keep and fix' }).click()
   await expect(decide.getByRole('status', { name: 'Decision made' })).toContainText('Keep and fix')
@@ -104,10 +108,12 @@ test('what to do with it: three cards for the profile, and a card chosen leads o
   const notes = panel.getByLabel('Notes (stay private)')
   await expect(notes).toHaveValue(/Repair plan \(scenarios v1/)
   await expect(notes).toBeFocused()
-  await expect(cards).toContainText('item changed since')
-  // the cards are stale now: choosing keep and fix again says it comes without the steps
-  await expect(fix.getByRole('button', { name: 'Choose this (without the repair steps): Keep and fix' })).toBeVisible()
-  await expect(fix).toContainText('Ask again to add the repair steps')
+  await expect(condition).toHaveValue('scuffed lid, one key loose')
+  // the decision is no edit: the cards stay current and say where the steps went
+  await expect(fix).toContainText('Repair steps added to the notes.')
+  await expect(cards.getByText(/^The model's scenarios/)).not.toContainText('item changed since')
+  await expect(fix).not.toContainText('Ask again to add the repair steps')
+  await expect(fix.getByRole('button', { name: 'Choose this: Keep and fix' })).toBeVisible()
 })
 
 test('the decision rows fit a phone dialog', async ({ page, request }) => {

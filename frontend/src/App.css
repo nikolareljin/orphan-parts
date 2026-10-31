@@ -947,7 +947,9 @@ button.link {
   border-top: 1px solid var(--line);
 }
 
+/* a label on a line of its own above its value, so read and copied text keeps them apart */
 .decide .scenario .label {
+  display: block;
   font-weight: 600;
   font-size: 0.85rem;
 }

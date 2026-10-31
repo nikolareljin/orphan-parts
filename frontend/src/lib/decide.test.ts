@@ -4,6 +4,7 @@ import {
   CARDS,
   LEADS_TO,
   STALE_FIX_HINT,
+  STEPS_ADDED,
   candidatesText,
   cardFor,
   choiceLabel,
@@ -11,7 +12,7 @@ import {
   difficultyLabel,
   effortLabel,
   fillsLine,
-  keepFixLabel,
+  keepFix,
   recommendationLabel,
   reservedLine,
   worthLine,
@@ -88,10 +89,16 @@ describe('scenario cards', () => {
     expect(LEADS_TO.give).toEqual(LEADS_TO.sell)
     expect(LEADS_TO.not_worth).toBeUndefined()
   })
-  it('says when keep and fix comes without the repair steps', () => {
-    expect(keepFixLabel(false)).toBe('Choose this')
-    expect(keepFixLabel(true)).toBe('Choose this (without the repair steps)')
+  it('says when keep and fix comes without the repair steps, and when they are in', () => {
+    expect(keepFix({ stale: false, steps_in_notes: false })).toEqual({ label: 'Choose this', hint: '' })
+    expect(keepFix({ stale: true, steps_in_notes: false })).toEqual({
+      label: 'Choose this (without the repair steps)',
+      hint: STALE_FIX_HINT,
+    })
     expect(STALE_FIX_HINT).toMatch(/Ask again/)
+    // the steps are in the notes: no stale hint, edited since or not
+    expect(keepFix({ stale: false, steps_in_notes: true })).toEqual({ label: 'Choose this', hint: STEPS_ADDED })
+    expect(keepFix({ stale: true, steps_in_notes: true })).toEqual({ label: 'Choose this', hint: STEPS_ADDED })
   })
   it('lights the sell card for giving it away', () => {
     expect(cardFor('give')).toBe('sell')

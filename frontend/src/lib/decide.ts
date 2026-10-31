@@ -65,12 +65,16 @@ export const LEADS_TO: Partial<Record<DecisionChoice, { scroll: string; focus: s
   give: { scroll: 'section.listing', focus: 'section.listing h4' },
 }
 
-// The keep and fix button: on cards written before the item last changed, the repair steps are
-// not added to the notes, and the button and its hint say so.
+// The keep and fix button and the line beside it: once the steps of these cards are in the
+// notes, it says so; on cards written before the item was last edited, the steps are not added,
+// and the button and its hint say that instead.
 export const STALE_FIX_HINT = 'The item changed since; Ask again to add the repair steps.'
+export const STEPS_ADDED = 'Repair steps added to the notes.'
 
-export function keepFixLabel(stale: boolean): string {
-  return stale ? 'Choose this (without the repair steps)' : 'Choose this'
+export function keepFix(scenarios: { stale: boolean; steps_in_notes: boolean }): { label: string; hint: string } {
+  if (scenarios.steps_in_notes) return { label: 'Choose this', hint: STEPS_ADDED }
+  if (scenarios.stale) return { label: 'Choose this (without the repair steps)', hint: STALE_FIX_HINT }
+  return { label: 'Choose this', hint: '' }
 }
 
 // The card a recommendation lights up: giving it away is on the sell card.

@@ -2,11 +2,10 @@ import { useId, type ReactNode } from 'react'
 import type { DecisionChoice, Decided, KeepFix, ReuseScenario, Scenarios as ScenarioSet, SellCard, Worth } from '../lib/api'
 import {
   CARDS,
-  STALE_FIX_HINT,
   cardFor,
   chosenCard,
   difficultyLabel,
-  keepFixLabel,
+  keepFix,
   recommendationLabel,
   worthLine,
   type ScenarioCard,
@@ -36,6 +35,7 @@ export default function Scenarios({
 }) {
   const lit = scenarios ? cardFor(scenarios.recommended) : null
   const hintId = useId()
+  const fix = scenarios ? keepFix(scenarios) : null
   const chosen = last?.choice
 
   const titleOf = (id: ScenarioCard) => CARDS.find((c) => c.id === id)?.title ?? id
@@ -100,10 +100,10 @@ export default function Scenarios({
               'keep_fix',
               <KeepFixBody card={scenarios.keep_fix} />,
               <>
-                {choose('keep_fix', keepFixLabel(scenarios.stale), 'keep_fix', scenarios.stale ? hintId : undefined)}
-                {scenarios.stale && (
+                {fix && choose('keep_fix', fix.label, 'keep_fix', fix.hint ? hintId : undefined)}
+                {fix?.hint && (
                   <span id={hintId} className="hint">
-                    {STALE_FIX_HINT}
+                    {fix?.hint}
                   </span>
                 )}
               </>,
@@ -209,11 +209,12 @@ function SellBody({ card, worth, busy, onPrice }: { card: SellCard; worth: Worth
     <>
       <Lines label="What sells it" lines={card.selling_points} />
       <p>
-        <span className="label">What it takes</span> {card.effort}
+        <span className="label">What it takes</span>
+        {card.effort}
       </p>
       {card.note && <p className="muted">{card.note}</p>}
       <p>
-        <span className="label">Price guidance</span>{' '}
+        <span className="label">Price guidance</span>
         {worth ? (
           worthLine(worth)
         ) : (
