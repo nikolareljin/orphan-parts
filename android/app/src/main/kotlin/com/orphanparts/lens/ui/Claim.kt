@@ -24,8 +24,15 @@ import kotlinx.coroutines.withContext
  * A code of its own for the same backend (`previousUrl` unchanged) that still opens the door
  * is kept rather than claimed again; only a 401 from the backend says it does not, so a
  * network error or a busy backend leaves it in place. A refused claim (the pairing already
- * claimed, the code that paired it ended, a browser's session) leaves the pairing. */
-suspend fun claimPhoneCode(paired: Settings, previousUrl: String, transport: Transport): Pair<Settings, String> =
+ * claimed, the code that paired it ended, a browser's session) leaves the pairing. The code
+ * claimed goes to `keep` as soon as it arrives, with the pairing still as the token, before
+ * the session is asked for: the backend never hands it out again. */
+suspend fun claimPhoneCode(
+    paired: Settings,
+    previousUrl: String,
+    transport: Transport,
+    keep: (Settings) -> Unit = {},
+): Pair<Settings, String> =
     withContext(Dispatchers.IO) {
         val where = "Paired with ${paired.baseUrl}"
         val client = Client(paired.baseUrl, transport)
@@ -48,6 +55,7 @@ suspend fun claimPhoneCode(paired: Settings, previousUrl: String, transport: Tra
         }
         if (!own.gated || own.code.isBlank()) return@withContext paired to "$where."
         val claimed = withPhoneCode(paired, own)
+        withContext(NonCancellable) { keep(claimed) }
         val line = "$where; this phone now has a code of its own (${claimed.codeName})."
         // the pairing is spent: a session opened with the code takes its place, or none, and the
         // next call opens one
@@ -70,17 +78,20 @@ val claimLine = MutableStateFlow("")
 
 /** The claim for a scan, run in the process's scope; the outcome is stored, on disk before
  * anything else, only if the settings still hold the scan it came from, and only then is its
- * line set (a later scan or a typed address says its own). */
+ * line set (a later scan or a typed address says its own). The code is written twice: on disk
+ * as soon as it is claimed, the pairing still its token so the scan still matches, and again
+ * with the session opened with it. */
 fun startClaim(
     store: SettingsStore,
     paired: Settings,
     previousUrl: String,
     transport: Transport = HttpTransport(),
 ): Job = claims.launch {
-    val (claimed, line) = claimPhoneCode(paired, previousUrl, transport)
-    val applied = withContext(NonCancellable) {
+    val keep = { claimed: Settings ->
         applyClaim(store.load(), paired, claimed)?.also { store.save(it, durable = true) }
     }
+    val (claimed, line) = claimPhoneCode(paired, previousUrl, transport) { keep(it) }
+    val applied = withContext(NonCancellable) { keep(claimed) }
     if (applied != null) claimLine.value = line
 }
 

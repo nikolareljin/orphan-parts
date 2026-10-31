@@ -10,6 +10,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/** The process ending mid-call: not an Exception, so nothing on the way catches it. */
+private class Killed : Error()
+
 class ClaimTest {
     private val url = "https://demo.example"
     private val pairing = "sid.9999999999.2.0.0123456789abcdef.${"a".repeat(32)}"
@@ -94,6 +97,29 @@ class ClaimTest {
         assertTrue(line.contains("now has a code of its own"))
         val (refused, _) = claimPhoneCode(Settings(url, "", pairing), url, transport(claimed, HttpResponse(429, """{"detail":"too many tries; wait 9 s"}""")))
         assertEquals("", refused.token)
+    }
+
+    @Test
+    fun the_claimed_code_is_kept_before_the_session_is_asked_for() {
+        var stored = Settings(url, "", pairing)
+        val paired = stored
+        // the process ends while the session is asked for
+        val t = object : FakeTransport(ArrayDeque()) {
+            override fun send(method: String, url: String, headers: Map<String, String>, body: ByteArray?): HttpResponse {
+                sent += Sent(method, url, headers, body)
+                if (url.endsWith("/api/access")) throw Killed()
+                return claimed
+            }
+        }
+        try {
+            runBlocking { claimPhoneCode(paired, url, t) { stored = it } }
+        } catch (_: Killed) {
+        }
+        assertEquals("https://demo.example/api/access", t.sent.last().url)
+        assertEquals("opl_new", stored.accessCode)
+        assertEquals("phone ffff0000", stored.codeLabel)
+        // the pairing is still the token, so the outcome still applies to the scan it came from
+        assertEquals(pairing, stored.token)
     }
 
     @Test
