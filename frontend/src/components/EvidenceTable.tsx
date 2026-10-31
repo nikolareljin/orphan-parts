@@ -1,5 +1,5 @@
 import type { Extraction } from '../lib/api'
-import { fieldLabel, orderedFields, percent, usd, withUnit } from '../lib/format'
+import { fieldLabel, orderedFields, percent, printedDiffers, usd, withUnit } from '../lib/format'
 
 export default function EvidenceTable({ result }: { result: Extraction }) {
   const rows = orderedFields(result.fields)
@@ -39,7 +39,7 @@ export default function EvidenceTable({ result }: { result: Extraction }) {
                 <th scope="row">{fieldLabel(name)}</th>
                 <td>
                   {withUnit(e)}
-                  {e.raw && e.raw !== e.value && <span className="raw"> as printed: {e.raw}</span>}
+                  {printedDiffers(e.value, e.raw) && <span className="raw">as printed: {e.raw}</span>}
                 </td>
                 <td>
                   <span className="bar" aria-hidden="true">

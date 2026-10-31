@@ -6,6 +6,8 @@ Scan what you already own. Decide what it can become. Find the missing piece on 
 prepare what you no longer need for sale or free pickup. Every answer carries its evidence, on
 Meta's Muse models.
 
+![How Orphan Parts Lens works](docs/assets/process.svg)
+
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
 Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
@@ -147,3 +149,5 @@ docker/     images that are not part of backend/ or frontend/
 ## License
 
 MIT, see `LICENSE`.
+
+Made by Nik Reljin — [about the author](https://nikolareljin.github.io/orphan-parts/about/), [LinkedIn](https://www.linkedin.com/in/nikolareljin). If it is useful, ⭐ star the repository.

@@ -4,7 +4,7 @@ site_url: https://nikolareljin.github.io/orphan-parts/
 repo_url: https://github.com/nikolareljin/orphan-parts
 repo_name: nikolareljin/orphan-parts
 edit_uri: edit/main/docs/
-copyright: MIT License
+copyright: MIT License · <a href="https://nikolareljin.github.io/orphan-parts/about/">About the author</a>
 
 theme:
   name: material
@@ -138,3 +138,4 @@ nav:
       - Limitations: project/limitations.md
       - Changelog: project/changelog.md
       - License: project/license.md
+  - About: about.md

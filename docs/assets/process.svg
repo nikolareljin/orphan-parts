@@ -1,0 +1,220 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 780" width="100%" role="img" aria-labelledby="pr-title pr-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <title id="pr-title">How Orphan Parts Lens works</title>
+  <desc id="pr-desc">Three columns, left to right. Capture: photos of the item, its label and its connector, with a voice note or a short clip, from the Android app or the web app, land in the Inbox. Read and decide: SAM 3.1 outlines the item, the label and the connector; Muse Spark reads the label into values, each to confirm until you accept it; a dimension is measured against a ruler; Muse Voice Transcribe keeps a spoken note as your words. Then one of four paths, each to its outcome: Keep, to a record in your inventory; Build and reuse, to a build pack; Sell or give away, to a Marketplace listing by handoff; Find the missing piece, to a part that fits. Your preferences (skills, tools, effort, budget and the rest) shape the project proposals. Your inventory: every item private, every value with its source, nothing published or posted for you.</desc>
+  <style>
+    .pr-bg { fill: #f6f7f9; }
+    .pr-col { fill: #ffffff; stroke: #5b6470; stroke-width: 1.5; }
+    .pr-box { fill: #ffffff; stroke: #5b6470; stroke-width: 1.5; }
+    .pr-rules { fill: #ffffff; stroke: #1b1f24; stroke-width: 1.8; }
+    .pr-model { fill: #e8effc; stroke: #2d6cdf; stroke-width: 1.8; }
+    .pr-hand { fill: #f6f7f9; stroke: #5b6470; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .pr-chip { fill: #f6f7f9; stroke: #5b6470; stroke-width: 1.2; }
+    .pr-step { fill: #2d6cdf; }
+    .pr-icon { fill: none; stroke: #1b1f24; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+    .pr-icon-fill { fill: #e8effc; stroke: #2d6cdf; stroke-width: 1.8; stroke-linejoin: round; }
+    .pr-h { fill: #1b1f24; font-size: 26px; font-weight: 700; }
+    .pr-n { fill: #ffffff; font-size: 13px; font-weight: 700; text-anchor: middle; }
+    .pr-t { fill: #1b1f24; font-size: 18px; font-weight: 600; }
+    .pr-r { fill: #1b1f24; font-size: 16px; font-weight: 600; }
+    .pr-k { fill: #1b1f24; font-size: 13px; font-weight: 600; }
+    .pr-o { fill: #1b1f24; font-size: 14px; font-weight: 600; text-anchor: middle; }
+    .pr-s { fill: #1b1f24; font-size: 14px; }
+    .pr-m { fill: #5b6470; font-size: 14px; }
+    .pr-b { fill: #2d6cdf; font-size: 13px; font-weight: 600; }
+    .pr-p { fill: #1b1f24; font-size: 13px; }
+    .pr-c { fill: #1b1f24; font-size: 12.5px; }
+    .pr-arrow { fill: none; stroke: #5b6470; stroke-width: 1.6; }
+  </style>
+  <defs>
+    <marker id="pr-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6470"/>
+    </marker>
+  </defs>
+  <rect class="pr-bg" x="0" y="0" width="1400" height="780" rx="12"/>
+
+  <!-- heading and legend -->
+  <text class="pr-h" x="30" y="52">How Orphan Parts Lens works</text>
+  <rect class="pr-model" x="880" y="34" width="18" height="18" rx="3"/>
+  <text class="pr-s" x="906" y="48">a model reads</text>
+  <rect class="pr-rules" x="1022" y="34" width="18" height="18" rx="3"/>
+  <text class="pr-s" x="1048" y="48">the rules decide</text>
+  <rect class="pr-hand" x="1180" y="34" width="18" height="18" rx="3"/>
+  <text class="pr-s" x="1206" y="48">by handoff: you run it</text>
+
+  <!-- arrows -->
+  <g class="pr-arrow" marker-end="url(#pr-head)">
+    <path d="M 150 424 V 458"/>
+    <path d="M 254 523 H 286 V 190 H 298"/>
+    <path d="M 816 300 H 850"/>
+    <path d="M 816 388 H 850"/>
+    <path d="M 816 476 H 850"/>
+    <path d="M 816 564 H 850"/>
+    <path d="M 1070 432 H 1088"/>
+    <path d="M 308 640 V 388 H 314"/>
+  </g>
+  <g class="pr-arrow">
+    <path d="M 1042 300 H 1070 V 564 H 1042"/>
+    <path d="M 1042 388 H 1070"/>
+    <path d="M 1042 476 H 1070"/>
+  </g>
+
+  <!-- column 1: capture -->
+  <rect class="pr-col" x="30" y="100" width="240" height="515" rx="10"/>
+  <circle class="pr-step" cx="54" cy="125" r="12"/>
+  <text class="pr-n" x="54" y="130">1</text>
+  <text class="pr-t" x="74" y="131">Capture</text>
+
+  <!-- the phone -->
+  <rect class="pr-icon" x="62" y="160" width="54" height="96" rx="8"/>
+  <rect class="pr-icon-fill" x="70" y="172" width="38" height="62" rx="2"/>
+  <circle class="pr-icon" cx="89" cy="246" r="3"/>
+  <text class="pr-s" x="89" y="282" text-anchor="middle">Android app</text>
+
+  <!-- the computer -->
+  <rect class="pr-icon" x="152" y="168" width="90" height="60" rx="4"/>
+  <rect class="pr-icon-fill" x="158" y="174" width="78" height="48" rx="2"/>
+  <rect class="pr-icon" x="140" y="232" width="114" height="8" rx="3"/>
+  <text class="pr-s" x="197" y="282" text-anchor="middle">web app</text>
+
+  <!-- what is captured -->
+  <rect class="pr-icon" x="48" y="312" width="20" height="15" rx="2"/>
+  <circle class="pr-icon" cx="58" cy="319.5" r="4"/>
+  <text class="pr-s" x="78" y="324">photos of the item,</text>
+  <text class="pr-s" x="78" y="344">its label and its connector</text>
+  <rect class="pr-icon" x="54" y="366" width="9" height="16" rx="4.5"/>
+  <path class="pr-icon" d="M 50 376 A 8.5 8.5 0 0 0 67 376 M 58.5 384.5 V 390 M 53 390 H 64"/>
+  <text class="pr-s" x="78" y="378">a voice note</text>
+  <text class="pr-s" x="78" y="398">or a short clip</text>
+
+  <!-- the inbox -->
+  <rect class="pr-box" x="46" y="468" width="208" height="110" rx="8"/>
+  <text class="pr-r" x="62" y="494">Inbox</text>
+  <text class="pr-m" x="62" y="518">captures, newest first</text>
+  <text class="pr-m" x="62" y="538">private until read</text>
+  <text class="pr-m" x="62" y="562">Read it sends them on</text>
+
+  <!-- column 2: read and decide -->
+  <rect class="pr-col" x="300" y="100" width="760" height="515" rx="10"/>
+  <circle class="pr-step" cx="324" cy="125" r="12"/>
+  <text class="pr-n" x="324" y="130">2</text>
+  <text class="pr-t" x="344" y="131">Read and decide</text>
+
+  <!-- the reading -->
+  <rect class="pr-model" x="316" y="150" width="172" height="80" rx="6"/>
+  <text class="pr-b" x="326" y="170">SAM 3.1</text>
+  <text class="pr-p" x="326" y="190">outlines the item,</text>
+  <text class="pr-p" x="326" y="206">the label and</text>
+  <text class="pr-p" x="326" y="222">the connector</text>
+
+  <rect class="pr-model" x="500" y="150" width="172" height="80" rx="6"/>
+  <text class="pr-b" x="510" y="170">Muse Spark</text>
+  <text class="pr-p" x="510" y="190">reads the label into</text>
+  <text class="pr-p" x="510" y="206">values, each to confirm</text>
+  <text class="pr-p" x="510" y="222">until you accept it</text>
+
+  <rect class="pr-rules" x="684" y="150" width="172" height="80" rx="6"/>
+  <text class="pr-k" x="694" y="170">Measure a feature</text>
+  <text class="pr-p" x="694" y="190">a dimension against</text>
+  <text class="pr-p" x="694" y="206">a ruler in the photo,</text>
+  <text class="pr-p" x="694" y="222">with its uncertainty</text>
+
+  <rect class="pr-model" x="868" y="150" width="172" height="80" rx="6"/>
+  <text class="pr-b" x="878" y="170">Muse Voice Transcribe</text>
+  <text class="pr-p" x="878" y="190">keeps a spoken note</text>
+  <text class="pr-p" x="878" y="206">as your words</text>
+
+  <text class="pr-m" x="316" y="252">Then one of four paths, each to its outcome</text>
+
+  <!-- keep -->
+  <rect class="pr-rules" x="316" y="262" width="500" height="76" rx="8"/>
+  <text class="pr-r" x="332" y="287">Keep</text>
+  <text class="pr-p" x="332" y="309">a private catalog record: condition, faults, tests, parts,</text>
+  <text class="pr-p" x="332" y="327">intent, availability and where it is</text>
+  <rect class="pr-box" x="852" y="262" width="190" height="76" rx="8"/>
+  <text class="pr-o" x="947" y="305">In your inventory</text>
+
+  <!-- build and reuse -->
+  <rect class="pr-rules" x="316" y="350" width="500" height="76" rx="8"/>
+  <text class="pr-r" x="332" y="375">Build and reuse</text>
+  <text class="pr-p" x="332" y="397">project proposals by <tspan class="pr-b">Muse Spark</tspan> from templates, using only what you own;</text>
+  <text class="pr-p" x="332" y="415">a budget across the build, and the missing pieces as searches</text>
+  <rect class="pr-box" x="852" y="350" width="190" height="76" rx="8"/>
+  <text class="pr-o" x="947" y="393">A build pack</text>
+
+  <!-- sell or give away -->
+  <rect class="pr-rules" x="316" y="438" width="500" height="76" rx="8"/>
+  <text class="pr-r" x="332" y="463">Sell or give away</text>
+  <text class="pr-p" x="332" y="485">price guidance from sourced, dated comparables, <tspan class="pr-b">Muse Spark</tspan> proposing;</text>
+  <text class="pr-p" x="332" y="503">a listing draft from confirmed values only</text>
+  <rect class="pr-hand" x="852" y="438" width="190" height="76" rx="8"/>
+  <text class="pr-o" x="947" y="472">A Marketplace listing</text>
+  <text class="pr-m" x="947" y="494" text-anchor="middle">by handoff: you post it</text>
+
+  <!-- find the missing piece -->
+  <rect class="pr-rules" x="316" y="526" width="500" height="76" rx="8"/>
+  <text class="pr-r" x="332" y="551">Find the missing piece</text>
+  <text class="pr-p" x="332" y="573">what it needs becomes a Marketplace search you run;</text>
+  <text class="pr-p" x="332" y="591">listings brought back are checked by the fit rules</text>
+  <rect class="pr-box" x="852" y="526" width="190" height="76" rx="8"/>
+  <text class="pr-o" x="947" y="569">A part that fits</text>
+
+  <!-- column 3: your inventory -->
+  <rect class="pr-col" x="1090" y="100" width="280" height="515" rx="10"/>
+  <circle class="pr-step" cx="1114" cy="125" r="12"/>
+  <text class="pr-n" x="1114" y="130">3</text>
+  <text class="pr-t" x="1134" y="131">Your inventory</text>
+
+  <!-- records -->
+  <g>
+    <rect class="pr-icon" x="1120" y="160" width="220" height="46" rx="6"/>
+    <rect class="pr-icon-fill" x="1130" y="170" width="26" height="26" rx="3"/>
+    <rect fill="#5b6470" x="1166" y="172" width="120" height="6" rx="3"/>
+    <rect fill="#c9ced6" x="1166" y="186" width="80" height="6" rx="3"/>
+    <rect class="pr-icon" x="1120" y="216" width="220" height="46" rx="6"/>
+    <rect class="pr-icon-fill" x="1130" y="226" width="26" height="26" rx="3"/>
+    <rect fill="#5b6470" x="1166" y="228" width="96" height="6" rx="3"/>
+    <rect fill="#c9ced6" x="1166" y="242" width="110" height="6" rx="3"/>
+    <rect class="pr-icon" x="1120" y="272" width="220" height="46" rx="6"/>
+    <rect class="pr-icon-fill" x="1130" y="282" width="26" height="26" rx="3"/>
+    <rect fill="#5b6470" x="1166" y="284" width="132" height="6" rx="3"/>
+    <rect fill="#c9ced6" x="1166" y="298" width="64" height="6" rx="3"/>
+  </g>
+
+  <circle class="pr-step" cx="1118" cy="356" r="4"/>
+  <text class="pr-s" x="1132" y="361">every item private</text>
+  <circle class="pr-step" cx="1118" cy="388" r="4"/>
+  <text class="pr-s" x="1132" y="393">every value with its source</text>
+  <circle class="pr-step" cx="1118" cy="420" r="4"/>
+  <text class="pr-s" x="1132" y="425">nothing published</text>
+  <text class="pr-s" x="1132" y="445">or posted for you</text>
+
+  <text class="pr-m" x="1112" y="500">What you confirm is kept here;</text>
+  <text class="pr-m" x="1112" y="520">the paths leave from it, and</text>
+  <text class="pr-m" x="1112" y="540">a part that fits comes back to it.</text>
+
+  <!-- preferences -->
+  <rect class="pr-box" x="300" y="640" width="760" height="82" rx="10"/>
+  <text class="pr-r" x="316" y="666">Your preferences</text>
+  <text class="pr-m" x="470" y="666">shape the project proposals</text>
+  <g>
+    <rect class="pr-chip" x="316" y="682" width="52" height="24" rx="12"/>
+    <text class="pr-c" x="342" y="698" text-anchor="middle">skills</text>
+    <rect class="pr-chip" x="376" y="682" width="50" height="24" rx="12"/>
+    <text class="pr-c" x="401" y="698" text-anchor="middle">tools</text>
+    <rect class="pr-chip" x="434" y="682" width="54" height="24" rx="12"/>
+    <text class="pr-c" x="461" y="698" text-anchor="middle">effort</text>
+    <rect class="pr-chip" x="496" y="682" width="60" height="24" rx="12"/>
+    <text class="pr-c" x="526" y="698" text-anchor="middle">budget</text>
+    <rect class="pr-chip" x="564" y="682" width="74" height="24" rx="12"/>
+    <text class="pr-c" x="601" y="698" text-anchor="middle">interests</text>
+    <rect class="pr-chip" x="646" y="682" width="104" height="24" rx="12"/>
+    <text class="pr-c" x="698" y="698" text-anchor="middle">opens devices</text>
+    <rect class="pr-chip" x="758" y="682" width="58" height="24" rx="12"/>
+    <text class="pr-c" x="787" y="698" text-anchor="middle">radius</text>
+    <rect class="pr-chip" x="824" y="682" width="132" height="24" rx="12"/>
+    <text class="pr-c" x="890" y="698" text-anchor="middle">used, new or either</text>
+  </g>
+
+  <!-- footer -->
+  <text class="pr-m" x="30" y="760">Muse Spark · SAM 3.1 · Muse Voice Transcribe · Muse Image (on request)</text>
+</svg>

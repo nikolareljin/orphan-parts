@@ -4,6 +4,8 @@ Scan what you already own. Decide what it can become. Find the missing piece on 
 prepare what you no longer need for sale or free pickup. Every answer carries its evidence, on
 Meta's Muse models.
 
+![How Orphan Parts Lens works](assets/process.svg)
+
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
 [Built during the hackathon](project/hackathon.md). One diagram of the whole, every box a
