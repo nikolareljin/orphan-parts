@@ -40,7 +40,11 @@ opened as well as new ones (the token names the record, which is read on every r
 that carries it); a session runs `DEMO_SESSION_HOURS` (12) otherwise. Nothing else is stored
 on the server. A wrong code is refused and only `DEMO_CODE_ATTEMPTS` (5) tries per address and quarter
 hour are taken. `GET /api/access` says whether a code is needed, whether this caller is through
-the door, and whether that reaches the live models (`live`); `DELETE /api/access` ends a session.
+the door, and whether that reaches the live models (`live`). `DELETE /api/access` (**Sign out**
+in the header) forgets the session in this browser: the cookie is cleared with the attributes it
+was set with, and the web app drops the token it keeps across origins even when the call fails.
+The token itself is good until it expires, since nothing is stored to end it; revoking the code
+ends every session it opened.
 Which code opened a session is logged by its label, never the code itself.
 
 ## The demo door

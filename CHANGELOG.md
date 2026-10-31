@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- **Sign out** in the web header while signed in on a gated host: `DELETE /api/access` clears the session cookie with the attributes it was set with (`HttpOnly`, `SameSite=Strict`, `Secure` when the cookie is), the web app drops the token it keeps across origins even when the call fails, and the page loads again as the demo visitor, the footer's pairing code with it.
+
 ## 0.3.0 - 2026-10-31
 
 ### Changed
