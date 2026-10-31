@@ -14,7 +14,10 @@ set -euo pipefail
 
 is_docs() {
   case "$1" in
-    docs/*|overrides/*|docker/docs/*|mkdocs.yml|*.md) return 0 ;;
+    docs/*|overrides/*|docker/docs/*|mkdocs.yml) return 0 ;;
+    # Markdown at the root only: demo/listings/*.md and the like are data the tests read
+    */*) ;;
+    *.md) return 0 ;;
   esac
   return 1
 }

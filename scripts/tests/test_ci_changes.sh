@@ -37,3 +37,10 @@ test_ci_changes_empty_runs_both() {
 test_ci_changes_rejects_one_argument() {
   assert_false bash "$_ci_changes" HEAD
 }
+
+test_ci_changes_markdown_outside_the_root_is_data() {
+  # the demo set's listings and the live check's README are read by tests: they run everything
+  assert_eq "$(_ci_changes_for demo/listings/frappe-agitator.md)" "backend=true web=true "
+  assert_eq "$(_ci_changes_for livecheck/README.md JUDGES.md)" "backend=true web=true "
+  assert_eq "$(_ci_changes_for JUDGES.md CHANGELOG.md)" "backend=false web=false "
+}
