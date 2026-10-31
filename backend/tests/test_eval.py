@@ -19,13 +19,6 @@ pytestmark = pytest.mark.anyio
 ROOT = Path(__file__).resolve().parents[2]
 SET = ROOT / "demo" / "set.yaml"
 
-# What the committed fixtures answer for the committed set: the set's photos and the voice
-# note are not in the repository, so no label is read, and every answer that is given (six
-# drafts, four price guidances, four listing reads, the two steps of the proposal loop) comes
-# from an operation's stub rather than a recording of this set. Recording the set with its
-# photos brings this to 0; the assertion pins the number the fixtures give today.
-STUB_ANSWERS_ON_THE_COMMITTED_SET = 16
-
 
 async def test_the_run_scores_the_committed_set_and_writes_the_files(
     recorded_settings: Settings, tmp_path: Path
@@ -47,29 +40,28 @@ async def test_the_run_scores_the_committed_set_and_writes_the_files(
     )
     s = report.summary
     assert s.mode == "fixture" and s.cost_usd == 0.0
-    assert s.items == s.items_loaded == 21 and s.photos == 0 and s.fields_read == 0
-    assert s.stub_answers == STUB_ANSWERS_ON_THE_COMMITTED_SET
-    # the fit verdicts come from the rules and the owner values: right without any recording
-    assert (s.fits_right, s.fits_total) == (2, 2)
+    # the set's photos are committed and recorded: every answer is a recording of this set
+    assert s.items == s.items_loaded == 10 and s.photos == 19
+    assert s.stub_answers == 0 and s.skipped == []
+    assert s.fields_read == 43
+    assert (s.expected, s.matches) == (14, 14)
+    assert (s.fits_right, s.fits_total) == (0, 0)
+    assert (s.proposals_proposed, s.proposals_kept, s.proposals_dropped) == (2, 2, 0)
     by_key = {i.key: i for i in report.items}
-    assert by_key["tool_fits"].fit is not None
-    assert by_key["tool_fits"].fit.verdict == "COMPATIBLE_LIKELY"
-    assert by_key["tool_near"].fit is not None and by_key["tool_near"].fit.verdict == "CONFLICT"
-    # the adapter's expected values are the stub's; its photo is not here, so nothing was read
-    assert {f.result for f in by_key["adapter"].expected_fields} == {"not_read"}
-    assert s.expected == 5 and s.matches == 0
-    # the proposal stub writes three, the rules keep the two the inventory backs
-    assert (s.proposals_proposed, s.proposals_kept, s.proposals_dropped) == (3, 2, 1)
-    assert by_key["laptop_old"].proposals_in == 1 and by_key["vacuum"].proposals_in == 1
+    assert by_key["monitor_u2419h"].proposals_in == 1
+    assert by_key["monitor_1800fp"].proposals_in == 1
+    # the agitator has no label: its values are the owner's measurements
+    agitator = by_key["frappe_agitator"]
+    assert agitator.fields_read == 0 and agitator.owner_values == 6
     out = tmp_path / "eval"
     written = write_report(report, out)
     assert [p.name for p in written] == ["report.json", "report.md", "fields.png", "proposals.png"]
     assert all(p.is_file() and p.stat().st_size > 0 for p in written)
     saved = json.loads((out / "report.json").read_text())
-    assert saved["summary"]["stub_answers"] == STUB_ANSWERS_ON_THE_COMMITTED_SET
+    assert saved["summary"]["stub_answers"] == 0
     text = (out / "report.md").read_text()
-    assert "| Fit verdicts right | 2 of 2 |" in text and "operation's stub" in text
-    assert "| tool_near | 0 | 0 | 1 |  |  | CONFLICT vs vacuum, expected conflict: right |" in text
+    assert "| Expected values matched | 14 of 14 |" in text and "operation's stub" not in text
+    assert "| powerline | 5 | 5 | 0 | 0.91 | brand match, model_number match |  |  |" in text
 
 
 def test_expected_values_compare_by_number_or_by_the_field_normaliser() -> None:
@@ -259,10 +251,11 @@ def test_the_command_line(
     recorded_settings.inventory_db_path.write_bytes(b"")
     assert main(["run", "--set", str(SET), "--out", str(out)]) == 0
     printed = capsys.readouterr().out
-    assert "removed inventory.sqlite3" in printed and "2/2 fit verdict(s) right" in printed
+    assert "removed inventory.sqlite3" in printed and "14/14 expected value(s) matched" in printed
     assert (out / "charts" / "proposals.png").is_file()
     assert main(["export", "--out", str(out)]) == 0
-    assert (out / "train.jsonl").read_text() == ""  # nothing observed was read for this set
+    # one line per item with accepted reads: every item but the agitator, which has no label
+    assert len((out / "train.jsonl").read_text().splitlines()) == 9
     (out / "a.json").write_bytes((out / "report.json").read_bytes())
     assert main(["diff", str(out / "a.json"), str(out / "report.json")]) == 0
     assert "stub_answers" in capsys.readouterr().out

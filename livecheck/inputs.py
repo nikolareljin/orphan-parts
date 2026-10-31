@@ -1,8 +1,8 @@
 """The demo set's own inputs: a label photo, a voice note and a listing text from demo/.
 
 A file named in demo/set.yaml that is not in the tree (the photos and notes are the owner's,
-written by ``./dev demo-scrub`` and not committed) is stood in for by one drawn or synthesized
-here, so the check runs on any clone. Nothing here is personal data: the label values are the
+written by ``./dev demo-scrub``) is stood in for by one drawn or synthesized here, so the check
+runs on any clone. Nothing here is personal data: the label values are the
 ones the recorded extract stub already answers with."""
 
 import math

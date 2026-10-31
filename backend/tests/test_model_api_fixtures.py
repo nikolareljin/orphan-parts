@@ -1,4 +1,5 @@
 import base64
+import json
 from pathlib import Path
 
 from app.model_api.fixtures import FixtureStore, request_key
@@ -59,6 +60,33 @@ def test_saved_fixture_holds_a_digest_instead_of_the_image(tmp_path: Path) -> No
     text = path.read_text()
     assert base64.b64encode(b"jpegbytes" * 100).decode("ascii") not in text
     assert "data:image/jpeg;sha256," in text
+
+
+def test_the_request_digest_is_written_as_digest_and_read_under_either_name(
+    tmp_path: Path,
+) -> None:
+    store = FixtureStore(tmp_path)
+    body = body_with_image(b"jpegbytes")
+    path = store.save("/responses", body, "extract", {"output": []})
+    saved = json.loads(path.read_text())
+    assert saved["digest"] == request_key("/responses", body) and "key" not in saved
+    # a recording written before the rename names it "key"
+    saved["key"] = saved.pop("digest")
+    path.write_text(json.dumps(saved))
+    found = store.find("/responses", body, "extract")
+    assert found is not None and found.key == request_key("/responses", body)
+
+
+def test_reasoning_is_emptied_in_the_recording_and_left_out_of_the_key(tmp_path: Path) -> None:
+    store = FixtureStore(tmp_path)
+    reasoning = {"type": "reasoning", "encrypted_content": "sk-" + "x" * 40}
+    body = {"model": "m", "input": ["question", reasoning]}
+    path = store.save("/responses", body, "propose-2", {"output": [reasoning]})
+    assert "sk-" not in path.read_text()
+    # the same chain with other reasoning in it finds the recording
+    other = {"model": "m", "input": ["question", {**reasoning, "encrypted_content": "y"}]}
+    found = store.find("/responses", other, "propose-2")
+    assert found is not None and found.response["output"][0]["encrypted_content"] == ""
 
 
 def test_find_falls_back_to_the_operation_fixture(tmp_path: Path) -> None:
