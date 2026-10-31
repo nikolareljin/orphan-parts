@@ -27,7 +27,11 @@ the repository's settings.
 `deploy/modal_app.py` builds the image from `backend/pyproject.toml`, adds `backend/app`, the
 recorded answers under `backend/tests/fixtures` (fixture mode on the host replays them) and
 the demo set under `demo/`, mounts the volume `orphan-parts-data` at `/data` (the inventory
-file, the captures, the spend ledger) and reads the secret. One container (`max_containers=1`: one writer for the database, one
+file, the captures, the spend ledger) and reads the secret. The image carries those three
+directories and nothing else, never a `.env` or a key file (`NEVER_SHIPPED` in
+`deploy/modal_app.py` keeps them out wherever they turn up), the secret is built from the
+named settings only, and the web step refuses to build while a `frontend/.env*` exists, since
+Vite would bake its `VITE_` names into the public bundle. One container (`max_containers=1`: one writer for the database, one
 counter for the demo gate), kept warm (`min_containers=1`; `OPL_MIN_CONTAINERS=0` at deploy
 time lets it scale to zero, with a cold start of some seconds on the first request after an
 idle quarter hour). A write is committed to the volume as soon as its request ends, and what

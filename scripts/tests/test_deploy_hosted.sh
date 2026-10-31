@@ -9,8 +9,8 @@ _hosted_cleanup() { [[ -n "${1:-}" && -d "$1" && "$1" == "${TMPDIR:-/tmp}"/* ]] 
 
 # A tree with the app file, a frontend directory and the four stand-ins. The modal stand-in
 # keeps the dotenv it was given (the secret) and prints a deploy line; wrangler lists the
-# project only when the tree has a flag file; npm writes dist on build and records VITE_API_URL;
-# curl answers readyz from a file.
+# project only when the tree has a flag file; npm writes dist on build (with a .env in it when
+# the tree has another flag file) and records VITE_API_URL; curl answers readyz from a file.
 _hosted_tree() {
   local dir="$1"
   mkdir -p "$dir/bin" "$dir/deploy" "$dir/frontend"
@@ -44,6 +44,7 @@ STUB
 #!/usr/bin/env bash
 printf '%s VITE_API_URL=%s\n' "\$*" "\${VITE_API_URL:-}" >> "$dir/npm.log"
 [[ "\$1 \$2" == "run build" ]] && { mkdir -p dist; echo '<html></html>' > dist/index.html; }
+[[ "\$1 \$2" == "run build" && -f "$dir/env-in-dist" ]] && touch dist/.env.production
 exit 0
 STUB
   cat > "$dir/bin/curl" <<STUB
@@ -151,5 +152,28 @@ test_hosted_all_runs_the_three_steps_and_the_web_takes_the_backend_url() {
   assert_false _hosted_env "$dir" bash "$_hosted" elsewhere 2>/dev/null
   # no modal command: said with the install line
   assert_false _hosted_env "$dir" MODAL="$dir/bin/nowhere" bash "$_hosted" backend 2>/dev/null
+  _hosted_cleanup "$dir"
+}
+
+test_hosted_web_refuses_a_frontend_env_file_before_the_build_and_in_dist() {
+  local dir err api=https://someone--orphan-parts-web.modal.run
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _hosted_tree "$dir"
+  # a .env Vite would read: refused by name before npm runs at all
+  touch "$dir/frontend/.env.production.local"
+  err="$(_hosted_env "$dir" API_URL=$api bash "$_hosted" web 2>&1 >/dev/null)" && assert_true false || assert_true true
+  assert_true grep -q 'frontend/.env.production.local' <<<"$err"
+  assert_false test -f "$dir/npm.log"
+  rm "$dir/frontend/.env.production.local"
+  # one the build leaves in dist: built, named, not uploaded
+  touch "$dir/env-in-dist"
+  err="$(_hosted_env "$dir" API_URL=$api bash "$_hosted" web 2>&1 >/dev/null)" && assert_true false || assert_true true
+  assert_true grep -q 'dist/.env.production' <<<"$err"
+  assert_true grep -q 'run build' "$dir/npm.log"
+  assert_false test -f "$dir/wrangler.log"
+  # without either: published
+  rm "$dir/env-in-dist" "$dir/frontend/dist/.env.production"
+  assert_true _hosted_env "$dir" API_URL=$api bash "$_hosted" web
+  assert_true grep -q 'pages deploy' "$dir/wrangler.log"
   _hosted_cleanup "$dir"
 }
