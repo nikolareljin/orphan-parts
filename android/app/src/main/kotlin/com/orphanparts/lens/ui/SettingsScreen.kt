@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +37,7 @@ import com.orphanparts.lens.pairingFrom
 import com.orphanparts.lens.pointsAtLocalhost
 import com.orphanparts.lens.tokenEnded
 import com.orphanparts.lens.typedSettings
+import com.orphanparts.lens.unpaired
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -130,6 +133,34 @@ fun scanToPair(
 
 private fun json(text: String): JSONObject = try { JSONObject(text) } catch (_: Exception) { JSONObject() }
 
+/** Unpair: the phone is released from the backend from its own side. The backend is asked
+ * once to forget the session (`DELETE /api/access`, what Sign out calls; a backend that keeps
+ * the session in a cookie drops it, ours stores nothing, so the token runs to its own expiry)
+ * with a short wait and whatever comes back, then what the pairing left is emptied: the
+ * address, the code, the token, the code's label and expiry. The phone's own code is not
+ * revoked here, the app has no right to; `./dev keys revoke` on the server does that, by its
+ * label, and the dialog says so. */
+suspend fun unpair(held: Settings, transport: Transport = HttpTransport(readMs = 5_000, connectMs = 5_000)): Settings =
+    withContext(Dispatchers.IO) {
+        if (held.ready && held.token.isNotBlank()) {
+            try {
+                Client(held.baseUrl, transport, held.token).leave()
+            } catch (_: Exception) {
+                // the phone forgets the session either way
+            }
+        }
+        unpaired(held)
+    }
+
+/** What the Unpair dialog asks: the phone's own code is named by its label with where it is
+ * revoked, since unpairing leaves it issued; a typed code or a pairing has nothing to revoke. */
+fun unpairQuestion(held: Settings): String =
+    if (held.ownCode) {
+        "Unpair this phone? It forgets the address, its code and its session. The code stays valid on the server until it is revoked there: ./dev keys revoke \"${held.codeLabel}\""
+    } else {
+        "Unpair this phone? It forgets the address, the code and the session it holds."
+    }
+
 @Composable
 fun SettingsScreen(
     settings: Settings,
@@ -143,6 +174,7 @@ fun SettingsScreen(
     var url by remember(settings.baseUrl, settings.accessCode) { mutableStateOf(settings.baseUrl) }
     var code by remember(settings.baseUrl, settings.accessCode) { mutableStateOf(settings.accessCode) }
     var status by remember { mutableStateOf("") }
+    var askUnpair by remember { mutableStateOf(false) }
     LaunchedEffect(note) { if (note.second.isNotEmpty()) status = note.second }
     val scope = rememberCoroutineScope()
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -211,9 +243,44 @@ fun SettingsScreen(
                     val own = if (typedUrl == settings.baseUrl && typedCode == settings.accessCode) settings else null
                     scope.launch { status = check(typedUrl, typedCode, pairing, own) }
                 }
+                // anything a pairing or a Save left can be released
+                if (settings.baseUrl.isNotBlank() || settings.accessCode.isNotBlank() || settings.token.isNotBlank()) {
+                    Spacer(Modifier.width(8.dp))
+                    SecondaryButton("Unpair", tone = Tone.Error) { askUnpair = true }
+                }
             }
         }
         Spacer(Modifier.height(10.dp))
         StatusLine(status)
+    }
+
+    if (askUnpair) {
+        val colors = MaterialTheme.colorScheme
+        AlertDialog(
+            onDismissRequest = { askUnpair = false },
+            title = { Text("Unpair") },
+            text = { Text(unpairQuestion(settings)) },
+            containerColor = colors.surface,
+            titleContentColor = colors.onSurface,
+            textContentColor = colors.onSurfaceVariant,
+            shape = MaterialTheme.shapes.large,
+            confirmButton = {
+                TextButton(onClick = {
+                    askUnpair = false
+                    status = "Unpairing…"
+                    val held = settings
+                    scope.launch {
+                        val empty = unpair(held)
+                        // a claim still running goes first, then the store is emptied on disk
+                        // before anything else, so the pairing cannot come back with the next
+                        // start; the app observes the store, as for a claim
+                        forgetClaims()
+                        store.save(empty, durable = true)
+                        status = "Unpaired."
+                    }
+                }) { Text("Unpair", color = colors.error) }
+            },
+            dismissButton = { TextButton(onClick = { askUnpair = false }) { Text("Keep", color = colors.primary) } },
+        )
     }
 }

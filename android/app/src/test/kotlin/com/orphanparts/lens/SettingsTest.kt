@@ -126,6 +126,21 @@ class PairingTest {
     }
 
     @Test
+    fun an_unpaired_phone_holds_nothing_and_takes_nothing_from_before() {
+        val empty = unpaired(own)
+        assertEquals(Settings("", ""), empty)
+        assertFalse(empty.ready)
+        assertFalse(empty.ownCode)
+        assertEquals(Settings("", ""), unpaired(Settings("http://host:8000", "typed", "sid.1.sig")))
+        // a claim started before the unpair lands on nothing: the scan it came from is gone
+        val scanned = Settings("https://demo.example", "", "sid.1.sig")
+        assertNull(applyClaim(empty, scanned, own))
+        assertNull(applyClaim(empty, scanned.copy(token = ""), own))
+        // and a code heard of as ended after it changes nothing
+        assertNull(withoutEndedCode(empty, "opl_mine"))
+    }
+
+    @Test
     fun anything_else_is_not_a_pairing_code() {
         val current = Settings("", "", "")
         assertNull(pairingFrom("hello", current))

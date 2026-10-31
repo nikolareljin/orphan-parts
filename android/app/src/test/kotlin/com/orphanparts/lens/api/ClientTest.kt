@@ -55,6 +55,28 @@ class ClientTest {
     }
 
     @Test
+    fun leave_sends_the_token_once_and_forgets_it_even_when_refused() {
+        val (c, t) = client(HttpResponse(200, """{"gated":true,"granted":false,"live":false}"""), HttpResponse(200, "[]"))
+        c.useToken("abc.def.ghi")
+        c.leave()
+        assertEquals("DELETE", t.sent[0].method)
+        assertEquals("http://backend:8000/api/access", t.sent[0].url)
+        assertEquals("Bearer abc.def.ghi", t.sent[0].headers["Authorization"])
+        assertNull(t.sent[0].body)
+        c.items()
+        assertNull(t.sent[1].headers["Authorization"])
+        val (refused, _) = client(HttpResponse(503, """{"detail":"not now"}"""))
+        refused.useToken("abc.def.ghi")
+        try {
+            refused.leave()
+            fail("a refusal is said")
+        } catch (e: ApiException) {
+            assertEquals(503, e.status)
+        }
+        assertEquals("", refused.token)
+    }
+
+    @Test
     fun the_phone_claims_its_own_code_with_the_pairing_session() {
         val (c, t) = client(
             HttpResponse(200, """{"gated":true,"code":"opl_mine","label":"phone abcd1234","expires_at":"2026-11-29T10:00:00+00:00"}"""),

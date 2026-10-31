@@ -147,6 +147,13 @@ fun withoutEndedCode(current: Settings, code: String): Settings? =
         null
     }
 
+/** The settings once the phone is unpaired: every field the pairing left, emptied, so the
+ * Backend tab shows the empty form and a claim or an ended code heard of after it finds
+ * nothing to apply to (`applyClaim` keys on the address and the token, `withoutEndedCode` on
+ * the code). The phone's own code stays issued on the server until it is revoked there. */
+fun unpaired(current: Settings): Settings =
+    current.copy(baseUrl = "", accessCode = "", token = "", codeLabel = "", codeExpires = "")
+
 class SettingsStore(context: Context) {
     private val prefs = context.getSharedPreferences("orphan-parts", Context.MODE_PRIVATE)
 
