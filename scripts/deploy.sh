@@ -54,13 +54,15 @@ load_env() {
 
 if [[ "${1:-}" == hosted ]]; then
   shift
-  load_env 'MODAL_TOKEN_ID|MODAL_TOKEN_SECRET|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID|MODEL_API_KEY_DEMO|DEMO_ACCESS_CODE_HOSTED|WEB_ORIGIN|PAGES_PROJECT|API_URL|SPEND_CAP_USD_HOSTED|OPL_FAKE_API_HOSTED|OPL_MIN_CONTAINERS'
-  # the host's code, cap and mode come from the _HOSTED names only (the shell's or .env's);
-  # this machine's DEMO_ACCESS_CODE, SPEND_CAP_USD and OPL_FAKE_API never reach the host, and
-  # an empty one leaves the host's default (no code, a cap of 20, recorded answers)
+  load_env 'MODAL_TOKEN_ID|MODAL_TOKEN_SECRET|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID|MODEL_API_KEY_DEMO|DEMO_ACCESS_CODE_HOSTED|WEB_ORIGIN|PAGES_PROJECT|API_URL|SPEND_CAP_USD_HOSTED|OPL_FAKE_API_HOSTED|PICTURE_ENABLED_HOSTED|OPL_MIN_CONTAINERS'
+  # the host's code, cap, mode and pictures come from the _HOSTED names only (the shell's or
+  # .env's); this machine's DEMO_ACCESS_CODE, SPEND_CAP_USD, OPL_FAKE_API and PICTURE_ENABLED
+  # never reach the host, and an empty one leaves the host's default (no code, a cap of 20,
+  # recorded answers, pictures off)
   export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE_HOSTED:-}"
   export SPEND_CAP_USD="${SPEND_CAP_USD_HOSTED:-}"
   export OPL_FAKE_API="${OPL_FAKE_API_HOSTED:-}"
+  export PICTURE_ENABLED="${PICTURE_ENABLED_HOSTED:-}"
   exec bash "$root/scripts/deploy-hosted.sh" "$@"
 fi
 target="all"

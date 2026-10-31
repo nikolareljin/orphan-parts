@@ -27,7 +27,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `IMAGE_MAX_PX` | `1280` | | photos are downscaled to this long edge before upload |
 | `SEGMENT_MAX_PX` | `800` | | the copy SAM 3.1 sees is downscaled to this long edge; boxes are scaled back onto the photo |
 | `MAX_PHOTOS` | `4` | | photos accepted per item |
-| `PICTURE_ENABLED` | `0` | | `1` lets the item dialog draw a picture of what an item could become: one Muse Image call per click ($0.01 an image), counted in the ledger, never automatic; off, the route answers 503 and the button is disabled |
+| `PICTURE_ENABLED` | `0` | | `1` lets the item dialog draw a picture of what an item could become: one Muse Image call per click ($0.01 an image), counted in the ledger, never automatic; off, the route answers 503 and the button is disabled; the hosted demo turns it on with the `PICTURE_ENABLED` repository variable |
 | `EXTRACT_ENHANCE` | `1` | | contrast stretched and edges sharpened on what goes to the model; what is kept is the photo as taken. Changing it changes what the model is shown, so fixtures recorded for a photo stop matching and the operation's fallback answers instead: record the set again |
 | `EXTRACT_BLUR_THRESHOLD` | `150` | | the sharpness (variance of the Laplacian on a 512 px copy) under which a reading warns that the label looks blurred |
 | `RETENTION_HOURS` | `24` | | reserved for a purge of stored photos; nothing but measurement photos is kept today, and no purge runs |

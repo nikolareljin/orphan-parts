@@ -23,6 +23,8 @@
 #   DEMO_ACCESS_CODE     the access code; empty = an open demo
 #   SPEND_CAP_USD        the ledger's cap on the host (default 20)
 #   OPL_FAKE_API         1 = recorded answers even with a key (default 1)
+#   PICTURE_ENABLED      1 = the item dialog may draw a picture with Muse Image (default 0;
+#                        only 0 or 1)
 #   OPL_MIN_CONTAINERS   read by deploy/modal_app.py at deploy time: 1 keeps the container warm
 #   MODAL_TOKEN_ID, MODAL_TOKEN_SECRET          the modal command's login (or ~/.modal.toml)
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID wrangler's login
@@ -69,6 +71,8 @@ step_secret() {
     [[ "$value" != *[\\\']* && "$value" != *$'\n'* ]] \
       || fail "secret: $name holds a single quote, a backslash or a newline, which the dotenv cannot carry"
   done
+  [[ "${PICTURE_ENABLED:-0}" =~ ^[01]$ ]] \
+    || fail "secret: PICTURE_ENABLED must be 0 or 1, not ${PICTURE_ENABLED}"
   local file
   file="$(mktemp)" || fail "secret: no temporary file"
   secret_file="$file"
@@ -79,6 +83,7 @@ step_secret() {
     printf "DEMO_ACCESS_CODE='%s'\n" "${DEMO_ACCESS_CODE:-}"
     printf "SPEND_CAP_USD='%s'\n" "${SPEND_CAP_USD:-20}"
     printf "OPL_FAKE_API='%s'\n" "${OPL_FAKE_API:-1}"
+    printf "PICTURE_ENABLED='%s'\n" "${PICTURE_ENABLED:-0}"
     printf "CORS_ORIGINS='%s'\n" "$WEB_ORIGIN"
     printf "DEMO_COOKIE_SECURE='1'\n"
     # Modal's proxy forwards the visitor's address: counted per visitor, not per proxy
@@ -93,7 +98,7 @@ step_secret() {
   local key="empty" code="empty"
   [[ -n "${MODEL_API_KEY_DEMO:-}" ]] && key="set"
   [[ -n "${DEMO_ACCESS_CODE:-}" ]] && code="set"
-  say "secret: orphan-parts written: key $key, code $code, OPL_FAKE_API=${OPL_FAKE_API:-1}, cap ${SPEND_CAP_USD:-20}, origin $WEB_ORIGIN"
+  say "secret: orphan-parts written: key $key, code $code, OPL_FAKE_API=${OPL_FAKE_API:-1}, PICTURE_ENABLED=${PICTURE_ENABLED:-0}, cap ${SPEND_CAP_USD:-20}, origin $WEB_ORIGIN"
 }
 
 step_backend() {
