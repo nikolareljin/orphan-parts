@@ -58,8 +58,8 @@ A plan for a missing item is one call (effort `low`) with the strict JSON schema
 `PlanWriting`: three to six search phrasings with a line each on what they find, one match
 pattern over listing text and the exclusion words. The brief carries the need's title, the
 profile, the needed values, the values of the item that needs it, the notes and the top price;
-the instructions ask for bounded gaps and classes instead of `.*` and nested repeats, and
-never a part number the need does not give. The pattern goes through the same checks as one
+the instructions ask for an RE2 pattern with short gaps and classes, no lookarounds,
+backreferences, comments or inline flags, and never a part number the need does not give. The pattern goes through the same checks as one
 typed by the owner and is dropped, with the reason, when it fails them. Operation name
 `search-plan`, which is also the recorded fixture. The code path is `app/find/service.py`;
 the checks are `app/find/plan.py`.

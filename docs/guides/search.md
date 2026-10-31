@@ -61,35 +61,57 @@ The plan is kept with the search, next to the listings brought back and the cand
 
 ## The pattern and its limits
 
-The pattern runs on Python's `re`, which backtracks and has no timeout, so it is checked
-before it is kept, whether Muse Spark wrote it or you did:
+The pattern runs on [RE2](https://github.com/google/re2/wiki/Syntax) (the `google-re2`
+package), an engine that matches in time linear in the text: it never backtracks, so no
+pattern, however it is written, can hold the backend while it runs. Python's `re` is not used
+for it; a backtracking engine has no timeout and holds the interpreter while it matches, so a
+single request could stall every other one. Whether Muse Spark wrote the pattern or you did,
+it is checked before it is kept, and refused with a line saying why:
 
-- it compiles, it is at most 300 characters, and it does not match empty text;
-- no backreferences;
-- no repeated group that repeats or branches inside (`(a+)+`, `(.*)*`, `(\w+\s?)*`,
-  `(a|ab)+`); a character class such as `[-\s]?` does the same job safely;
-- no open-ended `.*` or `.+` (write `.{0,40}`), no two open-ended repeats side by side
-  (`\d+\d+`), and at most six open-ended repeats in all.
+- it is at most 300 characters, it compiles under RE2, and it does not match empty text;
+- what RE2 does not have is refused by name: lookaheads and lookbehinds (`(?=`, `(?!`,
+  `(?<=`, `(?<!`; an exclusion word does the job of a negative one), backreferences (`\1`,
+  `(?P=name)`) and `\C`;
+- comments `(?#...)` and inline flags are refused, except `(?i)`: the pattern already matches
+  in any case, and a flag such as `(?x)` or `(?s)` changes what the rest of it means;
+- counted repeats are kept small: every atom counts one and `{n,m}` multiplies what it repeats
+  by `m`, and the whole may come to at most 400 (`.{0,40}` counts 40, `(?:\w{0,20}\s){1,30}`
+  counts 630 and is refused). RE2 expands a counted repeat into that many copies, and its work
+  for each character grows with them; `+` and `*` cost one.
 
-Those are the shapes that make a backtracking engine run for minutes on text that nearly
-matches. The pattern is also run over the first 4,000 characters of a listing only. A written
-pattern that fails the checks is not kept: the plan says why and the field stays empty for you
-to fill. **Try the pattern on a line** under the field shows, as you type, how a line scores
-and which span matched, through the same checks and engine as the ranking. **Save pattern**
-keeps it and scores every listing again.
+RE2's `\w`, `\d`, `\s` and `\b` are ASCII; `\pL` matches a letter in any script. The pattern is
+run over the first 4,000 characters of a listing, the part that is kept. A written pattern that
+fails the checks is not kept: the plan says why and the field stays empty for you to fill.
+**Try the pattern on a line** under the field shows, as you type, how a line scores and which
+span matched, through the same checks and engine as the ranking; a refused pattern's reason is
+read out by a screen reader without interrupting. **Save pattern** keeps it and scores every
+listing again.
 
 ## Bring back listings
 
 Paste one listing or several into **Bring back listings**: a line of dashes (`---`) between
 listings, or a blank line when no listing has blank lines inside. Or choose up to six
-screenshots: each is read into text by the label extractor (one call each). Each listing is
-scored here, without a model call:
+screenshots: each is read into text by the label extractor (one call each, and each counted
+against the hourly and daily allowance; a batch larger than what is left is refused whole).
+A listing is kept up to its first 4,000 characters, and a search keeps at most 50 listings:
+past that the oldest go first, the ones not yet checked before the ones **Check fit** has
+read, and the ones just brought back always stay. Each listing is scored here, without a
+model call:
 
 - **fits**: the pattern matches, no exclusion word, and the price is within the limit or not
   stated;
 - **maybe**: no exclusion word and within the limit, but the pattern does not match (or there
   is no pattern yet);
 - **does not fit**: an exclusion word is in the text, or the asking price is over the limit.
+
+The limit is the search's top price; a price exactly at it fits, and a top price of 0 (or none)
+means no limit. The asking price is the last dollar amount the listing states, so *was $40, now
+$15* is $15; `$1.2k` is $1,200; `CA$30` and other dollars with a letter before the sign are not
+read as US dollars (`US$30` is); *free* counts as $0 only when no amount is given and it is not
+*smoke-free*, *pet free* or *free shipping* (or delivery, or home delivery); and a number that
+goes on in groups of three after a space, such as `$1 200`, is not guessed at. Exclusion words
+match whole words in any case, so *FOR PARTS* rules a listing out and *brokenly* is not
+*broken*.
 
 The ranked list puts fits first, then maybe, then the ones ruled out, cheaper first within
 each. The matched span is highlighted in green, an exclusion word in red and struck through,
