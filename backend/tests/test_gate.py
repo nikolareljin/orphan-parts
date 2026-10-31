@@ -176,7 +176,7 @@ def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) ->
     assert opened.status_code == 200 and opened.json()["granted"] is True
     assert gated.get("/api/items").status_code == 200
     # the phone paired from this session carries the same record
-    web = {"Origin": "http://host:5173"}
+    web = {"Origin": "http://host:5173", "Sec-Fetch-Site": "same-origin"}
     phone = gated.get("/api/pair", params={"origin": "http://host:5173"}, headers=web).json()[
         "token"
     ]

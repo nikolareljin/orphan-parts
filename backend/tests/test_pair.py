@@ -302,13 +302,24 @@ def test_only_an_origin_this_server_is_reached_at_goes_into_a_pairing(tmp_path: 
         c.post("/api/access", json={"code": CODE})
         refused = c.get("/api/pair", params=evil)
         assert refused.status_code == 422 and "not an origin" in refused.json()["detail"]
+        # another site's page naming itself: the browser marks its requests cross-site
+        for page in ({"Origin": "https://evil.example"}, {"Referer": "https://evil.example/"}):
+            asked_from = {**page, "Sec-Fetch-Site": "cross-site"}
+            assert c.get("/api/pair", params=evil, headers=asked_from).status_code == 422
+            assert c.get("/api/pair.svg", params=evil, headers=asked_from).status_code == 422
         # nor as the API's origin beside a good web origin
         asked = {"origin": lan, "api": "https://evil.example"}
-        assert c.get("/api/pair", params=asked, headers={"Origin": lan}).status_code == 422
-        # the page on the network: its Origin, or the Referer of the image it loads
-        assert c.get("/api/pair", params={"origin": lan}, headers={"Origin": lan}).json()["token"]
-        image = c.get("/api/pair.svg", params={"origin": lan}, headers={"Referer": lan + "/"})
+        same = {"Origin": lan, "Sec-Fetch-Site": "same-origin"}
+        assert c.get("/api/pair", params=asked, headers=same).status_code == 422
+        # the page on the network, through a proxy that rewrites the host: its Origin, or the
+        # Referer of the image it loads, on a request the browser marks same-origin
+        assert c.get("/api/pair", params={"origin": lan}, headers=same).json()["token"]
+        lan_image = {"Referer": lan + "/", "Sec-Fetch-Site": "same-origin"}
+        image = c.get("/api/pair.svg", params={"origin": lan}, headers=lan_image)
         assert image.status_code == 200
+        # the same headers without that mark name nothing
+        unmarked = c.get("/api/pair", params={"origin": lan}, headers={"Origin": lan})
+        assert unmarked.status_code == 422
         # behind a proxy that keeps the host the browser asked for
         assert c.get("/api/pair", params={"origin": lan}, headers={"Host": "192.168.1.20:5173"})
     # the hosted page on another origin, named in CORS_ORIGINS, with the API's own origin

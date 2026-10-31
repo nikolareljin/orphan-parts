@@ -87,8 +87,9 @@ its own when reached.
 ## The phone
 
 *Pair the phone* at the foot of every page shows a QR code with this web origin
-(`GET /api/pair.svg`); the origin must be one this server is reached at (the page's own, as
-the browser names it, or one in `CORS_ORIGINS`), so the QR never points elsewhere. For a
+(`GET /api/pair.svg`); the origin must be one this server is reached at (the host asked
+for, the page's own on a request the browser marks same-origin, or one in `CORS_ORIGINS`), so
+the QR never points elsewhere, and another site's page cannot draw one naming itself. For a
 caller through the door it carries a pairing as well: a short session of its own kind, good
 for `PAIR_TOKEN_MINUTES` (15), that opens the door while it lasts and is the only token that
 claims a phone's code. The access code itself is never in the QR, and the QR stores nothing.

@@ -43,15 +43,18 @@ class PhoneCode(BaseModel):
 
 
 def served_origins(headers: Mapping[str, str], configured: Iterable[str] = ()) -> set[str]:
-    """The origins this server answers for, as the request shows them: the browser's Origin
-    and Referer, the Host it asked for (either scheme: a proxy in front may end TLS), a proxy's
-    forwarded host, and the configured CORS origins. Nothing else may go into a pairing, so a
-    QR drawn here points only back at this server."""
+    """The origins this server answers for, as the request shows them: the Host it asked for
+    (either scheme: a proxy in front may end TLS), a proxy's forwarded host, the configured
+    CORS origins, and the page's Origin and Referer when the browser marks the request
+    same-origin (a dev proxy rewrites the Host, so the LAN page is known by these). Another
+    site's page is cross-site, so its own origin does not count. Nothing else may go into a
+    pairing, so a QR drawn here points only back at this server."""
     found = {o.rstrip("/").lower() for o in configured}
-    for name in ("origin", "referer"):
-        parts = urlsplit(headers.get(name, ""))
-        if parts.scheme in ("http", "https") and parts.netloc:
-            found.add(f"{parts.scheme}://{parts.netloc}".lower())
+    if headers.get("sec-fetch-site", "") == "same-origin":
+        for name in ("origin", "referer"):
+            parts = urlsplit(headers.get(name, ""))
+            if parts.scheme in ("http", "https") and parts.netloc:
+                found.add(f"{parts.scheme}://{parts.netloc}".lower())
     for name in ("x-forwarded-host", "host"):
         host = headers.get(name, "").split(",")[0].strip().lower()
         if host:
