@@ -16,7 +16,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
 from app.model_api.errors import (
@@ -56,6 +56,8 @@ REASONING_HEADROOM: dict[str, int] = {
 }
 # with no effort given the model may still reason, so the room is the same as for low
 DEFAULT_REASONING_HEADROOM = REASONING_HEADROOM["low"]
+# how much of the text a validation error quotes; pydantic cuts about this much itself
+PREVIEW_CHARS = 120
 
 SleepFn = Callable[[float], Awaitable[None]]
 
@@ -94,6 +96,9 @@ class ModelResponse(BaseModel):
     model: str
     status: str
     text: str
+    # the last message alone: with a search or tool in play the model may write a line or two
+    # before the calls, and the answer is the message after them
+    final_text: str = ""
     output: list[dict[str, Any]]
     usage: Usage
     cost_usd: float
@@ -145,6 +150,35 @@ def output_text(output: list[dict[str, Any]]) -> tuple[str, str | None]:
             elif kind == "refusal" and refusal is None:
                 refusal = str(part.get("refusal") or part.get("text") or "refused")
     return "".join(chunks), refusal
+
+
+def final_text(output: list[dict[str, Any]]) -> str:
+    """The output_text of the last message item: the answer, once any tool calls are done."""
+    for item in reversed(output):
+        if item.get("type") != "message":
+            continue
+        parts = item.get("content") or []
+        return "".join(str(p.get("text", "")) for p in parts if p.get("type") == "output_text")
+    return ""
+
+
+def last_json_object(text: str) -> str | None:
+    """The last JSON object in the text that runs to its end, or None: tried from the last
+    opening brace backwards, each candidate decoded (so braces inside strings do not count)."""
+    body = text.rstrip()
+    if not body.endswith("}"):
+        return None
+    decoder = json.JSONDecoder()
+    start = body.rfind("{")
+    while start >= 0:
+        try:
+            value, end = decoder.raw_decode(body, start)
+        except ValueError:
+            value, end = None, -1
+        if isinstance(value, dict) and end == len(body):
+            return body[start:]
+        start = body.rfind("{", 0, start)
+    return None
 
 
 def searches(output: list[dict[str, Any]]) -> int:
@@ -245,6 +279,7 @@ class ModelApiClient:
         effort: str | None = None,
         max_output_tokens: int | None = None,
         tools: list[dict[str, Any]] | None = None,
+        max_tool_calls: int | None = None,
         include: list[str] | None = None,
         metadata: dict[str, str] | None = None,
         op: str = "respond",
@@ -261,6 +296,7 @@ class ModelApiClient:
                 effort=effort,
                 max_output_tokens=max_output_tokens,
                 tools=tools,
+                max_tool_calls=max_tool_calls,
                 include=include,
                 metadata=metadata,
                 op=op,
@@ -285,6 +321,9 @@ class ModelApiClient:
             }
         if tools:
             body["tools"] = tools
+        if max_tool_calls:
+            # the hard stop on built-in tools such as web search; one search is one call
+            body["max_tool_calls"] = max_tool_calls
         if include:
             body["include"] = include
         if metadata:
@@ -303,6 +342,7 @@ class ModelApiClient:
         data, from_fixture, attempts, ms = await self._post(RESPONSES, body, op, key=key)
         output = data.get("output") or []
         text, refusal = output_text(output)
+        answer = final_text(output)
         # The API reports no search count in usage; every web_search_call item is one query,
         # so the bill is read off the output unless the caller already knows the count.
         usage = Usage.from_response(
@@ -333,6 +373,7 @@ class ModelApiClient:
             model=str(data.get("model", model)),
             status=status,
             text=text,
+            final_text=answer,
             output=output,
             usage=usage,
             cost_usd=usd,
@@ -347,12 +388,7 @@ class ModelApiClient:
         response = await self.respond(
             schema=schema, schema_name=schema_name or model_cls.__name__, **kwargs
         )
-        try:
-            parsed = model_cls.model_validate_json(response.text)
-        except ValueError as exc:
-            raise IncompleteResponseError(
-                f"output did not match {model_cls.__name__}: {exc}", attempts=response.attempts
-            ) from exc
+        parsed = parse_structured(model_cls, response, str(kwargs.get("op") or "respond"))
         return StructuredResponse[T](parsed=parsed, response=response)
 
     async def respond_with_tools[T: BaseModel](
@@ -387,13 +423,7 @@ class ModelApiClient:
             spent += response.cost_usd
             calls = response.tool_calls
             if not calls:
-                try:
-                    parsed = model_cls.model_validate_json(response.text)
-                except ValueError as exc:
-                    raise IncompleteResponseError(
-                        f"output did not match {model_cls.__name__}: {exc}",
-                        attempts=response.attempts,
-                    ) from exc
+                parsed = parse_structured(model_cls, response, f"{op}-{step}")
                 # the answer carries what the whole loop cost, every step counted once
                 return StructuredResponse[T](
                     parsed=parsed, response=response.model_copy(update={"cost_usd": spent})
@@ -677,6 +707,42 @@ class ModelApiClient:
 
 
 # --- helpers -----------------------------------------------------------------
+
+
+def parse_structured[T: BaseModel](model_cls: type[T], response: ModelResponse, op: str) -> T:
+    """The typed answer out of a response. The schema binds the final message; a message the
+    model wrote before a search or a tool call is prose and is not read. When the final message
+    is not the schema alone, the last JSON object the whole text ends with is tried once."""
+    try:
+        return model_cls.model_validate_json(response.final_text)
+    except ValueError as exc:
+        reason = _validation_summary(exc)
+    tail = last_json_object(response.text)
+    if tail is not None and tail != response.final_text:
+        try:
+            return model_cls.model_validate_json(tail)
+        except ValueError:
+            pass
+    raise IncompleteResponseError(
+        f"{op}: the final message did not match {model_cls.__name__}: {reason}",
+        attempts=response.attempts,
+    )
+
+
+def _validation_summary(exc: ValueError) -> str:
+    """One line per failed check, the text they ran on cut short: enough to say what came back,
+    never the whole answer."""
+    if not isinstance(exc, ValidationError):
+        return str(exc)[:PREVIEW_CHARS]
+    lines: list[str] = []
+    for err in exc.errors(include_url=False)[:3]:
+        where = ".".join(str(part) for part in err.get("loc") or ()) or "text"
+        value = err.get("input")
+        shown = value if isinstance(value, str) else json.dumps(value, default=str)
+        if len(shown) > PREVIEW_CHARS:
+            shown = shown[: PREVIEW_CHARS // 2] + "..." + shown[-(PREVIEW_CHARS // 2) :]
+        lines.append(f"{where}: {err.get('msg')} (input {shown!r})")
+    return "; ".join(lines)
 
 
 def strict_schema(model_cls: type[BaseModel]) -> dict[str, Any]:

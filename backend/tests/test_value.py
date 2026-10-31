@@ -265,11 +265,42 @@ async def test_a_live_call_carries_the_search_tool_and_bills_each_search(
         }
     ]
     assert body["include"] == ["web_search_call.results"]
+    assert body["max_tool_calls"] == 4
+    assert body["instructions"].endswith(
+        "Search at most 4 times, then answer with what those searches found."
+    )
     assert body["text"]["format"]["name"] == "Findings"
     assert guide.searches == 2 and guide.from_fixture is False
     entry = ledger.entries()[0]
     assert entry.usage.search_queries == 2
     assert entry.usd >= 2 * SEARCH_QUERY_USD
+
+
+async def test_a_line_written_before_the_search_does_not_hide_the_answer(
+    live_settings: Settings,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        fixture = json.loads((RECORDED_FIXTURES / "responses" / "price.json").read_text())
+        response: dict[str, Any] = fixture["response"]
+        # the shape seen live: a message before the search, the schema in the one after it
+        aside = {
+            "id": "msg_0",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "content": [{"type": "output_text", "text": "Tracking it down.", "annotations": []}],
+        }
+        response["output"].insert(1, aside)
+        return httpx.Response(200, json=response)
+
+    client = ModelApiClient(
+        live_settings, CostLedger(cap_usd=25.0), transport=httpx.MockTransport(handler)
+    )
+    valuer = Valuer(live_settings, client, Inventory(live_settings))
+    guide = await valuer.guide(adapter(valuer.inventory), PriceRequest())
+    assert guide.searches == 1 and len(guide.comparables) == 4
+    by_kind = {q.kind: q for q in guide.quantities}
+    assert (by_kind["estimate"].low, by_kind["estimate"].typical) == (12, 17)
 
 
 def test_price_routes(recorded_client: TestClient) -> None:
