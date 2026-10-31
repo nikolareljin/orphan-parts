@@ -358,11 +358,11 @@ def test_pairing_settings_have_bounds(tmp_path: Path) -> None:
         {"pair_code_days": 0},
         {"pair_code_days": 3651},
         {"pair_token_minutes": 0},
-        {"pair_token_minutes": 1441},
+        {"pair_token_minutes": 61},
     ):
         with pytest.raises(ValueError, match="must be between"):
             gated(tmp_path, **over)
-    assert gated(tmp_path, pair_code_days=3650, pair_token_minutes=1440).pair_code_days == 3650
+    assert gated(tmp_path, pair_code_days=3650, pair_token_minutes=60).pair_code_days == 3650
 
 
 def test_a_phone_code_never_outlives_the_code_that_paired_it(tmp_path: Path) -> None:

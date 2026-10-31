@@ -104,7 +104,7 @@ class Settings(BaseSettings):
         ):
             if getattr(self, name) < 1:
                 raise ValueError(f"{name.upper()} must be at least 1")
-        for name, most in (("pair_token_minutes", 1440), ("pair_code_days", 3650)):
+        for name, most in (("pair_token_minutes", 60), ("pair_code_days", 3650)):
             if not 1 <= getattr(self, name) <= most:
                 raise ValueError(f"{name.upper()} must be between 1 and {most}")
         code = self.demo_access_code.get_secret_value() if self.demo_access_code else ""
