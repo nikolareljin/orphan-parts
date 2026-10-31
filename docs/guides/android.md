@@ -86,7 +86,12 @@ demo host answers over HTTPS.
 The launcher icon is rendered from `docs/assets/logo.svg`: `scripts/app-icon.sh` (Inkscape
 required) writes the adaptive icon's foreground and the legacy icons for every density under
 `android/app/src/main/res/mipmap-*/`, and the web header's mark (`frontend/public/brand.svg`,
-the same crop); run it again after a change to the logo.
+the legacy rounded square without its margin); run it again after a change to the logo (a viewfinder moved or resized
+in it is refused; to take it, the transform on its group is flattened in Inkscape by ungrouping
+and grouping again, the new group gets back the id `lens-viewfinder`, the ring's `cx`, `cy`,
+`r` and `stroke-width` are rounded to whole numbers, and `CX`, `CY` and `RING` in the script
+are set to match). The
+adaptive icon's background color (`values/ic_launcher_background.xml`) is set by hand.
 
 ## Allow the phone
 

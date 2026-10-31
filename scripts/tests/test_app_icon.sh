@@ -30,11 +30,11 @@ test_app_icon_writes_every_density_and_the_web_mark() {
   _app_icon_tree "$dir"
   assert_true env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
   res="$dir/android/app/src/main/res"
-  # three PNGs per density, at 108dp and 48dp in pixels
+  # three PNGs per density, at 108dp and 48dp in pixels (rendered aside, then copied into place)
   assert_eq "$(grep -c -- '--export-type=png' "$dir/inkscape.log")" "15"
-  assert_true grep -q -- "--export-filename=$res/mipmap-mdpi/ic_launcher_foreground.png --export-width=108 " "$dir/inkscape.log"
-  assert_true grep -q -- "--export-filename=$res/mipmap-hdpi/ic_launcher.png --export-width=72 " "$dir/inkscape.log"
-  assert_true grep -q -- "--export-filename=$res/mipmap-xxxhdpi/ic_launcher_round.png --export-width=192 " "$dir/inkscape.log"
+  assert_true grep -q -- "/mipmap-mdpi/ic_launcher_foreground.png --export-width=108 " "$dir/inkscape.log"
+  assert_true grep -q -- "/mipmap-hdpi/ic_launcher.png --export-width=72 " "$dir/inkscape.log"
+  assert_true grep -q -- "/mipmap-xxxhdpi/ic_launcher_round.png --export-width=192 " "$dir/inkscape.log"
   # the foreground: 108dp around the viewfinder's center (256,240), the ring (187 units) 66dp
   # across, so 108 * 374 / 66 units; the logo's frame is gone and nothing is clipped
   assert_true grep -q 'viewBox="-50.0018 -66.0018 612.0036 612.0036"' "$res/mipmap-mdpi/ic_launcher_foreground.png"
@@ -45,6 +45,10 @@ test_app_icon_writes_every_density_and_the_web_mark() {
   assert_true grep -q 'viewBox="51.9988 35.9988 408.0024 408.0024"' "$dir/frontend/public/brand.svg"
   assert_true grep -q 'rx="81.6005"' "$dir/frontend/public/brand.svg"
   assert_false grep -q 'id="rect51"' "$dir/frontend/public/brand.svg"
+  # every crop is a whole document: the clipped ones close their group, all close the svg
+  assert_eq "$(tail -n 1 "$dir/frontend/public/brand.svg")" "</g></svg>"
+  assert_eq "$(tail -n 1 "$res/mipmap-mdpi/ic_launcher_round.png")" "</g></svg>"
+  assert_eq "$(tail -n 1 "$res/mipmap-mdpi/ic_launcher_foreground.png")" "</svg>"
   _app_icon_cleanup "$dir"
 }
 
@@ -71,4 +75,136 @@ test_app_icon_refuses_an_unknown_option() {
   local rc=0
   ROOT=/nonexistent bash "$_app_icon" --force >/dev/null 2>&1 || rc=$?
   assert_eq "$rc" "2"
+}
+
+test_app_icon_keeps_the_icons_when_inkscape_writes_nothing() {
+  local dir
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$dir/bin/inkscape"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_true grep -q 'wrote nothing' <(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)
+  assert_false test -e "$dir/frontend/public/brand.svg"
+  assert_false test -e "$dir/android/app/src/main/res/mipmap-mdpi"
+  _app_icon_cleanup "$dir"
+}
+
+# An awk that writes decimals with a comma unless it runs in the C locale, as mawk does under a
+# comma-decimal locale: the geometry must come out the same.
+test_app_icon_geometry_ignores_a_comma_decimal_locale() {
+  local dir real_awk
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  real_awk="$(command -v awk)"
+  cat > "$dir/bin/awk" <<STUB
+#!/usr/bin/env bash
+if [[ "\${LC_ALL:-}" == C ]]; then exec "$real_awk" "\$@"; fi
+"$real_awk" "\$@" | tr . ,
+STUB
+  chmod +x "$dir/bin/awk"
+  assert_true env PATH="$dir/bin:$PATH" LC_ALL=el_GR.UTF-8 ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_true grep -q 'viewBox="51.9988 35.9988 408.0024 408.0024"' "$dir/frontend/public/brand.svg"
+  assert_true grep -q -- '--export-width=108 ' "$dir/inkscape.log"
+  _app_icon_cleanup "$dir"
+}
+
+# Each way a logo can stop fitting the crop's edits is refused before anything is written, with
+# the line that says which: the logo's shape (the frame's id renamed; its close moved before its
+# open; a second id="rect51"; another shape folded into the frame; a second shape at the frame's
+# indent; the viewBox changed; a second </defs>; a second </svg>; the defs closing after the frame;
+# the only viewBox not the root's; a second viewBox beside the root's; a second defs after the
+# frame; the gradient renamed; the clip's id taken; the viewfinder moved by a transform on its
+# group, either before or after its id, or on its ring; its ring moved either way, resized, or
+# given a stroke width through a style; a second id="circle53" or id="lens-viewfinder"), or the crop (two bled grounds; not
+# well-formed, checked with python3, so skipped without it). No refusal is a shell error.
+_app_icon_refused() {  # _app_icon_refused <sed edit> <expected line>
+  local dir out
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  sed -i "$1" "$dir/docs/assets/logo.svg"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  out="$(ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon" 2>&1)" || true
+  assert_true grep -q -- "$2" <<< "$out"
+  assert_false grep -q 'syntax error' <<< "$out"
+  assert_false test -e "$dir/frontend/public/brand.svg"
+  assert_false test -e "$dir/inkscape.log"
+  _app_icon_cleanup "$dir"
+}
+
+test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
+  local edit shape='is not shaped as crop() expects'
+  for edit in \
+    's/id="rect51"/id="frame"/' \
+    's/^     id="rect51" \/>$/     id="frame" \/>/; 0,/^  <rect$/s//     id="rect51" \/>\n  <rect/' \
+    '0,/^  <g$/s//  <g id="rect51" \/>\n  <g/' \
+    's/^     id="rect51" \/>$/     id="frame" \/>\n  <circle fill="red"\n     id="rect51" \/>/' \
+    's|^  <rect$|  <rect\n     id="extra" />\n  <rect|' \
+    's/viewBox="0 0 512 512"/viewBox="0 0 512 512.0"/' \
+    's|</defs>|</defs><defs></defs>|' \
+    's|</svg>|<svg></svg></svg>|' \
+    '/^  <\/defs>$/d; s|^     id="rect51" />$|     id="rect51" />\n  </defs>|' \
+    's/^   viewBox="0 0 512 512"$/   width="512"/; s|^  </defs>$|    <pattern viewBox="0 0 512 512" />\n  </defs>|' \
+    's|^  </defs>$|    <pattern viewBox="0 0 512 512" />\n  </defs>|' \
+    's|^     id="rect51" />$|&\n  <defs></defs>|' \
+    's/bgGrad/frameGrad/g' \
+    's|^  </defs>$|    <clipPath id="icon-shape" />\n  </defs>|' \
+    's|^     id="lens-viewfinder">$|     transform="translate(0,20)"\n&|' \
+    's|^     id="lens-viewfinder">$|     id="lens-viewfinder"\n     transform="translate(0,20)">|' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       cy="240"$/       cy="260"/' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       r="185"$/       r="200"/' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       r="185"$/&\n       transform="translate(0,20)"/' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       cx="256"$/       cx="276"/' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       r="185"$/&\n       style="stroke-width:20"/' \
+    's|^  <g$|  <g\n     id="circle53" />\n  <g|' \
+    's|^  <g$|  <g\n     id="lens-viewfinder" />\n  <g|'; do
+    _app_icon_refused "$edit" "$shape"
+  done
+  _app_icon_refused 's|^  </defs>$|  </defs>\n  <rect fill="url(#bgGrad)" />|' 'did not take'
+  if command -v python3 >/dev/null 2>&1; then
+    _app_icon_refused 's|^  </defs>$|  </defs>\n  <text>a \& b</text>|' 'not well-formed'
+  fi
+}
+
+# What a save can add is taken: a trailing blank line, a namespaced attribute on the frame
+# before its closing id.
+test_app_icon_takes_a_logo_saved_again() {
+  local dir edit
+  for edit in '$a\\' 's/^     id="rect51" \/>$/     inkscape:label="frame"\n     id="rect51" \/>/'; do
+    dir="$(mktemp -d)" || { assert_true false; return; }
+    _app_icon_tree "$dir"
+    sed -i "$edit" "$dir/docs/assets/logo.svg"
+    assert_true env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+    _app_icon_cleanup "$dir"
+  done
+}
+
+# A render that fails half-way (the fourth call, the first hdpi one) leaves every icon and the
+# web mark as they were, the densities already rendered included.
+test_app_icon_keeps_every_icon_when_a_later_render_fails() {
+  local dir res density png
+  dir="$(mktemp -d)" || { assert_true false; return; }
+  _app_icon_tree "$dir"
+  res="$dir/android/app/src/main/res"
+  for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+    mkdir -p "$res/mipmap-$density"
+    for png in ic_launcher_foreground ic_launcher ic_launcher_round; do
+      printf 'old %s %s\n' "$density" "$png" > "$res/mipmap-$density/$png.png"
+    done
+  done
+  printf 'old mark\n' > "$dir/frontend/public/brand.svg"
+  cp -r "$res" "$dir/res.before"
+  cp "$dir/frontend/public/brand.svg" "$dir/brand.before"
+  mv "$dir/bin/inkscape" "$dir/bin/inkscape-ok"
+  cat > "$dir/bin/inkscape" <<STUB
+#!/usr/bin/env bash
+n=\$(( \$(cat "$dir/calls" 2>/dev/null || echo 0) + 1 )); echo "\$n" > "$dir/calls"
+(( n < 4 )) || exit 1
+exec "$dir/bin/inkscape-ok" "\$@"
+STUB
+  chmod +x "$dir/bin/inkscape"
+  assert_false env ROOT="$dir" INKSCAPE="$dir/bin/inkscape" bash "$_app_icon"
+  assert_eq "$(cat "$dir/calls")" "4"
+  assert_true diff -r "$dir/res.before" "$res"
+  assert_true cmp -s "$dir/brand.before" "$dir/frontend/public/brand.svg"
+  _app_icon_cleanup "$dir"
 }
