@@ -7,7 +7,7 @@ last, and only for what the measurements show is weak.
 ## The loop as it exists
 
 1. **Record the set.** `./dev record-fixtures` loads `demo/set.yaml` once with the key from
-   `.env` and keeps every model answer under `backend/tests/fixtures/api/`. This spends
+   the shell or `.env` and keeps every model answer under `backend/tests/fixtures/api/`. This spends
    credits once; every later run replays the recordings at no cost.
 2. **Score it.** `./dev eval` resets the inventory, loads the set the way `./dev demo` does
    (fixture mode unless `--live`), and scores what the rules can check. It writes
@@ -21,10 +21,10 @@ last, and only for what the measurements show is weak.
    against those the rules kept, the stub answers, the spend and the mode.
 3. **Read the stub count first.** An answer that comes from an operation's stub rather than a
    recording of this set is counted, and the report says so. A report on stubs describes the
-   stubs: record the set before trusting any other number. Today the set's photos are not in
-   the repository, so a fresh checkout scores every label read as not read and the eleven
-   answers that are given come from stubs; the fit verdicts are still right, because they
-   rest on the owner values in the set and the rules alone.
+   stubs: record the set before trusting any other number. The set's photos and their
+   recordings are in the repository, so a fresh checkout scores the recorded reads with no
+   stub answers; a photo changed or a setting that changes what is sent (`EXTRACT_ENHANCE`,
+   `IMAGE_MAX_PX`) brings the stubs back until the set is recorded again.
 4. **Change what is ours.** The rules are data: `backend/app/profiles/data/*.yaml` (the keys,
    the tolerances, hard or soft, the questions). The prompts are the `INSTRUCTIONS` strings in
    `backend/app/extract/service.py` (label reading), `backend/app/listing/service.py` (the

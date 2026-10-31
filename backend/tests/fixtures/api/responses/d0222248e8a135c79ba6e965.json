@@ -1,0 +1,235 @@
+{
+  "endpoint": "/responses",
+  "op": "extract",
+  "model": "muse-spark-1.3",
+  "digest": "d0222248e8a135c79ba6e965",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Read the label on this item. Fields to look for:\n- brand: manufacturer or brand name printed on the label\n- model_number: model designation printed on the label\n- part_number: part number or P/N code, often next to a barcode\n- input_voltage: mains input range, for example 100-240 V (unit: V)\n- output_voltage: DC output voltage (unit: V)\n- output_current: DC output current (unit: A)\n- output_power: rated output power (unit: W)\n- connector: plug type and size, for example barrel 5.5 x 2.5 mm or USB-C\n- polarity: center positive or center negative, from the symbol\n- certifications: safety marks such as UL, CE or FCC\n- condition_notes: visible wear, damage or missing parts\nThe last 1 image(s) are close-up crops of the label found on the item.",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,da5f35f215c4d4e5",
+            "type": "input_image"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,8e41adf197d3f5ba",
+            "type": "input_image"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,aaa6619b5b4547b6",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You read labels on used items and spare parts from photos. Report only what is printed or clearly visible; never infer a value from the brand or the item type. Give each field a confidence between 0 and 1 that reflects how legible it is. Leave out any field the photos do not support. Copy values as printed and put units in the unit property. label_text is a line by line transcription of the label. item_type is a short noun phrase such as 'laptop power adapter'.",
+    "max_output_tokens": 800,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "LabelReading",
+        "schema": {
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of an extraction call: every property required, no extras.",
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "item_type": {
+              "title": "Item Type",
+              "type": "string"
+            },
+            "label_text": {
+              "title": "Label Text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "item_type",
+            "label_text",
+            "fields"
+          ],
+          "title": "LabelReading",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "LabelReading",
+        "schema": {
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "item_type": {
+              "title": "Item Type",
+              "type": "string"
+            },
+            "label_text": {
+              "title": "Label Text",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "description": "Strict output schema of an extraction call: every property required, no extras.",
+          "required": [
+            "item_type",
+            "label_text",
+            "fields"
+          ],
+          "title": "LabelReading",
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          }
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae596383093fa20838d4d14",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793431096.0,
+    "completed_at": 1793431096.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae596383093fa20838d4d14:rs_45529d50-cfbe-420b-a593-ba95b94da953",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_718a6865-2c60-4dfb-9f44-df7cf2c4f73e",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"fields\": [{\"confidence\": 0.95, \"name\": \"brand\", \"unit\": \"\", \"value\": \"Sun microsystems\"}, {\"confidence\": 0.95, \"name\": \"part_number\", \"unit\": \"\", \"value\": \"365-1429-01\"}, {\"confidence\": 0.85, \"name\": \"input_voltage\", \"unit\": \"V\", \"value\": \"100-240\"}, {\"confidence\": 0.8, \"name\": \"certifications\", \"unit\": \"\", \"value\": \"TUV SUD, TCO'03, cULus LISTED, CE, S, FC, VCI, CCC, C N218\"}], \"item_type\": \"flat panel display\", \"label_text\": \"Sun\\nmicrosystems\\nCOLOR FLAT PANEL DISPLAY\\n\\u5f69\\u8272\\u986f\\u793a\\u5668 / \\u5f69\\u8272\\u663e\\u793a\\u5668 / \\ubaa8\\ub2c8\\ud130\\nSun Microsystems, Inc.\\n4150 Network Circle, Santa Clara, CA 95054 U.S.A.\\n650-960-1300\\nELECTRICAL RATINGS / \\u984d\\u5b9a\\u96fb\\u58d3/\\u96fb\\u6d41 / \\u989d\\u5b9a\\u7535\\u538b/\\u7535\\u6d41\\n\\u5b9a\\u683c: 100-240V ~ 1.2A-0.6A 50/60Hz\\nDC-E-N37-001.1\\ncUL US I.T.E. LISTED E173323\\nCE\\nFC\\nVCI\\nCCC A000999\\nT33012\\nTUV SUD\\nTCO'03\\nCAUTION: To prevent electric shock, do not remove this enclosure.\\nNo user-serviceable parts inside. This class B digital apparatus meets\\nall requirements of the Canadian interference-causing regulations.\\nHg LAMP CONTAINS MERCURY, DISPOSE ACCORDING TO STATE/LOCAL LAW.\\nModel No. / \\u578b\\u865f / \\u578b\\u53f7\"}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You read labels on used items and spare parts from photos. Report only what is printed or clearly visible; never infer a value from the brand or the item type. Give each field a confidence between 0 and 1 that reflects how legible it is. Leave out any field the photos do not support. Copy values as printed and put units in the unit property. label_text is a line by line transcription of the label. item_type is a short noun phrase such as 'laptop power adapter'.",
+    "usage": {
+      "input_tokens": 2828,
+      "input_tokens_details": {
+        "cached_tokens": 1393
+      },
+      "output_tokens": 1911,
+      "output_tokens_details": {
+        "reasoning_tokens": 1436
+      },
+      "total_tokens": 4739
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4896
+  },
+  "status": 200
+}

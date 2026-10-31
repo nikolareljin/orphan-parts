@@ -1,0 +1,235 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-sell",
+  "model": "muse-spark-1.3",
+  "digest": "8944fb925df6e6c63a6bcfe1",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: sell\nname: Laptop motherboard, no processor\nitem_type: motherboard\ncondition: the processor socket is empty\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nasking price: 25\nConfirmed fields (key: value):\n- condition_notes: used board, CPU missing from socket, dust and tape residue visible\nField keys a fact may name: condition_notes, name, item_type, condition",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest Marketplace listings for used items. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 80 characters and starts with what the item is. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "type": "object",
+          "additionalProperties": false,
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "title": "DraftWriting"
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae590e503b7ad86d078410a",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793429733.0,
+    "completed_at": 1793429733.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae590e503b7ad86d078410a:rs_841d2d5a-d613-4a6f-a58d-fdc4fac9fe41",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_b623b54e-3ca3-46c5-bd5d-cba4a8a4899d",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"description\": \"Used laptop motherboard. The processor socket is empty with CPU missing. Dust and tape residue visible.\", \"facts\": [{\"field\": \"name\", \"text\": \"Laptop motherboard, no processor\"}, {\"field\": \"item_type\", \"text\": \"Item type is motherboard\"}, {\"field\": \"condition\", \"text\": \"The processor socket is empty\"}, {\"field\": \"condition_notes\", \"text\": \"Used board, CPU missing from socket\"}, {\"field\": \"condition_notes\", \"text\": \"Dust and tape residue visible\"}], \"keywords\": [\"laptop motherboard\", \"no processor\", \"used board\"], \"title\": \"Laptop motherboard, no processor\", \"uses\": [\"parts\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest Marketplace listings for used items. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 80 characters and starts with what the item is. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 389,
+      "input_tokens_details": {
+        "cached_tokens": 241
+      },
+      "output_tokens": 1242,
+      "output_tokens_details": {
+        "reasoning_tokens": 1088
+      },
+      "total_tokens": 1631
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}
