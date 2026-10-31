@@ -8,7 +8,9 @@ what is missing becomes a search you run on Marketplace.
 
 **What I want from a build.** A few answers kept once and read by every proposal: your
 interests, the effort you will put in, your skills, the tools you have, whether you open
-devices up, a budget with its currency, a radius, and whether you buy used, new or either.
+devices up, a budget with its currency, a radius, and whether you buy used, new or either. It
+is the same record as your [profile](profile.md); the skills are rated there, and the form
+here shows them in a line.
 
 **Proposals.** Muse Spark reads your inventory and the project templates through tools (the
 items a build may count on, one item in full, the catalog of templates) and proposes up to five
@@ -49,7 +51,7 @@ candidates, the costs with their dates, the tools you said you have, the steps w
 progress, the safety lines, the unknowns to check, the guidance by name, the limits that always
 apply, and the outcome once recorded. Nothing is asked of a model. Each pack carries a version,
 the day it was written and a digest of its inputs; a change to an item on it, to the project
-or to the budget marks it **stale**, and the next writing is the next version. **Download**
+or to the budget marks it **out of date**, and the next writing is the next version. **Download**
 keeps it as a file.
 
 **Progress and the outcome.** While a project is selected or being built, its steps are a

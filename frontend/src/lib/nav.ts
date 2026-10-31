@@ -1,4 +1,4 @@
-export type View = 'read' | 'inbox' | 'inventory' | 'find' | 'build'
+export type View = 'read' | 'inbox' | 'inventory' | 'find' | 'build' | 'profile'
 
 export const VIEWS: { id: View; label: string }[] = [
   { id: 'read', label: 'Read a label' },
@@ -6,6 +6,7 @@ export const VIEWS: { id: View; label: string }[] = [
   { id: 'inventory', label: 'My inventory' },
   { id: 'find', label: 'Find a part' },
   { id: 'build', label: 'Build and reuse' },
+  { id: 'profile', label: 'Profile' },
 ]
 
 // The page lives in the URL hash, so reload and back land where the person was.

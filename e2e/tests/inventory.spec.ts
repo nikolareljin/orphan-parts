@@ -50,7 +50,7 @@ test('a reading is saved privately and shows up in the inventory to confirm', as
   await page
     .getByLabel('Photos of the label')
     .setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: greyPng() })
-  await page.getByLabel('Find the label first with SAM 3.1, then read the crop').uncheck()
+  await page.getByLabel('Find the label in the photo first (SAM 3.1; helps with busy photos)').uncheck()
   await page.getByRole('button', { name: 'Read the label' }).click()
   await expect(page.getByRole('table', { name: 'Evidence' })).toBeVisible()
 
@@ -88,9 +88,9 @@ test('intent, an owner value, a separated part and the history', async ({ page, 
   const items = page.getByRole('table', { name: 'Items' })
   await items.getByRole('row', { name: webcam }).getByRole('button', { name: 'Open' }).click()
   const panel = page.getByRole('article', { name: `Item ${webcam}` })
-  await expect(panel).toContainText('No photo kept with this item.')
+  await expect(panel).toContainText('No photos saved with this item.')
 
-  await panel.getByLabel('Intent').selectOption('sell')
+  await panel.getByRole('combobox', { name: /^Plan/ }).selectOption('sell')
   await expect(items.getByRole('row', { name: webcam })).toContainText('Sell')
   await expect(panel).toContainText('version 2')
 
@@ -126,14 +126,14 @@ test('a picture of what the item could become is drawn on a click and labeled as
   await items.getByRole('row', { name: laptop }).getByRole('button', { name: 'Open' }).click()
   const panel = page.getByRole('article', { name: `Item ${laptop}` })
   const drawn = panel.getByRole('region', { name: 'What it could look like' })
-  await drawn.getByLabel('as a').fill('a bedside lamp')
+  await drawn.getByLabel('Draw it as').fill('a bedside lamp')
   await drawn.getByRole('button', { name: 'Draw it' }).click()
   await expect(drawn.getByRole('img', { name: 'Illustrative picture 1: a bedside lamp' })).toBeVisible()
   await expect(drawn).toContainText('Drawn as: a bedside lamp')
   await expect(drawn).toContainText('not a photo of the item')
   await expect(drawn).toContainText('recorded answer, nothing spent')
   // a picture is never one of the photos
-  await expect(panel).toContainText('No photo kept with this item.')
+  await expect(panel).toContainText('No photos saved with this item.')
 })
 
 test('deleting asks twice and then hides the item', async ({ page, request }) => {
@@ -163,11 +163,11 @@ test('a write refused because the item changed in between reloads the item', asy
   const elsewhere = await request.patch(`/api/items/${id}`, { data: { condition: 'flickers', version: 1 } })
   expect(elsewhere.status()).toBe(200)
 
-  await panel.getByLabel('Intent').selectOption('give')
-  await expect(panel.getByRole('alert')).toContainText('The item was reloaded')
+  await panel.getByRole('combobox', { name: /^Plan/ }).selectOption('give')
+  await expect(panel.getByRole('alert')).toContainText('was reloaded')
   await expect(panel).toContainText('version 2')
   await expect(panel.getByRole('textbox', { name: 'Condition', exact: true })).toHaveValue('flickers')
-  await expect(panel.getByLabel('Intent')).toHaveValue('keep')
+  await expect(panel.getByRole('combobox', { name: /^Plan/ })).toHaveValue('keep')
 })
 
 test('a failed save keeps the reading on the page', async ({ page }) => {
@@ -180,7 +180,7 @@ test('a failed save keeps the reading on the page', async ({ page }) => {
   await page
     .getByLabel('Photos of the label')
     .setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: greyPng() })
-  await page.getByLabel('Find the label first with SAM 3.1, then read the crop').uncheck()
+  await page.getByLabel('Find the label in the photo first (SAM 3.1; helps with busy photos)').uncheck()
   await page.getByRole('button', { name: 'Read the label' }).click()
   await expect(page.getByRole('table', { name: 'Evidence' })).toBeVisible()
   await page.getByRole('button', { name: 'Save privately' }).click()

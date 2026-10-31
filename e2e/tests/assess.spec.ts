@@ -71,10 +71,10 @@ test('an adapter that meets every hard rule is compatible, from values written i
   await fit.getByRole('button', { name: 'Check fit' }).click()
 
   const status = fit.getByRole('status')
-  await expect(status).toContainText('Compatible, likely')
+  await expect(status).toContainText('Likely compatible')
   await expect(status).toContainText('every hard rule passes (5)')
   await expect(status.getByRole('table', { name: 'Checks' }).getByRole('row', { name: /Output current/ })).toContainText('pass')
-  await expect(status).toContainText('Nothing required for: Part number, Model number, Connector, Plug length')
+  await expect(status).toContainText('No value given for: Part number, Model number, Connector, Plug length')
 })
 
 test('a missing polarity leaves the fit open and asks the seller', async ({ page, request }) => {
@@ -91,7 +91,7 @@ test('a missing polarity leaves the fit open and asks the seller', async ({ page
   await fit.getByRole('button', { name: 'Check fit' }).click()
 
   const status = fit.getByRole('status')
-  await expect(status).toContainText('Looks right, evidence missing')
+  await expect(status).toContainText('Looks right, not proven')
   await expect(status.getByRole('list', { name: 'Questions' })).toContainText('Is the centre of the plug positive or negative?')
   await expect(status.getByRole('table', { name: 'Checks' }).getByRole('row', { name: /Polarity/ })).toContainText('unknown')
 })

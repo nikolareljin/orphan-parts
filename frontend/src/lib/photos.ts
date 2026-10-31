@@ -15,7 +15,7 @@ export function clipProblem(file: File, maxMb: number): string | null {
   if (file.size > maxMb * 1024 * 1024) return `${file.name} is ${(file.size / (1024 * 1024)).toFixed(1)} MB; the limit is ${maxMb} MB for a video`
   const name = file.name.toLowerCase()
   if (!/\.(mp4|m4v|3gp|3gpp|3g2)$/.test(name) && file.type && !/^video\/(mp4|3gpp|3gpp2)$/.test(file.type)) {
-    return `${file.name} is not an MP4 or 3GP file; a browser or phone recording in MP4 is what the inbox takes`
+    return `${file.name} is not an MP4 or 3GP file; record or export the video as MP4`
   }
   return null
 }

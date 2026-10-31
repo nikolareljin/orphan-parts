@@ -11,6 +11,7 @@ describe('nav', () => {
   it('writes a hash for every page but the first', () => {
     expect(hashFor('read')).toBe('')
     expect(hashFor('find')).toBe('#find')
-    expect(VIEWS.map((v) => v.id)).toEqual(['read', 'inbox', 'inventory', 'find', 'build'])
+    expect(VIEWS.map((v) => v.id)).toEqual(['read', 'inbox', 'inventory', 'find', 'build', 'profile'])
+    expect(viewFromHash('#profile')).toBe('profile')
   })
 })

@@ -23,15 +23,14 @@ export function reachableFromAPhone(origin: string): boolean {
  * alone without a gate; with one, a pairing that claims the phone's own code for a caller
  * through the door, or the address alone for the demo visitor, whose phone is the demo too. */
 export function pairingText(gated: boolean, signedIn: boolean): string {
-  if (!gated) return 'It carries this address.'
+  if (!gated) return "It contains this server's address."
   if (!signedIn) {
-    return 'It carries this address alone: the phone joins as the demo. Sign in here first to give it a code of its own.'
+    return "It contains only this server's address, so the phone opens the demo. Sign in here first to sign the phone in too."
   }
   return (
-    'It carries this address and a pairing good for a few minutes; with it the phone claims an access code of its own, ' +
-    'which ends with the code you signed in with, or sooner when revoked on the server. That code stays here. ' +
-    'For those minutes the code is a live credential: anyone who scans it is signed in, so keep it off a projector ' +
-    'and out of a recording.'
+    "It contains this server's address and a sign-in that lasts a few minutes. With it the phone gets its own access code, " +
+    'which ends when yours does, or sooner if revoked on the server; your own code is never given to the phone. ' +
+    'Until the sign-in expires, anyone who scans it is signed in, so keep it off projectors and out of recordings.'
   )
 }
 

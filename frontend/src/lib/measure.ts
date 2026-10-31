@@ -77,5 +77,5 @@ export function formatMm(result: Pick<MeasureResult, 'value_mm' | 'uncertainty_m
 }
 
 export function methodLabel(method: MeasureResult['method']): string {
-  return method === 'two_point_scale' ? 'two-point scale' : 'homography from a known rectangle'
+  return method === 'two_point_scale' ? 'two-point scale' : 'perspective-corrected from a known rectangle'
 }

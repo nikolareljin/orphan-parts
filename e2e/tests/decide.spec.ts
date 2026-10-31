@@ -22,6 +22,9 @@ async function openItem(page: Page, name: string) {
 }
 
 test('the decide panel gathers the rows, asks for ideas, and keeps the choice on the item', async ({ page, request }) => {
+  // the whole decide flow in one test: ideas, a price guidance, a decision and a reload; it
+  // runs near the default limit while the other workers share the backend
+  test.slow()
   const name = `Old laptop ${stamp}`
   await createLaptop(request, name)
   const { panel, decide } = await openItem(page, name)
@@ -30,13 +33,13 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(decide).toContainText('laptop · 1 of 1 value accepted')
   await expect(decide).toContainText('Not asked yet.')
   await expect(decide).toContainText('Homework workstation (laptop)')
-  await expect(decide).toContainText('No open search from this item.')
-  await expect(decide.getByRole('button', { name: 'See picture controls' })).toBeVisible()
+  await expect(decide).toContainText('No open search for a part.')
+  await expect(decide.getByRole('button', { name: 'Go to the picture section' })).toBeVisible()
 
   // the model's proposals, from the recorded answer, labeled as proposals
   await decide.getByRole('button', { name: 'Ask for ideas' }).click()
   const ideas = decide.getByRole('status', { name: /Ideas/ })
-  await expect(ideas).toContainText("The model's proposals")
+  await expect(ideas).toContainText('Ideas from the model')
   await expect(ideas).toContainText('recorded answer')
   const list = ideas.getByRole('list', { name: 'Ideas' })
   await expect(list.getByRole('listitem')).toHaveCount(3)
@@ -45,7 +48,7 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(list).toContainText('low effort')
 
   // a guidance written on the Value panel is read into the worth row at once
-  await panel.getByRole('region', { name: 'What is it worth?' }).getByRole('button', { name: 'Price guidance' }).click()
+  await panel.getByRole('region', { name: 'What is it worth?' }).getByRole('button', { name: 'Get price guidance' }).click()
   await expect(decide).toContainText(/about \d/)
   await expect(decide).not.toContainText('Not asked yet.')
 
@@ -55,7 +58,7 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   const decided = decide.getByRole('status', { name: 'Decision made' })
   await expect(decided).toContainText('Sell')
   await expect(decided).toContainText('worth a listing')
-  await expect(panel.getByLabel('Intent')).toHaveValue('sell')
+  await expect(panel.getByRole('combobox', { name: /^Plan/ })).toHaveValue('sell')
   await expect(panel.getByRole('region', { name: 'Prepare to sell or give away' }).getByLabel('Sell')).toBeChecked()
 
   // the history has the line, and the panel reads it back after a reload
@@ -67,6 +70,54 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(again.decide).toContainText('worth a listing')
 })
 
+test('what to do with it: three cards for the profile, and a card chosen leads on', async ({ page, request }) => {
+  const name = `Scenario laptop ${stamp}`
+  await createLaptop(request, name)
+  // a monitor of the owner's, which the recorded reuse card names as "monitor (2)"
+  const monitor = await request.post('/api/items', { data: { item_type: 'monitor', name: `Spare monitor ${stamp}` } })
+  expect(monitor.status()).toBe(201)
+  const { panel, decide } = await openItem(page, name)
+
+  await decide.getByRole('button', { name: 'What should I do with it?' }).click()
+  const cards = decide.getByRole('region', { name: 'What to do with it' })
+  await expect(cards).toContainText("The model's scenarios")
+  await expect(cards).toContainText('recorded answer')
+  await expect(cards.getByRole('status', { name: 'Recommendation' })).toContainText('Recommended: Reuse it.')
+  const fix = cards.getByRole('article', { name: 'Keep and fix' })
+  const reuse = cards.getByRole('article', { name: 'Reuse it' })
+  const sell = cards.getByRole('article', { name: 'Sell or give away' })
+  await expect(fix.getByRole('list', { name: 'Steps' }).getByRole('listitem')).toHaveCount(4)
+  await expect(fix).toContainText('easy for you')
+  await expect(reuse).toContainText('recommended')
+  await expect(reuse.getByRole('list', { name: 'Reuse scenarios' }).getByRole('listitem')).toHaveCount(2)
+  await expect(reuse.getByText(/^With what you have: /).first()).toHaveText(/^With what you have: monitor(, (keyboard|mouse))*$/)
+  await expect(sell.getByRole('button', { name: 'Get price guidance' })).toBeVisible()
+
+  // the sell card asks the price route; the figure shows on the card
+  await sell.getByRole('button', { name: 'Get price guidance' }).click()
+  await expect(sell).toContainText(/about \d/)
+
+  // each Choose this is named with its card
+  await expect(reuse.getByRole('button', { name: 'Choose this: Reuse it' })).toBeVisible()
+
+  // a detail typed and not saved yet survives the decision below
+  const condition = panel.getByRole('textbox', { name: 'Condition', exact: true })
+  await condition.fill('scuffed lid, one key loose')
+
+  // keep and fix: the choice is kept, the steps land in the notes, and the focus goes there
+  await fix.getByRole('button', { name: 'Choose this: Keep and fix' }).click()
+  await expect(decide.getByRole('status', { name: 'Decision made' })).toContainText('Keep and fix')
+  await expect(fix).toContainText('chosen')
+  const notes = panel.getByLabel('Notes (private)')
+  await expect(notes).toHaveValue(/Repair plan \(scenarios v1/)
+  await expect(notes).toBeFocused()
+  await expect(condition).toHaveValue('scuffed lid, one key loose')
+  // the decision is no edit: the cards stay current and say where the steps went
+  await expect(fix).toContainText('Repair steps added to the notes.')
+  await expect(cards.getByText(/^The model's scenarios/)).not.toContainText('item changed since')
+  await expect(fix).not.toContainText('Ask again to get repair steps')
+  await expect(fix.getByRole('button', { name: 'Choose this: Keep and fix' })).toBeVisible()
+})
 
 test('the decision rows fit a phone dialog', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -74,6 +125,8 @@ test('the decision rows fit a phone dialog', async ({ page, request }) => {
   await createLaptop(request, name)
   const { decide } = await openItem(page, name)
   await expect(decide).toContainText('Homework workstation (laptop)')
+  await decide.getByRole('button', { name: 'What should I do with it?' }).click()
+  await expect(decide.getByRole('article', { name: 'Sell or give away' })).toBeVisible()
   const sizes = await decide.evaluate((el) => ({ width: el.clientWidth, scroll: el.scrollWidth }))
   expect(sizes.scroll).toBeLessThanOrEqual(sizes.width)
   await decide.getByRole('link', { name: 'Find a part', exact: true }).click()

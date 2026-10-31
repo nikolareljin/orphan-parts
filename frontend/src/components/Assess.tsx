@@ -75,7 +75,7 @@ export default function Assess({ item }: { item: Item }) {
     return (
       <section className="assess" aria-label="Does it fit?">
         <h4>Does it fit?</h4>
-        <p className="muted">Pick a profile for this item above; its rules decide what a fit means.</p>
+        <p className="muted">Set a profile under Facts first; its rules decide what fits.</p>
       </section>
     )
   }
@@ -94,7 +94,7 @@ export default function Assess({ item }: { item: Item }) {
                 setResult(null)
               }}
             >
-              <option value="">Values written in below</option>
+              <option value="">Values I type below</option>
               {others.map((o) => (
                 <option key={o.id} value={o.id}>
                   #{o.id} {o.name}
@@ -141,7 +141,7 @@ export function Result({ result }: { result: Assessment }) {
     <div className={`verdict ${verdictTone(result.verdict)}`} role="status">
       <strong>{verdictLabel(result.verdict)}</strong>
       <span className="muted">
-        {result.summary} · rules of {result.profile}
+        {result.summary} · {result.profile} rules
       </span>
       <table className="evidence checks-table" aria-label="Checks">
         <thead>
@@ -188,10 +188,10 @@ export function Result({ result }: { result: Assessment }) {
         </>
       )}
       {result.missing.length > 0 && (
-        <p className="meta">Nothing required for: {result.missing.join(', ')}.</p>
+        <p className="meta">No value given for: {result.missing.join(', ')}.</p>
       )}
       {result.to_confirm.length > 0 && (
-        <p className="meta">Resting on observations still to confirm: {result.to_confirm.join(', ')}.</p>
+        <p className="meta">Based on values not yet confirmed: {result.to_confirm.join(', ')}.</p>
       )}
     </div>
   )

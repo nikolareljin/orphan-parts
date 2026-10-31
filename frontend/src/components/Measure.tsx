@@ -188,7 +188,7 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
     <section className="measure" aria-label="Measure a feature">
       <h4>Measure a feature</h4>
       {!item.profile && (
-        <p className="muted">Pick a profile for this item above to get its list of features, or name the feature yourself.</p>
+        <p className="muted">Set a profile under Facts to list what can be measured, or name the feature yourself.</p>
       )}
       <div className="row">
         <label>
@@ -204,12 +204,12 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
         </label>
         {featureKey === '__other' && (
           <label>
-            <span>Feature key</span>
+            <span>Feature name</span>
             <input value={customKey} onChange={(e) => setCustomKey(e.target.value)} placeholder="spout_diameter" />
           </label>
         )}
         <label>
-          <span>Photo with the reference</span>
+          <span>Photo with a ruler or card in it</span>
           <input type="file" accept="image/*" onChange={onPick} />
         </label>
       </div>
@@ -217,14 +217,14 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
 
       <div className="row">
         <fieldset className="kind">
-          <legend>Scale reference</legend>
+          <legend>Size reference in the photo</legend>
           <label>
             <input type="radio" name="kind" checked={spec.kind === 'two_point'} onChange={() => changeKind('two_point')} />
             <span>Two points on a ruler</span>
           </label>
           <label>
             <input type="radio" name="kind" checked={spec.kind === 'rectangle'} onChange={() => changeKind('rectangle')} />
-            <span>Four corners of a known rectangle</span>
+            <span>Four corners of a card or other known rectangle</span>
           </label>
         </fieldset>
         {spec.kind === 'two_point' ? (
@@ -263,7 +263,7 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
           </>
         )}
         <label>
-          <span>Reference tolerance (mm)</span>
+          <span>Reference accuracy (± mm)</span>
           <input
             type="number"
             min={0}
@@ -276,7 +276,7 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
       {spec.kind === 'two_point' && (
         <label className="check">
           <input type="checkbox" checked={straightOn} onChange={(e) => setStraightOn(e.target.checked)} />
-          <span>Taken straight on, with the reference in the same plane as the feature</span>
+          <span>Taken straight on, with the ruler in the same plane as what is measured (touching it)</span>
         </label>
       )}
 
@@ -318,8 +318,8 @@ export default function Measure({ item, onMeasured }: { item: Item; onMeasured: 
 
       {history && history.length > 0 && (
         <details className="history">
-          <summary>Captures on this item ({history.length})</summary>
-          <table className="evidence" aria-label="Captures">
+          <summary>Past measurements ({history.length})</summary>
+          <table className="evidence" aria-label="Past measurements">
             <thead>
               <tr>
                 <th scope="col">When</th>
@@ -354,17 +354,17 @@ function ResultCard({ result }: { result: MeasureResult }) {
             {formatMm(result)} <span className="muted">({methodLabel(result.method)})</span>
           </p>
           <p className="meta">
-            Proposed on the item as an observed value; accept it in the fields above. Basis: {result.basis}.
+            Added to the item as a value to confirm; accept it under Fields above. Basis: {result.basis}.
           </p>
           {result.needs_direct_reading && (
             <p className="meta">
-              The profile allows ±{result.tolerance_mm} mm and this capture gives ±{result.uncertainty_mm?.toFixed(2)} mm:
-              enter a caliper or ruler reading under &quot;Add what you know&quot; (known from: tested) for this feature.
+              The profile needs ±{result.tolerance_mm} mm, but this photo gives ±{result.uncertainty_mm?.toFixed(2)} mm: measure it with a
+              caliper or ruler and enter it under &quot;Add what you know&quot; (known from: tested).
             </p>
           )}
         </>
       ) : (
-        <p className="value">Capture refused: no number. {result.redo}</p>
+        <p className="value">Could not measure: {result.redo}</p>
       )}
       <ul className="checks">
         {result.checks.map((c) => (

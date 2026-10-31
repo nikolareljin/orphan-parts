@@ -40,6 +40,8 @@ log = logging.getLogger("app.projects")
 
 MAX_OUTPUT_TOKENS = 1600
 MAX_STEPS = 4
+# kept beside the answers the demo loader writes: they are not the owner's profile
+BY_DEMO = "by_demo"
 INSTRUCTIONS = (
     "You propose small, practical projects a person can build from what they already own."
     " First call the tools: the templates are the only projects you may propose, and the"
@@ -185,11 +187,26 @@ class Planner:
 
     def preferences(self) -> Preferences:
         row = self.inventory.preferences()
-        return Preferences(**json.loads(row["content"])) if row else Preferences()
+        if row is None:
+            return Preferences()
+        content = json.loads(row["content"])
+        content.pop(BY_DEMO, None)
+        return Preferences(**content)
 
-    def set_preferences(self, prefs: Preferences) -> Preferences:
-        row = self.inventory.set_preferences(prefs.model_dump_json())
-        return Preferences(**json.loads(row["content"]))
+    def has_preferences(self) -> bool:
+        """Whether the owner has filled the form once; the defaults stand for nobody, and
+        neither do the answers the demo loader wrote."""
+        row = self.inventory.preferences()
+        return row is not None and not json.loads(row["content"]).get(BY_DEMO, False)
+
+    def set_preferences(self, prefs: Preferences, *, by_demo: bool = False) -> Preferences:
+        """Keeps the answers; ``by_demo`` marks the ones the demo loader writes, until the owner
+        saves the form."""
+        content = prefs.model_dump(mode="json")
+        if by_demo:
+            content[BY_DEMO] = True
+        self.inventory.set_preferences(json.dumps(content))
+        return self.preferences()
 
     # --- the tools the model may call --------------------------------------
 

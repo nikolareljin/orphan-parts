@@ -1,5 +1,6 @@
 """Deciding what an item becomes: one view of what the app knows about it, what the rules say
-it fills, what Muse Spark proposes it is good for, and the owner's choice kept as an event."""
+it fills, what Muse Spark proposes it is good for and the three scenarios it writes for this
+owner, and the owner's choice kept as an event."""
 
 from app.decide.schema import (
     CHOICES,
@@ -8,7 +9,12 @@ from app.decide.schema import (
     Decided,
     Decision,
     DecisionCreate,
+    KeepFix,
     OpenSearch,
+    ReuseScenario,
+    Scenarios,
+    ScenariosWriting,
+    SellCard,
     TemplateFit,
     Use,
     Uses,
@@ -20,6 +26,7 @@ from app.decide.service import (
     brief,
     decided_line,
     parse_decided,
+    scenarios_brief,
     suggested,
     templates_for,
 )
@@ -32,7 +39,12 @@ __all__ = [
     "Decider",
     "Decision",
     "DecisionCreate",
+    "KeepFix",
     "OpenSearch",
+    "ReuseScenario",
+    "Scenarios",
+    "ScenariosWriting",
+    "SellCard",
     "TemplateFit",
     "Use",
     "Uses",
@@ -41,6 +53,7 @@ __all__ = [
     "brief",
     "decided_line",
     "parse_decided",
+    "scenarios_brief",
     "suggested",
     "templates_for",
 ]
