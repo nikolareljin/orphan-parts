@@ -8,8 +8,12 @@ import importlib
 import io
 import json
 import os
+import re
+import shutil
+import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -137,6 +141,49 @@ def test_the_production_backend_mounts_nothing_but_its_data() -> None:
     volumes = [str(v) for v in backend.get("volumes", [])]
     assert not any("livecheck" in v for v in volumes)
     assert volumes == ["app-data:/data"]
+
+
+def _node(node: yaml.Node, *keys: str) -> yaml.Node:
+    for key in keys:
+        assert isinstance(node, yaml.MappingNode), keys
+        node = next(v for k, v in node.value if k.value == key)
+    return node
+
+
+def test_the_production_backend_volumes_replace_the_dev_ones() -> None:
+    # compose merges the two files' volume lists unless the prod one says otherwise: without
+    # the tag the dev file's mounts, the live check's among them, reach the production backend
+    path = ROOT / "docker-compose.prod.yml"
+    if not path.is_file():
+        pytest.skip("docker-compose.prod.yml is not in this tree")
+    tree = yaml.compose(path.read_text(), Loader=yaml.SafeLoader)
+    assert tree is not None
+    volumes = _node(tree, "services", "backend", "volumes")
+    assert volumes.tag in ("!override", "!reset"), volumes.tag
+
+
+def test_the_production_pair_gives_the_backend_no_live_check_mount(tmp_path: Path) -> None:
+    # the pair scripts/deploy.sh brings up, as compose itself merges it; config needs no daemon
+    if not (ROOT / "docker-compose.prod.yml").is_file():
+        pytest.skip("docker-compose.prod.yml is not in this tree")
+    docker = shutil.which("docker")
+    if docker is None:
+        pytest.skip("docker is not installed")
+    files = ["-f", "docker-compose.yml", "-f", "docker-compose.prod.yml"]
+    env = {**os.environ, "DOCKER_CONFIG": str(tmp_path)}
+    done = subprocess.run(
+        [docker, "compose", *files, "config", "--format", "json"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    assert done.returncode == 0, done.stderr
+    volumes = json.loads(done.stdout)["services"]["backend"].get("volumes", [])
+    sources = [str(v.get("source", "")) for v in volumes]
+    assert sources and not any("livecheck" in s for s in sources), sources
 
 
 def test_nothing_in_the_app_imports_the_live_check() -> None:
@@ -444,3 +491,264 @@ def test_the_http_proof_without_a_code_runs_the_visitor_half_only(tmp_path: Path
     assert by_op["extract"].status == "SKIP" and by_op["sign-out"].status == "SKIP"
     assert not run.ok
     assert "LIVECHECK_ACCESS_CODE: missing" in out.getvalue()
+
+
+# A name that would hold a credential; a literal of 4 or more characters beside one is a
+# hard-coded value, which no file of the live check may carry.
+CREDENTIAL_NAME = re.compile(r"(code|key|token|secret|password|passwd|bearer)", re.IGNORECASE)
+ENV_READS = {"get", "getenv", "setdefault"}
+# Literals beside such a name that are known not to be values, each with why:
+#   MODEL_API_KEY, LIVECHECK_ACCESS_CODE  the environment variables' names, never their values
+#   adapter                               the demo set's stand-in item, by its item key
+#                                         (inputs.demo_item); an item's name, no credential
+ALLOWED_LITERALS = {"MODEL_API_KEY", "LIVECHECK_ACCESS_CODE", "adapter"}
+
+
+def _literal(node: ast.AST | None) -> str:
+    """A string literal of 4 or more characters that is not an allowed name, or ""."""
+    if (
+        isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and len(node.value) >= 4
+        and node.value not in ALLOWED_LITERALS
+    ):
+        return node.value
+    return ""
+
+
+def _fallbacks(node: ast.AST | None) -> list[str]:
+    """The literals a value can come to: itself, either side of an or, either branch of an
+    if-else."""
+    if isinstance(node, ast.BoolOp):
+        return [lit for value in node.values for lit in _fallbacks(value)]
+    if isinstance(node, ast.IfExp):
+        return _fallbacks(node.body) + _fallbacks(node.orelse)
+    found = _literal(node)
+    return [found] if found else []
+
+
+def _is_env_read(node: ast.AST) -> bool:
+    """os.environ.get, environ.get, os.getenv, getenv, (os.)environ.setdefault."""
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    if isinstance(func, ast.Name):
+        return func.id == "getenv"
+    if not isinstance(func, ast.Attribute) or func.attr not in ENV_READS:
+        return False
+    owner = ast.unparse(func.value)
+    return owner in ("os", "environ", "os.environ") and (owner != "os" or func.attr == "getenv")
+
+
+def _target_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    if isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant):
+        return str(node.slice.value)
+    return ""
+
+
+def _hard_coded_credentials(source: str) -> list[str]:
+    """Every place in ``source`` where a credential would come from the code: an environment
+    read with a default that is not empty, or a literal assigned to, annotated on, defaulted
+    for, passed as or keyed by a credential's name, or or-ed with an environment read."""
+    found: list[str] = []
+    for node in ast.walk(ast.parse(source)):
+        pairs: list[tuple[str, ast.AST | None]] = []
+        if _is_env_read(node):
+            assert isinstance(node, ast.Call)
+            defaults = node.args[1:] + [k.value for k in node.keywords if k.arg == "default"]
+            for default in defaults:
+                if not (isinstance(default, ast.Constant) and default.value == ""):
+                    found.append(f"line {node.lineno}: {ast.unparse(node)}")
+        elif isinstance(node, ast.BoolOp) and any(_is_env_read(v) for v in node.values):
+            if _fallbacks(node):
+                found.append(f"line {node.lineno}: {ast.unparse(node)}")
+        if isinstance(node, ast.Assign):
+            pairs += [(_target_name(t), node.value) for t in node.targets]
+        elif isinstance(node, ast.AnnAssign | ast.AugAssign):
+            pairs.append((_target_name(node.target), node.value))
+        elif isinstance(node, ast.arguments):
+            positional = node.posonlyargs + node.args
+            pairs += [
+                (a.arg, d) for a, d in zip(positional[::-1], node.defaults[::-1], strict=False)
+            ]
+            pairs += [(a.arg, d) for a, d in zip(node.kwonlyargs, node.kw_defaults, strict=True)]
+        elif isinstance(node, ast.keyword) and node.arg:
+            pairs.append((node.arg, node.value))
+        elif isinstance(node, ast.Dict):
+            pairs += [
+                (k.value, v)
+                for k, v in zip(node.keys, node.values, strict=True)
+                if isinstance(k, ast.Constant) and isinstance(k.value, str)
+            ]
+        for name, value in pairs:
+            if CREDENTIAL_NAME.search(name) and _fallbacks(value):
+                found.append(f"line {getattr(value, 'lineno', '?')}: {name} = {_fallbacks(value)}")
+    return found
+
+
+# each written the way it would be met, with a plain stand-in for the value
+PROBE_VALUE = "plain-stand-in"
+HARD_CODED = [
+    source.replace("VALUE", PROBE_VALUE)
+    for source in (
+        'import os\ncode = os.environ.get("LIVECHECK_ACCESS_CODE", "VALUE")\n',
+        'import os\nx = os.environ.get("MODEL_API_KEY", "VALUE")\n',
+        'import os\nx = os.environ.get("LIVECHECK_ACCESS_CODE") or "VALUE"\n',
+        'def run(code: str = "VALUE") -> None:\n    pass\n',
+        'DEFAULT_CODE = "VALUE"\n',
+        'import os\nkey = os.getenv("MODEL_API_KEY", default="VALUE")\n',
+        'import os\nos.environ.setdefault("MODEL_API_KEY", "VALUE")\n',
+        'class C:\n    def __init__(self) -> None:\n        self.token = "VALUE"\n',
+        'HEADERS = {"api_key": "VALUE"}\n',
+        'import os\nkey = os.environ.get("MODEL_API_KEY") if os.environ else "VALUE"\n',
+        'call(access_code="VALUE")\n',
+    )
+]
+
+
+@pytest.mark.parametrize("source", HARD_CODED)
+def test_the_credential_check_catches_a_hard_coded_value(source: str) -> None:
+    assert _hard_coded_credentials(source), source
+
+
+def test_the_credential_check_lets_names_and_empty_defaults_through() -> None:
+    source = (
+        "import os\n"
+        'key = os.environ.get("MODEL_API_KEY", "")\n'
+        'code = os.environ.get("LIVECHECK_ACCESS_CODE")\n'
+        'name = "MODEL_API_KEY"\n'
+        "found = sorted(['a'], key=len)\n"
+    )
+    assert _hard_coded_credentials(source) == []
+
+
+def test_no_file_of_the_live_check_holds_a_hard_coded_credential() -> None:
+    files = sorted((_livecheck_parent() / "livecheck").rglob("*.py"))
+    assert files
+    for path in files:
+        assert _hard_coded_credentials(path.read_text(encoding="utf-8")) == [], path
+
+
+# Run main() with an op that prints the key, mid-line and on a line of its own, and raises
+# with it; the op stands in for any code under main() that would print a credential.
+LEAKY_RUN = """
+import os, sys, time
+from app.config import get_settings
+from livecheck import __main__ as entry, ops
+
+async def leaky(*args, **kwargs):
+    key = get_settings().model_api_key.get_secret_value()
+    print("the key is", key, "here")
+    print(repr({"api_key": key}))
+    sys.stdout.write("tail " + key)
+    if os.environ.get("LEAKY_READY"):
+        open(os.environ["LEAKY_READY"], "w").close()
+        time.sleep(60)
+    raise entry.RefusedError("refused over " + key)
+
+ops.run_api = leaky
+sys.exit(entry.main(["--ops", "segment"]))
+"""
+
+
+def _leaky_env(tmp_path: Path, extra: dict[str, str]) -> dict[str, str]:
+    env = {
+        **os.environ,
+        "OPL_FAKE_API": "1",
+        "DATA_DIR": str(tmp_path / "data"),
+        "PYTHONPATH": os.pathsep.join([str(_livecheck_parent()), str(BACKEND)]),
+        **extra,
+    }
+    for name in ("MODEL_API_KEY", "LIVECHECK_ACCESS_CODE", "OPL_RECORD_FIXTURES", "LEAKY_READY"):
+        if name not in extra:
+            env.pop(name, None)
+    # run outside backend/, a measured child would find no coverage settings (no branch data)
+    # and spoil the combined report; this child is not measured
+    for name in [n for n in env if n.startswith(("COV_CORE_", "COVERAGE_"))]:
+        env.pop(name)
+    return env
+
+
+def _leaky(tmp_path: Path, extra: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    # run from an empty folder: the only .env read is the one a case writes there
+    work = tmp_path / "work"
+    work.mkdir(exist_ok=True)
+    return subprocess.run(
+        [sys.executable, "-c", LEAKY_RUN],
+        cwd=work,
+        env=_leaky_env(tmp_path, extra),
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+
+
+def _assert_redacted(done: subprocess.CompletedProcess[str]) -> None:
+    output = done.stdout + done.stderr
+    assert "SHOULD-NOT-APPEAR" not in output, output
+    assert "the key is *** here" in done.stdout, output
+    assert "{'api_key': '***'}" in done.stdout, output
+    assert "live-check: refused: refused over ***" in done.stderr, output
+    assert done.returncode == 2, output
+
+
+def test_main_redacts_the_key_from_the_environment(tmp_path: Path) -> None:
+    _assert_redacted(_leaky(tmp_path, {"MODEL_API_KEY": PLACEHOLDER_KEY}))
+
+
+def test_main_redacts_the_key_the_settings_read_from_env_file(tmp_path: Path) -> None:
+    # not in the environment: only the settings know it, from the .env beside the run
+    (tmp_path / "work").mkdir()
+    (tmp_path / "work" / ".env").write_text(f"MODEL_API_KEY={PLACEHOLDER_KEY}\n")
+    _assert_redacted(_leaky(tmp_path, {}))
+
+
+def test_a_last_line_without_a_line_break_goes_out_redacted_at_exit(tmp_path: Path) -> None:
+    done = _leaky(tmp_path, {"MODEL_API_KEY": PLACEHOLDER_KEY})
+    assert "tail ***" in done.stdout, done.stdout + done.stderr
+    assert "SHOULD-NOT-APPEAR" not in done.stdout
+
+
+def test_sigterm_still_drains_the_held_line_redacted(tmp_path: Path) -> None:
+    ready = tmp_path / "ready"
+    work = tmp_path / "work"
+    work.mkdir()
+    with subprocess.Popen(
+        [sys.executable, "-c", LEAKY_RUN],
+        cwd=work,
+        env=_leaky_env(tmp_path, {"MODEL_API_KEY": PLACEHOLDER_KEY, "LEAKY_READY": str(ready)}),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    ) as proc:
+        deadline = time.monotonic() + 60
+        while not ready.exists() and proc.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.05)
+        assert ready.exists(), "the op never reached its held line"
+        proc.send_signal(signal.SIGTERM)
+        out, err = proc.communicate(timeout=30)
+    assert proc.returncode == 128 + signal.SIGTERM, out + err
+    assert "tail ***" in out, out + err
+    assert "SHOULD-NOT-APPEAR" not in out + err
+
+
+def test_the_probe_inventory_stays_in_the_temporary_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ops = _module("ops")
+    real = tmp_path / "real" / "inventory.sqlite3"
+    monkeypatch.setattr(
+        ops,
+        "get_settings",
+        lambda: Settings(
+            OPL_FAKE_API=True, data_dir=tmp_path / "data", inventory_db_file=str(real)
+        ),
+    )
+    work = tmp_path / "work"
+    settings = ops._settings(work)
+    assert settings.inventory_db_path == work / "inventory.sqlite3"

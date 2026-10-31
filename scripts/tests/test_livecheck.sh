@@ -10,10 +10,14 @@ _lc_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # What the check must never hold, matched in any case (grep -a -i -E): a key, code, token,
 # secret or password assigned a literal value (as code, JSON, YAML or dotenv write it), a
 # quoted literal of 20 or more key characters (a dev-issued 24-character code, a short key),
-# an access code or a key as the Model API writes them, a long hex or base64 run, an email
-# address.
+# an environment read with a default that is not empty or or-ed with a literal, a
+# credential's name or-ed or listed with a literal of 4 or more characters, an access code or a key as the Model API writes
+# them, a long hex or base64 run, an email address.
 _lc_patterns=(
   '(MODEL_API_KEY|ACCESS_CODE|API_KEY|_KEY|_TOKEN|SECRET|PASSWORD)["'"'"']?\]?[[:space:]]*[:=][[:space:]]*["'"'"']?[^[:space:]"'"'"'$]{6,}'
+  '(environ|getenv).*\(["'"'"'][A-Z_]+["'"'"'],[[:space:]]*["'"'"'][^"'"'"']+'
+  '(environ|getenv).*\)[[:space:]]+or[[:space:]]+["'"'"'][^"'"'"']{4,}'
+  '(CODE|KEY|TOKEN|SECRET)["'"'"']\)?[[:space:]]*(or|,)[[:space:]]*["'"'"'][^"'"'"']{4,}'
   '["'"'"'][A-Za-z0-9_-]{20,}["'"'"']'
   '(^|[^A-Za-z0-9])sk-'
   '(^|[^A-Za-z0-9])ak-'
@@ -106,6 +110,8 @@ test_livecheck_holds_only_tracked_python_and_markdown() {
 
 test_livecheck_passes_gitleaks_when_installed() {
   if ! command -v gitleaks >/dev/null 2>&1; then
+    # CI installs it (the scripts job): there, a missing gitleaks fails rather than skips
+    assert_eq "${GITHUB_ACTIONS:-}" ""
     printf '  note %s: gitleaks is not installed, skipped\n' "$_current"
     return 0
   fi
