@@ -219,11 +219,13 @@ body.has-dialog {
 }
 
 /* what the item could look like: drawn on a click, labeled as drawn, under the photos */
-.picture figure {
+.picture figure,
+.draw-it figure {
   margin: 0.5rem 0;
 }
 
-.picture figure img {
+.picture figure img,
+.draw-it figure img {
   display: block;
   width: 100%;
   max-width: 320px;
@@ -232,7 +234,8 @@ body.has-dialog {
   border: 1px solid var(--line);
 }
 
-.picture figcaption {
+.picture figcaption,
+.draw-it figcaption {
   font-size: 0.85rem;
   color: var(--muted);
   margin-top: 0.25rem;
