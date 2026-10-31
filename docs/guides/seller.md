@@ -5,7 +5,8 @@ Photos in, listing draft out: upload, segmentation overlays, evidence table, voi
 ## Built so far
 
 **Prepare to sell or give away**, on the item's page: a voice note kept as your words, the listing
-type (sell or free), whether the item holds personal data (which adds steps to wipe it), the pickup and the price you set.
+type (sell or free), whether the item holds personal data (which adds steps to wipe it), the
+pickup and the price you set.
 **Write the draft** has Muse Spark write the title and the text from the item's accepted values
 and your details only; the rules then append what must be disclosed (known faults, what was
 tested or that it was not, what is included, the price or free pickup) and drop any line that
