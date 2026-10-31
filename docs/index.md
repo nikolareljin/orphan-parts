@@ -30,8 +30,9 @@ starts with a two-minute fast path on the hosted app. Trying it on a phone: the
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
 2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and
-   `http://localhost:5173` on your own computer. To pair a phone with a local server, open the site at the computer's network address, not `localhost`
-   (for example `http://192.168.1.20:5173`), with the phone on the same network.
+   `http://localhost:5173` on your own computer. To pair a phone with a local server, open the
+   site at the computer's network address, not `localhost` (for example
+   `http://192.168.1.20:5173`), with the phone on the same network.
 3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
    (**Sign out**, in the same place, ends it).
    A local stack has no door until `./dev gate on`, which prints a code for you and one for

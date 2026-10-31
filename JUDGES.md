@@ -11,21 +11,21 @@ Marketplace. Meta's models read and write; rules decide what is kept.
 - **The access code** comes with the submission, separately. It is never in this repository.
 - **The documentation:** <https://nikolareljin.github.io/orphan-parts/>.
 
-## Fast path (under two minutes)
+## Fast path
 
-### Without the code
+### Without the code (under two minutes)
 
 The site opens as the demo: recorded answers for the demo set, nothing saved, nothing spent.
 The line at the foot of the page says *Demo: recorded answers only*.
 
 1. Open <https://orphan-parts.pages.dev>. The first page, **Read a label**, shows the demo
-   set's photos grouped by item (monitors, ThinkPads, a graphics card, a powerline adapter, a
-   frappé maker's agitator).
+   set's photos grouped by item (monitors, ThinkPads, a laptop motherboard, a graphics card, a
+   slot 1 processor, a powerline adapter, a frappé maker's agitator).
 2. Tick one photo, several, or **Select all photos of this item**; leave *Find the label in
    the photo first* on and press **Read the label**. Each reading appears side by side under
-   *Recorded answer for this sample.*: the SAM 3.1 overlay of the item, the label and the
-   connector, then every value Muse Spark read with its unit, confidence, source and the text
-   as printed.
+   *Recorded answer for this sample.*: the SAM 3.1 pass over the photo (the regions it found,
+   and a note for each of item, label and connector it did not), then every value Muse Spark
+   read with its unit, confidence, source and the text as printed.
 3. Open **My inventory**: the demo shelf, the set's items as the owner marked them public.
    **Open** one to see its photos beside its values, each with where it came from, and any
    picture drawn for it. **Measure a feature** in the item marks a ruler and a feature on one
@@ -33,7 +33,7 @@ The line at the foot of the page says *Demo: recorded answers only*.
    ask for the code (*demo: the code unlocks saving, drafts, prices, projects and captures*,
    or *Sign in with the access code to use this.*).
 
-### With the access code
+### With the access code (about ten minutes)
 
 4. **Sign in with the code** in the header, type the code, **Enter**. The header now shows
    **Sign out**; the foot of the page counts the live calls used today.
@@ -53,12 +53,13 @@ The line at the foot of the page says *Demo: recorded answers only*.
    Marketplace's fields, each with **Copy**, with **Download photos** (a zip in the draft's
    order) and **Open Marketplace**, which opens Marketplace's create page in a new tab.
    Posting is yours.
-9. **Find a part**: name what you need (*Looking for*, a profile or an item that needs it,
-   *Max price*) and **Start the search**. In the search, **Plan the search** writes three to
-   six Marketplace search links and a match pattern; open a link, copy listings back into
-   **Bring back listings** (separated by `---`), and **Score the listing** (**Score 3
-   listings** for three) ranks them as *fits*, *maybe* or *does not fit* with no model call. **Check fit** on one reads it into a candidate with the
-   questions to ask the seller.
+9. **Find a part**: name what you need (*Looking for*, a *Profile* or the item it is *Needed
+   by*, *Max price*) and **Start the search**. In the search, **Plan the search** writes three
+   to six Marketplace search links and a match pattern; open a link, paste listings into
+   **Bring back listings** (separated by `---` or a blank line), and **Score the listing**
+   (**Score 3 listings** for three) ranks each as *fits*, *maybe* or *does not fit* with no
+   model call. **Check fit** on one reads it into a candidate with the questions to ask the
+   seller.
 10. **Pair the phone**: at the foot of the page, open **Pair the phone**. In the Android app,
     on the **Backend** tab, **Scan to pair** and point the camera at the QR code, then
     **Check**. [Install the app](#install-the-android-app) first; the
@@ -72,7 +73,7 @@ The line at the foot of the page says *Demo: recorded answers only*.
 | Model | Where you see it |
 |---|---|
 | Muse Spark | reads a label into typed values with a confidence each; writes the decision cards, the ideas for what an item is good for, the Marketplace draft, the search plan and the build proposals; reads a listing brought back; searches the web for price guidance with citations |
-| SAM 3.1 | finds the item, the label and the connector in a photo, so the label crop is what gets read (the overlay on every reading) |
+| SAM 3.1 | looks for the item, the label and the connector in a photo, so the label crop is what gets read when one is found (the overlay under each reading, with a note when nothing was found) |
 | Muse Image | **Draw it**: a picture of what an item could become or of a finished project, on a click only, always captioned as drawn and never used as evidence |
 | Muse Voice Transcribe | a voice note from the phone's **Talk** tab or a capture, kept on the item as the owner's words |
 
@@ -154,7 +155,7 @@ Docker is needed.
   If Windows does not see the phone, install the maker's USB driver (Samsung Smart Switch,
   Google USB Driver, and so on) and run it again.
 
-`--version 0.3.0` (`-Version 0.3.0` on Windows) picks a release; `--apk file.apk` (`-Apk`)
+`--version x.y.z` (`-Version x.y.z` on Windows) picks a release other than the latest; `--apk file.apk` (`-Apk`)
 installs a file you already have.
 
 ## Pair the phone with the hosted app
@@ -180,8 +181,7 @@ field under it, tap **Save**, then **Check**; the answer ends with **The code op
 The phone's own code lasts thirty days, or until the code you were given ends if that is
 sooner. A QR code scanned from a page that is not signed in pairs the phone as the demo
 (recorded answers, nothing kept): sign in first. **Unpair** on the **Backend** tab makes the
-phone forget the address, its code and its session (if the tab has no **Unpair**, the app is
-release 0.3.0: uninstalling it does the same); the code itself is revoked on the server with
+phone forget the address, its code and its session; the code itself is revoked on the server with
 `./dev keys revoke "phone …"`.
 
 ### On the phone
@@ -220,7 +220,7 @@ the rest.
 
 - **Without the code, nothing is spent.** Every answer is a recording of the demo set; the
   Model API is never called and nothing is kept. A visitor cannot upload a photo: the gallery
-  is the reader.
+  is the reader. Each reading or measurement is a try, 20 per address and hour.
 - **With the code**, each call that reaches a model is counted first: 20 per session and hour
   and 300 per day for everyone (UTC), with 429 and a line saying which allowance ran out. Every
   request of any kind is held to 120 per address and minute; the code may be tried 5 times per
@@ -271,4 +271,5 @@ is posted or searched anywhere on anyone's behalf. Details:
 | After a scan: "no code of its own: this code has paired 10 phones already" | Have one revoked with `./dev keys revoke "phone …"` on the server, or use another code |
 | After a scan: "no code of its own: too many tries" | Wait the seconds it names and scan again |
 | "Sign in with the access code to read your own photos." | Uploads are for signed-in sessions; signed out, pick photos from the gallery |
+| "this address's hourly allowance of tries is used; wait … s" (or "… has fewer than … left") | Without the code each reading (one photo, or all photos of one item) and each measurement is a try, 20 per address and hour: pick fewer photos, or wait the seconds it names |
 | "this visitor's hourly allowance is used; try again in … s" | Wait the seconds it names; the allowance is 20 calls that reach a model per session and hour |

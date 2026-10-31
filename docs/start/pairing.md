@@ -8,8 +8,10 @@ app on an Android emulator. The hosted site looks the same; where **Check** on t
 `fixture` here, it says `live for the code, recorded otherwise` there, and the footer's
 `recorded answers only (nothing spent)` becomes the spend so far against the cap.
 
-The address in the pictures is the computer's network address with the port the stack was
-started on. The hosted site's address is `https://orphan-parts.pages.dev`.
+The address in the web pictures is the computer's network address with the port the stack was
+started on; the phone pictures show `http://10.0.2.2:5223`, the emulator's name for the same
+computer. On the hosted site the address under the QR code is the backend's,
+`https://….modal.run`, not `orphan-parts.pages.dev`: type that one.
 
 ## 1. Open the web app and sign in
 
@@ -92,12 +94,12 @@ the next screens show the typed path. What the app says after a scan:
 
 Then tap **Check**. With a code of its own the answer is **Backend ok, Model API live for the
 code, recorded otherwise, demo gated. The phone's own code (phone …, until …) opens it.**
-(`Model API fixture` on a stack in fixture mode.) The phone's code lasts thirty days, or until the code that paired it ends if
-that is sooner; one access code pairs at most ten phones. The tab names the code the phone
-holds, by label and end date, and how to end it on the server. **Unpair**, beside **Save** and
-**Check** once the phone has an address, makes the phone forget the address, its code and its
-session after a confirmation; the code itself stays valid until it is revoked on the server
-(`./dev keys revoke "phone …"`). Release 0.3.0 of the app predates **Unpair**.
+(`Model API fixture` on a stack in fixture mode.) The phone's code lasts thirty days, or until
+the code that paired it ends if that is sooner; one access code pairs at most ten phones. The
+tab names the code the phone holds, by label and end date, and how to end it on the server.
+**Unpair**, beside **Save** and **Check** once the phone has an address, makes the phone forget
+the address, its code and its session after a confirmation; the code itself stays valid until it
+is revoked on the server (`./dev keys revoke "phone …"`).
 
 ## 4. Type the address instead
 
@@ -146,9 +148,9 @@ inventory** lists the items the owner marked public (the demo set loads as publi
 values, photos and drawn pictures, and never a clip, a note, a location or a draft. There is
 no upload: **Read a label** and **Measure a feature** take the demo set's own photos, picked in
 a gallery, and each answer is the recording made of that exact photo; no live model is
-called. Nothing is kept: every save,
-draft, price, project, picture and capture is refused with one line, `demo: the code unlocks
-saving, drafts, prices, projects and captures`. A phone paired from a page that was not signed in is the same visitor: **Check** says
+called. Nothing is kept: every save, draft, price, project, picture and capture is refused
+with one line, `demo: the code unlocks saving, drafts, prices, projects and captures`. A phone
+paired from a page that was not signed in is the same visitor: **Check** says
 **Without the code this phone is the demo visitor: nothing it sends is kept.** Each visitor has
 an hourly allowance of calls (`20 per visitor per hour` on a default server) and the server a
 daily one.

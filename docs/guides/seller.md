@@ -13,9 +13,10 @@ submits a Facebook page, and the service sends nothing to facebook.com.
 
 ## Before the draft
 
-**Read a label** takes up to four photos. With *Find the label in the photo first* on, SAM 3.1 finds the item, the label
-and the connector in the first photo; the overlay and the crops are shown, and the label crop
-goes to Muse Spark with the photos, so every value is sourced `label_crop`. When the label
+**Read a label** takes up to four photos. With *Find the label in the photo first* on, SAM 3.1
+looks for the item, the label and the connector in the first photo; the overlay shows the
+regions it found, with a note for each it did not, and when a label is found its crop goes to
+Muse Spark with the photos, so every value is sourced `label_crop`. When the label
 cannot be found first, the photos are read whole and the page says why. The evidence table
 shows every field read with its value, unit, confidence, source and the text as printed, the
 warnings, the label transcription, the model and the cost of the calls. **Save privately** turns

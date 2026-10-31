@@ -45,11 +45,13 @@ recorded yet* for it and shows none, never the stub image as a drawing.
 ## 1. Read a label and save it
 
 **Read a label** takes up to four photos (signed out on a gated host, a gallery of the set's
-photos to click instead, one reading per item or photo). With *Find the label in the photo first* on, SAM 3.1 finds the
-item, the label and the connector and the overlay shows where; Muse Spark reads the label crop
-into typed fields, each with its confidence and its source. **Save privately** makes it an item
-in [My inventory](../guides/inventory.md): every observed value waits for you to confirm or
-reject it, and anything you add beside it carries your word as its provenance.
+photos to click instead, one reading per item or photo). With *Find the label in the photo
+first* on, SAM 3.1 looks for the item, the label and the connector: the overlay shows the
+regions it found, with a note for each it did not, and when no label is found the photos are
+read whole. Muse Spark reads the label crop, or the photos, into typed fields, each with its
+confidence and its source. **Save privately** makes it an item in
+[My inventory](../guides/inventory.md): every observed value waits for you to confirm or reject
+it, and anything you add beside it carries your word as its provenance.
 
 ## 2. Measure the thing that decides fit
 

@@ -9,9 +9,8 @@ note and a line of text. The backend keeps it, and reads it into an item when as
 The **Capture** tab is one session: **Take a photo** as many times as needed (four go in one
 capture; the next capture takes more), **Record a video** through the phone's camera app (30
 seconds at most), **Hold to talk** for what you know (what it is, what is wrong, what you
-tested), a name if you know it, a line, then **Send**. (Release 0.3.0 of the app
-names that button **Record a clip**.) Photos are re-encoded on the phone
-before they leave it, pixels only; the clip is sent as recorded. **Captures** lists what was
+tested), a name if you know it, a line, then **Send**. Photos are re-encoded on the phone before
+they leave it, pixels only; the clip is sent as recorded. **Captures** lists what was
 sent and whether the backend has read it: **Read it now** asks for that, and a capture that
 could not be read says why and can be tried again.
 
