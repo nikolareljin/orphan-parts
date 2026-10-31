@@ -30,8 +30,8 @@ The line at the foot of the page says *Demo: recorded answers only*.
    **Open** one to see its photos beside its values, each with where it came from, and any
    picture drawn for it. **Measure a feature** in the item marks a ruler and a feature on one
    of the set's photos and computes the dimension. Deciding, pricing, drafting and searching
-   answer with the line *demo: the code unlocks saving, drafts, prices, projects and
-   captures*.
+   ask for the code (*demo: the code unlocks saving, drafts, prices, projects and captures*,
+   or *Sign in with the access code to use this.*).
 
 ### With the access code
 
@@ -56,8 +56,8 @@ The line at the foot of the page says *Demo: recorded answers only*.
 9. **Find a part**: name what you need (*Looking for*, a profile or an item that needs it,
    *Max price*) and **Start the search**. In the search, **Plan the search** writes three to
    six Marketplace search links and a match pattern; open a link, copy listings back into
-   **Bring back listings**, and **Score the listing** ranks them as *fits*, *maybe* or *does
-   not fit* with no model call. **Check fit** on one reads it into a candidate with the
+   **Bring back listings** (separated by `---`), and **Score the listing** (**Score 3
+   listings** for three) ranks them as *fits*, *maybe* or *does not fit* with no model call. **Check fit** on one reads it into a candidate with the
    questions to ask the seller.
 10. **Pair the phone**: at the foot of the page, open **Pair the phone**. In the Android app,
     on the **Backend** tab, **Scan to pair** and point the camera at the QR code, then
@@ -202,7 +202,7 @@ Docker Desktop on macOS or Windows (run the commands in WSL there), Docker Engin
 ```bash
 git clone https://github.com/nikolareljin/orphan-parts.git
 cd orphan-parts
-cp .env.example .env    # set MODEL_API_KEY, or OPL_FAKE_API=1 for recorded answers
+cp .env.example .env    # set MODEL_API_KEY; left empty, the stack runs on recorded answers
 ./dev up                # the web app on http://localhost:5173, the API on :8000
 ./dev demo              # optional: load the demo set (recorded answers, nothing spent)
 ```
@@ -271,4 +271,4 @@ is posted or searched anywhere on anyone's behalf. Details:
 | After a scan: "no code of its own: this code has paired 10 phones already" | Have one revoked with `./dev keys revoke "phone …"` on the server, or use another code |
 | After a scan: "no code of its own: too many tries" | Wait the seconds it names and scan again |
 | "Sign in with the access code to read your own photos." | Uploads are for signed-in sessions; signed out, pick photos from the gallery |
-| A page says "this visitor's hourly allowance is used" | Wait the minutes it names |
+| "this visitor's hourly allowance is used; try again in … s" | Wait the seconds it names; the allowance is 20 calls that reach a model per session and hour |

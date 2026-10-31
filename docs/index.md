@@ -29,8 +29,8 @@ starts with a two-minute fast path on the hosted app. Trying it on a phone: the
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
-2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
-   with a local server, open the site at the computer's network address, not `localhost`
+2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and
+   `http://localhost:5173` on your own computer. To pair a phone with a local server, open the site at the computer's network address, not `localhost`
    (for example `http://192.168.1.20:5173`), with the phone on the same network.
 3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
    (**Sign out**, in the same place, ends it).
@@ -52,8 +52,8 @@ What to do when a step fails: [For judges](start/judges.md#if-something-does-not
 
 Drawers and shelves hold devices, chargers, tools and parts nobody can name, price or match any
 more. They sit unsold because writing an honest listing is work, and a frappé maker stays
-without its agitator because nobody can say which rod fits. Listings for the same thing differ in one
-detail, and the wrong one is a trip wasted. Working devices get thrown out for lack of a plan.
+without its agitator because nobody can say which rod fits. Listings for the same thing differ
+in one detail, and the wrong one is a trip wasted. Working devices get thrown out for lack of a plan.
 
 ## Four paths on one inventory
 
@@ -118,7 +118,8 @@ as profiles; anything else goes through a generic one until a profile exists for
 On the web today, behind an access code when it is public: a demo you can leave running.
 Without the code a visitor clicks the demo set's own photos and sees the answer recorded for
 each, at no cost; the code opens uploads and the live models, with allowances per visitor and
-per day, a spend cap and an operator's switch ([Demo access](operations/demo-access.md)). On the phone, a photo into the same inventory and a
+per day, a spend cap and an operator's switch ([Demo access](operations/demo-access.md)).
+On the phone, a photo into the same inventory and a
 voice note kept as your words and read back ([Android app](guides/android.md)); hands-free
 through Meta glasses, later. One backend serves all of them.
 

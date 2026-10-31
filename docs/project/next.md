@@ -6,8 +6,8 @@ description: What Orphan Parts Lens would ideally have next, each with what it i
 
 What the app would ideally have, after the hackathon scope. This page took over the roadmap;
 each item says what it is, why, and what it needs. What is still listed is not built, and the
-pages about each say so; what was on the list and has since been built is at the end, with
-where to find it.
+pages about each say so. What has been built since this page was first written is in a table
+at the end, with where to find it.
 
 ## Accounts instead of a shared code
 
@@ -103,8 +103,9 @@ voice features have nothing a visitor can try.
 **Why.** The phone and the voice notes are where a first-time visitor without a code sees the
 least.
 **What it needs.** The phone's Capture tab listing the samples from `GET /api/samples` and
-reading one with `POST /api/samples/read`, as the web does; a few WAV notes recorded for the
-set's items under `demo/notes/`, recorded once with a key and offered beside the photos.
+reading one with `POST /api/samples/read`, as the web does; a few WAV notes about the set's
+items under `demo/notes/`, their transcriptions recorded once with a key and offered beside the
+photos.
 
 ## Public items at a link
 
