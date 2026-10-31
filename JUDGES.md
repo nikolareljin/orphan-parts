@@ -79,8 +79,8 @@ installs a file you already have.
 ## 4. Connect the phone to the server with your code
 
 The pairing code never carries your access code; it carries the server's address and, once
-you are signed in, a session the server made for the phone. With that session the app claims
-an access code of its own, which it keeps.
+you are signed in, a pairing the server made for the phone, good for fifteen minutes. With it
+the app claims an access code of its own, which it keeps.
 
 1. On the phone's browser or on a laptop, open `https://orphan-parts.pages.dev`.
 2. Tap **Sign in with the code** in the header, enter the code, **Enter**. The header line
@@ -98,9 +98,10 @@ shows the address to type. On the **Backend** tab type it into **Backend URL**
 (`https://….modal.run`), type your access code into the second field, tap **Save**, then
 **Check**. The answer should end with **The code opens it.**
 
-The phone's own code lasts thirty days, so the phone stays through the gate after the
-pairing session's twelve hours with no second scan. Scanning the code on a page that is not
-signed in pairs the phone as the demo (recorded answers, nothing kept): sign in first.
+The phone's own code lasts thirty days, or until the code you were given ends if that is
+sooner, so the phone stays through the gate with no second scan. Scanning the code on a page
+that is not signed in pairs the phone as the demo (recorded answers, nothing kept): sign in
+first.
 
 ## 5. Connect to a local server instead (alternative)
 
@@ -159,4 +160,6 @@ until you delete them; nothing is published or posted anywhere. The details are 
 | The app: "that code points at localhost" | The site was opened at `localhost`; open it at the computer's network address, or use the hosted site |
 | **Check**: "Not reachable" | The phone is off the network the server is on, or the address has a typo; the hosted address is `https://`, a local one `http://…:5173` |
 | **Check**: "The code is refused" | The code was typed wrong or has expired; ask for a new one |
+| "This phone's code has ended or was revoked" | The code you were given has ended or was revoked, or the phone's own was: sign in on the site with a current code and scan its pairing code again |
+| After a scan: "no code of its own: … does not claim a phone's code" or "… already" | The pairing was spent or did not come from a scan: reload the signed-in page and scan its new code within fifteen minutes |
 | A page says "this visitor's hourly allowance is used" | The demo's per-person limit; wait the minutes it names |

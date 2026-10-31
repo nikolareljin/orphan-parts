@@ -87,17 +87,26 @@ its own when reached.
 ## The phone
 
 *Pair the phone* at the foot of every page shows a QR code with this web origin
-(`GET /api/pair.svg`). For a caller through the door it carries a session for the phone as
-well; the access code itself is never in the QR, and the QR stores nothing. On its first scan
-the app claims a code of its own with that session (`POST /api/pair/code`, once per pairing
-session): an issued record labeled `phone` and the first eight characters of the session's
-id, good for `PAIR_CODE_DAYS` (30), and never past the code that opened the session (a
-session from an issued code gives a phone code that ends with that record; one whose record
-has ended gives nothing). The phone's session ends like any other, after
-`DEMO_SESSION_HOURS`; the phone then opens a new one with its code, with no second scan.
-`./dev keys list` shows the phone codes beside the rest, and `./dev keys revoke "phone …"`
-cuts one phone off with every session it opened. Two phones need two scans of a fresh page:
-a reload draws a new session into the code. For the demo visitor the QR carries the address
+(`GET /api/pair.svg`); the origin must be one this server is reached at (the page's own, as
+the browser names it, or one in `CORS_ORIGINS`), so the QR never points elsewhere. For a
+caller through the door it carries a pairing as well: a short session of its own kind, good
+for `PAIR_TOKEN_MINUTES` (15), that opens the door while it lasts and is the only token that
+claims a phone's code. The access code itself is never in the QR, and the QR stores nothing.
+On its first scan the app claims a code of its own with the pairing (`POST /api/pair/code`,
+once per pairing; a browser's session is refused with 403, and each try counts against the
+address's `DEMO_CODE_ATTEMPTS`): an issued record labeled `phone` and the first eight
+characters of the pairing's id, good for `PAIR_CODE_DAYS` (30) and never past the code that
+signed the page in. The app then opens a session with that code, as a typed code would, and
+opens a new one with it whenever a session ends, with no second scan.
+
+The phone's code stands only while the code that paired it does. Revoking a guest's code
+(`./dev keys revoke judges`) ends that code, every session it opened and every phone code it
+paired, with their sessions; a guest code that expires does the same. A phone paired from a
+page signed in with the master code ends when `DEMO_ACCESS_CODE` changes. Revoking a phone's
+label (`./dev keys revoke "phone …"`) ends that phone alone. `./dev keys list` shows the phone
+codes beside the rest, each with what paired it, and `ended` for one whose parent has ended. A
+phone's own code does not pair another phone. Two phones need two scans of a fresh page: a
+reload draws a new pairing into the code. For the demo visitor the QR carries the address
 alone: a phone paired from it is the demo visitor too, its captures refused with the line,
 and the Capture tab says so before anything is sent; a scan of a signed-in page later gives
 it a code.

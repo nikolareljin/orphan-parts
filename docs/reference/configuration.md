@@ -44,7 +44,8 @@ stops the service with a clear message instead of failing on the first user requ
 | `PRICE_COUNTRY` | | | ISO 3166-1 country for local price results when the request names none |
 | `DEMO_ACCESS_CODE` | | | the master code of the live door, twelve characters at least; empty = no gate (a machine of your own). Codes issued as records (`./dev keys`) open the same door beside it; without a code a visitor is the demo |
 | `DEMO_SESSION_HOURS` | `12` | | how long a session lasts |
-| `PAIR_CODE_DAYS` | `30` | | how long the access code a phone claims on its first scan lasts; never past the code that paired it |
+| `PAIR_TOKEN_MINUTES` | `15` | | how long the pairing in a QR code lasts, 1 to 1440: the time to scan it and claim the phone's code |
+| `PAIR_CODE_DAYS` | `30` | | how long the access code a phone claims on its first scan lasts, 1 to 3650; never past the code that paired it, and ended with it |
 | `DEMO_VISITOR_CALLS_PER_HOUR` | `20` | | calls that spend, per session and hour |
 | `DEMO_DAILY_CALLS` | `300` | | calls that spend, for everyone per UTC day |
 | `DEMO_CODE_ATTEMPTS` | `5` | | tries of the code per address and quarter hour |

@@ -27,8 +27,8 @@ class Pairing(BaseModel):
     name: str = APP_NAME
     url: str = Field(description="the web origin the phone talks to; it proxies the API")
     gated: bool
-    token: str = Field(default="", description="a session for the phone, when the demo is gated")
-    expires_at: int = Field(default=0, description="when that session ends, Unix seconds")
+    token: str = Field(default="", description="a pairing for the phone, when the demo is gated")
+    expires_at: int = Field(default=0, description="when that pairing ends, Unix seconds")
 
     def payload(self) -> str:
         """What the QR carries: the origin, whether gated, the token. Nothing else."""

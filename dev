@@ -112,8 +112,8 @@ cmd_setup() {
 }
 
 # The app onto the connected phone, launched, and the pairing code printed: the phone talks to
-# the web app's origin on this machine's address (the web app proxies the API), with a session
-# of its own when the demo is gated.
+# the web app's origin on this machine's address (the web app proxies the API), with a pairing
+# (PAIR_TOKEN_MINUTES) when the demo is gated.
 cmd_phone() {
   local release=0
   [[ "${1:-}" == "--release" ]] && release=1
