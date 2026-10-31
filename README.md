@@ -80,7 +80,8 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    that scan; from a page that is not signed in, the phone joins as the demo. Without Google
    Play services or a second screen, type the address shown under the code into **Backend
    URL** and the access code, if the site has one, into the field under it, then tap **Save**
-   and **Check**.
+   and **Check**. Pictured:
+   [Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/).
 5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
    **Inbox**.
 

@@ -9,6 +9,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ### Added
 - **Sign out** in the web header while signed in on a gated host: `DELETE /api/access` clears the session cookie with the attributes it was set with (`HttpOnly`, `SameSite=Strict`, `Secure` when the cookie is), the web app drops the token it keeps across origins even when the call fails, and the page loads again as the demo visitor, the footer's pairing code with it.
+- A pictured guide to pairing the phone with the web app (`docs/start/pairing.md`): sign in, the footer's pairing code signed in and signed out, the scan, the typed address, a photo sent to the Inbox, and what a visitor gets with the code and without it; linked from the judges' guide, the README and the docs home.
 
 ## 0.3.0 - 2026-10-31
 
