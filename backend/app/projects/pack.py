@@ -33,9 +33,12 @@ PRIVATE_WORDS = frozenset(
         "license",
         "ssn",
         "iban",
+        "imsi",
+        "iccid",
+        "meid",
     }
 )
-PRIVATE_PARTS = ("serial", "password", "passwd")
+PRIVATE_PARTS = ("serial", "password", "passwd", "service_tag", "servicetag")
 
 
 def private_field(key: str) -> bool:

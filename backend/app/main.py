@@ -18,6 +18,7 @@ from app.api.items import router as items_router
 from app.api.measure import router as measure_router
 from app.api.pair import router as pair_router
 from app.api.photos import router as photos_router
+from app.api.picture import projects_router as project_pictures_router
 from app.api.picture import router as picture_router
 from app.api.profiles import router as profiles_router
 from app.api.projects import router as projects_router
@@ -195,6 +196,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(items_router)
     app.include_router(photos_router)
     app.include_router(picture_router)
+    app.include_router(project_pictures_router)
     app.include_router(profiles_router)
     app.include_router(measure_router)
     app.include_router(assess_router)
