@@ -115,6 +115,11 @@ class PairingTest {
         // a code saved since, or a typed one, stays
         assertNull(withoutEndedCode(held.copy(accessCode = "opl_newer"), "opl_mine"))
         assertNull(withoutEndedCode(Settings("https://demo.example", "opl_mine"), "opl_mine"))
+        // a live pairing from a scan since stays for its claim; an ended one goes
+        val live = "sid.9999999999.2.0.0123456789abcdef.${"a".repeat(32)}"
+        assertEquals(Settings("https://demo.example", "", live), withoutEndedCode(held.copy(token = live), "opl_mine"))
+        val ended = "sid.9.2.0.0123456789abcdef.${"a".repeat(32)}"
+        assertEquals(Settings("https://demo.example", ""), withoutEndedCode(held.copy(token = ended), "opl_mine"))
     }
 
     @Test
