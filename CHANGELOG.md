@@ -24,6 +24,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ### Security
 - No credential or personal data ships in an image: `.env` files and logs are kept out of both build contexts (and local data out of the backend's), and the release workflow scans each built image (`scripts/scan-image.sh`: its environment, the project's files, gitleaks) before anything is pushed.
+- A hosted deploy never ships a local secret file: the Modal image leaves out `.env*`, key, certificate and keystore files and Python caches wherever they turn up under the three directories it carries, and the web step refuses to build while a `frontend/.env*` exists (Vite would bake its `VITE_` names into the public bundle) and refuses to upload a `dist/` holding one.
 
 ### Changed
 - `.env.example` lists every name the hosted deploy and the planned second model route use (Modal, Cloudflare, the host's key, code, cap and mode; Baseten and Fireworks), with empty values and where to get each; `./dev deploy hosted` reads them from `.env` when the shell does not set them.
