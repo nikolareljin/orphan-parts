@@ -1,6 +1,6 @@
 [project]
 name = "orphan-parts"
-version = "0.2.0"
+version = "0.3.0"
 description = "Identify spare parts, draft Marketplace listings, verify matches with Meta's Muse models"
 requires-python = ">=3.12,<3.13"
 license = "MIT"
