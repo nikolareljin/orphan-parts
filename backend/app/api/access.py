@@ -74,8 +74,12 @@ def grant_access(
 
 @router.delete("/access", response_model=Access)
 def leave(response: Response, gate: GateDep) -> Access:
-    """End this session on this browser."""
-    response.delete_cookie(COOKIE, path="/")
+    """End this session on this browser. Sessions are not stored, so the token stays good until
+    it expires; what ends here is the browser's hold on it. Revoking the code ends them all."""
+    # a browser drops the cookie only when the attributes match the ones it was set with
+    response.delete_cookie(
+        COOKIE, path="/", httponly=True, samesite="strict", secure=gate.cookie_secure
+    )
     return Access(
         gated=gate.enabled, granted=not gate.enabled, live=not gate.enabled and gate.live_models
     )

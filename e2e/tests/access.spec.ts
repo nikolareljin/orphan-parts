@@ -30,6 +30,18 @@ test('without a session the pages are the demo, and the code opens the rest', as
   await expect(page.getByText(/demo: \d+ of \d+ calls today/)).toBeVisible()
   await page.getByRole('button', { name: 'My inventory' }).click()
   await expect(page.getByRole('alert')).toHaveCount(0)
+
+  // the way out: the header's Sign out drops the page back to the demo, and it stays there
+  await page.getByRole('button', { name: 'Sign out' }).click()
+  await expect(page.getByRole('button', { name: 'Sign in with the code' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0)
+  await expect(page.getByText(/demo: recorded answers; the code unlocks saving/)).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Sign in with the code' })).toBeVisible()
+  const after = (await (await page.request.get('/api/access')).json()) as { granted: boolean }
+  expect(after.granted).toBe(false)
+  const write = await page.request.post('/api/items', { data: { item_type: 'kettle' } })
+  expect(write.status()).toBe(403)
 })
 
 test('the API answers the demo visitor with recordings and refuses every write', async ({ request }) => {

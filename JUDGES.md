@@ -96,7 +96,8 @@ the app claims an access code of its own, which it keeps.
 
 1. On the phone's browser or on a laptop, open `https://orphan-parts.pages.dev`.
 2. Tap **Sign in with the code** in the header, enter the code, **Enter**. The header line
-   now says you are through the door.
+   now says you are through the door. **Sign out**, in the same place, ends the session in
+   this browser; closing the tab ends the hosted one as well.
 3. Scroll to the foot of the page and open **Pair the phone**. A QR code is there.
 4. In the app, on the **Backend** tab, tap **Scan to pair** and point the camera at the QR
    code (on a laptop screen, or on the phone's own screenshot opened on another device). The

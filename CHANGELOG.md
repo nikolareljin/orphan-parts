@@ -7,6 +7,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ### Changed
 - The phone guide, step 1 of the README and the docs home, and the Android guide say the app is not on Google Play: the APK comes from the releases, signed with the build's development key, so Android asks to allow installs from an unknown source (per app under **Install unknown apps** on Android 8 and newer), a Play Protect scan from the Play Store checks it once installed, and an earlier release is uninstalled before the next one, since each release carries a fresh key.
 
+### Added
+- **Sign out** in the web header while signed in on a gated host: `DELETE /api/access` clears the session cookie with the attributes it was set with (`HttpOnly`, `SameSite=Strict`, `Secure` when the cookie is), the web app drops the token it keeps across origins even when the call fails, and the page loads again as the demo visitor, the footer's pairing code with it.
+
 ## 0.3.0 - 2026-10-31
 
 ### Changed

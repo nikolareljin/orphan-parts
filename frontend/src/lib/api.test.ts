@@ -181,3 +181,49 @@ describe('api.pair.svg', () => {
     expect(await api.pair.svg('http://192.168.1.20:5173')).toEqual({ svg: '<svg/>', expiresAt: 0, expiresIn: null })
   })
 })
+
+// Across origins the session token lives in sessionStorage and leaving drops it whether or
+// not the server heard. The module reads the API's origin once, so it is loaded afresh here.
+describe('api.access.leave', () => {
+  const store = new Map<string, string>()
+  const storage = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => void store.set(key, value),
+    removeItem: (key: string) => void store.delete(key),
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+    vi.resetModules()
+    store.clear()
+  })
+
+  async function remote() {
+    vi.stubEnv('VITE_API_URL', 'https://api.example.test')
+    vi.stubGlobal('sessionStorage', storage)
+    vi.resetModules()
+    return (await import('./api')).api
+  }
+
+  it('sends the bearer token and forgets it', async () => {
+    const hosted = await remote()
+    store.set('opl-session', 'tok')
+    const answer = { gated: true, granted: false, live: false, token: '', expires_at: 0 }
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json(answer))
+    vi.stubGlobal('fetch', fetchMock)
+    expect((await hosted.access.leave()).granted).toBe(false)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('https://api.example.test/api/access')
+    expect(init).toMatchObject({ method: 'DELETE', credentials: 'include', headers: { Authorization: 'Bearer tok' } })
+    expect(store.has('opl-session')).toBe(false)
+  })
+
+  it('forgets the token even when the server does not answer', async () => {
+    const hosted = await remote()
+    store.set('opl-session', 'tok')
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => new Response('down', { status: 503 })))
+    await expect(hosted.access.leave()).rejects.toThrow('/api/access: HTTP 503')
+    expect(store.has('opl-session')).toBe(false)
+  })
+})
