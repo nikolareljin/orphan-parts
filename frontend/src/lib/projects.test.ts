@@ -44,13 +44,13 @@ describe('numbers', () => {
 describe('budgetText', () => {
   it('says what is left, or by how much the set is over, or that no budget is set', () => {
     expect(budgetText({ budget: 50, currency: 'USD', committed_spend: 12, remaining: 38, selected: 1 })).toBe(
-      '1 selected, expected spend 12 USD of 50 USD; 38 USD left',
+      '1 selected, estimated cost 12 USD of 50 USD; 38 USD left',
     )
     expect(budgetText({ budget: 10, currency: 'USD', committed_spend: 22, remaining: -12, selected: 2 })).toBe(
-      '2 selected, expected spend 22 USD of 10 USD: over by 12 USD',
+      '2 selected, estimated cost 22 USD of 10 USD: over by 12 USD',
     )
     expect(budgetText({ budget: null, currency: 'USD', committed_spend: 0, remaining: null, selected: 0 })).toBe(
-      '0 selected, expected spend 0 USD; no budget set',
+      '0 selected, estimated cost 0 USD; no budget set',
     )
   })
 })
@@ -98,7 +98,7 @@ describe('numberProblem', () => {
 describe('packs and progress', () => {
   it('labels a pack by version and day and says when it is stale', () => {
     expect(packLabel({ version: 2, created_at: '2026-10-29T18:00:00+00:00', stale: false })).toBe('version 2, 2026-10-29')
-    expect(packLabel({ version: 1, created_at: '2026-10-28T09:00:00+00:00', stale: true })).toBe('version 1, 2026-10-28, stale: an input changed since')
+    expect(packLabel({ version: 1, created_at: '2026-10-28T09:00:00+00:00', stale: true })).toBe('version 1, 2026-10-28, out of date: something changed since')
   })
   it('counts the steps done, treating missing flags as not done', () => {
     const project = { steps: ['a', 'b', 'c'], progress: [true] }

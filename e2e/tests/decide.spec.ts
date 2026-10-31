@@ -33,13 +33,13 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(decide).toContainText('laptop · 1 of 1 value accepted')
   await expect(decide).toContainText('Not asked yet.')
   await expect(decide).toContainText('Homework workstation (laptop)')
-  await expect(decide).toContainText('No open search from this item.')
-  await expect(decide.getByRole('button', { name: 'See picture controls' })).toBeVisible()
+  await expect(decide).toContainText('No open search for a part.')
+  await expect(decide.getByRole('button', { name: 'Go to the picture section' })).toBeVisible()
 
   // the model's proposals, from the recorded answer, labeled as proposals
   await decide.getByRole('button', { name: 'Ask for ideas' }).click()
   const ideas = decide.getByRole('status', { name: /Ideas/ })
-  await expect(ideas).toContainText("The model's proposals")
+  await expect(ideas).toContainText('Ideas from the model')
   await expect(ideas).toContainText('recorded answer')
   const list = ideas.getByRole('list', { name: 'Ideas' })
   await expect(list.getByRole('listitem')).toHaveCount(3)
@@ -48,7 +48,7 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(list).toContainText('low effort')
 
   // a guidance written on the Value panel is read into the worth row at once
-  await panel.getByRole('region', { name: 'What is it worth?' }).getByRole('button', { name: 'Price guidance' }).click()
+  await panel.getByRole('region', { name: 'What is it worth?' }).getByRole('button', { name: 'Get price guidance' }).click()
   await expect(decide).toContainText(/about \d/)
   await expect(decide).not.toContainText('Not asked yet.')
 
@@ -58,7 +58,7 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   const decided = decide.getByRole('status', { name: 'Decision made' })
   await expect(decided).toContainText('Sell')
   await expect(decided).toContainText('worth a listing')
-  await expect(panel.getByLabel('Intent')).toHaveValue('sell')
+  await expect(panel.getByRole('combobox', { name: /^Plan/ })).toHaveValue('sell')
   await expect(panel.getByRole('region', { name: 'Prepare to sell or give away' }).getByLabel('Sell')).toBeChecked()
 
   // the history has the line, and the panel reads it back after a reload
@@ -108,7 +108,7 @@ test('what to do with it: three cards for the profile, and a card chosen leads o
   await fix.getByRole('button', { name: 'Choose this: Keep and fix' }).click()
   await expect(decide.getByRole('status', { name: 'Decision made' })).toContainText('Keep and fix')
   await expect(fix).toContainText('chosen')
-  const notes = panel.getByLabel('Notes (stay private)')
+  const notes = panel.getByLabel('Notes (private)')
   await expect(notes).toHaveValue(/Repair plan \(scenarios v1/)
   await expect(notes).toBeFocused()
   await expect(condition).toHaveValue('scuffed lid, one key loose')

@@ -113,14 +113,14 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
       </div>
       {note && (
         <p className="hint">
-          Heard and kept as your words: <q>{note}</q>
-          {noteCut && ' (longer than the field holds; the first part was kept)'}
+          Transcribed and saved as condition notes: <q>{note}</q>
+          {noteCut && ' (too long; only the first part was saved)'}
         </p>
       )}
       <form onSubmit={(e) => void write(e)}>
         <div className="row options">
           <fieldset className="choice">
-            <legend>Mode</legend>
+            <legend>Listing type</legend>
             {MODES.map((m) => (
               <label key={m.value} className="check">
                 <input type="radio" name="mode" checked={mode === m.value} onChange={() => setMode(m.value)} />
@@ -130,18 +130,18 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
           </fieldset>
           <label className="check">
             <input type="checkbox" checked={holdsData} onChange={(e) => setHoldsData(e.target.checked)} />
-            <span>Stores accounts or files (phone, laptop, drive)</span>
+            <span>Holds personal data (adds steps to wipe it)</span>
           </label>
         </div>
         <div className="row">
           <label>
             <span>Pickup</span>
-            <input value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="area, times, how it is handed over" />
+            <input value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="area, times, how to hand it over" />
           </label>
           {mode === 'sell' && (
             <label>
               <span>Asking price</span>
-              <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="you set it" />
+              <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="your price" />
             </label>
           )}
           <button type="submit" disabled={busy}>
@@ -226,7 +226,7 @@ function DraftView({
         <a href={draft.handoff_url} target="_blank" rel="noopener noreferrer">
           Open Marketplace
         </a>
-        <span className="muted">Paste the draft into the create-item page yourself; nothing is posted from here.</span>
+        <span className="muted">Paste it into the new-listing form on Marketplace. Nothing is posted from here.</span>
       </div>
     </div>
   )

@@ -51,7 +51,7 @@ candidates, the costs with their dates, the tools you said you have, the steps w
 progress, the safety lines, the unknowns to check, the guidance by name, the limits that always
 apply, and the outcome once recorded. Nothing is asked of a model. Each pack carries a version,
 the day it was written and a digest of its inputs; a change to an item on it, to the project
-or to the budget marks it **stale**, and the next writing is the next version. **Download**
+or to the budget marks it **out of date**, and the next writing is the next version. **Download**
 keeps it as a file.
 
 **Progress and the outcome.** While a project is selected or being built, its steps are a

@@ -12,11 +12,11 @@ export function modeLabel(mode: DraftMode): string {
 export function groupLabel(group: StepGroup): string {
   switch (group) {
     case 'prepare':
-      return 'Before it goes'
+      return 'Before handing it over'
     case 'photos':
       return 'Photos'
     case 'data':
-      return 'Your data'
+      return 'Wipe your data'
   }
 }
 

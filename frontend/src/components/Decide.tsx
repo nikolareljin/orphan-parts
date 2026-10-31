@@ -203,11 +203,11 @@ export default function Decide({
             {view.uses && <UsesView uses={view.uses} />}
           </dd>
 
-          <dt>What would complete it</dt>
+          <dt>Parts it still needs</dt>
           <dd>
             {view.searches.length === 0 ? (
               <>
-                No open search from this item. <a href="#find">Find a part</a> opens one.
+                No open search for a part. Start one on <a href="#find">Find a part</a>.
               </>
             ) : (
               <ul className="searches" aria-label="Open searches">
@@ -227,7 +227,7 @@ export default function Decide({
           <dt>What it could look like</dt>
           <dd>
             <button type="button" className="link" onClick={() => document.querySelector('section.picture')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-              See picture controls
+              Go to the picture section
             </button>
           </dd>
 
@@ -247,7 +247,7 @@ export default function Decide({
             <div className="row">
               <label>
                 <span>Note</span>
-                <input value={note} maxLength={200} placeholder="why, in a line" onChange={(e) => setNote(e.target.value)} />
+                <input value={note} maxLength={200} placeholder="why (optional)" onChange={(e) => setNote(e.target.value)} />
               </label>
             </div>
             <div className="row choices">
@@ -273,12 +273,12 @@ function UsesView({ uses }: { uses: Uses }) {
   return (
     <div className="uses" role="status" aria-label={`Ideas ${uses.version}`}>
       <p className="meta">
-        The model's proposals · {uses.model} · {usd(uses.cost_usd)}
+        Ideas from the model · {uses.model} · {usd(uses.cost_usd)}
         {uses.from_fixture && <span className="badge">recorded answer</span>}
         {uses.stale && <span className="badge">item changed since</span>}
       </p>
       {uses.uses.length === 0 ? (
-        <p className="muted">No use was proposed.</p>
+        <p className="muted">No ideas came back.</p>
       ) : (
         <ul aria-label="Ideas">
           {uses.uses.map((u, i) => (
