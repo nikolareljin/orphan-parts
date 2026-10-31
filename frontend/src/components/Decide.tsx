@@ -160,7 +160,7 @@ export default function Decide({
           <dt>What it could look like</dt>
           <dd>
             <button type="button" className="link" onClick={() => document.querySelector('section.picture')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-              See picture controls above
+              See picture controls
             </button>
           </dd>
 

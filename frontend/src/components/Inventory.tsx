@@ -9,11 +9,22 @@ import Listing from './Listing'
 import Modal from './Modal'
 import Measure from './Measure'
 import Picture from './Picture'
+import SectionNav, { type SectionEntry } from './SectionNav'
 import Value from './Value'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
+
+// The item dialog's sections, in the order they are laid out; the bar at the top links to them.
+const SECTIONS: SectionEntry[] = [
+  { id: 'facts', label: 'Facts' },
+  { id: 'decide', label: 'Decide' },
+  { id: 'value', label: 'Value' },
+  { id: 'sell', label: 'Sell or give away' },
+  { id: 'fit', label: 'Measure and fit' },
+  { id: 'picture', label: 'Picture' },
+]
 
 // The owner's items. ``refresh`` changes when something was saved elsewhere on the page.
 export default function Inventory({
@@ -258,193 +269,212 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
         {item.item_type} · version {item.version} · saved {whenText(item.created_at)}
         {item.parent_id !== null && <> · part of item #{item.parent_id}</>}
       </p>
-      <ItemPhotos id={item.id} />
-      <Picture item={item} demo={demo} />
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
+      <SectionNav entries={SECTIONS} />
 
-      <div className="row">
-        <label>
-          <span>Intent</span>
-          <select
-            value={item.intent}
-            onChange={(e) =>
-              attempt(() =>
-                api.items.update(item.id, { intent: e.target.value as Item['intent'], version: item.version }),
-              )
-            }
-          >
-            {INTENTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Availability</span>
-          <select
-            value={item.availability}
-            onChange={(e) =>
-              attempt(() =>
-                api.items.update(item.id, {
-                  availability: e.target.value as Item['availability'],
-                  version: item.version,
-                }),
-              )
-            }
-          >
-            {AVAILABILITIES.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Profile</span>
-          <select
-            value={item.profile}
-            onChange={(e) => attempt(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
-          >
-            <option value="">none yet</option>
-            {profiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="item-section" data-section="facts">
+        <h4>Facts</h4>
+        <ItemPhotos id={item.id} />
+        <div className="row">
+          <label>
+            <span>Intent</span>
+            <select
+              value={item.intent}
+              onChange={(e) =>
+                attempt(() =>
+                  api.items.update(item.id, { intent: e.target.value as Item['intent'], version: item.version }),
+                )
+              }
+            >
+              {INTENTS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Availability</span>
+            <select
+              value={item.availability}
+              onChange={(e) =>
+                attempt(() =>
+                  api.items.update(item.id, {
+                    availability: e.target.value as Item['availability'],
+                    version: item.version,
+                  }),
+                )
+              }
+            >
+              {AVAILABILITIES.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Profile</span>
+            <select
+              value={item.profile}
+              onChange={(e) => attempt(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
+            >
+              <option value="">none yet</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <h4>
+          Fields
+          {toConfirm > 0 && <span className="badge">{toConfirm} to confirm</span>}
+        </h4>
+        {fields.length === 0 ? (
+          <p className="muted">No fields yet.</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="evidence" aria-label="Fields">
+              <thead>
+                <tr>
+                  <th scope="col">Field</th>
+                  <th scope="col">Value</th>
+                  <th scope="col">Known from</th>
+                  <th scope="col">Review</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fields.map((a) => (
+                  <tr key={a.id}>
+                    <th scope="row">{fieldLabel(a.field)}</th>
+                    <td>
+                      {withUnit(a)}
+                      {a.raw && a.raw !== a.value && <span className="raw"> as printed: {a.raw}</span>}
+                    </td>
+                    <td>
+                      {provenanceLabel(a.provenance)}
+                      {a.provenance === 'observed' && <span className="raw">{percent(a.confidence)} confidence</span>}
+                    </td>
+                    <td>
+                      {reviewLabel(a.review)}
+                      {a.review === 'proposed' && (
+                        <span className="actions">
+                          <button type="button" className="link" onClick={() => attempt(() => api.items.review(item.id, a.id, 'accepted'))}>
+                            Accept
+                          </button>
+                          <button type="button" className="link" onClick={() => attempt(() => api.items.review(item.id, a.id, 'rejected'))}>
+                            Reject
+                          </button>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <AddField onAdd={(spec) => apply(() => api.items.addField(item.id, spec))} />
+
+        <form
+          className="details"
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault()
+            attempt(() => api.items.update(item.id, { ...details, version: item.version }))
+          }}
+        >
+          <h4>Details</h4>
+          {(
+            [
+              ['condition', 'Condition'],
+              ['faults', 'Known faults'],
+              ['tests_done', 'Tests done'],
+              ['accessories', 'Included accessories'],
+              ['location', 'Where it is (stays private)'],
+              ['notes', 'Notes (stay private)'],
+            ] as const
+          ).map(([key, label]) => (
+            <label key={key}>
+              <span>{label}</span>
+              <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+            </label>
+          ))}
+          <button type="submit" disabled={!detailsChanged}>
+            Save details
+          </button>
+        </form>
+
+        <AddComponent
+          onAdd={(spec) =>
+            apply(async () => {
+              // the part is its own record; this page stays on the whole and shows what left
+              await api.items.addComponent(item.id, spec)
+              return api.items.get(item.id)
+            })
+          }
+        />
+        {item.components.length > 0 && (
+          <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
+        )}
       </div>
 
-      <h4>
-        Fields
-        {toConfirm > 0 && <span className="badge">{toConfirm} to confirm</span>}
-      </h4>
-      {fields.length === 0 ? (
-        <p className="muted">No fields yet.</p>
-      ) : (
-        <table className="evidence" aria-label="Fields">
-          <thead>
-            <tr>
-              <th scope="col">Field</th>
-              <th scope="col">Value</th>
-              <th scope="col">Known from</th>
-              <th scope="col">Review</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((a) => (
-              <tr key={a.id}>
-                <th scope="row">{fieldLabel(a.field)}</th>
-                <td>
-                  {withUnit(a)}
-                  {a.raw && a.raw !== a.value && <span className="raw"> as printed: {a.raw}</span>}
-                </td>
-                <td>
-                  {provenanceLabel(a.provenance)}
-                  {a.provenance === 'observed' && <span className="raw">{percent(a.confidence)} confidence</span>}
-                </td>
-                <td>
-                  {reviewLabel(a.review)}
-                  {a.review === 'proposed' && (
-                    <span className="actions">
-                      <button type="button" className="link" onClick={() => attempt(() => api.items.review(item.id, a.id, 'accepted'))}>
-                        Accept
-                      </button>
-                      <button type="button" className="link" onClick={() => attempt(() => api.items.review(item.id, a.id, 'rejected'))}>
-                        Reject
-                      </button>
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <div className="item-section" data-section="decide">
+        <Decide
+          item={item}
+          guided={guided}
+          onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
+        />
+      </div>
 
-      <AddField onAdd={(spec) => apply(() => api.items.addField(item.id, spec))} />
+      <div className="item-section" data-section="value">
+        <Value item={item} onGuided={() => setGuided((n) => n + 1)} />
+      </div>
 
-      <form
-        className="details"
-        onSubmit={(e: FormEvent) => {
-          e.preventDefault()
-          attempt(() => api.items.update(item.id, { ...details, version: item.version }))
-        }}
-      >
-        <h4>Details</h4>
-        {(
-          [
-            ['condition', 'Condition'],
-            ['faults', 'Known faults'],
-            ['tests_done', 'Tests done'],
-            ['accessories', 'Included accessories'],
-            ['location', 'Where it is (stays private)'],
-            ['notes', 'Notes (stay private)'],
-          ] as const
-        ).map(([key, label]) => (
-          <label key={key}>
-            <span>{label}</span>
-            <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
-          </label>
-        ))}
-        <button type="submit" disabled={!detailsChanged}>
-          Save details
-        </button>
-      </form>
+      <div className="item-section" data-section="sell">
+        <Listing item={item} onChanged={() => attempt(() => api.items.get(item.id))} />
+      </div>
 
-      <AddComponent
-        onAdd={(spec) =>
-          apply(async () => {
-            // the part is its own record; this page stays on the whole and shows what left
-            await api.items.addComponent(item.id, spec)
-            return api.items.get(item.id)
-          })
-        }
-      />
-      {item.components.length > 0 && (
-        <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
-      )}
+      <div className="item-section" data-section="fit">
+        <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
+        <Assess item={item} />
+      </div>
 
-      <Decide
-        item={item}
-        guided={guided}
-        onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
-      />
+      {/* the wrapper stays empty, and hidden, when there is no picture to show */}
+      <div className="item-section" data-section="picture">
+        <Picture item={item} demo={demo} />
+      </div>
 
-      <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
-
-      <Assess item={item} />
-
-      <Value item={item} onGuided={() => setGuided((n) => n + 1)} />
-
-      <Listing item={item} onChanged={() => attempt(() => api.items.get(item.id))} />
-
-      <div className="row">
-        <label className="inline">
+      <div className="item-footer">
+        <label className="check">
           <input
             type="checkbox"
             checked={item.public}
             onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
-          />{' '}
-          Public in the demo (what it is, its photos and drawn pictures; never the location or the notes)
+          />
+          <span>Public in the demo (what it is, its photos and drawn pictures; never the location or the notes)</span>
         </label>
-        <button type="button" className="link" onClick={() => void showEvents()}>
-          History
-        </button>
-        {confirmDelete ? (
-          <button type="button" className="danger" onClick={() => void remove()}>
-            Yes, delete item #{item.id}
+        <span className="item-actions">
+          <button type="button" className="link" onClick={() => void showEvents()}>
+            History
           </button>
-        ) : (
-          <button type="button" className="link" onClick={() => setConfirmDelete(true)}>
-            Delete
-          </button>
-        )}
+          {confirmDelete ? (
+            <button type="button" className="danger" onClick={() => void remove()}>
+              Yes, delete item #{item.id}
+            </button>
+          ) : (
+            <button type="button" className="danger quiet" onClick={() => setConfirmDelete(true)}>
+              Delete
+            </button>
+          )}
+        </span>
       </div>
       {events !== null && (
         <ol className="events" aria-label="History">
@@ -459,9 +489,9 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   )
 }
 
-// The photos the item was read from (the capture's, or the label photos saved with it), above
-// the values to confirm and in view while the dialog scrolls, so each value can be checked
-// against the picture. One click makes a photo large, another shrinks it.
+// The photos the item was read from (the capture's, or the label photos saved with it), a row
+// of thumbnails above the values to confirm, so each value can be checked against the picture.
+// One click makes a photo large, another shrinks it.
 function ItemPhotos({ id }: { id: number }) {
   const [count, setCount] = useState<number | null>(null)
   const [big, setBig] = useState<number | null>(null)

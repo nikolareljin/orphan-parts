@@ -52,6 +52,16 @@ INSTRUCTIONS = (
     " basis, and caveats for whatever makes the figures uncertain. Plain words, no hype."
 )
 
+
+def instructions(max_searches: int) -> str:
+    """The standing instructions with the search bound said: the model plans its searches
+    around the count, and ``max_tool_calls`` on the request holds it there."""
+    return (
+        f"{INSTRUCTIONS} Search at most {max_searches} time{'s' if max_searches != 1 else ''},"
+        " then answer with what those searches found."
+    )
+
+
 LABELS = {
     "asking": "asking prices seen",
     "sold": "sold prices seen",
@@ -234,10 +244,11 @@ class Valuer:
             Findings,
             model=self.settings.model_spark,
             input=[user_message(text_part(brief(item, known, request)))],
-            instructions=INSTRUCTIONS,
+            instructions=instructions(self.settings.price_max_searches),
             effort="low",
             max_output_tokens=MAX_OUTPUT_TOKENS,
             tools=[tool],
+            max_tool_calls=self.settings.price_max_searches,
             include=["web_search_call.results"],
             op="price",
         )

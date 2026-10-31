@@ -6,10 +6,10 @@ is read from it, and nothing rests on it.
 
 ## What it draws
 
-The dialog's line *What it could look like* has a field *as a...* (prefilled with the item's
-type; a project template id such as `smart_mirror` names that project, anything else is the
-owner's own words) and the button. The prompt is written by the rules from the item as it is
-known: its type, its accepted values (never one that identifies the item or its owner, such as
+The dialog's last section, *What it could look like*, has a field *as a...* (empty, with an
+example use as its placeholder; a project template id such as `smart_mirror` names that
+project, anything else is the owner's own words) and the button. The prompt is written by the
+rules from the item as it is known: its type, its accepted values (never one that identifies the item or its owner, such as
 a serial number, a MAC address or an IMEI; at most eight), its condition and its known faults,
 and the chosen use:
 *a semi-realistic illustration of a smart mirror built from laptop (screen size 14 in);
@@ -23,7 +23,7 @@ Never by itself. One call per click on the live door. The demo visitor is refuse
 every other call that spends, and sees only the pictures already drawn for a public item; the
 key is never used without the code. The switch is `PICTURE_ENABLED` (off by
 default): while it is off the route answers `503` with *pictures are off on this server
-(PICTURE_ENABLED)* and the button is disabled with that line.
+(PICTURE_ENABLED)*, and the section shows one line saying pictures are off, no field and no button.
 
 ## Request and response
 
