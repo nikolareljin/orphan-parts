@@ -130,6 +130,16 @@ fun typedSettings(settings: Settings, url: String, code: String): Settings {
 fun applyClaim(current: Settings, scanned: Settings, claimed: Settings): Settings? =
     if (current.baseUrl == scanned.baseUrl && current.token == scanned.token) claimed else null
 
+/** The settings once the phone's own code has ended (the backend refused it with 401), or null
+ * when the store holds another code by then: the code, its label and the token go, so the
+ * Backend tab shows a phone without a code instead of one that no longer opens. */
+fun withoutEndedCode(current: Settings, code: String): Settings? =
+    if (current.ownCode && current.accessCode == code) {
+        current.copy(accessCode = "", token = "", codeLabel = "", codeExpires = "")
+    } else {
+        null
+    }
+
 class SettingsStore(context: Context) {
     private val prefs = context.getSharedPreferences("orphan-parts", Context.MODE_PRIVATE)
 

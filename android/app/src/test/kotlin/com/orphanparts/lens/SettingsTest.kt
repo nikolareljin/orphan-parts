@@ -101,6 +101,20 @@ class PairingTest {
         assertTrue(tokenEnded("nonsense", 0))
         assertTrue(isPairingToken(pairing))
         assertFalse(isPairingToken("sid.2000.1.0.0123456789abcdef.${"a".repeat(32)}"))
+        // the shape before the binding: five fields, read for its expiry, never a pairing
+        val old = "sid.3000.1.0.${"b".repeat(32)}"
+        assertEquals(3000L, tokenExpiry(old))
+        assertFalse(isPairingToken(old))
+        assertFalse(isPairingToken("sid.3000.2.0.${"b".repeat(32)}"))
+    }
+
+    @Test
+    fun an_ended_own_code_leaves_the_store_without_a_code() {
+        val held = Settings("https://demo.example", "opl_mine", "sid.9.1.0.x", "phone abcd1234", "2026-12-01")
+        assertEquals(Settings("https://demo.example", ""), withoutEndedCode(held, "opl_mine"))
+        // a code saved since, or a typed one, stays
+        assertNull(withoutEndedCode(held.copy(accessCode = "opl_newer"), "opl_mine"))
+        assertNull(withoutEndedCode(Settings("https://demo.example", "opl_mine"), "opl_mine"))
     }
 
     @Test
