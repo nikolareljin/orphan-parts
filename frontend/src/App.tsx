@@ -5,6 +5,7 @@ import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
 import Modal from './components/Modal'
+import Profile from './components/Profile'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
 
 import { pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
@@ -183,6 +184,13 @@ export default function App() {
         <section className="card">
           <h2>Build and reuse</h2>
           <Build />
+        </section>
+      )}
+
+      {view === 'profile' && (
+        <section className="card">
+          <h2>Profile</h2>
+          <Profile />
         </section>
       )}
 

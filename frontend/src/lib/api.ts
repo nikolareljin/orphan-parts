@@ -540,10 +540,18 @@ export type Effort = 'low' | 'medium' | 'high'
 export type Purchase = 'used' | 'new' | 'either'
 export type ProjectStatus = 'proposed' | 'shortlisted' | 'selected' | 'building' | 'done' | 'abandoned'
 
+// The owner's skills, each rated; a record kept before the ratings reads as "some".
+export type SkillLevel = 'none' | 'some' | 'confident' | 'pro'
+
+export interface RatedSkill {
+  skill: string
+  level: SkillLevel
+}
+
 export interface Preferences {
   interests: string
   effort: Effort
-  skills: string[]
+  skills: RatedSkill[]
   tools: string
   opens_devices: boolean
   budget: number | null
@@ -650,7 +658,7 @@ export interface Conflict {
 
 // Decide what an item becomes: what the rules say it fills, what the model proposes it is good
 // for, and one view that gathers what the app already answered about it.
-export type DecisionChoice = 'keep_build' | 'sell' | 'give' | 'not_worth'
+export type DecisionChoice = 'keep_fix' | 'keep_build' | 'sell' | 'give' | 'not_worth'
 
 export interface Use {
   title: string
@@ -674,6 +682,61 @@ export interface Uses {
   stale: boolean
   templates: TemplateFit[]
   uses: Use[]
+  model: string
+  from_fixture: boolean
+  cost_usd: number
+  at: string
+}
+
+// What to do with it, for this owner: three cards written by the model from the item and the
+// profile, and the one it recommends.
+export type Difficulty = 'easy' | 'moderate' | 'hard'
+export type Recommendation = 'keep_fix' | 'reuse' | 'sell' | 'give'
+
+export interface KeepFix {
+  worth_fixing: boolean
+  problems: string[]
+  steps: string[]
+  difficulty: Difficulty
+  why: string
+  parts: string[]
+  cost: string
+  time: string
+}
+
+export interface ReuseScenario {
+  title: string
+  what_it_does: string
+  with_items: string[]
+  difficulty: Difficulty
+  why: string
+  extra_parts: string[]
+  cost: string
+  time: string
+}
+
+export interface SellCard {
+  selling_points: string[]
+  effort: string
+  note: string
+}
+
+export interface Scenarios {
+  id: number
+  item_id: number
+  version: number
+  item_version: number
+  // the item was edited since the cards were written; a decision is no edit
+  stale: boolean
+  // the keep and fix steps of these cards are in the item's notes
+  steps_in_notes: boolean
+  // written for the owner's profile; false: for an average person, no profile filled in
+  profiled: boolean
+  keep_fix: KeepFix
+  reuse: ReuseScenario[]
+  sell: SellCard
+  recommended: Recommendation
+  reason: string
   model: string
   from_fixture: boolean
   cost_usd: number
@@ -711,6 +774,7 @@ export interface Decision {
   accepted_fields: number
   worth: Worth | null
   uses: Uses | null
+  scenarios: Scenarios | null
   searches: OpenSearch[]
   templates: TemplateFit[]
   intent: Intent
@@ -1002,6 +1066,7 @@ export const api = {
   decide: {
     view: (itemId: number) => getJson<Decision>(`/api/items/${itemId}/decide`),
     uses: (itemId: number) => sendJson<Uses>('POST', `/api/items/${itemId}/uses`),
+    scenarios: (itemId: number) => sendJson<Scenarios>('POST', `/api/items/${itemId}/scenarios`),
     // made from the item version the panel showed: a stale choice is refused with 409
     choose: (itemId: number, choice: DecisionChoice, note: string, version?: number) =>
       sendJson<Item>('POST', `/api/items/${itemId}/decision`, { choice, note, version }),

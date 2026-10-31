@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
 import GatedImage from './GatedImage'
@@ -136,7 +136,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   const [details, setDetails] = useState({ condition: '', faults: '', tests_done: '', accessories: '', location: '', notes: '' })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [profiles, setProfiles] = useState<ProfileSummary[]>([])
-  // a guidance written on the Value panel: the Decide panel's worth row reads it again
+  // a guidance written on the Value panel or the Decide panel's sell card: both read it again
   const [guided, setGuided] = useState(0)
 
   useEffect(() => {
@@ -182,16 +182,12 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
     }
   }, [id])
 
-  function show(next: Item) {
+  // The server's item, with what the owner typed in the details and has not saved kept as typed;
+  // a save of the details (``saved``) takes the server's values as they were kept.
+  function show(next: Item, saved = false) {
+    const before = saved ? null : item
     setItem(next)
-    setDetails({
-      condition: next.condition,
-      faults: next.faults,
-      tests_done: next.tests_done,
-      accessories: next.accessories,
-      location: next.location,
-      notes: next.notes,
-    })
+    setDetails((typed) => mergeDetails(typed, before, next))
     setEvents(null)
   }
 
@@ -199,9 +195,9 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   // A write refused because the item changed in between reloads it instead of overwriting.
   // The refusal is shown here and thrown again, so a panel with its own error line says it too
   // and does not carry on as if the change had happened.
-  async function apply(action: () => Promise<Item>) {
+  async function apply(action: () => Promise<Item>, saved = false) {
     try {
-      show(await action())
+      show(await action(), saved)
       setError('')
       onChanged()
     } catch (err: unknown) {
@@ -221,8 +217,8 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   }
 
   // The same for a control with nowhere of its own to say a refusal: the error line above says it.
-  function attempt(action: () => Promise<Item>) {
-    void apply(action).catch(() => undefined)
+  function attempt(action: () => Promise<Item>, saved = false) {
+    void apply(action, saved).catch(() => undefined)
   }
 
   async function showEvents() {
@@ -388,7 +384,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           className="details"
           onSubmit={(e: FormEvent) => {
             e.preventDefault()
-            attempt(() => api.items.update(item.id, { ...details, version: item.version }))
+            attempt(() => api.items.update(item.id, { ...details, version: item.version }), true)
           }}
         >
           <h4>Details</h4>
@@ -407,7 +403,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
             .map(([key, label]) => (
               <label key={key}>
                 <span>{label}</span>
-                <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+                <textarea name={key} rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
               </label>
             ))}
           <button type="submit" disabled={!detailsChanged}>
@@ -434,11 +430,12 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           item={item}
           guided={guided}
           onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
+          onGuided={() => setGuided((n) => n + 1)}
         />
       </div>
 
       <div className="item-section" data-section="value">
-        <Value item={item} onGuided={() => setGuided((n) => n + 1)} />
+        <Value item={item} refresh={guided} onGuided={() => setGuided((n) => n + 1)} />
       </div>
 
       <div className="item-section" data-section="sell">

@@ -1,7 +1,8 @@
-import type { DecisionChoice, Effort, OpenSearch, TemplateFit, Worth } from './api'
+import type { DecisionChoice, Difficulty, Effort, OpenSearch, Recommendation, TemplateFit, Worth } from './api'
 import { money } from './value'
 
 export const CHOICES: { value: DecisionChoice; label: string }[] = [
+  { value: 'keep_fix', label: 'Keep and fix' },
   { value: 'keep_build', label: 'Keep and build' },
   { value: 'sell', label: 'Sell' },
   { value: 'give', label: 'Give away' },
@@ -43,4 +44,64 @@ export function reservedLine(committedTo: string[]): string {
 
 export function candidatesText(search: OpenSearch): string {
   return search.candidates === 1 ? '1 candidate' : `${search.candidates} candidates`
+}
+
+// The three scenario cards: the title each is shown under and the choice "Choose this" records.
+export type ScenarioCard = 'keep_fix' | 'reuse' | 'sell'
+
+export const CARDS: { id: ScenarioCard; title: string; choice: DecisionChoice }[] = [
+  { id: 'keep_fix', title: 'Keep and fix', choice: 'keep_fix' },
+  { id: 'reuse', title: 'Reuse it', choice: 'keep_build' },
+  { id: 'sell', title: 'Sell or give away', choice: 'sell' },
+]
+
+// Where a choice leads once it is kept: the part of the item dialog scrolled to, and what takes
+// the focus there. Keep and fix goes to the notes, where the repair steps are added; reuse to
+// what the item is good for; a sale or a gift to the listing's heading.
+export const LEADS_TO: Partial<Record<DecisionChoice, { scroll: string; focus: string }>> = {
+  keep_fix: { scroll: 'form.details', focus: 'form.details textarea[name="notes"]' },
+  keep_build: { scroll: '.decide .good-for', focus: '.decide .good-for' },
+  sell: { scroll: 'section.listing', focus: 'section.listing h4' },
+  give: { scroll: 'section.listing', focus: 'section.listing h4' },
+}
+
+// The keep and fix button and the line beside it: once the steps of these cards are in the
+// notes, it says so; on cards written before the item was last edited, the steps are not added,
+// and the button and its hint say that instead.
+export const STALE_FIX_HINT = 'The item changed. Ask again to get repair steps.'
+export const STEPS_ADDED = 'Repair steps added to the notes.'
+
+export function keepFix(scenarios: { stale: boolean; steps_in_notes: boolean }): { label: string; hint: string } {
+  if (scenarios.steps_in_notes) return { label: 'Choose this', hint: STEPS_ADDED }
+  if (scenarios.stale) return { label: 'Choose this (without the repair steps)', hint: STALE_FIX_HINT }
+  return { label: 'Choose this', hint: '' }
+}
+
+// The card a recommendation lights up: giving it away is on the sell card.
+export function cardFor(recommended: Recommendation): ScenarioCard {
+  return recommended === 'give' ? 'sell' : recommended
+}
+
+export function recommendationLabel(recommended: Recommendation): string {
+  switch (recommended) {
+    case 'keep_fix':
+      return 'Keep and fix'
+    case 'reuse':
+      return 'Reuse it'
+    case 'sell':
+      return 'Sell it'
+    case 'give':
+      return 'Give it away'
+  }
+}
+
+export function difficultyLabel(difficulty: Difficulty): string {
+  return difficulty === 'easy' ? 'easy for you' : difficulty === 'moderate' ? 'moderate for you' : 'hard for you'
+}
+
+// Whether a card is the one the last decision took: the sell card covers selling and giving.
+export function chosenCard(card: ScenarioCard, choice: DecisionChoice | undefined): boolean {
+  if (choice === undefined) return false
+  if (card === 'sell') return choice === 'sell' || choice === 'give'
+  return CARDS.find((c) => c.id === card)?.choice === choice
 }

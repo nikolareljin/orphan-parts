@@ -46,18 +46,6 @@ export function statusTone(status: ProjectStatus): 'fits' | 'conflict' | 'unsure
   return 'unsure'
 }
 
-// The skills field is typed as one line; the API keeps a list.
-export function skillsFromText(text: string): string[] {
-  return text
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
-}
-
-export function skillsToText(skills: string[]): string {
-  return skills.join(', ')
-}
-
 // A number field left blank means "not set", not zero.
 export function numberOrNull(text: string): number | null {
   const trimmed = text.trim()
