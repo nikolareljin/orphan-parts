@@ -66,7 +66,7 @@ message. [Find a part](../guides/search.md).
 
 **Build and reuse**: say what you want from a build, ask for proposals, and Muse Spark reads the
 inventory through tools and proposes projects from templates kept as data; only what names
-items you own is shown: a homework workstation on the 24 inch Dell and a retro console on the
+items you own is shown: a homework workstation on the 24 inch Dell and a smart mirror for the hall on the
 18 inch one. Select the homework workstation: its items are committed, the budget line says what
 is left, the missing cable becomes a search, and the build pack is one document from
 what stands. Record the outcome once it works. [Build and reuse](../guides/reuse.md).
