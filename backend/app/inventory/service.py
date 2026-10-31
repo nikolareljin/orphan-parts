@@ -48,6 +48,10 @@ class VersionConflictError(ValueError):
     pass
 
 
+class OutcomeConflictError(ValueError):
+    """A Marketplace outcome that does not follow the last one (sold twice, listed after sold)."""
+
+
 def now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -485,17 +489,52 @@ class Inventory:
             return found
 
     def add_marketplace_event(
-        self, item_id: int, kind: str, *, on: str, price: float | None, url: str, change: str
+        self,
+        item_id: int,
+        kind: str,
+        *,
+        on: str,
+        price: float | None,
+        url: str,
+        change: str,
+        after: frozenset[str],
+        report: bool = False,
+        gone: bool = False,
     ) -> sqlite3.Row:
+        """One outcome, in one transaction with what it brings: refused unless the latest
+        outcome is one of ``after`` ("" for none yet), so a sale is never recorded twice; with
+        ``report`` the price is also a reported sale, and with ``gone`` the item is marked gone."""
         at = now()
         with self.store.connect() as conn:
             row = self._row(conn, item_id)
+            last = conn.execute(
+                "SELECT kind FROM marketplace_events WHERE item_id = ? ORDER BY id DESC LIMIT 1",
+                (item_id,),
+            ).fetchone()
+            state = last["kind"] if last is not None else ""
+            if state not in after:
+                raise OutcomeConflictError(
+                    f"item {item_id} is {state or 'not listed'} on Marketplace;"
+                    f" it cannot be marked {kind} now"
+                )
+            version = int(row["version"])
             cur = conn.execute(
                 "INSERT INTO marketplace_events (item_id, kind, on_date, price, url, at)"
                 " VALUES (?,?,?,?,?,?)",
                 (item_id, kind, on, price, url, at),
             )
-            self._event(conn, item_id, change, int(row["version"]), at)
+            self._event(conn, item_id, change, version, at)
+            if report and price is not None:
+                conn.execute(
+                    "INSERT INTO price_reports (item_id, price, currency, sold_on, note, at)"
+                    " VALUES (?,?,?,?,?,?)",
+                    (item_id, price, "USD", on, "Facebook Marketplace", at),
+                )
+                self._event(conn, item_id, f"sale reported: {price:g} USD on {on}", version, at)
+            if gone and row["availability"] != "gone":
+                version += 1
+                conn.execute(SET_COLUMN["availability"], ("gone", version, at, item_id))
+                self._event(conn, item_id, "changed availability", version, at)
             found: sqlite3.Row = conn.execute(
                 "SELECT * FROM marketplace_events WHERE id = ?", (int(cur.lastrowid or 0),)
             ).fetchone()

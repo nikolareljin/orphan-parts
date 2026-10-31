@@ -87,6 +87,29 @@ export function parsePrice(text: string): number | null {
   return Number.isFinite(value) && value >= 0 ? value : null
 }
 
+// The details to save with the prices as typed. A give-away hides the price fields, so a
+// saved asking price, lowest price and handover are kept as they were (the draft prices a
+// give-away at 0 and hands it over at pickup whatever they say); a sale checks what was typed.
+export function detailsToSave(
+  details: SellDetails,
+  mode: DraftMode,
+  asking: string,
+  lowest: string,
+): { details: SellDetails } | { error: string } {
+  if (mode === 'give') return { details }
+  const a = parsePrice(asking)
+  const l = parsePrice(lowest)
+  if ((asking.trim() && (a === null || a === 0)) || (lowest.trim() && l === null)) {
+    return { error: 'a price is a number of dollars above 0, like 35' }
+  }
+  return { details: { ...details, asking_price: a, lowest_price: l } }
+}
+
+// A US price as people read it: $35, $35.50.
+export function dollars(value: number): string {
+  return Number.isInteger(value) ? `$${value.toLocaleString('en-US')}` : `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 export function priceInput(value: number | null): string {
   return value === null ? '' : String(value)
 }

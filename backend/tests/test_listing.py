@@ -28,6 +28,10 @@ def test_checklists_follow_the_mode_and_whether_data_is_held() -> None:
     sell = checklist("sell", holds_data=False)
     assert [s.group for s in sell].count("data") == 0
     assert {s.key for s in sell if s.required} >= {"clean", "test", "faults", "photo_faults"}
+    # Marketplace's own rules: a recalled product, a medical device or a streaming unlocker is
+    # not allowed there, and the owner checks before posting
+    allowed = next(s for s in sell if s.key == "allowed")
+    assert allowed.required and "Commerce Policies" in allowed.label and "recalled" in allowed.label
     give = checklist("give", holds_data=True)
     assert next(s for s in give if s.key == "test").label.startswith("Say what was tested")
     assert [s.key for s in give if s.group == "data"] == ["sign_out", "reset", "media", "limits"]

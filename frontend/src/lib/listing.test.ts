@@ -5,6 +5,8 @@ import {
   categoryText,
   copyFields,
   copyText,
+  detailsToSave,
+  dollars,
   draftText,
   emptyDetails,
   groupLabel,
@@ -118,6 +120,23 @@ describe('prices and details', () => {
     expect(parsePrice('-5')).toBeNull()
     expect(priceInput(null)).toBe('')
     expect(priceInput(35)).toBe('35')
+  })
+
+  it('keeps the saved prices when the listing is a give-away, and checks a sale\'s', () => {
+    const saved = { ...emptyDetails(), asking_price: 35, lowest_price: 25, handover: 'shipping' as const }
+    // the price fields are hidden for a give-away: nothing saved is wiped
+    expect(detailsToSave(saved, 'give', '', '')).toEqual({ details: saved })
+    expect(detailsToSave(saved, 'sell', '$40', '30')).toEqual({ details: { ...saved, asking_price: 40, lowest_price: 30 } })
+    expect(detailsToSave(saved, 'sell', '', '')).toEqual({ details: { ...saved, asking_price: null, lowest_price: null } })
+    expect(detailsToSave(saved, 'sell', 'thirty', '')).toHaveProperty('error')
+    // 0 would list a sale as free
+    expect(detailsToSave(saved, 'sell', '0', '')).toHaveProperty('error')
+  })
+
+  it('writes a price as US readers expect', () => {
+    expect(dollars(35)).toBe('$35')
+    expect(dollars(32.5)).toBe('$32.50')
+    expect(dollars(1200)).toBe('$1,200')
   })
 
   it('starts empty, pickup first, holding no data', () => {

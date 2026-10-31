@@ -3,6 +3,7 @@ from fastapi.responses import Response
 
 from app.api.deps import HandoffDep, ListerDep
 from app.api.model_errors import as_http
+from app.inventory import OutcomeConflictError
 from app.listing import (
     Draft,
     DraftRequest,
@@ -101,17 +102,28 @@ def marketplace_status(item_id: int, handoff: HandoffDep) -> MarketplaceStatus:
 
 @router.post("/items/{item_id}/marketplace/listed", response_model=MarketplaceStatus)
 def mark_listed(item_id: int, spec: Listed, handoff: HandoffDep) -> MarketplaceStatus:
-    """The owner posted it: the date, the price, and the listing's address when pasted."""
-    return handoff.listed(item_id, spec)
+    """The owner posted it: the date, the price, and the listing link when pasted. Listed
+    again is a new price; 409 after a sale or a gift."""
+    try:
+        return handoff.listed(item_id, spec)
+    except OutcomeConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.post("/items/{item_id}/marketplace/sold", response_model=MarketplaceStatus)
 def mark_sold(item_id: int, spec: Sold, handoff: HandoffDep) -> MarketplaceStatus:
-    """Sold: the final price is also recorded as a sale for price guidance; the item is gone."""
-    return handoff.sold(item_id, spec)
+    """Sold: the final price is also recorded as a sale for price guidance; the item is gone.
+    409 after a sale or a gift, so a sale is never counted twice."""
+    try:
+        return handoff.sold(item_id, spec)
+    except OutcomeConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.post("/items/{item_id}/marketplace/given", response_model=MarketplaceStatus)
 def mark_given(item_id: int, spec: Given, handoff: HandoffDep) -> MarketplaceStatus:
-    """Given away: the item is gone."""
-    return handoff.given(item_id, spec)
+    """Given away: the item is gone. 409 after a sale or a gift."""
+    try:
+        return handoff.given(item_id, spec)
+    except OutcomeConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc

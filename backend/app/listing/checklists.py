@@ -22,6 +22,12 @@ _PREPARE: list[tuple[str, str, bool]] = [
     ("accessories", "Gather every accessory, cable and part that goes with it", True),
     ("faults", "Write down every fault and mark you know of", True),
     ("pickup", "Decide the pickup area and how it is handed over", True),
+    (
+        "allowed",
+        "Check Marketplace allows it (Meta's Commerce Policies): not recalled, not a medical"
+        " device, nothing that unlocks paid streaming or services",
+        True,
+    ),
 ]
 _PHOTOS: list[tuple[str, str, bool]] = [
     ("photo_front", "Front, in daylight, on a plain background", True),

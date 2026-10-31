@@ -7,6 +7,7 @@ page; the owner pastes them and posts."""
 
 import re
 import zipfile
+from decimal import ROUND_HALF_UP, Decimal
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
@@ -30,6 +31,16 @@ _STREET = re.compile(
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 # ten digits in the usual US groupings, with or without +1
 _PHONE = re.compile(r"(?<!\d)(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)")
+
+
+def dollars(value: float) -> str:
+    """A US price as people read it: $35, $35.50."""
+    return f"${value:,.0f}" if value == int(value) else f"${value:,.2f}"
+
+
+def whole_dollars(value: float) -> int:
+    """The price as Marketplace takes it: whole dollars, half a dollar rounded up."""
+    return int(Decimal(str(value)).quantize(Decimal(1), rounding=ROUND_HALF_UP))
 
 
 class Category(BaseModel):

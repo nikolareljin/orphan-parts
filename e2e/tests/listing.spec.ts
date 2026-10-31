@@ -47,7 +47,7 @@ async function openItem(page: Page, name: string) {
 
 test.use({ permissions: ['clipboard-read', 'clipboard-write'] })
 
-test('tell us more, then the Marketplace handoff: fields to copy, the create page, listed and sold', async ({ page, request }) => {
+test('listing details, then the Marketplace handoff: fields to copy, the create page, listed and sold', async ({ page, request }) => {
   test.slow() // a draft, a checklist and outcomes, each a write, with five other workers on the backend
   const name = `Orbital charger ${stamp}`
   await createAdapter(request, name)
@@ -136,7 +136,7 @@ test('a give-away is free under Free Stuff, worded for pickup, with the data ste
   await expect(draft).toContainText('Could be useful for: Spare charger')
   await expect(draft.getByLabel('Draft text')).toHaveValue(/Data: signed out of every account and wiped\./)
   await expect(draft.getByLabel('Draft text')).toHaveValue(/Free\. Local pickup in 11105\.$/)
-  await expect(draft).toContainText('Your data')
+  await expect(draft).toContainText('Wipe your data')
   await expect(draft.getByLabel(/Factory reset/)).toBeVisible()
   await draft.getByRole('button', { name: 'Mark as given' }).click()
   await expect(draft.getByLabel('After posting')).toContainText('given on')

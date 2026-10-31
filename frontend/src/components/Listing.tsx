@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, mediaUrl, type Draft, type DraftMode, type Included, type Item, type MarketplaceData, type MarketplaceStatus, type SellDetails } from '../lib/api'
 import { usd } from '../lib/format'
 import {
@@ -10,6 +10,8 @@ import {
   categoryText,
   copyFields,
   copyText,
+  detailsToSave,
+  dollars,
   emptyDetails,
   groupLabel,
   handoffSteps,
@@ -41,6 +43,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
   const [error, setError] = useState('')
   const [note, setNote] = useState('')
   const [noteCut, setNoteCut] = useState(false)
+  const dataId = useId()
 
   // a decision on the item (Sell, Give away) picks the mode; any other intent leaves the radio
   // where it is, and the radio still changes it
@@ -98,16 +101,14 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
     setDetails((d) => ({ ...d, included: on ? [...d.included, value] : d.included.filter((v) => v !== value) }))
   }
 
-  // the prices as typed, checked; a give-away has none and is picked up
+  // the prices as typed, checked; a give-away keeps the saved ones
   function withPrices(): SellDetails | null {
-    if (mode === 'give') return { ...details, asking_price: null, lowest_price: null, handover: 'pickup' }
-    const a = parsePrice(asking)
-    const l = parsePrice(lowest)
-    if ((asking.trim() && a === null) || (lowest.trim() && l === null)) {
-      setError('a price is a number of dollars, like 35')
+    const next = detailsToSave(details, mode, asking, lowest)
+    if ('error' in next) {
+      setError(next.error)
       return null
     }
-    return { ...details, asking_price: a, lowest_price: l }
+    return next.details
   }
 
   async function saveDetails(): Promise<boolean> {
@@ -247,15 +248,15 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
             <input value={details.untested} onChange={(e) => set('untested', e.target.value)} placeholder="the DVI input" />
           </label>
           <label>
-            <span>Personal data on it</span>
-            <select value={details.data} aria-describedby="data-hint" onChange={(e) => set('data', e.target.value as SellDetails['data'])}>
+            <span id={`${dataId}-label`}>Personal data on it</span>
+            <select value={details.data} aria-labelledby={`${dataId}-label`} aria-describedby={`${dataId}-hint`} onChange={(e) => set('data', e.target.value as SellDetails['data'])}>
               {DATA_STATES.map((d) => (
                 <option key={d.value} value={d.value}>
                   {d.label}
                 </option>
               ))}
             </select>
-            <small id="data-hint" className="muted">
+            <small id={`${dataId}-hint`} className="muted">
               Holds personal data (adds steps to wipe it)
             </small>
           </label>
@@ -537,7 +538,7 @@ function Outcomes({
           {status.events.map((e) => (
             <li key={e.id}>
               {e.kind} on {e.on}
-              {e.price !== null && e.kind !== 'given' && ` at $${e.price}`}
+              {e.price !== null && e.kind !== 'given' && ` at ${dollars(e.price)}`}
               {e.url && (
                 <>
                   {' · '}

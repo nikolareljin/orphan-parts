@@ -3,7 +3,7 @@ version per save. The lowest acceptable price and the reason for selling are the
 they never reach the model or the listing text."""
 
 import re
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
@@ -58,7 +58,9 @@ class SellDetails(BaseModel):
         max_length=AREA_MAX,
         description="city, ZIP or neighborhood; never a street address",
     )
-    asking_price: float | None = Field(default=None, ge=0, le=PRICE_MAX)
+    asking_price: float | None = Field(
+        default=None, gt=0, le=PRICE_MAX, description="above 0: a listing at 0 reads as free"
+    )
     lowest_price: float | None = Field(
         default=None, ge=0, le=PRICE_MAX, description="private: never in the listing text"
     )
@@ -135,7 +137,8 @@ def _a_day_that_was(value: str) -> str:
         day = date.fromisoformat(value)
     except ValueError as exc:
         raise ValueError("a real date, YYYY-MM-DD") from exc
-    if day > datetime.now(UTC).date():
+    # the owner's calendar day may be ahead of UTC's (Guam, Saipan): the latest clock is UTC+14
+    if day > (datetime.now(UTC) + timedelta(hours=14)).date():
         raise ValueError("the date cannot be in the future")
     return value
 

@@ -244,7 +244,8 @@ CREATE INDEX IF NOT EXISTS scenarios_by_item ON scenarios (item_id);
 # happened to the listing after: listed, sold, given. Written to run again over a file that already
 # has the tables: a build of this step numbered it 13, so such a file also gets the scenarios table
 # it skipped
-_SCHEMA_V14 = """
+_SCHEMA_V14 = (
+    """
 CREATE TABLE IF NOT EXISTS sell_details (
     id INTEGER PRIMARY KEY,
     item_id INTEGER NOT NULL REFERENCES items(id),
@@ -263,7 +264,9 @@ CREATE TABLE IF NOT EXISTS marketplace_events (
     at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS marketplace_events_by_item ON marketplace_events (item_id);
-""" + _SCHEMA_V13
+"""
+    + _SCHEMA_V13
+)
 
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,

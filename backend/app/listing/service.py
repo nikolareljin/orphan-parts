@@ -19,9 +19,11 @@ from app.listing.marketplace import (
     TAGS_MAX,
     TITLE_MAX,
     data,
+    dollars,
     pick_category,
     pick_condition,
     strip_personal,
+    whole_dollars,
 )
 from app.listing.schema import (
     Draft,
@@ -203,28 +205,29 @@ def _amount(text: str) -> float | None:
         return None
 
 
-def _dollars(value: float) -> str:
-    return f"{value:.0f}" if value == int(value) else f"{value:.2f}"
-
-
 def price_for(
     request: DraftRequest, details: SellDetails | None, guidance: dict[str, Any] | None
 ) -> tuple[str, str]:
-    """The price to type on Marketplace and where it comes from: free for a give-away; the
-    owner's asking price; else the typical figure of the latest price guidance, named."""
+    """The price to type on Marketplace, in whole dollars, and where it comes from: free for a
+    give-away; the owner's asking price; else the typical figure of the latest price guidance,
+    named. A sale is never priced at 0, which Marketplace shows as free."""
     if request.mode == "give":
         return "0", "free"
     asked = _amount(request.asking_price) if request.asking_price else None
     if asked is None and details is not None:
         asked = details.asking_price
-    if asked is not None:
-        return _dollars(asked), "your asking price"
+    if asked:
+        whole = whole_dollars(asked)
+        if whole >= 1:
+            if whole != asked:
+                return str(whole), f"your asking price, {dollars(asked)} rounded to whole dollars"
+            return str(whole), "your asking price"
     if guidance is not None and guidance["content"].get("currency") == "USD":
         typical = next(
             (s for s in guidance["content"].get("strategies", []) if s["name"] == "typical"), None
         )
-        if typical is not None and typical.get("price"):
-            figure = round(float(typical["price"]))
+        figure = whole_dollars(float(typical.get("price") or 0)) if typical is not None else 0
+        if figure >= 1:
             weak = " (weak evidence)" if guidance["content"].get("weak") else ""
             return (
                 str(figure),

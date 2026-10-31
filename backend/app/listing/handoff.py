@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from app.inventory import Inventory
-from app.inventory.schema import ItemPatch
 from app.listing.details import (
     Given,
     Listed,
@@ -16,11 +15,14 @@ from app.listing.details import (
     SellDetailsRecord,
     Sold,
 )
-from app.listing.marketplace import photo_zip
+from app.listing.marketplace import dollars, photo_zip
 from app.listing.service import Lister
 from app.photos import ItemPhotos
 
 log = logging.getLogger("app.listing")
+
+# the outcomes a new one may follow: none yet, or listed
+OPEN = frozenset({"", "listed"})
 
 
 class Handoff:
@@ -54,30 +56,32 @@ class Handoff:
         )
 
     def listed(self, item_id: int, spec: Listed) -> MarketplaceStatus:
+        # listed again is a new price or a new listing; nothing follows a sale or a gift
         self.inventory.add_marketplace_event(
             item_id,
             "listed",
             on=spec.on,
             price=spec.price,
             url=spec.url,
-            change=f"listed on Facebook Marketplace at ${spec.price:g} on {spec.on}",
+            change=f"listed on Facebook Marketplace at {dollars(spec.price)} on {spec.on}",
+            after=OPEN,
         )
         return self.status(item_id)
 
     def sold(self, item_id: int, spec: Sold) -> MarketplaceStatus:
+        # the final price counts as a reported sale beside the guidance, never mixed into it;
+        # the event, the report and the item marked gone are one write
         self.inventory.add_marketplace_event(
             item_id,
             "sold",
             on=spec.on,
             price=spec.price,
             url="",
-            change=f"sold on Facebook Marketplace for ${spec.price:g} on {spec.on}",
+            change=f"sold on Facebook Marketplace for {dollars(spec.price)} on {spec.on}",
+            after=OPEN,
+            report=True,
+            gone=True,
         )
-        # the final price counts as a reported sale beside the guidance, never mixed into it
-        self.inventory.add_price_report(
-            item_id, price=spec.price, currency="USD", sold_on=spec.on, note="Facebook Marketplace"
-        )
-        self._gone(item_id)
         return self.status(item_id)
 
     def given(self, item_id: int, spec: Given) -> MarketplaceStatus:
@@ -88,13 +92,10 @@ class Handoff:
             price=0,
             url="",
             change=f"given away through Facebook Marketplace on {spec.on}",
+            after=OPEN,
+            gone=True,
         )
-        self._gone(item_id)
         return self.status(item_id)
-
-    def _gone(self, item_id: int) -> None:
-        if self.inventory.get(item_id).availability != "gone":
-            self.inventory.update(item_id, ItemPatch(availability="gone"))
 
     def _record(self, row: Any) -> SellDetailsRecord:
         return SellDetailsRecord(

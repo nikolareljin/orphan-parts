@@ -3,6 +3,7 @@ photo zip and what happened after the owner posted."""
 
 import json
 import zipfile
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -98,10 +99,10 @@ def test_contact_details_are_found_and_taken_out_but_specs_are_not() -> None:
     assert "555" not in text and "Elm" not in text and len(found) == 2
 
 
-# --- Listing details ------------------------------------------------------------------------
+# --- Listing details ---------------------------------------------------------------------
 
 
-def test_tell_us_more_refuses_a_street_address_and_contact_details() -> None:
+def test_listing_details_refuses_a_street_address_and_contact_details() -> None:
     assert details(area="11105").area == "11105"
     assert details(area="  Upper  West Side ").area == "Upper West Side"
     for area in ("31-17 Ditmars Blvd", "12 Oak Street", "Apt 4B"):
@@ -145,6 +146,27 @@ def test_the_price_is_the_asking_price_else_the_guidance_figure_named() -> None:
     price, basis = price_for(sell, details(asking_price=None), guidance)
     assert price == "32" and "price guidance v2" in basis and "$32" in basis
     assert price_for(sell, None, None)[0] == ""
+
+
+def test_the_price_is_whole_dollars_and_a_sale_is_never_free() -> None:
+    sell = DraftRequest(mode="sell")
+    # Marketplace takes whole dollars; cents are rounded and said
+    assert price_for(sell, details(asking_price=35.5, lowest_price=None), None) == (
+        "36",
+        "your asking price, $35.50 rounded to whole dollars",
+    )
+    assert price_for(sell, details(asking_price=34.99, lowest_price=None), None)[0] == "35"
+    assert price_for(DraftRequest(mode="sell", asking_price="$1,200"), None, None)[0] == "1200"
+    # a guidance figure under a dollar is no price: 0 would list the sale as free
+    tiny = {
+        "version": 1,
+        "content": {"currency": "USD", "strategies": [{"name": "typical", "price": 0.4}]},
+    }
+    assert price_for(sell, None, tiny)[0] == ""
+    assert price_for(DraftRequest(mode="sell", asking_price="0"), None, tiny)[0] == ""
+    # an asking price of 0 is refused where it is saved
+    with pytest.raises(ValidationError, match="greater than 0"):
+        details(asking_price=0, lowest_price=None)
 
 
 # --- the draft ---------------------------------------------------------------------------
@@ -306,11 +328,57 @@ def test_listed_sold_and_given_are_recorded(client: TestClient) -> None:
     assert "listed on Facebook Marketplace at $35 on 2026-10-01" in changes
     assert "sold on Facebook Marketplace for $30 on 2026-10-20" in changes
 
+    # nothing follows a sale: a second sale would count twice in the price guidance
+    again = client.post(f"{base}/sold", json={"price": 30, "on": "2026-10-20"})
+    assert again.status_code == 409 and "sold" in again.json()["detail"]
+    assert client.post(f"{base}/listed", json={"price": 35}).status_code == 409
+    assert client.post(f"{base}/given", json={}).status_code == 409
+    assert len(client.get(f"/api/items/{item_id}/price/reports").json()) == 1
+
     other = client.post("/api/items", json={"item_type": "kettle"}).json()["id"]
     given = client.post(f"/api/items/{other}/marketplace/given", json={})
     assert given.status_code == 200 and given.json()["state"] == "given"
     assert client.get(f"/api/items/{other}").json()["availability"] == "gone"
+    assert client.post(f"/api/items/{other}/marketplace/sold", json={"price": 5}).status_code == 409
+    assert client.get(f"/api/items/{other}/price/reports").json() == []
     assert client.post("/api/items/999/marketplace/given", json={}).status_code == 404
+
+
+def test_listed_again_is_a_new_price_and_the_day_may_be_ahead_of_utc(client: TestClient) -> None:
+    item_id = client.post("/api/items", json={"item_type": "LCD monitor"}).json()["id"]
+    base = f"/api/items/{item_id}/marketplace"
+    assert client.post(f"{base}/listed", json={"price": 40}).status_code == 200
+    relisted = client.post(f"{base}/listed", json={"price": 32.5})
+    assert relisted.status_code == 200 and [e["price"] for e in relisted.json()["events"]] == [
+        40,
+        32.5,
+    ]
+    changes = [e["change"] for e in client.get(f"/api/items/{item_id}/events").json()]
+    assert any(c.startswith("listed on Facebook Marketplace at $32.50 on ") for c in changes)
+    # Guam's calendar is a day ahead of UTC's for ten hours; two days ahead is the future
+    tomorrow = (datetime.now(UTC) + timedelta(days=1)).date().isoformat()
+    later = (datetime.now(UTC) + timedelta(days=2)).date().isoformat()
+    assert client.post(f"{base}/listed", json={"price": 30, "on": later}).status_code == 422
+    ahead = datetime.now(UTC) + timedelta(hours=14)
+    if ahead.date().isoformat() == tomorrow:
+        assert client.post(f"{base}/listed", json={"price": 30, "on": tomorrow}).status_code == 200
+
+
+def test_a_sale_that_fails_leaves_nothing_behind(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import app.inventory.service as service
+
+    item_id = client.post("/api/items", json={"item_type": "LCD monitor"}).json()["id"]
+    broken = dict(service.SET_COLUMN, availability="UPDATE no_such_table SET x = ?")
+    monkeypatch.setattr(service, "SET_COLUMN", broken)
+    with pytest.raises(Exception, match="no_such_table"):
+        client.post(f"/api/items/{item_id}/marketplace/sold", json={"price": 30})
+    monkeypatch.undo()
+    # the event, the reported sale and the gone mark are one write: none of them was kept
+    assert client.get(f"/api/items/{item_id}/marketplace").json()["events"] == []
+    assert client.get(f"/api/items/{item_id}/price/reports").json() == []
+    assert client.get(f"/api/items/{item_id}").json()["availability"] != "gone"
 
 
 def test_the_draft_spends_and_the_rest_needs_the_code(tmp_path: Path) -> None:
@@ -329,6 +397,28 @@ def test_the_draft_spends_and_the_rest_needs_the_code(tmp_path: Path) -> None:
         assert gated.put(f"/api/items/{item_id}/sell-details", json={}).status_code == 403
         assert gated.post(f"/api/items/{item_id}/drafts", json={}).status_code == 403
         assert gated.get(f"/api/items/{item_id}/marketplace").status_code == 403
+        # a public item too: the lowest price, the reason and the area stay with the owner
+        gated.post("/api/access", json={"code": CODE})
+        assert gated.post(f"/api/items/{item_id}/public", json={"public": True}).status_code == 200
+        saved = gated.put(f"/api/items/{item_id}/sell-details", json=details().model_dump())
+        assert saved.status_code == 200
+        gated.cookies.clear()
+        assert gated.get(f"/api/items/{item_id}").status_code == 200
+        for path in (
+            f"/api/items/{item_id}/sell-details",
+            f"/api/items/{item_id}/drafts",
+            f"/api/items/{item_id}/marketplace",
+            "/api/drafts/1/photos.zip",
+            "/api/marketplace/us",
+        ):
+            seen = gated.get(path)
+            assert seen.status_code == 403, path
+            assert "Denver" not in seen.text and "27.5" not in seen.text, path
+        for path in ("listed", "sold", "given"):
+            refused = gated.post(f"/api/items/{item_id}/marketplace/{path}", json={"price": 5})
+            assert refused.status_code == 403, path
+        public = gated.get(f"/api/items/{item_id}").text
+        assert "Denver" not in public and "Astoria" not in public and "27.5" not in public
 
 
 def test_marketplace_paths_are_in_the_openapi_document(client: TestClient) -> None:

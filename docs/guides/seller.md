@@ -24,7 +24,7 @@ submits a Facebook page, and the service sends nothing to facebook.com.
     | Personal data on it: none stored, signed out and wiped, not wiped yet | yes, when it stores any |
     | Handover: local pickup, shipping or either (a give-away is pickup) | yes |
     | Area: a city, ZIP or neighborhood | yes |
-    | Asking price (USD) | in the price field |
+    | Asking price (USD, above 0) | in the price field, in whole dollars |
     | Availability | yes |
     | Lowest you would take | **never**: kept for you |
     | Your reason for parting with it | **never**: kept for you |
@@ -32,7 +32,9 @@ submits a Facebook page, and the service sends nothing to facebook.com.
     The details are saved on the item, a new version each time (`PUT /api/items/{id}/sell-details`).
     An area that reads as a street address is refused, and so is a phone number, an email address
     or a street address in any free-text field: buyers write through Marketplace. A voice note is
-    kept as your words (`condition_notes`) and the draft reads it from there.
+    kept as your words (`condition_notes`) and the draft reads it from there. Switching the listing
+    type to give away keeps the saved prices and handover; a give-away is priced 0 and picked up.
+    None of these details is shown to a demo visitor, not even on a public item.
 
 2. **Write the draft.** The details are saved, then one Muse Spark call (effort low) gets the
     item's accepted values, your public details and the item's photos (up to four, sent at 768 px),
@@ -41,9 +43,11 @@ submits a Facebook page, and the service sends nothing to facebook.com.
 
     - **Title:** at most 100 characters, brand, model and key spec first; a give-away starts
       with *Free:*.
-    - **Price:** your asking price; with none, the typical figure of the latest
+    - **Price:** whole dollars, as Marketplace takes them: your asking price (cents rounded,
+      and said); with none, the typical figure of the latest
       [price guidance](value.md), named as such ("suggested: the typical figure of price
-      guidance v2, $32; set your own"); `0` for a give-away.
+      guidance v2, $32; set your own"); `0` for a give-away. A sale is never priced 0, which
+      Marketplace shows as free: with no figure of a dollar or more the price is left for you.
     - **Category:** one path from the data file below; a name not in it falls back to its top
       category, or is left for you to pick, with a warning. A give-away is listed under
       *Free Stuff*, and the category the draft picked is named in case Marketplace asks for one.
@@ -68,12 +72,15 @@ submits a Facebook page, and the service sends nothing to facebook.com.
     in, with no camera metadata. **Open Marketplace** opens `MARKETPLACE_CREATE_URL` in a new
     tab. The checklist under it: choose *Item for sale*, paste the fields, add the photos in
     order, set pickup or shipping and the area, check the preview, publish. The preparation
-    steps (clean, test, photos, your data) are ticked and kept per draft.
+    steps (clean, test, photos, your data) are ticked and kept per draft, and so is checking that
+    Marketplace allows the item at all: its Commerce Policies refuse, among others, recalled
+    products, medical devices and anything that unlocks paid streaming or services.
 
-4. **After posting.** **Mark as listed** keeps the date, the price and the listing's address
-    when you paste it. Later, **Mark as sold** keeps the final price, records it as a sale for
-    price guidance (`note: Facebook Marketplace`) and marks the item gone; **Mark as given** marks
-    it gone. Each is an event in the item's history.
+4. **After posting.** **Mark as listed** keeps the date, the price and the listing link when you
+    paste it; listed again is a new price. Later, **Mark as sold** keeps the final price, records
+    it as a sale for price guidance (`note: Facebook Marketplace`) and marks the item gone, in one
+    write; **Mark as given** marks it gone. Nothing follows a sale or a gift (409), so a sale is
+    never counted twice. Each is an event in the item's history.
 
 ## US categories and conditions
 
