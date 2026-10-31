@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from app.config import Settings
 from app.extract.schema import Source
 from app.inventory.schema import (
+    TEXT_MAX,
     Assertion,
     ComponentCreate,
     Event,
@@ -432,47 +433,76 @@ class Inventory:
 
     # what the item is good for: stored as written, read back with the item's current version
 
-    _USES_SELECT = (
-        "SELECT u.*, i.version AS current_item_version FROM uses u JOIN items i ON i.id = u.item_id"
+    # what was written for an item and kept with the item version it was written from: the
+    # uses and the scenarios share one shape and one way in, each in its own table
+    _WRITTEN_SELECT = (
+        "SELECT w.*, i.version AS current_item_version FROM {table} w"
+        " JOIN items i ON i.id = w.item_id"
     )
 
-    def add_uses(self, item_id: int, content: str, *, item_version: int) -> sqlite3.Row:
+    def _add_written(
+        self, table: str, label: str, item_id: int, content: str, *, item_version: int
+    ) -> sqlite3.Row:
         at = now()
+        select = self._WRITTEN_SELECT.format(table=table)
         with self.store.connect() as conn:
             self._row(conn, item_id)
             last = conn.execute(
-                "SELECT MAX(version) FROM uses WHERE item_id = ?", (item_id,)
+                f"SELECT MAX(version) FROM {table} WHERE item_id = ?", (item_id,)
             ).fetchone()[0]
             version = int(last or 0) + 1
             # Keep the version used in the brief, even if the item changed during the request.
-            self._event(conn, item_id, f"uses written (v{version})", item_version, at)
+            self._event(conn, item_id, f"{label} written (v{version})", item_version, at)
             cur = conn.execute(
-                "INSERT INTO uses (item_id, version, item_version, content, created_at)"
+                f"INSERT INTO {table} (item_id, version, item_version, content, created_at)"
                 " VALUES (?,?,?,?,?)",
                 (item_id, version, item_version, content, at),
             )
             found: sqlite3.Row | None = conn.execute(
-                self._USES_SELECT + " WHERE u.id = ?", (int(cur.lastrowid or 0),)
+                select + " WHERE w.id = ?", (int(cur.lastrowid or 0),)
             ).fetchone()
             assert found is not None
             return found
 
-    def uses(self, item_id: int) -> list[sqlite3.Row]:
+    def _written(self, table: str, item_id: int) -> list[sqlite3.Row]:
+        select = self._WRITTEN_SELECT.format(table=table)
         with self.store.connect() as conn:
             self._row(conn, item_id)
             return conn.execute(
-                self._USES_SELECT + " WHERE u.item_id = ? ORDER BY u.id", (item_id,)
+                select + " WHERE w.item_id = ? ORDER BY w.id", (item_id,)
             ).fetchall()
 
+    def add_uses(self, item_id: int, content: str, *, item_version: int) -> sqlite3.Row:
+        return self._add_written("uses", "uses", item_id, content, item_version=item_version)
+
+    def uses(self, item_id: int) -> list[sqlite3.Row]:
+        return self._written("uses", item_id)
+
+    def add_scenarios(self, item_id: int, content: str, *, item_version: int) -> sqlite3.Row:
+        return self._add_written(
+            "scenarios", "scenarios", item_id, content, item_version=item_version
+        )
+
+    def scenarios(self, item_id: int) -> list[sqlite3.Row]:
+        return self._written("scenarios", item_id)
+
     def decide(
-        self, item_id: int, intent: str, change: str, *, said: bool, version: int | None = None
+        self,
+        item_id: int,
+        intent: str,
+        change: str,
+        *,
+        said: bool,
+        version: int | None = None,
+        notes_add: str = "",
     ) -> Item:
         """The owner's decision: the intent it implies is set and the decision itself is the
         event line, so the history keeps the why. The version is bumped only when the item
-        changes: a new intent, or a note (``said``) that gives the item a new why. The same
-        choice again, with nothing said, is an event and nothing more; the guidance and the
-        uses written before it stay current. With ``version`` set, a choice made from an older
-        version of the item is refused and nothing is written."""
+        changes: a new intent, a note (``said``) that gives the item a new why, or text added
+        to the notes (``notes_add``, a repair plan; not added twice). The same choice again,
+        with nothing said, is an event and nothing more; the guidance and the uses written
+        before it stay current. With ``version`` set, a choice made from an older version of
+        the item is refused and nothing is written."""
         at = now()
         with self.store.connect() as conn:
             row = self._row(conn, item_id)
@@ -481,9 +511,14 @@ class Inventory:
                     f"item {item_id} is at version {row['version']}, not {version}"
                 )
             version = int(row["version"])
-            if intent != str(row["intent"]) or said:
+            notes = str(row["notes"])
+            add = notes_add.strip() if notes_add.strip() not in notes else ""
+            if intent != str(row["intent"]) or said or add:
                 version += 1
                 conn.execute(SET_COLUMN["intent"], (intent, version, at, item_id))
+            if add:
+                kept = f"{notes.rstrip()}\n\n{add}" if notes.strip() else add
+                conn.execute(SET_COLUMN["notes"], (kept[:TEXT_MAX], version, at, item_id))
             self._event(conn, item_id, change, version, at)
             return self._item(conn, item_id)
 

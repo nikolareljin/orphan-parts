@@ -1,0 +1,59 @@
+{
+  "endpoint": "/responses",
+  "op": "scenarios",
+  "model": "muse-spark-1.3",
+  "key": "fallback-scenarios",
+  "request": {
+    "instructions": "scenarios instructions, see app/decide/service.py",
+    "input": "one text part: the scenarios brief, see app/decide/service.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ScenariosWriting",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_scenarios",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_scenarios",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "msg_fixture_scenarios",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "{\"keep_fix\": {\"worth_fixing\": true, \"problems\": [\"The battery has lost most of its capacity: an hour on a charge is a worn cell, not a fault in the laptop.\"], \"steps\": [\"Find the battery part number on the label under the laptop or in the battery report.\", \"Order a replacement battery for that number.\", \"Unplug the charger, remove the bottom cover screws, disconnect the old battery and fit the new one.\", \"Charge it fully once, then run it down once so the gauge reads right.\"], \"difficulty\": \"easy\", \"why\": \"A bottom cover and one connector: easy with some electronics skill, and you open devices up.\", \"parts\": [\"replacement battery, 30 to 60 USD\"], \"cost\": \"30 to 60 USD\", \"time\": \"half an hour, once the battery arrives\"}, \"reuse\": [{\"title\": \"Homework desk with the spare monitor\", \"what_it_does\": \"Drives a bigger screen, a keyboard and a mouse at a desk, lid closed; the short battery does not matter on a desk.\", \"with_items\": [\"monitor\"], \"difficulty\": \"easy\", \"why\": \"Plugging in and a display setting; no skill needed beyond basic computer setup.\", \"extra_parts\": [\"an HDMI or USB-C cable the two share, 8 to 15 USD\"], \"cost\": \"under 20 USD\", \"time\": \"an hour\"}, {\"title\": \"Small home server for backups\", \"what_it_does\": \"Runs a light Linux and keeps a copy of the family's files on an external drive, on the network, plugged in all the time.\", \"with_items\": [], \"difficulty\": \"moderate\", \"why\": \"An install and a share to set up: moderate with some software skill, and nothing to open.\", \"extra_parts\": [\"an external drive for the copies, 50 to 80 USD\", \"an Ethernet cable, 5 USD\"], \"cost\": \"55 to 85 USD\", \"time\": \"an afternoon\"}], \"sell\": {\"selling_points\": [\"Boots to the desktop and runs: a working laptop, honestly described.\", \"8 GB of memory is enough for school and office work.\"], \"effort\": \"A fresh install with your data removed, three photos and a listing; a buyer collects or you ship it.\", \"note\": \"Say the battery holds an hour; a buyer who knows pays less but does not come back.\"}, \"recommended\": \"reuse\", \"reason\": \"You already own a monitor and like an afternoon of tinkering: the homework desk uses what you have and costs a cable.\"}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 760,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 690,
+      "output_tokens_details": {
+        "reasoning_tokens": 60
+      },
+      "total_tokens": 1450
+    }
+  },
+  "status": 200
+}

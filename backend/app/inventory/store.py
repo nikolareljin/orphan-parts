@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -225,6 +225,20 @@ ALTER TABLE access_keys ADD COLUMN parent_id INTEGER;
 ALTER TABLE access_keys ADD COLUMN master TEXT;
 """
 
+# version 13: the three scenarios written for the owner (keep and fix, reuse, sell or give
+# away), one answer per asking, written from one item version, kept like the uses
+_SCHEMA_V13 = """
+CREATE TABLE scenarios (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    version INTEGER NOT NULL,
+    item_version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX scenarios_by_item ON scenarios (item_id);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -238,6 +252,7 @@ MIGRATIONS: dict[int, str] = {
     10: _SCHEMA_V10,
     11: _SCHEMA_V11,
     12: _SCHEMA_V12,
+    13: _SCHEMA_V13,
 }
 
 

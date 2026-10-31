@@ -1,21 +1,29 @@
 """Deciding what an item becomes: the rules say which projects it fills and gather what the app
 already answered (the price, the searches, the history); Muse Spark proposes what else it is
-good for; the owner chooses, and the choice is an event on the item."""
+good for and, for this owner, writes three scenarios (keep and fix, reuse, sell or give away);
+the owner chooses, and the choice is an event on the item."""
 
 import json
 import logging
+import re
 from typing import Any
 
 from app.config import Settings
 from app.decide.schema import (
     CHOICES,
     INTENT_FOR,
+    MAX_REUSE,
     MAX_USES,
     Choice,
     Decided,
     Decision,
     DecisionCreate,
+    KeepFix,
     OpenSearch,
+    ReuseScenario,
+    Scenarios,
+    ScenariosWriting,
+    SellCard,
     TemplateFit,
     Use,
     Uses,
@@ -29,6 +37,7 @@ from app.model_api import ModelApiClient, text_part, user_message
 from app.projects.pack import private_field
 from app.projects.schema import Preferences
 from app.projects.service import Planner, fits
+from app.projects.skills import skills_line
 from app.projects.templates import Templates
 from app.value.schema import Strategy
 from app.value.service import Valuer
@@ -36,11 +45,24 @@ from app.value.service import Valuer
 log = logging.getLogger("app.decide")
 
 MAX_OUTPUT_TOKENS = 700
+# three cards with their lists: measured at 900 to 1,100 tokens of JSON
+SCENARIOS_OUTPUT_TOKENS = 1200
 # what the model writes is shown as it is, so it is cut, not trusted
 TEXT_MAX = 200
 NEEDS_MAX = 6
+# how many kinds of item the scenarios brief names from the rest of the inventory
+OTHERS_MAX = 40
 DETAIL_KEYS = ("condition", "faults", "tests_done", "accessories")
 DECIDED = "decided: "
+EFFORT_WORDS = {
+    "low": "an hour or so of tinkering is fun, no more",
+    "medium": "an afternoon of tinkering is fun",
+    "high": "a weekend or more of tinkering is fun",
+}
+NO_PROFILE = (
+    "No profile was filled in. Answer for an average person with household tools and no"
+    " particular skill, and say so in the first line of each card."
+)
 
 INSTRUCTIONS = (
     "You say what a used item is still good for, to a person deciding whether to keep it,"
@@ -51,6 +73,64 @@ INSTRUCTIONS = (
     " the effort (low, medium or high) for a person with the skills given, and add one note"
     " on what to check first. Respect the person's interests and budget. Plain words, no hype."
 )
+
+
+SCENARIOS_INSTRUCTIONS = (
+    "You help one person decide what to do with one used item: keep it and fix it, reuse it"
+    " in something, or sell or give it away. Write three cards from the facts given and the"
+    " person's profile; never assume a part works when the tests do not say so, and never"
+    " invent a fault the record does not hold."
+    " keep_fix: the likely problem or problems behind the recorded condition and faults (one"
+    " entry 'works as it is' when nothing is wrong), the repair steps written for this person's"
+    " level, the difficulty for this person (easy, moderate or hard) with a why that names the"
+    " rated skill it rests on, the parts with a rough cost each, the total cost and the time;"
+    " when the repair is not worth it for this person, say so with worth_fixing false and the"
+    " why. reuse: two or three things to make of it that fit the person's skills and tools,"
+    " each naming the other items they own that it would use (with_items; empty when none"
+    " applies), the difficulty for this person and why, the extra parts with cost, and the"
+    " time. sell: what makes it sellable as it stands, what listing and handing it over takes,"
+    " and one note; give no price, the price guidance is a separate step. recommended: one of"
+    " keep_fix, reuse, sell or give, with a one-line reason tied to the profile. Plain words,"
+    " no hype; each list entry one line."
+)
+
+
+def scenarios_brief(
+    item: Item,
+    known: dict[str, str],
+    prefs: Preferences,
+    *,
+    profiled: bool,
+    others: list[str],
+) -> str:
+    """What the scenarios call is told: the item's confirmed values and details, the owner's
+    profile (rated skills, tools, effort, whether they open devices, budget) and the kinds of
+    item they own besides. Nothing else: not the location, the notes, a photo, a price or a
+    search; the same rule as the uses brief."""
+    lines = [f"name: {item.name}", f"item_type: {item.item_type}"]
+    for key in DETAIL_KEYS:
+        lines.append(f"{key}: {getattr(item, key) or '(not given)'}")
+    lines.append(f"intent so far: {item.intent}")
+    lines.append("Confirmed fields (key: value):")
+    lines.extend(f"- {k}: {v}" for k, v in known.items())
+    if not known:
+        lines.append("- (none confirmed yet)")
+    lines.append("Profile:")
+    if profiled:
+        rated = skills_line(prefs.skills) or "(none rated)"
+        lines.append(f"- skills (rated none, some, confident or pro): {rated}")
+        lines.append(f"- tools: {prefs.tools or '(not given)'}")
+        lines.append(f"- effort: {EFFORT_WORDS[prefs.effort]}")
+        lines.append(f"- opens devices up: {'yes' if prefs.opens_devices else 'no'}")
+        budget = f"{prefs.budget:g} {prefs.currency}" if prefs.budget is not None else "(not given)"
+        lines.append(f"- budget for parts: {budget}")
+    else:
+        lines.append(f"- {NO_PROFILE}")
+    lines.append("Other items the person owns (kind, how many):")
+    lines.extend(f"- {o}" for o in others)
+    if not others:
+        lines.append("- (nothing else listed)")
+    return "\n".join(lines)
 
 
 def brief(item: Item, known: dict[str, str], prefs: Preferences, fills: list[TemplateFit]) -> str:
@@ -65,7 +145,7 @@ def brief(item: Item, known: dict[str, str], prefs: Preferences, fills: list[Tem
     if not known:
         lines.append("- (none confirmed yet)")
     lines.append(f"interests: {prefs.interests or '(not given)'}")
-    lines.append(f"skills: {', '.join(prefs.skills) or '(not given)'}")
+    lines.append(f"skills: {skills_line(prefs.skills) or '(not given)'}")
     budget = f"{prefs.budget:g} {prefs.currency}" if prefs.budget is not None else "(not given)"
     lines.append(f"budget for extra parts: {budget}")
     lines.append("Projects in the catalog this item already fills a part of:")
@@ -119,6 +199,68 @@ def parse_decided(change: str) -> tuple[Choice, str] | None:
 
 def decided_line(spec: DecisionCreate) -> str:
     return f"{DECIDED}{spec.choice}: {spec.note}" if spec.note else f"{DECIDED}{spec.choice}"
+
+
+def repair_plan(scenarios: Scenarios) -> str:
+    """The keep and fix card as a few lines for the item's notes: the steps, the parts, the
+    cost and the time. Empty when the card says it is not worth fixing or has no steps."""
+    card = scenarios.keep_fix
+    if not card.worth_fixing or not card.steps:
+        return ""
+    lines = [f"Repair plan (scenarios v{scenarios.version}, {card.difficulty}):"]
+    lines.extend(f"{n}. {step}" for n, step in enumerate(card.steps, start=1))
+    if card.parts:
+        lines.append(f"Parts: {'; '.join(card.parts)}")
+    lines.append(f"Cost: {card.cost}. Time: {card.time}.")
+    return "\n".join(lines)
+
+
+# what the model wrote for the cards is shown as it is, so each text is cut to its bound and
+# each list to its length, blank entries dropped
+
+
+def _line(text: str) -> str:
+    return text.strip()[:TEXT_MAX]
+
+
+def _lines(texts: list[str]) -> list[str]:
+    return [t.strip()[:TEXT_MAX] for t in texts if t.strip()][:NEEDS_MAX]
+
+
+def _cut_keep_fix(card: KeepFix) -> KeepFix:
+    return KeepFix(
+        worth_fixing=card.worth_fixing,
+        problems=_lines(card.problems),
+        steps=_lines(card.steps),
+        difficulty=card.difficulty,
+        why=_line(card.why),
+        parts=_lines(card.parts),
+        cost=_line(card.cost),
+        time=_line(card.time),
+    )
+
+
+# the brief lists the other items as "kind (count)"; a card names the kind
+_COUNT = re.compile(r"\s*\(\d+\)$")
+
+
+def _cut_reuse(card: ReuseScenario) -> ReuseScenario:
+    return ReuseScenario(
+        title=_line(card.title),
+        what_it_does=_line(card.what_it_does),
+        with_items=_lines([_COUNT.sub("", t) for t in card.with_items]),
+        difficulty=card.difficulty,
+        why=_line(card.why),
+        extra_parts=_lines(card.extra_parts),
+        cost=_line(card.cost),
+        time=_line(card.time),
+    )
+
+
+def _cut_sell(card: SellCard) -> SellCard:
+    return SellCard(
+        selling_points=_lines(card.selling_points), effort=_line(card.effort), note=_line(card.note)
+    )
 
 
 class Decider:
@@ -194,6 +336,82 @@ class Decider:
         rows = self.inventory.uses(item_id)
         return self.uses_of(rows[-1]) if rows else None
 
+    # --- what to do with it, for this owner ---------------------------------------
+
+    def others(self, item_id: int) -> list[str]:
+        """The kinds of item the owner has besides this one, with how many of each, the most
+        of a kind first; what is gone is not counted. Capped, so a large inventory does not
+        become the brief."""
+        counts: dict[str, int] = {}
+        for summary in self.inventory.list_items():
+            if summary.id == item_id or summary.availability == "gone":
+                continue
+            counts[summary.item_type] = counts.get(summary.item_type, 0) + 1
+        ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        return [f"{kind} ({n})" for kind, n in ranked[:OTHERS_MAX]]
+
+    async def scenarios(self, item_id: int) -> Scenarios:
+        item = self.inventory.get(item_id)
+        known = known_fields(item)
+        profiled = self.planner.has_preferences()
+        text = scenarios_brief(
+            item,
+            known,
+            self.planner.preferences(),
+            profiled=profiled,
+            others=self.others(item_id),
+        )
+        result = await self.client.respond_structured(
+            ScenariosWriting,
+            model=self.settings.model_spark,
+            input=[user_message(text_part(text))],
+            instructions=SCENARIOS_INSTRUCTIONS,
+            effort="low",
+            max_output_tokens=SCENARIOS_OUTPUT_TOKENS,
+            op="scenarios",
+        )
+        written = result.parsed
+        content: dict[str, Any] = {
+            "profiled": profiled,
+            "keep_fix": _cut_keep_fix(written.keep_fix).model_dump(),
+            "reuse": [_cut_reuse(r).model_dump() for r in written.reuse if r.title.strip()][
+                :MAX_REUSE
+            ],
+            "sell": _cut_sell(written.sell).model_dump(),
+            "recommended": written.recommended,
+            "reason": _line(written.reason),
+            "model": result.response.model,
+            "from_fixture": result.response.from_fixture,
+            "cost_usd": result.response.cost_usd,
+        }
+        row = self.inventory.add_scenarios(item_id, json.dumps(content), item_version=item.version)
+        log.info(
+            "scenarios",
+            extra={
+                "item_id": item_id,
+                "recommended": written.recommended,
+                "profiled": profiled,
+                "usd": result.response.cost_usd,
+            },
+        )
+        return self.scenarios_of(row)
+
+    def latest_scenarios(self, item_id: int) -> Scenarios | None:
+        rows = self.inventory.scenarios(item_id)
+        return self.scenarios_of(rows[-1]) if rows else None
+
+    def scenarios_of(self, row: Any) -> Scenarios:
+        content = json.loads(row["content"])
+        return Scenarios(
+            id=int(row["id"]),
+            item_id=int(row["item_id"]),
+            version=int(row["version"]),
+            item_version=int(row["item_version"]),
+            stale=int(row["item_version"]) != int(row["current_item_version"]),
+            at=row["created_at"],
+            **content,
+        )
+
     def uses_of(self, row: Any) -> Uses:
         content = json.loads(row["content"])
         return Uses(
@@ -262,6 +480,7 @@ class Decider:
             accepted_fields=sum(1 for a in item.fields.values() if a.review == "accepted"),
             worth=self.worth(item_id),
             uses=self.latest_uses(item_id),
+            scenarios=self.latest_scenarios(item_id),
             searches=self.searches_from(item_id),
             templates=templates_for(item, self.templates),
             intent=item.intent,
@@ -272,12 +491,19 @@ class Decider:
     # --- the choice ------------------------------------------------------------------------
 
     def decide(self, item_id: int, spec: DecisionCreate) -> Item:
+        """The choice, kept as an event. Keep and fix also writes the repair steps of the
+        current scenarios into the item's notes, where the owner reads and edits them."""
+        plan = ""
+        if spec.choice == "keep_fix":
+            latest = self.latest_scenarios(item_id)
+            plan = repair_plan(latest) if latest is not None and not latest.stale else ""
         item = self.inventory.decide(
             item_id,
             INTENT_FOR[spec.choice],
             decided_line(spec),
             said=bool(spec.note),
             version=spec.version,
+            notes_add=plan,
         )
         log.info("decided", extra={"item_id": item_id, "choice": spec.choice})
         return item
