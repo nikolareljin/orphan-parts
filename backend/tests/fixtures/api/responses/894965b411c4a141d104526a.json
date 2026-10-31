@@ -1,0 +1,253 @@
+{
+  "endpoint": "/responses",
+  "op": "listing-text",
+  "model": "muse-spark-1.3",
+  "digest": "894965b411c4a141d104526a",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Listing text, as pasted:\n---\nDEMO DATA, a written example. Metal agitator rod for a frappé maker, stainless, 4 mm rod, two tabs 12 mm across, 160 mm long with the disc. Like new.\n---\nField names you may use: brand, certifications, condition_notes, connector, head_diameter, input_voltage, material, model_number, output_current, output_power, output_voltage, part_number, polarity, rod_diameter, rod_length, tab_length, tab_span, tab_width",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You read a second-hand listing someone pasted: the title, the asking price with its currency, the place, and what is included, as written. Then the specification fields the text supports, from the list given, with a confidence per field; leave out any field the text does not state, and never infer a value the seller did not write.",
+    "max_output_tokens": 800,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "ListingReading",
+        "schema": {
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a listing-text call: every property required, no extras.",
+          "properties": {
+            "asking_price": {
+              "title": "Asking Price",
+              "type": "string"
+            },
+            "currency": {
+              "title": "Currency",
+              "type": "string"
+            },
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "included": {
+              "title": "Included",
+              "type": "string"
+            },
+            "location": {
+              "title": "Location",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "asking_price",
+            "currency",
+            "location",
+            "included",
+            "fields"
+          ],
+          "title": "ListingReading",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ListingReading",
+        "schema": {
+          "required": [
+            "title",
+            "asking_price",
+            "currency",
+            "location",
+            "included",
+            "fields"
+          ],
+          "type": "object",
+          "description": "Strict output schema of a listing-text call: every property required, no extras.",
+          "properties": {
+            "asking_price": {
+              "title": "Asking Price",
+              "type": "string"
+            },
+            "currency": {
+              "title": "Currency",
+              "type": "string"
+            },
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "included": {
+              "title": "Included",
+              "type": "string"
+            },
+            "location": {
+              "title": "Location",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            }
+          },
+          "title": "ListingReading",
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae591232bdd656c272d4c1d",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793429795.0,
+    "completed_at": 1793429795.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae591232bdd656c272d4c1d:rs_2819d93c-6796-4058-bb4c-a545fe16c1fa",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_117f1add-d903-4831-8837-dd55de0bd063",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"asking_price\":\"\",\"currency\":\"\",\"fields\":[{\"confidence\":0.95,\"name\":\"material\",\"unit\":\"\",\"value\":\"stainless\"},{\"confidence\":0.95,\"name\":\"rod_diameter\",\"unit\":\"mm\",\"value\":\"4\"},{\"confidence\":0.75,\"name\":\"tab_span\",\"unit\":\"mm\",\"value\":\"12\"},{\"confidence\":0.9,\"name\":\"rod_length\",\"unit\":\"mm\",\"value\":\"160\"},{\"confidence\":0.9,\"name\":\"condition_notes\",\"unit\":\"\",\"value\":\"Like new\"}],\"included\":\"Metal agitator rod for a frappé maker\",\"location\":\"\",\"title\":\"DEMO DATA, a written example. Metal agitator rod for a frappé maker, stainless, 4 mm rod, two tabs 12 mm across, 160 mm long with the disc. Like new.\"}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You read a second-hand listing someone pasted: the title, the asking price with its currency, the place, and what is included, as written. Then the specification fields the text supports, from the list given, with a confidence per field; leave out any field the text does not state, and never infer a value the seller did not write.",
+    "usage": {
+      "input_tokens": 413,
+      "input_tokens_details": {
+        "cached_tokens": 241
+      },
+      "output_tokens": 1805,
+      "output_tokens_details": {
+        "reasoning_tokens": 1635
+      },
+      "total_tokens": 2218
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4896
+  },
+  "status": 200
+}

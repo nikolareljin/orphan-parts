@@ -59,6 +59,14 @@ export function mergeDetails(typed: Details, before: Item | null, next: Item): D
   return Object.fromEntries(DETAIL_KEYS.map((k) => [k, typed[k] !== before[k] ? typed[k] : fresh[k]])) as Details
 }
 
+// What a save of the details sends: only the fields the owner changed from the item as it was
+// loaded, so a value never typed in (a blank the demo visitor was served, say) is never written.
+// Nothing at all from an item served redacted.
+export function changedDetails(typed: Details, item: Item): Partial<Details> {
+  if (item.redacted) return {}
+  return Object.fromEntries(DETAIL_KEYS.filter((k) => typed[k] !== item[k]).map((k) => [k, typed[k]]))
+}
+
 // "2026-10-28T21:05:11+00:00" shown as a local date and time, without the seconds.
 export function whenText(iso: string): string {
   const d = new Date(iso)

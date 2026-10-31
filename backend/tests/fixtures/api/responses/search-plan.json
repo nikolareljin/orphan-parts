@@ -1,0 +1,59 @@
+{
+  "endpoint": "/responses",
+  "op": "search-plan",
+  "model": "muse-spark-1.3",
+  "key": "fallback-search-plan",
+  "request": {
+    "instructions": "search plan instructions, see app/find/service.py",
+    "input": "one text part: the need, its profile, values, notes and top price, see app/find/service.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "PlanWriting",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_search-plan",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_search_plan",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "msg_fixture_search_plan",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "{\"phrasings\": [{\"text\": \"65W laptop charger 19.5V\", \"why\": \"the plain name with the output most sellers put in the title\"}, {\"text\": \"Orbital OP065-19-333\", \"why\": \"the part number from the label, as printed\"}, {\"text\": \"Orbital 65 watt adapter\", \"why\": \"sellers who spell out the wattage and say adapter, not charger\"}, {\"text\": \"19.5V 3.33A power supply\", \"why\": \"listings titled by the output alone, often from lots of mixed chargers\"}, {\"text\": \"Orbitl laptop charger\", \"why\": \"a common misspelling of the brand that the search box does not correct\"}], \"pattern\": \"OP-?065-?19-?333|19\\\\.5\\\\s*V.{0,20}3\\\\.3\\\\d?\\\\s*A\", \"exclusions\": [\"for parts\", \"broken\", \"not working\", \"frayed\", \"no cord\", \"12V\"]}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 520,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 260,
+      "output_tokens_details": {
+        "reasoning_tokens": 40
+      },
+      "total_tokens": 780
+    }
+  },
+  "status": 200
+}

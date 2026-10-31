@@ -1,0 +1,86 @@
+{
+  "endpoint": "/responses",
+  "op": "segment-connector",
+  "model": "sam-3.1",
+  "digest": "56e3d84a48ba75eabdd300f7",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "plug or connector at the end of a cable",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,0de3b0c4694e806a",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "model": "sam-3.1",
+    "prompt_cache_key": "orphan-parts",
+    "store": false
+  },
+  "response": {
+    "metadata": {
+      "mask_encoding": "one_bit",
+      "include_confidence": "true"
+    },
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "sam-3.1",
+    "background": false,
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae5962001a3221be1694e51",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793431072.0,
+    "completed_at": 1793431072.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_e9cfddad-88f6-4ee3-a8e2-9e59a4c41c96",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": null,
+    "usage": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 0,
+      "images_processed": 1
+    },
+    "parallel_tool_calls": true,
+    "store": false
+  },
+  "status": 200
+}

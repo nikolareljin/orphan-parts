@@ -23,40 +23,39 @@ listing draft that no confirmed field backs, never changes a
 evidence. The
 [architecture](../development/architecture.md) page shows the same split from the inside.
 
-## One path through: the crevice tool
+## One path through: the frappé agitator
 
-The demo set is a drawer of idle things; this is the vacuum in it, the tool that fits and the
-near miss.
+The demo set is a drawer of idle things; this is the frappé maker in it, whose agitator wore
+out, and the rods listed to replace it.
 
-1. The vacuum and the two loose crevice tools are photographed on the phone's **Capture** tab,
-   each with a spoken word on what is known (*runs; the crevice tool is missing*), and sent.
+1. The agitator is photographed on the phone's **Capture** tab beside a tape measure, with a
+   spoken word on what is known (*the base runs; the rod no longer mixes*), and sent.
    [Capture from the phone](../guides/capture.md).
-2. In the web app's **Inbox**, **Read it**: SAM 3.1 finds the label crop, Muse Spark reads what
-   the label says, the note is kept as the owner's words. Each capture becomes an item with its
-   photos above the values to confirm. [My inventory](../guides/inventory.md).
-3. On the vacuum, the wand's outer diameter goes in under **Add what you know**. On each tool,
-   **Measure a feature**: the opening photographed straight on across a ruler, two marks on the
-   ruler, two on the opening, and the inner diameter comes back with its uncertainty and the
-   method: 32.2 mm on one tool, 35 mm on the other. [Measure a feature](../guides/measure.md).
-4. **Does it fit?** on each tool against the vacuum: the rules of the `vacuum_attachment`
-   profile, one at a time. The near miss fails the opening's tolerance and ends in `CONFLICT`.
-   The right one passes on the dimension, with the latch still unknown, and that unknown
-   becomes a question rather than a pass. [Does it fit?](../guides/match.md),
-   [Verdict ladder](../concepts/verdicts.md).
-5. **Find a part** records what the vacuum needs with a top price and hands off the Marketplace
-   search for you to run. Two listings brought back as their text are read by Muse Spark,
-   assessed by the same rules, dated and placed where they stand; **Ask the seller** turns the
-   open questions into a message. [Find a part](../guides/search.md).
+2. In the web app's **Inbox**, **Read it**: there is no label to read, so the item keeps its
+   photos and the owner's words. [My inventory](../guides/inventory.md).
+3. **Measure a feature** on the side photo: two marks on the ruler, two on the rod, and the
+   diameter comes back with its uncertainty and the method. Under **Add what you know** go the
+   tab span, width and length, the rod's length, and the material wanted: metal.
+   [Measure a feature](../guides/measure.md).
+4. **Find a part** records what the agitator needs with a top price and hands off the
+   Marketplace search for you to run. Four listings brought back as their text are read by Muse
+   Spark and checked by the rules of the `blender_agitator` profile, one at a time: the
+   all-metal rod of the same size is a documented candidate (`COMPATIBLE_LIKELY`), the plastic
+   rod fails on its material and its diameter and the metal one with wider tabs on the span
+   (`CONFLICT`), and the listing with no measurements needs evidence (`INSUFFICIENT_INFO`).
+   **Ask the seller** turns the open questions into a message.
+   [Find a part](../guides/search.md), [Verdict ladder](../concepts/verdicts.md).
 
 ## Another path: the homework desk
 
-1. The old laptop (*boots, battery weak*), the spare monitor (*works, one HDMI input*), the USB
-   keyboard and the webcam are in the inventory with the intent *use in a build*.
+1. The Dell U2419H and Dell 1800FP monitors, read from their rating labels, and the ThinkPad
+   T510, opened with its keyboard off, are in the inventory with the intent *use in a build*.
    [My inventory](../guides/inventory.md).
 2. Under **Build and reuse**, what you want from a build is kept once: *a quiet desk for
    homework*, low effort, a budget of 50 USD. [Build and reuse](../guides/reuse.md).
 3. **Propose**: Muse Spark reads the inventory and the project templates through tools and
-   proposes projects; the homework workstation names the laptop, the monitor and the keyboard.
+   proposes projects; the homework workstation names the 24 inch monitor and lists the laptop,
+   the cable, the keyboard and the mouse as missing, since the T510 is not yet known to work.
    The rules keep only allocations the inventory backs: an item you have, usable, of a kind the
    requirement takes. [Agent tools](../reference/agent-tools.md).
 4. **Select** it: the items are committed and reserved, one build per item; the budget line says

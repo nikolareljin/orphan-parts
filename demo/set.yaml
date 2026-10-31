@@ -3,176 +3,121 @@
 # runs the set once with a key and keeps every model answer; `./dev demo` replays it.
 # A photo named here that is not present is skipped with a note, so the set loads either way.
 # An item's `expect:` block is what `./dev eval` scores the load against: values the reading
-# should give, the verdict the rules should reach against another item, how many kept
-# proposals should use it. Fit and proposal expectations come from the rules and the owner
-# values written here; the adapter's expected fields are the values in the extract stub
-# (backend/tests/fixtures/api/responses/extract.json), which answers every label read until
-# the set is recorded with its own photos. A photo that is not present scores as not read.
+# should give (as printed on the label in the photos), how many kept proposals should use it.
+# The photos are the owner's own, with serial numbers, MAC addresses and keys masked before
+# they were scrubbed; the recordings under backend/tests/fixtures/api are of these files.
 title: a drawer of idle things
 currency: USD
 country: US
 
 items:
-  - key: vacuum
-    name: Upright vacuum
-    item_type: vacuum
-    profile: vacuum_attachment
-    intent: build
-    photos: [photos/vac_a.jpg, photos/vac_b.jpg]
-    condition: runs; the crevice tool is missing
-    tests_done: ran for a minute, suction fine
-    fields:
-      wand_outer_diameter: "32"
-    expect:
-      proposals_min: 1
-  - key: tool_fits
-    name: Crevice tool, the one that fits
-    item_type: crevice tool
-    profile: vacuum_attachment
-    intent: build
-    photos: [photos/vac_tool1_c.jpg]
-    fields:
-      opening_inner_diameter: "32.2"
-    expect:
-      # the wand's outer diameter is the needed opening inner diameter, in the rule's terms
-      fit: {against: vacuum, verdict: fits, values: {opening_inner_diameter: "32"}}
-  - key: tool_near
-    name: Crevice tool, the near miss
-    item_type: crevice tool
-    profile: vacuum_attachment
-    intent: build
-    photos: [photos/vac_tool2_c.jpg]
-    fields:
-      opening_inner_diameter: "35"
-    expect:
-      fit: {against: vacuum, verdict: conflict, values: {opening_inner_diameter: "32"}}
-  - key: laptop_old
-    name: Old laptop
-    item_type: laptop
-    intent: build
-    photos: [photos/laptop1_b.jpg]
-    condition: boots, battery weak
-    tests_done: booted to the desktop
-    expect:
-      proposals_min: 1
-  - key: laptop_second
-    name: Second laptop, cracked screen
-    item_type: laptop
-    intent: sell
-    photos: [photos/laptop2_b.jpg]
-    faults: screen cracked in one corner
-    draft: sell
-    asking_price: "60"
-    price: true
-  - key: webcam
-    name: USB webcam
-    item_type: webcam
-    intent: build
-    photos: [photos/cam_a.jpg]
-  - key: monitor
-    name: Spare monitor
+  # screens: two Dell monitors and an old Sun one
+  - key: monitor_u2419h
+    name: Dell U2419H monitor, 24 inch
     item_type: monitor
     intent: build
-    condition: works, one HDMI input
+    photos: [photos/dell-u2419h-label.jpg]
     expect:
-      proposals_min: 1
-  - key: phone
-    name: Broken phone
-    item_type: phone
-    intent: sell
-    photos: [photos/phone_a.jpg]
-    faults: screen does not light; charges and vibrates
-    holds_data: true
-    draft: sell
-    price: true
-  - key: adapter
-    name: Laptop power adapter
-    item_type: power adapter
-    profile: power_adapter
-    intent: keep
-    photos: [photos/psu1_b.jpg]
-    voice_note: notes/note_adapter.wav
-    expect:
-      # the extract stub's values; replace them with what the recording of psu1_b.jpg reads
       fields:
-        brand: Orbital Power
-        model_number: OP-65N
-        output_voltage: 19.5 V
-        output_current: 3.33 A
-        output_power: 65 W
-  - key: keyboard
-    name: USB keyboard
-    item_type: keyboard
-    intent: give
-    photos: [photos/kbd_a.jpg]
-    condition: works, two keycaps loose
-    draft: give
-
-  # the owner's shelf (Oct 31): old laptops, memory, tablets, monitors, mice, switches, a
-  # phone with a broken screen, and the frappé maker whose agitator wore out
-  - key: laptop_third
-    name: Third laptop, works
-    item_type: laptop
-    intent: build
-    condition: works; slow; 8 GB RAM; HDMI out
-    tests_done: booted, ran a browser for an hour
-  - key: ram_sticks
-    name: Four RAM modules, DDR3 SO-DIMM
-    item_type: ram module
-    intent: build
-    condition: untested; from two laptops of the same age
-  - key: tablet_one
-    name: Android tablet, 10 inch
-    item_type: tablet
-    intent: build
-    condition: works; battery holds a day
-    tests_done: charged, browser works
-  - key: tablet_two
-    name: Android tablet, 8 inch, old
-    item_type: tablet
-    intent: sell
-    condition: works; slow
-    draft: sell
-    price: true
-  - key: monitor_two
-    name: Second monitor, 24 inch
+        brand: Dell
+        model_number: U2419H
+      proposals_min: 1
+  - key: monitor_1800fp
+    name: Dell 1800FP monitor, 18 inch
     item_type: monitor
     intent: build
-    condition: works; HDMI and VGA
-  - key: mouse_one
-    name: USB mouse
-    item_type: mouse
-    intent: build
-  - key: mouse_two
-    name: Wireless mouse, no dongle
-    item_type: mouse
-    intent: give
-    faults: the USB receiver is missing
-    draft: give
-  - key: switch_one
-    name: Network switch, 8 ports
-    item_type: network switch
-    intent: build
-    condition: works; gigabit
-  - key: switch_two
-    name: Network switch, 5 ports
-    item_type: network switch
+    photos: [photos/dell-1800fp-label.jpg]
+    expect:
+      fields:
+        brand: Dell
+        model_number: 1800FP
+      proposals_min: 1
+  - key: monitor_sun
+    name: Sun flat panel monitor
+    item_type: monitor
     intent: sell
+    photos: [photos/sun-monitor-label.jpg, photos/sun-monitor-back.jpg]
     draft: sell
     price: true
-  - key: s8
-    name: Samsung S8, broken screen
-    item_type: phone
+    expect:
+      fields:
+        brand: Sun Microsystems
+        part_number: 365-1429-01
+
+  # two ThinkPads and a spare laptop board
+  - key: laptop_t510
+    name: ThinkPad T510
+    item_type: laptop
     intent: build
-    faults: screen cracked and dark in one third; touch works; camera works
+    photos: [photos/thinkpad-t510-inside.jpg, photos/thinkpad-t510-label.jpg]
+    condition: opened; the keyboard and the palm rest are off
+    expect:
+      fields:
+        brand: Lenovo
+  - key: laptop_9461
+    name: Older ThinkPad, type 9461
+    item_type: laptop
+    intent: give
+    photos: [photos/thinkpad-9461-bottom.jpg, photos/thinkpad-9461-labels.jpg]
     holds_data: true
-    condition: charges and boots
+    draft: give
+    expect:
+      fields:
+        brand: Lenovo
+        model_number: 9461-54G
+  - key: laptop_board
+    name: Laptop motherboard, no processor
+    item_type: motherboard
+    intent: sell
+    photos: [photos/laptop-board-top.jpg, photos/laptop-board-side.jpg]
+    condition: the processor socket is empty
+    draft: sell
+    asking_price: "25"
+
+  # desktop parts from older machines
+  - key: gpu_9800gt
+    name: EVGA GeForce 9800 GT graphics card
+    item_type: graphics card
+    intent: sell
+    photos: [photos/evga-9800gt-front.jpg, photos/evga-9800gt-back.jpg]
+    condition: dust on the fan
+    draft: sell
+    price: true
+    expect:
+      fields:
+        brand: EVGA
+        model_number: e-GeForce 9800 GT
+  - key: cpu_slot1
+    name: Intel slot 1 processor with its fan
+    item_type: processor
+    intent: give
+    photos: [photos/intel-slot-cpu.jpg, photos/intel-slot-cpu-fan.jpg]
+    draft: give
+    expect:
+      fields:
+        brand: Intel
+
+  # the home network
+  - key: powerline
+    name: TP-Link TL-PA2010 powerline adapter
+    item_type: powerline adapter
+    intent: build
+    photos: [photos/tplink-pa2010.jpg, photos/tplink-pa2010-label.jpg]
+    condition: still in its plastic wrap; one unit, its twin is missing
+    expect:
+      fields:
+        brand: TP-Link
+        model_number: TL-PA2010
+
+  # the frappé maker whose agitator wore out: measured against a ruler, looking for a rod
+  # of the same size, all metal
   - key: frappe_agitator
     name: Frappé maker agitator, worn
     item_type: blender agitator
     profile: blender_agitator
     intent: keep
-    faults: the rod is plastic around the two tabs and worn there; it wobbles in the drive and the disc no longer spins true
+    photos: [photos/agitator-ruler.jpg, photos/agitator-head.jpg, photos/agitator-coupling.jpg]
+    faults: the plastic hub where the disc meets the rod is worn; the disc wobbles and no longer spins true
     condition: the base runs; the rod no longer mixes
     fields:
       rod_diameter: "4"
@@ -180,39 +125,29 @@ items:
       tab_width: "2.5"
       tab_length: "8"
       rod_length: "150"
-      # the material wanted in a replacement (metal or plastic); the worn rod's own plastic is
-      # in the faults
+      # the material wanted in a replacement (metal or plastic); the worn hub's plastic is in
+      # the faults
       material: "metal"
 
 searches:
-  - key: vac_tool
-    need: vacuum
-    title: crevice tool for the upright vacuum
-    max_price: 15
-    listings:
-      - text: "@listings/L1.txt"
-        asking_price: "9"
-      - text: "@listings/L2.txt"
-        asking_price: "6"
-  - key: adapter_spare
-    need: adapter
-    title: spare 65 W laptop adapter
-    max_price: 25
-    listings:
-      - text: "@listings/L3.txt"
-        asking_price: "15"
-      - text: "@listings/L4.txt"
-        asking_price: "12"
   - key: metal_agitator
     need: frappe_agitator
     title: all-metal agitator rod for the frappé maker, 4 mm rod, two tabs 9 mm across
     max_price: 20
-    listings: []
+    listings:
+      - text: "@listings/L1.txt"
+        asking_price: "12"
+      - text: "@listings/L2.txt"
+        asking_price: "6"
+      - text: "@listings/L3.txt"
+        asking_price: "10"
+      - text: "@listings/L4.txt"
+        asking_price: "5"
 
 propose:
   count: 3
   preferences:
-    interests: a quiet desk for homework; music in the kitchen; home automation; an arcade table for the living room; a smart mirror in the hall; a home server for the photos
+    interests: a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos
     effort: low
     skills: [basic computer setup]
     budget: 50

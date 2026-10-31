@@ -81,11 +81,11 @@ The check never records fixtures: `OPL_RECORD_FIXTURES` set to anything but off 
 **api** (the default) runs inside the backend image (`compose run ... backend python -m livecheck`)
 with `livecheck/` mounted read-only, or on this machine in the backend's virtualenv with
 `NATIVE=1`, and calls each operation through the service the route
-calls, on one item made from the demo set's `adapter` entry in a temporary inventory (named
-there whatever `INVENTORY_DB_FILE` says, so an absolute path never reaches the real one). The
-inputs are the set's own: the item's photo and note when they are under `demo/photos` and
-`demo/notes` (the owner's, written by `./dev demo-scrub`, not committed), else a label drawn
-and a one-second tone made at run time; the listing text is `demo/listings/L1.txt`. Each line
+calls, on one item made from the demo set's `adapter` entry, else its first item with a photo,
+in a temporary inventory (named there whatever `INVENTORY_DB_FILE` says, so an absolute path
+never reaches the real one). The inputs are the set's own: the item's photo and note when they
+are under `demo/photos` and `demo/notes` (the owner's, written by `./dev demo-scrub`), else a
+label drawn and a one-second tone made at run time; the listing text is `demo/listings/L1.txt`. Each line
 shows the op, the model that answered, PASS or FAIL, milliseconds, input, output and reasoning
 tokens, the cost, and on failure the exception's one-line message (never a request body).
 

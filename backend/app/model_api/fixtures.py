@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 log = logging.getLogger(__name__)
 
@@ -25,19 +25,40 @@ _SAFE = re.compile(r"[^a-z0-9_.-]+")
 
 
 class Fixture(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     endpoint: str
     op: str
     model: str | None = None
-    key: str
+    # written as "digest": a long hex value under "key" reads as a credential to secret
+    # scanners; files written before that still say "key"
+    key: str = Field(validation_alias=AliasChoices("digest", "key"), serialization_alias="digest")
     request: dict[str, Any] = Field(default_factory=dict)
     response: dict[str, Any] = Field(default_factory=dict)
     status: int = 200
 
 
+def _without_reasoning(value: Any) -> Any:
+    """The model's encrypted reasoning emptied: opaque, large, never read back from a recording,
+    and random enough to pass for a credential. A request that carries an earlier answer's
+    reasoning is keyed without it, so a replayed chain still finds its next step."""
+    if isinstance(value, dict):
+        return {
+            k: "" if k == "encrypted_content" and isinstance(v, str) else _without_reasoning(v)
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [_without_reasoning(v) for v in value]
+    return value
+
+
 def _summarise(value: Any) -> Any:
     """Replace inline media with a digest so fixtures stay small and keys stay stable."""
     if isinstance(value, dict):
-        return {k: _summarise(v) for k, v in sorted(value.items())}
+        return {
+            k: "" if k == "encrypted_content" and isinstance(v, str) else _summarise(v)
+            for k, v in sorted(value.items())
+        }
     if isinstance(value, list):
         return [_summarise(v) for v in value]
     if isinstance(value, str) and value.startswith("data:"):
@@ -97,10 +118,10 @@ class FixtureStore:
             model=model if isinstance(model, str) else None,
             key=key,
             request=_summarise(body),
-            response=response,
+            response=_without_reasoning(response),
             status=status,
         )
         path = self.path_for(endpoint, key)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(fixture.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        path.write_text(fixture.model_dump_json(indent=2, by_alias=True) + "\n", encoding="utf-8")
         return path

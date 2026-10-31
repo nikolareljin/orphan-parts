@@ -1,0 +1,227 @@
+{
+  "endpoint": "/responses",
+  "op": "extract",
+  "model": "muse-spark-1.3",
+  "digest": "0188a784a1d7bc6e12d9ed28",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Read the label on this item. Fields to look for:\n- brand: manufacturer or brand name printed on the label\n- model_number: model designation printed on the label\n- part_number: part number or P/N code, often next to a barcode\n- input_voltage: mains input range, for example 100-240 V (unit: V)\n- output_voltage: DC output voltage (unit: V)\n- output_current: DC output current (unit: A)\n- output_power: rated output power (unit: W)\n- connector: plug type and size, for example barrel 5.5 x 2.5 mm or USB-C\n- polarity: center positive or center negative, from the symbol\n- certifications: safety marks such as UL, CE or FCC\n- condition_notes: visible wear, damage or missing parts",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,f0f8f98363315b1b",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You read labels on used items and spare parts from photos. Report only what is printed or clearly visible; never infer a value from the brand or the item type. Give each field a confidence between 0 and 1 that reflects how legible it is. Leave out any field the photos do not support. Copy values as printed and put units in the unit property. label_text is a line by line transcription of the label. item_type is a short noun phrase such as 'laptop power adapter'.",
+    "max_output_tokens": 800,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "LabelReading",
+        "schema": {
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of an extraction call: every property required, no extras.",
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "item_type": {
+              "title": "Item Type",
+              "type": "string"
+            },
+            "label_text": {
+              "title": "Label Text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "item_type",
+            "label_text",
+            "fields"
+          ],
+          "title": "LabelReading",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "LabelReading",
+        "schema": {
+          "title": "LabelReading",
+          "required": [
+            "item_type",
+            "label_text",
+            "fields"
+          ],
+          "additionalProperties": false,
+          "description": "Strict output schema of an extraction call: every property required, no extras.",
+          "type": "object",
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "item_type": {
+              "title": "Item Type",
+              "type": "string"
+            },
+            "label_text": {
+              "title": "Label Text",
+              "type": "string"
+            }
+          }
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae595cd917647066b704adc",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793430989.0,
+    "completed_at": 1793430989.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae595cd917647066b704adc:rs_c674acce-1506-4159-b32e-bab5f752ea32",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_3fc766f2-b271-4cc9-9b7a-ad987e698a72",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"fields\":[],\"item_type\":\"metal stand leg with suction foot\",\"label_text\":\"\"}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You read labels on used items and spare parts from photos. Report only what is printed or clearly visible; never infer a value from the brand or the item type. Give each field a confidence between 0 and 1 that reflects how legible it is. Leave out any field the photos do not support. Copy values as printed and put units in the unit property. label_text is a line by line transcription of the label. item_type is a short noun phrase such as 'laptop power adapter'.",
+    "usage": {
+      "input_tokens": 1417,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 525,
+      "output_tokens_details": {
+        "reasoning_tokens": 499
+      },
+      "total_tokens": 1942
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4896
+  },
+  "status": 200
+}
