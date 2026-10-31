@@ -48,12 +48,15 @@ answers or the live models. A unit test keeps the palette equal to the web app's
 
 ## Installing the released app
 
-The release page carries `orphan-parts-<version>.apk`; [On your phone in ten
-minutes](../start/judges.md) is the path for a phone with no development setup (download on the
-phone, or `scripts/phone-install.sh` / `scripts/phone-install.ps1` over USB, which bring their
-own `adb`). The app runs on Android 8.0 and newer; the QR scanner needs Google Play services,
-the typed address works everywhere. On Windows the development path below runs in WSL; the
-install scripts run natively.
+The release page carries `orphan-parts-<version>.apk`, and the same file as `orphan-parts.apk`,
+which keeps
+`https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
+pointing at the newest release (the QR code on the docs home and in the phone guide opens it);
+[On your phone in ten minutes](../start/judges.md) is the path for a phone with no development
+setup (download on the phone, or `scripts/phone-install.sh` / `scripts/phone-install.ps1` over
+USB, which bring their own `adb`). The app runs on Android 8.0 and newer; the QR scanner needs
+Google Play services, the typed address works everywhere. On Windows the development path below
+runs in WSL; the install scripts run natively.
 
 ## Building and running it
 
@@ -81,7 +84,8 @@ USB debugging prompt. The build needs a JDK 17 or 21 (Gradle 8.13 refuses a newe
 The release APK is signed with the release key when `KEYSTORE_PATH`, `KEYSTORE_PASSWORD`,
 `KEY_ALIAS` and `KEY_PASSWORD` are set (or `android/keystore.properties`, which is ignored by
 git), and with the debug key otherwise: that one installs on a phone but is not for a store.
-The version is the repository's `VERSION`; each release attaches `orphan-parts-<version>.apk`.
+The version is the repository's `VERSION`; each release attaches `orphan-parts-<version>.apk`
+and a copy named `orphan-parts.apk`.
 
 The app allows plain HTTP, because the dev stack on a home network answers that way; the
 demo host answers over HTTPS.
@@ -89,7 +93,12 @@ demo host answers over HTTPS.
 The launcher icon is rendered from `docs/assets/logo.svg`: `scripts/app-icon.sh` (Inkscape
 required) writes the adaptive icon's foreground and the legacy icons for every density under
 `android/app/src/main/res/mipmap-*/`, and the web header's mark (`frontend/public/brand.svg`,
-the same crop); run it again after a change to the logo.
+the legacy rounded square without its margin); run it again after a change to the logo (a viewfinder moved or resized
+in it is refused; to take it, the transform on its group is flattened in Inkscape by ungrouping
+and grouping again, the new group gets back the id `lens-viewfinder`, the ring's `cx`, `cy`,
+`r` and `stroke-width` are rounded to whole numbers, and `CX`, `CY` and `RING` in the script
+are set to match). The
+adaptive icon's background color (`values/ic_launcher_background.xml`) is set by hand.
 
 ## Allow the phone
 

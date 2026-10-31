@@ -19,10 +19,18 @@ here needs a development setup; a computer is optional.
 
 ## 2. Install the app from the phone (no computer)
 
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="160">
+
+The QR code, shown on another screen and scanned with the phone's camera, opens
+`https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`, the
+newest release's APK; the same link opened in the phone's browser downloads it too. Either
+way, continue at item 3 of the list below (open the download). The release page is the other
+way to the same file:
+
 1. On the phone, open `https://github.com/nikolareljin/orphan-parts/releases/latest` in the
    browser.
 2. Under **Assets**, tap `orphan-parts-<version>.apk`. The download starts; the file is
-   about 6 MB.
+   about 8 MB.
 3. Open the download (the notification, or the browser's Downloads page). The phone asks to
    allow installing from this browser: tap **Settings**, turn on **Allow from this source**
    (older phones: **Settings, Security, Unknown sources**), go back.
