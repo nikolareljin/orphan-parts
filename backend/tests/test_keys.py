@@ -1,5 +1,9 @@
 """Access codes as records: issued once, matched by hash, ended by expiry or by hand."""
 
+import hashlib
+import sqlite3
+import threading
+import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -97,6 +101,43 @@ def test_the_command_issues_lists_and_revokes(
     assert "no current code" in capsys.readouterr()[1]
     assert main(["list"], keys) == 0
     assert "revoked" in capsys.readouterr()[0]
+
+
+def test_the_master_tag_is_a_slow_salted_digest() -> None:
+    tag = master_tag("the-master-code")
+    slow = hashlib.pbkdf2_hmac("sha256", b"the-master-code", b"opl-phone-master", 200_000)
+    assert tag == slow[:8].hex() and len(tag) == 16
+    assert tag != hashlib.sha256(b"the-master-code").hexdigest()[:16]
+    assert master_tag("a-new-master-code") != tag and master_tag("") == ""
+
+
+def test_a_revoke_on_another_connection_lands_before_the_claim_reads_its_parent(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "inventory.sqlite3"
+    keys = AccessKeys(Store(path))
+    _, guest = keys.issue("guest", 2)
+    other = sqlite3.connect(path, isolation_level=None)
+    other.execute("BEGIN IMMEDIATE")
+    ended: list[str] = []
+
+    def claim() -> None:
+        try:
+            keys.issue_child("phone racing1", 30, parent=guest.id, stamp=guest.created_at)
+        except AccessKeyError as exc:
+            ended.append(str(exc))
+
+    worker = threading.Thread(target=claim)
+    worker.start()
+    time.sleep(0.3)
+    # the claim waits for the write lock the revoke holds, and reads the parent after it
+    assert worker.is_alive()
+    other.execute("UPDATE access_keys SET revoked_at = ? WHERE id = ?", ("2026-01-01", guest.id))
+    other.execute("COMMIT")
+    other.close()
+    worker.join(10)
+    assert ended == ["the code that paired this phone has ended"]
+    assert [k.label for k in keys.all()] == ["guest"]
 
 
 def test_a_phone_code_is_claimed_once_and_stands_with_its_parent(tmp_path: Path) -> None:

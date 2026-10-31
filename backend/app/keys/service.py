@@ -55,8 +55,11 @@ def digest(code: str) -> str:
 
 def master_tag(code: str) -> str:
     """What a phone's record keeps of the master code it was claimed under: enough to tell a
-    rotated code, nothing to recover it from."""
-    return hashlib.sha256(b"opl-phone:" + code.encode("utf-8")).hexdigest()[:16] if code else ""
+    rotated code, and slow to guess the code from (eight bytes of a salted PBKDF2)."""
+    if not code:
+        return ""
+    tag = hashlib.pbkdf2_hmac("sha256", code.encode("utf-8"), b"opl-phone-master", 200_000)
+    return tag[:8].hex()
 
 
 def _text(moment: datetime) -> str:
