@@ -234,10 +234,21 @@ def test_leaving_clears_the_cookie(gated: TestClient) -> None:
     assert gated.get("/api/items").status_code == 200
     gone = gated.delete("/api/access")
     assert gone.status_code == 200 and gone.json()["granted"] is False
-    assert (
-        "Max-Age=0" in gone.headers["set-cookie"] or "expires" in gone.headers["set-cookie"].lower()
-    )
+    cleared = gone.headers["set-cookie"]
+    assert cleared.startswith(f'{COOKIE}=""') and "Max-Age=0" in cleared
+    # the same attributes the cookie was set with, or a browser keeps it
+    assert "Path=/" in cleared and "HttpOnly" in cleared and "SameSite=strict" in cleared
+    assert "Secure" not in cleared
     assert gated.get("/api/searches").status_code == 403  # the demo visitor again
+
+
+def test_leaving_clears_a_secure_cookie_as_secure(tmp_path: Path) -> None:
+    with TestClient(create_app(gated_settings(tmp_path, demo_cookie_secure=True))) as c:
+        opened = c.post("/api/access", json={"code": CODE}).headers["set-cookie"]
+        assert "Secure" in opened and "SameSite=strict" in opened
+        cleared = c.delete("/api/access").headers["set-cookie"]
+        assert "Max-Age=0" in cleared and "Secure" in cleared
+        assert "Path=/" in cleared and "HttpOnly" in cleared and "SameSite=strict" in cleared
 
 
 def test_a_record_with_the_same_id_after_a_reset_is_a_stranger(tmp_path: Path) -> None:

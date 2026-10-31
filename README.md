@@ -58,8 +58,10 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    <img src="docs/assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140"><br>
    Or, on the phone, open the
    [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) and tap either
-   APK. Open the download with installing from the browser allowed (**Allow from this source**);
-   if Play Protect warns, **More details**, **Install anyway**. Or over a USB cable, with **USB
+   APK. The app is not on Google Play, so allow the browser to install unknown apps when the
+   download opens (**Allow from this source**); if Play Protect warns, **More details**,
+   **Install anyway**; afterwards a **Play Protect** scan in the Play Store checks it. Or over
+   a USB cable, with **USB
    debugging** on in **Developer options**: from a clone, `scripts/phone-install.sh` on the
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
@@ -68,7 +70,8 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    deployed; or `./dev up` and `http://localhost:5173` on your own computer. To pair a phone
    with a local server, open the site at the computer's network address, not `localhost`
    (for example `http://192.168.1.20:5173`), with the phone on the same network.
-3. **Sign in**: **Sign in with the code** in the header, then the access code you were given.
+3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
+   (**Sign out**, in the same place, ends it).
    A local stack has no door until `./dev gate on`, which prints a code for you and one for
    the phone; reload the page, then sign in with yours. Without it, go on to step 4.
 4. **Pair the phone**: at the foot of the page, open **Pair the phone** for the QR code. In the
