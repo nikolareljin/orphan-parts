@@ -52,6 +52,18 @@ same normalisers as a label reading; a rule key the label set does not know is k
 any other name is dropped. Operation name `listing-text`, which is also the recorded fixture.
 The code path is `app/find/service.py`.
 
+## Search plan
+
+A plan for a missing item is one call (effort `low`) with the strict JSON schema of
+`PlanWriting`: three to six search phrasings with a line each on what they find, one match
+pattern over listing text and the exclusion words. The brief carries the need's title, the
+profile, the needed values, the values of the item that needs it, the notes and the top price;
+the instructions ask for bounded gaps and classes instead of `.*` and nested repeats, and
+never a part number the need does not give. The pattern goes through the same checks as one
+typed by the owner and is dropped, with the reason, when it fails them. Operation name
+`search-plan`, which is also the recorded fixture. The code path is `app/find/service.py`;
+the checks are `app/find/plan.py`.
+
 ## Uses
 
 What an item is good for is one call with the strict JSON schema of `UsesWriting`: up to three

@@ -62,6 +62,13 @@ name dropped; typed values as the owner's word and a conflict rejected; a screen
 extractor; a recheck after the need changed and a withdrawal; a candidate without its source
 refused; the routes with multipart requests and every refusal.
 
+The search plan is tested with a recorded plan (`search-plan`): the pattern checks (the example
+accepted, the runaway shapes, a pattern over 300 characters, a backreference and one that
+matches empty text refused, an accepted pattern fast on text that nearly matches), the local
+score with its exclusions, prices and highlights, the links encoded one per phrasing, the plan,
+screenshot and Check fit routes counted as spending, a written pattern that fails the checks
+not kept, the owner's pattern scoring every listing again, and the routes.
+
 Price guidance is tested against a recorded search-grounded answer (`price`): one search, four
 results, five proposed comparables of which the unbacked one is dropped and said; the four
 figures and their counts; a reported sale counted apart and one in another currency not; whole

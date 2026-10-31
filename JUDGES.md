@@ -155,6 +155,8 @@ app, installs it over USB and prints the pairing code in the terminal.
 - **Decide**, on the item below its values: what it is, what it is worth, what it is good for
   (**Ask for ideas**), what would complete it; then **Keep and build**, **Sell**, **Give
   away** or **Not worth it**, with a note the item keeps.
+- **Find a part:** **Plan the search** writes several Marketplace search links you open
+  yourself and a match pattern; paste back what you find and the listings are ranked by it.
 - **From a laptop instead of the phone:** the Inbox's **Send a capture** form takes photos
   and a short video (MP4 or 3GP) straight from the computer.
 - **Talk tab:** for an item already in the inventory, hold and say what you know; the
