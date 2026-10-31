@@ -44,6 +44,18 @@ repair steps*: the choice is recorded and the notes stay as they are. When the n
 the plan together would pass the notes' 4,000 characters, whole steps are left out from the end
 and the plan ends with *… (more in the scenarios)*; the notes you wrote are never cut.
 
+Each reuse scenario has **Draw it**: Muse Image draws how the finished project could look, one
+image call per click, and nothing is drawn when the cards appear. The hint under the button
+says so: *Draw how the finished project could look. One image call.* The prompt is written by
+the rules from the scenario's title and what it does, this item's kind and up to three of its
+accepted values (never one that identifies it, such as a serial number, a MAC address or an
+IMEI, and never a price) and the kinds of item the card names; never a name, the location or
+the notes. The picture is kept with that set of cards and captioned as drawn, *not a photo of a
+real build*; asking for the cards again starts a new set with no pictures. While pictures are
+off on the server (`PICTURE_ENABLED`) the card shows *Pictures are off on this server.* instead
+of the button; the demo visitor sees the button disabled with *Sign in with the access code to
+draw.* See [Muse Image](../models/muse-image.md).
+
 The cards are written for your [profile](profile.md): your rated skills, your tools, the effort
 you will put in, whether you open devices up, and your budget. Without a profile they are
 written for an average person with household tools, and the panel says so with a link to fill

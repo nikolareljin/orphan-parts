@@ -442,6 +442,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           guided={guided}
           onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
           onGuided={() => setGuided((n) => n + 1)}
+          demo={demo}
         />
       </div>
 
