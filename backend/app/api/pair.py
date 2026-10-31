@@ -17,6 +17,7 @@ from app.pairing import (
 
 router = APIRouter(prefix="/api", tags=["ops"])
 log = logging.getLogger("app.gate")
+PAIR_EXPIRES = "X-Pair-Expires-At"
 PAIRING_ENDED = "the pairing has ended; reload the signed-in page and scan its new code"
 BROWSER_CLAIM = "a browser's session does not claim a phone's code; scan the QR code with the app"
 
@@ -66,12 +67,13 @@ def pair_svg(
     origin: str = Query(description="the web app's origin"),
     api: str = Query(default="", description="the API's origin, when it is not the web app's"),
 ) -> Response:
-    """The same, as a QR code the phone scans."""
-    return Response(
-        svg(_pairing(request, origin, gate, settings, api)),
-        media_type="image/svg+xml",
-        headers={"Cache-Control": "no-store"},
-    )
+    """The same, as a QR code the phone scans; when it carries a pairing, X-Pair-Expires-At
+    says when that ends (Unix seconds), so the page draws a new one before then."""
+    found = _pairing(request, origin, gate, settings, api)
+    headers = {"Cache-Control": "no-store"}
+    if found.expires_at:
+        headers[PAIR_EXPIRES] = str(found.expires_at)
+    return Response(svg(found), media_type="image/svg+xml", headers=headers)
 
 
 @router.post("/pair/code", response_model=PhoneCode)

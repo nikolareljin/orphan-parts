@@ -180,7 +180,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["*"],
-        expose_headers=["X-Request-ID"],
+        expose_headers=["X-Request-ID", "X-Pair-Expires-At"],
     )
     app.add_middleware(RequestContextMiddleware)
     app.include_router(router)

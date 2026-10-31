@@ -121,7 +121,8 @@ def test_pair_routes_need_a_session_when_gated(settings: Settings, tmp_path: Pat
             "token": "",
             "expires_at": 0,
         }
-        assert c.get("/api/pair.svg", params={"origin": "http://host:5173"}).status_code == 200
+        image = c.get("/api/pair.svg", params={"origin": "http://host:5173"})
+        assert image.status_code == 200 and "x-pair-expires-at" not in image.headers
         # and the rest of the gate stands as it was
         assert c.post("/api/items", json={"item_type": "x"}).status_code == 403
         assert c.post("/api/pair/code").status_code == 401
@@ -136,6 +137,12 @@ def test_pair_routes_need_a_session_when_gated(settings: Settings, tmp_path: Pat
         )
         assert found["token"].split(".")[2] == "2"
         assert 14 * 60 < found["expires_at"] - datetime.now(UTC).timestamp() <= 15 * 60
+        # the image of a pairing says when it ends, so the page draws a new one in time
+        c.post("/api/access", json={"code": CODE})
+        image = c.get("/api/pair.svg", params={"origin": "http://host:5173"})
+        ends = int(image.headers["x-pair-expires-at"])
+        assert 14 * 60 < ends - datetime.now(UTC).timestamp() <= 15 * 60
+        c.cookies.clear()
 
 
 def test_the_command_line_prints_the_code_or_the_payload(

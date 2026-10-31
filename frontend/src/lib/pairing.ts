@@ -29,6 +29,15 @@ export function pairingText(gated: boolean, signedIn: boolean): string {
   }
   return (
     'It carries this address and a pairing good for a few minutes; with it the phone claims an access code of its own, ' +
-    'which ends with the code you signed in with, or sooner when revoked on the server. That code stays here.'
+    'which ends with the code you signed in with, or sooner when revoked on the server. That code stays here. ' +
+    'For those minutes the code is a live credential: anyone who scans it is signed in, so keep it off a projector ' +
+    'and out of a recording.'
   )
+}
+
+/** How long the footer's pairing code stays before it is drawn again: a minute before the
+ * pairing in it ends (never sooner than 15 s), or 10 minutes when the code says no end. */
+export function redrawAfterMs(expiresAt: number, nowMs: number): number {
+  if (!expiresAt) return 10 * 60_000
+  return Math.max(15_000, expiresAt * 1000 - nowMs - 60_000)
 }

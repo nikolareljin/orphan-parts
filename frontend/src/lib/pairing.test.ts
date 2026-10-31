@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pairingText, reachableFromAPhone } from './pairing'
+import { pairingText, reachableFromAPhone, redrawAfterMs } from './pairing'
 
 describe('reachableFromAPhone', () => {
   it('accepts a network address and a public origin', () => {
@@ -28,5 +28,17 @@ describe('pairingText', () => {
     expect(pairingText(true, false)).toContain('Sign in here first')
     expect(pairingText(true, true)).toContain('an access code of its own')
     expect(pairingText(true, true)).toContain('stays here')
+    expect(pairingText(true, true)).toContain('live credential')
+    expect(pairingText(true, false)).not.toContain('live credential')
+  })
+})
+
+describe('redrawAfterMs', () => {
+  it('draws the code again a minute before its pairing ends, and every 10 minutes without one', () => {
+    const now = 1_000_000_000
+    expect(redrawAfterMs(now / 1000 + 15 * 60, now)).toBe(14 * 60_000)
+    expect(redrawAfterMs(now / 1000 + 60, now)).toBe(15_000)
+    expect(redrawAfterMs(now / 1000 - 5, now)).toBe(15_000)
+    expect(redrawAfterMs(0, now)).toBe(10 * 60_000)
   })
 })

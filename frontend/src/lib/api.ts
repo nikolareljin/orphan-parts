@@ -1010,13 +1010,20 @@ export const api = {
       apiUrl(
         `/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}${door ? `&door=${door}` : ''}`,
       ),
+    // the image, and when the pairing in it ends (Unix seconds; 0 when it carries none). The
+    // Referer goes along whatever the page's own policy: the server draws only an origin it
+    // is reached at
     svg: async (origin: string, door = '') => {
-      const res = await fetch(api.pair.svgUrl(origin, door), { headers: authHeaders(), credentials: 'include' })
+      const res = await fetch(api.pair.svgUrl(origin, door), {
+        headers: authHeaders(),
+        credentials: 'include',
+        referrerPolicy: 'same-origin',
+      })
       if (!res.ok) {
         noteStatus(res.status)
         throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)
       }
-      return await res.text()
+      return { svg: await res.text(), expiresAt: Number(res.headers.get('X-Pair-Expires-At') ?? 0) || 0 }
     },
     get: (origin: string) =>
       getJson<{ url: string; gated: boolean; token: string; expires_at: number }>(
