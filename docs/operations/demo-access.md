@@ -62,6 +62,17 @@ proposal, picture drawn and capture. The web app shows the pages, a *Sign in wit
 header, and the line on whatever a visitor tries to save; the phone says the same on its
 Capture tab when no code is set.
 
+The header always carries one door on a gated host: *Sign in with the code* without a session
+(and while the browser has not heard back from `GET /api/access` yet), *Sign out* with one. The
+web app asks `GET /api/access` on its own, apart from `/readyz` and `/api/version`, tries again
+after a failure (1 s, doubling up to 30 s) and asks again when the tab comes back into view,
+so a slow start or a failed service check never takes the door away. A 401 or a write refused
+as the demo visitor turns it back to *Sign in with the code*. On a host without a code
+(`gated: false`) the header says *Open server (no code needed)* instead.
+
+For now, signing in uses a shared access code only. Accounts and a proper sign-in come later
+([Next steps](../project/next.md)).
+
 The visitor's tries are answered by a second model client in fixture mode, the **twin**: the
 same recorded answers the browser checks and `./dev demo` use, a ledger of its own that goes
 nowhere, nothing sent to the Model API and nothing spent. Only a request through the code's
