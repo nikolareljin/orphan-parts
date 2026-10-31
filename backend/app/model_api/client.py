@@ -279,6 +279,7 @@ class ModelApiClient:
         effort: str | None = None,
         max_output_tokens: int | None = None,
         tools: list[dict[str, Any]] | None = None,
+        max_tool_calls: int | None = None,
         include: list[str] | None = None,
         metadata: dict[str, str] | None = None,
         op: str = "respond",
@@ -295,6 +296,7 @@ class ModelApiClient:
                 effort=effort,
                 max_output_tokens=max_output_tokens,
                 tools=tools,
+                max_tool_calls=max_tool_calls,
                 include=include,
                 metadata=metadata,
                 op=op,
@@ -319,6 +321,9 @@ class ModelApiClient:
             }
         if tools:
             body["tools"] = tools
+        if max_tool_calls:
+            # the hard stop on built-in tools such as web search; one search is one call
+            body["max_tool_calls"] = max_tool_calls
         if include:
             body["include"] = include
         if metadata:

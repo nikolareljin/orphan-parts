@@ -145,12 +145,14 @@ async def test_request_carries_effort_instructions_and_limits(live: Settings) ->
         effort="low",
         max_output_tokens=64,
         tools=[{"type": "function", "name": "lookup", "parameters": {}}],
+        max_tool_calls=3,
     )
     body = h.body()
     assert body["reasoning"] == {"effort": "low"}
     assert body["instructions"] == "be brief"
     assert body["max_output_tokens"] == 64 + REASONING_HEADROOM["low"]
     assert body["tools"][0]["name"] == "lookup"
+    assert body["max_tool_calls"] == 3
     assert body["input"][0]["content"][0] == {"type": "input_text", "text": "hi"}
 
 

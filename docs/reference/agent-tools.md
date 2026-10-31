@@ -23,8 +23,8 @@ are written by the rules afterwards, from the allocations the inventory backs.
 ## Built-in tool: web search
 
 `POST /api/items/{id}/price` sends one call with `{"type": "web_search"}`, a
-`search_context_size` from `PRICE_SEARCH_CONTEXT` and an approximate `user_location`, and asks
-for `web_search_call.results` back. The rules keep a comparable only when its page is among
+`search_context_size` from `PRICE_SEARCH_CONTEXT`, an approximate `user_location` and
+`max_tool_calls` from `PRICE_MAX_SEARCHES` (4), and asks for `web_search_call.results` back. The rules keep a comparable only when its page is among
 the results or the citations ([Muse Spark](../models/muse-spark.md)). Side effects: the
 searches are counted into the spend ledger at the published per-query rate.
 

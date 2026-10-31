@@ -265,6 +265,10 @@ async def test_a_live_call_carries_the_search_tool_and_bills_each_search(
         }
     ]
     assert body["include"] == ["web_search_call.results"]
+    assert body["max_tool_calls"] == 4
+    assert body["instructions"].endswith(
+        "Search at most 4 times, then answer with what those searches found."
+    )
     assert body["text"]["format"]["name"] == "Findings"
     assert guide.searches == 2 and guide.from_fixture is False
     entry = ledger.entries()[0]
