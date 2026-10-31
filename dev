@@ -18,7 +18,14 @@
 #   test [backend|frontend|scripts]
 #                      run the full check suite (default: all three)
 #   check-api          confirm the Model API key, the active mode and the spend ledger
-#   e2e                Playwright against the dev stack in fixture mode (E2E_KEEP=1 leaves it up)
+#   live-check [--ops a,b,...] [--max-usd N] [--against local|hosted|URL] [--keep-going]
+#                      one real call per Model API operation the product makes, through its
+#                      own services with the demo set's inputs, each line with model, tokens
+#                      and cost (spends real credit, at most --max-usd, default 0.25); with
+#                      --against, the same proof over HTTP against a running backend, signed
+#                      in with LIVECHECK_ACCESS_CODE from the environment; OPL_FAKE_API=1
+#                      replays the recordings and spends nothing (livecheck/README.md)
+#   e2e              Playwright against the dev stack in fixture mode (E2E_KEEP=1 leaves it up)
 #   lint               ruff, mypy, eslint, tsc
 #   fmt                ruff format, eslint --fix
 #   docs               serve the docs site at :8001 with live reload
@@ -281,6 +288,60 @@ cmd_check_api() {
   else
     docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
     compose run --rm --no-deps backend python -m app.model_api check
+  fi
+}
+
+# One call per Model API operation, through the product's own code, in the backend image with
+# livecheck/ mounted read-only (never in an image). Live mode is the shell's or .env's key and
+# OPL_FAKE_API unset or 0; OPL_FAKE_API=1 replays the recordings. The access code for --against
+# is LIVECHECK_ACCESS_CODE from the shell or .env, read by name and passed on, never an argument.
+cmd_live_check() {
+  local usage="usage: ./dev live-check [--ops a,b,...] [--max-usd N] [--against local|hosted|URL] [--keep-going]"
+  local against="" args=() pass=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --ops|--max-usd) [[ $# -ge 2 && -n "$2" ]] || die "$1 needs a value"; args+=("$1" "$2"); shift 2 ;;
+      --ops=*|--max-usd=*) args+=("$1"); shift ;;
+      --against) [[ $# -ge 2 && -n "$2" ]] || die "--against needs local, hosted or a URL"; against="$2"; shift 2 ;;
+      --against=*) against="${1#--against=}"; shift ;;
+      --keep-going) args+=("$1"); shift ;;
+      *) die "$usage" ;;
+    esac
+  done
+  need_env_file
+  local fake="${OPL_FAKE_API:-$(env_get OPL_FAKE_API "$ROOT/.env")}"
+  [[ "$fake" == "1" ]] || fake=0
+  # the two names the check may use, from the shell first, then .env; nothing else is read here
+  local key="${MODEL_API_KEY:-$(env_get MODEL_API_KEY "$ROOT/.env")}"
+  local code="${LIVECHECK_ACCESS_CODE:-$(env_get LIVECHECK_ACCESS_CODE "$ROOT/.env")}"
+  if [[ -n "$against" ]]; then
+    case "$against" in
+      local)
+        # inside the compose network the backend is the service by name; natively, this machine
+        if [[ "${NATIVE:-0}" == "1" ]]; then against="http://localhost:$BACKEND_PORT"; else against="http://backend:8000"; fi
+        ;;
+      hosted)
+        against="${API_URL:-$(env_get API_URL "$ROOT/.env")}"
+        [[ -n "$against" ]] || die "live-check: --against hosted needs API_URL (the backend's https URL) in the shell or .env"
+        ;;
+      http://*|https://*) ;;
+      *) die "$usage" ;;
+    esac
+    args+=(--against "$against")
+  elif [[ "$fake" != "1" && -z "$key" ]]; then
+    die "live-check: MODEL_API_KEY is empty; set it in .env for a live run, or OPL_FAKE_API=1 for the dry run on recordings"
+  fi
+  # both go by the environment, never on a command line: compose copies a name given without
+  # a value from the shell, and a value set in the shell wins over .env, as elsewhere in dev
+  [[ -z "${MODEL_API_KEY:-}" ]] || pass+=(-e MODEL_API_KEY)
+  if [[ -n "$code" ]]; then export LIVECHECK_ACCESS_CODE="$code"; pass+=(-e LIVECHECK_ACCESS_CODE); fi
+  if [[ "${NATIVE:-0}" == "1" ]]; then
+    venv_ensure "$BACKEND"
+    env_load "$ROOT/.env"
+    OPL_FAKE_API="$fake" PYTHONPATH="$ROOT" venv_run "$BACKEND" python -m livecheck "${args[@]+"${args[@]}"}"
+  else
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e PYTHONPATH=/opt/livecheck "${pass[@]+"${pass[@]}"}" backend python -m livecheck "${args[@]+"${args[@]}"}"
   fi
 }
 
@@ -577,6 +638,7 @@ case "$cmd" in
   logs) cmd_logs "$@" ;;
   test) cmd_test "$@" ;;
   check-api) cmd_check_api "$@" ;;
+  live-check) cmd_live_check "$@" ;;
   e2e) cmd_e2e "$@" ;;
   lint) cmd_lint "$@" ;;
   fmt) cmd_fmt "$@" ;;

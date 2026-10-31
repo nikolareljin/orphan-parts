@@ -16,3 +16,5 @@ data
 *.sqlite3-*
 *.log
 .git
+# the live check lives beside the backend, never in its image (./dev live-check mounts it)
+livecheck

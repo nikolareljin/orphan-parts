@@ -11,3 +11,5 @@ test-results
 playwright-report
 *.log
 .git
+# the live check at the repository root, never in the web image
+livecheck
