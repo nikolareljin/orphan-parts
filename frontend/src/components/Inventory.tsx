@@ -136,7 +136,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
   const [details, setDetails] = useState({ condition: '', faults: '', tests_done: '', accessories: '', location: '', notes: '' })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [profiles, setProfiles] = useState<ProfileSummary[]>([])
-  // a guidance written on the Value panel: the Decide panel's worth row reads it again
+  // a guidance written on the Value panel or the Decide panel's sell card: both read it again
   const [guided, setGuided] = useState(0)
 
   useEffect(() => {
@@ -431,11 +431,12 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           item={item}
           guided={guided}
           onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
+          onGuided={() => setGuided((n) => n + 1)}
         />
       </div>
 
       <div className="item-section" data-section="value">
-        <Value item={item} onGuided={() => setGuided((n) => n + 1)} />
+        <Value item={item} refresh={guided} onGuided={() => setGuided((n) => n + 1)} />
       </div>
 
       <div className="item-section" data-section="sell">

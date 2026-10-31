@@ -67,6 +67,37 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(again.decide).toContainText('worth a listing')
 })
 
+test('what to do with it: three cards for the profile, and a card chosen leads on', async ({ page, request }) => {
+  const name = `Scenario laptop ${stamp}`
+  await createLaptop(request, name)
+  const { panel, decide } = await openItem(page, name)
+
+  await decide.getByRole('button', { name: 'What should I do with it?' }).click()
+  const cards = decide.getByRole('region', { name: 'What to do with it' })
+  await expect(cards).toContainText("The model's scenarios")
+  await expect(cards).toContainText('recorded answer')
+  await expect(cards.getByRole('status', { name: 'Recommendation' })).toContainText('Recommended: Reuse it.')
+  const fix = cards.getByRole('article', { name: 'Keep and fix' })
+  const reuse = cards.getByRole('article', { name: 'Reuse it' })
+  const sell = cards.getByRole('article', { name: 'Sell or give away' })
+  await expect(fix.getByRole('list', { name: 'Steps' }).getByRole('listitem')).toHaveCount(4)
+  await expect(fix).toContainText('easy for you')
+  await expect(reuse).toContainText('recommended')
+  await expect(reuse.getByRole('list', { name: 'Reuse scenarios' }).getByRole('listitem')).toHaveCount(2)
+  await expect(reuse).toContainText('With what you have: monitor')
+  await expect(sell.getByRole('button', { name: 'Get price guidance' })).toBeVisible()
+
+  // the sell card asks the price route; the figure shows on the card
+  await sell.getByRole('button', { name: 'Get price guidance' }).click()
+  await expect(sell).toContainText(/about \d/)
+
+  // keep and fix: the choice is kept, and the steps land in the notes
+  await fix.getByRole('button', { name: 'Choose this' }).click()
+  await expect(decide.getByRole('status', { name: 'Decision made' })).toContainText('Keep and fix')
+  await expect(fix).toContainText('chosen')
+  await expect(panel.getByLabel('Notes (stay private)')).toHaveValue(/Repair plan \(scenarios v1/)
+  await expect(cards).toContainText('item changed since')
+})
 
 test('the decision rows fit a phone dialog', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -74,6 +105,8 @@ test('the decision rows fit a phone dialog', async ({ page, request }) => {
   await createLaptop(request, name)
   const { decide } = await openItem(page, name)
   await expect(decide).toContainText('Homework workstation (laptop)')
+  await decide.getByRole('button', { name: 'What should I do with it?' }).click()
+  await expect(decide.getByRole('article', { name: 'Sell or give away' })).toBeVisible()
   const sizes = await decide.evaluate((el) => ({ width: el.clientWidth, scroll: el.scrollWidth }))
   expect(sizes.scroll).toBeLessThanOrEqual(sizes.width)
   await decide.getByRole('link', { name: 'Find a part', exact: true }).click()

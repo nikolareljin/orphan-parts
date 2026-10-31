@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import type { Worth } from './api'
-import { candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from './decide'
+import {
+  CARDS,
+  candidatesText,
+  cardFor,
+  choiceLabel,
+  chosenCard,
+  difficultyLabel,
+  effortLabel,
+  fillsLine,
+  recommendationLabel,
+  reservedLine,
+  worthLine,
+} from './decide'
 
 const worth = (over: Partial<Worth>): Worth => ({
   id: 1,
@@ -54,5 +66,28 @@ describe('labels', () => {
     expect(effortLabel('low')).toBe('low effort')
     expect(candidatesText({ id: 1, title: 't', status: 'open', candidates: 1, handoff_url: '' })).toBe('1 candidate')
     expect(candidatesText({ id: 1, title: 't', status: 'open', candidates: 0, handoff_url: '' })).toBe('0 candidates')
+  })
+})
+
+describe('scenario cards', () => {
+  it('records each card as a choice and leads to its section', () => {
+    expect(CARDS.map((c) => [c.id, c.choice, c.section])).toEqual([
+      ['keep_fix', 'keep_fix', 'facts'],
+      ['reuse', 'keep_build', 'decide'],
+      ['sell', 'sell', 'sell'],
+    ])
+    expect(choiceLabel('keep_fix')).toBe('Keep and fix')
+  })
+  it('lights the sell card for giving it away', () => {
+    expect(cardFor('give')).toBe('sell')
+    expect(cardFor('reuse')).toBe('reuse')
+    expect(recommendationLabel('give')).toBe('Give it away')
+    expect(difficultyLabel('moderate')).toBe('moderate for you')
+  })
+  it('marks the card the last decision took', () => {
+    expect(chosenCard('sell', 'give')).toBe(true)
+    expect(chosenCard('reuse', 'keep_build')).toBe(true)
+    expect(chosenCard('keep_fix', 'keep_build')).toBe(false)
+    expect(chosenCard('keep_fix', undefined)).toBe(false)
   })
 })

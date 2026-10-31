@@ -15,13 +15,12 @@ import {
   numberProblem,
   packLabel,
   progressText,
-  skillsFromText,
-  skillsToText,
   statusLabel,
   statusTone,
   stepDone,
   todayIso,
 } from '../lib/projects'
+import { skillsLine } from '../lib/profile'
 import Modal from './Modal'
 
 function message(err: unknown): string {
@@ -114,7 +113,6 @@ export default function Build() {
 
 function PreferencesForm({ onSaved }: { onSaved: () => void }) {
   const [prefs, setPrefs] = useState<Preferences>(EMPTY_PREFERENCES)
-  const [skills, setSkills] = useState('')
   const [budget, setBudgetText] = useState('')
   const [radius, setRadius] = useState('')
   const [open, setOpen] = useState(false)
@@ -129,7 +127,6 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
       .then((p) => {
         if (cancelled) return
         setPrefs(p)
-        setSkills(skillsToText(p.skills))
         setBudgetText(p.budget === null ? '' : String(p.budget))
         setRadius(p.radius_km === null ? '' : String(p.radius_km))
       })
@@ -154,7 +151,6 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
     try {
       const kept = await api.build.setPreferences({
         ...prefs,
-        skills: skillsFromText(skills),
         budget: numberOrNull(budget),
         radius_km: numberOrNull(radius),
         currency: prefs.currency.trim().toUpperCase() || 'USD',
@@ -206,10 +202,9 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
                 ))}
               </select>
             </label>
-            <label>
-              <span>Skills (comma separated)</span>
-              <input value={skills} maxLength={400} onChange={(e) => setSkills(e.target.value)} />
-            </label>
+            <p className="skills-line">
+              <span>Skills</span> {skillsLine(prefs.skills)} · <a href="#profile">rate them on your Profile</a>
+            </p>
             <label>
               <span>Tools I have</span>
               <input value={prefs.tools} maxLength={2000} onChange={(e) => setPrefs({ ...prefs, tools: e.target.value })} />

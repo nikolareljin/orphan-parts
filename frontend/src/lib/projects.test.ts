@@ -11,10 +11,8 @@ import {
   numberOrNull,
   packLabel,
   progressText,
-  skillsFromText,
   stepDone,
   todayIso,
-  skillsToText,
   statusLabel,
   statusTone,
 } from './projects'
@@ -30,11 +28,7 @@ describe('labels', () => {
   })
 })
 
-describe('skills and numbers', () => {
-  it('reads a comma list and writes it back', () => {
-    expect(skillsFromText(' soldering, basic computer setup ,, ')).toEqual(['soldering', 'basic computer setup'])
-    expect(skillsToText(['a', 'b'])).toBe('a, b')
-  })
+describe('numbers', () => {
   it('treats a blank or negative number as not set', () => {
     expect(numberOrNull('')).toBeNull()
     expect(numberOrNull(' 40 ')).toBe(40)
