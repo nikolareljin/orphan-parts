@@ -8,9 +8,9 @@ is worth the effort. Every estimate is labelled as an estimate.
 ## Built so far
 
 **What is it worth?**, on the item's page. Pick the currency, and the country and city for local
-results, then **Price guidance**. Muse Spark searches the web for listings and sales of
+results, then **Get price guidance**. Muse Spark searches the web for listings and sales of
 the same model and condition (see [search grounding](../models/muse-spark.md#search-grounding))
-and proposes comparables; the rules keep only those a search result or a citation backs, in the
+and proposes comparables (shown as *Similar listings*); the rules keep only those a search result or a citation backs, in the
 requested currency, and say how many lines were left out. Nothing is converted between
 currencies and nothing is invented.
 
@@ -20,7 +20,7 @@ Four figures, never merged, each with its count, range, typical value, source an
 |---|---|
 | asking prices seen | listings found by the search, on the day they were seen |
 | sold prices seen | sales the found pages state as completed; an asking price is never labelled sold |
-| sales you reported | what you recorded under *Record a sale you know*, with its date |
+| sales you reported | what you recorded under *Add a sale you know of*, with its date |
 | the model's estimate | the model's low, typical and high, labelled as an estimate with its basis |
 
 Three ways to price follow, each from a figure that exists: quick sale (under the lowest asking

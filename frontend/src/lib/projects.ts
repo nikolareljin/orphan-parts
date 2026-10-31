@@ -85,10 +85,10 @@ export function money(amount: number, currency: string): string {
 // What the selected set spends against the budget, in one line.
 export function budgetText(b: Budget): string {
   const spend = money(b.committed_spend, b.currency)
-  if (b.budget === null) return `${b.selected} selected, expected spend ${spend}; no budget set`
+  if (b.budget === null) return `${b.selected} selected, estimated cost ${spend}; no budget set`
   const left = b.remaining ?? 0
-  if (left < 0) return `${b.selected} selected, expected spend ${spend} of ${money(b.budget, b.currency)}: over by ${money(-left, b.currency)}`
-  return `${b.selected} selected, expected spend ${spend} of ${money(b.budget, b.currency)}; ${money(left, b.currency)} left`
+  if (left < 0) return `${b.selected} selected, estimated cost ${spend} of ${money(b.budget, b.currency)}: over by ${money(-left, b.currency)}`
+  return `${b.selected} selected, estimated cost ${spend} of ${money(b.budget, b.currency)}; ${money(left, b.currency)} left`
 }
 
 // Requirements the inventory does not fill, blocking ones first.
@@ -117,7 +117,7 @@ export function conflictText(conflicts: Conflict[]): string {
 // Where a pack stands: the version, the day, and whether its inputs changed since.
 export function packLabel(pack: Pick<Pack, 'version' | 'created_at' | 'stale'>): string {
   const day = pack.created_at.slice(0, 10)
-  return `version ${pack.version}, ${day}${pack.stale ? ', stale: an input changed since' : ''}`
+  return `version ${pack.version}, ${day}${pack.stale ? ', out of date: something changed since' : ''}`
 }
 
 // Progress is kept per step; a project written before the steps had flags has none yet.

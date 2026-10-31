@@ -15,16 +15,16 @@ started on. The hosted site's address is `https://orphan-parts.pages.dev`.
 Open the hosted site, or a local stack at the computer's network address (for example
 `http://192.168.1.20:5173`; not `localhost`, which on the phone is the phone). While the
 server has a gate and the page is not signed in, the header ends with **Sign in with the
-code**, and the foot of the page says `demo: recorded answers; the code unlocks saving`.
+code**, and the foot of the page says `Demo: recorded answers only. Sign in to save`.
 
 ![The web app signed out: the header ends with Sign in with the code; the footer says demo, recorded answers](../assets/pairing/web-sign-in.png){ width=480 }
 
 Tap **Sign in with the code**, type the access code, **Enter**.
 
-![The Access code dialog: the code opens the rest; a field for the code and the Enter button](../assets/pairing/web-sign-in-dialog.png){ width=480 }
+![The Access code dialog: sign in with the access code; a field for the code and the Enter button](../assets/pairing/web-sign-in-dialog.png){ width=480 }
 
 Signed in, the link is gone from the header and the footer counts the day's calls instead:
-`demo: 0 of 300 calls today, 20 per visitor and hour`. The inventory is the full one now, not
+`Demo: 0 of 300 calls used today (20 per visitor per hour)`. The inventory is the full one now, not
 the public items only.
 
 ![The web app signed in: no sign-in link in the header; the footer counts calls](../assets/pairing/web-signed-in.png){ width=480 }

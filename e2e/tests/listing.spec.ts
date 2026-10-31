@@ -81,7 +81,7 @@ test('a give-away draft is free, lists uses and adds the data steps', async ({ p
   await createAdapter(request, name)
   const { listing } = await openItem(page, name)
   await listing.getByLabel('Give away').check()
-  await listing.getByLabel(/Stores accounts or files/).check()
+  await listing.getByLabel(/Holds personal data/).check()
   await listing.getByLabel('Pickup').fill('porch')
   await listing.getByRole('button', { name: 'Write the draft' }).click()
 
@@ -89,7 +89,7 @@ test('a give-away draft is free, lists uses and adds the data steps', async ({ p
   await expect(draft).toContainText('Free: Orbital 65 W laptop power adapter')
   await expect(draft).toContainText('Could be useful for: Spare charger')
   await expect(draft.getByLabel('Draft text')).toHaveValue(/Free to collect\. Pickup: porch$/)
-  await expect(draft).toContainText('Your data')
+  await expect(draft).toContainText('Wipe your data')
   await expect(draft.getByLabel(/Factory reset/)).toBeVisible()
 })
 
@@ -98,7 +98,7 @@ test('a voice note is transcribed and kept as the owner’s words', async ({ pag
   await createAdapter(request, name)
   const { panel, listing } = await openItem(page, name)
   await listing.getByLabel('Voice note (WAV)').setInputFiles({ name: 'note.wav', mimeType: 'audio/wav', buffer: silenceWav() })
-  await expect(listing.getByText(/Heard and kept as your words/)).toContainText('Case is scuffed')
+  await expect(listing.getByText(/Transcribed and saved as condition notes/)).toContainText('Case is scuffed')
   const row = panel.getByRole('table', { name: 'Fields' }).getByRole('row', { name: /Condition notes/ })
   await expect(row).toContainText('Case is scuffed')
   await expect(row).toContainText('stated by the owner')

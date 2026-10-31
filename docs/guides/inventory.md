@@ -18,12 +18,12 @@ how you know it (stated by you, documented, tested, estimated). Your value is ac
 and shown as the current one, but it never replaces the observation: both stay, each with its
 provenance, so a later reader can see what the label said and what you corrected.
 
-## Condition, intent and availability
+## Condition, plan and availability
 
 | Field | Meaning |
 |---|---|
 | Condition, known faults, tests done, included accessories | free text, yours |
-| Intent | keep, use in a build, sell, give away |
+| Plan | keep, use in a build, sell, give away |
 | Availability | available, reserved (a plan counts on it), gone |
 | Where it is, notes | private; shown only on the item page, never in a draft or a shared record |
 
@@ -33,7 +33,7 @@ the current state instead of overwriting it.
 
 ## Parts of a whole
 
-A removable part can be separated into its own record with **Separate a part**: a camera module
+A removable part can be separated into its own record with **Separate a part into its own item**: a camera module
 from a broken phone, the cable from a charger. The part gets the parent's intent and a link
 back; the parent's faults note what left, so a later plan does not count on a whole device that
 is no longer whole.

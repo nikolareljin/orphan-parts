@@ -1,21 +1,32 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { grayPng } from './png'
 
 // These start without the session every other test carries: the two doors are the subject.
 test.use({ storageState: { cookies: [], origins: [] } })
 
 const code = process.env.E2E_ACCESS_CODE ?? ''
+const sampleLine = 'Recorded answer for this sample photo'
+
+async function readALabel(page: Page) {
+  await page.getByLabel('Photos of the label').setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: grayPng() })
+  await page.getByLabel('Find the label in the photo first (SAM 3.1; helps with busy photos)').uncheck()
+  await page.getByRole('button', { name: 'Read the label' }).click()
+  await expect(page.getByRole('table', { name: 'Evidence' })).toBeVisible()
+}
 
 test('without a session the pages are the demo, and the code opens the rest', async ({ page }) => {
   test.skip(!code, 'the stack runs without a gate')
   await page.goto('/')
   // the pages are there for the visitor; the way in is a link in the header
   await expect(page.getByRole('button', { name: 'My inventory' })).toBeVisible()
-  await expect(page.getByText(/demo: recorded answers; the code unlocks saving/)).toBeVisible()
+  await expect(page.getByText(/Demo: recorded answers only\. Sign in to save/)).toBeVisible()
   // the inventory shows what the owner made public; a save is what the code unlocks
   await page.getByRole('button', { name: 'My inventory' }).click()
   await expect(page.getByRole('alert')).toHaveCount(0)
   await page.getByRole('button', { name: 'Read a label' }).click()
+  // a recorded answer says so in plain words for the visitor, above the result
+  await readALabel(page)
+  await expect(page.getByRole('note').filter({ hasText: sampleLine })).toBeVisible()
 
   await page.getByRole('button', { name: 'Sign in with the code' }).click()
   const gate = page.getByRole('form', { name: 'Access code' })
@@ -27,7 +38,11 @@ test('without a session the pages are the demo, and the code opens the rest', as
   await gate.getByLabel('Access code').fill(code)
   await gate.getByRole('button', { name: 'Enter' }).click()
   await expect(page.getByRole('button', { name: 'Sign in with the code' })).toHaveCount(0)
-  await expect(page.getByText(/demo: \d+ of \d+ calls today/)).toBeVisible()
+  await expect(page.getByText(/Demo: \d+ of \d+ calls used today/)).toBeVisible()
+  // signed in, the same recorded reading carries only its small badge
+  await readALabel(page)
+  await expect(page.getByText('recorded answer', { exact: true })).toBeVisible()
+  await expect(page.getByText(sampleLine)).toHaveCount(0)
   await page.getByRole('button', { name: 'My inventory' }).click()
   await expect(page.getByRole('alert')).toHaveCount(0)
 
@@ -35,7 +50,7 @@ test('without a session the pages are the demo, and the code opens the rest', as
   await page.getByRole('button', { name: 'Sign out' }).click()
   await expect(page.getByRole('button', { name: 'Sign in with the code' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0)
-  await expect(page.getByText(/demo: recorded answers; the code unlocks saving/)).toBeVisible()
+  await expect(page.getByText(/Demo: recorded answers only\. Sign in to save/)).toBeVisible()
   await page.reload()
   await expect(page.getByRole('button', { name: 'Sign in with the code' })).toBeVisible()
   const after = (await (await page.request.get('/api/access')).json()) as { granted: boolean }

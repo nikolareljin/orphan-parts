@@ -35,8 +35,8 @@ export function searchesText(n: number): string {
 export function evidenceText(guide: Guidance): string {
   const backed = guide.comparables.length
   const reported = guide.quantities.find((q) => q.kind === 'reported')?.count ?? 0
-  const parts = [`${backed} backed comparable${backed === 1 ? '' : 's'}`]
+  const parts = [`${backed} similar listing${backed === 1 ? '' : 's'} with a source`]
   if (reported) parts.push(`${reported} sale${reported === 1 ? '' : 's'} you reported`)
-  if (guide.dropped) parts.push(`${guide.dropped} line${guide.dropped === 1 ? '' : 's'} left out`)
+  if (guide.dropped) parts.push(`${guide.dropped} without a source left out`)
   return parts.join(', ')
 }

@@ -16,7 +16,7 @@ export const AVAILABILITIES: { value: Availability; label: string }[] = [
 export const PROVENANCES: { value: Provenance; label: string }[] = [
   { value: 'observed', label: 'observed on a photo' },
   { value: 'owner_reported', label: 'stated by the owner' },
-  { value: 'documented', label: 'documented' },
+  { value: 'documented', label: 'from documentation' },
   { value: 'tested', label: 'tested' },
   { value: 'estimated', label: 'estimated' },
 ]

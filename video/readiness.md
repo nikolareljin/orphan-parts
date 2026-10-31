@@ -49,7 +49,7 @@ here.**
 | S05 | Capture on the phone | needs owner photos | the app installed and paired, the appliance | Capture tab, photos, hold to talk, name, **Send** |
 | S06 | Read the label | needs owner photos and the key | S05's capture; `OPL_FAKE_API=0` with the key | **Inbox**, **Read it**, open the item, **Accept** |
 | S07 | Measure the rod | needs owner photos | a side photo of the rod with a ruler in the same plane | **My inventory**, the agitator, **Measure a feature**, *Rod diameter*, marks, **Measure** |
-| S08 | The replacement search and its questions | recordable now | `./dev demo`; check the *Needs* line (storyboard note) | **Find a part**, the agitator search, hover **Search Marketplace**, **Bring a listing back**, **Values I know**, **Assess it**, **Ask the seller** |
+| S08 | The replacement search and its questions | recordable now | `./dev demo`; check the *Needs* line (storyboard note) | **Find a part**, the agitator search, hover **Search Marketplace**, **Bring a listing back**, **Values I know**, **Check fit**, **Ask the seller** |
 | S09 | The inventory | recordable now | `./dev demo` | **My inventory**, scroll, open *Third laptop, works* |
 | S10 | What I want from a build | recordable now | `./dev demo` | **Build and reuse**, **What I want from a build**, fields, **Save** |
 | S11 | Five proposals | recordable with the key | live Muse Spark run (fixture mode proposes the homework desk, not the arcade) | **Propose projects**, How many **5**, **Propose** |

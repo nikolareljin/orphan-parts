@@ -18,16 +18,16 @@ describe('demoText', () => {
   it('says nothing without a gate and the counts with one', () => {
     expect(demoText(ready({ gated: false, paused: false, daily_used: 0, daily_cap: 300, visitor_cap_per_hour: 20 }))).toBe('')
     expect(demoText(ready({ gated: true, paused: false, daily_used: 12, daily_cap: 300, visitor_cap_per_hour: 20 }))).toBe(
-      'demo: 12 of 300 calls today, 20 per visitor and hour',
+      'Demo: 12 of 300 calls used today (20 per visitor per hour)',
     )
     expect(demoText(ready({ gated: true, paused: true, daily_used: 12, daily_cap: 300, visitor_cap_per_hour: 20 }))).toContain('paused by the operator')
     expect(demoText(ready({ gated: false, paused: true, daily_used: 0, daily_cap: 300, visitor_cap_per_hour: 20 }))).toBe('paused by the operator')
   })
   it('names the demo door for a visitor without a session', () => {
     const gated = { gated: true, paused: false, daily_used: 12, daily_cap: 300, visitor_cap_per_hour: 20 }
-    expect(demoText(ready(gated), false)).toBe('demo: recorded answers; the code unlocks saving')
-    expect(demoText(ready({ ...gated, live_models: true }), false)).toBe('demo: recorded answers; the code unlocks saving and the live models')
-    expect(demoText(ready({ ...gated, paused: true }), false)).toBe('demo: recorded answers; the code unlocks saving; paused by the operator')
+    expect(demoText(ready(gated), false)).toBe('Demo: recorded answers only. Sign in to save')
+    expect(demoText(ready({ ...gated, live_models: true }), false)).toBe('Demo: recorded answers only. Sign in to save and use the live models')
+    expect(demoText(ready({ ...gated, paused: true }), false)).toBe('Demo: recorded answers only. Sign in to save; paused by the operator')
     expect(demoText(ready({ gated: false, paused: false, daily_used: 0, daily_cap: 300, visitor_cap_per_hour: 20 }), false)).toBe('')
   })
 })

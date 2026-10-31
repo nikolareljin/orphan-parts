@@ -41,8 +41,8 @@ describe('evidenceText', () => {
       dropped: 1,
       quantities: [quantity({ kind: 'reported', count: 1 })],
     } as unknown as Guidance
-    expect(evidenceText(guide)).toBe('4 backed comparables, 1 sale you reported, 1 line left out')
+    expect(evidenceText(guide)).toBe('4 similar listings with a source, 1 sale you reported, 1 without a source left out')
     const bare = { comparables: [{}], dropped: 0, quantities: [] } as unknown as Guidance
-    expect(evidenceText(bare)).toBe('1 backed comparable')
+    expect(evidenceText(bare)).toBe('1 similar listing with a source')
   })
 })

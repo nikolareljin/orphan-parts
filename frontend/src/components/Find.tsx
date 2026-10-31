@@ -41,13 +41,13 @@ export default function Find() {
         }}
       />
       {searches.length === 0 ? (
-        <p className="muted">No searches yet. Say what you need above; the search itself runs on Marketplace, by you.</p>
+        <p className="muted">No searches yet. Describe the part you need above; you run the search on Marketplace yourself.</p>
       ) : (
         <table className="evidence" aria-label="Searches">
           <thead>
             <tr>
               <th scope="col">Looking for</th>
-              <th scope="col">Rules of</th>
+              <th scope="col">Profile</th>
               <th scope="col">Status</th>
               <th scope="col">Candidates</th>
               <th scope="col"></th>
@@ -163,7 +163,7 @@ function NewSearch({ onCreated }: { onCreated: (s: Search) => void }) {
               setNeedItemId(e.target.value === '' ? null : Number(e.target.value))
             }}
           >
-            <option value="">Values written in below</option>
+            <option value="">Values I type below</option>
             {items.map((i) => (
               <option key={i.id} value={i.id}>
                 #{i.id} {i.name} ({i.profile})
@@ -173,9 +173,9 @@ function NewSearch({ onCreated }: { onCreated: (s: Search) => void }) {
         </label>
         {needItemId === null && (
           <label>
-            <span>Rules of</span>
+            <span>Profile</span>
             <select value={profile} onChange={(e) => setProfile(e.target.value)}>
-              <option value="">pick a profile</option>
+              <option value="">pick one</option>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
@@ -203,7 +203,7 @@ function NewSearch({ onCreated }: { onCreated: (s: Search) => void }) {
       )}
       <div className="row">
         <label>
-          <span>Top price</span>
+          <span>Max price</span>
           <input value={maxPrice} inputMode="decimal" onChange={(e) => setMaxPrice(e.target.value)} />
         </label>
         <label>
@@ -279,7 +279,7 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
       <div className="row">
         <h3>{search.title}</h3>
         <span className="badge">{statusLabel(search.status)}</span>
-        <span className="muted">rules of {search.profile}</span>
+        <span className="muted">{search.profile} rules</span>
         <button type="button" className="link" onClick={onClosed}>
           Close panel
         </button>
@@ -288,7 +288,7 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
         <a href={search.handoff_url} target="_blank" rel="noopener noreferrer">
           Search Marketplace
         </a>{' '}
-        <span className="muted">opens the search for you to run; nothing is fetched or posted from here. Bring a listing back below.</span>
+        <span className="muted">opens the search in a new tab for you to run; nothing is fetched or posted from here. Then bring a listing back below.</span>
         {search.max_price !== null && ` · top price ${search.max_price} ${search.currency}`}
         {search.radius_km !== null && ` · within ${search.radius_km} km`}
       </p>
@@ -323,10 +323,10 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
           <thead>
             <tr>
               <th scope="col">Listing</th>
-              <th scope="col">Stands</th>
+              <th scope="col">Status</th>
               <th scope="col">Price</th>
               <th scope="col">Seen</th>
-              <th scope="col">From</th>
+              <th scope="col">Source</th>
               <th scope="col"></th>
             </tr>
           </thead>
@@ -424,7 +424,7 @@ function AddCandidate({ searchId, rules, onAdded }: { searchId: number; rules: P
     <form className="add-candidate" onSubmit={(e) => void add(e)} aria-label="Bring a listing back">
       <h4>Bring a listing back</h4>
       <fieldset className="kind">
-        <legend>From</legend>
+        <legend>Add from</legend>
         {SOURCES.map((s) => (
           <label key={s.value}>
             <input type="radio" name="source" checked={source === s.value} onChange={() => setSource(s.value)} />
@@ -435,7 +435,7 @@ function AddCandidate({ searchId, rules, onAdded }: { searchId: number; rules: P
       {source === 'text' && (
         <label className="wide">
           <span>Listing text</span>
-          <textarea value={text} rows={4} maxLength={8000} placeholder="paste the listing as it reads" onChange={(e) => setText(e.target.value)} />
+          <textarea value={text} rows={4} maxLength={8000} placeholder="paste the listing text" onChange={(e) => setText(e.target.value)} />
         </label>
       )}
       {source === 'screenshot' && (
@@ -473,10 +473,10 @@ function AddCandidate({ searchId, rules, onAdded }: { searchId: number; rules: P
         </label>
         <label>
           <span>Link</span>
-          <input value={url} maxLength={500} placeholder="kept as given, never opened" onChange={(e) => setUrl(e.target.value)} />
+          <input value={url} maxLength={500} placeholder="saved as is, never opened" onChange={(e) => setUrl(e.target.value)} />
         </label>
         <button type="submit" disabled={busy || !ready || currency.length !== 3}>
-          {busy ? 'Working…' : 'Assess it'}
+          {busy ? 'Working…' : 'Check fit'}
         </button>
       </div>
       {error && (
@@ -557,7 +557,7 @@ function CandidatePanel({ id, onChanged }: { id: number; onChanged: () => void }
       </p>
       {candidate.url && (
         <p className="meta">
-          Link, kept as given: <code>{candidate.url}</code>
+          Link (saved as is, not opened): <code>{candidate.url}</code>
         </p>
       )}
       {candidate.warnings.length > 0 && (

@@ -88,7 +88,7 @@ fun TalkScreen(session: Session, lastItemId: Int?) {
         Text("Say it about an item", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(6.dp))
         Text(
-            "Hold the button and talk: what it is, what is wrong with it, what you tested. The backend writes it down as your words and the phone reads it back.",
+            "Hold the button and talk: what it is, what is wrong with it, what you tested. It is saved on the item as your words and read back to you.",
             style = MaterialTheme.typography.bodyMedium,
             color = muted,
         )
@@ -145,7 +145,7 @@ fun TalkScreen(session: Session, lastItemId: Int?) {
                                 try {
                                     val note = session.call { it.voiceNote(id, wav) }
                                     transcript = note.transcript
-                                    status = (if (note.cut) "Kept, cut at the limit. " else "Kept as your words. ") + "Heard by ${note.model}."
+                                    status = (if (note.cut) "Saved, cut at the length limit. " else "Saved as your words. ") + "Heard by ${note.model}."
                                     speaker?.speak(note.transcript, TextToSpeech.QUEUE_FLUSH, null, "note")
                                 } catch (e: Exception) {
                                     status = "Could not keep it: ${describe(e)}"
