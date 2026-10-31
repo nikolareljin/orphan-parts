@@ -14,7 +14,7 @@ What you can do and what you have, kept once for the inventory. The scenarios on
   own with its level; a skill of your own can be removed, the listed ones stay at *none*.
 - **Tools I have**, in a line.
 - **Effort I will put in**: an hour or so, an afternoon, or a weekend or more.
-- **I open devices up**.
+- **I am OK opening up devices**.
 - **Budget**, **Currency** and **Radius (km)**.
 
 **Save profile** keeps it. The record is the one behind `GET /api/preferences` and

@@ -39,8 +39,8 @@ The repair steps go into the notes only while the item is as it was when the car
 checked in the same write as the notes; a decision is no change to the item, so choosing **Reuse
 it** first and **Keep and fix** after still adds them, once. After they are in, the card says
 *Repair steps added to the notes*. On cards that say *item changed since* the button reads
-**Choose this (without the repair steps)**, with the hint *The item changed since; Ask again to
-add the repair steps*: the choice is recorded and the notes stay as they are. When the notes and
+**Choose this (without the repair steps)**, with the hint *The item changed. Ask again to get
+repair steps*: the choice is recorded and the notes stay as they are. When the notes and
 the plan together would pass the notes' 4,000 characters, whole steps are left out from the end
 and the plan ends with *… (more in the scenarios)*; the notes you wrote are never cut.
 
@@ -64,7 +64,7 @@ a new version. The demo visitor is refused, as on every other call that spends.
 | Row | What it shows | Who answers |
 |---|---|---|
 | What it is | the kind of item and how many of its values you have accepted, with a link down to the values | the inventory |
-| What it is worth | the latest price guidance in a line: the typical asking figure (the estimate's when nothing was asked), the strategy to start from, weak evidence and *item changed since* when either applies; **Ask what it is worth**, shown when none was made, takes you to the Value panel's form, where the currency and the place are yours to give; the row reads the new guidance as soon as the panel writes it | Muse Spark proposes, the rules keep what a page backs; see [Value an item](value.md) |
+| What it is worth | the latest price guidance in a line: the typical asking figure (the estimate's when nothing was asked), the strategy to start from, weak evidence and *item changed since* when either applies (a decision is no change to what it is worth); **Ask what it is worth**, shown when none was made, takes you to the Value panel's form, where the currency and the place are yours to give; the row reads the new guidance as soon as the panel writes it | Muse Spark proposes, the rules keep what a page backs; see [Value an item](value.md) |
 | What it is good for | the project templates in the catalog with a requirement this kind of item fills, named with the requirement; then **Ask for ideas** | the templates are the rules, from the item's type against each requirement's kinds; the ideas are the model's proposals and the panel says so |
 | What would complete it | the open searches from this item with their candidate counts, the Marketplace search to run, and a link to [Find a part](search.md) | the inventory |
 | What it could look like | a link to the picture controls | draw on request when enabled |

@@ -34,7 +34,8 @@ whole against the sum of the parts' own latest guidance, with the number of list
 a part without guidance of its own is never priced by guess.
 
 A guidance is written from one item version and says **item changed since** when the item was
-edited after it. Asking what it is worth changes nothing about the item.
+edited after it. Asking what it is worth changes nothing about the item, and neither does a
+decision on it (keep, sell, give away): the guidance stays current through those.
 
 ## From the API
 

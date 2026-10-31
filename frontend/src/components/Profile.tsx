@@ -198,7 +198,7 @@ export default function Profile() {
         </label>
         <label className="check">
           <input type="checkbox" checked={prefs.opens_devices} onChange={(e) => setPrefs({ ...prefs, opens_devices: e.target.checked })} />
-          <span>I open devices up</span>
+          <span>I am OK opening up devices</span>
         </label>
       </div>
       <div className="row">

@@ -68,7 +68,7 @@ export const LEADS_TO: Partial<Record<DecisionChoice, { scroll: string; focus: s
 // The keep and fix button and the line beside it: once the steps of these cards are in the
 // notes, it says so; on cards written before the item was last edited, the steps are not added,
 // and the button and its hint say that instead.
-export const STALE_FIX_HINT = 'The item changed since; Ask again to add the repair steps.'
+export const STALE_FIX_HINT = 'The item changed. Ask again to get repair steps.'
 export const STEPS_ADDED = 'Repair steps added to the notes.'
 
 export function keepFix(scenarios: { stale: boolean; steps_in_notes: boolean }): { label: string; hint: string } {

@@ -112,7 +112,7 @@ test('what to do with it: three cards for the profile, and a card chosen leads o
   // the decision is no edit: the cards stay current and say where the steps went
   await expect(fix).toContainText('Repair steps added to the notes.')
   await expect(cards.getByText(/^The model's scenarios/)).not.toContainText('item changed since')
-  await expect(fix).not.toContainText('Ask again to add the repair steps')
+  await expect(fix).not.toContainText('Ask again to get repair steps')
   await expect(fix.getByRole('button', { name: 'Choose this: Keep and fix' })).toBeVisible()
 })
 

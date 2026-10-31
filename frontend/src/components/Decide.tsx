@@ -193,7 +193,7 @@ export default function Decide({
           <dd>
             {item.intent === 'build' && (
               <>
-                Kept to build: <a href="#build">plan it in Build and reuse</a>.{' '}
+                Kept for a build. <a href="#build">Plan it in Build and reuse</a>.{' '}
               </>
             )}
             <span className="rules">{fillsLine(view.templates)}</span>{' '}

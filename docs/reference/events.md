@@ -30,8 +30,9 @@ lists them. The changes written today:
 | `deleted` | the item hidden |
 
 Drafts, guidances and packs carry the item or project version they were written from, which is
-how `stale` is decided: a later version means an input changed. The scenarios on an item are
-the exception: a later version that only `decided: ` lines account for leaves them current.
+how `stale` is decided: a later version means an input changed. The scenarios and the price
+guidance on an item are the exception: a later version that only `decided: ` lines account for
+leaves them current, since a decision changes neither what the item is nor what it is worth.
 
 ## The request's trail
 
