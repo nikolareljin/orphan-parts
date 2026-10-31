@@ -21,7 +21,9 @@ here needs a development setup; a computer is optional.
 
 <img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="160">
 
-The QR code, shown on another screen and scanned with the phone's camera, opens
+The app is not on Google Play: its Play listing was started and not finished within the
+hackathon window, so the APK comes from this repository's releases. The QR code, shown on
+another screen and scanned with the phone's camera, opens
 `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`, the
 newest release's APK; the same link opened in the phone's browser downloads it too. Either
 way, continue at item 3 of the list below (open the download). The release page is the other
@@ -31,13 +33,23 @@ way to the same file:
    browser.
 2. Under **Assets**, tap `orphan-parts-<version>.apk`. The download starts; the file is
    about 8 MB.
-3. Open the download (the notification, or the browser's Downloads page). The phone asks to
-   allow installing from this browser: tap **Settings**, turn on **Allow from this source**
-   (older phones: **Settings, Security, Unknown sources**), go back.
+3. Open the download (the notification, or the browser's Downloads page). The APK is signed
+   with the build's own development key, not a Google Play key, so Android treats it as an
+   app from an unknown source and asks before installing: on the prompt tap **Settings**,
+   turn on **Allow from this source** for the browser, go back. On Android 8 and newer that
+   permission is given per app, under **Settings**, **Apps**, **Special app access**,
+   **Install unknown apps** (the menu names vary a little by maker); on older phones it is
+   one switch, **Settings**, **Security**, **Unknown sources**.
 4. Tap **Install**. If Play Protect says the app is from an unknown developer, tap **More
-   details**, then **Install anyway**. The app is signed with a development key, not a store
-   key; that is what the warning means.
-5. Tap **Open**. The app opens on its **Backend** tab. Go to step 4.
+   details**, then **Install anyway**. The warning means the key is not a store's, which is
+   so for every app installed outside Google Play.
+5. Tap **Open**. The app opens on its **Backend** tab.
+6. Check the install with Google Play Protect: open the **Google Play Store** app, tap the
+   profile icon at the top right, tap **Play Protect**, then **Scan**. The scan goes over
+   every installed app, this one included, and reports any harm it finds; for this app it
+   should report none. The permission from item 3 can then be turned off again: **Settings**,
+   **Apps**, **Special app access**, **Install unknown apps**, the browser, **Allow from this
+   source** off. Go to step 4.
 
 ## 3. Install from a computer (optional, path B)
 
@@ -80,7 +92,8 @@ installs a file you already have.
 
 The pairing code never carries your access code; it carries the server's address and, once
 you are signed in, a pairing the server made for the phone, good for fifteen minutes. With it
-the app claims an access code of its own, which it keeps.
+the app claims an access code of its own, which it keeps. Every screen of this step, pictured:
+[Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/).
 
 1. On the phone's browser or on a laptop, open `https://orphan-parts.pages.dev`.
 2. Tap **Sign in with the code** in the header, enter the code, **Enter**. The header line
@@ -154,8 +167,8 @@ until you delete them; nothing is published or posted anywhere. The details are 
 | What you see | What to do |
 |---|---|
 | The browser will not open the APK, or "blocked by your admin" | Use the browser's Downloads page; or path B in step 3 |
-| "App not installed" | An older copy with another key is on the phone: uninstall it, install again |
-| Play Protect: "unsafe app blocked" | **More details**, **Install anyway**; the app carries a development key |
+| "App not installed" | An earlier release is on the phone: each release is signed with a fresh development key, and Android refuses an update under another key. Uninstall it (**Settings**, **Apps**, **Orphan Parts Lens**, **Uninstall**), then install again |
+| Play Protect: "unsafe app blocked" or "unknown developer" | **More details**, **Install anyway**; the app carries a development key, not a Google Play key, as every app installed outside the store does. A Play Protect scan afterwards (step 2, item 6) checks it |
 | `phone-install`: "the phone has not allowed this computer" | Unlock the phone, tick **Always allow**, tap **Allow** on its prompt, run again |
 | `phone-install`: "no phone found" | A cable that carries data; **USB debugging** on; **File transfer** chosen; on Windows the maker's USB driver |
 | The app: "that code points at localhost" | The site was opened at `localhost`; open it at the computer's network address, or use the hosted site |
