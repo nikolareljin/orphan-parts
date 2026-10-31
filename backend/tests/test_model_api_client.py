@@ -27,6 +27,7 @@ from app.model_api.client import (
     DEFAULT_REASONING_HEADROOM,
     REASONING_HEADROOM,
     RESPONSES,
+    last_json_object,
     output_cap,
 )
 from app.model_api.fixtures import request_key
@@ -371,6 +372,78 @@ async def test_structured_output_that_does_not_parse_raises(live: Settings) -> N
     h = Harness(live, lambda _: httpx.Response(200, json=completed('{"part_number": 1}')))
     with pytest.raises(IncompleteResponseError, match="did not match Label"):
         await h.client.respond_structured(Label, model="muse-spark-1.3", input="read")
+
+
+LABEL_JSON = '{"part_number": "M378A1K43CB2", "capacity_gb": 8, "tags": ["ddr4"]}'
+WEB_SEARCH = {"type": "web_search", "search_context_size": "low"}
+
+
+def message(text: str, id: str = "msg_1") -> dict[str, Any]:
+    return {
+        "id": id,
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [{"type": "output_text", "text": text, "annotations": []}],
+    }
+
+
+def searched(*items: dict[str, Any]) -> dict[str, Any]:
+    """A response the way it comes back with a search tool: the items given, in order."""
+    data = completed("")
+    data["output"] = [{"id": "rs_1", "type": "reasoning", "summary": []}, *items]
+    return data
+
+
+async def test_the_answer_is_read_from_the_final_message(live: Settings) -> None:
+    # with the search tool the model may write a line before the call; the schema binds the
+    # message after it
+    data = searched(
+        message("Tracking the part down.", "msg_1"),
+        {"id": "ws_1", "type": "web_search_call", "status": "completed", "results": []},
+        message(LABEL_JSON, "msg_2"),
+    )
+    h = Harness(live, lambda _: httpx.Response(200, json=data))
+    result = await h.client.respond_structured(
+        Label, model="muse-spark-1.3", input="read", tools=[WEB_SEARCH], op="price"
+    )
+    assert result.parsed.part_number == "M378A1K43CB2"
+    assert result.response.final_text == LABEL_JSON
+    assert result.response.text == "Tracking the part down." + LABEL_JSON
+
+
+async def test_prose_ahead_of_the_json_in_one_message_is_skipped(live: Settings) -> None:
+    data = searched(message("Here is what I found: " + LABEL_JSON))
+    h = Harness(live, lambda _: httpx.Response(200, json=data))
+    result = await h.client.respond_structured(Label, model="muse-spark-1.3", input="read")
+    assert result.parsed.capacity_gb == 8
+
+
+async def test_a_final_message_without_the_schema_raises_a_short_error(live: Settings) -> None:
+    prose = "I could not find a listing for this part. " * 20
+    data = searched(
+        message("Looking.", "msg_1"),
+        {"id": "ws_1", "type": "web_search_call", "status": "completed", "results": []},
+        message(prose, "msg_2"),
+    )
+    h = Harness(live, lambda _: httpx.Response(200, json=data))
+    with pytest.raises(IncompleteResponseError) as info:
+        await h.client.respond_structured(
+            Label, model="muse-spark-1.3", input="the whole brief", tools=[WEB_SEARCH], op="price"
+        )
+    text = str(info.value)
+    assert text.startswith("price: the final message did not match Label: text: Invalid JSON")
+    # the answer is cut short and the request is not in it
+    assert len(text) < 400
+    assert "the whole brief" not in text
+
+
+def test_last_json_object_runs_to_the_end_and_minds_strings() -> None:
+    assert last_json_object('note {"a": "}", "b": {"c": 1}}  \n') == '{"a": "}", "b": {"c": 1}}'
+    assert last_json_object('{"a": 1} and then {"b": 2}') == '{"b": 2}'
+    assert last_json_object("a { b } c") is None
+    assert last_json_object('{"a": 1} trailing words') is None
+    assert last_json_object("") is None
 
 
 # --- fixture and record modes -------------------------------------------------
