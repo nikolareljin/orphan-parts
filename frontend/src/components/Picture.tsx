@@ -8,14 +8,15 @@ function message(err: unknown): string {
 }
 
 // What the item could look like: a picture drawn by Muse Image only when the button is clicked
-// (every click is a paid call), shown under the photos and labeled as drawn, never as a
-// photo of the item. The server says whether it draws at all (PICTURE_ENABLED). The demo visitor
-// sees the pictures already drawn and no button; a list that cannot be read hides the section.
+// (every click is a paid call), the last section of the dialog, labeled as drawn, never as a
+// photo of the item. The server says whether it draws at all (PICTURE_ENABLED); while it does
+// not, the section says so in one line and shows no controls. The demo visitor sees the
+// pictures already drawn and no button; a list that cannot be read hides the section.
 export default function Picture({ item, demo = false }: { item: Item; demo?: boolean }) {
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [failed, setFailed] = useState(false)
   const [pictures, setPictures] = useState<Drawn[]>([])
-  const [use, setUse] = useState(item.item_type)
+  const [use, setUse] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -58,18 +59,24 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
   return (
     <section className="picture" aria-label="What it could look like">
       <h4>What it could look like</h4>
-      {!demo && (
-        <form className="inline" onSubmit={(e) => void draw(e)}>
-          <label>
-            <span>as a…</span>
-            <input value={use} onChange={(e) => setUse(e.target.value)} placeholder={item.item_type} maxLength={200} disabled={off} />
-          </label>
-          <button type="submit" disabled={off || busy || enabled === null}>
-            {busy ? 'Drawing…' : 'Draw it'}
-          </button>
-        </form>
+      {!demo && !off && (
+        <>
+          <form className="inline" onSubmit={(e) => void draw(e)}>
+            <label>
+              <span>as a…</span>
+              <input value={use} onChange={(e) => setUse(e.target.value)} placeholder="a kitchen recipe display" maxLength={200} />
+            </label>
+            <button type="submit" disabled={busy || enabled === null}>
+              {busy ? 'Drawing…' : 'Draw it'}
+            </button>
+          </form>
+          <p className="hint">
+            Draws an illustration of what the item could become, as what you type or as itself; it is labeled as drawn and is
+            never evidence.
+          </p>
+        </>
       )}
-      {off && !demo && <p className="muted">pictures are off on this server (PICTURE_ENABLED)</p>}
+      {off && !demo && <p className="muted">Pictures of what it could become are off on this server.</p>}
       {error && (
         <p className="error" role="alert">
           {error}
