@@ -25,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,9 +66,17 @@ fun App() {
     // shown on the Backend tab once: leaving the tab clears it, so a return does not replay it
     LaunchedEffect(page) { if (page != 0 && pairLine.second.isNotEmpty()) pairLine = pairLine.first to "" }
 
-    val scope = rememberCoroutineScope()
-    // one client per settings: the session token it holds belongs to that backend and code
-    val session = remember(settings) { Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode, settings.token) }
+    // one client per settings: the token it holds belongs to that backend and code
+    val session = remember(settings) {
+        Session(Client(settings.baseUrl, HttpTransport()), settings.accessCode, settings.token, settings.ownCode)
+    }
+    // a claim finished (in the process's scope, stored there): the settings are read again, and
+    // the line shown on the Backend tab without moving to it
+    val claimed: (String) -> Unit = { line ->
+        settings = store.load()
+        pairLine = pairLine.first + 1 to line
+    }
+    LaunchedEffect(Unit) { retryClaimAtStart(store, claimed) }
 
     LaunchedEffect(session) {
         service = serviceLine(settings.baseUrl, null, null)
@@ -106,10 +113,10 @@ fun App() {
                     Spacer(Modifier.width(8.dp))
                     // pair again from any page: the scanner, then the Backend tab shows the outcome
                     QrButton {
-                        scanToPair(context, settings, scope, onSaved = { saved ->
+                        scanToPair(context, store, onSaved = { saved ->
                             store.save(saved)
                             settings = store.load()
-                        }) { line ->
+                        }, onClaimed = claimed) { line ->
                             pairLine = pairLine.first + 1 to line
                             page = 0
                         }
@@ -141,10 +148,10 @@ fun App() {
                 }
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
                     when (page) {
-                        0 -> SettingsScreen(settings, session, pairLine) { saved ->
+                        0 -> SettingsScreen(settings, store, pairLine, onSaved = { saved ->
                             store.save(saved)
                             settings = store.load()
-                        }
+                        }, onClaimed = claimed)
                         1 -> CaptureScreen(session) { sent += 1 }
                         2 -> CapturesScreen(session, sent) { itemId ->
                             lastItemId = itemId

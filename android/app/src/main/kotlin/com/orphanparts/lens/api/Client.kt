@@ -49,9 +49,13 @@ class ApiException(val status: Int, message: String) : Exception(message)
 
 /** The backend, by the paths the web app uses; the session token from the access code goes
  * with every call as a bearer header, since the phone keeps no cookies. */
-class Client(private val baseUrl: String, private val transport: Transport, private var token: String = "") {
+class Client(private val baseUrl: String, private val transport: Transport, token: String = "") {
 
-    /** A session from the pairing, used instead of the code. */
+    /** The token every call carries: a pairing, or the session the code opened. */
+    var token: String = token
+        private set
+
+    /** A token held from before (a pairing, or a session kept), used instead of the code. */
     fun useToken(given: String) {
         token = given
     }
@@ -74,11 +78,11 @@ class Client(private val baseUrl: String, private val transport: Transport, priv
         return json.optBoolean("granted", false)
     }
 
-    /** Whether the session this client holds (a pairing) still opens the backend. */
+    /** Whether the token this client holds still opens the backend. */
     fun accessGranted(): Boolean = get("/api/access").optBoolean("granted", false)
 
-    /** The phone's own code, claimed with the pairing's session this client holds; the backend
-     * gives it once per pairing, and refuses a second claim. */
+    /** The phone's own code, claimed with the pairing this client holds; the backend gives it
+     * once per pairing, and refuses a second claim and a browser's session. */
     fun phoneCode(): PhoneCode {
         val json = send("POST", "/api/pair/code", ByteArray(0), "application/json")
         return PhoneCode(

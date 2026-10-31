@@ -9,7 +9,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 /** A transport that records what was sent and answers from a script. */
-class FakeTransport(private val answers: ArrayDeque<HttpResponse>) : Transport {
+open class FakeTransport(private val answers: ArrayDeque<HttpResponse>) : Transport {
     data class Sent(val method: String, val url: String, val headers: Map<String, String>, val body: ByteArray?)
 
     val sent = mutableListOf<Sent>()

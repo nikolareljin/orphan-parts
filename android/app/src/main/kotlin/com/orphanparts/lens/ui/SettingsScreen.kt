@@ -24,14 +24,17 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.orphanparts.lens.Settings
+import com.orphanparts.lens.SettingsStore
 import com.orphanparts.lens.api.ApiException
 import com.orphanparts.lens.api.Client
 import com.orphanparts.lens.api.HttpTransport
+import com.orphanparts.lens.api.Transport
+import com.orphanparts.lens.isPairingToken
 import com.orphanparts.lens.normalizeBaseUrl
 import com.orphanparts.lens.pairingFrom
 import com.orphanparts.lens.pointsAtLocalhost
-import com.orphanparts.lens.withPhoneCode
-import kotlinx.coroutines.CoroutineScope
+import com.orphanparts.lens.tokenEnded
+import com.orphanparts.lens.typedSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,8 +43,14 @@ import org.json.JSONObject
 /** What is typed is what is checked: the backend's open readiness path first, then the code
  * against the gate when there is one, each with its own line; a code of the phone's own is
  * named by its label and expiry, never shown. */
-suspend fun check(baseUrl: String, code: String, token: String = "", own: Settings? = null): String = withContext(Dispatchers.IO) {
-    val client = Client(baseUrl, HttpTransport(), token)
+suspend fun check(
+    baseUrl: String,
+    code: String,
+    token: String = "",
+    own: Settings? = null,
+    transport: Transport = HttpTransport(),
+): String = withContext(Dispatchers.IO) {
+    val client = Client(baseUrl, transport, token)
     val ready = try {
         client.readiness()
     } catch (e: Exception) {
@@ -49,10 +58,12 @@ suspend fun check(baseUrl: String, code: String, token: String = "", own: Settin
     }
     val gate = if (ready.gated) "gated" else "open"
     val line = "Backend ${ready.status}, Model API ${ready.modelApi}, demo $gate."
+    val ownCode = own != null && own.ownCode
     when {
         !ready.gated -> line
         code.isBlank() && token.isNotBlank() -> try {
-            if (client.accessGranted()) "$line Paired: the session works until it ends." else "The pairing has ended; scan the code again. $line"
+            // an ended token is served as the demo visitor, so its expiry is read first
+            if (!tokenEnded(token) && client.accessGranted()) "$line Paired: the pairing works for a few minutes." else "$PAIRING_ENDED. $line"
         } catch (e: Exception) {
             "The pairing could not be checked: ${describe(e)}. $line"
         }
@@ -60,48 +71,34 @@ suspend fun check(baseUrl: String, code: String, token: String = "", own: Settin
         else -> try {
             val opens = client.access(code)
             when {
-                opens && own != null && own.ownCode -> "$line The phone's own code (${own.codeLabel}, until ${own.codeExpiresDay}) opens it."
+                opens && ownCode -> "$line The phone's own code (${own!!.codeName}) opens it."
                 opens -> "$line The code opens it."
                 else -> "The code is refused. $line"
             }
         } catch (e: ApiException) {
-            "The code is refused: ${describe(e)}. $line"
+            if (e.status == 401 && ownCode) "${OWN_CODE_ENDED.replaceFirstChar { it.uppercase() }}. $line" else "The code is refused: ${describe(e)}. $line"
         }
-    }
-}
-
-/** After a scan that carried a session: the phone's own code from the backend, kept beside
- * the session so the phone stays through the gate when the session ends, with no second scan.
- * A code of its own that still opens the door is kept rather than claimed again; a refused
- * claim (the pairing already claimed, the code that paired it ended) leaves the session. */
-suspend fun claimPhoneCode(paired: Settings): Pair<Settings, String> = withContext(Dispatchers.IO) {
-    val where = "Paired with ${paired.baseUrl}"
-    val client = Client(paired.baseUrl, HttpTransport())
-    val keeps = paired.ownCode && try { client.access(paired.accessCode) } catch (_: Exception) { false }
-    if (keeps) return@withContext paired to "$where; it keeps its own code (${paired.codeLabel})."
-    client.useToken(paired.token)
-    try {
-        val own = client.phoneCode()
-        if (!own.gated || own.code.isBlank()) {
-            paired to "$where."
-        } else {
-            withPhoneCode(paired, own) to "$where; this phone now has a code of its own (${own.label}, until ${own.expiresAt.take(10)})."
-        }
-    } catch (e: Exception) {
-        paired to "$where (with a session); no code of its own: ${describe(e)}."
     }
 }
 
 /** The phone's camera reads the pairing code the web app (or ./dev phone) shows; what it
- * carries becomes the settings, and one line says what happened. A code with a session is
- * saved at once, then the phone claims its own code with it and the settings are saved
- * again; a code without one (the demo visitor's page) pairs the phone as the demo. */
-fun scanToPair(context: android.content.Context, settings: Settings, scope: CoroutineScope, onSaved: (Settings) -> Unit, onStatus: (String) -> Unit) {
+ * carries becomes the settings, and one line says what happened. A code with a pairing is
+ * saved at once, then the phone claims its own code with it in the process's scope and the
+ * store is written again (`onClaimed` says so); a code without one (the demo visitor's page)
+ * pairs the phone as the demo, keeping its own code for the same backend. */
+fun scanToPair(
+    context: android.content.Context,
+    store: SettingsStore,
+    onSaved: (Settings) -> Unit,
+    onClaimed: (String) -> Unit,
+    onStatus: (String) -> Unit,
+) {
     val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
     GmsBarcodeScanning.getClient(context, options).startScan()
         .addOnSuccessListener { barcode ->
             val raw = barcode.rawValue ?: ""
-            val paired = pairingFrom(raw, settings)
+            val before = store.load()
+            val paired = pairingFrom(raw, before)
             if (paired == null) {
                 onStatus(
                     if (pointsAtLocalhost(raw)) {
@@ -113,14 +110,17 @@ fun scanToPair(context: android.content.Context, settings: Settings, scope: Coro
             } else {
                 onSaved(paired)
                 if (paired.token.isBlank()) {
-                    onStatus("Paired with ${paired.baseUrl}" + (if (json(raw).optBoolean("gated")) " as the demo visitor: nothing it sends is kept. Sign in on the web app and scan its code to give this phone a code of its own." else "."))
+                    val gated = json(raw).optBoolean("gated")
+                    onStatus(
+                        "Paired with ${paired.baseUrl}" + when {
+                            !gated -> "."
+                            paired.ownCode -> "; it keeps its own code (${paired.codeName})."
+                            else -> " as the demo visitor: nothing it sends is kept. Sign in on the web app and scan its code to give this phone a code of its own."
+                        },
+                    )
                 } else {
-                    onStatus("Paired with ${paired.baseUrl} (with a session); claiming a code of its own…")
-                    scope.launch {
-                        val (claimed, line) = claimPhoneCode(paired)
-                        onSaved(claimed)
-                        onStatus(line)
-                    }
+                    onStatus("Paired with ${paired.baseUrl} (with a pairing); claiming a code of its own…")
+                    startClaim(store, paired, before.baseUrl, onDone = onClaimed)
                 }
             }
         }
@@ -133,9 +133,10 @@ private fun json(text: String): JSONObject = try { JSONObject(text) } catch (_: 
 @Composable
 fun SettingsScreen(
     settings: Settings,
-    session: Session,
+    store: SettingsStore,
     note: Pair<Int, String> = 0 to "", // a line from elsewhere (the header's scan) to show
     onSaved: (Settings) -> Unit,
+    onClaimed: (String) -> Unit,
 ) {
     val context = LocalContext.current
     var url by remember(settings) { mutableStateOf(settings.baseUrl) }
@@ -155,7 +156,7 @@ fun SettingsScreen(
                 color = muted,
             )
             Spacer(Modifier.height(12.dp))
-            PrimaryButton("Scan to pair") { scanToPair(context, settings, scope, onSaved) { status = it } }
+            PrimaryButton("Scan to pair") { scanToPair(context, store, onSaved, onClaimed) { status = it } }
         }
         Spacer(Modifier.height(12.dp))
         Panel {
@@ -182,31 +183,21 @@ fun SettingsScreen(
                 shape = MaterialTheme.shapes.small,
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (settings.ownCode && code == settings.accessCode) {
+            if (settings.ownCode && code == settings.accessCode && normalizeBaseUrl(url) == settings.baseUrl) {
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "This phone holds a code of its own, ${settings.codeLabel}, until ${settings.codeExpiresDay}; on the server, ./dev keys revoke \"${settings.codeLabel}\" ends it.",
+                    "This phone holds a code of its own, ${settings.codeName}; on the server, ./dev keys revoke \"${settings.codeLabel}\" ends it, as does revoking the code that paired it.",
                     style = MaterialTheme.typography.bodySmall,
                     color = muted,
                 )
-            } else if (settings.token.isNotBlank()) {
+            } else if (isPairingToken(settings.token) && !tokenEnded(settings.token)) {
                 Spacer(Modifier.height(6.dp))
-                Text("A session from the pairing is kept; it ends on its own, scan again then.", style = MaterialTheme.typography.bodySmall, color = muted)
+                Text("A pairing is kept; it ends within minutes, scan again then.", style = MaterialTheme.typography.bodySmall, color = muted)
             }
             Spacer(Modifier.height(12.dp))
             Row {
                 PrimaryButton("Save") {
-                    // a code typed over the phone's own is a typed code: no label goes with it
-                    val own = code == settings.accessCode
-                    onSaved(
-                        Settings(
-                            normalizeBaseUrl(url),
-                            code,
-                            token = if (normalizeBaseUrl(url) == settings.baseUrl) settings.token else "",
-                            codeLabel = if (own) settings.codeLabel else "",
-                            codeExpires = if (own) settings.codeExpires else "",
-                        ),
-                    )
+                    onSaved(typedSettings(settings, url, code))
                     status = "Saved."
                 }
                 Spacer(Modifier.width(8.dp))
@@ -214,8 +205,8 @@ fun SettingsScreen(
                     status = "Checking…"
                     val typedUrl = normalizeBaseUrl(url)
                     val typedCode = code
-                    // the pairing's session counts for the address it was made for
-                    val pairing = if (typedUrl == settings.baseUrl) settings.token else ""
+                    // the token in hand counts for the address and the code it was opened with
+                    val pairing = if (typedUrl == settings.baseUrl && typedCode == settings.accessCode) settings.token else ""
                     val own = if (typedUrl == settings.baseUrl && typedCode == settings.accessCode) settings else null
                     scope.launch { status = check(typedUrl, typedCode, pairing, own) }
                 }

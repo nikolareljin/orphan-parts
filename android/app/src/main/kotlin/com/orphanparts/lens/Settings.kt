@@ -6,9 +6,10 @@ import org.json.JSONObject
 import java.net.InetAddress
 import java.net.URI
 
-/** Where the backend is and what opens it: the demo code, or a session the pairing gave and
- * the code of its own the phone claimed with it (its label and expiry say which code it
- * holds; a typed code has neither); kept in the app's private storage. */
+/** Where the backend is and what opens it: a typed code, or the code of its own the phone
+ * claimed with a pairing (its label and expiry say which code it holds; a typed code has
+ * neither), and the token in hand: a pairing, or a session opened with the code. Kept in the
+ * app's private storage. */
 data class Settings(
     val baseUrl: String,
     val accessCode: String,
@@ -23,6 +24,26 @@ data class Settings(
 
     /** The code's expiry as a day. */
     val codeExpiresDay: String get() = codeExpires.take(10)
+
+    /** The phone's own code by name: its label, and until when when that is known. */
+    val codeName: String get() = if (codeExpiresDay.isBlank()) codeLabel else "$codeLabel, until $codeExpiresDay"
+}
+
+/** When a token ends, Unix seconds, read off its second field (`sid.expiry.door...`); null for
+ * anything not shaped like one of ours. */
+fun tokenExpiry(token: String): Long? = token.split('.').getOrNull(1)?.toLongOrNull()
+
+/** Whether the token has ended by its own expiry (or is not one of ours): the backend serves an
+ * ended token as the demo visitor without a word, so the phone must tell for itself. */
+fun tokenEnded(token: String, nowSeconds: Long = System.currentTimeMillis() / 1000): Boolean {
+    val exp = tokenExpiry(token) ?: return true
+    return exp <= nowSeconds
+}
+
+/** Whether the token is a pairing (door 2), the short kind a QR carries that claims a code. */
+fun isPairingToken(token: String): Boolean {
+    val parts = token.split('.')
+    return parts.size == 6 && parts[2] == "2"
 }
 
 /** A base URL as the client uses it: a scheme, no trailing slash, no path to the API. */
@@ -64,10 +85,11 @@ fun pointsAtLocalhost(text: String): Boolean {
     return url.isNotEmpty() && !reachableFromAPhone(url)
 }
 
-/** The pairing payload a QR code carries: the origin, whether gated, a session token. The
- * code itself is kept as it was; a scan replaces the URL and the session, nothing else. A
- * gated pairing without a session was shown to the demo visitor: the phone joins as the
- * demo too, with the address alone and no code, until a scan of a signed-in page. */
+/** The pairing payload a QR code carries: the origin, whether gated, a pairing token. For the
+ * backend the phone already uses, the code it holds is kept and the scan replaces the token
+ * (a gated code without one was shown to the demo visitor, and leaves the phone with its own
+ * code if it has one). For any other backend the code, its label and expiry are dropped: a
+ * code is never sent to another host. */
 fun pairingFrom(text: String, current: Settings): Settings? {
     val json = try {
         JSONObject(text)
@@ -79,15 +101,34 @@ fun pairingFrom(text: String, current: Settings): Settings? {
     if (!json.has("gated")) return null
     val url = normalizeBaseUrl(json.optString("url"))
     if (url.isEmpty() || !reachableFromAPhone(url)) return null
-    val token = json.optString("token")
-    if (json.optBoolean("gated") && token.isEmpty()) return Settings(baseUrl = url, accessCode = "")
-    return current.copy(baseUrl = url, token = token)
+    val kept = if (url == current.baseUrl) current else Settings(baseUrl = url, accessCode = "")
+    return kept.copy(baseUrl = url, token = json.optString("token"))
 }
 
-/** The settings once the phone has claimed its own code with the pairing's session: the
- * code replaces whatever was typed, and its label and expiry say so on the Backend tab. */
+/** The settings once the phone has claimed its own code with the pairing: the code replaces
+ * whatever was typed, and its label and expiry say so on the Backend tab. */
 fun withPhoneCode(paired: Settings, own: PhoneCode): Settings =
     paired.copy(accessCode = own.code, codeLabel = own.label, codeExpires = own.expiresAt)
+
+/** What Save on the Backend tab keeps of what is typed: the label and expiry stay with the
+ * phone's own code only while both the address and the code are unchanged, and the token in
+ * hand only while both are too (it belongs to that backend and that code). */
+fun typedSettings(settings: Settings, url: String, code: String): Settings {
+    val base = normalizeBaseUrl(url)
+    val same = base == settings.baseUrl && code == settings.accessCode
+    return Settings(
+        base,
+        code,
+        token = if (same) settings.token else "",
+        codeLabel = if (same) settings.codeLabel else "",
+        codeExpires = if (same) settings.codeExpires else "",
+    )
+}
+
+/** The claim's outcome applied to what is stored now, or null when the settings moved on while
+ * it ran (another scan, a typed address): only the scan it started from takes it. */
+fun applyClaim(current: Settings, scanned: Settings, claimed: Settings): Settings? =
+    if (current.baseUrl == scanned.baseUrl && current.token == scanned.token) claimed else null
 
 class SettingsStore(context: Context) {
     private val prefs = context.getSharedPreferences("orphan-parts", Context.MODE_PRIVATE)

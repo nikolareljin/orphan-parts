@@ -24,27 +24,41 @@ class SettingsTest {
 }
 
 class PairingTest {
+    private val own = Settings("https://demo.example", "opl_mine", "sid.1.sig", "phone abcd1234", "2026-11-29T10:00:00+00:00")
+
     @Test
-    fun a_pairing_code_sets_the_url_and_the_session_and_keeps_the_code() {
-        val current = Settings("http://old:8000", "the code", "")
-        val paired = pairingFrom("""{"url":"http://192.168.1.20:5173","gated":true,"token":"sid.1.sig"}""", current)!!
+    fun a_pairing_code_for_the_same_backend_sets_the_token_and_keeps_the_code() {
+        val current = Settings("http://192.168.1.20:5173", "the code", "")
+        val paired = pairingFrom("""{"url":"http://192.168.1.20:5173/","gated":true,"token":"sid.1.sig"}""", current)!!
         assertEquals("http://192.168.1.20:5173", paired.baseUrl)
         assertEquals("sid.1.sig", paired.token)
         assertEquals("the code", paired.accessCode)
-        val open = pairingFrom("""{"url":"https://demo.example/","gated":false,"token":""}""", current)!!
-        assertEquals("https://demo.example", open.baseUrl)
-        assertEquals("", open.token)
-        assertEquals("the code", open.accessCode)
     }
 
     @Test
-    fun a_gated_code_without_a_session_pairs_the_phone_as_the_demo_visitor() {
-        val current = Settings("http://old:8000", "opl_old", "sid.1.sig", "phone abcd1234", "2026-11-29T10:00:00+00:00")
-        val demo = pairingFrom("""{"url":"https://demo.example","gated":true,"token":""}""", current)!!
-        assertEquals(Settings("https://demo.example", ""), demo)
+    fun a_signed_in_code_for_another_backend_drops_the_code_it_held() {
+        val paired = pairingFrom("""{"url":"https://elsewhere.example","gated":true,"token":"sid.2.sig"}""", own)!!
+        assertEquals(Settings("https://elsewhere.example", "", "sid.2.sig"), paired)
+        assertFalse(paired.ownCode)
+        // an open backend elsewhere gets no code either
+        val open = pairingFrom("""{"url":"https://open.example","gated":false,"token":""}""", Settings("http://old:8000", "typed"))!!
+        assertEquals(Settings("https://open.example", ""), open)
+    }
+
+    @Test
+    fun a_demo_code_for_the_same_backend_keeps_the_phones_own_code() {
+        val demo = pairingFrom("""{"url":"https://demo.example","gated":true,"token":""}""", own)!!
+        assertEquals(own.copy(token = ""), demo)
+        assertTrue(demo.ownCode)
+    }
+
+    @Test
+    fun a_demo_code_for_another_backend_pairs_the_phone_as_the_demo_visitor() {
+        val demo = pairingFrom("""{"url":"https://other.example","gated":true,"token":""}""", own)!!
+        assertEquals(Settings("https://other.example", ""), demo)
         assertFalse(demo.ownCode)
-        // a later scan of a signed-in page carries a session again
-        val signedIn = pairingFrom("""{"url":"https://demo.example","gated":true,"token":"sid.2.sig"}""", demo)!!
+        // a later scan of a signed-in page carries a pairing again
+        val signedIn = pairingFrom("""{"url":"https://other.example","gated":true,"token":"sid.2.sig"}""", demo)!!
         assertEquals("sid.2.sig", signedIn.token)
         assertEquals("", signedIn.accessCode)
     }
@@ -55,12 +69,38 @@ class PairingTest {
         assertFalse(paired.ownCode)
         val own = withPhoneCode(paired, PhoneCode(true, "opl_mine", "phone abcd1234", "2026-11-29T10:00:00+00:00"))
         assertEquals("opl_mine", own.accessCode)
-        assertEquals("sid.1.sig", own.token)
         assertTrue(own.ownCode)
         assertEquals("phone abcd1234", own.codeLabel)
         assertEquals("2026-11-29", own.codeExpiresDay)
-        // a typed code over it is a typed code again
-        assertFalse(own.copy(accessCode = "other", codeLabel = "", codeExpires = "").ownCode)
+        assertEquals("phone abcd1234, until 2026-11-29", own.codeName)
+        assertEquals("phone abcd1234", own.copy(codeExpires = "").codeName)
+    }
+
+    @Test
+    fun save_keeps_the_label_and_the_token_only_for_the_same_address_and_code() {
+        assertEquals(own, typedSettings(own, "https://demo.example/", "opl_mine"))
+        assertEquals(Settings("https://demo.example", "typed"), typedSettings(own, "https://demo.example", "typed"))
+        assertEquals(Settings("http://elsewhere.example", "opl_mine"), typedSettings(own, "elsewhere.example", "opl_mine"))
+    }
+
+    @Test
+    fun a_claim_lands_only_on_the_scan_it_started_from() {
+        val scanned = Settings("https://demo.example", "", "sid.1.sig")
+        val claimed = own
+        assertEquals(claimed, applyClaim(scanned, scanned, claimed))
+        assertNull(applyClaim(scanned.copy(token = "sid.2.sig"), scanned, claimed))
+        assertNull(applyClaim(scanned.copy(baseUrl = "https://other.example"), scanned, claimed))
+    }
+
+    @Test
+    fun a_token_is_read_for_its_expiry_and_its_kind() {
+        val pairing = "sid.2000.2.0.0123456789abcdef.${"a".repeat(32)}"
+        assertEquals(2000L, tokenExpiry(pairing))
+        assertFalse(tokenEnded(pairing, 1999))
+        assertTrue(tokenEnded(pairing, 2000))
+        assertTrue(tokenEnded("nonsense", 0))
+        assertTrue(isPairingToken(pairing))
+        assertFalse(isPairingToken("sid.2000.1.0.0123456789abcdef.${"a".repeat(32)}"))
     }
 
     @Test
