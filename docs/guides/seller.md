@@ -2,17 +2,101 @@
 
 Photos in, listing draft out: upload, segmentation overlays, evidence table, voice note, questions to resolve, copy or hand off to Marketplace.
 
-## Built so far
+## The hard limit
 
-**Prepare to sell or give away**, on the item's page: a voice note kept as your words, the mode
-(sell or free), whether the item stores accounts or files, the pickup and the price you set.
-**Write the draft** has Muse Spark write the title and the text from the item's accepted values
-and your details only; the rules then append what must be disclosed (known faults, what was
-tested or that it was not, what is included, the price or free pickup) and drop any line that
-rests on nothing confirmed, saying so. The draft lists its facts with the field each rests on,
-warnings to read before posting, and the checklist: before it goes, photos, and your data when
-the item holds any. Steps are kept per draft; a draft written before the item changed says so.
-**Copy the draft** and **Open Marketplace** hand it over; see [Marketplace handoff](marketplace.md).
+No public API posts a personal Facebook Marketplace listing, and automating the site is against
+its terms. The app prepares every field, zips the photos in order and opens Marketplace's create
+page in a new tab; you paste the fields, add the photos and post. Nothing here fills, reads or
+submits a Facebook page, and the service sends nothing to facebook.com.
+
+## The flow
+
+**Prepare to sell or give away** is a section of the item's dialog.
+
+1. **Tell us more.** The mode (sell or give away) and what a buyer asks about:
+
+    | Field | In the listing? |
+    |---|---|
+    | Condition in your words | yes, as your words |
+    | Included: stand, cables, power cord, original box, manual, remote, and other | yes |
+    | Known faults or cosmetic issues | yes, always disclosed |
+    | Not tested | yes, always disclosed |
+    | Accounts or files: none, signed out and wiped, not wiped yet | yes, when it stores any |
+    | Handover: local pickup, shipping or either (a give-away is pickup) | yes |
+    | Area: a city, ZIP or neighborhood | yes |
+    | Asking price (USD) | in the price field |
+    | Availability | yes |
+    | Lowest you would take | **never**: kept for you |
+    | Your reason for parting with it | **never**: kept for you |
+
+    The details are saved on the item, a new version each time (`PUT /api/items/{id}/sell-details`).
+    An area that reads as a street address is refused, and so is a phone number, an email address
+    or a street address in any free-text field: buyers write through Marketplace. A voice note is
+    kept as your words (`condition_notes`) and the draft reads it from there.
+
+2. **Write the draft.** The details are saved, then one Muse Spark call (effort low) gets the
+    item's accepted values, your public details and the item's photos (up to four, sent at 768 px),
+    and writes the listing in Marketplace's shape. The lowest price, the reason and the asking
+    price are not in what the model reads. The rules then check what came back:
+
+    - **Title:** at most 100 characters, brand, model and key spec first; a give-away starts
+      with *Free:*.
+    - **Price:** your asking price; with none, the typical figure of the latest
+      [price guidance](value.md), named as such ("suggested: the typical figure of price
+      guidance v2, $32; set your own"); `0` for a give-away.
+    - **Category:** one path from the data file below; a name not in it falls back to its top
+      category, or is left for you to pick, with a warning. A give-away is listed under
+      *Free Stuff*, and the category the draft picked is named in case Marketplace asks for one.
+    - **Condition:** one of the four below. *New* only when you said new and named no fault;
+      otherwise it becomes *Used - Like New*, with a warning.
+    - **Description:** the model's few sentences, then the lines the rules add whatever was
+      written: known faults, what was tested or that it was not, what was not tested, what is
+      included, the data line when the item stores any, the pickup or shipping line, and
+      availability. A phone number, an email or a street address in the text is taken out and
+      said.
+    - **Tags:** up to 20, at most 30 characters each, no repeats.
+    - **Photo order:** the item's photos, best first, each with a reason; a photo the draft left
+      out goes after the others.
+
+    Lines that rest on nothing confirmed are dropped and listed under *Before posting*; a draft
+    says when the item or the details changed since it was written.
+
+3. **Marketplace handoff.** Each field has a **Copy** button: title, price, category,
+    condition, description, tags. The category and the condition are lists from the data file
+    and can be changed before copying. **Download photos** gets a zip of the photos in the
+    draft's order (`01-photo-2.jpg`, `02-photo-1.jpg`, ...), as stored: re-encoded when they came
+    in, with no camera metadata. **Open Marketplace** opens `MARKETPLACE_CREATE_URL` in a new
+    tab. The checklist under it: choose *Item for sale*, paste the fields, add the photos in
+    order, set pickup or shipping and the area, check the preview, publish. The preparation
+    steps (clean, test, photos, your data) are ticked and kept per draft.
+
+4. **After posting.** **Mark as listed** keeps the date, the price and the listing's address
+    when you paste it. Later, **Mark as sold** keeps the final price, records it as a sale for
+    price guidance (`note: Facebook Marketplace`) and marks the item gone; **Mark as given** marks
+    it gone. Each is an event in the item's history.
+
+## US categories and conditions
+
+The categories live in `backend/app/listing/marketplace_us.yaml`, read from the public category
+index at `facebook.com/marketplace/categories/` and the category pages under it in October 2026.
+A name found there is marked `seen: true`; a name in common use that could not be confirmed there
+is `seen: false`, and a draft that picks one says to check it in Marketplace's picker.
+
+| Category | Subcategories |
+|---|---|
+| Electronics | Computers; Cell Phones; Cameras; Video Games & Consoles; Printers, Scanners & Fax Machines; Monitors\*; Audio\*; TV & Video\* |
+| Home Goods | Kitchen & Dining\*; Furniture |
+| Home Improvement Supplies | Tools\*; Electrical\* |
+| Garden & Outdoor, Toys & Games, Musical Instruments, Office Supplies, Pet Supplies, Hobbies | |
+| Sporting Goods\*, Auto Parts\*, Baby & Kids\*, Arts & Crafts\* | |
+| Free Stuff | (where a give-away is browsed) |
+
+\* not confirmed on the category pages.
+
+Conditions, best first: **New**, **Used - Like New**, **Used - Good**, **Used - Fair**.
+
+Marketplace changes its picker without notice; the draft's choice is a starting point, and the
+create page is where it is settled. See also [Marketplace handoff](marketplace.md).
 
 ### The first steps
 
