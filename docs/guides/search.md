@@ -67,6 +67,32 @@ links say the max price they include, or *No max price set* when there is none (
 the newly written pattern is offered beside yours (**Try the suggestion** puts it in the field,
 unsaved), and a written pattern that fails the checks never empties the one already kept.
 
+## Search the web
+
+**Search the web**, beside the Marketplace links in **Plan the search**, looks for the part on
+the open web: shops, second-hand listings and the maker's spare-parts pages. It is one Muse
+Spark call (effort `low`, operation `part-search`) with the `web_search` tool, at most
+`PART_MAX_SEARCHES` searches (4; 1 to 10), and it runs only when you click; nothing searches
+on its own and Marketplace itself is not searched. The brief is the plan's: the need, the
+profile, the needed values, the item's values (measured ones included, never a serial number
+or anything else that identifies the item or you), the notes and the top price. When the
+device the part came from is recorded (see [the device it came from](inventory.md#the-device-a-part-came-from)),
+the brief leads with it: *Look first for the maker's own part: Hamilton Beach 729 blender
+agitator*, then parts sold as fitting that device, then parts with the same values.
+
+The model writes each page it found: the URL, the title, the site, the price and the
+dimensions as the page states them, and a short quote. A page is kept only when its URL is
+among the search results or the citations of that same answer, and only a web link
+(`http`/`https`); one per page, at most ten a click. The rest are left out and counted
+(*Added 3 pages to the listings. 1 left out: no search result showed it.*). Each page kept
+becomes a listing with its link, scored by the pattern, the exclusion words and the top
+price like a pasted one, and **Check fit** reads it the same way; the candidate keeps the
+link. A page already in the listings is not added again. The link opens in a new tab and the
+app never fetches it.
+
+The call counts against the hourly and daily allowance like the plan; the demo visitor sees
+*Sign in with the access code to search the web.* instead of the button.
+
 ## The pattern and its limits
 
 The pattern runs on [RE2](https://github.com/google/re2/wiki/Syntax) (the `google-re2`
@@ -153,6 +179,7 @@ curl -s -X PATCH localhost:8000/api/searches/1/plan -H 'content-type: applicatio
 curl -s -X POST localhost:8000/api/searches/1/listings -H 'content-type: application/json' \
   -d '{"texts": ["Orbital charger 19.5V 3.34A, $15", "Charger for parts, $5"]}'
 curl -s -X POST localhost:8000/api/searches/1/listings/1/check
+curl -s -X POST localhost:8000/api/searches/1/web
 ```
 
 See [HTTP API](../reference/http-api.md) and the [buyer flow](buyer.md).

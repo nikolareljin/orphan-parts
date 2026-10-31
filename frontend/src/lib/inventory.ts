@@ -79,3 +79,15 @@ export function whenText(iso: string): string {
 export function isConflict(err: unknown): boolean {
   return err instanceof ApiError && err.status === 409
 }
+
+// The question the app asks about a part it cannot tie to its device.
+export const PARENT_PROMPT = "We couldn't tell which device this part came from. Tell us more about it, or add a photo of that device (the label under its base is best)."
+
+export function asksForParent(item: Item | null | undefined): boolean {
+  return item?.needs_parent === true
+}
+
+// What a photo of the device gave, in a line.
+export function parentPhotoLine(model: string): string {
+  return model ? `Read from the photo: ${model}. Confirm it in the fields.` : 'No model could be read from the photo. Tell us about the device instead.'
+}

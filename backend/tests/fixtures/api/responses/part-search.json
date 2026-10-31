@@ -1,0 +1,105 @@
+{
+  "endpoint": "/responses",
+  "op": "part-search",
+  "model": "muse-spark-1.3",
+  "digest": "fallback-part-search",
+  "request": {
+    "instructions": "part search instructions, see app/find/service.py",
+    "input": "one text part: the need, the device it came from and its values, see app/find/service.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "low"
+      }
+    ],
+    "include": [
+      "web_search_call.results"
+    ],
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "WebFinds",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_part_search",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "rs_fixture_part_search",
+        "type": "reasoning",
+        "summary": []
+      },
+      {
+        "id": "ws_fixture_part_search_1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "drink mixer agitator spindle 4 mm two tab"
+        },
+        "results": [
+          {
+            "type": "web_search_result",
+            "title": "Drink mixer spindle, stainless steel, two-tab drive",
+            "url": "https://example.org/parts/drink-mixer-spindle-metal",
+            "snippet": "Replacement spindle for two-tab drink mixers. Stainless rod 4 mm, overall length 150 mm."
+          },
+          {
+            "type": "web_search_result",
+            "title": "Used mixer agitator rod with disc",
+            "url": "https://example.org/listings/agitator-rod-used",
+            "snippet": "Agitator rod from a milkshake mixer, works, plastic disc, rod is metal."
+          },
+          {
+            "type": "web_search_result",
+            "title": "Lot of frapp\u00e9 maker whisks, for parts",
+            "url": "https://example.org/listings/frappe-whisk-lot",
+            "snippet": "Three whisks, for parts, one tab broken."
+          }
+        ]
+      },
+      {
+        "id": "msg_fixture_part_search",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://example.org/parts/drink-mixer-spindle-metal",
+                "title": "Drink mixer spindle, stainless steel, two-tab drive",
+                "start_index": 0,
+                "end_index": 40
+              }
+            ],
+            "text": "{\"candidates\": [{\"url\": \"https://example.org/parts/drink-mixer-spindle-metal\", \"title\": \"Drink mixer spindle, stainless steel, two-tab drive\", \"site\": \"example.org\", \"price_as_stated\": \"$12.99\", \"dimensions_as_stated\": \"rod 4 mm, 150 mm long\", \"quote\": \"Replacement spindle for two-tab drink mixers. Stainless rod 4 mm, overall length 150 mm.\"}, {\"url\": \"https://example.org/listings/agitator-rod-used\", \"title\": \"Used mixer agitator rod with disc\", \"site\": \"example.org\", \"price_as_stated\": \"$6\", \"dimensions_as_stated\": \"\", \"quote\": \"Agitator rod from a milkshake mixer, works, plastic disc, rod is metal.\"}, {\"url\": \"https://example.org/listings/frappe-whisk-lot\", \"title\": \"Lot of frapp\\u00e9 maker whisks, for parts\", \"site\": \"example.org\", \"price_as_stated\": \"$5\", \"dimensions_as_stated\": \"\", \"quote\": \"Three whisks, for parts, one tab broken.\"}, {\"url\": \"https://example.org/forum/where-to-buy-spindle\", \"title\": \"Forum post about a spindle\", \"site\": \"example.org\", \"price_as_stated\": \"$9\", \"dimensions_as_stated\": \"4 mm\", \"quote\": \"Someone said they have one.\"}]}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 1800,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 420,
+      "output_tokens_details": {
+        "reasoning_tokens": 40
+      },
+      "total_tokens": 2220
+    }
+  },
+  "status": 200
+}

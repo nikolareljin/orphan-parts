@@ -17,6 +17,7 @@ from app.extract.imaging import BadImageError, prepare
 from app.find import Finder
 from app.find.schema import CandidateCreate, SearchCreate
 from app.inventory import Inventory
+from app.inventory.parent import PARENT_DEVICE, PARENT_MODEL, device_model
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.listing import Lister, VoiceNotes
 from app.listing.schema import DraftRequest
@@ -261,6 +262,15 @@ class Loader:
                 self.inventory.add_field(created.id, FieldCreate(field=field, value=value))
             except ValueError as exc:
                 out.skipped.append(f"{item.key}: field {field}: {exc}")
+        if item.parent_photos or item.parent_device_model:
+            await self.load_parent(item, created.id, base, out)
+        if item.parent_device:
+            try:
+                self.inventory.add_field(
+                    created.id, FieldCreate(field=PARENT_DEVICE, value=item.parent_device)
+                )
+            except ValueError as exc:
+                out.skipped.append(f"{item.key}: parent device: {exc}")
         if item.voice_note:
             file = base / item.voice_note
             if not file.is_file():
@@ -299,6 +309,62 @@ class Loader:
                 out.guidances += 1
                 out.cost_usd += guidance.cost_usd
         return created.id
+
+    async def load_parent(self, item: DemoItem, item_id: int, base: Path, out: Outcome) -> None:
+        """The device a part came from, as the owner answers the app's question: photos of it
+        read once as a label (only a recording of these very photos answers in fixture mode,
+        never the stub), the model read off them accepted as parent_device_model; until that
+        reading is recorded, the model the set states is saved as typed."""
+        photos: list[bytes] = []
+        for name in item.parent_photos:
+            file = base / name
+            if not file.is_file():
+                out.skipped.append(f"{item.key}: parent photo {name} missing")
+                continue
+            try:
+                photos.append(file.read_bytes())
+            except OSError as exc:
+                out.skipped.append(f"{item.key}: parent photo {name}: {exc}")
+        model = ""
+        if photos:
+            token = exact_replay.set(True)
+            try:
+                reading = await self.extractor.extract(photos)
+            except NoRecordingError:
+                out.unrecorded.append(
+                    f"{item.key}: the reading of the device photos (one ./dev record-fixtures"
+                    " run reads them)"
+                )
+            except (BadImageError, ModelApiError) as exc:
+                out.skipped.append(f"{item.key}: the device photos could not be read: {exc}")
+            else:
+                out.photos += len(photos)
+                out.cost_usd += reading.cost_usd
+                model, confidence, raw = device_model(reading)
+                if model:
+                    read = self.inventory.add_observation(
+                        item_id, PARENT_MODEL, model, confidence=confidence, source="photo", raw=raw
+                    )
+                    self.inventory.review(item_id, read.fields[PARENT_MODEL].id, "accepted")
+            finally:
+                exact_replay.reset(token)
+            # kept beside the part's own photos, as far as there is room
+            room = self.settings.max_photos - self.photos.count(item_id)
+            if room > 0:
+                try:
+                    self.photos.add(item_id, photos[:room])
+                except (OSError, BadImageError, PhotoError) as exc:
+                    out.skipped.append(f"{item.key}: the device photos could not be kept: {exc}")
+        if not model and item.parent_device_model:
+            try:
+                self.inventory.add_field(
+                    item_id,
+                    FieldCreate(
+                        field=PARENT_MODEL, value=item.parent_device_model, provenance="documented"
+                    ),
+                )
+            except ValueError as exc:
+                out.skipped.append(f"{item.key}: parent device model: {exc}")
 
     async def draw(self, item: DemoItem, item_id: int, out: Outcome) -> None:
         """The item's picture, after its drafts. With a key it is drawn (and kept, in record

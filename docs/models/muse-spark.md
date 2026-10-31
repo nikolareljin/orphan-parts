@@ -26,6 +26,17 @@ Price guidance is one call with the `web_search` tool and the strict JSON schema
 The code path is `app/value/service.py`; the [value guide](../guides/value.md) shows what the
 four figures mean.
 
+**Search the web** for a part is the same shape: one call with the `web_search` tool
+(`search_context_size: PRICE_SEARCH_CONTEXT`), `max_tool_calls: PART_MAX_SEARCHES` (4) said in
+the instructions too, `include: ["web_search_call.results"]`, and the strict JSON schema of
+`WebFinds` (each page's URL, title, site, price and dimensions as stated, and a quote). The
+brief is the search plan's, led by the device the part came from when it is recorded. The same
+check keeps a page only when it is among the results or the citations
+(`app/model_api/client.py` `backed_pages`). Operation name `part-search`; its fixture is a stub
+written by hand (three results on `example.org`, four proposed pages of which one rests on no
+result), not a recording. The code path is `app/find/service.py`
+([search guide](../guides/search.md#search-the-web)).
+
 ## Tool calling
 
 A project proposal is a loop of calls with function tools and the strict JSON schema of

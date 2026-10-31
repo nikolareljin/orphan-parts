@@ -9,6 +9,8 @@ id: vacuum_attachment          # snake_case, must equal the file name
 label: Vacuum attachment
 description: >                 # optional
   What this kind of item is and what decides fit.
+part_of_device: true           # optional, default false: a part that comes off a device; one
+                               # with no identity value of its own asks which device it came from
 features:                      # dimensions worth measuring
   - key: opening_inner_diameter   # snake_case
     label: Opening inner diameter

@@ -46,6 +46,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `VOICE_MAX_SECONDS` | `600` | | longest voice note accepted; the transcription service takes ten minutes at most, and `MAX_UPLOAD_MB` bounds the file first |
 | `PRICE_SEARCH_CONTEXT` | `low` | | how much of each page the search hands the model: `low`, `medium` or `high`; more costs tokens and time |
 | `PRICE_MAX_SEARCHES` | `4` | | how many web searches one price guidance may make (1 to 10), sent as `max_tool_calls` and said in the instructions; each search is billed per query and hands the model pages to read |
+| `PART_MAX_SEARCHES` | `4` | | how many web searches one **Search the web** for a part may make (1 to 10), sent as `max_tool_calls` and said in the instructions |
 | `PRICE_COUNTRY` | | | ISO 3166-1 country for local price results when the request names none |
 | `DEMO_ACCESS_CODE` | | | the master code of the live door, twelve characters at least; empty = no gate (a machine of your own). Codes issued as records (`./dev keys`) open the same door beside it; without a code a visitor is the demo |
 | `DEMO_SESSION_HOURS` | `12` | | how long a session lasts |

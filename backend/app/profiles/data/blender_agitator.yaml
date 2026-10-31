@@ -10,6 +10,7 @@ description: >
   be; on a candidate it is the rod's own material. When no rod of the
   same dimensions exists, the search is for another agitator of the same drive, or another
   device whose rod fits this base.
+part_of_device: true
 features:
   - key: rod_diameter
     label: Rod diameter

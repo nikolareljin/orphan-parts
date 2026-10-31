@@ -29,6 +29,7 @@ from app.find.plan import (
     validate_pattern,
 )
 from app.find.schema import (
+    LINE_MAX,
     BroughtListing,
     Candidate,
     CandidateCreate,
@@ -47,11 +48,23 @@ from app.find.schema import (
     SearchPlan,
     SellerQuestions,
     State,
+    WebFind,
+    WebFinds,
+    WebSearchResult,
 )
 from app.inventory import Inventory, NotFoundError
+from app.inventory.parent import PARENT_DEVICE, PARENT_FIELDS, PARENT_MODEL
+from app.inventory.schema import Item
 from app.match.schema import Assessment, AssessRequest, Side
 from app.match.service import Assessor
-from app.model_api import ModelApiClient, text_part, user_message
+from app.model_api import (
+    ModelApiClient,
+    backed_pages,
+    norm_url,
+    searches,
+    text_part,
+    user_message,
+)
 from app.profiles import Profiles, UnknownProfileError
 
 log = logging.getLogger("app.find")
@@ -83,6 +96,95 @@ PLAN_INSTRUCTIONS = (
     " phrases in a listing that rule it out: for parts, broken, not working, and any that name"
     " a variant that does not fit. Never invent a part or model number the need does not give."
 )
+
+
+# one web search for the part: what the model may write, and how many finds one click keeps
+PART_OUTPUT_TOKENS = 1200
+WEB_MAX = 10
+# what the model writes is shown as it is, so it is cut, not trusted
+WEB_FIELD_MAX = 300
+PART_INSTRUCTIONS = (
+    "You look for a used or spare part on the web for someone who needs it. Search for pages"
+    " that offer this part for sale: shops, second-hand listings, the maker's spare-parts"
+    " pages. When the device the part came from is given, look first for the maker's own part"
+    " for that device (brand, model and the part's name), then for parts sold as fitting that"
+    " device, then for parts with the same measured values. Report only pages you saw in a"
+    " search, one per page, with its URL as the search gave it, the page title, the site, the"
+    " price and the dimensions as the page states them (empty when it states none), and a short"
+    " quote from the page that shows it is this part. Never invent a page, a price or a"
+    " dimension; never guess a part number the need does not give."
+)
+
+
+def part_instructions(max_searches: int) -> str:
+    """The standing instructions with the search bound said, as the price call does."""
+    return (
+        f"{PART_INSTRUCTIONS} Search at most {max_searches}"
+        f" time{'s' if max_searches != 1 else ''}, then answer with what those searches found."
+    )
+
+
+def parent_line(item: Item) -> str:
+    """The device the item came off, for a brief: its model as read or typed, and the owner's
+    words about it. Empty when neither is recorded."""
+    model = item.fields.get(PARENT_MODEL)
+    words = item.fields.get(PARENT_DEVICE)
+    said = [
+        f"model {model.value.strip()}" if model and model.value.strip() else "",
+        words.value.strip() if words and words.value.strip() else "",
+    ]
+    said = [p for p in said if p]
+    return f"It came from this device: {'; '.join(said)}" if said else ""
+
+
+def _cut(value: str) -> str:
+    return " ".join(value.split())[:WEB_FIELD_MAX]
+
+
+def web_text(find: WebFind) -> str:
+    """A find as listing text, so the pattern, the exclusion words and the price read it as
+    they read a pasted listing."""
+    parts = [find.title, find.price_as_stated, find.dimensions_as_stated, find.quote]
+    text = " · ".join(p for p in parts if p)
+    return f"{text} (found on {find.site})" if find.site else text
+
+
+def backed_finds(
+    found: list[WebFind], output: list[dict[str, Any]]
+) -> tuple[list[WebFind], int, list[str]]:
+    """Keep a find only when a search result or a citation carries its page, and only a web
+    link; one find per page, at most WEB_MAX. Say how many were dropped and why."""
+    pages = backed_pages(output)
+    kept: list[WebFind] = []
+    seen: set[str] = set()
+    unbacked = 0
+    for f in found:
+        url = f.url.strip()
+        page = norm_url(url)
+        if not url.lower().startswith(("https://", "http://")) or page not in pages:
+            unbacked += 1
+            continue
+        if page in seen or len(kept) >= WEB_MAX:
+            continue
+        seen.add(page)
+        kept.append(
+            WebFind(
+                url=url[:LINE_MAX],
+                title=_cut(f.title),
+                site=_cut(f.site),
+                price_as_stated=_cut(f.price_as_stated),
+                dimensions_as_stated=_cut(f.dimensions_as_stated),
+                quote=_cut(f.quote),
+            )
+        )
+    notes: list[str] = []
+    if searches(output) == 0:
+        notes.append("the model made no web search, so nothing it wrote can be backed")
+    elif not pages and found:
+        notes.append("the search returned no pages, so nothing the model wrote can be backed")
+    if unbacked:
+        notes.append(f"{unbacked} find(s) rest on no search result and were left out")
+    return kept, unbacked, notes
 
 
 class FindError(ValueError):
@@ -335,10 +437,18 @@ class Finder:
             values = [
                 f"{k.replace('_', ' ')} {a.value} {a.unit}".strip()
                 for k, a in item.fields.items()
-                if a.value.strip() and a.review != "rejected" and not private_field(k)
+                if a.value.strip()
+                and a.review != "rejected"
+                and not private_field(k)
+                and k not in PARENT_FIELDS
             ]
             if values:
                 lines.append("What it states: " + "; ".join(values[:30]))
+            # the device it came off, the owner's words included: this brief is the owner's own
+            # call, made to find the part, and the device is what finds the maker's part
+            came = parent_line(item)
+            if came:
+                lines.append(came)
         if search.notes:
             lines.append(f"Notes: {search.notes}")
         if search.max_price:
@@ -403,6 +513,81 @@ class Finder:
         )
         # scoring every listing again, and the lock, stay off the event loop
         return await asyncio.to_thread(self._keep_plan, search_id, plan)
+
+    def web_brief(self, search: Search) -> str:
+        """The plan's brief, led by the maker's own part for the device it came from when that
+        is recorded ("Hamilton Beach 729 blender agitator"), then the rest in order."""
+        brief = self.plan_brief(search)
+        if search.need_item_id is None:
+            return brief
+        item = self.inventory.get(search.need_item_id)
+        model = item.fields.get(PARENT_MODEL)
+        device = model.value.strip() if model else ""
+        if not device:
+            words = item.fields.get(PARENT_DEVICE)
+            device = words.value.strip() if words else ""
+        if not device:
+            return brief
+        part = item.item_type.strip() or self.profiles.get(search.profile).label
+        return (
+            f"Look first for the maker's own part: {device} {part}; then for parts sold as"
+            " fitting that device; then for parts with the same values.\n" + brief
+        )
+
+    async def search_web(self, search_id: int) -> WebSearchResult:
+        """One Muse Spark call with web search: pages that offer the part. Only finds whose page
+        is among the search results or the citations are kept; each becomes a listing with its
+        link, scored by the plan and checked with Check fit like any listing. Marketplace is
+        not searched: it has no public search API and its terms forbid scraping."""
+        search = self.search(search_id)
+        if search.status == "closed":
+            raise FindError("the search is closed; reopen it to search the web")
+        bound = self.settings.part_max_searches
+        result = await self.client.respond_structured(
+            WebFinds,
+            model=self.settings.model_spark,
+            input=[user_message(text_part(self.web_brief(search)))],
+            instructions=part_instructions(bound),
+            effort="low",
+            max_output_tokens=PART_OUTPUT_TOKENS,
+            tools=[
+                {"type": "web_search", "search_context_size": self.settings.price_search_context}
+            ],
+            max_tool_calls=bound,
+            include=["web_search_call.results"],
+            op="part-search",
+        )
+        response = result.response
+        kept, dropped, notes = backed_finds(result.parsed.candidates, response.output)
+        listings, added = await asyncio.to_thread(
+            self._add,
+            search_id,
+            [("web", web_text(f)) for f in kept],
+            today(),
+            [f.url for f in kept],
+        )
+        if kept and not added:
+            notes.append("every page found is already in the listings")
+        log.info(
+            "web search",
+            extra={
+                "search_id": search_id,
+                "added": added,
+                "dropped": dropped,
+                "searches": response.usage.search_queries,
+                "usd": response.cost_usd,
+            },
+        )
+        return WebSearchResult(
+            listings=listings,
+            added=added,
+            dropped=dropped,
+            notes=notes,
+            searches=response.usage.search_queries,
+            model=response.model,
+            from_fixture=response.from_fixture,
+            cost_usd=response.cost_usd,
+        )
 
     def edit_plan(self, search_id: int, edit: PlanEdit) -> Search:
         """The owner's pattern and words. A search with no plan yet gets one here, with the
@@ -476,7 +661,18 @@ class Finder:
     def _add_listings(
         self, search_id: int, texts: list[tuple[str, str]], observed_on: str
     ) -> list[BroughtListing]:
-        """Kept as far as the pattern reads them (SCAN_MAX), scored, at most MAX_LISTINGS."""
+        return self._add(search_id, texts, observed_on)[0]
+
+    def _add(
+        self,
+        search_id: int,
+        texts: list[tuple[str, str]],
+        observed_on: str,
+        urls: list[str] | None = None,
+    ) -> tuple[list[BroughtListing], int]:
+        """Kept as far as the pattern reads them (SCAN_MAX), scored, at most MAX_LISTINGS; with
+        ``urls`` (web finds, one each), a page already in the listings is not added again.
+        Returns the ranked listings and how many were added."""
         with self.held(search_id):
             row = self.inventory.search(search_id)
             if row["status"] == "closed":
@@ -485,30 +681,37 @@ class Finder:
             plan = SearchPlan(**content["plan"]) if content.get("plan") else None
             compiled = compiled_or_none(plan.pattern) if plan else None
             entries: list[dict[str, Any]] = content.setdefault("listings", [])
+            pairs = list(zip(texts, urls or [""] * len(texts), strict=True))
+            if urls:
+                have = {norm_url(str(e.get("source_url", ""))) for e in entries}
+                pairs = [(t, u) for t, u in pairs if norm_url(u) not in have]
+            if not pairs:
+                return self.listings(search_id), 0
             # ids only go up, so one removed is never given to another listing
             next_id = max(
                 int(content.get("next_listing_id", 1)),
                 max((int(e["id"]) for e in entries), default=0) + 1,
             )
-            content["next_listing_id"] = next_id + len(texts)
+            content["next_listing_id"] = next_id + len(pairs)
             added_at = stamp()
-            for i, (kind, whole) in enumerate(texts):
+            for i, ((kind, whole), url) in enumerate(pairs):
                 text = whole.strip()[:SCAN_MAX]
-                entries.append(
-                    {
-                        "id": next_id + i,
-                        "source_kind": kind,
-                        "text": text,
-                        "observed_on": observed_on or today(),
-                        "added_at": added_at,
-                        "candidate_id": None,
-                        "score": self._score(text, compiled, plan).model_dump(),
-                    }
-                )
-            fresh = set(range(next_id, next_id + len(texts)))
+                entry: dict[str, Any] = {
+                    "id": next_id + i,
+                    "source_kind": kind,
+                    "text": text,
+                    "observed_on": observed_on or today(),
+                    "added_at": added_at,
+                    "candidate_id": None,
+                    "score": self._score(text, compiled, plan).model_dump(),
+                }
+                if url:
+                    entry["source_url"] = url
+                entries.append(entry)
+            fresh = set(range(next_id, next_id + len(pairs)))
             content["listings"] = capped(entries, fresh)
             self.inventory.update_search(search_id, str(row["status"]), json.dumps(content))
-            return self.listings(search_id)
+            return self.listings(search_id), len(pairs)
 
     def add_listings(self, search_id: int, back: ListingsBack) -> list[BroughtListing]:
         """Pasted listings, scored where they stand; nothing is read by a model."""
@@ -562,7 +765,10 @@ class Finder:
             return self.candidate(found.candidate_id)
         try:
             candidate = await self.add_candidate(
-                search_id, CandidateCreate(text=found.text, observed_on=found.observed_on)
+                search_id,
+                CandidateCreate(
+                    text=found.text, observed_on=found.observed_on, url=found.source_url
+                ),
             )
         except BaseException:
             await asyncio.to_thread(self._remember_candidate, search_id, listing_id, None)

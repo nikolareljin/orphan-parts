@@ -11,6 +11,7 @@ from app.demo.schema import DemoItem, DemoSet, Outcome
 from app.extract.fields import FIELD_BY_NAME
 from app.extract.service import INSTRUCTIONS, prompt
 from app.inventory import Inventory
+from app.inventory.parent import PARENT_FIELDS
 from app.inventory.schema import Item
 from app.inventory.service import current_fields
 from app.match import AssessError, Assessor, AssessRequest, Side
@@ -162,10 +163,12 @@ def score(
         if row.item_id is not None:
             item = inventory.get(row.item_id)
             row.loaded = True
-            observed = [a for a in item.assertions if a.provenance == "observed"]
+            # the item's own values: what is known of the device a part came from is not scored
+            own = [a for a in item.assertions if a.field not in PARENT_FIELDS]
+            observed = [a for a in own if a.provenance == "observed"]
             row.fields_read = len(observed)
             row.fields_accepted = sum(1 for a in observed if a.review == "accepted")
-            row.owner_values = sum(1 for a in item.assertions if a.provenance != "observed")
+            row.owner_values = sum(1 for a in own if a.provenance != "observed")
             if observed:
                 row.mean_confidence = round(sum(a.confidence for a in observed) / len(observed), 3)
             row.proposals_in = allocated.get(row.item_id, 0)

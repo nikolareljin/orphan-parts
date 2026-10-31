@@ -55,6 +55,9 @@ class Profile(BaseModel):
     id: str = Field(pattern=KEY)
     label: str
     description: str = ""
+    # a part that comes off a device (an agitator, a vacuum tool): without its own model
+    # number it is tied to a device by the device it came from, so the app asks for that
+    part_of_device: bool = False
     features: list[Feature] = []
     rules: list[Rule] = []
 

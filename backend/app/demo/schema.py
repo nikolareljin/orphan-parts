@@ -66,8 +66,22 @@ class DemoItem(BaseModel):
         " fixture mode shows it only when a recording of that drawing is kept",
     )
     expect: Expect | None = Field(default=None, description="what an evaluation run scores")
+    parent_photos: list[str] = Field(
+        default=[],
+        description="photos of the device a part came from (its label first), read once as a"
+        " label; kept with the item's photos as far as MAX_PHOTOS leaves room",
+    )
+    parent_device: str = Field(
+        default="", max_length=500, description="the owner's words about that device"
+    )
+    parent_device_model: str = Field(
+        default="",
+        max_length=200,
+        description="the device's model as its label states it; saved as typed while the"
+        " reading of parent_photos is not recorded yet",
+    )
 
-    @field_validator("photos")
+    @field_validator("photos", "parent_photos")
     @classmethod
     def _some(cls, values: list[str]) -> list[str]:
         if len(values) > 4:
@@ -137,7 +151,7 @@ class DemoSet(BaseModel):
         """Every file the set names, relative to the set file."""
         out: list[str] = []
         for i in self.items:
-            out += i.photos
+            out += i.photos + i.parent_photos
             if i.voice_note:
                 out.append(i.voice_note)
         for s in self.searches:

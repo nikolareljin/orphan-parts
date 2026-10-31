@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest'
 import type { Assertion, Item } from './api'
 import { ApiError } from './api'
 import {
+  PARENT_PROMPT,
+  asksForParent,
   availabilityLabel,
   changedDetails,
   detailsOf,
   intentLabel,
   isConflict,
   mergeDetails,
+  parentPhotoLine,
   proposedCount,
   provenanceLabel,
   reviewLabel,
@@ -117,5 +120,21 @@ describe('changedDetails', () => {
   it('sends nothing from an item served redacted to the demo visitor', () => {
     const seen = { ...loaded, location: '', notes: '', redacted: true }
     expect(changedDetails({ ...detailsOf(seen), faults: 'flickers', notes: 'typed' }, seen)).toEqual({})
+  })
+})
+
+describe('the device a part came from', () => {
+  it('asks only when the server says the part cannot be tied to its device', () => {
+    expect(asksForParent({ ...item([]), needs_parent: true })).toBe(true)
+    expect(asksForParent({ ...item([]), needs_parent: false })).toBe(false)
+    // an item served before the flag existed, or none at all: nothing is asked
+    expect(asksForParent(item([]))).toBe(false)
+    expect(asksForParent(null)).toBe(false)
+    expect(PARENT_PROMPT).toContain('the label under its base is best')
+  })
+
+  it('says what a photo of the device gave', () => {
+    expect(parentPhotoLine('Hamilton Beach 729')).toBe('Read from the photo: Hamilton Beach 729. Confirm it in the fields.')
+    expect(parentPhotoLine('')).toContain('No model could be read')
   })
 })

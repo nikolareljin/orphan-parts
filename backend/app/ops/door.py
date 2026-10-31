@@ -12,6 +12,9 @@ live_request: ContextVar[bool] = ContextVar("live_request", default=True)
 # shapes blank these whenever they are serialized for the demo visitor, so every route that
 # answers the visitor (and any added later) leaves them out without remembering to.
 PRIVATE_SOURCES = frozenset({"voice_note"})
+# The fields that are the owner's own words, kept like the notes: the device a part came from,
+# as the owner described it (app.inventory.parent).
+PRIVATE_FIELDS = frozenset({"parent_device"})
 
 
 def for_visitor() -> bool:

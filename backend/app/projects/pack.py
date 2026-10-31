@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 
 from app.find.schema import Candidate, Search
 from app.inventory.schema import Item
+from app.ops.door import PRIVATE_FIELDS
 from app.projects.schema import Budget, Preferences, Project
 
 # Field names that identify the item or its owner: as whole words of the key (``mac`` keeps
@@ -42,6 +43,10 @@ PRIVATE_PARTS = ("serial", "password", "passwd", "service_tag", "servicetag")
 
 
 def private_field(key: str) -> bool:
+    """A field that identifies the item or its owner, or is the owner's own words (the device a
+    part came from, as they described it): kept out of every brief and document."""
+    if key.lower() in PRIVATE_FIELDS:
+        return True
     words = key.lower().split("_")
     return any(w in PRIVATE_WORDS for w in words) or any(p in key.lower() for p in PRIVATE_PARTS)
 

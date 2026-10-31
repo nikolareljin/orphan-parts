@@ -191,15 +191,50 @@ class ListingsBack(BaseModel):
 
 
 class BroughtListing(BaseModel):
-    """A listing the owner brought back, scored by the plan as it stands, with its dates."""
+    """A listing the owner brought back, or a web search found, scored by the plan as it
+    stands, with its dates."""
 
     id: int
-    source_kind: Literal["text", "screenshot"]
+    source_kind: Literal["text", "screenshot", "web"]
     text: str
     observed_on: str
     added_at: str
     score: ListingScore
     candidate_id: int | None = Field(description="set once Check fit has assessed it")
+    source_url: str = Field(
+        default="", description="the page a web search found it on; never fetched by the app"
+    )
+
+
+class WebFind(BaseModel):
+    """One page the web search found, as the model wrote it: strict, every property required."""
+
+    url: str
+    title: str
+    site: str
+    price_as_stated: str
+    dimensions_as_stated: str
+    quote: str
+
+
+class WebFinds(BaseModel):
+    """Strict output schema of a part-search call."""
+
+    candidates: list[WebFind]
+
+
+class WebSearchResult(BaseModel):
+    """What one "Search the web" kept: the ranked listings with the new ones in them, how many
+    the model wrote and how many were left out because no search result carries their page."""
+
+    listings: list[BroughtListing]
+    added: int
+    dropped: int
+    notes: list[str]
+    searches: int
+    model: str
+    from_fixture: bool
+    cost_usd: float
 
 
 class Search(BaseModel):

@@ -1,7 +1,9 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
+import { asksForParent } from '../lib/inventory'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
+import ParentPrompt from './ParentPrompt'
 import SampleRead from './SampleRead'
 import SegmentView from './SegmentView'
 
@@ -105,6 +107,18 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
     }
   }
 
+  // the device a saved part came from, answered right here; the item is replaced by the
+  // server's answer and a refusal is said with the save's own line
+  async function answer(action: () => Promise<Item>) {
+    try {
+      const saved = await action()
+      setState((s) => (s.kind === 'done' ? { ...s, saved, saveError: undefined } : s))
+    } catch (err: unknown) {
+      setState((s) => (s.kind === 'done' ? { ...s, saveError: messageOf(err) } : s))
+      throw err
+    }
+  }
+
   return (
     <form className="extract fields" onSubmit={onSubmit}>
       <div className="row">
@@ -156,6 +170,7 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
                   <p className="meta">
                     Saved to your inventory as item #{state.saved.id}, {state.saved.name}. It is private.
                   </p>
+                  {asksForParent(state.saved) && <ParentPrompt item={state.saved} readOnly={false} save={answer} />}
                   {state.saveError && (
                     <p className="error" role="alert">
                       {state.saveError}

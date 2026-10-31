@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
 import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
+import ParentPrompt from './ParentPrompt'
 import Measure from './Measure'
 import { ItemSearch } from './SearchPlan'
 import Picture from './Picture'
@@ -294,7 +295,8 @@ function ItemPanel({
 
       <div className="item-section" data-section="facts">
         <h4>Facts</h4>
-        <ItemPhotos id={item.id} />
+        {asksForParent(item) && <ParentPrompt item={item} readOnly={readOnly} save={(action) => apply(action)} />}
+        <ItemPhotos key={item.version} id={item.id} />
         <div className="row">
           <label>
             <span>Plan</span>

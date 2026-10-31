@@ -17,6 +17,9 @@ from app.find.schema import (
     SearchPatch,
     SearchPlan,
     SellerQuestions,
+    WebFind,
+    WebFinds,
+    WebSearchResult,
 )
 from app.find.service import BusyError, Finder, FindError, handoff_url, seller_message, state_for
 
@@ -38,6 +41,9 @@ __all__ = [
     "SearchPatch",
     "SearchPlan",
     "SellerQuestions",
+    "WebFind",
+    "WebFinds",
+    "WebSearchResult",
     "handoff_url",
     "score_listing",
     "seller_message",

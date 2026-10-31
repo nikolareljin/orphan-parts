@@ -9,6 +9,9 @@
 # An item's `picture:` asks Muse Image for a drawing of it as that use (a template id or a few
 # words) once its drafts are written; fixture mode shows the drawing only once a record run
 # has kept it, and says "not recorded yet" until then.
+# A part's `parent_photos:` are photos of the device it came from, read once as a label (only a
+# recording of them answers in fixture mode); `parent_device:` is the owner's words about it and
+# `parent_device_model:` the model as its label states, saved as typed until that read is recorded.
 title: a drawer of idle things
 currency: USD
 country: US
@@ -135,6 +138,13 @@ items:
       # the material wanted in a replacement (metal or plastic); the worn hub's plastic is in
       # the faults
       material: "metal"
+    # the rod alone carries no model number, so the app asks which device it came from; the
+    # answer: the drink mixer it came off, by the label under its base, its badge and the
+    # whole mixer with the rod fitted. The model the label states stands in until a record
+    # run has read the photos.
+    parent_photos: [photos/hamilton-729-label.jpg, photos/hamilton-729-badge.jpg, photos/hamilton-729-mixer.jpg]
+    parent_device: Hamilton Beach drink mixer, type DM01, 120 V 60 Hz 70 W
+    parent_device_model: Hamilton Beach 729
 
 searches:
   - key: metal_agitator

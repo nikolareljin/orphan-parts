@@ -14,6 +14,7 @@ from app.config import Settings
 from app.find.schema import SearchCreate, SearchPatch
 from app.find.service import Finder
 from app.inventory import Inventory
+from app.inventory.parent import PARENT_FIELDS
 from app.inventory.schema import Item, ItemPatch
 from app.model_api import ModelApiClient, text_part, user_message
 from app.projects import pack as packs
@@ -98,7 +99,10 @@ class AllocationConflictError(ProjectsError):
 
 
 def item_line(item: Item) -> dict[str, Any]:
-    fields = {k: f"{a.value} {a.unit}".strip() for k, a in item.fields.items()}
+    # what the item is; the device a part came from is for its searches, not a build
+    fields = {
+        k: f"{a.value} {a.unit}".strip() for k, a in item.fields.items() if k not in PARENT_FIELDS
+    }
     return {
         "id": item.id,
         "name": item.name,

@@ -224,6 +224,29 @@ def citations(output: list[dict[str, Any]]) -> list[dict[str, str]]:
     return found
 
 
+def norm_url(url: str) -> str:
+    """The page without scheme, www, query, fragment or trailing slash: the same page, however
+    the model or the search wrote it."""
+    u = url.strip().lower()
+    for prefix in ("https://", "http://"):
+        if u.startswith(prefix):
+            u = u[len(prefix) :]
+    if u.startswith("www."):
+        u = u[4:]
+    for sep in ("?", "#"):
+        u = u.split(sep, 1)[0]
+    return u.rstrip("/")
+
+
+def backed_pages(output: list[dict[str, Any]]) -> set[str]:
+    """Every page a search returned or the answer cited, as ``norm_url`` writes it: what a URL
+    the model wrote must be among to count as found rather than made up."""
+    pages = {norm_url(r["url"]) for r in search_results(output)}
+    pages |= {norm_url(c["url"]) for c in citations(output)}
+    pages.discard("")
+    return pages
+
+
 # --- client ------------------------------------------------------------------
 
 

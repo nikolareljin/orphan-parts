@@ -12,12 +12,13 @@ from app.inventory import Inventory
 from app.inventory.schema import Item
 from app.model_api import (
     ModelApiClient,
-    citations,
-    search_results,
+    backed_pages,
+    norm_url,
     searches,
     text_part,
     user_message,
 )
+from app.ops.door import PRIVATE_FIELDS
 from app.value.schema import (
     Comparable,
     Findings,
@@ -89,27 +90,12 @@ def brief(item: Item, known: dict[str, str], request: PriceRequest) -> str:
     return "\n".join(lines)
 
 
-def _norm_url(url: str) -> str:
-    """The page without scheme, www, query, fragment or trailing slash: the same page, however
-    the model or the search wrote it."""
-    u = url.strip().lower()
-    for prefix in ("https://", "http://"):
-        if u.startswith(prefix):
-            u = u[len(prefix) :]
-    if u.startswith("www."):
-        u = u[4:]
-    for sep in ("?", "#"):
-        u = u.split(sep, 1)[0]
-    return u.rstrip("/")
-
-
 def backed(
     found: list[Comparable], output: list[dict[str, Any]], currency: str
 ) -> tuple[list[Comparable], int, list[str]]:
     """Keep a comparable only when a search result or a citation carries its page, in the
     requested currency; say how many were dropped and why."""
-    pages = {_norm_url(r["url"]) for r in search_results(output)}
-    pages |= {_norm_url(c["url"]) for c in citations(output)}
+    pages = backed_pages(output)
     kept: list[Comparable] = []
     dropped = 0
     caveats: list[str] = []
@@ -120,7 +106,7 @@ def backed(
         if c.price <= 0:
             no_price += 1
             continue
-        page = _norm_url(c.source_url)
+        page = norm_url(c.source_url)
         if page not in pages:
             dropped += 1
             continue
@@ -226,7 +212,8 @@ class Valuer:
         known = {
             k: f"{a.value} {a.unit}".strip()
             for k, a in item.fields.items()
-            if a.review == "accepted"
+            # the owner's words about the device a part came from stay theirs
+            if a.review == "accepted" and k not in PRIVATE_FIELDS
         }
         tool: dict[str, Any] = {
             "type": "web_search",

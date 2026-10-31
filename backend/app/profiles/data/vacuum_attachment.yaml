@@ -4,6 +4,7 @@ description: >
   A non-powered tool that fits the wand or hose of a vacuum cleaner. Fit is decided by the
   opening and the insertion geometry; a powered head also needs documented electrical
   compatibility, which no dimension can establish.
+part_of_device: true
 features:
   - key: opening_inner_diameter
     label: Opening inner diameter

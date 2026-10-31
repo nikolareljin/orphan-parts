@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { askingPrice, candidateRequest, highlightSegments, maxPriceLine, seenText, sourceLabel, splitListings, stateLabel, stateTone, statusLabel, verdictLabel, verdictTone } from './find'
+import { WEB_SIGN_IN, askingPrice, siteOf, webLink, webSummary, candidateRequest, highlightSegments, maxPriceLine, seenText, sourceLabel, splitListings, stateLabel, stateTone, statusLabel, verdictLabel, verdictTone } from './find'
 
 describe('labels', () => {
   it('names every state, tone, status and source', () => {
@@ -100,5 +100,26 @@ describe('prices', () => {
     expect(maxPriceLine(20)).toBe('Each link includes your max price, $20.')
     expect(maxPriceLine(0)).toBe('No max price set.')
     expect(maxPriceLine(null)).toBe('No max price set.')
+  })
+})
+
+describe('search the web', () => {
+  const result = { listings: [], added: 3, dropped: 1, notes: [], searches: 1, model: 'm', from_fixture: true, cost_usd: 0 }
+
+  it('links only to web pages', () => {
+    expect(webLink('https://example.org/a')).toBe('https://example.org/a')
+    expect(webLink(' http://example.org/a ')).toBe('http://example.org/a')
+    expect(webLink('javascript:alert(1)')).toBe('')
+    expect(webLink(undefined)).toBe('')
+    expect(siteOf('https://www.example.org/parts/a')).toBe('example.org')
+  })
+
+  it('says what was added and left out in a line', () => {
+    expect(webSummary(result)).toBe('Added 3 pages to the listings. 1 left out: no search result showed it.')
+    expect(webSummary({ ...result, added: 1, dropped: 0 })).toBe('Added 1 page to the listings.')
+    expect(webSummary({ ...result, added: 0, dropped: 0, notes: ['every page found is already in the listings'] })).toBe(
+      'Added 0 pages to the listings. Every page found is already in the list.',
+    )
+    expect(WEB_SIGN_IN).toBe('Sign in with the access code to search the web.')
   })
 })
