@@ -1,5 +1,6 @@
 """Shapes of a missing-item search: what is needed, what a candidate shows, where it stands."""
 
+import re
 from datetime import UTC, date, datetime
 from typing import Literal
 
@@ -50,6 +51,14 @@ def _a_day_that_was(value: str) -> str:
     return value
 
 
+def seen_day(value: str) -> str:
+    """A day given in a form field: empty, or a real past date as YYYY-MM-DD."""
+    value = value.strip()
+    if value and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        raise ValueError("a real date, YYYY-MM-DD")
+    return _a_day_that_was(value)
+
+
 class SearchCreate(BaseModel):
     """What is needed: another item's requirements, or values written in, under a profile."""
 
@@ -82,6 +91,113 @@ class SearchPatch(BaseModel):
     notes: str | None = Field(default=None, max_length=NOTES_MAX)
 
 
+class Phrasing(BaseModel):
+    """One way a seller might have worded the listing, and the search link that runs it."""
+
+    text: str
+    why: str
+    url: str = Field(default="", description="the Marketplace search for this phrasing")
+
+
+class PlanWriting(BaseModel):
+    """Strict output schema of a search-plan call: every property required, no extras."""
+
+    phrasings: list[Phrasing]
+    pattern: str
+    exclusions: list[str]
+
+
+class SearchPlan(BaseModel):
+    """Phrasings to search with, the pattern a fitting listing matches and the words that rule
+    one out. The links are opened by the owner; the pattern runs here, on what comes back."""
+
+    phrasings: list[Phrasing]
+    pattern: str = Field(description="Python regular expression, case-insensitive; may be empty")
+    pattern_error: str = Field(default="", description="why the written pattern was refused")
+    exclusions: list[str]
+    max_price: float | None
+    radius_km: int | None
+    model: str
+    from_fixture: bool
+    cost_usd: float
+    planned_at: str
+    edited_at: str = ""
+
+
+class PlanEdit(BaseModel):
+    """The owner's pattern and exclusion words; the pattern is checked again before it is kept."""
+
+    pattern: str | None = Field(default=None, max_length=1000)
+    exclusions: list[str] | None = Field(default=None, max_length=100)
+
+
+class PatternTest(BaseModel):
+    """A pattern tried on a line of text, before it is kept or after."""
+
+    pattern: str = Field(default="", max_length=1000)
+    exclusions: list[str] = Field(default=[], max_length=100)
+    max_price: float | None = Field(default=None, ge=0, le=PRICE_MAX)
+    text: str = Field(max_length=TEXT_MAX)
+
+
+class Highlight(BaseModel):
+    kind: Literal["match", "excluded"]
+    start: int = Field(description="offset in characters (code points) of the listing text")
+    end: int
+    text: str
+
+
+class ListingScore(BaseModel):
+    """Where a listing stands by the pattern, the exclusion words and the price; no model."""
+
+    verdict: Literal["fits", "maybe", "no"]
+    matched: bool | None
+    highlights: list[Highlight]
+    excluded: list[str]
+    price: float | None
+    price_ok: bool | None
+    reasons: list[str]
+
+
+class PatternResult(BaseModel):
+    error: str
+    score: ListingScore | None
+
+
+class ListingsBack(BaseModel):
+    """Several listings brought back at once, as pasted text, each one already split out."""
+
+    texts: list[str] = Field(min_length=1, max_length=20)
+    observed_on: str = Field(default="", pattern=DATE, description="today when empty")
+
+    @field_validator("observed_on")
+    @classmethod
+    def _seen(cls, value: str) -> str:
+        return _a_day_that_was(value)
+
+    @field_validator("texts")
+    @classmethod
+    def _bounded(cls, texts: list[str]) -> list[str]:
+        kept = [t.strip() for t in texts if t.strip()]
+        if not kept:
+            raise ValueError("no listing text")
+        if any(len(t) > TEXT_MAX for t in kept):
+            raise ValueError(f"a listing is longer than {TEXT_MAX} characters")
+        return kept
+
+
+class BroughtListing(BaseModel):
+    """A listing the owner brought back, scored by the plan as it stands, with its dates."""
+
+    id: int
+    source_kind: Literal["text", "screenshot"]
+    text: str
+    observed_on: str
+    added_at: str
+    score: ListingScore
+    candidate_id: int | None = Field(description="set once Check fit has assessed it")
+
+
 class Search(BaseModel):
     id: int
     need_item_id: int | None
@@ -98,6 +214,8 @@ class Search(BaseModel):
         description="the Marketplace search the owner runs; nothing is fetched"
     )
     candidates: int
+    plan: SearchPlan | None = None
+    listings: int = Field(default=0, description="listings brought back for scoring")
     created_at: str
     updated_at: str
 
