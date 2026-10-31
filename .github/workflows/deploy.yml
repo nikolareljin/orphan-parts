@@ -35,6 +35,7 @@ jobs:
   backend:
     if: vars.HOSTED_DEPLOY == 'true' && (github.event_name == 'push' || inputs.target == 'both' || inputs.target == 'backend')
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       api_url: ${{ steps.deploy.outputs.api_url }}
     steps:
@@ -70,6 +71,7 @@ jobs:
       && (github.event_name == 'push' || inputs.target == 'both' || inputs.target == 'web')
       && (needs.backend.result == 'success' || needs.backend.result == 'skipped')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
