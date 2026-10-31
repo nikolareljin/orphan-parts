@@ -186,7 +186,7 @@ async def test_a_picture_named_in_the_set_waits_for_its_recording(
 async def test_record_mode_draws_the_picture_and_fixture_mode_replays_it(
     live_settings: Settings,
 ) -> None:
-    recording = live_settings.model_copy(update={"record_fixtures": True})
+    recording = live_settings.model_copy(update={"record_fixtures": True, "picture_enabled": True})
     path = small_set(recording.data_dir.parent / "demo", "    picture: smart_mirror\n")
     calls: list[str] = []
     loader, client = build_loader(recording)
@@ -216,3 +216,24 @@ async def test_record_mode_draws_the_picture_and_fixture_mode_replays_it(
     assert loader.pictures is not None
     kept = loader.pictures.list(loader.ids["monitor_u2419h"]).pictures
     assert len(kept) == 1 and kept[0].from_fixture is True
+
+
+async def test_a_live_run_draws_no_picture_unless_pictures_are_on(live_settings: Settings) -> None:
+    # load_demo on a host with a key: PICTURE_ENABLED off means no paid drawing
+    path = small_set(live_settings.data_dir.parent / "demo", "    picture: smart_mirror\n")
+    calls: list[str] = []
+    loader, client = build_loader(live_settings)
+    await client.aclose()
+    faked = ModelApiClient(
+        live_settings, CostLedger(25.0), transport=fake_api(live_settings, calls)
+    )
+    loader.client = loader.extractor.client = faked
+    assert loader.pictures is not None
+    loader.pictures.client = faked
+    try:
+        outcome = await loader.run(load_set(path), path.parent)
+    finally:
+        await faked.aclose()
+    assert outcome.pictures == 0 and outcome.skipped == []
+    assert outcome.unrecorded == ["monitor_u2419h: picture (left out: PICTURE_ENABLED is off)"]
+    assert not any(c.endswith("/images/generations") for c in calls)

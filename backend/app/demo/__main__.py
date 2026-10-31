@@ -68,10 +68,14 @@ def build_loader(settings: Settings) -> tuple[Loader, ModelApiClient]:
     assessor = Assessor(profiles, inventory)
     finder = Finder(settings, client, inventory, profiles, extractor, assessor)
     templates = Templates()
-    # an item of the set that names a picture asks for it whatever PICTURE_ENABLED says: the
-    # set is the owner's own run, and fixture mode replays the drawing or skips it
+    # an item's picture is drawn only with PICTURE_ENABLED (every drawing is a paid call; a
+    # record run turns it on); fixture mode replays a kept drawing whatever it says, at no cost
+    replay = settings.model_api_mode == "fixture"
     pictures = Pictures(
-        settings.model_copy(update={"picture_enabled": True}), client, inventory, templates
+        settings.model_copy(update={"picture_enabled": settings.picture_enabled or replay}),
+        client,
+        inventory,
+        templates,
     )
     loader = Loader(
         settings,

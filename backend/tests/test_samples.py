@@ -295,3 +295,28 @@ def test_the_owner_uploads_live_while_the_visitor_reads_recordings(
         assert mine.status_code == 200
         assert mine.json()["results"][0]["extraction"]["from_fixture"] is False
         assert len(calls) == 2
+
+
+def test_a_visitor_pays_one_try_per_reading(tmp_path: Path) -> None:
+    settings = visitor_settings(tmp_path, demo_visitor_calls_per_hour=4)
+    with TestClient(create_app(settings)) as c:
+        three = ["dell-u2419h-label", "evga-9800gt-front", "agitator-head"]
+        first = c.post("/api/samples/read", json={"sample_ids": three, "find_label": False})
+        assert first.status_code == 200 and len(first.json()["results"]) == 3
+        # one try is left: three more readings are refused before any is made, and the
+        # refused request's own try is given back
+        again = c.post("/api/samples/read", json={"sample_ids": three, "find_label": False})
+        assert again.status_code == 429 and "Retry-After" in again.headers
+        assert "pick fewer photos" in again.json()["detail"]
+        one = c.post("/api/samples/read", json={"sample_ids": three[:1], "find_label": False})
+        assert one.status_code == 200
+
+
+def test_a_repeated_reading_is_answered_from_memory(visitor: TestClient) -> None:
+    ledger = visitor.app.state.model_api.ledger  # type: ignore[attr-defined]
+    body = {"sample_ids": ["evga-9800gt-back"], "find_label": True}
+    first = visitor.post("/api/samples/read", json=body).json()
+    made = len(ledger.entries())
+    assert made > 0
+    second = visitor.post("/api/samples/read", json=body).json()
+    assert second == first and len(ledger.entries()) == made  # no call, no decoding

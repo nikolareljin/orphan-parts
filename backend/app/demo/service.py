@@ -313,7 +313,9 @@ class Loader:
             picture = await self.pictures.draw(item_id, item.picture)
         except NoRecordingError:
             out.unrecorded.append(f"{item.key}: picture (one ./dev record-fixtures run draws it)")
-        except (ValueError, LookupError, PicturesOffError, ModelApiError) as exc:
+        except PicturesOffError:
+            out.unrecorded.append(f"{item.key}: picture (left out: PICTURE_ENABLED is off)")
+        except (ValueError, LookupError, ModelApiError) as exc:
             out.skipped.append(f"{item.key}: picture: {exc}")
         else:
             out.pictures += 1

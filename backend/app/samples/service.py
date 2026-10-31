@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from app.config import Settings
 from app.extract import Extraction, Extractor
 from app.model_api import NoRecordingError, exact_replay
+from app.ops.door import live_request
 from app.samples.catalog import MISSING_LINE, Samples, UnknownSampleError
 from app.segment import Segmentation, Segmenter
 
@@ -47,6 +48,17 @@ class SampleRead(BaseModel):
     results: list[SampleResult]
 
 
+KEEP_MAX = 256  # recorded readings kept for repeats; the oldest goes first
+
+
+def recorded(result: SampleResult) -> bool:
+    """A reading answered wholly from recordings (or found to have none): the same next time."""
+    if result.missing:
+        return True
+    parts = [result.extraction, result.segmentation]
+    return all(p is None or p.from_fixture for p in parts) and result.extraction is not None
+
+
 Unit = tuple[str, str, list[str], bool]  # item key, item name, photo ids, the whole item
 
 
@@ -68,6 +80,9 @@ class SampleReader:
         self.samples = samples
         self.extractor = extractor
         self.segmenter = segmenter
+        # recorded readings by (photo ids, find_label, door): the same recording always gives the
+        # same answer, so a repeat costs no decoding; a live answer is never kept here
+        self._kept: dict[tuple[tuple[str, ...], bool, bool], SampleResult] = {}
 
     def units(self, sample_ids: list[str]) -> list[Unit]:
         """The selection as readings, in the catalog's order: an item whose every photo is
@@ -101,6 +116,12 @@ class SampleReader:
     async def read(self, sample_ids: list[str], find_label: bool = True) -> SampleRead:
         results: list[SampleResult] = []
         for key, name, ids, whole in self.units(sample_ids):
+            # kept apart by door: the owner's read through a key is never a visitor's recording
+            slot = (tuple(ids), find_label, live_request.get())
+            kept = self._kept.get(slot)
+            if kept is not None:
+                results.append(kept)
+                continue
             result = SampleResult(sample_ids=ids, item_key=key, item_name=name, whole_item=whole)
             token = exact_replay.set(True)
             try:
@@ -115,6 +136,10 @@ class SampleReader:
                 )
             finally:
                 exact_replay.reset(token)
+            if recorded(result):
+                if len(self._kept) >= KEEP_MAX:
+                    self._kept.pop(next(iter(self._kept)))
+                self._kept[slot] = result
             results.append(result)
         return SampleRead(results=results)
 

@@ -81,8 +81,11 @@ the Inbox's capture form, the listing's voice note and *Find a part* show one li
 with the access code to use this.*, since the set has no sample a visitor could send there and
 those routes are behind the code. Signed in, every upload is back and read live where the
 server has a key. The set's photos are the samples wherever the set is shipped (`DEMO_SET`, by
-default `demo/set.yaml` beside the backend: the dev stack mounts it, the Modal image carries
-it); without it the gallery says there are none.
+default `demo/set.yaml` beside the backend, which the dev stack mounts; the Modal image ships
+the set at `/root/demo` and the Modal app sets `DEMO_SET` to it); without it the gallery says there are none.
+A reading of several samples costs the visitor one try per reading (an item's group is one), so
+a large selection is paid for as the readings it makes; a reading answered from the recordings
+is kept in memory, and the same pick again is answered without decoding anything.
 
 The header always carries one door on a gated host: *Sign in with the code* without a session
 (and while the browser has not heard back from `GET /api/access` yet), *Sign out* with one. The
