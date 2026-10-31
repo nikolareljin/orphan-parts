@@ -40,3 +40,5 @@ curl -s localhost:8000/api/candidates/1/questions
 ```
 
 See [HTTP API](../reference/http-api.md) and the [buyer flow](buyer.md).
+
+<!-- path filter check -->
