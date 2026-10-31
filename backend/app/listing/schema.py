@@ -1,5 +1,7 @@
 """Shapes of a listing draft: what the model writes, what the rules add, what is stored."""
 
+import re
+
 from pydantic import BaseModel, Field, field_validator
 
 from app.listing.checklists import Mode, Step
@@ -33,6 +35,7 @@ class DraftWriting(BaseModel):
 
 
 DETAIL_MAX = 200
+PLAIN_AMOUNT = re.compile(r"\$?\s?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?")
 
 
 class DraftRequest(BaseModel):
@@ -49,6 +52,14 @@ class DraftRequest(BaseModel):
     @classmethod
     def _one_line(cls, value: str) -> str:
         return " ".join(value.split())
+
+    @field_validator("asking_price")
+    @classmethod
+    def _plain_amount(cls, value: str) -> str:
+        # one amount of dollars ("$35", "1,200.50"); a range or words would be read wrong
+        if value and not PLAIN_AMOUNT.fullmatch(value):
+            raise ValueError("asking_price: one amount of dollars, like 35")
+        return value
 
 
 class Draft(BaseModel):

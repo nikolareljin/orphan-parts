@@ -65,7 +65,7 @@ test('listing details, then the Marketplace handoff: fields to copy, the create 
   await form.getByLabel('Your reason (private)').fill('moving to Denver')
   await form.getByRole('button', { name: 'Write the draft' }).click()
 
-  const draft = listing.getByRole('status')
+  const draft = listing.getByRole('region', { name: 'Marketplace handoff' })
   await expect(draft).toContainText('Marketplace handoff')
   await expect(draft).toContainText('recorded answer')
   const text = draft.getByLabel('Draft text')
@@ -104,18 +104,29 @@ test('listing details, then the Marketplace handoff: fields to copy, the create 
   ])
   await page.reload()
   const again = await openItem(page, name)
-  const kept = again.listing.getByRole('status')
+  const kept = again.listing.getByRole('region', { name: 'Marketplace handoff' })
   await expect(kept.getByLabel(/Clean the outside/)).toBeChecked()
   await expect(again.listing.getByLabel('Area', { exact: true })).toHaveValue('Astoria')
+  // written again from the same details: a new draft, no new details version
+  await again.listing.getByRole('button', { name: 'Write the draft' }).click()
+  await expect(kept).toContainText('draft 2')
+  await expect(again.listing.getByRole('form', { name: 'Listing details' })).toContainText('Details saved (version 1)')
 
   const after = kept.getByLabel('After posting')
   await after.getByLabel('Listing link (optional)').fill('https://www.facebook.com/marketplace/item/1234567890/')
   await after.getByRole('button', { name: 'Mark as listed' }).click()
   await expect(after).toContainText('listed on')
+  // listed again at a lower price, then sold: the buttons wait for each write
+  await after.getByLabel('Price (USD)').fill('14')
+  await after.getByRole('button', { name: 'Listed again at $14' }).click()
+  await expect(after.getByRole('listitem')).toHaveCount(2)
+  await after.getByLabel('Price (USD)').fill('0')
+  await expect(after.getByRole('button', { name: /^Listed again/ })).toBeDisabled()
   await after.getByLabel('Price (USD)').fill('13')
   await after.getByRole('button', { name: 'Mark as sold' }).click()
   await expect(after).toContainText('sold on')
   await expect(after).toContainText('at $13')
+  await expect(listing.getByRole('alert')).toHaveCount(0)
 })
 
 test('a give-away is free under Free Stuff, worded for pickup, with the data steps', async ({ page, request }) => {
@@ -129,7 +140,7 @@ test('a give-away is free under Free Stuff, worded for pickup, with the data ste
   await form.getByLabel('Area').fill('11105')
   await form.getByRole('button', { name: 'Write the draft' }).click()
 
-  const draft = listing.getByRole('status')
+  const draft = listing.getByRole('region', { name: 'Marketplace handoff' })
   await expect(draft).toContainText('Free: Orbital 65 W laptop power adapter')
   await expect(draft).toContainText('Free (0)')
   await expect(draft.getByLabel('Category', { exact: true })).toHaveValue('Free Stuff')

@@ -37,9 +37,11 @@ submits a Facebook page, and the service sends nothing to facebook.com.
     None of these details is shown to a demo visitor, not even on a public item.
 
 2. **Write the draft.** The details are saved, then one Muse Spark call (effort low) gets the
-    item's accepted values, your public details and the item's photos (up to four, sent at 768 px),
-    and writes the listing in Marketplace's shape. The lowest price, the reason and the asking
-    price are not in what the model reads. The rules then check what came back:
+    item's accepted values, your public details and the item's photos (the first four, sent at
+    768 px, even when `MAX_PHOTOS` allows more), and writes the listing in Marketplace's shape. The
+    lowest price, the reason and the asking price are not in what the model reads, and neither is
+    a value that identifies the item (a serial number, MAC address or IMEI): one the model reads
+    off a photo is taken out of the title, the description and the tags, with a warning. The rules then check what came back:
 
     - **Title:** at most 100 characters, brand, model and key spec first; a give-away starts
       with *Free:*.
@@ -72,12 +74,14 @@ submits a Facebook page, and the service sends nothing to facebook.com.
     in, with no camera metadata. **Open Marketplace** opens `MARKETPLACE_CREATE_URL` in a new
     tab. The checklist under it: choose *Item for sale*, paste the fields, add the photos in
     order, set pickup or shipping and the area, check the preview, publish. The preparation
-    steps (clean, test, photos, your data) are ticked and kept per draft, and so is checking that
+    steps (clean, test, photos with the serial number, MAC or IMEI covered on the label, your
+    data) are ticked and kept per draft, and so is checking that
     Marketplace allows the item at all: its Commerce Policies refuse, among others, recalled
     products, medical devices and anything that unlocks paid streaming or services.
 
 4. **After posting.** **Mark as listed** keeps the date, the price and the listing link when you
-    paste it; listed again is a new price. Later, **Mark as sold** keeps the final price, records
+    paste it; while it is listed, **Listed again at $…** records a new price. Each button waits for
+    its write, and a sale is listed at a price above 0. Later, **Mark as sold** keeps the final price, records
     it as a sale for price guidance (`note: Facebook Marketplace`) and marks the item gone, in one
     write; **Mark as given** marks it gone. Nothing follows a sale or a gift (409), so a sale is
     never counted twice. Each is an event in the item's history.

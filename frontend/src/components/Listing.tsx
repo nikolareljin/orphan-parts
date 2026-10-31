@@ -18,7 +18,9 @@ import {
   parsePrice,
   priceInput,
   priceLabel,
+  listedLabel,
   remaining,
+  sameDetails,
   stepsByGroup,
   today,
   type CopyKey,
@@ -35,6 +37,8 @@ export default function Listing({ item, readOnly = false, onChanged }: { item: I
   const [mode, setMode] = useState<DraftMode>(item.intent === 'give' ? 'give' : 'sell')
   const [details, setDetails] = useState<SellDetails>(emptyDetails)
   const [saved, setSaved] = useState<number | null>(null)
+  // the details as last saved, so a draft written from unchanged details saves nothing new
+  const [stored, setStored] = useState<SellDetails | null>(null)
   // whether the owner's saved details were read: until then the form is blank, and saving it
   // would write the blanks over them
   const [loaded, setLoaded] = useState(false)
@@ -64,6 +68,7 @@ export default function Listing({ item, readOnly = false, onChanged }: { item: I
         setLoaded(true)
         if (record === null) return
         setDetails(record.details)
+        setStored(record.details)
         setSaved(record.version)
         setAsking(priceInput(record.details.asking_price))
         setLowest(priceInput(record.details.lowest_price))
@@ -120,12 +125,16 @@ export default function Listing({ item, readOnly = false, onChanged }: { item: I
     return next.details
   }
 
-  async function saveDetails(): Promise<boolean> {
+  // saved as a new version; with onlyChanged, details the same as the saved ones are kept as
+  // they are (a draft written again adds no "listing details saved" line to the history)
+  async function saveDetails(onlyChanged = false): Promise<boolean> {
     if (readOnly || !loaded) return false
     const next = withPrices()
     if (next === null) return false
+    if (onlyChanged && stored !== null && sameDetails(next, stored)) return true
     const record = await api.marketplace.saveDetails(item.id, next)
     setDetails(record.details)
+    setStored(record.details)
     setSaved(record.version)
     return true
   }
@@ -150,7 +159,7 @@ export default function Listing({ item, readOnly = false, onChanged }: { item: I
     setBusy(true)
     setError('')
     try {
-      if (!(await saveDetails())) return
+      if (!(await saveDetails(true))) return
       setDraft(await api.drafts.write(item.id, { mode, holds_data: details.data !== 'none', pickup: '', asking_price: '' }))
       onChanged()
     } catch (err: unknown) {
@@ -340,7 +349,7 @@ export default function Listing({ item, readOnly = false, onChanged }: { item: I
           detailsChanged={saved !== null && draft.details_version !== saved}
           status={status}
           onTick={(k, d) => void tick(k, d)}
-          onRecord={(run) => void record(run)}
+          onRecord={record}
           onError={setError}
         />
       )}
@@ -362,7 +371,7 @@ function Handoff({
   detailsChanged: boolean
   status: MarketplaceStatus | null
   onTick: (key: string, done: boolean) => void
-  onRecord: (run: () => Promise<MarketplaceStatus>) => void
+  onRecord: (run: () => Promise<MarketplaceStatus>) => Promise<void>
   onError: (text: string) => void
 }) {
   const [copied, setCopied] = useState<CopyKey | null>(null)
@@ -439,9 +448,9 @@ function Handoff({
   }
 
   return (
-    <div className="draft handoff" role="status" aria-label={`Draft ${draft.version}`}>
+    <section className="draft handoff" aria-label="Marketplace handoff">
       <h5>Marketplace handoff</h5>
-      <p className="meta">
+      <p className="meta" role="status">
         {draft.mode === 'sell' ? 'For sale' : 'Free'} · draft {draft.version} · {draft.model} · {usd(draft.cost_usd)}
         {draft.from_fixture && <span className="badge">recorded answer</span>}
         {draft.stale && <span className="badge">item changed since</span>}
@@ -454,6 +463,9 @@ function Handoff({
           ))}
         </ul>
       )}
+      <p className="visually-hidden" role="status">
+        {copied ? `${copyFields(draft).find((f) => f.key === copied)?.label ?? ''} copied` : ''}
+      </p>
       <dl className="fields" aria-label="Fields to paste">
         {copyFields(draft, { category, condition }).map((f) => (
           <div key={f.key} className={`field ${f.key}`}>
@@ -529,7 +541,7 @@ function Handoff({
       ))}
       <p className="meta">{draft.ready ? 'Every required step is done.' : `${left} required step(s) left.`}</p>
       <Outcomes draft={draft} itemId={itemId} status={status} onRecord={onRecord} />
-    </div>
+    </section>
   )
 }
 
@@ -542,17 +554,31 @@ function Outcomes({
   draft: Draft
   itemId: number
   status: MarketplaceStatus | null
-  onRecord: (run: () => Promise<MarketplaceStatus>) => void
+  onRecord: (run: () => Promise<MarketplaceStatus>) => Promise<void>
 }) {
   const [on, setOn] = useState(today())
   const [price, setPrice] = useState(draft.price)
   const [url, setUrl] = useState('')
+  // one outcome at a time: a second click while a sale is recorded would be refused as sold
+  const [pending, setPending] = useState(false)
   const state = status?.state ?? ''
   const done = state === 'sold' || state === 'given'
   const amount = parsePrice(price)
+  // a sale is listed at a price above 0, which Marketplace would show as free
+  const canList = (state === '' || state === 'listed') && (draft.mode === 'give' || (amount !== null && amount > 0))
+
+  async function run(call: () => Promise<MarketplaceStatus>) {
+    if (pending) return
+    setPending(true)
+    try {
+      await onRecord(call)
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
-    <div className="outcomes" aria-label="After posting">
+    <section className="outcomes" aria-label="After posting">
       <h5>After posting</h5>
       {status && status.events.length > 0 && (
         <ul className="events">
@@ -584,37 +610,38 @@ function Outcomes({
               <input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
             </label>
           )}
-          {state === '' && (
-            <label>
-              <span>Listing link (optional)</span>
-              <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.facebook.com/marketplace/item/…" />
-            </label>
-          )}
+          <label>
+            <span>Listing link (optional)</span>
+            <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.facebook.com/marketplace/item/…" />
+          </label>
         </div>
       )}
       {!done && (
         <div className="row actions">
-          {state === '' && (
+          <button
+            type="button"
+            disabled={pending || !canList}
+            onClick={() => void run(() => api.marketplace.listed(itemId, { on, price: draft.mode === 'give' ? 0 : (amount ?? 0), url: url.trim() }))}
+          >
+            {listedLabel(state, draft.mode, amount)}
+          </button>
+          {draft.mode === 'sell' ? (
             <button
               type="button"
-              disabled={draft.mode === 'sell' && amount === null}
-              onClick={() => onRecord(() => api.marketplace.listed(itemId, { on, price: amount ?? 0, url: url.trim() }))}
+              className="secondary"
+              disabled={pending || !amount}
+              onClick={() => void run(() => api.marketplace.sold(itemId, { on, price: amount ?? 0 }))}
             >
-              Mark as listed
-            </button>
-          )}
-          {draft.mode === 'sell' ? (
-            <button type="button" className="secondary" disabled={!amount} onClick={() => onRecord(() => api.marketplace.sold(itemId, { on, price: amount ?? 0 }))}>
               Mark as sold
             </button>
           ) : (
-            <button type="button" className="secondary" onClick={() => onRecord(() => api.marketplace.given(itemId, { on }))}>
+            <button type="button" className="secondary" disabled={pending} onClick={() => void run(() => api.marketplace.given(itemId, { on }))}>
               Mark as given
             </button>
           )}
           {draft.mode === 'sell' && <span className="muted">A sale is also recorded for price guidance.</span>}
         </div>
       )}
-    </div>
+    </section>
   )
 }

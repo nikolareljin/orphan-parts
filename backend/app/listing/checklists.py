@@ -33,6 +33,11 @@ _PHOTOS: list[tuple[str, str, bool]] = [
     ("photo_front", "Front, in daylight, on a plain background", True),
     ("photo_back", "Back and sides", True),
     ("photo_label", "The label, sharp and readable", True),
+    (
+        "photo_identifiers",
+        "Cover the serial number, MAC or IMEI on the label photo before posting",
+        True,
+    ),
     ("photo_faults", "Every fault, close up, nothing hidden by the crop", True),
     ("photo_included", "Everything included, laid out together", False),
 ]

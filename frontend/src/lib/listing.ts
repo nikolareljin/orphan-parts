@@ -105,6 +105,19 @@ export function detailsToSave(
   return { details: { ...details, asking_price: a, lowest_price: l } }
 }
 
+// Whether two sets of details say the same, field by field; what is included in any order.
+export function sameDetails(a: SellDetails, b: SellDetails): boolean {
+  return (Object.keys(emptyDetails()) as (keyof SellDetails)[]).every((k) =>
+    k === 'included' ? [...a.included].sort().join() === [...b.included].sort().join() : a[k] === b[k],
+  )
+}
+
+// The listed button: the first listing, then a new price on the same listing.
+export function listedLabel(state: string, mode: DraftMode, amount: number | null): string {
+  if (state !== 'listed') return 'Mark as listed'
+  return mode === 'sell' && amount !== null && amount > 0 ? `Listed again at ${dollars(amount)}` : 'Listed again'
+}
+
 // A US price as people read it: $35, $35.50.
 export function dollars(value: number): string {
   return Number.isInteger(value) ? `$${value.toLocaleString('en-US')}` : `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

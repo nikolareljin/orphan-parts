@@ -270,6 +270,65 @@ async def test_the_draft_is_checked_against_the_data_file_and_scrubbed(
     assert draft.photos[1].reason.startswith("not placed by the draft")
 
 
+async def test_a_serial_mac_or_imei_never_reaches_the_model_or_the_listing(
+    live_settings: Settings,
+) -> None:
+    sent: dict[str, Any] = {}
+    serial, mac = "CN-0K4567-72872", "00:1A:2B:3C:4D:5E"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.update(json.loads(request.content))
+        writing = {
+            # read off the label photo, the one place the brief cannot keep it out of
+            "title": f"DELL 1800FP monitor S/N {serial.lower()}",
+            "category": "Electronics > Monitors",
+            "condition": "Used - Good",
+            "description": f"Clean screen. MAC {mac}.",
+            "uses": [],
+            "tags": ["monitor", serial],
+            "facts": [{"text": f"Serial {serial}", "field": "serial_number"}],
+            "photo_order": [],
+        }
+        fixture = json.loads((RECORDED_FIXTURES / "responses" / "draft-sell.json").read_text())
+        response: dict[str, Any] = fixture["response"]
+        msg = next(o for o in response["output"] if o["type"] == "message")
+        msg["content"][0]["text"] = json.dumps(writing)
+        return httpx.Response(200, json=response)
+
+    # MAX_PHOTOS raised to six: still four go to the model
+    wide = live_settings.model_copy(update={"max_photos": 6})
+    client = ModelApiClient(wide, CostLedger(cap_usd=25.0), transport=httpx.MockTransport(handler))
+    lister = Lister(wide, client, Inventory(wide))
+    item_id = monitor(lister.inventory)
+    lister.inventory.add_field(item_id, FieldCreate(field="serial_number", value=serial))
+    lister.inventory.add_field(item_id, FieldCreate(field="mac_address", value=mac))
+    lister.inventory.add_field(item_id, FieldCreate(field="imei", value="356938035643800"))
+    # six photos: four go to the model, the other two follow in the order
+    lister.photos.add(item_id, [exif_photo() for _ in range(6)])
+    draft = await lister.draft(item_id, DraftRequest(mode="sell"))
+    brief_text = sent["input"][0]["content"][0]["text"]
+    for private in (serial, mac, "356938035643800", "serial_number", "mac_address", "imei"):
+        assert private not in brief_text, private
+    assert "screen_size: 18 in" in brief_text
+    shown = draft.title + draft.description + " ".join(draft.tags)
+    assert serial.lower() not in shown.lower() and mac not in shown
+    assert draft.tags == ["monitor"] and draft.facts == []
+    assert any("serial number, MAC address or IMEI" in w for w in draft.warnings)
+    images = [p for p in sent["input"][0]["content"] if p["type"] == "input_image"]
+    assert len(images) == 4 and "Photos: 4, numbered 1 to 4" in brief_text
+    assert [p.photo for p in draft.photos] == [1, 2, 3, 4, 5, 6]
+    assert draft.photos[4].reason == "after the first 4; not read"
+    assert any(s.key == "photo_identifiers" and "MAC or IMEI" in s.label for s in draft.checklist)
+
+
+def test_the_asking_price_on_a_request_is_one_plain_amount() -> None:
+    assert DraftRequest(asking_price="$1,200.50").asking_price == "$1,200.50"
+    assert price_for(DraftRequest(asking_price="$1,200.50"), None, None)[0] == "1201"
+    for wrong in ("$100-150", "35 or best offer", "1.2.3", "12,34"):
+        with pytest.raises(ValidationError, match="one amount of dollars"):
+            DraftRequest(asking_price=wrong)
+
+
 # --- routes ------------------------------------------------------------------------------
 
 

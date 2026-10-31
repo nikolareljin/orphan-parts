@@ -26,6 +26,7 @@ from app.listing.marketplace import (
     whole_dollars,
 )
 from app.listing.schema import (
+    PLAIN_AMOUNT,
     Draft,
     DraftFact,
     DraftRequest,
@@ -35,12 +36,15 @@ from app.listing.schema import (
 )
 from app.model_api import ModelApiClient, image_part, text_part, user_message
 from app.photos import ItemPhotos
+from app.projects.pack import private_field
 
 log = logging.getLogger("app.listing")
 
 MAX_OUTPUT_TOKENS = 1100
 # the photos go to the model smaller than they are kept: enough to rank them, fewer tokens
 PHOTO_PX = 768
+# at most this many go to the model, in the item's order; the rest follow in the photo order
+PHOTOS_SENT = 4
 REASON_MAX = 120
 # Details of the item the model may rest a line on, beside the confirmed fields.
 DETAIL_KEYS = ("name", "item_type", "condition", "faults", "tests_done", "accessories", "pickup")
@@ -198,11 +202,35 @@ def disclosures(item: Item, request: DraftRequest, details: SellDetails | None =
 
 
 def _amount(text: str) -> float | None:
+    # the request checked it is one plain amount ("$1,200.50"); the rest is its digits
+    if not PLAIN_AMOUNT.fullmatch(text.strip()):
+        return None
     cleaned = re.sub(r"[^\d.]", "", text)
     try:
         return float(cleaned) if cleaned else None
     except ValueError:
         return None
+
+
+def private_values(item: Item) -> list[str]:
+    """What an item holds that identifies it or its owner (a serial, a MAC address, an IMEI),
+    accepted or not: never shown in a listing, even when the model reads it off a photo."""
+    return sorted(
+        {
+            a.value.strip()
+            for a in item.assertions
+            if private_field(a.field) and len(a.value.strip()) >= 4
+        },
+        key=len,
+        reverse=True,
+    )
+
+
+def strip_values(text: str, values: list[str]) -> str:
+    """The text with each private value taken out, letter case aside."""
+    for value in values:
+        text = re.sub(re.escape(value), "[removed]", text, flags=re.I)
+    return text
 
 
 def price_for(
@@ -265,7 +293,7 @@ class Lister:
     def _photo_parts(self, item_id: int) -> list[dict[str, Any]]:
         s = self.settings
         parts: list[dict[str, Any]] = []
-        for n in range(1, self.photos.count(item_id) + 1):
+        for n in range(1, min(self.photos.count(item_id), PHOTOS_SENT) + 1):
             small = prepare(
                 self.photos.read(item_id, n),
                 max_px=PHOTO_PX,
@@ -277,12 +305,17 @@ class Lister:
     async def draft(self, item_id: int, request: DraftRequest) -> Draft:
         item = self.inventory.get(item_id)
         details, details_version = self.details(item_id)
+        # nothing that identifies the item or its owner (a serial, a MAC address, an IMEI, an
+        # account) reaches the model, by the rule the other briefs keep
         known = {
             k: (f"{a.value} {a.unit}".strip())
             for k, a in item.fields.items()
-            if a.review == "accepted"
+            if a.review == "accepted" and not private_field(k)
         }
-        to_confirm = sorted(k for k, a in item.fields.items() if a.review == "proposed")
+        to_confirm = sorted(
+            k for k, a in item.fields.items() if a.review == "proposed" and not private_field(k)
+        )
+        secrets = private_values(item)
         photo_parts = self._photo_parts(item_id)
         count = len(photo_parts) // 2
         result = await self.client.respond_structured(
@@ -320,17 +353,23 @@ class Lister:
                 " price come from Listing details"
             )
 
-        title, removed = strip_personal(" ".join(writing.title.split()))
+        title, removed = strip_personal(strip_values(" ".join(writing.title.split()), secrets))
         if request.mode == "give" and not title.lower().startswith("free"):
             title = f"Free: {title}"
         title = title[:TITLE_MAX].rstrip()
         holds_data = request.holds_data or (details is not None and details.data != "none")
-        text, more = strip_personal(writing.description.strip())
+        text, more = strip_personal(strip_values(writing.description.strip(), secrets))
         removed += more
         description = text + "\n\n" + "\n".join(disclosures(item, request, details))
         if removed:
             warnings.append(
                 "took out " + ", ".join(sorted(set(removed))) + "; buyers write through Marketplace"
+            )
+        written = writing.title + "\n" + writing.description
+        if strip_values(written, secrets) != written:
+            warnings.append(
+                "took out a serial number, MAC address or IMEI the item holds; cover it on the"
+                " label photo too"
             )
 
         category = pick_category(writing.category)
@@ -364,7 +403,12 @@ class Lister:
         tags: list[str] = []
         for tag in writing.tags:
             tag = " ".join(tag.split()).strip("#")[:TAG_MAX]
-            if tag and not strip_personal(tag)[1] and tag.casefold() not in map(str.casefold, tags):
+            if (
+                tag
+                and not strip_personal(tag)[1]
+                and strip_values(tag, secrets) == tag
+                and tag.casefold() not in map(str.casefold, tags)
+            ):
                 tags.append(tag)
         tags = tags[:TAGS_MAX]
 
@@ -376,6 +420,8 @@ class Lister:
         for n in range(1, count + 1):
             if n not in {p.photo for p in photos}:
                 photos.append(PhotoPick(photo=n, reason="not placed by the draft; kept after"))
+        for n in range(count + 1, self.photos.count(item_id) + 1):
+            photos.append(PhotoPick(photo=n, reason=f"after the first {PHOTOS_SENT}; not read"))
         if count == 0:
             warnings.append(
                 "the item has no photos yet: add the front, the label and every fault first"

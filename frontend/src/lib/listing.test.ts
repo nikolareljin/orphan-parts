@@ -11,11 +11,13 @@ import {
   emptyDetails,
   groupLabel,
   handoffSteps,
+  listedLabel,
   modeLabel,
   parsePrice,
   priceInput,
   priceLabel,
   remaining,
+  sameDetails,
   stepsByGroup,
   today,
 } from './listing'
@@ -131,6 +133,20 @@ describe('prices and details', () => {
     expect(detailsToSave(saved, 'sell', 'thirty', '')).toHaveProperty('error')
     // 0 would list a sale as free
     expect(detailsToSave(saved, 'sell', '0', '')).toHaveProperty('error')
+  })
+
+  it('names the listed button for a first listing and a new price', () => {
+    expect(listedLabel('', 'sell', 35)).toBe('Mark as listed')
+    expect(listedLabel('listed', 'sell', 32.5)).toBe('Listed again at $32.50')
+    expect(listedLabel('listed', 'sell', null)).toBe('Listed again')
+    expect(listedLabel('listed', 'give', 0)).toBe('Listed again')
+  })
+
+  it('compares details field by field, what is included in any order', () => {
+    const a = { ...emptyDetails(), included: ['stand' as const, 'box' as const], asking_price: 35 }
+    expect(sameDetails(a, { ...a, included: ['box', 'stand'] })).toBe(true)
+    expect(sameDetails(a, { ...a, asking_price: 30 })).toBe(false)
+    expect(sameDetails(a, { ...a, area: 'Astoria' })).toBe(false)
   })
 
   it('writes a price as US readers expect', () => {
