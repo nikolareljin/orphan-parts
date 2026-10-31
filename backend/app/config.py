@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     model_api_retry_after_max_s: float = 30.0
     prompt_cache_name: str = "orphan-parts"
     extract_reasoning_effort: str = "low"
+    # a ceiling on max_output_tokens as sent (the answer budget plus the reasoning headroom);
+    # 0 = none. Tokens are billed as used, so the ceiling bounds the worst call, not the usual one
+    model_max_output_tokens: int = 0
     image_max_px: int = 1280
     segment_max_px: int = 800
     voice_max_seconds: int = 600
@@ -93,6 +96,8 @@ class Settings(BaseSettings):
             raise ValueError("MODEL_API_MAX_ATTEMPTS must be at least 1")
         if self.spend_cap_usd < 0:
             raise ValueError("SPEND_CAP_USD must not be negative")
+        if self.model_max_output_tokens < 0:
+            raise ValueError("MODEL_MAX_OUTPUT_TOKENS must not be negative (0 = no ceiling)")
         if self.price_country and not re.fullmatch(r"[A-Z]{2}", self.price_country):
             raise ValueError("PRICE_COUNTRY must be a two-letter ISO 3166-1 code, or empty")
         if self.candidate_days < 1:

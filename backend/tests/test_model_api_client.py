@@ -23,6 +23,13 @@ from app.model_api import (
     text_part,
     user_message,
 )
+from app.model_api.client import (
+    DEFAULT_REASONING_HEADROOM,
+    REASONING_HEADROOM,
+    RESPONSES,
+    output_cap,
+)
+from app.model_api.fixtures import request_key
 
 pytestmark = pytest.mark.anyio
 
@@ -141,9 +148,49 @@ async def test_request_carries_effort_instructions_and_limits(live: Settings) ->
     body = h.body()
     assert body["reasoning"] == {"effort": "low"}
     assert body["instructions"] == "be brief"
-    assert body["max_output_tokens"] == 64
+    assert body["max_output_tokens"] == 64 + REASONING_HEADROOM["low"]
     assert body["tools"][0]["name"] == "lookup"
     assert body["input"][0]["content"][0] == {"type": "input_text", "text": "hi"}
+
+
+@pytest.mark.parametrize("effort", sorted(REASONING_HEADROOM))
+async def test_the_cap_sent_is_the_answer_budget_plus_the_headroom_for_the_effort(
+    live: Settings, effort: str
+) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json=completed("ok")))
+    await h.client.respond(model="m", input="x", effort=effort, max_output_tokens=800)
+    assert h.body()["max_output_tokens"] == 800 + REASONING_HEADROOM[effort]
+
+
+async def test_without_an_effort_the_headroom_is_the_default(live: Settings) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json=completed("ok")))
+    await h.client.respond(model="m", input="x", max_output_tokens=700)
+    assert h.body()["max_output_tokens"] == 700 + DEFAULT_REASONING_HEADROOM
+    # no budget given: no cap on the wire, as before
+    await h.client.respond(model="m", input="x", effort="high")
+    assert "max_output_tokens" not in h.body()
+
+
+async def test_the_ceiling_holds_the_sum(tmp_path: Path) -> None:
+    capped = Settings(
+        OPL_FAKE_API=False,
+        model_api_key=SAMPLE_VALUE,
+        model_max_output_tokens=2000,
+        fixtures_dir=tmp_path / "fixtures",
+        _env_file=None,
+    )
+    h = Harness(capped, lambda _: httpx.Response(200, json=completed("ok")))
+    await h.client.respond(model="m", input="x", effort="high", max_output_tokens=800)
+    assert h.body()["max_output_tokens"] == 2000
+    await h.client.respond(model="m", input="x", effort="minimal", max_output_tokens=800)
+    assert h.body()["max_output_tokens"] == 800 + REASONING_HEADROOM["minimal"]
+
+
+def test_output_cap_arithmetic() -> None:
+    assert output_cap(800, "low") == 800 + 4096
+    assert output_cap(800, None) == 800 + DEFAULT_REASONING_HEADROOM
+    assert output_cap(800, "xhigh", 10_000) == 10_000
+    assert output_cap(800, "xhigh", 0) == 800 + 32_768
 
 
 async def test_unknown_effort_is_rejected_before_any_request(live: Settings) -> None:
@@ -261,14 +308,29 @@ async def test_negative_caller_counts_are_rejected(live: Settings) -> None:
 
 
 async def test_incomplete_and_refused_responses_raise(live: Settings) -> None:
-    incomplete = completed("partial")
+    incomplete = completed("partial", output_tokens=800)
     incomplete["status"] = "incomplete"
     incomplete["incomplete_details"] = {"reason": "max_output_tokens"}
+    incomplete["usage"]["output_tokens_details"] = {"reasoning_tokens": 798}
     h = Harness(live, lambda _: httpx.Response(200, json=incomplete))
-    with pytest.raises(IncompleteResponseError, match="max_output_tokens"):
-        await h.client.respond(model="muse-spark-1.3", input="x")
+    with pytest.raises(IncompleteResponseError, match="max_output_tokens") as info:
+        await h.client.respond(
+            model="muse-spark-1.3", input="x", effort="low", max_output_tokens=800, op="extract"
+        )
+    # the message names the operation, the cap sent and the reasoning share, nothing of the input
+    message = str(info.value)
+    assert message.startswith("response incomplete: extract reached max_output_tokens (4896)")
+    assert "800 output tokens used, 798 of them reasoning" in message
     # the call is still on the ledger: tokens were billed
     assert h.ledger.summary().calls == 1
+
+    # another reason keeps the plain form
+    other = completed("partial")
+    other["status"] = "incomplete"
+    other["incomplete_details"] = {"reason": "content_filter"}
+    h1 = Harness(live, lambda _: httpx.Response(200, json=other))
+    with pytest.raises(IncompleteResponseError, match="content_filter"):
+        await h1.client.respond(model="muse-spark-1.3", input="x")
 
     refused = completed("")
     refused["output"][1]["content"] = [{"type": "refusal", "refusal": "no"}]
@@ -386,6 +448,40 @@ async def test_record_mode_saves_a_fixture_that_replays(tmp_path: Path) -> None:
     second = await h2.client.respond(model="muse-spark-1.3", input="same", op="extract")
     assert second.text == "recorded"
     assert second.from_fixture is True
+
+
+async def test_a_fixture_is_keyed_on_the_answer_budget_not_the_cap_sent(tmp_path: Path) -> None:
+    recording = Settings(
+        OPL_FAKE_API=False,
+        OPL_RECORD_FIXTURES=True,
+        model_api_key=SAMPLE_VALUE,
+        fixtures_dir=tmp_path / "fixtures",
+        _env_file=None,
+    )
+    h = Harness(recording, lambda _: httpx.Response(200, json=completed("recorded")))
+    await h.client.respond(
+        model="muse-spark-1.3", input="same", effort="low", max_output_tokens=800, op="extract"
+    )
+    assert h.body()["max_output_tokens"] == 800 + REASONING_HEADROOM["low"]
+    (path,) = (tmp_path / "fixtures" / "responses").glob("*.json")
+    saved = json.loads(path.read_text())
+    assert saved["request"]["max_output_tokens"] == 800
+    # the key is what a recording made before any headroom would carry
+    assert path.stem == request_key(RESPONSES, saved["request"])
+
+    # a different ceiling changes the wire, not the fixture found: an exact match, no fallback
+    replay = Settings(
+        OPL_FAKE_API=True,
+        model_max_output_tokens=1000,
+        fixtures_dir=tmp_path / "fixtures",
+        _env_file=None,
+    )
+    h2 = Harness(replay, never)
+    second = await h2.client.respond(
+        model="muse-spark-1.3", input="same", effort="low", max_output_tokens=800, op="extract"
+    )
+    assert second.text == "recorded"
+    assert h2.client.fixture_fallbacks == 0
 
 
 async def test_each_recording_gets_its_own_transcribe_fixture(tmp_path: Path) -> None:

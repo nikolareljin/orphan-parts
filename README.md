@@ -58,8 +58,10 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    <img src="docs/assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140"><br>
    Or, on the phone, open the
    [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) and tap either
-   APK. Open the download with installing from the browser allowed (**Allow from this source**);
-   if Play Protect warns, **More details**, **Install anyway**. Or over a USB cable, with **USB
+   APK. The app is not on Google Play, so allow the browser to install unknown apps when the
+   download opens (**Allow from this source**); if Play Protect warns, **More details**,
+   **Install anyway**; afterwards a **Play Protect** scan in the Play Store checks it. Or over
+   a USB cable, with **USB
    debugging** on in **Developer options**: from a clone, `scripts/phone-install.sh` on the
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
@@ -78,7 +80,8 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    that scan; from a page that is not signed in, the phone joins as the demo. Without Google
    Play services or a second screen, type the address shown under the code into **Backend
    URL** and the access code, if the site has one, into the field under it, then tap **Save**
-   and **Check**.
+   and **Check**. Pictured:
+   [Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/).
 5. **Take a photo** on the app's **Capture** tab and tap **Send**; it shows in the site's
    **Inbox**.
 
