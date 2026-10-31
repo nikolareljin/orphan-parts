@@ -124,6 +124,19 @@ describe('api', () => {
     expect(JSON.parse(init?.body as string)).toEqual({ item_type: 'adapter', intent: 'sell' })
   })
 
+  it('draws a project and a reuse card at their own routes, one POST each', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ n: 1 }, { status: 201 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await api.build.drawPicture(4)
+    await api.decide.drawCard(7, 3, 1)
+    expect(fetchMock.mock.calls.map(([url, init]) => `${init?.method} ${String(url)}`)).toEqual([
+      'POST /api/projects/4/picture',
+      'POST /api/items/7/scenarios/3/reuse/1/picture',
+    ])
+    expect(api.build.pictureUrl(4, 2)).toBe('/api/projects/4/pictures/2')
+    expect(api.decide.cardPictureUrl(7, 3, 1, 2)).toBe('/api/items/7/scenarios/3/reuse/1/pictures/2')
+  })
+
   it('patches with the version and reviews an assertion', async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ id: 7 }))
     vi.stubGlobal('fetch', fetchMock)

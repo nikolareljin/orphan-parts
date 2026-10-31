@@ -611,3 +611,57 @@ def test_a_save_after_a_demo_load_leaves_the_location_and_notes_alone(gated: Tes
     after = gated.get(f"/api/items/{item}").json()
     assert after["faults"] == "flickers"
     assert after["location"] == SECRETS[0] and after["notes"] == SECRETS[1]
+
+
+# An id the router reads as a number, spelled otherwise: a sign, a leading zero, a space either
+# side (sent as %20). Each must be counted, limited and paused like the plain one.
+ODD_IDS = ("+1", "01", " 1", "1 ")
+
+
+def test_every_spending_route_is_counted_whatever_the_id_spelling() -> None:
+    from app.ops.gate import EXPENSIVE
+
+    for method, pattern in EXPENSIVE:
+        template = pattern.pattern.removeprefix("^").removesuffix("$")
+        for odd in ODD_IDS:
+            path = template.replace("[^/]+", odd)
+            assert expensive(method, path), path
+            if "[^/]+" in template:
+                assert not demo_allowed(method, path), path
+    # a path that only ends like one is not one
+    assert not expensive("POST", "/api/items/1/picture\n")
+    assert not expensive("POST", "/api/items/1/2/picture")
+
+
+def test_the_visitor_list_takes_only_plain_ids() -> None:
+    assert demo_allowed("GET", "/api/items/1")
+    # a leading zero is still digits, the same public item; a sign or a space is refused
+    for odd in ("+1", " 1", "1 "):
+        assert not demo_allowed("GET", f"/api/items/{odd}")
+        assert not demo_allowed("GET", f"/api/items/{odd}/pictures")
+    assert not demo_allowed("GET", "/api/items/1\n")
+
+
+def test_an_odd_id_spelling_spends_from_the_allowance_and_stops_at_the_pause(
+    tmp_path: Path,
+) -> None:
+    settings = gated_settings(tmp_path, demo_daily_calls=100)
+    with TestClient(create_app(settings)) as c:
+        c.post("/api/access", json={"code": CODE})
+        sent = ("+1", "01", "%201", "1%20")
+        for n, odd in enumerate(sent, start=1):
+            c.post(f"/api/projects/{odd}/picture")
+            c.post(f"/api/items/{odd}/picture", json={})
+            assert c.get("/readyz").json()["demo"]["daily_used"] == 2 * n, odd
+    with TestClient(create_app(gated_settings(tmp_path, demo_paused=True))) as c:
+        c.post("/api/access", json={"code": CODE})
+        for odd in ("+1", "%201", "1%20", "01"):
+            for path in (f"/api/projects/{odd}/picture", f"/api/items/{odd}/scenarios"):
+                paused = c.post(path)
+                assert paused.status_code == 503, path
+                assert "paused by the operator" in paused.json()["detail"]
+    # the demo visitor is refused the same, never let through by the spelling
+    with TestClient(create_app(gated_settings(tmp_path))) as c:
+        for odd in ("+1", "%201", "01"):
+            assert c.post(f"/api/projects/{odd}/picture").status_code == 403
+            assert c.get(f"/api/items/{odd}/events").status_code == 403

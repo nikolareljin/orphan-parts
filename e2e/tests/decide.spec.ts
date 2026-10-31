@@ -133,3 +133,24 @@ test('the decision rows fit a phone dialog', async ({ page, request }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page).toHaveURL(/#find$/)
 })
+
+test('a reuse card is drawn only on a click, and the picture is labeled as drawn', async ({ page, request }) => {
+  const name = `Drawn laptop ${stamp}`
+  await createLaptop(request, name)
+  const { decide } = await openItem(page, name)
+  await decide.getByRole('button', { name: 'What should I do with it?' }).click()
+  const reuse = decide.getByRole('region', { name: 'What to do with it' }).getByRole('article', { name: 'Reuse it' })
+  const first = reuse.getByRole('list', { name: 'Reuse scenarios' }).getByRole('listitem').first()
+  const draw = first.getByRole('button', { name: /^Draw it: / })
+  await expect(draw).toBeEnabled()
+  await expect(first).toContainText('Draw how the finished project could look. One image call.')
+  // nothing is drawn when the cards appear
+  await expect(reuse.getByRole('img')).toHaveCount(0)
+  await draw.click()
+  await expect(first.getByRole('img', { name: /^Illustrative picture 1: / })).toBeVisible()
+  await expect(first).toContainText('Drawn as: ')
+  await expect(first).toContainText('not a photo of a real build')
+  await expect(first).toContainText('recorded answer, nothing spent')
+  // one click, one picture; the other card has none
+  await expect(reuse.getByRole('img')).toHaveCount(1)
+})

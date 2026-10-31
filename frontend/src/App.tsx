@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Build from './components/Build'
 import ExtractForm from './components/ExtractForm'
 import Find from './components/Find'
@@ -6,11 +6,12 @@ import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
 import Modal from './components/Modal'
 import Profile from './components/Profile'
-import { ACCESS_REQUIRED_EVENT, api, apiBase, type Readiness, type Version } from './lib/api'
+import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type Version } from './lib/api'
 
 import { pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
 import { DEFAULT_LIMITS } from './lib/photos'
 import { demoText } from './lib/access'
+import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs, type AccessState, type KnownAccess } from './lib/door'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
 
@@ -24,10 +25,10 @@ export default function App() {
   const [view, setViewState] = useState<View>(() => viewFromHash(window.location.hash))
   const [saved, setSaved] = useState(0)
   const [openItem, setOpenItem] = useState<number | null>(null)
-  const [granted, setGranted] = useState<boolean | null>(null)
+  // what the server said about the code, asked on its own; null until it answers
+  const [access, setAccess] = useState<KnownAccess>(null)
   // how many times the footer's pairing code has been opened; 0 while it is closed
   const [pairOpened, setPairOpened] = useState(0)
-  const [gated, setGated] = useState(false)
   const [signIn, setSignIn] = useState(false)
   const [reloads, setReloads] = useState(0)
   // the footer goes while the API is out of reach and comes back with the code closed: so is
@@ -36,12 +37,10 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([api.readiness(), api.version(), api.access.status()])
-      .then(([ready, version, access]) => {
+    Promise.all([api.readiness(), api.version()])
+      .then(([ready, version]) => {
         if (cancelled) return
         setStatus({ kind: 'ok', ready, version })
-        setGranted(access.granted)
-        setGated(access.gated)
       })
       .catch((err: unknown) => {
         if (!cancelled) setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
@@ -67,29 +66,90 @@ export default function App() {
     }
   }, [])
 
+  // The door is asked about on its own, so a slow or failed /readyz or /api/version never
+  // takes it out of the header. A failed check is tried again (1 s, 2 s, 4 s ... 30 s), and the
+  // tab asks again whenever it comes back into view. Each check and each thing the person does
+  // takes a number: an answer to an older question than what the tab now knows is dropped.
+  const accessSeq = useRef(0)
+  const accessRetry = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const checkAccess = useRef<() => void>(() => undefined)
+  useEffect(() => {
+    let failures = 0
+    const check = () => {
+      const seq = ++accessSeq.current
+      clearTimeout(accessRetry.current)
+      api.access
+        .status()
+        .then((answer) => {
+          if (seq !== accessSeq.current) return
+          failures = 0
+          setAccess({ gated: answer.gated, granted: answer.granted })
+        })
+        .catch(() => {
+          if (seq !== accessSeq.current) return
+          failures += 1
+          accessRetry.current = setTimeout(check, retryDelayMs(failures))
+        })
+    }
+    checkAccess.current = check
+    check()
+    const visible = () => {
+      if (document.visibilityState === 'visible') check()
+    }
+    window.addEventListener('focus', check)
+    document.addEventListener('visibilitychange', visible)
+    return () => {
+      accessSeq.current += 1
+      clearTimeout(accessRetry.current)
+      window.removeEventListener('focus', check)
+      document.removeEventListener('visibilitychange', visible)
+    }
+  }, [])
+
+  // what the tab knows from what the person just did: shown at once, ahead of any answer
+  // still on its way
+  function knowAccess(next: AccessState) {
+    accessSeq.current += 1
+    clearTimeout(accessRetry.current)
+    setAccess(next)
+  }
+
   // a session that ended mid-visit: a 401, or a write refused as the demo visitor, brings
   // the way in back to the header; the pages stay, as they do for any visitor
   useEffect(() => {
     const lost = () => {
-      setGranted(false)
-      setGated(true)
+      accessSeq.current += 1
+      clearTimeout(accessRetry.current)
+      setAccess(SIGNED_OUT)
     }
     window.addEventListener(ACCESS_REQUIRED_EVENT, lost)
     return () => window.removeEventListener(ACCESS_REQUIRED_EVENT, lost)
   }, [])
 
+  // the header's one door: Sign in with the code, Sign out, or the open server's note
+  const door = doorOf(access)
   // the demo door: gated, and no session; the code opens the rest
-  const demo = gated && granted === false
-  const signedIn = gated && granted === true
+  const demo = isDemo(access)
+  // the dialog belongs to the way in: once the door turns (a check, a sign-in) it closes
+  if (signIn && door !== 'sign-in') setSignIn(false)
 
-  // the way out: the server clears the cookie, the tab drops its token, and the page loads
-  // again as whatever the browser is now, the demo visitor when all went well
+  // opening the way in also asks again: a session opened in another tab shows up here
+  function openSignIn() {
+    setSignIn(true)
+    checkAccess.current()
+  }
+
+  // the way out: the server clears the cookie, the tab drops its token, and the header turns
+  // at once; the page loads again as whatever the browser is now
   async function signOut() {
+    let answer: Access | undefined
     try {
-      await api.access.leave()
+      answer = await api.access.leave()
     } catch {
-      // the token is gone either way; the page says where it stands
+      // the token is gone either way; the server is asked where the browser stands
     }
+    knowAccess(answer ? { gated: answer.gated, granted: answer.granted } : SIGNED_OUT)
+    if (!answer) checkAccess.current()
     setReloads((n) => n + 1)
     setSaved((n) => n + 1)
   }
@@ -104,30 +164,36 @@ export default function App() {
             <p className="tagline">Show it, ask it, sell it, or find the one that fits.</p>
           </div>
         </div>
-        <nav className="nav" aria-label="Pages">
-          {VIEWS.map((v) => (
-            <button key={v.id} type="button" aria-current={view === v.id ? 'page' : undefined} onClick={() => setView(v.id)}>
-              {v.label}
-            </button>
-          ))}
-          {demo && (
-            <button type="button" className="link door" onClick={() => setSignIn(true)}>
+        {/* the door sits beside the pages, not among them: on a phone the pages scroll sideways
+            and the door would scroll off with them */}
+        <div className="header-end">
+          <nav className="nav" aria-label="Pages">
+            {VIEWS.map((v) => (
+              <button key={v.id} type="button" aria-current={view === v.id ? 'page' : undefined} onClick={() => setView(v.id)}>
+                {v.label}
+              </button>
+            ))}
+          </nav>
+          {door === 'sign-in' && (
+            <button type="button" className="link door" onClick={openSignIn}>
               Sign in with the code
             </button>
           )}
-          {signedIn && (
+          {door === 'sign-out' && (
             <button type="button" className="link door" onClick={() => void signOut()}>
               Sign out
             </button>
           )}
-        </nav>
+          {door === 'open' && <span className="door door-note">Open server (no code needed)</span>}
+        </div>
       </header>
 
-      {demo && signIn && (
+      {signIn && door === 'sign-in' && (
         <Modal title="Access code" onClose={() => setSignIn(false)}>
           <AccessGate
-            onGranted={() => {
+            onGranted={(opened) => {
               setSignIn(false)
+              knowAccess(opened.gated ? SIGNED_IN : { gated: false, granted: true })
               setReloads((n) => n + 1)
               // the page under the dialog loads again through the door it now has
               setSaved((n) => n + 1)
@@ -183,7 +249,7 @@ export default function App() {
       {view === 'build' && (
         <section className="card">
           <h2>Build and reuse</h2>
-          <Build />
+          <Build demo={demo} />
         </section>
       )}
 
@@ -223,7 +289,7 @@ export default function App() {
                 <>
                   {/* drawn only while open, anew on each opening, once the door is known and again when
                       it changes: a pairing is in it once signed in, and a pairing is a live session */}
-                  {pairOpened > 0 && (granted !== null || !gated) && (
+                  {pairOpened > 0 && access !== null && (
                     <PairImage key={`${demo ? 'demo' : 'in'}-${pairOpened}`} door={demo ? 'demo' : 'in'} />
                   )}
                   <p className="muted">
@@ -246,7 +312,7 @@ export default function App() {
 }
 
 // The code's door. A session is a cookie the browser keeps; nothing is stored here.
-function AccessGate({ onGranted }: { onGranted: () => void }) {
+function AccessGate({ onGranted }: { onGranted: (access: Access) => void }) {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -260,7 +326,7 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
       const access = await api.access.grant(code)
       if (access.granted) {
         setCode('')
-        onGranted()
+        onGranted(access)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err))
@@ -287,6 +353,7 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
             {busy ? 'Checking…' : 'Enter'}
           </button>
         </div>
+        <p className="muted gate-note">For now, signing in uses an access code only. Proper accounts come later.</p>
         {error && (
           <p className="error" role="alert">
             {error}

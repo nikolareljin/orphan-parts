@@ -49,7 +49,10 @@ container: `load [--set FILE] [--reset]`, `record [--set FILE] [--reset]`,
 scores a load, `export [--out DIR]` writes `train.jsonl` from the accepted reads, `diff a.json b.json`
 puts two reports side by side.
 
-Flags: `-v` turns on debug logging for the helpers, `-d` adds `set -x`.
+Flags: `-v` turns on debug logging for the helpers, `-d` adds `set -x`. The trace never shows
+a value read from `.env` or a secret set in the shell: everything that reads one runs with
+tracing off and turns it back on after (`untraced` in `scripts/lib/env.sh`); `./dev gate on`
+and `gate show` still print the access code they are asked for.
 `NATIVE=1 ./dev test` runs the checks on the host instead of in Docker.
 
 ## Helper library

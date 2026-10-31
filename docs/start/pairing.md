@@ -19,11 +19,12 @@ code**, and the foot of the page says `Demo: recorded answers only. Sign in to s
 
 ![The web app signed out: the header ends with Sign in with the code; the footer says demo, recorded answers](../assets/pairing/web-sign-in.png){ width=480 }
 
-Tap **Sign in with the code**, type the access code, **Enter**.
+Tap **Sign in with the code**, type the access code, **Enter**. For now, signing in uses an
+access code only; proper accounts come later ([Next steps](../project/next.md)).
 
 ![The Access code dialog: sign in with the access code; a field for the code and the Enter button](../assets/pairing/web-sign-in-dialog.png){ width=480 }
 
-Signed in, the link is gone from the header and the footer counts the day's calls instead:
+Signed in, the header shows **Sign out** in its place and the footer counts the day's calls instead:
 `Live calls: 0 of 300 used today (20 per visitor per hour)`. The inventory is the full one now, not
 the public items only.
 

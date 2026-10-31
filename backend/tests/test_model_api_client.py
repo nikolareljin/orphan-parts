@@ -684,3 +684,19 @@ def test_user_message_wraps_parts() -> None:
     msg = user_message(text_part("a"), image_part(b"x", "image/png"))
     assert msg["role"] == "user"
     assert [p["type"] for p in msg["content"]] == ["input_text", "input_image"]
+
+
+async def test_a_picture_is_tried_once_so_one_click_never_bills_twice(live: Settings) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("slow", request=request)
+
+    h = Harness(live, handler)
+    with pytest.raises(ModelApiError) as info:
+        await h.client.picture("a lamp")
+    assert len(h.requests) == 1 and h.sleeps == []
+    assert info.value.attempts == 1
+    # the other calls keep their retries
+    h2 = Harness(live, handler)
+    with pytest.raises(ModelApiError):
+        await h2.client.respond(model="muse-spark-1.3", input="x")
+    assert len(h2.requests) == live.model_api_max_attempts

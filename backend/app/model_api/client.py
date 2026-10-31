@@ -507,7 +507,9 @@ class ModelApiClient:
             "output_format": "jpeg",
             "reasoning_strength": "low",
         }
-        data, from_fixture, attempts, ms = await self._post(IMAGES, body, op)
+        # one try: an image that timed out may still have been drawn and billed, so a second
+        # try could charge one click twice
+        data, from_fixture, attempts, ms = await self._post(IMAGES, body, op, attempts=1)
         images = [item for item in data.get("data") or [] if isinstance(item, dict)]
         first = images[0] if images else {}
         encoded = first.get("b64_json")
@@ -566,8 +568,10 @@ class ModelApiClient:
         op: str,
         files: dict[str, Any] | None = None,
         key: dict[str, Any] | None = None,
+        attempts: int | None = None,
     ) -> tuple[dict[str, Any], bool, int, float]:
-        """body goes on the wire; key, when given, is what names the fixture instead."""
+        """body goes on the wire; key, when given, is what names the fixture instead; attempts,
+        when given, caps the tries (one for a call that bills even when its answer is lost)."""
         keyed = body if key is None else key
         if self.mode == "record":
             # a recording already on disk for this exact request is replayed, not bought
@@ -595,10 +599,12 @@ class ModelApiClient:
                 )
             return fixture.response, True, 1, 0.0
         self.ledger.require_budget()
-        data, attempts, ms = await self._request("POST", endpoint, body, op, files=files)
+        data, tried, ms = await self._request(
+            "POST", endpoint, body, op, files=files, max_attempts=attempts
+        )
         if self.mode == "record":
             self.fixtures.save(endpoint, keyed, op, data)
-        return data, False, attempts, ms
+        return data, False, tried, ms
 
     async def _request(
         self,
@@ -607,9 +613,10 @@ class ModelApiClient:
         body: dict[str, Any] | None,
         op: str,
         files: dict[str, Any] | None = None,
+        max_attempts: int | None = None,
     ) -> tuple[dict[str, Any], int, float]:
         started = time.perf_counter()
-        max_attempts = self.settings.model_api_max_attempts
+        max_attempts = max_attempts or self.settings.model_api_max_attempts
         last: ModelApiError | None = None
         for attempt in range(1, max_attempts + 1):
             try:
