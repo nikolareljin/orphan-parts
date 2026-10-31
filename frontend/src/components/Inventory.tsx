@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
-import { fieldLabel, percent, withUnit } from '../lib/format'
+import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
@@ -357,7 +357,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
                     <th scope="row">{fieldLabel(a.field)}</th>
                     <td>
                       {withUnit(a)}
-                      {a.raw && a.raw !== a.value && <span className="raw"> as printed: {a.raw}</span>}
+                      {printedDiffers(a.value, a.raw) && <span className="raw">as printed: {a.raw}</span>}
                     </td>
                     <td>
                       {provenanceLabel(a.provenance)}
