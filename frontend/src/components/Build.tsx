@@ -170,7 +170,7 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
   }
 
   return (
-    <form className="preferences" onSubmit={(e) => void save(e)} aria-label="What I want from a build">
+    <form className="preferences fields" onSubmit={(e) => void save(e)} aria-label="What I want from a build">
       <div className="row">
         <h3>What I want from a build</h3>
         <button type="button" className="link" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
@@ -185,17 +185,17 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
       </div>
       {open && (
         <>
-          <label className="wide">
-            <span>Interests</span>
-            <textarea
-              value={prefs.interests}
-              maxLength={2000}
-              rows={2}
-              placeholder="a desk for the kids' homework, music in the kitchen"
-              onChange={(e) => setPrefs({ ...prefs, interests: e.target.value })}
-            />
-          </label>
           <div className="row">
+            <label className="wide">
+              <span>Interests</span>
+              <textarea
+                value={prefs.interests}
+                maxLength={2000}
+                rows={2}
+                placeholder="a desk for the kids' homework, music in the kitchen"
+                onChange={(e) => setPrefs({ ...prefs, interests: e.target.value })}
+              />
+            </label>
             <label>
               <span>Effort I will put in</span>
               <select value={prefs.effort} onChange={(e) => setPrefs({ ...prefs, effort: e.target.value as Preferences['effort'] })}>
@@ -214,12 +214,6 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
               <span>Tools I have</span>
               <input value={prefs.tools} maxLength={2000} onChange={(e) => setPrefs({ ...prefs, tools: e.target.value })} />
             </label>
-            <label className="check">
-              <input type="checkbox" checked={prefs.opens_devices} onChange={(e) => setPrefs({ ...prefs, opens_devices: e.target.checked })} />
-              <span>I open devices up</span>
-            </label>
-          </div>
-          <div className="row">
             <label>
               <span>Budget</span>
               <input value={budget} inputMode="decimal" onChange={(e) => setBudgetText(e.target.value)} />
@@ -240,6 +234,12 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
                 <option value="either">either</option>
               </select>
             </label>
+            <label className="check">
+              <input type="checkbox" checked={prefs.opens_devices} onChange={(e) => setPrefs({ ...prefs, opens_devices: e.target.checked })} />
+              <span>I open devices up</span>
+            </label>
+          </div>
+          <div className="row actions">
             <button type="submit" disabled={busy}>
               {busy ? 'Saving…' : 'Save'}
             </button>
@@ -293,7 +293,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
   }
 
   return (
-    <form className="propose" onSubmit={(e) => void propose(e)} aria-label="Propose projects">
+    <form className="propose fields" onSubmit={(e) => void propose(e)} aria-label="Propose projects">
       <h3>What could I build from what I own?</h3>
       <p className="muted">
         Muse Spark reads your inventory and the project templates and proposes builds; only what names items you have is shown. Templates:{' '}
@@ -314,6 +314,8 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
           <span>This time</span>
           <input value={note} maxLength={2000} placeholder="something for the kids, nothing with soldering" onChange={(e) => setNote(e.target.value)} />
         </label>
+      </div>
+      <div className="row actions">
         <button type="submit" disabled={busy}>
           {busy ? 'Thinking…' : 'Propose'}
         </button>
@@ -691,7 +693,7 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
         </p>
       )}
       {project.status === 'building' && (
-        <form onSubmit={record} aria-label="Record the outcome">
+        <form className="fields" onSubmit={record} aria-label="Record the outcome">
           <div className="row">
             <label className="wide">
               <span>What was set up</span>
@@ -707,14 +709,16 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
               <span>Tested on</span>
               <input value={testedOn} placeholder="YYYY-MM-DD" onChange={(e) => setTestedOn(e.target.value)} />
             </label>
-            <label className="check">
-              <input type="checkbox" checked={working} onChange={(e) => setWorking(e.target.checked)} />
-              <span>It works</span>
-            </label>
             <label>
               <span>Limits</span>
               <input value={limitations} maxLength={2000} onChange={(e) => setLimitations(e.target.value)} />
             </label>
+            <label className="check">
+              <input type="checkbox" checked={working} onChange={(e) => setWorking(e.target.checked)} />
+              <span>It works</span>
+            </label>
+          </div>
+          <div className="row actions">
             <button type="submit" disabled={busy || !configuration.trim() || !test.trim()}>
               Record the outcome
             </button>

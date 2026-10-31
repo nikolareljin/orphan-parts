@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
@@ -27,6 +27,7 @@ export default function ExtractForm({
   const [findFirst, setFindFirst] = useState(true)
   const [name, setName] = useState('')
   const [state, setState] = useState<State>({ kind: 'idle' })
+  const ids = useId()
 
   const busy = state.kind === 'segmenting' || state.kind === 'reading'
   const segmentation = 'segmentation' in state ? state.segmentation : undefined
@@ -96,11 +97,19 @@ export default function ExtractForm({
   }
 
   return (
-    <form className="extract" onSubmit={onSubmit}>
-      <label className="field">
-        <span>Photos of the label</span>
-        <input type="file" accept="image/*" multiple onChange={onPick} />
-      </label>
+    <form className="extract fields" onSubmit={onSubmit}>
+      <div className="row">
+        <div className="field">
+          <label>
+            <span>Photos of the label</span>
+            <input type="file" accept="image/*" multiple onChange={onPick} aria-describedby={`${ids}-photos`} />
+          </label>
+          <p className="help" id={`${ids}-photos`}>
+            Up to {limits.max_photos} photos, {limits.max_upload_mb} MB each. Sharp, straight on, the whole label in frame.
+            {dropped > 0 && ` Only the first ${limits.max_photos} are used.`}
+          </p>
+        </div>
+      </div>
       {files.length > 0 && (
         <ul className="files">
           {files.map((f, i) => (
@@ -108,18 +117,17 @@ export default function ExtractForm({
           ))}
         </ul>
       )}
-      <p className="hint">
-        Up to {limits.max_photos} photos, {limits.max_upload_mb} MB each. Sharp, straight on, the whole label in
-        frame.
-        {dropped > 0 && ` Only the first ${limits.max_photos} are used.`}
-      </p>
-      <label className="check">
-        <input type="checkbox" checked={findFirst} onChange={(e) => setFindFirst(e.target.checked)} />
-        <span>Find the label first with SAM 3.1, then read the crop</span>
-      </label>
-      <button type="submit" disabled={files.length === 0 || busy}>
-        {state.kind === 'segmenting' ? 'Finding…' : state.kind === 'reading' ? 'Reading…' : 'Read the label'}
-      </button>
+      <div className="row">
+        <label className="check">
+          <input type="checkbox" checked={findFirst} onChange={(e) => setFindFirst(e.target.checked)} />
+          <span>Find the label first with SAM 3.1, then read the crop</span>
+        </label>
+      </div>
+      <div className="row actions">
+        <button type="submit" disabled={files.length === 0 || busy}>
+          {state.kind === 'segmenting' ? 'Finding…' : state.kind === 'reading' ? 'Reading…' : 'Read the label'}
+        </button>
+      </div>
 
       {state.kind === 'error' && (
         <p className="error" role="alert">
@@ -147,13 +155,17 @@ export default function ExtractForm({
                 </>
               ) : (
                 <>
-                  <label>
-                    <span>Name</span>
-                    <input value={name} onChange={(e) => setName(e.target.value)} placeholder={state.result.item_type} />
-                  </label>
-                  <button type="button" onClick={() => void save()}>
-                    Save privately
-                  </button>
+                  <div className="row">
+                    <label>
+                      <span>Name</span>
+                      <input value={name} onChange={(e) => setName(e.target.value)} placeholder={state.result.item_type} />
+                    </label>
+                  </div>
+                  <div className="row actions">
+                    <button type="button" onClick={() => void save()}>
+                      Save privately
+                    </button>
+                  </div>
                   {state.saveError && (
                     <p className="error" role="alert">
                       {state.saveError}
