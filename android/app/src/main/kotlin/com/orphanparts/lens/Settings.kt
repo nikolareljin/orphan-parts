@@ -134,10 +134,14 @@ fun applyClaim(current: Settings, scanned: Settings, claimed: Settings): Setting
 /** The settings once the phone's own code has ended (the backend refused it with 401), or null
  * when the store holds another code by then: the code, its label and the token go, so the
  * Backend tab shows a phone without a code instead of one that no longer opens. A live pairing
- * stays (a scan since, its claim running), so the claim still finds the scan it came from. */
+ * from a scan since stays (its claim running), so the claim still finds the scan it came from;
+ * the pairing that claimed the ended code (its label is "phone " and the pairing's first eight
+ * characters) is spent and goes with it. */
 fun withoutEndedCode(current: Settings, code: String): Settings? =
     if (current.ownCode && current.accessCode == code) {
-        val token = if (isPairingToken(current.token) && !tokenEnded(current.token)) current.token else ""
+        val spent = current.codeLabel == "phone " + current.token.substringBefore('.').take(8)
+        val live = isPairingToken(current.token) && !tokenEnded(current.token) && !spent
+        val token = if (live) current.token else ""
         current.copy(accessCode = "", token = token, codeLabel = "", codeExpires = "")
     } else {
         null

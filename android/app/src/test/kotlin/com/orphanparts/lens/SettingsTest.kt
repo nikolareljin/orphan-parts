@@ -120,6 +120,9 @@ class PairingTest {
         assertEquals(Settings("https://demo.example", "", live), withoutEndedCode(held.copy(token = live), "opl_mine"))
         val ended = "sid.9.2.0.0123456789abcdef.${"a".repeat(32)}"
         assertEquals(Settings("https://demo.example", ""), withoutEndedCode(held.copy(token = ended), "opl_mine"))
+        // the live pairing that claimed the ended code is spent: it goes too
+        val spent = "abcd1234xyz.9999999999.2.0.0123456789abcdef.${"a".repeat(32)}"
+        assertEquals(Settings("https://demo.example", ""), withoutEndedCode(held.copy(token = spent), "opl_mine"))
     }
 
     @Test
