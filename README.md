@@ -149,3 +149,5 @@ docker/     images that are not part of backend/ or frontend/
 ## License
 
 MIT, see `LICENSE`.
+
+Made by Nik Reljin — [about the author](https://nikolareljin.github.io/orphan-parts/about/), [LinkedIn](https://www.linkedin.com/in/nikolareljin). If it is useful, ⭐ star the repository.
