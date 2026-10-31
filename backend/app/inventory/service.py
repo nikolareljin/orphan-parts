@@ -663,9 +663,13 @@ class Inventory:
 
     # missing-item searches and their candidates; a search may name the item it is for
 
+    # the search as shown (head, without the listings brought back) and how many listings it
+    # holds, counted by SQLite rather than by parsing them
     _SEARCH_SELECT = (
         "SELECT s.*, (SELECT COUNT(*) FROM candidates c WHERE c.search_id = s.id)"
-        " AS candidate_count FROM searches s"
+        " AS candidate_count, json_remove(s.content, '$.listings') AS head,"
+        " COALESCE(json_array_length(s.content, '$.listings'), 0) AS listing_count"
+        " FROM searches s"
     )
 
     def add_search(

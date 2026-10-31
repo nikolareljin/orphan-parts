@@ -131,6 +131,20 @@ def test_the_lowest_price_and_the_reason_never_reach_the_brief(settings: Setting
     assert "stand, power cord, VGA cable" in text
 
 
+def test_the_location_and_the_notes_never_reach_the_brief(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    item = inventory.create(
+        ItemCreate(
+            item_type="LCD monitor",
+            name="DELL 1800FP",
+            location="garage shelf B",
+            notes="paid 40 for it",
+        )
+    )
+    text = brief(item, {}, DraftRequest(mode="sell"), details(), photos=0)
+    assert "garage shelf B" not in text and "paid 40" not in text
+
+
 def test_the_price_is_the_asking_price_else_the_guidance_figure_named() -> None:
     sell = DraftRequest(mode="sell")
     assert price_for(sell, details(), None) == ("35", "your asking price")

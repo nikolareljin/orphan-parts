@@ -31,10 +31,13 @@ function message(err: unknown): string {
 
 // From a private record to a Facebook Marketplace listing the owner posts: what the owner adds,
 // the draft in Marketplace's shape, the fields to paste, and what happened after.
-export default function Listing({ item, onChanged }: { item: Item; onChanged: () => void }) {
+export default function Listing({ item, readOnly = false, onChanged }: { item: Item; readOnly?: boolean; onChanged: () => void }) {
   const [mode, setMode] = useState<DraftMode>(item.intent === 'give' ? 'give' : 'sell')
   const [details, setDetails] = useState<SellDetails>(emptyDetails)
   const [saved, setSaved] = useState<number | null>(null)
+  // whether the owner's saved details were read: until then the form is blank, and saving it
+  // would write the blanks over them
+  const [loaded, setLoaded] = useState(false)
   const [asking, setAsking] = useState('')
   const [lowest, setLowest] = useState('')
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -52,23 +55,29 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
   }, [item.intent])
 
   useEffect(() => {
+    if (readOnly) return
     let cancelled = false
     api.marketplace
       .details(item.id)
       .then((record) => {
-        if (cancelled || record === null) return
+        if (cancelled) return
+        setLoaded(true)
+        if (record === null) return
         setDetails(record.details)
         setSaved(record.version)
         setAsking(priceInput(record.details.asking_price))
         setLowest(priceInput(record.details.lowest_price))
       })
-      .catch(() => undefined)
+      .catch((err: unknown) => {
+        if (!cancelled) setError(`the saved listing details could not be read (${message(err)}); nothing is saved until they are`)
+      })
     return () => {
       cancelled = true
     }
-  }, [item.id])
+  }, [item.id, readOnly])
 
   useEffect(() => {
+    if (readOnly) return
     let cancelled = false
     api.drafts
       .list(item.id)
@@ -91,7 +100,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
       cancelled = true
     }
     // the item's version too: an edit after drafting is what makes a draft stale
-  }, [item.id, item.version])
+  }, [item.id, item.version, readOnly])
 
   function set<K extends keyof SellDetails>(key: K, value: SellDetails[K]) {
     setDetails((d) => ({ ...d, [key]: value }))
@@ -112,6 +121,7 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
   }
 
   async function saveDetails(): Promise<boolean> {
+    if (readOnly || !loaded) return false
     const next = withPrices()
     if (next === null) return false
     const record = await api.marketplace.saveDetails(item.id, next)
@@ -190,6 +200,17 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
       setError(message(err))
     }
   }
+
+  // the demo visitor, or an item served as the visitor sees it: the listing details, drafts and
+  // outcomes are the owner's and are never read or written from here
+  if (readOnly)
+    return (
+      <section className="listing" aria-label="Prepare to sell or give away">
+        <h4 tabIndex={-1}>Prepare to sell or give away</h4>
+        <p className="hint limit">{HARD_LIMIT}</p>
+        <p className="meta">Sign in with the code to prepare a listing.</p>
+      </section>
+    )
 
   return (
     <section className="listing" aria-label="Prepare to sell or give away">
@@ -297,10 +318,10 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
         )}
         <p className="hint">Never a street address, a phone number or an email: buyers write through Marketplace.</p>
         <div className="row actions">
-          <button type="submit" disabled={busy}>
+          <button type="submit" disabled={busy || !loaded}>
             {busy ? 'Working…' : 'Write the draft'}
           </button>
-          <button type="button" disabled={busy} onClick={() => void onSave()}>
+          <button type="button" disabled={busy || !loaded} onClick={() => void onSave()}>
             Save details
           </button>
           {saved !== null && <span className="muted">Details saved (version {saved})</span>}

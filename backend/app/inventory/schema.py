@@ -2,9 +2,17 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationInfo,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from app.extract.schema import Extraction, Source
+from app.ops.door import PRIVATE_SOURCES, for_visitor
 
 # How a value is known. An observation never goes away: a correction sits beside it.
 Provenance = Literal["observed", "owner_reported", "documented", "tested", "estimated"]
@@ -75,6 +83,33 @@ class Item(ItemSummary):
     fields: dict[str, Assertion]
     assertions: list[Assertion]
     components: list[int]
+    redacted: bool = Field(
+        default=False,
+        description="served to the demo visitor: location, notes and voice notes left out, so"
+        " a client must not save these values back",
+    )
+
+    # For the demo visitor the location and the notes are blank and the voice notes are left
+    # out, wherever the item is answered; the owner gets it whole.
+    @field_serializer("redacted")
+    def _redacted(self, value: bool) -> bool:
+        return for_visitor()
+
+    @field_serializer("location", "notes")
+    def _owner_text(self, value: str) -> str:
+        return "" if for_visitor() else value
+
+    @field_serializer("assertions")
+    def _owner_assertions(self, value: list[Assertion]) -> list[Assertion]:
+        if not for_visitor():
+            return value
+        return [a for a in value if a.source not in PRIVATE_SOURCES]
+
+    @field_serializer("fields")
+    def _owner_fields(self, value: dict[str, Assertion]) -> dict[str, Assertion]:
+        if not for_visitor():
+            return value
+        return {k: a for k, a in value.items() if a.source not in PRIVATE_SOURCES}
 
 
 class ItemCreate(BaseModel):

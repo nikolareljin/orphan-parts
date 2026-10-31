@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, availabilityLabel, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
 import GatedImage from './GatedImage'
 import Listing from './Listing'
 import Modal from './Modal'
 import Measure from './Measure'
+import { ItemSearch } from './SearchPlan'
 import Picture from './Picture'
 import SectionNav, { type SectionEntry } from './SectionNav'
 import Value from './Value'
@@ -254,6 +255,9 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
 
   const fields = Object.values(item.fields)
   const toConfirm = proposedCount(item)
+  // the demo, or an item served as the demo visitor sees it (a session that ended unnoticed):
+  // the details are shown, never saved
+  const readOnly = demo || item.redacted === true
   const detailsChanged = (Object.keys(details) as (keyof typeof details)[]).some((k) => details[k] !== item[k])
 
   return (
@@ -384,7 +388,10 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           className="details"
           onSubmit={(e: FormEvent) => {
             e.preventDefault()
-            attempt(() => api.items.update(item.id, { ...details, version: item.version }), true)
+            // only what was changed, and nothing from a demo load: a blank it was served is not
+            // the owner's value, and a session opened meanwhile would write it over theirs
+            if (readOnly) return
+            attempt(() => api.items.update(item.id, { ...changedDetails(details, item), version: item.version }), true)
           }}
         >
           <h4>Details</h4>
@@ -397,15 +404,22 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
               ['location', 'Where it is kept (private)'],
               ['notes', 'Notes (private)'],
             ] as const
-          ).map(([key, label]) => (
-            <label key={key}>
-              <span>{label}</span>
-              <textarea name={key} rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
-            </label>
-          ))}
-          <button type="submit" disabled={!detailsChanged}>
-            Save details
-          </button>
+          )
+            // the owner's alone: the demo visitor is never sent them, so there is nothing to show
+            .filter(([key]) => !readOnly || (key !== 'location' && key !== 'notes'))
+            .map(([key, label]) => (
+              <label key={key}>
+                <span>{label}</span>
+                <textarea name={key} rows={1} readOnly={readOnly} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+              </label>
+            ))}
+          {readOnly ? (
+            <p className="meta">Shown as in the public demo; sign in with the code to edit the details.</p>
+          ) : (
+            <button type="submit" disabled={!detailsChanged}>
+              Save details
+            </button>
+          )}
         </form>
 
         <AddComponent
@@ -436,12 +450,13 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
       </div>
 
       <div className="item-section" data-section="sell">
-        <Listing item={item} onChanged={() => attempt(() => api.items.get(item.id))} />
+        <Listing item={item} readOnly={readOnly} onChanged={() => attempt(() => api.items.get(item.id))} />
       </div>
 
       <div className="item-section" data-section="fit">
         <Measure item={item} onMeasured={() => attempt(() => api.items.get(item.id))} />
         <Assess item={item} />
+        {!demo && <ItemSearch item={item} />}
       </div>
 
       {/* the wrapper stays empty, and hidden, when there is no picture to show */}
@@ -458,7 +473,7 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
           />
           <span>
             Show in the public demo{' '}
-            <small className="muted">Visitors without the access code can open this item, its photos and drawings.</small>
+            <small className="muted">Visitors without the access code can open this item, its photos and drawings. Location and notes stay private.</small>
           </span>
         </label>
         <span className="item-actions">
