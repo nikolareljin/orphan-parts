@@ -29,13 +29,10 @@ TEXT_INPUT = 3000
 IMAGE_INPUT = 2000
 # one step of the propose loop: the brief, the inventory and the tool results so far
 PROPOSE_INPUT = 6000
-# the price call with web search: live calls read 70,000 to 100,000 input tokens over 11 or 12
-# searches; uncapped, the allowance is the most of those times 1.5
-PRICE_INPUT = 150_000
-PRICE_SEARCHES = 18
-# with PRICE_MAX_SEARCHES set, the searches are held to it, and the pages they bring in to
-# about 40,000 tokens at the default of 4; times 1.5
-PRICE_INPUT_CAPPED = 60_000
+# the price call with web search, held to PRICE_MAX_SEARCHES searches: live calls read 70,000
+# to 100,000 input tokens over 11 or 12 unbounded searches, about 10,000 a search; the allowance
+# is the brief plus that times 1.5 for each search allowed (63,000 at the default of 4)
+PRICE_INPUT_PER_SEARCH = 15_000
 # what the text services ask for, but extract, which takes EXTRACT_REASONING_EFFORT
 EFFORT = "low"
 
@@ -74,12 +71,9 @@ def media(model: str, *, images: int = 0, audio_seconds: float = 0.0, attempts: 
 
 
 def price_terms(settings: Settings) -> tuple[int, int]:
-    """The input allowance and the searches of one price call: held to PRICE_MAX_SEARCHES when
-    the settings carry it, else the recorded maxima."""
-    most = getattr(settings, "price_max_searches", None)
-    if isinstance(most, int) and most > 0:
-        return PRICE_INPUT_CAPPED, most
-    return PRICE_INPUT, PRICE_SEARCHES
+    """The input allowance and the searches of one price call under PRICE_MAX_SEARCHES."""
+    searches = settings.price_max_searches
+    return TEXT_INPUT + PRICE_INPUT_PER_SEARCH * searches, searches
 
 
 def ceiling(op: str, settings: Settings, *, audio_seconds: float) -> Ceiling:

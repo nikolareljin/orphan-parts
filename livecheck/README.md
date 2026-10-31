@@ -8,7 +8,7 @@ never deployed, never a route.
 
 ```bash
 ./dev live-check                          # the default set, at most $0.25 (says what it skips)
-./dev live-check --ops price --max-usd 1.02  # the dearest on its own
+./dev live-check --ops price --max-usd 0.44  # the price call on its own
 ./dev live-check --ops segment,extract    # a few operations
 ./dev live-check --ops picture            # the priciest, only when named
 ./dev live-check --max-usd 0.05           # a tighter ceiling for the run
@@ -32,22 +32,26 @@ the published standard rates). What one usually costs, and the ceiling the guard
 | `draft`        | `Lister.draft`, a sell listing for the item                | `muse-spark`            | $0.002-0.006  | $0.0965   |
 | `uses`         | `Decider.uses`, what the item is good for                  | `muse-spark`            | $0.002-0.006  | $0.0965   |
 | `propose`      | `Planner.propose`, the tool loop, one project asked        | `muse-spark`            | $0.01-0.03    | $0.5073   |
-| `price`        | `Valuer.guide`, with web search: the dearest of the set    | `muse-spark` + search   | $0.10-0.16    | $1.0149   |
+| `price`        | `Valuer.guide`, with web search: the dearest of the set    | `muse-spark` + search   | $0.04-0.07    | $0.4399   |
 | `picture`      | `Pictures.draw`, only with `--ops picture`                 | `muse-image`            | $0.01         | $0.0400   |
 
 The ceilings are at the default settings (`MODEL_API_MAX_ATTEMPTS=4`, effort `low`, no
-`MODEL_MAX_OUTPUT_TOKENS`); the run works them out from the settings it has. Every operation of
-the default set (everything but `picture`) usually comes to about $0.15 to $0.25 together, most
-of it the price call, which reads tens of thousands of tokens of search results; a run at the
-default `--max-usd` skips `propose` and `price` (below) and spends a few cents. The ceiling of an operation is what
-the client puts on the wire for the service's `MAX_OUTPUT_TOKENS` (the answer budget plus the
-reasoning headroom for the effort the service asks for: `EXTRACT_REASONING_EFFORT` for extract,
-`low`, 4,096 tokens, for the rest; under `MODEL_MAX_OUTPUT_TOKENS` when set) at the output rate,
-plus an input allowance (the most a live call of that kind has read, times 1.5: 150,000 tokens
-and 18 searches for the price call, whose live calls read up to 100,000 over 12 searches), times
-the steps a loop may take, plus the searches or the media it is allowed, and all of it times
-`MODEL_API_MAX_ATTEMPTS`, since the client retries a failed request and a timed-out one may
-still be billed. It bounds the worst call, not the usual one: tokens are billed as used.
+`MODEL_MAX_OUTPUT_TOKENS`, `PRICE_MAX_SEARCHES=4`); the run works them out from the settings it
+has. Every operation of the default set (everything but `picture`) usually comes to about $0.08
+to $0.15 together, most of it the price call, which reads tens of thousands of tokens of search
+results; a run at the default `--max-usd` skips `propose` and `price` (below) and spends a few
+cents.
+
+The ceiling of an operation is what the client puts on the wire for the service's
+`MAX_OUTPUT_TOKENS` (the answer budget plus the reasoning headroom for the effort the service
+asks for: `EXTRACT_REASONING_EFFORT` for extract, `low`, 4,096 tokens, for the rest; under
+`MODEL_MAX_OUTPUT_TOKENS` when set) at the output rate, plus an input allowance (the most a live
+call of that kind has read, times 1.5; for the price call 15,000 tokens a search on top of the
+brief, 63,000 at four searches, from live calls that read up to 100,000 over 12 unbounded
+searches), times the steps a loop may take, plus the searches (`PRICE_MAX_SEARCHES`) or the
+media it is allowed, and all of it times `MODEL_API_MAX_ATTEMPTS`, since the client retries a
+failed request and a timed-out one may still be billed. It bounds the worst call, not the usual
+one: tokens are billed as used.
 
 The guard works in two steps. Before the first call the run prints the sum of the ceilings and,
 when that is above `--max-usd`, names every operation whose ceiling alone is above it: those
@@ -59,7 +63,7 @@ spent) has less headroom than `--max-usd`. The ledger is the backend's own file,
 counts against the cap like any other call; a running backend reads the file at its next start.
 
 ```bash
-./dev live-check --ops price --max-usd 1.02    # the price call on its own, with its search
+./dev live-check --ops price --max-usd 0.44    # the price call on its own, with its search
 ./dev live-check --ops propose --max-usd 0.51  # the propose loop on its own
 ```
 

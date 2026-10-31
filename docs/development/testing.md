@@ -141,7 +141,7 @@ that records it; what is not set up skipped or refused).
 ```bash
 ./dev live-check                         # one real call per operation, at most $0.25
 ./dev live-check --ops segment,extract   # a few of them
-./dev live-check --ops price --max-usd 1.02  # the price call on its own
+./dev live-check --ops price --max-usd 0.44  # the price call on its own
 ./dev live-check --ops picture           # Muse Image, only when named
 OPL_FAKE_API=1 ./dev live-check          # the dry run on the recordings: the default set, $0
 ./dev live-check --against local         # over HTTP against the stack on this machine
@@ -154,7 +154,7 @@ Model API for real, on purpose: each operation the product makes (`segment`, `tr
 through the service its route calls, on one item made from the demo set, with a line per
 operation: the model that answered, PASS or FAIL, milliseconds, input, output and reasoning
 tokens, the cost, and the exception's one-line message on failure. A live run spends real
-credit: `price`, with its web search, is the dearest at ten to sixteen cents, `propose` and its
+credit: `price`, with its web search, is the dearest at four to seven cents (`PRICE_MAX_SEARCHES` searches), `propose` and its
 tool loop a cent or more, `segment` a quarter of a cent. Each operation has a ceiling (its
 output budget and reasoning headroom, an input allowance, its searches, times the client's
 attempts); before the first call the run names every operation whose ceiling alone is above

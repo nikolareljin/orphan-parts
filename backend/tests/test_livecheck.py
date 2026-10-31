@@ -318,7 +318,11 @@ def test_the_ceilings_count_the_effort_the_attempts_and_the_search() -> None:
     ).usd
     assert four == pytest.approx(low * 4, rel=1e-3)
     price = ceilings.ceiling("price", base, audio_seconds=1.0)
-    assert "150000 in, 18 searches" in price.why
+    assert "63000 in, 4 searches" in price.why
+    more = ceilings.ceiling(
+        "price", base.model_copy(update={"price_max_searches": 8}), audio_seconds=1.0
+    )
+    assert "123000 in, 8 searches" in more.why and more.usd > price.usd
     # the default set at the default --max-usd: the run names what it will skip up front
     defaults = Settings(OPL_FAKE_API=True)
     cs = {op: ceilings.ceiling(op, defaults, audio_seconds=1.0) for op in ops.OPS}
