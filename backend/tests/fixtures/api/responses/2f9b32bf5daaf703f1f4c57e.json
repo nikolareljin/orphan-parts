@@ -1,0 +1,86 @@
+{
+  "endpoint": "/responses",
+  "op": "segment-label",
+  "model": "sam-3.1",
+  "digest": "2f9b32bf5daaf703f1f4c57e",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "product label with printed text",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,587cbe67e7cab665",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "model": "sam-3.1",
+    "prompt_cache_key": "orphan-parts",
+    "store": false
+  },
+  "response": {
+    "metadata": {
+      "mask_encoding": "one_bit",
+      "include_confidence": "true"
+    },
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "sam-3.1",
+    "background": false,
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae596004ac0f73a1a0d429c",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793431040.0,
+    "completed_at": 1793431040.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_c38ec129-e935-4cfe-9ed1-116aa61d6fd6",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "<0f>0<|box;x1=128;y1=196;x2=330;y2=717;w=369;h=800;c=0.6167664527893066|><|mask;x=0;y=0;c=0.6167664527893066;data=522,203,!!!!#7Cl]M$AFAjilACE#WE#(rW7K2TiP?kn'qY7yhVfk9wsC:bo?2#IN@&(%2-*6.V?6d:GOJZ:ERvK9_ksNoNUeVtr.gcas$Xm[8EAckRZv9W9[sK+)I8Ld+jOxzM^S*X!!!!!!!|>\n",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": null,
+    "usage": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 0,
+      "images_processed": 1
+    },
+    "parallel_tool_calls": true,
+    "store": false
+  },
+  "status": 200
+}

@@ -1,0 +1,235 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-sell",
+  "model": "muse-spark-1.3",
+  "digest": "05ea656e3a0771b61816d5bf",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: sell\nname: EVGA GeForce 9800 GT graphics card\nitem_type: graphics card\ncondition: dust on the fan\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nasking price: (the owner sets it)\nConfirmed fields (key: value):\n- brand: EVGA\n- model_number: E-GEFORCE9800GT\n- connector: pci-e\n- certifications: CULUS LISTED, CE, FCC\n- condition_notes: dusty fan and shroud, signs of use\nField keys a fact may name: brand, model_number, connector, certifications, condition_notes, name, item_type, condition",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest Marketplace listings for used items. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 80 characters and starts with what the item is. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "title": "DraftWriting",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ]
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae590f12d86b3d902574f75",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793429745.0,
+    "completed_at": 1793429745.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae590f12d86b3d902574f75:rs_d8ab46e6-baad-4f6f-b7c3-adf44fd6f377",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_f00052ab-4a98-4153-b7fa-be31bb9167ae",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"description\": \"Used graphics card. EVGA GeForce 9800 GT, model E-GEFORCE9800GT, with pci-e connector. Fan and shroud are dusty with signs of use. Markings show CULUS LISTED, CE, FCC.\", \"facts\": [{\"field\": \"item_type\", \"text\": \"Item is a graphics card.\"}, {\"field\": \"name\", \"text\": \"Name is EVGA GeForce 9800 GT graphics card.\"}, {\"field\": \"brand\", \"text\": \"Brand is EVGA.\"}, {\"field\": \"model_number\", \"text\": \"Model number is E-GEFORCE9800GT.\"}, {\"field\": \"connector\", \"text\": \"Connector is pci-e.\"}, {\"field\": \"condition\", \"text\": \"Condition includes dust on the fan.\"}, {\"field\": \"condition_notes\", \"text\": \"Fan and shroud are dusty with signs of use.\"}, {\"field\": \"certifications\", \"text\": \"Certifications marked CULUS LISTED, CE, FCC.\"}], \"keywords\": [\"EVGA\", \"9800 GT\", \"graphics card\", \"pci-e\", \"E-GEFORCE9800GT\"], \"title\": \"graphics card - EVGA GeForce 9800 GT\", \"uses\": [\"parts\", \"collection\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest Marketplace listings for used items. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 80 characters and starts with what the item is. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 440,
+      "input_tokens_details": {
+        "cached_tokens": 241
+      },
+      "output_tokens": 1675,
+      "output_tokens_details": {
+        "reasoning_tokens": 1388
+      },
+      "total_tokens": 2115
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}

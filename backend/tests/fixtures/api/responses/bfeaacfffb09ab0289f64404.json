@@ -1,0 +1,227 @@
+{
+  "endpoint": "/responses",
+  "op": "extract",
+  "model": "muse-spark-1.3",
+  "digest": "bfeaacfffb09ab0289f64404",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Read the label on this item. Fields to look for:\n- brand: manufacturer or brand name printed on the label\n- model_number: model designation printed on the label\n- part_number: part number or P/N code, often next to a barcode\n- input_voltage: mains input range, for example 100-240 V (unit: V)\n- output_voltage: DC output voltage (unit: V)\n- output_current: DC output current (unit: A)\n- output_power: rated output power (unit: W)\n- connector: plug type and size, for example barrel 5.5 x 2.5 mm or USB-C\n- polarity: center positive or center negative, from the symbol\n- certifications: safety marks such as UL, CE or FCC\n- condition_notes: visible wear, damage or missing parts",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,695d73bcfa32791c",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You read labels on used items and spare parts from photos. Report only what is printed or clearly visible; never infer a value from the brand or the item type. Give each field a confidence between 0 and 1 that reflects how legible it is. Leave out any field the photos do not support. Copy values as printed and put units in the unit property. label_text is a line by line transcription of the label. item_type is a short noun phrase such as 'laptop power adapter'.",
+    "max_output_tokens": 800,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "LabelReading",
+        "schema": {
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of an extraction call: every property required, no extras.",
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "item_type": {
+              "title": "Item Type",
+              "type": "string"
+            },
+            "label_text": {
+              "title": "Label Text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "item_type",
+            "label_text",
+            "fields"
+          ],
+          "title": "LabelReading",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "LabelReading",
+        "schema": {
+          "required": [
+            "item_type",
+            "label_text",
+            "fields"
+          ],
+          "additionalProperties": false,
+          "title": "LabelReading",
+          "type": "object",
+          "$defs": {
+            "ReadField": {
+              "additionalProperties": false,
+              "description": "One field as the model read it. Empty value means nothing on the label supports it.",
+              "properties": {
+                "confidence": {
+                  "title": "Confidence",
+                  "type": "number"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "unit": {
+                  "title": "Unit",
+                  "type": "string"
+                },
+                "value": {
+                  "title": "Value",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "value",
+                "unit",
+                "confidence"
+              ],
+              "title": "ReadField",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "item_type": {
+              "title": "Item Type",
+              "type": "string"
+            },
+            "label_text": {
+              "title": "Label Text",
+              "type": "string"
+            }
+          },
+          "description": "Strict output schema of an extraction call: every property required, no extras."
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae5962b8fd92d3afdc440e9",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793431083.0,
+    "completed_at": 1793431083.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae5962b8fd92d3afdc440e9:rs_f9d4e034-a496-4c0e-bf6b-7c34631d9797",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_f0076f9f-0dff-4b8e-801e-c5dd18703c7e",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"fields\":[{\"confidence\":0.95,\"name\":\"brand\",\"unit\":\"\",\"value\":\"TP-LINK\"},{\"confidence\":0.95,\"name\":\"model_number\",\"unit\":\"\",\"value\":\"TL-PA2010\"},{\"confidence\":0.9,\"name\":\"input_voltage\",\"unit\":\"V\",\"value\":\"100-240\"},{\"confidence\":0.85,\"name\":\"certifications\",\"unit\":\"\",\"value\":\"FC RoHS CE\"}],\"item_type\":\"powerline network adapter\",\"label_text\":\"TP-LINK Model: TL-PA2010\\nInput: 100-240V~ 50/60Hz 0.06A\\nFC RoHS MADE IN CHINA CE\\nMAC Add\\nPassword\"}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You read labels on used items and spare parts from photos. Report only what is printed or clearly visible; never infer a value from the brand or the item type. Give each field a confidence between 0 and 1 that reflects how legible it is. Leave out any field the photos do not support. Copy values as printed and put units in the unit property. label_text is a line by line transcription of the label. item_type is a short noun phrase such as 'laptop power adapter'.",
+    "usage": {
+      "input_tokens": 1417,
+      "input_tokens_details": {
+        "cached_tokens": 369
+      },
+      "output_tokens": 715,
+      "output_tokens_details": {
+        "reasoning_tokens": 566
+      },
+      "total_tokens": 2132
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4896
+  },
+  "status": 200
+}
