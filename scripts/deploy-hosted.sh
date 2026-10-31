@@ -55,7 +55,7 @@ trap '[[ -n "$secret_file" ]] && rm -f -- "$secret_file"' EXIT
 
 need_modal() {
   command -v "${modal_cmd[0]}" >/dev/null 2>&1 \
-    || fail "the modal command is not installed (pip install modal); see docs/operations/deployment.md"
+    || fail "the modal command is not installed (pip install modal python-dotenv); see docs/operations/deployment.md"
 }
 
 step_secret() {

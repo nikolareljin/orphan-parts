@@ -13,7 +13,7 @@ Docker images yourself on a host of your own, which stays supported.
 ### The backend on Modal
 
 ```bash
-pipx install modal && modal setup          # once, a browser login
+pipx install modal && pipx inject modal python-dotenv && modal setup   # once, a browser login
 modal secret create orphan-parts \
   MODEL_API_KEY=... DEMO_ACCESS_CODE=... SPEND_CAP_USD=20 OPL_FAKE_API=1 \
   CORS_ORIGINS=https://orphan-parts.pages.dev DEMO_COOKIE_SECURE=1 DEMO_TRUST_PROXY=1
