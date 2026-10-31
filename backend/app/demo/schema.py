@@ -69,7 +69,7 @@ class DemoItem(BaseModel):
     parent_photos: list[str] = Field(
         default=[],
         description="photos of the device a part came from (its label first), read once as a"
-        " label; kept with the item's photos as far as MAX_PHOTOS leaves room",
+        " label and kept as the item's device photos, apart from its own",
     )
     parent_device: str = Field(
         default="", max_length=500, description="the owner's words about that device"

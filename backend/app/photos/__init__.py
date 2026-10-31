@@ -1,3 +1,3 @@
-from app.photos.service import ItemPhotos, PhotoError
+from app.photos.service import DevicePhotos, ItemPhotos, PhotoError
 
-__all__ = ["ItemPhotos", "PhotoError"]
+__all__ = ["DevicePhotos", "ItemPhotos", "PhotoError"]

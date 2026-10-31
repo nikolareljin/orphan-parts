@@ -120,6 +120,8 @@ def backed(
         kept.append(
             c.model_copy(
                 update={
+                    # the page as the search gave it, not as the model wrote it
+                    "source_url": pages[page],
                     "observed": c.observed or today(),
                     "currency": currency,
                     "title": c.title.strip()[:TEXT_MAX],

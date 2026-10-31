@@ -82,16 +82,20 @@ agitator*, then parts sold as fitting that device, then parts with the same valu
 
 The model writes each page it found: the URL, the title, the site, the price and the
 dimensions as the page states them, and a short quote. A page is kept only when its URL is
-among the search results or the citations of that same answer, and only a web link
-(`http`/`https`); one per page, at most ten a click. The rest are left out and counted
+among the search results or the citations of that same answer, query and all (only the
+fragment, `utm_*` tracking parameters, the scheme, `www.` and a trailing slash are let go, so
+`?id=1` and `?id=999` are two pages), only a web link (`http`/`https`), and only with some
+text to score; the link kept is the one the search returned. One per page, at most ten a
+click. The rest are left out and counted
 (*Added 3 pages to the listings. 1 left out: no search result showed it.*). Each page kept
 becomes a listing with its link, scored by the pattern, the exclusion words and the top
 price like a pasted one, and **Check fit** reads it the same way; the candidate keeps the
 link. A page already in the listings is not added again. The link opens in a new tab and the
 app never fetches it.
 
-The call counts against the hourly and daily allowance like the plan; the demo visitor sees
-*Sign in with the access code to search the web.* instead of the button.
+The call counts against the hourly and daily allowance like the plan. The demo visitor does not
+reach *Find a part* (the page shows the line to sign in); a session that ends while the search
+is open turns the button into *Sign in with the access code to search the web.*
 
 ## The pattern and its limits
 

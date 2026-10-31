@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
-import { asksForParent, cameFrom } from '../lib/inventory'
+import { asksForParent, cameFrom, photoReadLine } from '../lib/inventory'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
 import ParentPrompt from './ParentPrompt'
@@ -173,7 +173,12 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
                   {asksForParent(state.saved) ? (
                     <ParentPrompt item={state.saved} readOnly={false} save={answer} />
                   ) : (
-                    cameFrom(state.saved) && <p className="meta came-from">{cameFrom(state.saved)}</p>
+                    cameFrom(state.saved) && (
+                      <>
+                        <p className="meta came-from">{cameFrom(state.saved)}</p>
+                        {photoReadLine(state.saved) && <p className="meta photo-read">{photoReadLine(state.saved)}</p>}
+                      </>
+                    )
                   )}
                   {state.saveError && (
                     <p className="error" role="alert">

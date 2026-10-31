@@ -89,3 +89,13 @@ class ItemPhotos:
         folder = self.folder(item_id)
         if folder.is_dir() and folder.parent == self.root:
             shutil.rmtree(folder)
+
+
+class DevicePhotos(ItemPhotos):
+    """Photos of the device a part came from, under ``DATA_DIR/items/<id>/device/``: the
+    owner's, kept apart from the part's own photos. They never count against the part's
+    ``MAX_PHOTOS``, never go into a draft or the photo zip, and the demo visitor never gets
+    them. They go with the item, inside its folder."""
+
+    def folder(self, item_id: int) -> Path:
+        return self.root / str(item_id) / "device"

@@ -51,9 +51,12 @@ profile), no model or part number of its own and no device recorded, the item di
 - **Device it came from**: a line in your words (brand, model, what it is), saved as the field
   `parent_device` (source `user_edit`). It is yours like the notes: the demo visitor never gets
   it, and it goes into no brief but the searches you run for the part.
-- **Add a photo of the device**: one label reading (one Muse Spark call); the photo is kept with
-  the item's photos and the brand and model number read off it are proposed as
-  `parent_device_model` (source `photo`) for you to accept.
+- **Add a photo of the device**: one label reading (one Muse Spark call); the brand and model
+  number read off it are proposed as `parent_device_model` (source `photo`) for you to accept,
+  and the dialog says *Read from the photo: ... Confirm it in the fields.* until you do. The
+  photo is kept as a photo of the device, apart from the part's own: it takes none of the
+  part's `MAX_PHOTOS`, never goes into a draft or the photo zip, and the demo visitor never
+  gets it. The dialog shows it under *Came from*.
 
 Either answer, a model number of the part's own, or a link to the device as its parent item
 clears the question; a rejected value does not. Once answered, the dialog says where the part

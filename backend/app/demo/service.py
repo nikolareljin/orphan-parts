@@ -22,7 +22,7 @@ from app.inventory.schema import FieldCreate, ItemCreate
 from app.listing import Lister, VoiceNotes
 from app.listing.schema import DraftRequest
 from app.model_api import ModelApiClient, ModelApiError, NoRecordingError, exact_replay
-from app.photos import ItemPhotos, PhotoError
+from app.photos import DevicePhotos, ItemPhotos, PhotoError
 from app.picture import Pictures, PicturesOffError
 from app.projects import Planner, ProposeRequest
 from app.value import Valuer
@@ -121,6 +121,8 @@ class Loader:
         self.pictures = pictures
         # the set's photos stay with the items they were read from, as a capture's do
         self.photos = ItemPhotos(settings, inventory)
+        # a part's photos of the device it came from, kept apart from its own
+        self.device_photos = DevicePhotos(settings, inventory)
 
     async def run(self, demo: DemoSet, base: Path) -> Outcome:
         out = Outcome(mode=self.settings.model_api_mode)
@@ -348,13 +350,11 @@ class Loader:
                     self.inventory.review(item_id, read.fields[PARENT_MODEL].id, "accepted")
             finally:
                 exact_replay.reset(token)
-            # kept beside the part's own photos, as far as there is room
-            room = self.settings.max_photos - self.photos.count(item_id)
-            if room > 0:
-                try:
-                    self.photos.add(item_id, photos[:room])
-                except (OSError, BadImageError, PhotoError) as exc:
-                    out.skipped.append(f"{item.key}: the device photos could not be kept: {exc}")
+            # kept apart from the part's own photos: never in a draft or seen by the visitor
+            try:
+                self.device_photos.add(item_id, photos)
+            except (OSError, BadImageError, PhotoError) as exc:
+                out.skipped.append(f"{item.key}: the device photos could not be kept: {exc}")
         if not model and item.parent_device_model:
             try:
                 self.inventory.add_field(

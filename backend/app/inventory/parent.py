@@ -15,6 +15,8 @@ PARENT_DEVICE = "parent_device"
 # the device's model as read off a photo of its label, or typed: product data, not private
 PARENT_MODEL = "parent_device_model"
 PARENT_FIELDS = (PARENT_DEVICE, PARENT_MODEL)
+# the label fields that name a part by itself
+OWN_CODES = ("model_number", "part_number")
 
 
 @lru_cache(maxsize=1)
@@ -41,12 +43,15 @@ def needs_parent(
     fields: Mapping[str, Assertion], parent_id: int | None, profile: Profile | None
 ) -> bool:
     """Whether to ask which device the part came from: a part profile, no model or part number
-    of its own (an identity rule's field), no parent record and no parent device given."""
+    of its own (nor another identity rule's field), no parent record and no parent device
+    given. A rejected value does not count."""
     if profile is None or not profile.part_of_device or parent_id is not None:
         return False
     if any(_stated(fields, k) for k in PARENT_FIELDS):
         return False
-    return not any(_stated(fields, r.key) for r in profile.rules if r.identity)
+    # a model or a part number of its own ties it, whether or not the profile rules on it
+    own = {r.key for r in profile.rules if r.identity} | set(OWN_CODES)
+    return not any(_stated(fields, k) for k in own)
 
 
 def device_model(reading: Extraction) -> tuple[str, float, str]:

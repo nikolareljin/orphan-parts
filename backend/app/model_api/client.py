@@ -15,6 +15,7 @@ import time
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 import httpx
 from pydantic import BaseModel, ValidationError
@@ -225,25 +226,35 @@ def citations(output: list[dict[str, Any]]) -> list[dict[str, str]]:
 
 
 def norm_url(url: str) -> str:
-    """The page without scheme, www, query, fragment or trailing slash: the same page, however
-    the model or the search wrote it."""
-    u = url.strip().lower()
-    for prefix in ("https://", "http://"):
-        if u.startswith(prefix):
-            u = u[len(prefix) :]
-    if u.startswith("www."):
-        u = u[4:]
-    for sep in ("?", "#"):
-        u = u.split(sep, 1)[0]
-    return u.rstrip("/")
+    """The page as one string, with only a light cleanup: no scheme, ``www.``, fragment or
+    trailing slash, no ``utm_*`` tracking parameters, the host in lower case. The rest of the
+    query stays, in its order: ``?id=1`` and ``?id=999`` are two pages."""
+    parts = urlsplit(url.strip())
+    host = parts.netloc.lower().removeprefix("www.")
+    if not host:
+        # no scheme written: the whole is host and path
+        rest = urlsplit("//" + url.strip())
+        parts, host = rest, rest.netloc.lower().removeprefix("www.")
+    query = urlencode(
+        [
+            (k, v)
+            for k, v in parse_qsl(parts.query, keep_blank_values=True)
+            if not k.lower().startswith("utm_")
+        ]
+    )
+    page = host + parts.path.rstrip("/")
+    return f"{page}?{query}" if query else page
 
 
-def backed_pages(output: list[dict[str, Any]]) -> set[str]:
-    """Every page a search returned or the answer cited, as ``norm_url`` writes it: what a URL
-    the model wrote must be among to count as found rather than made up."""
-    pages = {norm_url(r["url"]) for r in search_results(output)}
-    pages |= {norm_url(c["url"]) for c in citations(output)}
-    pages.discard("")
+def backed_pages(output: list[dict[str, Any]]) -> dict[str, str]:
+    """Every page a search returned or the answer cited, as ``norm_url`` writes it, to the URL
+    as the search gave it (a search result's before a citation's): what a URL the model wrote
+    must be among to count as found rather than made up, and what is kept in its place."""
+    pages: dict[str, str] = {}
+    for found in (*search_results(output), *citations(output)):
+        page = norm_url(found["url"])
+        if page and page not in pages:
+            pages[page] = found["url"].strip()
     return pages
 
 

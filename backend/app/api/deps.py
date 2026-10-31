@@ -15,7 +15,7 @@ from app.match.service import Assessor
 from app.measure.service import Measurer
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import Gate
-from app.photos import ItemPhotos
+from app.photos import DevicePhotos, ItemPhotos
 from app.picture import Pictures
 from app.profiles import Profiles
 from app.projects.service import Planner
@@ -156,6 +156,14 @@ def app_photos(request: Request) -> ItemPhotos:
 
 
 PhotosDep = Annotated[ItemPhotos, Depends(app_photos)]
+
+
+def app_device_photos(request: Request) -> DevicePhotos:
+    photos: DevicePhotos = request.app.state.device_photos
+    return photos
+
+
+DevicePhotosDep = Annotated[DevicePhotos, Depends(app_device_photos)]
 
 
 def app_pictures(request: Request) -> Pictures:

@@ -41,7 +41,7 @@ from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import Gate, GateMiddleware
 from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
-from app.photos import ItemPhotos
+from app.photos import DevicePhotos, ItemPhotos
 from app.picture import Pictures
 from app.profiles import Profiles
 from app.projects import Planner, Templates
@@ -113,6 +113,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.inventory = Inventory(settings)
     gate.keys = AccessKeys(app.state.inventory.store, gate.master_tag)
     app.state.photos = ItemPhotos(settings, app.state.inventory)
+    app.state.device_photos = DevicePhotos(settings, app.state.inventory)
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)
     app.state.assessor = Assessor(app.state.profiles, app.state.inventory)

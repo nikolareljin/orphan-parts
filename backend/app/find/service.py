@@ -152,12 +152,15 @@ def web_text(find: WebFind) -> str:
 def backed_finds(
     found: list[WebFind], output: list[dict[str, Any]]
 ) -> tuple[list[WebFind], int, list[str]]:
-    """Keep a find only when a search result or a citation carries its page, and only a web
-    link; one find per page, at most WEB_MAX. Say how many were dropped and why."""
+    """Keep a find only when a search result or a citation carries its page, query and all
+    (only a fragment and tracking parameters are let go), and only a web link; the URL kept is
+    the one the search gave. One find per page, at most WEB_MAX, none without text to score.
+    Say how many were dropped and why."""
     pages = backed_pages(output)
     kept: list[WebFind] = []
     seen: set[str] = set()
     unbacked = 0
+    empty = 0
     for f in found:
         url = f.url.strip()
         page = norm_url(url)
@@ -166,17 +169,19 @@ def backed_finds(
             continue
         if page in seen or len(kept) >= WEB_MAX:
             continue
-        seen.add(page)
-        kept.append(
-            WebFind(
-                url=url[:LINE_MAX],
-                title=_cut(f.title),
-                site=_cut(f.site),
-                price_as_stated=_cut(f.price_as_stated),
-                dimensions_as_stated=_cut(f.dimensions_as_stated),
-                quote=_cut(f.quote),
-            )
+        cut = WebFind(
+            url=pages[page][:LINE_MAX],
+            title=_cut(f.title),
+            site=_cut(f.site),
+            price_as_stated=_cut(f.price_as_stated),
+            dimensions_as_stated=_cut(f.dimensions_as_stated),
+            quote=_cut(f.quote),
         )
+        if not (cut.title or cut.price_as_stated or cut.dimensions_as_stated or cut.quote):
+            empty += 1  # nothing for the pattern or the price to read
+            continue
+        seen.add(page)
+        kept.append(cut)
     notes: list[str] = []
     if searches(output) == 0:
         notes.append("the model made no web search, so nothing it wrote can be backed")
@@ -184,7 +189,9 @@ def backed_finds(
         notes.append("the search returned no pages, so nothing the model wrote can be backed")
     if unbacked:
         notes.append(f"{unbacked} find(s) rest on no search result and were left out")
-    return kept, unbacked, notes
+    if empty:
+        notes.append(f"{empty} find(s) said nothing about the part and were left out")
+    return kept, unbacked + empty, notes
 
 
 class FindError(ValueError):

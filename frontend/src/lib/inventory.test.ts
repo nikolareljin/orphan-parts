@@ -12,6 +12,7 @@ import {
   isConflict,
   mergeDetails,
   parentPhotoLine,
+  photoReadLine,
   proposedCount,
   provenanceLabel,
   reviewLabel,
@@ -141,6 +142,17 @@ describe('the device a part came from', () => {
     expect(
       cameFrom({ ...item([]), fields: { parent_device_model: a('parent_device_model', 'Hamilton Beach 729'), parent_device: a('parent_device', 'the drink mixer') } }),
     ).toBe('Came from: Hamilton Beach 729, the drink mixer')
+  })
+
+  it('says a model read off the photo is still to confirm', () => {
+    const read = (review: Assertion['review'], source: Assertion['source']): Item => ({
+      ...item([]),
+      fields: { parent_device_model: { ...assertion(9, review), field: 'parent_device_model', value: 'Hamilton Beach 729', source } },
+    })
+    expect(photoReadLine(read('proposed', 'photo'))).toBe('Read from the photo: Hamilton Beach 729. Confirm it in the fields.')
+    expect(photoReadLine(read('accepted', 'photo'))).toBe('')
+    expect(photoReadLine(read('accepted', 'user_edit'))).toBe('')
+    expect(photoReadLine(item([]))).toBe('')
   })
 
   it('says what a photo of the device gave', () => {

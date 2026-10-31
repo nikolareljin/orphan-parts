@@ -416,5 +416,6 @@ async def test_a_part_is_answered_by_the_device_it_came_from(recorded_settings: 
     assert rod.fields["parent_device_model"].value == "Hamilton Beach 729"
     assert rod.fields["parent_device"].value == "the drink mixer"
     assert rod.needs_parent is False
-    assert loader.photos.count(rod.id) == 1  # the device photo kept with the part
+    # the device photo is kept apart from the part's own
+    assert loader.photos.count(rod.id) == 0 and loader.device_photos.count(rod.id) == 1
     assert loader.inventory.get(loader.ids["bare"]).needs_parent is True

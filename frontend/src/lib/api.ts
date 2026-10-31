@@ -1214,6 +1214,9 @@ export const api = {
         `/api/items/${id}/photos`,
         photos.map((p): FormPart => ['uploads', p]),
       ),
+    // photos of the device a part came from: the owner's, kept apart from the part's own
+    devicePhotos: (id: number) => getJson<PhotoCount>(`/api/items/${id}/device-photos`),
+    devicePhotoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/device-photos/${n}`),
     addParentPhoto: (id: number, photo: File) => postForm<ParentPhoto>(`/api/items/${id}/parent-photo`, [['photo', photo]]),
     measurements: (id: number) => getJson<Measurement[]>(`/api/items/${id}/measurements`),
     measure: (id: number, photo: File, request: MeasureRequest) =>

@@ -98,3 +98,9 @@ export function cameFrom(item: Item): string {
   const said = [item.fields.parent_device_model?.value, item.fields.parent_device?.value].map((v) => v?.trim() ?? '').filter(Boolean)
   return said.length ? `Came from: ${said.join(', ')}` : ''
 }
+
+// While the model read off a photo of the device is still to confirm, the line that says so.
+export function photoReadLine(item: Item): string {
+  const read = item.fields.parent_device_model
+  return read && read.source === 'photo' && read.review === 'proposed' ? parentPhotoLine(read.value) : ''
+}

@@ -4,7 +4,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from app.api.deps import ExtractorDep, GateDep, PhotosDep
+from app.api.deps import DevicePhotosDep, ExtractorDep, GateDep, PhotosDep
 from app.api.model_errors import as_http
 from app.extract import Extraction
 from app.extract.imaging import BadImageError
@@ -24,8 +24,8 @@ class PhotoCount(BaseModel):
 
 
 class ParentPhoto(BaseModel):
-    """A photo of the device a part came from: kept with the item's photos, read like a label,
-    and the model read off it proposed as the item's parent_device_model."""
+    """A photo of the device a part came from: kept apart from the part's own photos, read like
+    a label, and the model read off it proposed as the item's parent_device_model."""
 
     item: Item
     model: str = Field(description="the device model read off the photo; empty when none")
@@ -84,12 +84,13 @@ async def add_item_photos(item_id: int, uploads: PhotosPart, photos: PhotosDep) 
 async def add_parent_photo(
     item_id: int,
     photo: Annotated[UploadFile, File(description="A photo of the device the part came from")],
-    photos: PhotosDep,
+    photos: DevicePhotosDep,
     extractor: ExtractorDep,
     gate: GateDep,
 ) -> ParentPhoto:
     """The device a part came from, by a photo of it (the label under its base is best): one
-    label reading (one Muse Spark call), the photo kept with the item's photos, and the model
+    label reading (one Muse Spark call), the photo kept with the item's device photos (apart
+    from the part's own: never in a draft, the photo zip or the visitor's view), and the model
     read off it proposed as ``parent_device_model``, sourced ``photo``, for the owner to accept."""
     cap = photos.settings.max_upload_mb * 1024 * 1024
     try:
@@ -101,8 +102,8 @@ async def add_parent_photo(
         give_back_request(gate)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"an item keeps at most {photos.settings.max_photos} photos; this one has"
-            f" {have}",
+            detail=f"an item keeps at most {photos.settings.max_photos} photos of the device;"
+            f" this one has {have}",
         )
     data = await photo.read(cap + 1)
     if not data or len(data) > cap:
@@ -130,7 +131,20 @@ async def add_parent_photo(
             item_id, PARENT_MODEL, model, confidence=confidence, source="photo", raw=raw
         )
         if model
-        # the photo is kept all the same: a new version, so the dialog reads the photos again
+        # the photo is kept all the same: a new version, so the dialog reads them again
         else inventory.note(item_id, "a photo of the device kept; no model read off it")
     )
     return ParentPhoto(item=item, model=model, extraction=reading)
+
+
+@router.get("/{item_id}/device-photos", response_model=PhotoCount)
+def device_photos(item_id: int, photos: DevicePhotosDep) -> PhotoCount:
+    """How many photos of the device the part came from are kept; the owner's alone."""
+    return PhotoCount(count=photos.count(item_id))
+
+
+@router.get("/{item_id}/device-photos/{n}", response_class=Response)
+def device_photo(item_id: int, n: int, photos: DevicePhotosDep) -> Response:
+    return Response(
+        photos.read(item_id, n), media_type="image/jpeg", headers={"Cache-Control": "no-store"}
+    )

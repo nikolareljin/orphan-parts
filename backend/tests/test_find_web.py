@@ -17,7 +17,7 @@ from app.inventory.parent import needs_parent, profile_of
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.main import create_app
 from app.match import Assessor
-from app.model_api import CostLedger, ModelApiClient
+from app.model_api import CostLedger, ModelApiClient, norm_url
 from app.ops.gate import demo_allowed, expensive
 from app.profiles import Profiles
 from app.projects.pack import private_field
@@ -130,30 +130,61 @@ def test_the_owners_words_about_the_device_stay_out_of_other_briefs(finder: Find
 
 def test_only_finds_a_search_result_or_a_citation_carries_are_kept() -> None:
     output = search_output(
-        "https://www.example.org/a?ref=x", "https://example.org/b", cited=("http://example.org/c",)
+        "https://www.example.org/a?ref=x",
+        "https://example.org/b",
+        "https://shop.example.org/item?id=1&utm_source=feed",
+        "https://example.org",
+        cited=("http://example.org/c",),
     )
     kept, dropped, notes = backed_finds(
         [
-            find("https://example.org/a"),
-            find("https://example.org/a/#again"),  # the same page: one find per page
+            find("https://example.org/a?ref=x"),
+            find("https://example.org/a/?ref=x#again"),  # the same page: one find per page
+            find("https://example.org/a"),  # the query is part of the page
             find("https://example.org/b"),
             find("https://example.org/c"),
+            find("https://shop.example.org/item?id=1"),  # tracking parameters let go
+            find("https://shop.example.org/item?id=999"),  # another product: not backed
+            find("https://example.org/"),  # the bare domain, a slash either way
             find("https://example.org/made-up"),
             find("javascript:alert(1)//example.org/b"),
+            find("https://example.org/b?x=1"),
         ],
         output,
     )
+    # each kept as the search gave it, not as the model wrote it
     assert [f.url for f in kept] == [
-        "https://example.org/a",
+        "https://www.example.org/a?ref=x",
         "https://example.org/b",
-        "https://example.org/c",
+        "http://example.org/c",
+        "https://shop.example.org/item?id=1&utm_source=feed",
+        "https://example.org",
     ]
-    assert dropped == 2 and notes == ["2 find(s) rest on no search result and were left out"]
+    assert dropped == 5 and notes == ["5 find(s) rest on no search result and were left out"]
     _, _, none = backed_finds([find("https://example.org/a")], [])
     assert none[0] == "the model made no web search, so nothing it wrote can be backed"
     many = [find(f"https://example.org/{i}") for i in range(WEB_MAX + 5)]
     kept, _, _ = backed_finds(many, search_output(*(f.url for f in many)))
     assert len(kept) == WEB_MAX
+    # a find with nothing to score is left out and said
+    bare = WebFind(
+        url="https://example.org/b",
+        title=" ",
+        site="example.org",
+        price_as_stated="",
+        dimensions_as_stated="",
+        quote="",
+    )
+    kept, dropped, notes = backed_finds([bare], output)
+    assert kept == [] and dropped == 1
+    assert notes == ["1 find(s) said nothing about the part and were left out"]
+
+
+def test_a_page_is_its_path_and_query_without_tracking_or_fragment() -> None:
+    assert norm_url("https://WWW.Example.org/a/?id=1#top") == "example.org/a?id=1"
+    assert norm_url("https://example.org/a?id=1") != norm_url("https://example.org/a?id=999")
+    assert norm_url("https://example.org/a?utm_medium=x&id=1") == "example.org/a?id=1"
+    assert norm_url("example.org/") == norm_url("https://example.org") == "example.org"
 
 
 def test_a_find_reads_as_a_listing_the_pattern_and_the_price_can_score() -> None:
@@ -277,6 +308,7 @@ def test_a_part_with_no_model_and_no_device_asks_for_the_device(
         ("parent_device", "the drink mixer in the kitchen"),
         ("parent_device_model", "Hamilton Beach 729"),
         ("model_number", "729"),
+        ("part_number", "990010200"),
     ):
         item = agitator(inventory)
         assert (
@@ -352,7 +384,10 @@ def test_a_photo_of_the_device_is_kept_and_its_model_proposed(
     assert read["source"] == "photo" and read["review"] == "proposed"
     assert read["provenance"] == "observed"
     assert body["item"]["needs_parent"] is False
-    assert c.get(f"/api/items/{item_id}/photos").json()["count"] == 1
+    # kept apart: the device's photos are not the part's
+    assert c.get(f"/api/items/{item_id}/photos").json()["count"] == 0
+    assert c.get(f"/api/items/{item_id}/device-photos").json()["count"] == 1
+    assert c.get(f"/api/items/{item_id}/device-photos/1").headers["content-type"] == "image/jpeg"
     assert body["item"]["version"] == item.json()["version"] + 1
     assert (
         c.post(
@@ -396,3 +431,42 @@ def test_a_device_photo_with_no_model_still_makes_a_new_version(
     assert body["model"] == "" and body["item"]["needs_parent"] is True
     # the photo row reads the count again: the item is a new version
     assert body["item"]["version"] == made.json()["version"] + 1
+
+
+def test_device_photos_stay_out_of_the_parts_photos_drafts_zip_and_the_visitor(
+    tmp_path: Path,
+) -> None:
+    settings = gated_settings(tmp_path, fixtures_dir=RECORDED_FIXTURES)
+    with TestClient(create_app(settings)) as c:
+        c.post("/api/access", json={"code": CODE})
+        item = c.post(
+            "/api/items", json={"item_type": "agitator", "profile": "blender_agitator"}
+        ).json()["id"]
+        for _ in range(2):
+            sent = c.post(
+                f"/api/items/{item}/parent-photo",
+                files={"photo": ("base.jpg", make_photo(), "image/jpeg")},
+            )
+            assert sent.status_code == 201, sent.text
+        # not counted against the part's own photos: all four still fit
+        own = [("uploads", (f"{i}.jpg", make_photo(), "image/jpeg")) for i in range(4)]
+        assert c.post(f"/api/items/{item}/photos", files=own).json()["count"] == 4
+        assert c.get(f"/api/items/{item}/device-photos").json()["count"] == 2
+        # a draft reads, and its zip carries, the part's photos alone
+        lister = c.app.state.lister  # type: ignore[attr-defined]
+        assert sum(p["type"] == "input_image" for p in lister._photo_parts(item)) == 4
+        draft = c.post(f"/api/items/{item}/drafts", json={"mode": "give"})
+        assert draft.status_code == 201, draft.text
+        assert {p["photo"] for p in draft.json()["photos"]} <= {1, 2, 3, 4}
+        zipped = c.get(f"/api/drafts/{draft.json()['id']}/photos.zip")
+        assert zipped.status_code == 200
+        import io
+        import zipfile
+
+        assert len(zipfile.ZipFile(io.BytesIO(zipped.content)).namelist()) <= 4
+        c.post(f"/api/items/{item}/public", json={"public": True})
+        c.cookies.clear()
+        # the visitor sees the part and its photos, never the device's
+        assert c.get(f"/api/items/{item}/photos").json()["count"] == 4
+        assert c.get(f"/api/items/{item}/device-photos").status_code == 403
+        assert c.get(f"/api/items/{item}/device-photos/1").status_code == 403

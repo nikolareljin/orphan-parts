@@ -41,8 +41,11 @@ test('a photo of the device is kept and the model read off it answers the questi
   // the recorded label reading gives a brand and a model number
   await expect(card).toHaveCount(0)
   await expect(panel.getByRole('table', { name: 'Fields' })).toContainText('Orbital Power OP-65N')
-  await expect(panel.getByRole('img', { name: 'Item photo 1' })).toBeVisible()
   await expect(panel.locator('.came-from')).toHaveText('Came from: Orbital Power OP-65N')
+  // the model read is still to confirm, and the photo is the device's, apart from the part's
+  await expect(panel.locator('.photo-read')).toHaveText('Read from the photo: Orbital Power OP-65N. Confirm it in the fields.')
+  await expect(panel.getByLabel('Photos of the device').getByRole('img', { name: 'Device photo 1' })).toBeVisible()
+  await expect(panel.getByRole('img', { name: 'Item photo 1' })).toHaveCount(0)
 })
 
 test('Search the web brings back pages as listings with their links', async ({ page, request }) => {
