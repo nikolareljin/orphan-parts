@@ -31,7 +31,7 @@ test('the decide panel gathers the rows, asks for ideas, and keeps the choice on
   await expect(decide).toContainText('Not asked yet.')
   await expect(decide).toContainText('Homework workstation (laptop)')
   await expect(decide).toContainText('No open search from this item.')
-  await expect(decide.getByRole('button', { name: 'See picture controls above' })).toBeVisible()
+  await expect(decide.getByRole('button', { name: 'See picture controls' })).toBeVisible()
 
   // the model's proposals, from the recorded answer, labeled as proposals
   await decide.getByRole('button', { name: 'Ask for ideas' }).click()

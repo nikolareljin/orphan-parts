@@ -110,19 +110,19 @@ export default function Listing({ item, onChanged }: { item: Item; onChanged: ()
           <span>Voice note (WAV)</span>
           <input type="file" accept="audio/wav,.wav" onChange={(e) => void onVoice(e)} disabled={busy} />
         </label>
-        {note && (
-          <p className="hint">
-            Heard and kept as your words: <q>{note}</q>
-            {noteCut && ' (longer than the field holds; the first part was kept)'}
-          </p>
-        )}
       </div>
+      {note && (
+        <p className="hint">
+          Heard and kept as your words: <q>{note}</q>
+          {noteCut && ' (longer than the field holds; the first part was kept)'}
+        </p>
+      )}
       <form onSubmit={(e) => void write(e)}>
-        <div className="row">
-          <fieldset className="kind">
+        <div className="row options">
+          <fieldset className="choice">
             <legend>Mode</legend>
             {MODES.map((m) => (
-              <label key={m.value}>
+              <label key={m.value} className="check">
                 <input type="radio" name="mode" checked={mode === m.value} onChange={() => setMode(m.value)} />
                 <span>{m.label}</span>
               </label>

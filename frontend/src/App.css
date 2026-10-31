@@ -145,8 +145,9 @@ dialog.modal::backdrop {
 }
 
 .modal-body {
+  --pad: 1.25rem; /* the side padding; the item dialog's section bar spans it */
   overflow: auto;
-  padding: 0.25rem 1.25rem 1.25rem;
+  padding: 0 var(--pad) var(--pad); /* no room above the content: a sticky bar in it starts at the top */
 }
 
 .modal-body > article,
@@ -160,18 +161,12 @@ body.has-dialog {
   overflow: hidden;
 }
 
-/* the item's photos: in view above the values while the dialog scrolls under them */
+/* the item's photos: a row of thumbnails above the values, in the flow of the dialog */
 .item-photos {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  padding: 0.5rem 0;
-  margin: 0 0 0.5rem;
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
+  margin: 0 0 0.75rem;
 }
 
 .item-photos .photo {
@@ -645,14 +640,6 @@ table.items tr.open {
 .item h4 {
   margin: 1rem 0 0.5rem;
   font-size: 0.95rem;
-}
-
-.item .row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: end;
-  margin-top: 0.75rem;
 }
 
 .inline {
@@ -1229,4 +1216,303 @@ footer.service .pair img {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.5rem;
+}
+
+/* the item dialog: the name, a bar of section links that stays while the body scrolls, one
+   card per section (facts, decide, value, sell or give away, measure and fit, picture), then a
+   footer with the demo switch, the history and the delete */
+.item h3 {
+  margin: 0.25rem 0 0.15rem;
+  font-size: 1.2rem;
+}
+
+.item > .meta {
+  margin-top: 0;
+}
+
+.item .meta,
+.item .hint {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.modal-body .item-nav {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  width: auto;
+  margin: 0.5rem calc(-1 * var(--pad)) 0;
+  padding: 0.35rem var(--pad);
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-body .item-nav[hidden] {
+  display: none;
+}
+
+.item-nav button[aria-current='true'] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.item-section {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 40%, var(--card));
+  scroll-margin-top: 3.25rem; /* under the section bar */
+}
+
+/* a section with nothing to show (no picture yet for a visitor) takes no room */
+.item-section:empty {
+  display: none;
+}
+
+/* the first heading of a card is its title; a second panel in the same card gets a rule and
+   a title of its own; the headings after a title are subheadings */
+.item-section > h4:first-child,
+.item-section > section > h4:first-child {
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.5rem;
+  font-size: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.item-section > section + section {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.item-section .measure {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.item h4 {
+  margin: 1.1rem 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.item h5 {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.92rem;
+}
+
+.item section,
+.item table.evidence {
+  scroll-margin-top: 3.5rem;
+}
+
+.item .table-wrap {
+  overflow-x: auto;
+  margin: 0 0 0.5rem;
+}
+
+.item .no-photos {
+  margin: 0 0 0.75rem;
+}
+
+/* rows of controls: side by side, wrapping; a row of fields is a grid, the label above each
+   input and the action button on the inputs' baseline */
+.item .row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.item .row:has(> label:not(.check)),
+.item form.inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.6rem 0.75rem;
+  align-items: end;
+}
+
+.item form.inline {
+  margin-top: 0.25rem;
+}
+
+.item form.inline > h4 {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.item .row:has(> label:not(.check)) > button,
+.item form.inline > button {
+  justify-self: start;
+}
+
+.item .row > label:not(.check),
+.item form.inline > label,
+.item .details > label,
+.item .needed > label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.item .row > label:not(.check) > span,
+.item form.inline > label > span,
+.item .details > label > span,
+.item .needed > label > span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.item .row:has(> label:not(.check)) > .hint,
+.item .row:has(> label:not(.check)) > .error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.item .details {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.6rem 0.75rem;
+}
+
+.item .details > h4,
+.item .details > button {
+  grid-column: 1 / -1;
+}
+
+.item .details > h4 {
+  margin-bottom: 0;
+}
+
+.item input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.item select,
+.item textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+.item input[type='file'] {
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+/* a checkbox or a radio sits on the line with its text, never above it */
+.item label:has(> input[type='checkbox']),
+.item label:has(> input[type='radio']),
+.item .check {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
+  font-size: 0.92rem;
+}
+
+.item input[type='checkbox'],
+.item input[type='radio'] {
+  flex: none;
+  width: auto;
+  margin: 0.2rem 0 0;
+  accent-color: var(--accent);
+}
+
+/* a radio group on one line: "Mode: (•) Sell ( ) Give away" */
+.item fieldset.choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.item fieldset.choice legend {
+  float: left; /* laid out as one of the flex items, not as the box's caption */
+  padding: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.item fieldset.choice legend::after {
+  content: ':';
+}
+
+.item .row.options {
+  gap: 0.5rem 1.5rem;
+}
+
+.measure .kind {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+
+.item-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin-top: 1.25rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
+.item-footer .check {
+  flex: 1 1 18rem;
+}
+
+.item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.item .danger.quiet {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+
+.item .danger.quiet:hover {
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+}
+
+.item .events {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .modal-body {
+    --pad: 0.75rem;
+  }
+
+  .modal-body .item-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .item-section {
+    padding: 0.75rem 0.75rem 0.9rem;
+  }
+
+  .item-actions {
+    margin-left: 0;
+  }
 }
