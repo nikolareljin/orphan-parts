@@ -21,7 +21,7 @@ Live mode needs a key. Put it in `.env`, or set `OPL_FAKE_API=1` to run on recor
 `./dev up` and `./dev test` need the Docker daemon. Start Docker, or use the native path:
 `./dev up --native` and `NATIVE=1 ./dev test`.
 
-## Frontend shows "API not reachable"
+## Frontend shows "Cannot reach the server"
 
 The backend is still starting or failed. `./dev logs backend` shows why.
 

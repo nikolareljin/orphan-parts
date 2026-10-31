@@ -22,14 +22,14 @@ describe('reachableFromAPhone', () => {
 
 describe('pairingText', () => {
   it('says what the code carries in each of the three states', () => {
-    expect(pairingText(false, false)).toBe('It carries this address.')
-    expect(pairingText(false, true)).toBe('It carries this address.')
-    expect(pairingText(true, false)).toContain('the phone joins as the demo')
+    expect(pairingText(false, false)).toBe("It contains this server's address.")
+    expect(pairingText(false, true)).toBe("It contains this server's address.")
+    expect(pairingText(true, false)).toContain('the phone opens the demo')
     expect(pairingText(true, false)).toContain('Sign in here first')
-    expect(pairingText(true, true)).toContain('an access code of its own')
-    expect(pairingText(true, true)).toContain('stays here')
-    expect(pairingText(true, true)).toContain('live credential')
-    expect(pairingText(true, false)).not.toContain('live credential')
+    expect(pairingText(true, true)).toContain('its own access code')
+    expect(pairingText(true, true)).toContain('never given to the phone')
+    expect(pairingText(true, true)).toContain('anyone who scans it is signed in')
+    expect(pairingText(true, false)).not.toContain('anyone who scans it is signed in')
   })
 })
 

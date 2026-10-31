@@ -21,8 +21,8 @@ export function captureTone(status: CaptureStatus): 'fits' | 'conflict' | 'unsur
 export function captureSummary(c: Pick<Capture, 'photos' | 'clip' | 'clip_bytes' | 'audio' | 'audio_seconds' | 'name' | 'model'>): string {
   const parts: string[] = []
   parts.push(c.photos === 1 ? '1 photo' : `${c.photos} photos`)
-  if (c.clip) parts.push(`a clip of ${Math.max(1, Math.round(c.clip_bytes / 1024))} KB`)
-  if (c.audio) parts.push(`a note of ${c.audio_seconds.toFixed(0)} s`)
+  if (c.clip) parts.push(`a video of ${Math.max(1, Math.round(c.clip_bytes / 1024))} KB`)
+  if (c.audio) parts.push(`a voice note of ${c.audio_seconds.toFixed(0)} s`)
   let text = parts.join(', ')
   if (c.name) text += ` · named ${c.name}`
   if (c.model) text += ` · read by ${c.model}`

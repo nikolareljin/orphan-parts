@@ -22,7 +22,7 @@ first (select a second project that commits the laptop), then record S11 to S14.
 | S05 | 0:26 | 6 | The phone's Capture tab | Capture tab: photograph the base, the label (fills the frame), the agitator; hold to talk: "the rod wobbles in the drive; the base runs"; type a name; **Send** | scrcpy window in OBS, or `adb shell screenrecord` | `t02-capture` | photos |
 | S06 | 0:32 | 5 | The capture read into an item | **Inbox**, the new capture, **Read it**; open the item: the label crop and the values *to confirm*; **Accept** one value | OBS, browser | `t03-read` | photos (and key) |
 | S07 | 0:37 | 5 | A dimension from a ruler | **My inventory**, *Frappé maker agitator, worn*, **Measure a feature**, feature *Rod diameter*, upload the side photo with the ruler, mark two points on the ruler and the two edges of the rod, **Measure**; the value with its method and uncertainty | OBS, browser | `t04-measure` | photos |
-| S08 | 0:42 | 13 | The replacement search, its open questions | **Find a part**, the search *all-metal agitator rod for the frappé maker*; hover **Search Marketplace** (do not open it on camera); **Bring a listing back**, choose **Values I know**, type only what a seller might state, **Assess it**; the state (*needs evidence* expected), **Ask the seller**, the questions | OBS, browser | `t05-find` 0 to 3 s, `t07-routes` 3 to 7 s, `t06-sample-values` 7 to 11 s | now |
+| S08 | 0:42 | 13 | The replacement search, its open questions | **Find a part**, the search *all-metal agitator rod for the frappé maker*; hover **Search Marketplace** (do not open it on camera); **Bring a listing back**, choose **Values I know**, type only what a seller might state, **Check fit**; the state (*needs evidence* expected), **Ask the seller**, the questions | OBS, browser | `t05-find` 0 to 3 s, `t07-routes` 3 to 7 s, `t06-sample-values` 7 to 11 s | now |
 | S09 | 0:55 | 8 | The inventory: laptops, RAM, tablets, monitors, mice, switches | **My inventory**, scroll the list slowly; open *Third laptop, works* for 2 s | OBS, browser | `t08-story-b` | now |
 | S10 | 1:03 | 9 | What I want from a build | **Build and reuse**, **What I want from a build**: Interests *an arcade table for the living room; home automation; a smart mirror*, Effort, Skills, Budget; **Save** | OBS, browser | `t09-preferences` | now |
 | S11 | 1:12 | 8 | Five proposals | **Propose projects**, How many **5**, **Propose**; let the list settle; pan over the proposals, stop on the arcade | OBS, browser, live key | `t10-propose` | key |
@@ -55,7 +55,7 @@ first (select a second project that commits the laptop), then record S11 to S14.
   must be, metal (the worn rod's plastic is in its faults), and the material rule is an
   equality: a candidate stated as metal, steel or all-metal passes it, one stated as plastic
   is a conflict, and leaving the material out of the typed values makes it a question to the
-  seller. To search from the measurement of S07 instead, start a new search (**I need one that fits**, *Needed by*: **Values written in below**)
+  seller. To search from the measurement of S07 instead, start a new search (**I need one that fits**, *Needed by*: **Values I type below**)
   under the agitator profile. The rod numbers in the demo set (4 mm rod, 9 mm
   across the tabs) are the set's entries: confirm them against S07 before they appear. Never
   type an asking price that a real listing did not state.

@@ -14,7 +14,7 @@ describe('captures', () => {
     expect(captureSummary({ photos: 1, clip: false, clip_bytes: 0, audio: false, audio_seconds: 0, name: '', model: '' })).toBe('1 photo')
     expect(
       captureSummary({ photos: 2, clip: true, clip_bytes: 3 * 1024, audio: true, audio_seconds: 2.4, name: 'Old adapter', model: 'muse-spark-1.3' }),
-    ).toBe('2 photos, a clip of 3 KB, a note of 2 s · named Old adapter · read by muse-spark-1.3')
-    expect(captureSummary({ photos: 0, clip: true, clip_bytes: 10, audio: false, audio_seconds: 0, name: '', model: '' })).toBe('0 photos, a clip of 1 KB')
+    ).toBe('2 photos, a video of 3 KB, a voice note of 2 s · named Old adapter · read by muse-spark-1.3')
+    expect(captureSummary({ photos: 0, clip: true, clip_bytes: 10, audio: false, audio_seconds: 0, name: '', model: '' })).toBe('0 photos, a video of 1 KB')
   })
 })

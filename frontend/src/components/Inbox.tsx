@@ -16,7 +16,7 @@ function Clip({ id }: { id: number }) {
   if (unplayable) {
     return (
       <p className="muted">
-        This browser cannot play the clip of capture #{id} ({unplayable === 'codec' ? 'a codec it lacks' : 'it could not be loaded or played here'}).{' '}
+        This browser cannot play the video of capture #{id} ({unplayable === 'codec' ? 'its format is not supported' : 'it failed to load'}).{' '}
         <a href={url} download={`capture-${id}.mp4`}>
           Download it
         </a>
@@ -90,8 +90,8 @@ export default function Inbox({
     <div className="inbox">
       <SendCapture limits={limits} demo={demo} onSent={() => void load()} />
       <p className="muted">
-        Captures arrive from the phone app: photos, a short clip, a spoken note and a line. <strong>Read it</strong> turns one into an item in your
-        inventory, with every value marked as observed and the note kept as your words. Nothing here leaves this backend until you read it.{' '}
+        Captures come from the phone app: photos, a short video, a voice note and a line of text. <strong>Read it</strong> turns one into an item
+        in your inventory, each value marked to confirm and the voice note kept as your words. Nothing leaves this server until you read it.{' '}
         <button type="button" className="link" onClick={() => void load()}>
           Refresh
         </button>

@@ -122,7 +122,7 @@ fun scanToPair(
                         },
                     )
                 } else {
-                    onStatus("Paired with ${paired.baseUrl} (with a pairing); claiming a code of its own…")
+                    onStatus("Paired with ${paired.baseUrl}; getting this phone its own access code…")
                     startClaim(store, paired, before.baseUrl)
                 }
             }
@@ -209,7 +209,7 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = code,
                 onValueChange = { code = it },
-                label = { Text("Access code (the live door; without it a gated backend is a demo)") },
+                label = { Text("Access code (if the server has one; without it you get the demo)") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 colors = fieldColors(),
@@ -225,7 +225,7 @@ fun SettingsScreen(
                 )
             } else if (isPairingToken(settings.token) && !tokenEnded(settings.token)) {
                 Spacer(Modifier.height(6.dp))
-                Text("A pairing is kept; it ends within minutes, scan again then.", style = MaterialTheme.typography.bodySmall, color = muted)
+                Text("Paired for a few minutes; scan the code again when it ends.", style = MaterialTheme.typography.bodySmall, color = muted)
             }
             Spacer(Modifier.height(12.dp))
             Row {
