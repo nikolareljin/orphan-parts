@@ -1,0 +1,86 @@
+{
+  "endpoint": "/responses",
+  "op": "segment-label",
+  "model": "sam-3.1",
+  "digest": "b50bcbbc65d89821362cf322",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "product label with printed text",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,079af5b3565d980f",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "model": "sam-3.1",
+    "prompt_cache_key": "orphan-parts",
+    "store": false
+  },
+  "response": {
+    "metadata": {
+      "mask_encoding": "one_bit",
+      "include_confidence": "true"
+    },
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "sam-3.1",
+    "background": false,
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae595d697412cda15164917",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793430998.0,
+    "completed_at": 1793430998.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_d510f0bb-fe9c-4ed1-871a-53ae7fa8d387",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": null,
+    "usage": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 0,
+      "images_processed": 1
+    },
+    "parallel_tool_calls": true,
+    "store": false
+  },
+  "status": 200
+}

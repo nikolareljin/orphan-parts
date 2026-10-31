@@ -1,0 +1,235 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-give",
+  "model": "muse-spark-1.3",
+  "digest": "92f99dc6879fdb03fc1e5959",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: give\nname: Intel slot 1 processor with its fan\nitem_type: processor\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nConfirmed fields (key: value):\n- brand: intel\n- part_number: 0600169\n- model_number: 1DBX1612H2056\n- input_voltage: 5 V\n- connector: 3-pin fan connector with yellow, green and black wires\n- certifications: CE\n- condition_notes: dust on housing and fan blades, signs of use\nField keys a fact may name: brand, part_number, model_number, input_voltage, connector, certifications, condition_notes, name, item_type",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest free-item notices for things given away. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. No hype, no emoji. The title is at most 80 characters. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "title": "DraftWriting",
+          "type": "object",
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          }
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae5910915ae3abe1add4f4d",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793429769.0,
+    "completed_at": 1793429769.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae5910915ae3abe1add4f4d:rs_8cae83ed-258a-440c-b1c5-debdaabe766e",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_d43ba4a3-15b1-4a0c-a932-df9efc40ded7",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"description\": \"Free Intel slot 1 processor with its fan. Brand Intel. Part 0600169, model 1DBX1612H2056. Fan marked 5 V with 3-pin fan connector with yellow, green and black wires, CE marked. Dust on housing and fan blades, signs of use. Faults not stated. No test information given, untested for function.\", \"facts\": [{\"field\": \"name\", \"text\": \"Item is Intel slot 1 processor with its fan\"}, {\"field\": \"item_type\", \"text\": \"Item type is processor\"}, {\"field\": \"brand\", \"text\": \"Brand is intel\"}, {\"field\": \"part_number\", \"text\": \"Part number is 0600169\"}, {\"field\": \"model_number\", \"text\": \"Model number is 1DBX1612H2056\"}, {\"field\": \"input_voltage\", \"text\": \"Input voltage is 5 V\"}, {\"field\": \"connector\", \"text\": \"Connector is 3-pin fan connector with yellow, green and black wires\"}, {\"field\": \"certifications\", \"text\": \"Certification is CE\"}, {\"field\": \"condition_notes\", \"text\": \"Has dust on housing and fan blades, signs of use\"}], \"keywords\": [\"intel\", \"slot 1 processor\", \"fan\"], \"title\": \"Free Intel slot 1 processor with its fan\", \"uses\": [\"spare parts\", \"vintage computer collection\", \"display piece\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest free-item notices for things given away. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. No hype, no emoji. The title is at most 80 characters. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 459,
+      "input_tokens_details": {
+        "cached_tokens": 241
+      },
+      "output_tokens": 1411,
+      "output_tokens_details": {
+        "reasoning_tokens": 1093
+      },
+      "total_tokens": 1870
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}

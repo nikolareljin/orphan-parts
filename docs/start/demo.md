@@ -2,9 +2,9 @@
 
 Sixty seconds through what is built, in the order a person meets it, on a stack started with
 `./dev up` in fixture mode (no key: every model answer is a recorded one and nothing is spent).
-With a key, the same steps run live. The demo set is a drawer of idle things: a vacuum that
-lost its tool and a few loose tools, two old laptops, a spare monitor, a keyboard, a broken
-phone, a power adapter.
+With a key, the same steps run live. The demo set is a drawer of idle things, photographed by
+the owner: three monitors, two ThinkPads and a spare laptop board, an old graphics card, a slot 1
+processor, a powerline adapter still in its wrap, and the worn agitator of a frappé maker.
 
 ## The set, loaded
 
@@ -40,41 +40,44 @@ reject it, and anything you add beside it carries your word as its provenance.
 
 ## 2. Measure the thing that decides fit
 
-On the vacuum's page, **Measure a feature**: the opening photographed straight on with a ruler
-across it, two marks on the ruler and two on the opening, and the number comes from geometry,
-with its uncertainty and the method. A blurred or oblique capture is refused with the reason.
+On the agitator's page, **Measure a feature**: the rod photographed from the side with a ruler
+along it, two marks on the ruler and two on the rod, and the number comes from geometry, with
+its uncertainty and the method. A blurred or oblique capture is refused with the reason.
 [Measure a feature](../guides/measure.md).
 
-## 3. Does the loose tool fit?
+## 3. Does a listed rod fit?
 
-**Does it fit?** checks a candidate against the vacuum's profile rule by rule: the near-fit tool
-is rejected on the dimension it misses, the right one passes with the latch still unknown, and
-that unknown becomes a question. The verdict is one of five on the
+**Does it fit?** checks a candidate against the agitator's profile rule by rule: the all-metal
+rod of the same size passes, the plastic one is rejected on its material and its diameter, the metal
+one with wider tabs is rejected on the span, and the listing with no measurements stays at
+*needs evidence*, its unknowns turned into questions. The verdict is one of five on the
 [ladder](../concepts/verdicts.md), decided by the rules, never by the model.
 [Does it fit?](../guides/match.md).
 
 ## 4. Find the missing piece
 
-**Find a part** records what the vacuum needs and hands off a Marketplace search for you to run.
+**Find a part** records what the agitator needs (all metal, a 4 mm rod, two tabs 9 mm across)
+and hands off a Marketplace search for you to run.
 A listing brought back as its text is read by Muse Spark into fields, dated, assessed by the
 same rules and placed where it stands; **Ask the seller** turns the open questions into a
 message. [Find a part](../guides/search.md).
 
-## 5. What could the laptops become?
+## 5. What could the monitors become?
 
 **Build and reuse**: say what you want from a build, ask for proposals, and Muse Spark reads the
 inventory through tools and proposes projects from templates kept as data; only what names
-items you own is shown. Select the homework workstation: its items are committed, the budget line
-says what is left, the missing cable becomes a search, and the build pack is one document from
+items you own is shown: a homework workstation on the 24 inch Dell and a retro console on the
+18 inch one. Select the homework workstation: its items are committed, the budget line says what
+is left, the missing cable becomes a search, and the build pack is one document from
 what stands. Record the outcome once it works. [Build and reuse](../guides/reuse.md).
 
-## 6. Sell the phone, give the keyboard away
+## 6. Sell the graphics card, give the processor away
 
-On the broken phone, **What is it worth?** has Muse Spark search for listings and sales of the
+On the graphics card, **What is it worth?** has Muse Spark search for listings and sales of the
 same model and keeps only the comparables a page backs; asking, sold, reported and estimated
 stay four numbers. **Prepare to sell** writes an honest draft from confirmed values with the
-disclosures the rules append, and the keyboard goes as a free-pickup draft with the
-data-removal steps. **Open Marketplace** hands the draft over; posting is yours.
+disclosures the rules append; the slot 1 processor goes as a free-pickup draft, and the older
+ThinkPad as one with the data-removal steps. **Open Marketplace** hands the draft over; posting is yours.
 [Value an item](../guides/value.md), [Seller flow](../guides/seller.md).
 
 ## 7. On the phone

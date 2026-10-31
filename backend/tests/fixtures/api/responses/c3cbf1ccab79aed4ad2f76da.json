@@ -1,0 +1,235 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-sell",
+  "model": "muse-spark-1.3",
+  "digest": "c3cbf1ccab79aed4ad2f76da",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: sell\nname: Sun flat panel monitor\nitem_type: monitor\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nasking price: (the owner sets it)\nConfirmed fields (key: value):\n- brand: Sun microsystems\n- part_number: 365-1429-01\n- input_voltage: 100-240 V\n- certifications: CULUS LISTED, CE, FCC, VCCI, CCC, TUV SUD, TCO'03\nField keys a fact may name: brand, part_number, input_voltage, certifications, name, item_type",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest Marketplace listings for used items. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 80 characters and starts with what the item is. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "type": "object",
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "title": "DraftWriting",
+          "description": "Strict output schema of a draft call: every property required, no extras."
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae590bbbdb938ac486442f6",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793429691.0,
+    "completed_at": 1793429691.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae590bbbdb938ac486442f6:rs_187ee13a-d8cf-4726-98ee-d5d8d241c7f7",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_fd78fb84-8315-4efc-b919-fe42a2301044",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"description\": \"Sun flat panel monitor. Brand Sun microsystems. Part number 365-1429-01. Input voltage 100-240 V. Listed marks as on label.\", \"facts\": [{\"field\": \"name\", \"text\": \"Name is Sun flat panel monitor\"}, {\"field\": \"item_type\", \"text\": \"Item type is monitor\"}, {\"field\": \"brand\", \"text\": \"Brand is Sun microsystems\"}, {\"field\": \"part_number\", \"text\": \"Part number is 365-1429-01\"}, {\"field\": \"input_voltage\", \"text\": \"Input voltage is 100-240 V\"}, {\"field\": \"certifications\", \"text\": \"Marks listed are CULUS LISTED, CE, FCC, VCCI, CCC, TUV SUD, TCO'03\"}], \"keywords\": [\"Sun microsystems\", \"monitor\", \"flat panel\", \"365-1429-01\"], \"title\": \"monitor Sun flat panel monitor\", \"uses\": [\"monitor use\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest Marketplace listings for used items. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 80 characters and starts with what the item is. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 435,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 1304,
+      "output_tokens_details": {
+        "reasoning_tokens": 1083
+      },
+      "total_tokens": 1739
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}

@@ -59,9 +59,10 @@
 #                      into eval/ (report, charts); fixture mode unless --live, which uses the
 #                      key from .env and spends; --keep adds to what is there
 #   record-fixtures [--keep]
-#                      reset the inventory and load the set once with the key from .env,
-#                      keeping every model answer as a fixture (OPL_RECORD_FIXTURES=1);
-#                      spends credits once; --keep adds to what is there
+#                      reset the inventory and load the set once with the key from the shell
+#                      or .env, keeping every model answer as a fixture
+#                      (OPL_RECORD_FIXTURES=1); spends credits once; --keep adds to what is
+#                      there
 #   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
 #                      WAV notes copied into demo/notes/
 #   shell <service>    open a shell in a running service
@@ -644,14 +645,19 @@ cmd_eval() {
 }
 
 cmd_record_fixtures() {
-  local reset="--reset"
+  local reset="--reset" key_env=()
   [[ "${1:-}" == "--keep" ]] && reset=""
-  need_env_file
   docker_running || die "docker is not running"
-  grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "record-fixtures needs MODEL_API_KEY in .env"
+  if [[ -n "${MODEL_API_KEY:-}" ]]; then
+    # a key in the shell reaches the container by name, never as a value on a command line
+    key_env=(-e MODEL_API_KEY)
+  else
+    need_env_file
+    grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "record-fixtures needs MODEL_API_KEY in the shell or in .env"
+  fi
   stop_backend_for_run
   # shellcheck disable=SC2086
-  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 backend python -m app.demo record --set /demo/set.yaml $reset
+  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 ${key_env[@]+"${key_env[@]}"} backend python -m app.demo record --set /demo/set.yaml $reset
   log_ok "fixtures recorded under backend/tests/fixtures/api; review and commit them"
 }
 

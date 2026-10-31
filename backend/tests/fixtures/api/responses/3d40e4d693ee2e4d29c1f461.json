@@ -1,0 +1,437 @@
+{
+  "endpoint": "/responses",
+  "op": "propose-1",
+  "model": "muse-spark-1.3",
+  "digest": "3d40e4d693ee2e4d29c1f461",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Propose at most 3 projects.\nPreferences: {\"interests\":\"a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos\",\"effort\":\"low\",\"skills\":[\"basic computer setup\"],\"tools\":\"\",\"opens_devices\":false,\"budget\":50.0,\"currency\":\"USD\",\"radius_km\":null,\"purchase\":\"used\"}",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You propose small, practical projects a person can build from what they already own. First call the tools: the templates are the only projects you may propose, and the inventory is the only source of items. Fill each requirement with one listed item, naming it by id and name, with one line of why it fits; leave a requirement missing rather than inventing an item or stretching one that does not fit. Say the practical result in one line, the effort, the extra spending you expect in the owner's currency, and the unknowns a person should check before starting. Respect the owner's preferences and skills. Plain words, no hype.",
+    "max_output_tokens": 1600,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "ProposalSet",
+        "schema": {
+          "$defs": {
+            "Proposal": {
+              "additionalProperties": false,
+              "properties": {
+                "allocations": {
+                  "items": {
+                    "$ref": "#/$defs/ProposedAllocation"
+                  },
+                  "title": "Allocations",
+                  "type": "array"
+                },
+                "effort": {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "missing": {
+                  "description": "requirement keys the inventory does not fill",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Missing",
+                  "type": "array"
+                },
+                "result": {
+                  "title": "Result",
+                  "type": "string"
+                },
+                "spend_estimate": {
+                  "title": "Spend Estimate",
+                  "type": "number"
+                },
+                "template": {
+                  "title": "Template",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "unknowns": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Unknowns",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "template",
+                "title",
+                "result",
+                "allocations",
+                "missing",
+                "effort",
+                "spend_estimate",
+                "unknowns"
+              ],
+              "title": "Proposal",
+              "type": "object"
+            },
+            "ProposedAllocation": {
+              "additionalProperties": false,
+              "properties": {
+                "item_id": {
+                  "default": 0,
+                  "description": "the item's id; 0 when only the name is known",
+                  "title": "Item Id",
+                  "type": "integer"
+                },
+                "item_name": {
+                  "default": "",
+                  "description": "the item's name as listed",
+                  "title": "Item Name",
+                  "type": "string"
+                },
+                "requirement": {
+                  "title": "Requirement",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "requirement",
+                "item_id",
+                "item_name",
+                "why"
+              ],
+              "title": "ProposedAllocation",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a proposal call: every property required, no extras.",
+          "properties": {
+            "proposals": {
+              "items": {
+                "$ref": "#/$defs/Proposal"
+              },
+              "title": "Proposals",
+              "type": "array"
+            }
+          },
+          "required": [
+            "proposals"
+          ],
+          "title": "ProposalSet",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    },
+    "tools": [
+      {
+        "description": "Every item the owner has that a build may use, with its fields.",
+        "name": "list_inventory",
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {},
+          "type": "object"
+        },
+        "strict": true,
+        "type": "function"
+      },
+      {
+        "description": "The projects that may be proposed, with what each one requires.",
+        "name": "template_catalog",
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {},
+          "type": "object"
+        },
+        "strict": true,
+        "type": "function"
+      },
+      {
+        "description": "One item in full: condition, faults, tests, accessories and parts.",
+        "name": "item_details",
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {
+            "item_id": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "item_id"
+          ],
+          "type": "object"
+        },
+        "strict": true,
+        "type": "function"
+      }
+    ]
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ProposalSet",
+        "schema": {
+          "$defs": {
+            "Proposal": {
+              "additionalProperties": false,
+              "properties": {
+                "allocations": {
+                  "items": {
+                    "$ref": "#/$defs/ProposedAllocation"
+                  },
+                  "title": "Allocations",
+                  "type": "array"
+                },
+                "effort": {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "missing": {
+                  "description": "requirement keys the inventory does not fill",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Missing",
+                  "type": "array"
+                },
+                "result": {
+                  "title": "Result",
+                  "type": "string"
+                },
+                "spend_estimate": {
+                  "title": "Spend Estimate",
+                  "type": "number"
+                },
+                "template": {
+                  "title": "Template",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "unknowns": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Unknowns",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "template",
+                "title",
+                "result",
+                "allocations",
+                "missing",
+                "effort",
+                "spend_estimate",
+                "unknowns"
+              ],
+              "title": "Proposal",
+              "type": "object"
+            },
+            "ProposedAllocation": {
+              "additionalProperties": false,
+              "properties": {
+                "item_id": {
+                  "default": 0,
+                  "description": "the item's id; 0 when only the name is known",
+                  "title": "Item Id",
+                  "type": "integer"
+                },
+                "item_name": {
+                  "default": "",
+                  "description": "the item's name as listed",
+                  "title": "Item Name",
+                  "type": "string"
+                },
+                "requirement": {
+                  "title": "Requirement",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "requirement",
+                "item_id",
+                "item_name",
+                "why"
+              ],
+              "title": "ProposedAllocation",
+              "type": "object"
+            }
+          },
+          "description": "Strict output schema of a proposal call: every property required, no extras.",
+          "additionalProperties": false,
+          "required": [
+            "proposals"
+          ],
+          "type": "object",
+          "title": "ProposalSet",
+          "properties": {
+            "proposals": {
+              "items": {
+                "$ref": "#/$defs/Proposal"
+              },
+              "title": "Proposals",
+              "type": "array"
+            }
+          }
+        },
+        "strict": true
+      }
+    },
+    "tools": [
+      {
+        "type": "function",
+        "name": "list_inventory",
+        "description": "Every item the owner has that a build may use, with its fields.",
+        "parameters": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {}
+        },
+        "strict": true
+      },
+      {
+        "type": "function",
+        "name": "template_catalog",
+        "description": "The projects that may be proposed, with what each one requires.",
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {},
+          "type": "object"
+        },
+        "strict": true
+      },
+      {
+        "type": "function",
+        "name": "item_details",
+        "description": "One item in full: condition, faults, tests, accessories and parts.",
+        "parameters": {
+          "properties": {
+            "item_id": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "item_id"
+          ],
+          "type": "object"
+        },
+        "strict": true
+      }
+    ],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae591281a1c375006044535",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793429800.0,
+    "completed_at": 1793429800.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae591281a1c375006044535:rs_393adf25-d835-4a0a-b8c4-81d7cc4782bb",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "rs_eccee575-8935-4beb-8d3f-a69e862204be",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Your brief is set — I'll check what you own for low-effort builds.",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "phase": "commentary",
+        "status": "completed"
+      },
+      {
+        "type": "function_call",
+        "id": "fc_daac4d3e-aac7-4069-b68a-80aba81e977f",
+        "call_id": "call_daac4d3e-aac7-4069-b68a-80aba81e977f",
+        "name": "list_inventory",
+        "arguments": "{}",
+        "status": "completed"
+      },
+      {
+        "type": "function_call",
+        "id": "fc_a535db34-4403-42e0-8334-290c1390e4f0",
+        "call_id": "call_a535db34-4403-42e0-8334-290c1390e4f0",
+        "name": "template_catalog",
+        "arguments": "{}",
+        "status": "completed"
+      }
+    ],
+    "instructions": "You propose small, practical projects a person can build from what they already own. First call the tools: the templates are the only projects you may propose, and the inventory is the only source of items. Fill each requirement with one listed item, naming it by id and name, with one line of why it fits; leave a requirement missing rather than inventing an item or stretching one that does not fit. Say the practical result in one line, the effort, the extra spending you expect in the owner's currency, and the unknowns a person should check before starting. Respect the owner's preferences and skills. Plain words, no hype.",
+    "usage": {
+      "input_tokens": 1176,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 101,
+      "output_tokens_details": {
+        "reasoning_tokens": 7
+      },
+      "total_tokens": 1277
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 5696
+  },
+  "status": 200
+}

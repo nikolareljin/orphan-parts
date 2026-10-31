@@ -1,0 +1,86 @@
+{
+  "endpoint": "/responses",
+  "op": "segment-connector",
+  "model": "sam-3.1",
+  "digest": "c33c20434f083494de076f69",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "plug or connector at the end of a cable",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,63fd9d923757542a",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "model": "sam-3.1",
+    "prompt_cache_key": "orphan-parts",
+    "store": false
+  },
+  "response": {
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "sam-3.1",
+    "background": false,
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae595e2ef49eadb0b5a4e7f",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793431010.0,
+    "completed_at": 1793431010.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_422c4e54-ac5b-415b-acd9-82246b650a48",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "<0f>0<|box;x1=85;y1=48;x2=138;y2=86;w=369;h=800;c=0.8904109597206116|><|mask;x=0;y=0;c=0.8904109597206116;data=39,54,!!!!!PG=9q=fGY^U8={Z/.V)q3]q3EaB_ev%P'?=/'P9:]1`3K0k#Wqt!!!|>,1<|box;x1=164;y1=286;x2=204;y2=320;w=369;h=800;c=0.9139785170555115|><|mask;x=0;y=0;c=0.9139785170555115;data=35,41,!!!!!7NW?{=TDR{z-8loB`b*L72EoCl|>\n",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": null,
+    "usage": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 0,
+      "images_processed": 1
+    },
+    "parallel_tool_calls": true,
+    "store": false
+  },
+  "status": 200
+}

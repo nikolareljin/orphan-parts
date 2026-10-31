@@ -1,0 +1,235 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-give",
+  "model": "muse-spark-1.3",
+  "digest": "26ff85f87f443a420aae4d41",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: give\nname: Older ThinkPad, type 9461\nitem_type: laptop\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nConfirmed fields (key: value):\n- brand: lenovo\n- model_number: 9461-54G\n- part_number: 41W4721JS\n- input_voltage: 20 V\n- certifications: UL, CE\n- condition_notes: Microsoft COA label stained, torn and peeling; scuffs and scratches on chassis\nField keys a fact may name: brand, model_number, part_number, input_voltage, certifications, condition_notes, name, item_type",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest free-item notices for things given away. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. No hype, no emoji. The title is at most 80 characters. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            }
+          },
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "keywords": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Keywords",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "type": "object",
+          "additionalProperties": false,
+          "title": "DraftWriting",
+          "required": [
+            "title",
+            "description",
+            "uses",
+            "keywords",
+            "facts"
+          ]
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae590da78f7237007aa4312",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793429722.0,
+    "completed_at": 1793429722.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae590da78f7237007aa4312:rs_6d0ace14-d957-41fd-9e2c-ae2d1a8d4360",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_e088bdd3-a1dd-4e47-a14c-efc894c30e90",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"description\": \"Free older ThinkPad laptop, type 9461. Brand listed as Lenovo, model 9461-54G, part 41W4721JS, 20 V input. Marked UL, CE. COA label is stained, torn and peeling, chassis has scuffs and scratches. Condition otherwise not given, faults not given, no tests reported, no accessories listed, pickup not specified. Could be useful for parts, repair practice, or hobby tinkering.\", \"facts\": [{\"field\": \"name\", \"text\": \"Older ThinkPad, type 9461\"}, {\"field\": \"item_type\", \"text\": \"Item type is laptop\"}, {\"field\": \"brand\", \"text\": \"Brand is lenovo\"}, {\"field\": \"model_number\", \"text\": \"Model number is 9461-54G\"}, {\"field\": \"part_number\", \"text\": \"Part number is 41W4721JS\"}, {\"field\": \"input_voltage\", \"text\": \"Input voltage is 20 V\"}, {\"field\": \"certifications\", \"text\": \"Certifications are UL, CE\"}, {\"field\": \"condition_notes\", \"text\": \"Microsoft COA label stained, torn and peeling; scuffs and scratches on chassis\"}], \"keywords\": [\"ThinkPad\", \"9461-54G\", \"Lenovo laptop\", \"free laptop\"], \"title\": \"Free Older ThinkPad Type 9461 Laptop\", \"uses\": [\"parts donor\", \"repair practice\", \"hobby project\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest free-item notices for things given away. Use only the facts given; never add a specification, an accessory or a test result that is not listed. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. No hype, no emoji. The title is at most 80 characters. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 450,
+      "input_tokens_details": {
+        "cached_tokens": 113
+      },
+      "output_tokens": 1109,
+      "output_tokens_details": {
+        "reasoning_tokens": 786
+      },
+      "total_tokens": 1559
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}
