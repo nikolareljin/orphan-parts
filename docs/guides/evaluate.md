@@ -19,6 +19,14 @@ documented ones stand out and the rejected ones say why. Open any of them for it
 candidate seen more than `CANDIDATE_DAYS` ago is marked too old to trust; **Recheck** runs it
 against the need as it stands now.
 
+**Listings before they are candidates.** What you paste back from a Marketplace search, or
+read from a screenshot, is ranked first without a model: *fits* when the search plan's pattern
+matches, no exclusion word appears and the price is within the top price; *maybe* when the
+pattern does not match or the price is unclear; *does not fit* on an exclusion word or a price
+over the limit. Fits come first, then maybe, then the rest, cheaper first within each, with the
+matched words highlighted and the reason written out. **Check fit** turns one into a candidate.
+See [Bring back listings](search.md#bring-back-listings).
+
 **What a fit score is not.** There is none. A candidate is not ranked by a number a model
 produced; it is placed by which rules passed, which failed and which are still unknown, and the
 asking price is shown beside that, not folded into it.

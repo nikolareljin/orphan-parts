@@ -21,10 +21,12 @@ def test_readyz_reports_fixture_mode_and_writable_data_dir(client: TestClient) -
     assert body["data_dir_writable"] is True
 
 
-def test_version_lists_every_model_id(client: TestClient) -> None:
+def test_version_lists_the_models_the_app_calls(client: TestClient) -> None:
     body = client.get("/api/version").json()
     assert body["version"] == __version__
-    assert set(body["models"]) == {"spark", "wonder", "image", "voice", "sam"}
+    # Muse Wonder is configured and never called: the footer must not name it
+    assert set(body["models"]) == {"spark", "image", "voice", "sam"}
+    assert "muse-wonder-1.0" not in body["models"].values()
     assert body["models"]["sam"] == "sam-3.1"
 
 

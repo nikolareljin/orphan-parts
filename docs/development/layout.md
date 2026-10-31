@@ -5,12 +5,18 @@ backend/
   app/
     main.py           app factory, middleware, routers
     config.py         settings, validated at startup
-    api/              one router per feature (items, extract, segment, measure, assess,
-                      drafts, voice, value, find, projects, profiles, access); routes.py
-                      holds the operational paths
-    extract/, segment/, measure/, match/, listing/, value/, find/, projects/
+    api/              one router per feature (items, photos, extract, segment, measure,
+                      assess, drafts, voice, value, decide, find, projects, picture,
+                      captures, pair, samples, profiles, access); routes.py holds the
+                      operational paths
+    extract/, segment/, measure/, match/, listing/, value/, decide/, find/, projects/,
+    picture/, captures/
                       one package per feature: schema, service, data
     inventory/        the SQLite store, its migrations and the item service
+    photos/           the photos kept with an item
+    keys/, pairing/   access codes issued as records; the phone's pairing and its own code
+    samples/          the demo set's photos as the visitor's gallery, read by id
+    eval/             the evaluation loop over the demo set and the training export
     profiles/         the category profiles as data, and their loader
     demo/             the demo set loaded through the services, recorded once, replayed
     model_api/        the Model API client, pricing, spend ledger, recorded fixtures
@@ -26,6 +32,7 @@ frontend/
     App.tsx           shell
     components/       one component per page and panel
     lib/api.ts        the only place that talks to the backend
+    public/           the header's mark and the favicon
   vite.config.ts      dev proxy to the backend, vitest config
   Dockerfile          build + nginx
   nginx.conf          static files, API proxy
@@ -65,6 +72,9 @@ scripts/
   tests/              their tests
 VERSION               the version, the one place it is read from by hand
 
+e2e/                  the Playwright browser checks (./dev e2e)
+eval/                 where ./dev eval writes its report and charts
+video/                the demo video kit: scripts, storyboards, captions
 docker/docs/          image that builds and serves the docs site
 docs/, mkdocs.yml     this site
   assets/             the logo, the share image, the flow diagram, the stylesheet, and
@@ -77,4 +87,3 @@ docker-compose.yml    development stack
 docker-compose.prod.yml
 ```
 
-Directories that arrive with later features: `demo/`.

@@ -1,8 +1,8 @@
 # Muse Spark
 
-Vision extraction with structured output, tool-calling steps inside the agent, search grounding
-for prices and part numbers, and the explanations under each verdict. Runs at low reasoning
-effort for parsing.
+Vision extraction with structured output, the decision cards and the listing drafts, the
+search plan, tool-calling steps for project proposals, and search grounding for prices. Runs
+at low reasoning effort throughout. No verdict is the model's: the rules decide fit.
 
 ## Search grounding
 
@@ -63,6 +63,33 @@ backreferences, comments or inline flags, and never a part number the need does 
 typed by the owner and is dropped, with the reason, when it fails them. Operation name
 `search-plan`, which is also the recorded fixture. The code path is `app/find/service.py`;
 the checks are `app/find/plan.py`.
+
+## Decision cards
+
+**What should I do with it?** is one call (effort `low`, an answer budget of 1,200 tokens) with
+the strict JSON schema of `ScenariosWriting`: a keep and fix card (whether it is worth fixing,
+the likely problems, the steps, the difficulty for this person and why, the parts, cost and
+time), two or three reuse cards (each naming the kinds of item it uses from the rest of the
+inventory) and a sell card (selling points and effort, never a price), with one recommendation
+and its reason. The brief carries the item's accepted values (none that identifies it), its
+condition, faults, tests, accessories and intent, the owner's rated skills, tools, effort,
+whether they open devices up and budget, and the kinds of item they own besides with a count
+each. Each text is cut to its bound and a reuse card without a title is dropped. Operation name
+`scenarios`, which is also the recorded fixture. The code path is `app/decide/service.py`; see
+[Decide what it becomes](../guides/decide.md).
+
+## Listing drafts
+
+A Facebook Marketplace (US) draft is one call (effort `low`, an answer budget of 1,100 tokens)
+with the strict JSON schema of `DraftWriting`: the title, the description, the category, the
+condition, the tags, what it could be used for (a give-away), the photo order with a reason
+each, and the facts each line rests on,
+named by field. The input is the brief (accepted values without any that identifies the item,
+the public listing details, the mode) and the item's first four photos at 768 px. The rules
+then check the category and the condition against `app/listing/marketplace_us.yaml`, set the
+price, cut the title and the tags, append the disclosures and drop any line that rests on
+nothing confirmed. Operation names `draft-sell` and `draft-give`, which are also the recorded
+fixtures. The code path is `app/listing/service.py`; see the [seller flow](../guides/seller.md).
 
 ## Uses
 

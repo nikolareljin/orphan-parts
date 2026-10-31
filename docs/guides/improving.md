@@ -1,7 +1,8 @@
 # Training and improving the reads
 
 The model reads labels; the rules decide. Improving the reads means measuring them on the
-demo set, changing what is ours to change, and measuring again. Tuning the model itself comes
+demo set, changing what the repository controls (the rules and the prompts), and measuring
+again. Tuning the model itself comes
 last, and only for what the measurements show is weak.
 
 ## The loop as it exists
@@ -25,11 +26,12 @@ last, and only for what the measurements show is weak.
    recordings are in the repository, so a fresh checkout scores the recorded reads with no
    stub answers; a photo changed or a setting that changes what is sent (`EXTRACT_ENHANCE`,
    `IMAGE_MAX_PX`) brings the stubs back until the set is recorded again.
-4. **Change what is ours.** The rules are data: `backend/app/profiles/data/*.yaml` (the keys,
-   the tolerances, hard or soft, the questions). The prompts are the `INSTRUCTIONS` strings in
+4. **Change the rules or the prompts.** The rules are data: `backend/app/profiles/data/*.yaml` (the keys,
+   the tolerances, hard or soft, the questions). The prompts are the `INSTRUCTIONS` strings (and their `LISTING_`, `PLAN_` and `SCENARIOS_` siblings) in
    `backend/app/extract/service.py` (label reading), `backend/app/listing/service.py` (the
    drafts), `backend/app/value/service.py` (price guidance), `backend/app/find/service.py`
-   (reading a listing) and `backend/app/projects/service.py` (proposals); the field list the
+   (reading a listing and the search plan), `backend/app/decide/service.py` (the uses and the
+   decision cards) and `backend/app/projects/service.py` (proposals); the field list the
    reading prompt asks for is `backend/app/extract/fields.py`, and the normalizers beside it.
 5. **Re-record and compare.** A changed prompt changes the request, so its recording is new:
    run `./dev record-fixtures` again, then `./dev eval`. Keep the earlier `report.json` under
@@ -59,22 +61,16 @@ pixels, so it can be shared without the owner's images.
 
 Stated as of October 30, 2026, from the providers' own pages; check them before spending.
 
-- **Fireworks** trains LoRA adapters of Muse Spark Open through its Serverless Training API
-  on the base model `accounts/fireworks/models/muse-spark-open-nvfp4`. It is a limited
-  preview: the managed fine-tuning UI does not support the model, and an account without the
-  preview sees a refusal and has to ask Fireworks to enable it. The training data is JSONL
-  conversations, the shape `train.jsonl` has. Meta's post-training guide
-  (<https://dev.meta.ai/docs/muse-spark-open/post-training>) lists supervised fine-tuning,
-  DPO, ORPO, distillation and reinforcement learning as the methods the open weights support.
-  A tuned adapter is served from an on-demand deployment; training is priced per token of
-  training data.
+Meta's post-training guide for Muse Spark Open
+(<https://dev.meta.ai/docs/muse-spark-open/post-training>) lists supervised fine-tuning, DPO,
+ORPO, distillation and reinforcement learning as the methods the open weights support. The
+training data is JSONL conversations, the shape `train.jsonl` has.
+
+- **Fireworks** trains LoRA adapters of Muse Spark Open through its training API, as a limited
+  preview that an account has to have enabled. A tuned adapter is served from an on-demand
+  deployment; training is priced per token of training data.
 - **Baseten** hosts Muse Spark Open for inference and can serve a tuned adapter on dedicated
   inference. No Baseten training path for this model was found as of October 30, 2026.
-
-The two references the plan keeps: the Fireworks hackathon experiments repository
-(<https://github.com/sinanuozdemir/ai-experiments/tree/main/experiments/meta-hackathon-muse>)
-and the Fireworks workshop deck
-(<https://docs.google.com/presentation/d/1_TVWwXtQLCih6jNgVQ0XGBoIo1uzMC9A4MYBC6JE-44/edit>).
 
 This version makes no model call to either provider: every call goes to the Meta Model API
 through one [client](../models/model-api-client.md). A tuned adapter would be one more

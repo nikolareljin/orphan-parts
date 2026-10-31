@@ -42,7 +42,7 @@ vitest and a production build in the frontend image. CI runs the same steps.
 ## 4. The phone
 
 To install the released app without a development setup, see
-[On your phone in ten minutes](judges.md). For building it yourself:
+[For judges](judges.md). For building it yourself:
 
 ```bash
 ./dev setup --check      # what the app's build needs: a JDK 17 or later, the Android command-line tools

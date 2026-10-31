@@ -6,8 +6,9 @@
   echoed in the response and attached to every log line written while handling the request.
 - **Health**: `GET /healthz` says the process is up. `GET /readyz` reports whether configuration
   loaded, which Model API mode is active (`live`, `fixture`, `record`, or `fixture (key
-  failed)` when the startup probe found the key not answering), whether the data directory is
-  writable, and the spend so far against the cap.
+  failed)` when the startup probe found the key not answering; behind a gate with a key,
+  `live for the code, recorded otherwise`), whether the data directory is writable, and the
+  spend so far against the cap.
 
 ## Model API calls
 
@@ -20,8 +21,8 @@ the delay and the error. Reaching the cap logs a warning and `GET /readyz` turns
 A refusal by the gate logs the path and the reason under `app.gate`: `limit: requests per
 minute`, `limit: visitor calls per hour`, `limit: daily calls`, or `paused: a call that spends
 was refused`, with the `Retry-After` given. The code and the tokens never appear in a line.
-`/readyz` carries the gate's state under `demo`: `gated`, `paused`, `daily_used`, `daily_cap`,
-`visitor_cap_per_hour`.
+`/readyz` carries the gate's state under `demo`: `gated`, `live_models` (whether a key is
+there for the code's door), `paused`, `daily_used`, `daily_cap`, `visitor_cap_per_hour`.
 
 ## Spend ledger
 

@@ -1,6 +1,8 @@
 # Seller flow
 
-Photos in, listing draft out: upload, segmentation overlays, evidence table, voice note, questions to resolve, copy or hand off to Marketplace.
+Photos in, a Facebook Marketplace (US) listing out: the label read and confirmed, the listing
+details you give, a draft in Marketplace's fields with the disclosures the rules require, and
+the handoff to the create page. Posting is yours.
 
 ## The hard limit
 
@@ -9,9 +11,23 @@ its terms. The app prepares every field, zips the photos in order and opens Mark
 page in a new tab; you paste the fields, add the photos and post. Nothing here fills, reads or
 submits a Facebook page, and the service sends nothing to facebook.com.
 
+## Before the draft
+
+**Read a label** takes up to four photos. With *Find the label in the photo first* on, SAM 3.1
+looks for the item, the label and the connector in the first photo; the overlay shows the
+regions it found, with a note for each it did not, and when a label is found its crop goes to
+Muse Spark with the photos, so every value is sourced `label_crop`. When the label
+cannot be found first, the photos are read whole and the page says why. The evidence table
+shows every field read with its value, unit, confidence, source and the text as printed, the
+warnings, the label transcription, the model and the cost of the calls. **Save privately** turns
+the reading into an item in [My inventory](inventory.md), where each observed value is confirmed
+or corrected before anything is drafted.
+
 ## The flow
 
-**Prepare to sell or give away** is a section of the item's dialog.
+**Prepare to sell or give away** is a section of the item's dialog; **Sell** or **Give away**
+in [Decide](decide.md) scroll to it with the listing type set. It is behind the access code:
+the demo visitor sees neither the details nor a draft, not even on a public item.
 
 1. **Listing details.** The listing type (sell or give away) and what a buyer asks about:
 
@@ -34,7 +50,6 @@ submits a Facebook page, and the service sends nothing to facebook.com.
     or a street address in any free-text field: buyers write through Marketplace. A voice note is
     kept as your words (`condition_notes`) and the draft reads it from there. Switching the listing
     type to give away keeps the saved prices and handover; a give-away is priced 0 and picked up.
-    None of these details is shown to a demo visitor, not even on a public item.
 
 2. **Write the draft.** The details are saved, then one Muse Spark call (effort low) gets the
     item's accepted values, your public details and the item's photos (the first four, sent at
@@ -108,14 +123,3 @@ Conditions, best first: **New**, **Used - Like New**, **Used - Good**, **Used - 
 
 Marketplace changes its picker without notice; the draft's choice is a starting point, and the
 create page is where it is settled. See also [Marketplace handoff](marketplace.md).
-
-### The first steps
-
-Up to four photos go in. With "Find the label in the photo first" on, SAM 3.1 finds the item, the label
-and the connector in the first photo; the overlay and the crops are shown, and the label crop
-goes to Muse Spark with the photos, so every value is sourced `label_crop`. When the label
-cannot be found first, the photos are read whole and the page says why. The evidence table
-shows every field read with its value, unit, confidence, source and the text as printed, the
-warnings, the label transcription, the model and the cost of the calls. **Save privately** turns
-the reading into an item in [My inventory](inventory.md), where each observed value is confirmed
-or corrected before anything is drafted. The rest of the flow follows.

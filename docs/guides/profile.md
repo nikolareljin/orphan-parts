@@ -10,8 +10,8 @@ What you can do and what you have, kept once for the inventory. The scenarios on
 
 - **Skills**, each rated *none*, *some*, *confident* or *pro*. Ten are always listed: software,
   electronics and soldering, woodworking, metalwork, handcrafting and sewing, plumbing, 3D
-  printing, arts and crafts, car and mechanics, home repair. **Another skill** adds one of your
-  own with its level; a skill of your own can be removed, the listed ones stay at *none*.
+  printing, arts and crafts, car and mechanics, home repair. **Another skill** and **Add skill**
+  add one of your own with its level; a skill of your own can be removed, the listed ones stay at *none*.
 - **Tools I have**, in a line.
 - **Effort I will put in**: an hour or so, an afternoon, or a weekend or more.
 - **I am OK opening up devices**.

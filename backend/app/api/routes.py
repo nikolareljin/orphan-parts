@@ -95,9 +95,9 @@ def version(settings: SettingsDep) -> Version:
     return Version(
         name="orphan-parts",
         version=__version__,
+        # the models the app calls; Muse Wonder is configured but never called, so not listed
         models={
             "spark": settings.model_spark,
-            "wonder": settings.model_wonder,
             "image": settings.model_image,
             "voice": settings.model_voice,
             "sam": settings.model_sam,

@@ -6,15 +6,17 @@ is no number at all.
 
 ## What to photograph
 
-The item's profile names the features that decide fit and how to capture each one: for a vacuum
-attachment the opening's inner and outer diameter, the insertion depth, the outer diameter at
-that depth and the latch position. Put a ruler, or any object of known length, **in the same
+The item's profile names the features that decide fit and how to capture each one: for a
+blender or frappé maker agitator the rod's diameter and length, the width, length and span of
+the two coupling tabs and the head's diameter; for a power adapter the plug's two diameters and
+its length. Put a ruler, or any object of known length, **in the same
 plane as the feature** and photograph it straight on. For an oblique view on a flat surface,
 use a known rectangle instead, a card for instance, and mark its four corners.
 
 ## Marking
 
-On the item page, under **Measure a feature**: pick the feature, choose the photo, then click
+On the item page, under **Measure a feature**: pick the feature, choose the photo (signed out,
+one of the demo set's photos is picked instead and nothing is stored), then click
 the marks in order on the photo: the two ends of the known length on the reference (or the four
 corners of the rectangle, top-left first, clockwise), then the two ends of the feature. Enter
 the reference's length (or width and height) in millimetres and its tolerance. For a two-point
@@ -73,20 +75,20 @@ sealing, retention or safety fit on its own; those need their own evidence.
 ```bash
 # try a capture without storing it
 curl -s -X POST localhost:8000/api/measure \
-  -F photo=@opening.jpg \
-  -F 'request={"feature":"opening_inner_diameter","profile":"vacuum_attachment",
+  -F photo=@agitator-ruler.jpg \
+  -F 'request={"feature":"rod_diameter","profile":"blender_agitator",
       "image":{"width":640,"height":480},
       "reference":{"kind":"two_point","points":[{"x":100,"y":400},{"x":500,"y":400}],"length_mm":100},
       "points":[{"x":200,"y":200},{"x":340,"y":200}],"straight_on":true}'
 
 # the same on an item: stored, and proposed as an observed value when accepted
-curl -s -X POST localhost:8000/api/items/1/measurements -F photo=@opening.jpg -F 'request={...}'
+curl -s -X POST localhost:8000/api/items/1/measurements -F photo=@agitator-ruler.jpg -F 'request={...}'
 curl -s localhost:8000/api/items/1/measurements
 curl -s localhost:8000/api/items/1/measurements/1/photo -o capture.jpg
 
 # the features a profile names
 curl -s localhost:8000/api/profiles
-curl -s localhost:8000/api/profiles/vacuum_attachment/features
+curl -s localhost:8000/api/profiles/blender_agitator/features
 ```
 
 Full shapes in the [HTTP API](../reference/http-api.md); thresholds in

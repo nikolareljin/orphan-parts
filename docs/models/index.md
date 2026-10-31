@@ -5,10 +5,10 @@ Model IDs are configuration, never literals in code (see [Configuration](../refe
 
 | Model | ID (default) | Used for |
 |---|---|---|
-| [Muse Spark](muse-spark.md) | `muse-spark-1.3` | label extraction with structured output, listing text read into fields, price guidance with search grounding, listing drafts, project proposals through a tool-calling loop |
+| [Muse Spark](muse-spark.md) | `muse-spark-1.3` | label extraction with structured output, listing text read into fields, price guidance with search grounding, the decision cards and the uses of an item, listing drafts, search plans, project proposals through a tool-calling loop |
 | [SAM 3.1](sam-3-1.md) | `sam-3.1` | the item, the label and the connector found in a photo, one concept per call; the label crop feeds extraction |
 | [Muse Voice Transcribe](muse-voice-transcribe.md) | `muse-voice-transcribe-1.0` | voice notes kept as the owner's words, from the web and from the phone |
-| [Muse Image](muse-image.md) | `muse-image-1.0` | a picture of what an item could become, drawn only when the owner clicks and the switch is on; illustrative, never evidence |
+| [Muse Image](muse-image.md) | `muse-image-1.0` | a picture of what an item could become or of a finished project, drawn only when the owner clicks and the switch is on; illustrative, never evidence |
 
 Considered and not used in this version, each with its own page saying so:
 [Muse Wonder](muse-wonder.md), [Muse Glimmer](muse-glimmer.md),
