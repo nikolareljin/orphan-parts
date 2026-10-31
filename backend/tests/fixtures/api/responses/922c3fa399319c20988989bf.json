@@ -1,0 +1,327 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-give",
+  "model": "muse-spark-1.3",
+  "digest": "922c3fa399319c20988989bf",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: give\nMarketplace: Facebook Marketplace, United States\nname: Intel slot 1 processor with its fan\nitem_type: processor\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nConfirmed fields (key: value):\n- brand: intel\n- part_number: 0600169\n- model_number: 1DBX1612H2056\n- input_voltage: 5 V\n- connector: 3-pin fan connector with yellow, green and black wires\n- certifications: CE\n- condition_notes: dust on housing and fan blades, signs of use\nPhotos: 2, numbered 1 to 2 in the order attached\nCategories (one path): Electronics; Electronics > Computers; Electronics > Cell Phones; Electronics > Cameras; Electronics > Video Games & Consoles; Electronics > Printers, Scanners & Fax Machines; Electronics > Monitors; Electronics > Audio; Electronics > TV & Video; Home Goods; Home Goods > Kitchen & Dining; Home Goods > Furniture; Home Improvement Supplies; Home Improvement Supplies > Tools; Home Improvement Supplies > Electrical; Garden & Outdoor; Sporting Goods; Toys & Games; Musical Instruments; Office Supplies; Auto Parts; Baby & Kids; Pet Supplies; Arts & Crafts; Hobbies; Free Stuff\nConditions (one): New; Used - Like New; Used - Good; Used - Fair\nField keys a fact may name: brand, part_number, model_number, input_voltage, connector, certifications, condition_notes, name, item_type",
+            "type": "input_text"
+          },
+          {
+            "text": "Photo 1",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,b9835edb35ccad55",
+            "type": "input_image"
+          },
+          {
+            "text": "Photo 2",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,9dea771f8c2e0dde",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for items given away for free. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 1100,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "type": "object",
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ],
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "title": "DraftWriting",
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae5a8eaf54db920d0994c00",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793435882.0,
+    "completed_at": 1793435882.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae5a8eaf54db920d0994c00:rs_fd83a054-7b1c-4ded-a001-beb0f708936b",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_84a6c7a8-e557-435f-8ed8-24dca95753d8",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"category\": \"Electronics > Computers\", \"condition\": \"Used - Fair\", \"description\": \"Free Intel Slot 1 processor with its fan. Model 1DBX1612H2056, part 0600169, 5 V, with 3-pin fan connector with yellow, green and black wires, CE marked. Has dust on housing and fan blades and signs of use. Not tested.\", \"facts\": [{\"field\": \"brand\", \"text\": \"Brand is Intel\"}, {\"field\": \"name\", \"text\": \"Slot 1 processor with its fan\"}, {\"field\": \"item_type\", \"text\": \"Item type is processor\"}, {\"field\": \"model_number\", \"text\": \"Model number 1DBX1612H2056\"}, {\"field\": \"part_number\", \"text\": \"Part number 0600169\"}, {\"field\": \"input_voltage\", \"text\": \"Input voltage 5 V\"}, {\"field\": \"connector\", \"text\": \"3-pin fan connector with yellow, green and black wires\"}, {\"field\": \"certifications\", \"text\": \"CE marked\"}, {\"field\": \"condition_notes\", \"text\": \"Dust on housing and fan blades, signs of use\"}], \"photo_order\": [{\"photo\": 2, \"reason\": \"Full view showing fan and housing\"}, {\"photo\": 1, \"reason\": \"Other side showing housing sticker\"}], \"tags\": [\"intel\", \"slot 1\", \"processor\", \"cpu\", \"fan\", \"1DBX1612H2056\", \"0600169\", \"5V\", \"vintage computer\", \"parts\"], \"title\": \"Intel 1DBX1612H2056 Slot 1 Processor with Fan\", \"uses\": [\"vintage computer parts\", \"slot 1 collection\", \"tinkering\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for items given away for free. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 1643,
+      "input_tokens_details": {
+        "cached_tokens": 497
+      },
+      "output_tokens": 1766,
+      "output_tokens_details": {
+        "reasoning_tokens": 1379
+      },
+      "total_tokens": 3409
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 5196
+  },
+  "status": 200
+}
