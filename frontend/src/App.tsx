@@ -79,6 +79,19 @@ export default function App() {
 
   // the demo door: gated, and no session; the code opens the rest
   const demo = gated && granted === false
+  const signedIn = gated && granted === true
+
+  // the way out: the server clears the cookie, the tab drops its token, and the page loads
+  // again as whatever the browser is now, the demo visitor when all went well
+  async function signOut() {
+    try {
+      await api.access.leave()
+    } catch {
+      // the token is gone either way; the page says where it stands
+    }
+    setReloads((n) => n + 1)
+    setSaved((n) => n + 1)
+  }
 
   return (
     <main className="shell">
@@ -99,6 +112,11 @@ export default function App() {
           {demo && (
             <button type="button" className="link door" onClick={() => setSignIn(true)}>
               Sign in with the code
+            </button>
+          )}
+          {signedIn && (
+            <button type="button" className="link door" onClick={() => void signOut()}>
+              Sign out
             </button>
           )}
         </nav>

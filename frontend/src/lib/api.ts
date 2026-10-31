@@ -894,10 +894,13 @@ export const api = {
       keepToken(access.granted ? access.token : '')
       return access
     },
+    // the browser forgets the session either way: a DELETE that never arrives still ends it here
     leave: async () => {
-      const access = await sendJson<Access>('DELETE', '/api/access')
-      keepToken('')
-      return access
+      try {
+        return await sendJson<Access>('DELETE', '/api/access')
+      } finally {
+        keepToken('')
+      }
     },
   },
   readiness: () => getJson<Readiness>('/readyz'),
