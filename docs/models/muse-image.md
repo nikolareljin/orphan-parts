@@ -24,6 +24,8 @@ every other call that spends, and sees only the pictures already drawn for a pub
 key is never used without the code. The switch is `PICTURE_ENABLED` (off by
 default): while it is off the route answers `503` with *pictures are off on this server
 (PICTURE_ENABLED)*, and the section shows one line saying pictures are off, no field and no button.
+The hosted demo turns it on with the repository variable `PICTURE_ENABLED`, which the deploy
+writes into the Modal secret ([deployment](../operations/deployment.md)).
 
 ## Request and response
 
