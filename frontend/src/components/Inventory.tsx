@@ -401,12 +401,15 @@ function ItemPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolea
               ['location', 'Where it is (stays private)'],
               ['notes', 'Notes (stay private)'],
             ] as const
-          ).map(([key, label]) => (
-            <label key={key}>
-              <span>{label}</span>
-              <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
-            </label>
-          ))}
+          )
+            // the owner's alone: the demo visitor is never sent them, so there is nothing to show
+            .filter(([key]) => !demo || (key !== 'location' && key !== 'notes'))
+            .map(([key, label]) => (
+              <label key={key}>
+                <span>{label}</span>
+                <textarea rows={1} value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+              </label>
+            ))}
           <button type="submit" disabled={!detailsChanged}>
             Save details
           </button>

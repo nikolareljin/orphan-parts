@@ -437,3 +437,142 @@ def test_a_session_of_the_shape_before_the_binding_still_opens_the_door(tmp_path
     assert gate.verify(old(soon + gate.session_seconds, 0, "")) is None
     keys.revoke("judges")
     assert gate.verify(old(soon, record.id, record.created_at)) is None
+
+
+# --- what the owner keeps to themselves on a public record ---------------------------
+
+SECRETS = ("garage shelf B", "paid 40 for it", "spoken about the lid", "a line from the phone")
+# every route the demo visitor reaches; one added to DEMO_ALLOWED is added here once it is
+# checked to keep the owner's text out
+DEMO_ROUTES = {
+    ("get", "/api/items"),
+    ("get", "/api/items/{item_id}"),
+    ("get", "/api/items/{item_id}/photos"),
+    ("get", "/api/items/{item_id}/photos/{n}"),
+    ("get", "/api/items/{item_id}/pictures"),
+    ("get", "/api/items/{item_id}/pictures/{n}"),
+    ("get", "/api/captures"),
+    ("get", "/api/captures/{capture_id}"),
+    ("get", "/api/captures/{capture_id}/photos/{n}"),
+    ("get", "/api/profiles"),
+    ("get", "/api/profiles/{profile_id}/features"),
+    ("get", "/api/profiles/{profile_id}/rules"),
+    ("get", "/api/templates"),
+    ("get", "/api/pair"),
+    ("get", "/api/pair.svg"),
+    ("post", "/api/extract"),
+    ("post", "/api/segment"),
+    ("post", "/api/assess"),
+    ("post", "/api/measure"),
+}
+
+
+def _concrete(path: str, item_id: int, capture_id: int) -> str:
+    return (
+        path.replace("{item_id}", str(item_id))
+        .replace("{capture_id}", str(capture_id))
+        .replace("{profile_id}", "power_adapter")
+        .replace("{n}", "1")
+    )
+
+
+def _public_records(gated: TestClient) -> tuple[int, int]:
+    """As the owner: an item with a location, notes, a voice note and a photo, and a capture
+    with a line, a clip and a spoken note, both marked public. The session stays open."""
+    from tests.test_captures import mp4_bytes, wav_bytes
+
+    gated.post("/api/access", json={"code": CODE})
+    item = gated.post(
+        "/api/items",
+        json={
+            "name": "Desk lamp",
+            "item_type": "desk lamp",
+            "condition": "works",
+            "location": SECRETS[0],
+            "notes": SECRETS[1],
+        },
+    ).json()["id"]
+    inventory = gated.app.state.inventory  # type: ignore[attr-defined]
+    from app.inventory.schema import FieldCreate
+
+    inventory.add_field(
+        item, FieldCreate(field="condition_notes", value=SECRETS[2]), source="voice_note"
+    )
+    inventory.add_field(item, FieldCreate(field="color", value="green"))
+    photo = ("uploads", ("p.jpg", make_photo(), "image/jpeg"))
+    assert gated.post(f"/api/items/{item}/photos", files=[photo]).status_code == 201
+    assert gated.post(f"/api/items/{item}/public", json={"public": True}).status_code == 200
+    from app.captures import CaptureCreate
+
+    capture = gated.app.state.captures.create(  # type: ignore[attr-defined]
+        CaptureCreate(note=SECRETS[3], name="Lamp from the phone"),
+        [make_photo()],
+        mp4_bytes(),
+        wav_bytes(1.0),
+    ).id
+    assert gated.post(f"/api/captures/{capture}/public", json={"public": True}).status_code == 200
+    return item, capture
+
+
+def test_the_owner_gets_a_public_item_and_capture_whole(gated: TestClient) -> None:
+    item, capture = _public_records(gated)
+    got = gated.get(f"/api/items/{item}").json()
+    assert got["location"] == SECRETS[0] and got["notes"] == SECRETS[1]
+    assert got["fields"]["condition_notes"]["value"] == SECRETS[2]
+    assert any(a["source"] == "voice_note" for a in got["assertions"])
+    kept = gated.get(f"/api/captures/{capture}").json()
+    assert kept["note"] == SECRETS[3] and kept["clip"] and kept["audio"]
+    assert kept["clip_bytes"] > 0 and kept["audio_seconds"] > 0
+    listed = gated.get("/api/captures").json()["captures"]
+    assert [c["note"] for c in listed] == [SECRETS[3]]
+
+
+def test_the_demo_visitor_never_gets_a_location_a_note_a_clip_or_a_voice_note(
+    gated: TestClient,
+) -> None:
+    item, capture = _public_records(gated)
+    gated.cookies.clear()
+    got = gated.get(f"/api/items/{item}")
+    assert got.status_code == 200
+    body = got.json()
+    # the item is there, with its values; what the owner keeps is blank or left out
+    assert body["name"] == "Desk lamp" and body["condition"] == "works"
+    assert body["fields"]["color"]["value"] == "green"
+    assert body["location"] == "" and body["notes"] == ""
+    assert "condition_notes" not in body["fields"]
+    assert all(a["source"] != "voice_note" for a in body["assertions"])
+    listed = gated.get("/api/items").json()
+    assert [i["id"] for i in listed] == [item]
+    assert all("location" not in i and "notes" not in i for i in listed)
+    for shown in (
+        gated.get(f"/api/captures/{capture}").json(),
+        gated.get("/api/captures").json()["captures"][0],
+    ):
+        assert shown["id"] == capture and shown["photos"] == 1 and shown["name"]
+        assert shown["note"] == "" and shown["clip"] is False and shown["clip_bytes"] == 0
+        assert shown["audio"] is False and shown["audio_seconds"] == 0
+    # the media stays behind the code too
+    assert gated.get(f"/api/captures/{capture}/clip").status_code == 403
+    assert gated.get(f"/api/captures/{capture}/note").status_code == 403
+    # and what the owner reads in-process is untouched
+    inventory = gated.app.state.inventory  # type: ignore[attr-defined]
+    assert inventory.get(item).model_dump()["notes"] == SECRETS[1]
+
+
+def test_no_route_the_demo_visitor_reaches_carries_the_owners_text(gated: TestClient) -> None:
+    reachable = set()
+    for path, ops in gated.app.openapi()["paths"].items():  # type: ignore[attr-defined]
+        for method in ops:
+            if demo_allowed(method.upper(), _concrete(path, 1, 1)):
+                reachable.add((method, path))
+    assert reachable == DEMO_ROUTES
+    item, capture = _public_records(gated)
+    gated.cookies.clear()
+    for method, path in sorted(DEMO_ROUTES):
+        if method != "get":
+            continue  # the tries read what is sent with them, never the inventory
+        answer = gated.get(_concrete(path, item, capture))
+        assert answer.status_code != 403, path
+        text = answer.content.decode("utf-8", "replace")
+        for secret in SECRETS:
+            assert secret not in text, (path, secret)
