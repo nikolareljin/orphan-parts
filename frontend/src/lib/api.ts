@@ -1004,10 +1004,14 @@ export const api = {
       sendJson<Item>('POST', `/api/items/${itemId}/decision`, { choice, note, version }),
   },
   pair: {
-    // the phone talks to the API's own origin when the web app is served elsewhere
-    svgUrl: (origin: string) => apiUrl(`/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}`),
-    svg: async (origin: string) => {
-      const res = await fetch(api.pair.svgUrl(origin), { headers: authHeaders(), credentials: 'include' })
+    // the phone talks to the API's own origin when the web app is served elsewhere; the door
+    // the page is at goes in too, so the image of one door is never shown for the other
+    svgUrl: (origin: string, door = '') =>
+      apiUrl(
+        `/api/pair.svg?origin=${encodeURIComponent(origin)}${apiBase ? `&api=${encodeURIComponent(apiBase)}` : ''}${door ? `&door=${door}` : ''}`,
+      ),
+    svg: async (origin: string, door = '') => {
+      const res = await fetch(api.pair.svgUrl(origin, door), { headers: authHeaders(), credentials: 'include' })
       if (!res.ok) {
         noteStatus(res.status)
         throw new ApiError(res.status, `pair.svg: HTTP ${res.status}`)

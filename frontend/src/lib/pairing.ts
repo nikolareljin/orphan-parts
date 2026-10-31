@@ -20,15 +20,15 @@ export function reachableFromAPhone(origin: string): boolean {
 }
 
 /** What the pairing code under the footer carries, as the line under it says: the address
- * alone without a gate; with one, a session and the phone's own code for a caller through
- * the door, or the address alone for the demo visitor, whose phone is the demo too. */
+ * alone without a gate; with one, a pairing that claims the phone's own code for a caller
+ * through the door, or the address alone for the demo visitor, whose phone is the demo too. */
 export function pairingText(gated: boolean, signedIn: boolean): string {
   if (!gated) return 'It carries this address.'
   if (!signedIn) {
     return 'It carries this address alone: the phone joins as the demo. Sign in here first to give it a code of its own.'
   }
   return (
-    'It carries this address and a session; on its first scan the phone gets an access code of its own, ' +
-    'which outlives the session and can be revoked on the server. The code you signed in with stays here.'
+    'It carries this address and a pairing good for a few minutes; with it the phone claims an access code of its own, ' +
+    'which ends with the code you signed in with, or sooner when revoked on the server. That code stays here.'
   )
 }

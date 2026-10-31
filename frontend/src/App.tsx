@@ -188,8 +188,8 @@ export default function App() {
               </p>
               {reachableFromAPhone(pairOrigin) ? (
                 <>
-                  {/* the code changes with the door: a session is in it once signed in, so it is drawn again */}
-                  <PairImage key={demo ? 'demo' : 'in'} />
+                  {/* drawn once the door is known, and again when it changes: a pairing is in it once signed in */}
+                  {(granted !== null || !gated) && <PairImage key={demo ? 'demo' : 'in'} door={demo ? 'demo' : 'in'} />}
                   <p className="muted">
                     Or type <code>{pairOrigin}</code> into the app.
                   </p>
@@ -265,15 +265,15 @@ function AccessGate({ onGranted }: { onGranted: () => void }) {
 // The pairing code as an image. Across origins an <img> carries no bearer header, so the SVG
 // is fetched with the session and shown as a data URL; same origin the cookie does it. Without
 // a session either way the backend draws the address alone.
-function PairImage() {
+function PairImage({ door }: { door: string }) {
   // across origins the first source would be a fetch of the SVG without the session: none
   // until the session's copy is in hand
-  const [src, setSrc] = useState(apiBase ? '' : api.pair.svgUrl(window.location.origin))
+  const [src, setSrc] = useState(apiBase ? '' : api.pair.svgUrl(window.location.origin, door))
   useEffect(() => {
     if (!apiBase) return
     let cancelled = false
     api.pair
-      .svg(window.location.origin)
+      .svg(window.location.origin, door)
       .then((text) => {
         if (!cancelled) setSrc(`data:image/svg+xml;utf8,${encodeURIComponent(text)}`)
       })
@@ -281,7 +281,8 @@ function PairImage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [door])
   if (!src) return null // the session's copy is on its way
-  return <img src={src} alt="Pairing code for the phone" width="220" height="220" />
+  // the Referer names this page to the server, which draws only an origin it is reached at
+  return <img src={src} alt="Pairing code for the phone" width="220" height="220" referrerPolicy="same-origin" />
 }

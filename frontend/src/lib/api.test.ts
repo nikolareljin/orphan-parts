@@ -155,3 +155,12 @@ describe('api', () => {
     await expect(api.extract([new File(['x'], 'a.jpg')])).rejects.toThrow('/api/extract: HTTP 502')
   })
 })
+
+describe('api.pair.svgUrl', () => {
+  it('names the door, so a sign-in draws the code again', () => {
+    const origin = 'http://192.168.1.20:5173'
+    expect(api.pair.svgUrl(origin)).toBe(`/api/pair.svg?origin=${encodeURIComponent(origin)}`)
+    expect(api.pair.svgUrl(origin, 'demo')).not.toBe(api.pair.svgUrl(origin, 'in'))
+    expect(api.pair.svgUrl(origin, 'in')).toContain('&door=in')
+  })
+})
