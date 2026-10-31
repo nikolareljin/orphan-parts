@@ -24,7 +24,7 @@ lists them. The changes written today:
 | `price guidance written (v<n>)` | a guidance |
 | `uses written (v<n>)` | what the item is good for, asked |
 | `scenarios written (v<n>)` | what to do with it, asked: the three cards for the owner's profile |
-| `decided: <choice>: <note>` | the owner's decision (`keep_fix`, `keep_build`, `sell`, `give`, `not_worth`), with the note when given; the intent it implies is set in the same change, and for `keep_fix` the repair steps of the current scenarios are added to the notes. The version is bumped only when the intent changes, a note is given or the notes gain the steps; the same choice again is the line alone |
+| `decided: <choice>: <note>` | the owner's decision (`keep_fix`, `keep_build`, `sell`, `give`, `not_worth`), with the note when given; the intent it implies is set in the same change, and for `keep_fix` the repair steps of the latest scenarios are added to the notes while the item is at the version they were written from. The version is bumped only when the intent changes, a note is given or the notes gain the steps; the same choice again is the line alone |
 | `search opened: <title>` | a missing-item search for what the item needs |
 | `proposed for: <project>` / `put on: <project>` | an allocation, by a proposal or by hand |
 | `deleted` | the item hidden |

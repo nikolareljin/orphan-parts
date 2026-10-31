@@ -31,6 +31,7 @@ a name given twice keeps its first rating.
 effort in words, whether you open devices up and the budget. Each card says how hard the work
 is for you and names the skill that makes it so; a repair that needs plumbing is *hard* when
 plumbing is *none*. Without a saved profile the cards are written for an average person with
-household tools and the panel says so.
+household tools and the panel says so. The answers the demo loader writes (`./dev demo`) do not
+count as a saved profile until you save the form yourself.
 
 The profile is behind the access code; the demo visitor sees the demo line in its place.

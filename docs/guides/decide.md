@@ -19,19 +19,28 @@ screen and one above the other on a phone:
 | Card | What it says |
 |---|---|
 | Keep and fix | the likely problem or problems behind the condition and faults you recorded (or that it works as it is), the repair steps written for your level, how hard that is for you (easy, moderate or hard) and why, naming the skill it rests on, the parts with a rough cost each, the total and the time; or that it is not worth fixing, and why |
-| Reuse it | two or three things to make of it that fit your skills and tools, each naming the other items you own it would use, how hard it is for you, the extra parts with their cost, and the time |
+| Reuse it | two or three things to make of it that fit your skills and tools, each naming the other items you own it would use (shown as the kinds you have now, without a count; a name that matches nothing you own is left out), how hard it is for you, the extra parts with their cost, and the time |
 | Sell or give away | what makes it sellable as it stands and what listing and handing it over takes; the latest price guidance in a line when there is one, else **Get price guidance**, which asks the price route in your profile's currency (the scenarios themselves never price the item) |
 
 Above the cards, one recommendation (keep and fix, reuse, sell or give away) with a one-line
 reason tied to your profile; the recommended card is outlined. Each card has **Choose this**
 (the sell card has **Sell it** and **Give it away**), which records the choice through the same
-decision as the row below and takes you to the section that follows from it:
+decision as the row below and takes you to the section that follows from it, moving the focus
+there too. Each **Choose this** is named with its card for a screen reader (*Choose this: Keep
+and fix*):
 
 | Card | Choice recorded | Intent | Then |
 |---|---|---|---|
-| Keep and fix | `keep_fix` | keep | the repair steps, parts, cost and time are added to the item's notes (once; they stay private) and the page scrolls to the details |
-| Reuse it | `keep_build` | build | the page scrolls to *What it is good for*, with a link to [Build and reuse](reuse.md) |
-| Sell or give away | `sell` or `give` | sell or give | the page scrolls to *Prepare to sell or give away*; see [Seller flow](seller.md) |
+| Keep and fix | `keep_fix` | keep | the repair steps, parts, cost and time are added to the item's notes (they stay private) and the page scrolls to the details, the focus in the notes |
+| Reuse it | `keep_build` | build | the page scrolls to *What it is good for*, focused, with a link to [Build and reuse](reuse.md) |
+| Sell or give away | `sell` or `give` | sell or give | the page scrolls to *Prepare to sell or give away*, focused on its heading; see [Seller flow](seller.md) |
+
+The repair steps go into the notes only while the item is as it was when the cards were written,
+checked in the same write as the notes. On cards that say *item changed since* the button reads
+**Choose this (without the repair steps)**, with the hint *The item changed since; Ask again to
+add the repair steps*: the choice is recorded and the notes stay as they are. When the notes and
+the plan together would pass the notes' 4,000 characters, whole steps are left out from the end
+and the plan ends with *… (more in the scenarios)*; the notes you wrote are never cut.
 
 The cards are written for your [profile](profile.md): your rated skills, your tools, the effort
 you will put in, whether you open devices up, and your budget. Without a profile they are
@@ -72,7 +81,7 @@ The decision sets the item's intent (**Keep and fix** to *keep*, **Keep and buil
 **Sell** and **Give away** to the same, **Not worth it** to *keep*, with the note saying why)
 and writes
 `decided: <choice>: <note>` into the item's history, so the why is kept beside the what. The
-version is bumped when the intent changes or a note is given; the same choice said again with
+version is bumped when the intent changes, a note is given, or the notes gain the repair steps; the same choice said again with
 nothing added is a line in the history and nothing more, so a guidance or an idea written before
 it stays current. **Sell** and **Give away** scroll to *Prepare to sell or give away* with the
 mode set; see [Seller flow](seller.md). The panel shows the last decision with its date.
