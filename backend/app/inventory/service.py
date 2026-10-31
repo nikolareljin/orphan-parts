@@ -430,6 +430,61 @@ class Inventory:
                 "SELECT * FROM price_reports WHERE item_id = ? ORDER BY sold_on, id", (item_id,)
             ).fetchall()
 
+    # what the owner adds before a Marketplace listing: one version per save; saving it is an
+    # event on the item, and the item itself is unchanged, so a draft does not go stale
+
+    def add_sell_details(self, item_id: int, content: str) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            last = conn.execute(
+                "SELECT MAX(version) FROM sell_details WHERE item_id = ?", (item_id,)
+            ).fetchone()[0]
+            version = int(last or 0) + 1
+            self._event(conn, item_id, f"listing details saved (v{version})", row["version"], at)
+            cur = conn.execute(
+                "INSERT INTO sell_details (item_id, version, content, at) VALUES (?,?,?,?)",
+                (item_id, version, content, at),
+            )
+            found: sqlite3.Row = conn.execute(
+                "SELECT * FROM sell_details WHERE id = ?", (int(cur.lastrowid or 0),)
+            ).fetchone()
+            return found
+
+    def sell_details(self, item_id: int) -> sqlite3.Row | None:
+        """The latest version, or None before the first save."""
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            found: sqlite3.Row | None = conn.execute(
+                "SELECT * FROM sell_details WHERE item_id = ? ORDER BY version DESC LIMIT 1",
+                (item_id,),
+            ).fetchone()
+            return found
+
+    def add_marketplace_event(
+        self, item_id: int, kind: str, *, on: str, price: float | None, url: str, change: str
+    ) -> sqlite3.Row:
+        at = now()
+        with self.store.connect() as conn:
+            row = self._row(conn, item_id)
+            cur = conn.execute(
+                "INSERT INTO marketplace_events (item_id, kind, on_date, price, url, at)"
+                " VALUES (?,?,?,?,?,?)",
+                (item_id, kind, on, price, url, at),
+            )
+            self._event(conn, item_id, change, int(row["version"]), at)
+            found: sqlite3.Row = conn.execute(
+                "SELECT * FROM marketplace_events WHERE id = ?", (int(cur.lastrowid or 0),)
+            ).fetchone()
+            return found
+
+    def marketplace_events(self, item_id: int) -> list[sqlite3.Row]:
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            return conn.execute(
+                "SELECT * FROM marketplace_events WHERE item_id = ? ORDER BY id", (item_id,)
+            ).fetchall()
+
     # what the item is good for: stored as written, read back with the item's current version
 
     _USES_SELECT = (

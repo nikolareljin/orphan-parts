@@ -66,7 +66,7 @@ def test_the_brief_holds_only_confirmed_values_and_the_owner_details(
     assert "- output_voltage: 19.5 V" in text
     assert "polarity" not in text.split("Field keys")[0]  # only what was passed as known
     assert "faults: frayed sleeve near the plug" in text
-    assert "asking price: (the owner sets it)" in text
+    assert "asking price" not in text  # the rules set the price
     keys = text.split("Field keys a fact may name: ")[1]
     assert "accessories" in keys and "pickup" in keys
     assert "tests_done" not in keys  # empty, so no line may rest on it
@@ -75,7 +75,7 @@ def test_the_brief_holds_only_confirmed_values_and_the_owner_details(
     assert lines[0] == "Known faults: frayed sleeve near the plug"
     assert lines[1] == "Not tested; sold as is."
     assert lines[2] == "Included: original cable"
-    assert lines[3] == "Price: $15"
+    assert not any(line.startswith("Price") for line in lines)  # Marketplace has a price field
     free = disclosures(item, DraftRequest(mode="give", pickup="porch"))
     assert free[1] == "Not tested." and free[-1] == "Free to collect. Pickup: porch"
 
@@ -101,9 +101,13 @@ async def test_a_sell_draft_keeps_confirmed_facts_and_adds_the_disclosures(
     assert len([w for w in draft.warnings if "rested on nothing" in w]) == 2
     assert "Known faults: frayed sleeve near the plug" in draft.description
     assert "Not tested; sold as is." in draft.description
-    assert "Nothing else included." in draft.description
-    assert draft.description.endswith("Price: $15")
-    assert draft.asking_price == "$15" and draft.uses == []
+    assert draft.description.endswith("Nothing else included.")
+    assert (draft.price, draft.price_basis) == ("15", "your asking price")
+    assert draft.asking_price == "15" and draft.uses == []
+    assert draft.category == "Electronics > Computers" and draft.condition == "Used - Good"
+    assert draft.tags[0] == "laptop charger"
+    assert draft.photos == []  # the item has no photos: the made-up order is dropped
+    assert any("no photos yet" in w for w in draft.warnings)
     assert draft.handoff_url.startswith("https://www.facebook.com/marketplace/")
     assert draft.ready is False
     assert [s.key for s in draft.checklist if s.group == "data"] == []
@@ -178,14 +182,17 @@ async def test_a_working_claim_without_a_recorded_test_is_flagged(
     def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         assert body["text"]["format"]["name"] == "DraftWriting"
-        assert body["instructions"].startswith("You write short, honest Marketplace")
+        assert body["instructions"].startswith("You write short, honest Facebook Marketplace")
         assert "Confirmed fields" in body["input"][0]["content"][0]["text"]
         writing = {
             "title": "Charger, fully functional",
             "description": "Works perfectly.",
+            "category": "Electronics",
+            "condition": "Used - Good",
             "uses": [],
-            "keywords": [],
+            "tags": [],
             "facts": [{"text": "Works perfectly", "field": "tests_done"}],
+            "photo_order": [],
         }
         fixture = json.loads((RECORDED_FIXTURES / "responses" / "draft-sell.json").read_text())
         response: dict[str, Any] = fixture["response"]
@@ -216,7 +223,7 @@ def test_draft_routes(recorded_client: TestClient) -> None:
     )
     assert written.status_code == 201, written.text
     draft = written.json()
-    assert draft["title"] and draft["description"].endswith("Price: $10")
+    assert draft["title"] and draft["price"] == "10"
     assert draft["ready"] is False
 
     step = recorded_client.post(

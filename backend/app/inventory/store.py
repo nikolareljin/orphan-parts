@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -225,6 +225,29 @@ ALTER TABLE access_keys ADD COLUMN parent_id INTEGER;
 ALTER TABLE access_keys ADD COLUMN master TEXT;
 """
 
+# version 13: what the owner adds before a Marketplace listing, one version per save, and what
+# happened to the listing after: listed, sold, given
+_SCHEMA_V13 = """
+CREATE TABLE sell_details (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    at TEXT NOT NULL
+);
+CREATE INDEX sell_details_by_item ON sell_details (item_id);
+CREATE TABLE marketplace_events (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    kind TEXT NOT NULL,
+    on_date TEXT NOT NULL,
+    price REAL,
+    url TEXT NOT NULL DEFAULT '',
+    at TEXT NOT NULL
+);
+CREATE INDEX marketplace_events_by_item ON marketplace_events (item_id);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -238,6 +261,7 @@ MIGRATIONS: dict[int, str] = {
     10: _SCHEMA_V10,
     11: _SCHEMA_V11,
     12: _SCHEMA_V12,
+    13: _SCHEMA_V13,
 }
 
 

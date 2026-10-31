@@ -12,14 +12,24 @@ class DraftFact(BaseModel):
     field: str
 
 
+class PhotoPick(BaseModel):
+    """One of the item's photos, by its number, and why it sits where it does."""
+
+    photo: int
+    reason: str
+
+
 class DraftWriting(BaseModel):
     """Strict output schema of a draft call: every property required, no extras."""
 
     title: str
+    category: str
+    condition: str
     description: str
     uses: list[str]
-    keywords: list[str]
+    tags: list[str]
     facts: list[DraftFact]
+    photo_order: list[PhotoPick]
 
 
 DETAIL_MAX = 200
@@ -30,7 +40,9 @@ class DraftRequest(BaseModel):
     holds_data: bool = Field(default=False, description="the item stores accounts or files")
     pickup: str = Field(default="", max_length=DETAIL_MAX)
     asking_price: str = Field(
-        default="", max_length=DETAIL_MAX, description="set by the owner; nothing is suggested here"
+        default="",
+        max_length=DETAIL_MAX,
+        description="set by the owner; the saved listing details are used when this is empty",
     )
 
     @field_validator("pickup", "asking_price")
@@ -46,11 +58,21 @@ class Draft(BaseModel):
     version: int = Field(description="per item and mode; a new draft bumps it")
     item_version: int = Field(description="the item version the draft was written from")
     stale: bool = Field(description="the item changed since the draft was written")
-    title: str
+    title: str = Field(description="at most 100 characters")
+    price: str = Field(default="", description="whole dollars as typed on Marketplace; 0 is free")
+    price_basis: str = Field(default="", description="where the price comes from")
+    category: str = Field(default="", description="a path from the Marketplace data file")
+    condition: str = Field(default="", description="one of the Marketplace conditions")
     description: str = Field(description="the model's text with the disclosures the rules add")
     facts: list[DraftFact]
     uses: list[str]
-    keywords: list[str]
+    tags: list[str] = Field(default_factory=list, description="at most 20, short")
+    photos: list[PhotoPick] = Field(
+        default_factory=list, description="the item's photos, best first, with a reason each"
+    )
+    details_version: int | None = Field(
+        default=None, description="the listing details version the draft was written from"
+    )
     warnings: list[str]
     to_confirm: list[str] = Field(
         description="observed fields left out until the owner accepts them"

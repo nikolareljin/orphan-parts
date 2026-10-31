@@ -32,7 +32,7 @@ from app.extract import Extractor
 from app.find import Finder
 from app.inventory import Inventory
 from app.keys import AccessKeys
-from app.listing import Lister, VoiceNotes
+from app.listing import Handoff, Lister, VoiceNotes
 from app.match import Assessor
 from app.measure import Measurer
 from app.model_api import CostLedger, ModelApiClient
@@ -109,7 +109,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)
     app.state.assessor = Assessor(app.state.profiles, app.state.inventory)
-    app.state.lister = Lister(settings, client, app.state.inventory)
+    app.state.lister = Lister(settings, client, app.state.inventory, app.state.photos)
+    app.state.handoff = Handoff(app.state.inventory, app.state.photos, app.state.lister)
     app.state.voice = VoiceNotes(settings, client, app.state.inventory)
     app.state.valuer = Valuer(settings, client, app.state.inventory)
     app.state.finder = Finder(
