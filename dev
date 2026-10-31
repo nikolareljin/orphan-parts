@@ -256,7 +256,7 @@ test_scripts() {
 test_backend() {
   [[ -d "$BACKEND" ]] || { log_warn "backend: not in this tree yet, skipped"; return 0; }
   log_info "backend: ruff, mypy, pytest"
-  run_in backend sh -c 'ruff check . && ruff format --check . && mypy app && pytest -q'
+  run_in backend sh -c "ruff check . && ruff format --check . && mypy app && $LINT_LIVECHECK && pytest -q"
 }
 
 test_frontend() {
@@ -405,8 +405,12 @@ cmd_e2e() {
   log_ok "end-to-end checks passed"
 }
 
+# The live check's own lint, from backend/ (its ruff and mypy settings): livecheck/ sits beside
+# the backend in a clone and is mounted read-only at /opt/livecheck/livecheck in the container.
+LINT_LIVECHECK='lc=/opt/livecheck/livecheck; [ -d "$lc" ] || lc=../livecheck; ruff check "$lc" && ruff format --check "$lc" && PYTHONPATH="${lc%/livecheck}" mypy "$lc"'
+
 cmd_lint() {
-  run_in backend sh -c 'ruff check . && ruff format --check . && mypy app'
+  run_in backend sh -c "ruff check . && ruff format --check . && mypy app && $LINT_LIVECHECK"
   run_in frontend sh -c 'npm ci --no-audit --no-fund --loglevel=error && npm run lint && npm run typecheck'
 }
 
