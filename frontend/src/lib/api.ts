@@ -284,6 +284,11 @@ export interface DraftRequest {
   asking_price: string
 }
 
+export interface PhotoPick {
+  photo: number
+  reason: string
+}
+
 export interface Draft {
   id: number
   item_id: number
@@ -292,10 +297,16 @@ export interface Draft {
   item_version: number
   stale: boolean
   title: string
+  price: string
+  price_basis: string
+  category: string
+  condition: string
   description: string
   facts: DraftFact[]
   uses: string[]
-  keywords: string[]
+  tags: string[]
+  photos: PhotoPick[]
+  details_version: number | null
   warnings: string[]
   to_confirm: string[]
   pickup: string
@@ -308,6 +319,63 @@ export interface Draft {
   from_fixture: boolean
   cost_usd: number
   at: string
+}
+
+export type Included = 'stand' | 'cables' | 'power_cord' | 'box' | 'manual' | 'remote'
+export type Handover = 'pickup' | 'shipping' | 'either'
+export type DataState = 'none' | 'wiped' | 'not_wiped'
+
+// "Listing details": the lowest price and the reason are kept for the owner, never listed
+export interface SellDetails {
+  condition_words: string
+  included: Included[]
+  included_other: string
+  faults: string
+  untested: string
+  data: DataState
+  reason: string
+  handover: Handover
+  area: string
+  asking_price: number | null
+  lowest_price: number | null
+  availability: string
+}
+
+export interface SellDetailsRecord {
+  item_id: number
+  version: number
+  details: SellDetails
+  at: string
+}
+
+export interface MarketplaceCategory {
+  path: string
+  seen: boolean
+  holds: string
+}
+
+export interface MarketplaceData {
+  categories: MarketplaceCategory[]
+  conditions: string[]
+  free_category: string
+}
+
+export type MarketplaceOutcome = 'listed' | 'sold' | 'given'
+
+export interface MarketplaceEvent {
+  id: number
+  item_id: number
+  kind: MarketplaceOutcome
+  on: string
+  price: number | null
+  url: string
+  at: string
+}
+
+export interface MarketplaceStatus {
+  item_id: number
+  state: '' | MarketplaceOutcome
+  events: MarketplaceEvent[]
 }
 
 export interface VoiceNote {
@@ -1078,6 +1146,17 @@ export const api = {
     write: (itemId: number, request: DraftRequest) => sendJson<Draft>('POST', `/api/items/${itemId}/drafts`, request),
     get: (id: number) => getJson<Draft>(`/api/drafts/${id}`),
     setStep: (id: number, key: string, done: boolean) => sendJson<Draft>('POST', `/api/drafts/${id}/checklist`, { key, done }),
+    photosZipUrl: (id: number) => apiUrl(`/api/drafts/${id}/photos.zip`),
+  },
+  marketplace: {
+    data: () => getJson<MarketplaceData>('/api/marketplace/us'),
+    details: (itemId: number) => getJson<SellDetailsRecord | null>(`/api/items/${itemId}/sell-details`),
+    saveDetails: (itemId: number, details: SellDetails) => sendJson<SellDetailsRecord>('PUT', `/api/items/${itemId}/sell-details`, details),
+    status: (itemId: number) => getJson<MarketplaceStatus>(`/api/items/${itemId}/marketplace`),
+    listed: (itemId: number, spec: { on: string; price: number; url: string }) =>
+      sendJson<MarketplaceStatus>('POST', `/api/items/${itemId}/marketplace/listed`, spec),
+    sold: (itemId: number, spec: { on: string; price: number }) => sendJson<MarketplaceStatus>('POST', `/api/items/${itemId}/marketplace/sold`, spec),
+    given: (itemId: number, spec: { on: string }) => sendJson<MarketplaceStatus>('POST', `/api/items/${itemId}/marketplace/given`, spec),
   },
   voice: (itemId: number, audio: File) => postForm<VoiceNote>(`/api/items/${itemId}/voice`, [['audio', audio]]),
   value: {

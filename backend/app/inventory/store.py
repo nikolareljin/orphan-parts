@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 14
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -240,6 +240,34 @@ CREATE TABLE IF NOT EXISTS scenarios (
 CREATE INDEX IF NOT EXISTS scenarios_by_item ON scenarios (item_id);
 """
 
+# version 14: what the owner adds before a Marketplace listing, one version per save, and what
+# happened to the listing after: listed, sold, given. Written to run again over a file that already
+# has the tables: a build of this step numbered it 13, so such a file also gets the scenarios table
+# it skipped
+_SCHEMA_V14 = (
+    """
+CREATE TABLE IF NOT EXISTS sell_details (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    version INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sell_details_by_item ON sell_details (item_id);
+CREATE TABLE IF NOT EXISTS marketplace_events (
+    id INTEGER PRIMARY KEY,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    kind TEXT NOT NULL,
+    on_date TEXT NOT NULL,
+    price REAL,
+    url TEXT NOT NULL DEFAULT '',
+    at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS marketplace_events_by_item ON marketplace_events (item_id);
+"""
+    + _SCHEMA_V13
+)
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -254,6 +282,7 @@ MIGRATIONS: dict[int, str] = {
     11: _SCHEMA_V11,
     12: _SCHEMA_V12,
     13: _SCHEMA_V13,
+    14: _SCHEMA_V14,
 }
 
 

@@ -1018,6 +1018,151 @@ button.link {
   color: #b7791f;
 }
 
+/* the hard limit, said once at the top */
+.listing .limit {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-radius: 0 6px 6px 0;
+}
+
+.listing .tell textarea {
+  resize: vertical;
+}
+
+.listing fieldset.included {
+  margin-top: 0.75rem;
+}
+
+.listing .row.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.listing .handoff {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+/* the fields to paste: label, value, Copy, one row each */
+.listing dl.fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.listing dl.fields .field {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.25rem 0.75rem;
+  align-items: start;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.listing dl.fields dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding-top: 0.3rem;
+}
+
+.listing dl.fields dd {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 0.75rem;
+  align-items: start;
+  margin: 0;
+  min-width: 0;
+}
+
+.listing dl.fields .value {
+  padding-top: 0.3rem;
+  overflow-wrap: anywhere;
+}
+
+.listing dl.fields dd > small {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.listing dl.fields dd > button.copy:not(.link):not(.danger) {
+  grid-column: 2;
+  grid-row: 1;
+  padding: 0.3rem 0.75rem;
+  background: var(--card);
+  color: var(--accent);
+}
+
+.listing .photo-order {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0.5rem 0 0.75rem;
+  list-style: none;
+}
+
+.listing .photo-order li {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.listing .photo-order img,
+.listing .photo-order .image-pending {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.listing a.button {
+  display: inline-block;
+  padding: 0.5rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  text-decoration: none;
+}
+
+.listing .row button.secondary:not(.link):not(.danger) {
+  background: var(--card);
+  color: var(--accent);
+}
+
+.listing dl.fields dd > select {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.listing .handoff-steps {
+  padding-left: 1.25rem;
+}
+
+.listing .events {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 560px) {
+  .listing dl.fields .field {
+    grid-template-columns: 1fr;
+  }
+
+  .listing dl.fields dt {
+    padding-top: 0;
+  }
+}
+
 /* what is it worth */
 .value .quantities td:nth-child(2) {
   text-align: right;

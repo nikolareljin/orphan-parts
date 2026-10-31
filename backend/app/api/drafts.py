@@ -1,19 +1,35 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 
-from app.api.deps import ListerDep
+from app.api.deps import HandoffDep, ListerDep
 from app.api.model_errors import as_http
-from app.listing import Draft, DraftRequest, StepChange
+from app.inventory import OutcomeConflictError
+from app.listing import (
+    Draft,
+    DraftRequest,
+    Given,
+    Listed,
+    MarketplaceStatus,
+    SellDetails,
+    SellDetailsRecord,
+    Sold,
+    StepChange,
+)
+from app.listing.marketplace import MarketplaceData, data
 
 router = APIRouter(prefix="/api", tags=["listing"])
 
 
 @router.post("/items/{item_id}/drafts", response_model=Draft, status_code=201)
 async def write_draft(item_id: int, request: DraftRequest, lister: ListerDep) -> Draft:
-    """Write a listing draft for sale or free pickup from what is confirmed about the item.
-    Muse Spark writes the prose; the rules add the disclosures (faults, what was tested, what is
-    included, price or free, pickup) and drop any line that rests on nothing confirmed. The
-    draft comes with its preparation checklist, and the data-removal steps when the item holds
-    data."""
+    """Write a Facebook Marketplace (US) draft for sale or free pickup from what is confirmed
+    about the item, the saved listing details and its photos. One Muse Spark call writes the
+    title, description, tags, category, condition and photo order; the rules validate the
+    category and condition against the data file, set the price (the asking price, else the
+    typical figure of the latest price guidance, named; 0 for a give-away), add the disclosures
+    (faults, what was tested, what is included, data, pickup), take out contact details and drop
+    any line that rests on nothing confirmed. Nothing is posted: the owner pastes the fields on
+    Marketplace's create page."""
     try:
         return await lister.draft(item_id, request)
     except Exception as exc:
@@ -41,3 +57,73 @@ def set_step(draft_id: int, change: StepChange, lister: ListerDep) -> Draft:
         if "no step" in str(exc):
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         raise
+
+
+@router.get("/marketplace/us", response_model=MarketplaceData)
+def marketplace_us() -> MarketplaceData:
+    """The Marketplace (US) categories and conditions a draft may name, from the data file."""
+    return data()
+
+
+@router.get("/items/{item_id}/sell-details", response_model=SellDetailsRecord | None)
+def get_sell_details(item_id: int, handoff: HandoffDep) -> SellDetailsRecord | None:
+    """The latest listing details the owner saved, or null before the first save."""
+    return handoff.details(item_id)
+
+
+@router.put("/items/{item_id}/sell-details", response_model=SellDetailsRecord)
+def save_sell_details(item_id: int, details: SellDetails, handoff: HandoffDep) -> SellDetailsRecord:
+    """Save what the owner adds before a draft, as a new version. The lowest price and the
+    reason for selling are kept for the owner and never reach the model or the listing; the
+    area is a city, ZIP or neighborhood, and free text with a street address, an email or a
+    phone number is refused."""
+    return handoff.save_details(item_id, details)
+
+
+@router.get("/drafts/{draft_id}/photos.zip", response_class=Response)
+def draft_photos(draft_id: int, handoff: HandoffDep) -> Response:
+    """The item's photos in the draft's order, as stored (re-encoded, metadata dropped)."""
+    item_id, archive = handoff.zip(draft_id)
+    return Response(
+        archive,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="item-{item_id}-photos.zip"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.get("/items/{item_id}/marketplace", response_model=MarketplaceStatus)
+def marketplace_status(item_id: int, handoff: HandoffDep) -> MarketplaceStatus:
+    """What happened on Marketplace after the owner posted: listed, sold, given."""
+    return handoff.status(item_id)
+
+
+@router.post("/items/{item_id}/marketplace/listed", response_model=MarketplaceStatus)
+def mark_listed(item_id: int, spec: Listed, handoff: HandoffDep) -> MarketplaceStatus:
+    """The owner posted it: the date, the price, and the listing link when pasted. Listed
+    again is a new price; 409 after a sale or a gift."""
+    try:
+        return handoff.listed(item_id, spec)
+    except OutcomeConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/items/{item_id}/marketplace/sold", response_model=MarketplaceStatus)
+def mark_sold(item_id: int, spec: Sold, handoff: HandoffDep) -> MarketplaceStatus:
+    """Sold: the final price is also recorded as a sale for price guidance; the item is gone.
+    409 after a sale or a gift, so a sale is never counted twice."""
+    try:
+        return handoff.sold(item_id, spec)
+    except OutcomeConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/items/{item_id}/marketplace/given", response_model=MarketplaceStatus)
+def mark_given(item_id: int, spec: Given, handoff: HandoffDep) -> MarketplaceStatus:
+    """Given away: the item is gone. 409 after a sale or a gift."""
+    try:
+        return handoff.given(item_id, spec)
+    except OutcomeConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc

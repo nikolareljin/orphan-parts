@@ -22,11 +22,22 @@ _PREPARE: list[tuple[str, str, bool]] = [
     ("accessories", "Gather every accessory, cable and part that goes with it", True),
     ("faults", "Write down every fault and mark you know of", True),
     ("pickup", "Decide the pickup area and how it is handed over", True),
+    (
+        "allowed",
+        "Check Marketplace allows it (Meta's Commerce Policies): not recalled, not a medical"
+        " device, nothing that unlocks paid streaming or services",
+        True,
+    ),
 ]
 _PHOTOS: list[tuple[str, str, bool]] = [
     ("photo_front", "Front, in daylight, on a plain background", True),
     ("photo_back", "Back and sides", True),
     ("photo_label", "The label, sharp and readable", True),
+    (
+        "photo_identifiers",
+        "Cover the serial number, MAC or IMEI on the label photo before posting",
+        True,
+    ),
     ("photo_faults", "Every fault, close up, nothing hidden by the crop", True),
     ("photo_included", "Everything included, laid out together", False),
 ]

@@ -261,6 +261,59 @@ def test_a_file_that_already_has_the_scenarios_table_opens(settings: Settings) -
         assert {"scenarios", "scenarios_by_item"} <= names
 
 
+def test_a_version_twelve_file_gets_scenarios_then_the_listing_tables(settings: Settings) -> None:
+    path = settings.inventory_db_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        for version in range(1, 13):
+            conn.executescript(MIGRATIONS[version])
+        conn.execute("PRAGMA user_version = 12")
+    Store(path)
+    Store(path)  # opening again changes nothing
+    with sqlite3.connect(path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 14
+        names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master")}
+        assert {"scenarios", "sell_details", "marketplace_events"} <= names
+
+
+def test_a_version_thirteen_file_from_main_gets_the_listing_tables(settings: Settings) -> None:
+    path = settings.inventory_db_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        for version in range(1, 14):
+            conn.executescript(MIGRATIONS[version])
+        conn.execute(
+            "INSERT INTO scenarios (item_id, version, item_version, content, created_at)"
+            " VALUES (1, 1, 1, '{}', 't')"
+        )
+        conn.execute("PRAGMA user_version = 13")
+    Store(path)
+    Store(path)
+    with sqlite3.connect(path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 14
+        names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master")}
+        assert {"sell_details", "marketplace_events"} <= names
+        # the scenarios already written are kept
+        assert conn.execute("SELECT COUNT(*) FROM scenarios").fetchone()[0] == 1
+
+
+def test_a_file_whose_listing_step_was_numbered_thirteen_opens(settings: Settings) -> None:
+    # an earlier build of the listing step wrote its tables as version 13, so the file skipped
+    # the scenarios step; step 14 runs over the tables it has and adds the one it lacks
+    path = settings.inventory_db_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        for version in range(1, 13):
+            conn.executescript(MIGRATIONS[version])
+        conn.executescript(MIGRATIONS[14].split("CREATE TABLE IF NOT EXISTS scenarios")[0])
+        conn.execute("PRAGMA user_version = 13")
+    Store(path)
+    with sqlite3.connect(path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+        names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master")}
+        assert {"scenarios", "scenarios_by_item", "sell_details", "marketplace_events"} <= names
+
+
 def test_a_step_that_fails_leaves_the_version_before_it(
     settings: Settings, monkeypatch: pytest.MonkeyPatch
 ) -> None:

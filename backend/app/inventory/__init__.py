@@ -15,7 +15,13 @@ from app.inventory.schema import (
     Review,
     ReviewChange,
 )
-from app.inventory.service import Inventory, NotFoundError, VersionConflictError, current_fields
+from app.inventory.service import (
+    Inventory,
+    NotFoundError,
+    OutcomeConflictError,
+    VersionConflictError,
+    current_fields,
+)
 
 __all__ = [
     "Assertion",
@@ -30,6 +36,7 @@ __all__ = [
     "ItemPatch",
     "ItemSummary",
     "NotFoundError",
+    "OutcomeConflictError",
     "Provenance",
     "Review",
     "ReviewChange",
