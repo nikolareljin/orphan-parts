@@ -284,7 +284,9 @@ def test_a_new_master_code_ends_the_phone_codes_claimed_under_the_old(tmp_path: 
 
 def test_the_claim_counts_against_the_code_attempts(tmp_path: Path) -> None:
     with served(gated(tmp_path, demo_code_attempts=2)) as c:
-        assert c.post("/api/pair/code").status_code == 401
+        ended = c.post("/api/pair/code")
+        assert ended.status_code == 401
+        assert ended.json()["detail"].endswith("reload the signed-in page and scan its new code")
         assert c.post("/api/pair/code").status_code == 401
         spent = c.post("/api/pair/code")
         assert spent.status_code == 429 and "Retry-After" in spent.headers

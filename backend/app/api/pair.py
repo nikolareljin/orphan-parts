@@ -17,6 +17,7 @@ from app.pairing import (
 
 router = APIRouter(prefix="/api", tags=["ops"])
 log = logging.getLogger("app.gate")
+PAIRING_ENDED = "the pairing has ended; reload the signed-in page and scan its new code"
 BROWSER_CLAIM = "a browser's session does not claim a phone's code; scan the QR code with the app"
 
 
@@ -92,7 +93,7 @@ def pair_code(request: Request, gate: GateDep, settings: SettingsDep) -> PhoneCo
         )
     session = gate.verify(gate.token_of(request))
     if session is None or not session.live or gate.keys is None:
-        raise HTTPException(status_code=401, detail="the pairing has ended; scan the code again")
+        raise HTTPException(status_code=401, detail=PAIRING_ENDED)
     if not session.pairing:
         raise HTTPException(status_code=403, detail=BROWSER_CLAIM)
     try:
