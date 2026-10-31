@@ -177,3 +177,28 @@ test('the profile rates the skills, adds one of your own, and the Build page rea
   await expect(skills.getByRole('rowheader', { name: own })).toHaveCount(0)
   await expect(form.getByRole('button', { name: 'Remove software' })).toHaveCount(0)
 })
+
+test('a project is drawn only on a click, and the picture is labeled as drawn', async ({ page, request }) => {
+  await household(request)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Build and reuse' }).click()
+  const propose = page.getByRole('form', { name: 'Propose projects' })
+  await propose.getByRole('button', { name: 'Propose' }).click()
+  await expect(propose).toContainText(/proposed/)
+  const panel = page.getByRole('article', { name: /Project Homework desk/ })
+  const draw = panel.getByRole('button', { name: /^Draw it: Homework desk/ })
+  await expect(draw).toBeEnabled()
+  await expect(panel).toContainText('Draw how the finished project could look. One image call.')
+  // nothing is drawn when the project opens
+  await expect(panel.getByRole('img')).toHaveCount(0)
+  await draw.click()
+  await expect(panel.getByRole('img', { name: /^Illustrative picture 1: Homework desk/ })).toBeVisible()
+  await expect(panel).toContainText('not a photo of a real build')
+  await expect(panel).toContainText('recorded answer, nothing spent')
+  // kept with the project: open it again and it is there, with no new call
+  await panel.getByRole('button', { name: 'Close panel' }).click()
+  await page.getByRole('row', { name: /Homework desk/ }).first().getByRole('button', { name: 'Open' }).click()
+  const again = page.getByRole('article', { name: /Project Homework desk/ })
+  await expect(again.getByRole('img', { name: /^Illustrative picture 1: / })).toBeVisible()
+  await expect(again.getByRole('img')).toHaveCount(1)
+})

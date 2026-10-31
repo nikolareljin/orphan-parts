@@ -21,6 +21,7 @@ import {
   todayIso,
 } from '../lib/projects'
 import { skillsLine } from '../lib/profile'
+import DrawIt from './DrawIt'
 import Modal from './Modal'
 
 function message(err: unknown): string {
@@ -29,7 +30,7 @@ function message(err: unknown): string {
 
 // Build and reuse: what the owner wants, what Muse Spark proposes from the inventory, and the
 // projects that come of it. An item is committed to one selected build at a time.
-export default function Build() {
+export default function Build({ demo = false }: { demo?: boolean }) {
   const [projects, setProjects] = useState<Project[]>([])
   const [budget, setBudget] = useState<Budget | null>(null)
   const [openId, setOpenId] = useState<number | null>(null)
@@ -104,7 +105,7 @@ export default function Build() {
       )}
       {openId !== null && (
         <Modal title={`Project #${openId}`} onClose={() => setOpenId(null)}>
-          <ProjectPanel key={openId} id={openId} onChanged={load} onClosed={() => setOpenId(null)} />
+          <ProjectPanel key={openId} id={openId} demo={demo} onChanged={load} onClosed={() => setOpenId(null)} />
         </Modal>
       )}
     </div>
@@ -325,7 +326,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
   )
 }
 
-function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => void; onClosed: () => void }) {
+function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolean; onChanged: () => void; onClosed: () => void }) {
   const [project, setProject] = useState<Project | null>(null)
   const [conflicts, setConflicts] = useState<Conflict[]>([])
   const [items, setItems] = useState<ItemSummary[]>([])
@@ -432,6 +433,14 @@ function ProjectPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =
         {' · '}
         {project.from_fixture ? 'recorded answer' : `${project.model}, ${usd(project.cost_usd)}`}
       </p>
+      <DrawIt
+        key={project.id}
+        name={project.title}
+        demo={demo}
+        list={() => api.build.pictures(id)}
+        draw={() => api.build.drawPicture(id)}
+        url={(n) => api.build.pictureUrl(id, n)}
+      />
 
       <h4>From your inventory</h4>
       {project.allocations.length === 0 ? (

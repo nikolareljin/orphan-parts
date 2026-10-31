@@ -43,7 +43,9 @@ shape of each is the one the [HTTP API](http-api.md) returns.
 - A picture drawn on request (`POST /api/items/{id}/picture`, with `PICTURE_ENABLED`) is kept
   in the same folder as `picture-<n>.jpg` with a `picture-<n>.json` record (what it was drawn
   as, the model, the cost, when), never among the photos and never read as evidence; it goes
-  with the item.
+  with the item. A picture of a reuse card's finished project is kept the same way in
+  `DATA_DIR/items/<id>/scenarios-<scenarios id>-reuse-<card>/` and goes with the item; one of
+  a Build project in `DATA_DIR/projects/<id>/`, cleared with the inventory by `./dev demo`.
 - A capture from the phone is kept as sent, re-encoded photos, the clip and the WAV note, under
   `DATA_DIR/captures/<id>/`, until the capture is deleted; the item read from it stays.
 - A voice recording sent to `/api/items/{id}/voice` is transcribed and dropped; the transcript

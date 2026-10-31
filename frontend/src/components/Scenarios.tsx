@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import type { DecisionChoice, Decided, KeepFix, ReuseScenario, Scenarios as ScenarioSet, SellCard, Worth } from '../lib/api'
+import { api, type DecisionChoice, type Decided, type KeepFix, type ReuseScenario, type Scenarios as ScenarioSet, type SellCard, type Worth } from '../lib/api'
 import {
   CARDS,
   cardFor,
@@ -11,6 +11,7 @@ import {
   type ScenarioCard,
 } from '../lib/decide'
 import { usd } from '../lib/format'
+import DrawIt from './DrawIt'
 
 // What to do with it: one button asks Muse Spark for three cards written for this owner (keep
 // and fix, reuse, sell or give away) and the one it recommends. Each card records its choice
@@ -23,6 +24,7 @@ export default function Scenarios({
   onAsk,
   onChoose,
   onPrice,
+  demo = false,
 }: {
   scenarios: ScenarioSet | null
   worth: Worth | null
@@ -32,6 +34,8 @@ export default function Scenarios({
   onAsk: () => void
   onChoose: (choice: DecisionChoice) => void
   onPrice: () => void
+  // the demo visitor: Draw it is shown disabled, with the line to sign in
+  demo?: boolean
 }) {
   const lit = scenarios ? cardFor(scenarios.recommended) : null
   const hintId = useId()
@@ -110,7 +114,7 @@ export default function Scenarios({
             )}
             {card(
               'reuse',
-              <ReuseBody scenarios={scenarios.reuse} />,
+              <ReuseBody set={scenarios} demo={demo} />,
               <>
                 {choose('keep_build', 'Choose this', 'reuse')}
                 {chosen === 'keep_build' && <a href="#build">Plan it in Build and reuse</a>}
@@ -184,7 +188,10 @@ function KeepFixBody({ card }: { card: KeepFix }) {
   )
 }
 
-function ReuseBody({ scenarios }: { scenarios: ReuseScenario[] }) {
+// Each reuse scenario with its own Draw it: how the finished project could look, drawn only on a
+// click and kept with this set of cards.
+function ReuseBody({ set, demo }: { set: ScenarioSet; demo: boolean }) {
+  const scenarios: ReuseScenario[] = set.reuse
   if (scenarios.length === 0) return <p className="muted">No reuse was proposed.</p>
   return (
     <ul className="reuse" aria-label="Reuse scenarios">
@@ -198,6 +205,14 @@ function ReuseBody({ scenarios }: { scenarios: ReuseScenario[] }) {
           <p className="muted">
             {r.cost} · {r.time}
           </p>
+          <DrawIt
+            key={`${set.id}:${i}`}
+            name={r.title}
+            demo={demo}
+            list={() => api.decide.cardPictures(set.item_id, set.id, i)}
+            draw={() => api.decide.drawCard(set.item_id, set.id, i)}
+            url={(n) => api.decide.cardPictureUrl(set.item_id, set.id, i, n)}
+          />
         </li>
       ))}
     </ul>

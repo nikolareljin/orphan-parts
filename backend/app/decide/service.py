@@ -34,7 +34,7 @@ from app.find.service import Finder
 from app.inventory import Inventory
 from app.inventory.schema import TEXT_MAX as NOTES_MAX
 from app.inventory.schema import Item
-from app.inventory.service import DECIDED, notes_room
+from app.inventory.service import DECIDED, NotFoundError, notes_room
 from app.model_api import ModelApiClient, text_part, user_message
 from app.projects.pack import private_field
 from app.projects.schema import Preferences
@@ -440,6 +440,13 @@ class Decider:
     def latest_scenarios(self, item_id: int) -> Scenarios | None:
         rows = self.inventory.scenarios(item_id)
         return self.scenarios_of(rows[-1]) if rows else None
+
+    def scenarios_by_id(self, item_id: int, scenarios_id: int) -> Scenarios:
+        """One set of cards written for the item, by its id; 404 for one written for another."""
+        for row in self.inventory.scenarios(item_id):
+            if int(row["id"]) == scenarios_id:
+                return self.scenarios_of(row)
+        raise NotFoundError(f"item {item_id} has no scenarios {scenarios_id}")
 
     def scenarios_of(self, row: Any) -> Scenarios:
         """The cards as kept, with each reuse card's with_items read as the kinds the owner has

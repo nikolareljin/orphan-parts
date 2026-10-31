@@ -17,13 +17,31 @@ condition: scuffed lid, on a plain background, no text, no logos, no people*. A 
 confirm is left out. With no use given, the item is drawn as itself, cleaned up and ready to
 use.
 
+### A finished project
+
+**Draw it** is also on each *Reuse it* scenario in the decision view and on each Build
+project's panel: a picture of how the finished project could look, built from several items.
+The prompt is written by the rules from what the card uses and nothing else: *a semi-realistic
+illustration of Homework workstation built from laptop (screen size 14 in), monitor; a desk
+set-up for homework, on a plain background, no text, no logos, no people*. For a reuse card,
+the card's title, what it does, this item (its kind and up to three accepted values) and the
+kinds of item the card names from the rest of the inventory; for a project, its title, what it
+results in and the items allocated to it (each its kind and up to three accepted values). A
+value that identifies an item (serial, MAC, IMEI, by the same filter as above) or names a price
+never goes out, nor a name, the location or the notes. The title is cut to 120 characters, the
+line to 200, a value to 60, and at most six parts are named, each once.
+
 ## When it is called
 
-Never by itself. One call per click on the live door. The demo visitor is refused (`403`) like
+Never by itself. One call per click on the live door; showing an item, writing scenarios,
+proposing projects, opening a project or deciding draws nothing. The demo visitor is refused (`403`) like
 every other call that spends, and sees only the pictures already drawn for a public item; the
-key is never used without the code. The switch is `PICTURE_ENABLED` (off by
+key is never used without the code. Scenarios and projects are not shown to the demo visitor,
+so a card's or a project's **Draw it** is disabled for them with *Sign in with the access code
+to draw.* The switch is `PICTURE_ENABLED` (off by
 default): while it is off the route answers `503` with *pictures are off on this server
-(PICTURE_ENABLED)*, and the section shows one line saying pictures are off, no field and no button.
+(PICTURE_ENABLED)*, and the section shows one line saying pictures are off, no field and no button; a card or a
+project shows *Pictures are off on this server.* in place of **Draw it**.
 The hosted demo turns it on with the repository variable `PICTURE_ENABLED`, which the deploy
 writes into the Modal secret ([deployment](../operations/deployment.md)).
 
@@ -43,7 +61,11 @@ writes into the Modal secret ([deployment](../operations/deployment.md)).
   (what it was drawn as, the model, the cost, when; the number is claimed by creating the file
   exclusively, so two draws at once never overwrite each other), beside the item's photos and
   never counted as one: `GET /api/items/{id}/photos` does not see it. Served by
-  `GET /api/items/{id}/pictures/{n}`, never cached; gone with the item.
+  `GET /api/items/{id}/pictures/{n}`, never cached; gone with the item. A reuse card's
+  pictures go in `DATA_DIR/items/<id>/scenarios-<scenarios id>-reuse-<card>/`, numbered the
+  same way, so they go with the item too and a new set of cards starts with none; a project's
+  in `DATA_DIR/projects/<id>/`, cleared with the inventory by `./dev demo`. No schema change:
+  the files and their records are the storage.
 
 ## Cost
 

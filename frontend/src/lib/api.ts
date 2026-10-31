@@ -1062,6 +1062,10 @@ export const api = {
     recordOutcome: (id: number, outcome: OutcomeCreate) => sendJson<Project>('POST', `/api/projects/${id}/outcome`, outcome),
     setShared: (id: number, shared: boolean) => sendJson<Project>('POST', `/api/projects/${id}/outcome/share`, { shared }),
     shareText: (id: number) => getJson<{ text: string }>(`/api/projects/${id}/outcome/share`),
+    // how the finished project could look, drawn by Muse Image on a click; kept with the project
+    pictures: (id: number) => getJson<PictureList>(`/api/projects/${id}/pictures`),
+    drawPicture: (id: number) => sendJson<Picture>('POST', `/api/projects/${id}/picture`),
+    pictureUrl: (id: number, n: number) => apiUrl(`/api/projects/${id}/pictures/${n}`),
   },
   decide: {
     view: (itemId: number) => getJson<Decision>(`/api/items/${itemId}/decide`),
@@ -1070,6 +1074,13 @@ export const api = {
     // made from the item version the panel showed: a stale choice is refused with 409
     choose: (itemId: number, choice: DecisionChoice, note: string, version?: number) =>
       sendJson<Item>('POST', `/api/items/${itemId}/decision`, { choice, note, version }),
+    // how a reuse card's project could look, drawn on a click; kept with the card (from 0)
+    cardPictures: (itemId: number, scenariosId: number, card: number) =>
+      getJson<PictureList>(`/api/items/${itemId}/scenarios/${scenariosId}/reuse/${card}/pictures`),
+    drawCard: (itemId: number, scenariosId: number, card: number) =>
+      sendJson<Picture>('POST', `/api/items/${itemId}/scenarios/${scenariosId}/reuse/${card}/picture`),
+    cardPictureUrl: (itemId: number, scenariosId: number, card: number, n: number) =>
+      apiUrl(`/api/items/${itemId}/scenarios/${scenariosId}/reuse/${card}/pictures/${n}`),
   },
   pair: {
     // the phone talks to the API's own origin when the web app is served elsewhere; the door

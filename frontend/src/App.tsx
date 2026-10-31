@@ -181,7 +181,7 @@ export default function App() {
       {view === 'build' && (
         <section className="card">
           <h2>Build and reuse</h2>
-          <Build />
+          <Build demo={demo} />
         </section>
       )}
 

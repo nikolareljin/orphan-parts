@@ -18,6 +18,7 @@ export default function Decide({
   guided,
   onDecide,
   onGuided,
+  demo = false,
 }: {
   item: Item
   // bumped when the Value panel writes a guidance: the worth row reads it again
@@ -25,6 +26,8 @@ export default function Decide({
   onDecide: (choice: DecisionChoice, note: string) => Promise<void>
   // told when the sell card writes a guidance, so the Value panel reads it too
   onGuided: () => void
+  // the demo visitor: nothing is drawn for them
+  demo?: boolean
 }) {
   const [view, setView] = useState<Decision | null>(null)
   const [note, setNote] = useState('')
@@ -156,6 +159,7 @@ export default function Decide({
           onAsk={() => void askScenarios()}
           onChoose={(choice) => void choose(choice, 'cards')}
           onPrice={() => void askPrice()}
+          demo={demo}
         />
       )}
       {refusal && refusedAt === 'cards' && (

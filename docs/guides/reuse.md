@@ -63,6 +63,15 @@ outcome** turns it into a text for other people that names the kinds of items, t
 set-up, the test and the limits, and nothing else: no item names, ids, values, places or
 prices. It is off until you switch it on.
 
+**Draw it.** A project's panel has **Draw it**: Muse Image draws how the finished project
+could look, from its title, what it results in and the kinds of the items on it with up to
+three accepted values each (never one that identifies an item, a name, the location, the notes
+or a price). One image call per click; opening the panel or proposing draws nothing. The
+pictures are kept with the project and shown when the panel opens again, captioned as drawn,
+*not a photo of a real build*. While pictures are off on the server the panel says so instead
+of showing the button; the demo visitor sees it disabled with *Sign in with the access code to
+draw.* See [Muse Image](../models/muse-image.md).
+
 ## From the API
 
 ```bash
@@ -72,6 +81,7 @@ curl -s -X POST localhost:8000/api/projects/propose -H 'content-type: applicatio
 curl -s -X POST localhost:8000/api/projects/1/select -H 'content-type: application/json' -d '{}'
 curl -s -X POST localhost:8000/api/projects/1/requirements/video_cable/search
 curl -s -X POST localhost:8000/api/projects/1/pack | jq -r .markdown
+curl -s -X POST localhost:8000/api/projects/1/picture   # one image call; needs PICTURE_ENABLED
 curl -s -X POST localhost:8000/api/projects/1/outcome -H 'content-type: application/json' \
   -d '{"configuration": "laptop on the monitor over HDMI", "test": "a full homework session", "tested_on": "2026-10-29", "working": true}'
 ```
