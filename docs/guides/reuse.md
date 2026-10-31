@@ -8,7 +8,9 @@ what is missing becomes a search you run on Marketplace.
 
 **What I want from a build.** A few answers kept once and read by every proposal: your
 interests, the effort you will put in, your skills, the tools you have, whether you open
-devices up, a budget with its currency, a radius, and whether you buy used, new or either.
+devices up, a budget with its currency, a radius, and whether you buy used, new or either. It
+is the same record as your [profile](profile.md); the skills are rated there, and the form
+here shows them in a line.
 
 **Proposals.** Muse Spark reads your inventory and the project templates through tools (the
 items a build may count on, one item in full, the catalog of templates) and proposes up to five

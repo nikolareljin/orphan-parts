@@ -17,11 +17,12 @@ startup and refuses to open a file written by a newer version.
 | `price_reports` | v4 | sales the owner reports: `price`, `currency`, `sold_on`, `note`; never merged with what a search finds |
 | `searches` | v5 | missing-item requests: `need_item_id` or a `profile`, `title`, `content` (spec, radius, prices), `status`, `handoff_url` |
 | `candidates` | v5 | listings brought back: `source_kind`, `observed_on`, `state`, `content` (the reading, the assessment, the questions) |
-| `preferences` | v6 | one row: what the owner wants from a build |
+| `preferences` | v6 | one row: the owner's profile and what they want from a build; `skills` in it is a list of `{skill, level}`, and a plain name kept before the ratings reads as `some` |
 | `projects` | v6 | `template`, `title`, `status`, `version`, `content` (requirements, result, effort, spend, unknowns, steps, progress, the outcome) |
 | `allocations` | v6 | an item on a project for a requirement, `committed` or exploratory, with `why` |
 | `packs` | v7 | build packs: `version` per project, `digest` of the inputs, the `markdown` |
 | `uses` | v11 | what an item is good for, one row per asking: `version` per item, the `item_version` it was written from, `content` (the templates the rules found it fills, the model's proposals, the model and the cost), `created_at` |
+| `scenarios` | v13 | what to do with an item, one row per asking: `version` per item, the `item_version` it was written from, `content` (the keep and fix, reuse and sell cards, the recommendation and its reason, whether it was written for a profile, the model and the cost), `created_at` |
 | `items.public`, `captures.public` | v10 | `1` when the owner shows the row to the demo visitor (the demo loader marks what it loads); the demo visitor's reads are limited to these rows |
 | `access_keys` | v9 | access codes issued as records: the `hash` (SHA-256), a `label`, when issued, `expires_at`, `revoked_at`; the code itself is shown once and never kept |
 | `access_keys.parent_id`, `access_keys.master` | v12 | for a phone's own code, what paired it: the issued record's id, or a short digest of the master code; the code stands only while that record is unrevoked and unexpired, or while the master code is the same |
