@@ -113,7 +113,8 @@ STUB
 # open; a second id="rect51"; another shape folded into the frame; a second shape at the frame's
 # indent; the viewBox changed; a second </defs>; a second </svg>; the defs closing after the frame;
 # the only viewBox not the root's; a second viewBox beside the root's; a second defs after the
-# frame; the gradient renamed; the clip's id taken), or the crop (two bled grounds; not
+# frame; the gradient renamed; the clip's id taken; the viewfinder moved by a transform on its
+# group, either before or after its id, or on its ring; its ring moved or resized), or the crop (two bled grounds; not
 # well-formed, checked with python3, so skipped without it). No refusal is a shell error.
 _app_icon_refused() {  # _app_icon_refused <sed edit> <expected line>
   local dir out
@@ -145,7 +146,12 @@ test_app_icon_refuses_a_logo_the_crop_does_not_fit() {
     's|^  </defs>$|    <pattern viewBox="0 0 512 512" />\n  </defs>|' \
     's|^     id="rect51" />$|&\n  <defs></defs>|' \
     's/bgGrad/frameGrad/g' \
-    's|^  </defs>$|    <clipPath id="icon-shape" />\n  </defs>|'; do
+    's|^  </defs>$|    <clipPath id="icon-shape" />\n  </defs>|' \
+    's|^     id="lens-viewfinder">$|     transform="translate(0,20)"\n&|' \
+    's|^     id="lens-viewfinder">$|     id="lens-viewfinder"\n     transform="translate(0,20)">|' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       cy="240"$/       cy="260"/' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       r="185"$/       r="200"/' \
+    '/id="lens-viewfinder"/,/id="circle53"/s/^       r="185"$/&\n       transform="translate(0,20)"/'; do
     _app_icon_refused "$edit" "$shape"
   done
   _app_icon_refused 's|^  </defs>$|  </defs>\n  <rect fill="url(#bgGrad)" />|' 'did not take'

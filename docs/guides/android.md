@@ -86,7 +86,8 @@ demo host answers over HTTPS.
 The launcher icon is rendered from `docs/assets/logo.svg`: `scripts/app-icon.sh` (Inkscape
 required) writes the adaptive icon's foreground and the legacy icons for every density under
 `android/app/src/main/res/mipmap-*/`, and the web header's mark (`frontend/public/brand.svg`,
-the legacy rounded square without its margin); run it again after a change to the logo. The
+the legacy rounded square without its margin); run it again after a change to the logo (a viewfinder moved or resized
+in it is refused until `CX`, `CY` and `RING` in the script match it). The
 adaptive icon's background color (`values/ic_launcher_background.xml`) is set by hand.
 
 ## Allow the phone

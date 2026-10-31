@@ -111,15 +111,32 @@ frame_fits() {
       ! sed -n "$((open + 1)),$((close - 1))p" "$logo" |
         grep -qv '^     [A-Za-z_][A-Za-z0-9_.:-]*="[^"]*"$'; }
 }
+# The crop is centered on (CX, CY) and sized by RING, numbers read off the logo: the viewfinder
+# group as saved, with no transform, and its outer ring circle53 at that center with radius plus
+# half its stroke equal to RING. A viewfinder moved or resized in the logo is refused here;
+# CX, CY and RING are updated to match it.
+ring_fits() {
+  local group ring block r w
+  group="$(line_of '^     id="lens-viewfinder">$')"
+  ring="$(line_of '^       id="circle53" />$')"
+  [[ -n "$group" && -n "$ring" ]] && (( group < ring && ring - group <= 9 )) &&
+    [[ "$(sed -n "$((group - 1))p" "$logo")" == "  <g" ]] || return 1
+  block="$(sed -n "$group,${ring}p" "$logo")"
+  grep -qx "       cx=\"$CX\"" <<< "$block" && grep -qx "       cy=\"$CY\"" <<< "$block" &&
+    ! grep -q 'transform=' <<< "$block" || return 1
+  r="$(sed -n 's/^       r="\([0-9]*\)"$/\1/p' <<< "$block")"
+  w="$(sed -n 's/^       stroke-width="\([0-9]*\)"$/\1/p' <<< "$block")"
+  [[ -n "$r" && -n "$w" ]] && (( r * 2 + w == RING * 2 ))
+}
 logo_fits() {
   [[ "$(count 'viewBox="0 0 512 512"')" == 1 && "$(count '^   viewBox="0 0 512 512"$')" == 1 &&
      "$(count '^  <rect$')" == 1 && "$(count 'id="rect51"')" == 1 &&
      "$(count '</defs>')" == 1 && "$(count '</svg>')" == 1 &&
      "$(count 'id="bgGrad"')" == 1 && "$(count 'icon-shape')" == 0 ]] &&
-    frame_fits ||
+    frame_fits && ring_fits ||
     fail "$logo is not shaped as crop() expects (the root's viewBox, one </defs> before the" \
       "frame, one frame '  <rect' of attributes ending at id=\"rect51\", one </svg>, the" \
-      "gradient bgGrad, no id icon-shape); update crop()"
+      "gradient bgGrad, no id icon-shape, the viewfinder at CX, CY and RING); update crop()"
 }
 
 # A crop is used only when its edits took: the new viewBox once, the frame gone, the bled ground
