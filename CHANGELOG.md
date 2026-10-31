@@ -11,6 +11,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 - **Sign out** in the web header while signed in on a gated host: `DELETE /api/access` clears the session cookie with the attributes it was set with (`HttpOnly`, `SameSite=Strict`, `Secure` when the cookie is), the web app drops the token it keeps across origins even when the call fails, and the page loads again as the demo visitor, the footer's pairing code with it.
 - A pictured guide to pairing the phone with the web app (`docs/start/pairing.md`): sign in, the footer's pairing code signed in and signed out, the scan, the typed address, a photo sent to the Inbox, and what a visitor gets with the code and without it; linked from the judges' guide, the README and the docs home.
 
+### Fixed
+- Live calls no longer stop with `response incomplete: max_output_tokens` before the answer: reasoning tokens count against `max_output_tokens` on the Responses API, and a label read at effort `low` spent 798 of its 800 on reasoning. A caller's `max_output_tokens` is now the answer budget alone; the client adds a headroom by effort (1,024 `minimal`, 4,096 `low`, 8,192 `medium`, 16,384 `high`, 32,768 `xhigh`), under `MODEL_MAX_OUTPUT_TOKENS` when set (`0`, the default, is no ceiling). Tokens are billed as used, so the larger cap costs nothing unless the model uses it. Fixtures stay keyed on the answer budget, so recordings still match. A response that still stops at the cap says which operation, how many output tokens were used and how many of them were reasoning.
+
 ## 0.3.0 - 2026-10-31
 
 ### Changed

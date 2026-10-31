@@ -13,6 +13,7 @@ process is exactly the one in the code.
 | Retries | 429, 500 and 503 are retried up to `MODEL_API_MAX_ATTEMPTS` with exponential backoff and jitter (0.5 s, 1 s, 2 s...). A `Retry-After` header is honoured, capped at `MODEL_API_RETRY_AFTER_MAX_S`. 400, 401, 402, 403, 404 and 413 are never retried. Timeouts and connection errors count as retryable. |
 | Spend cap | Before each live call the ledger must be under `SPEND_CAP_USD`, otherwise `SpendCapError` is raised and nothing is sent. |
 | Cost ledger | Every call appends one line to `DATA_DIR/model_api_spend.jsonl` with tokens, price, attempts and the request ID; `GET /api/spend` and `/readyz` read the totals. |
+| Output cap | `max_output_tokens` from a caller is the answer budget; the request carries it plus a reasoning headroom by effort (1,024 `minimal`, 4,096 `low`, 8,192 `medium`, 16,384 `high`, 32,768 `xhigh`; 4,096 with no effort), under `MODEL_MAX_OUTPUT_TOKENS` when set, since reasoning tokens count against the cap. A response that still stops at the cap raises with the operation, the tokens used and the reasoning share. |
 | Structured output | `respond_structured(Model, ...)` sends the Pydantic model's JSON Schema as `text.format` with `strict: true` (every object closed, every property required) and validates the reply. |
 | Fixture mode | `OPL_FAKE_API=1`: responses come from `backend/tests/fixtures/api/`, no network, zero cost. |
 | Record mode | `OPL_RECORD_FIXTURES=1`: live calls, and every response is saved as a fixture. |
@@ -87,7 +88,8 @@ A fixture is one JSON file under `backend/tests/fixtures/api/<endpoint>/`:
 
 - `<key>.json`: exact match. The key is a digest of the request body with inline images replaced
   by their own digest, so the same photo and prompt always find the same file and the file stays
-  small.
+  small. The body is keyed with the caller's answer budget as `max_output_tokens`, not the cap
+  sent, so a recording outlives a change of headroom or ceiling.
 - `<op>.json`: fallback for every request made for that operation. Tests use this form when the
   exact prompt does not matter.
 

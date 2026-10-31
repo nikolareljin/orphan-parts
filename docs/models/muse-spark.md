@@ -74,8 +74,11 @@ One call per request, however many photos (up to `MAX_PHOTOS`, default 4):
   `label_text` (a transcription) and a list of `{name, value, unit, confidence}`. The reply is
   validated back into the model; anything else is a `502` for the caller.
 - **Effort and size.** `reasoning.effort` is `EXTRACT_REASONING_EFFORT` (default `low`),
-  `max_output_tokens` is 800. The recorded one-photo call uses 1,480 input and 310 output
-  tokens, about 0.003 USD at the standard rate.
+  the answer budget is 800 tokens. Reasoning tokens count against `max_output_tokens` on this
+  API (a read at `low` spent 798 of 800 on reasoning and stopped before the answer), so the
+  client sends the budget plus a headroom by effort, 4,096 at `low`, under
+  `MODEL_MAX_OUTPUT_TOKENS` when set; tokens are billed as used, not as capped. The recorded
+  one-photo call uses 1,480 input and 310 output tokens, about 0.003 USD at the standard rate.
 - **Operation name** `extract`, which is also the name of the recorded fixture that answers
   every extraction in fixture mode.
 

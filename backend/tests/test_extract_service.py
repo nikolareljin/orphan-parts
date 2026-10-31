@@ -8,6 +8,7 @@ from app.config import Settings
 from app.extract import BadImageError, Extractor, LabelReading
 from app.extract.service import INSTRUCTIONS, MAX_OUTPUT_TOKENS, assemble, prompt
 from app.model_api import CostLedger, ModelApiClient, ModelResponse, Usage
+from app.model_api.client import REASONING_HEADROOM
 from tests.conftest import make_photo
 
 pytestmark = pytest.mark.anyio
@@ -91,7 +92,9 @@ async def test_request_carries_prompt_schema_and_one_image_per_photo(
     assert body["model"] == live_settings.model_spark
     assert body["instructions"] == INSTRUCTIONS
     assert body["reasoning"] == {"effort": live_settings.extract_reasoning_effort}
-    assert body["max_output_tokens"] == MAX_OUTPUT_TOKENS
+    # the answer budget plus the room reasoning takes at that effort
+    headroom = REASONING_HEADROOM[live_settings.extract_reasoning_effort]
+    assert body["max_output_tokens"] == MAX_OUTPUT_TOKENS + headroom
     assert body["text"]["format"]["name"] == "LabelReading"
     assert body["text"]["format"]["strict"] is True
     parts = body["input"][0]["content"]

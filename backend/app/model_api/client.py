@@ -43,8 +43,29 @@ IMAGE_MIME_TYPES = frozenset(
     {"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/x-icon"}
 )
 REASONING_EFFORTS = frozenset({"minimal", "low", "medium", "high", "xhigh"})
+# Reasoning tokens count against max_output_tokens on this API: a label read at effort low
+# spent 798 of its 800 on reasoning and stopped before the answer. A caller's max_output_tokens
+# is the budget for the answer alone; the request adds this much room for reasoning, by effort.
+# Billing is per token used, so the larger cap costs nothing unless the model uses it.
+REASONING_HEADROOM: dict[str, int] = {
+    "minimal": 1024,
+    "low": 4096,
+    "medium": 8192,
+    "high": 16384,
+    "xhigh": 32768,
+}
+# with no effort given the model may still reason, so the room is the same as for low
+DEFAULT_REASONING_HEADROOM = REASONING_HEADROOM["low"]
 
 SleepFn = Callable[[float], Awaitable[None]]
+
+
+def output_cap(answer_tokens: int, effort: str | None, ceiling: int = 0) -> int:
+    """The max_output_tokens sent: the answer budget plus the reasoning headroom for the
+    effort, held under the ceiling when one is set (0 = none)."""
+    headroom = REASONING_HEADROOM.get(effort or "", DEFAULT_REASONING_HEADROOM)
+    total = answer_tokens + headroom
+    return min(total, ceiling) if ceiling > 0 else total
 
 
 # --- input helpers -----------------------------------------------------------
@@ -262,8 +283,6 @@ class ModelApiClient:
                     "strict": True,
                 }
             }
-        if max_output_tokens:
-            body["max_output_tokens"] = max_output_tokens
         if tools:
             body["tools"] = tools
         if include:
@@ -272,8 +291,16 @@ class ModelApiClient:
             body["metadata"] = metadata
         if self.settings.prompt_cache_name:
             body["prompt_cache_key"] = self.settings.prompt_cache_name
+        # the fixture is keyed on the answer budget, not on the cap sent, so a recording outlives
+        # a change of headroom or ceiling; the wire carries the sum
+        key: dict[str, Any] | None = None
+        cap = 0
+        if max_output_tokens:
+            key = {**body, "max_output_tokens": max_output_tokens}
+            cap = output_cap(max_output_tokens, effort, self.settings.model_max_output_tokens)
+            body["max_output_tokens"] = cap
 
-        data, from_fixture, attempts, ms = await self._post(RESPONSES, body, op)
+        data, from_fixture, attempts, ms = await self._post(RESPONSES, body, op, key=key)
         output = data.get("output") or []
         text, refusal = output_text(output)
         # The API reports no search count in usage; every web_search_call item is one query,
@@ -288,6 +315,16 @@ class ModelApiClient:
         status = str(data.get("status", "completed"))
         if status != "completed":
             detail = data.get("incomplete_details") or data.get("error") or {}
+            reason = detail.get("reason") if isinstance(detail, dict) else None
+            if reason == "max_output_tokens":
+                # the numbers say what to raise next: the answer budget, or the headroom
+                sent = f" ({cap})" if cap else ""
+                raise IncompleteResponseError(
+                    f"response incomplete: {op} reached max_output_tokens{sent} with "
+                    f"{usage.output_tokens} output tokens used, {usage.reasoning_tokens} of them "
+                    "reasoning",
+                    attempts=attempts,
+                )
             raise IncompleteResponseError(f"response {status}: {detail}", attempts=attempts)
         if refusal is not None:
             raise IncompleteResponseError(f"model refused: {refusal}", attempts=attempts)
