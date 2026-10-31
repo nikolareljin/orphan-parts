@@ -138,8 +138,10 @@ fun SettingsScreen(
     onSaved: (Settings) -> Unit,
 ) {
     val context = LocalContext.current
-    var url by remember(settings) { mutableStateOf(settings.baseUrl) }
-    var code by remember(settings) { mutableStateOf(settings.accessCode) }
+    // keyed on what the fields show: a background write of the token (a claim's session, a
+    // refreshed one) leaves unsaved typing alone
+    var url by remember(settings.baseUrl, settings.accessCode) { mutableStateOf(settings.baseUrl) }
+    var code by remember(settings.baseUrl, settings.accessCode) { mutableStateOf(settings.accessCode) }
     var status by remember { mutableStateOf("") }
     LaunchedEffect(note) { if (note.second.isNotEmpty()) status = note.second }
     val scope = rememberCoroutineScope()
