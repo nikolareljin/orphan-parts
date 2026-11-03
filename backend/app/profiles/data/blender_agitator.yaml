@@ -11,6 +11,7 @@ description: >
   same dimensions exists, the search is for another agitator of the same drive, or another
   device whose rod fits this base.
 part_of_device: true
+search_terms: [agitator shaft, agitator, spindle, mixing shaft]
 features:
   - key: rod_diameter
     label: Rod diameter

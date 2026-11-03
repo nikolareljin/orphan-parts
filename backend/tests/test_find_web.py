@@ -17,7 +17,7 @@ from app.inventory.parent import needs_parent, profile_of
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.main import create_app
 from app.match import Assessor
-from app.model_api import CostLedger, ModelApiClient, norm_url
+from app.model_api import CostLedger, ModelApiClient, backing, norm_url
 from app.ops.gate import demo_allowed, expensive
 from app.profiles import Profiles
 from app.projects.pack import private_field
@@ -97,16 +97,24 @@ def test_the_web_brief_leads_with_the_device_and_carries_nothing_private(
     search = finder.create(SearchCreate(need_item_id=item, title="metal agitator rod"))
     brief = finder.web_brief(search)
     first = brief.splitlines()[0]
-    assert first.startswith(
-        "Look first for the maker's own part: Hamilton Beach 729 blender agitator"
+    # the plain names a seller uses, beside the device: not only the profile's name
+    assert first == (
+        "Look first for the maker's own part for this device: search \"Hamilton Beach 729"
+        ' replacement agitator shaft" (also: agitator, spindle, mixing shaft, blender'
+        " agitator, blender or frappé maker agitator) and the maker's part numbers; then"
+        " compatible aftermarket parts sold as fitting that device; then used or donor parts"
+        " with the same values."
     )
     assert "rod diameter 4" in brief and "SN-PRIVATE-9" not in brief
     assert "It came from this device: model Hamilton Beach 729; the drink mixer" in brief
     # the parent fields are said once, in their own line, not among the values
     assert "parent device" not in brief
-    plain = finder.create(SearchCreate(profile="blender_agitator", title="agitator"))
+    plain = finder.create(SearchCreate(profile="power_adapter", title="adapter"))
     assert finder.web_brief(plain) == finder.plan_brief(plain)
-    assert "Search at most 4 times" in part_instructions(4)
+    said = part_instructions(4)
+    assert "up to 10 distinct pages" in said and "Prefer product pages" in said
+    assert "copy each URL exactly as the search result gave it" in said
+    assert "Search at most 4 times" in said
     assert "Search at most 1 time," in part_instructions(1)
 
 
@@ -114,7 +122,13 @@ def test_the_plan_brief_is_unchanged_without_a_parent_device(finder: Finder) -> 
     item = agitator(finder.inventory, rod_diameter="4")
     search = finder.create(SearchCreate(need_item_id=item, title="rod"))
     assert "came from" not in finder.plan_brief(search)
-    assert finder.web_brief(search) == finder.plan_brief(search)
+    # no device: the part's names lead, the rest is the plan's brief as it was
+    web = finder.web_brief(search)
+    assert web.splitlines()[0] == (
+        "Names for the part: agitator shaft (also: agitator, spindle, mixing shaft, blender"
+        " agitator, blender or frappé maker agitator)."
+    )
+    assert web.split("\n", 1)[1] == finder.plan_brief(search)
 
 
 def test_the_owners_words_about_the_device_stay_out_of_other_briefs(finder: Finder) -> None:
@@ -140,7 +154,6 @@ def test_only_finds_a_search_result_or_a_citation_carries_are_kept() -> None:
         [
             find("https://example.org/a?ref=x"),
             find("https://example.org/a/?ref=x#again"),  # the same page: one find per page
-            find("https://example.org/a"),  # the query is part of the page
             find("https://example.org/b"),
             find("https://example.org/c"),
             find("https://shop.example.org/item?id=1"),  # tracking parameters let go
@@ -148,7 +161,7 @@ def test_only_finds_a_search_result_or_a_citation_carries_are_kept() -> None:
             find("https://example.org/"),  # the bare domain, a slash either way
             find("https://example.org/made-up"),
             find("javascript:alert(1)//example.org/b"),
-            find("https://example.org/b?x=1"),
+            find("https://example.org/b?x=1"),  # a parameter the search's page lacks
         ],
         output,
     )
@@ -160,7 +173,7 @@ def test_only_finds_a_search_result_or_a_citation_carries_are_kept() -> None:
         "https://shop.example.org/item?id=1&utm_source=feed",
         "https://example.org",
     ]
-    assert dropped == 5 and notes == ["5 find(s) rest on no search result and were left out"]
+    assert dropped == 4 and notes == ["4 find(s) rest on no search result and were left out"]
     _, _, none = backed_finds([find("https://example.org/a")], [])
     assert none[0] == "the model made no web search, so nothing it wrote can be backed"
     many = [find(f"https://example.org/{i}") for i in range(WEB_MAX + 5)]
@@ -180,11 +193,96 @@ def test_only_finds_a_search_result_or_a_citation_carries_are_kept() -> None:
     assert notes == ["1 find(s) said nothing about the part and were left out"]
 
 
-def test_a_page_is_its_path_and_query_without_tracking_or_fragment() -> None:
-    assert norm_url("https://WWW.Example.org/a/?id=1#top") == "example.org/a?id=1"
-    assert norm_url("https://example.org/a?id=1") != norm_url("https://example.org/a?id=999")
-    assert norm_url("https://example.org/a?utm_medium=x&id=1") == "example.org/a?id=1"
-    assert norm_url("example.org/") == norm_url("https://example.org") == "example.org"
+def test_a_rewritten_url_is_backed_by_its_host_and_path_when_one_page_alone_fits() -> None:
+    full = "https://www.parts.example/p/agitator-990043600/?SourceCode=19&ModelNum=729"
+    # the model dropped a parameter the result has: the result's page, under its own URL
+    assert backing("https://parts.example/p/agitator-990043600", {norm_url(full): full}) == (
+        full,
+        "path",
+    )
+    pages = {norm_url(full): full}
+    # reordered, and a tracking parameter added
+    assert backing(
+        "https://parts.example/p/agitator-990043600?ModelNum=729&SourceCode=19&gclid=x", pages
+    ) == (full, "path")
+    assert backing(full + "&gclid=x", pages) == (full, "exact")
+    assert backing("https://parts.example/p/agitator-990043600?ModelNum=729", pages) == (
+        full,
+        "path",
+    )
+    # a parameter that names another page: not this one
+    assert backing("https://parts.example/p/agitator-990043600?ModelNum=730", pages) == (
+        "",
+        "none",
+    )
+    # an unrelated path on the same host
+    assert backing("https://parts.example/p/other-part", pages) == ("", "none")
+    # ?id=1 against ?id=999: two pages, whichever the search has
+    one, other = "https://shop.example/item?id=1", "https://shop.example/item?id=999"
+    assert backing(other, {norm_url(one): one}) == ("", "none")
+    both = {norm_url(one): one, norm_url(other): other}
+    assert backing(one, both) == (one, "exact")
+    # the query left out, and two results on that path: which one is not known
+    assert backing("https://shop.example/item", both) == ("", "ambiguous")
+    kept, dropped, notes = backed_finds(
+        [find("https://shop.example/item")], search_output(one, other)
+    )
+    assert kept == [] and dropped == 1
+    assert notes == [
+        "1 find(s) match several search results on the same page path and were left out:"
+        " which page was meant is not known"
+    ]
+
+
+def test_the_live_answer_shape_is_backed() -> None:
+    """Built from a live run: the answer interleaves reasoning, messages and several searches,
+    whose results are ``text_result`` items with empty snippets; the model wrote one URL with
+    its query trimmed, one as given, and one on a path no search returned."""
+    partstown = "https://www.partstown.ca/p/hamilton-beach-commercial/ham990043600"
+    fix = (
+        "https://www.fix.com/parts/drink-mixer/hamilton-beach/fix16654296/agitator-solid-990043600/"
+        "?SourceCode=19&SearchTerm=HMD200-BZ220&ModelNum=HMD200-BZ220"
+    )
+    ereplace = (
+        "https://www.ereplacementparts.com/hamilton-beach-729-drink-mixer-parts-c-2394_2395.html"
+    )
+
+    def call(query: str, *urls: str) -> dict[str, Any]:
+        return {
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {"type": "search", "query": query},
+            "results": [
+                {"type": "text_result", "title": f"page {i}", "url": u, "snippet": ""}
+                for i, u in enumerate(urls)
+            ],
+        }
+
+    output: list[dict[str, Any]] = [
+        {"type": "reasoning", "summary": []},
+        {
+            "type": "message",
+            "content": [{"type": "output_text", "text": "Looking.", "annotations": []}],
+        },
+        call("HAMILTON BEACH 729 blender agitator", partstown, fix),
+        {"type": "reasoning", "summary": []},
+        call("Hamilton Beach 729 replacement agitator shaft", ereplace),
+        {"type": "message", "content": [{"type": "output_text", "text": "{}", "annotations": []}]},
+    ]
+    kept, dropped, notes = backed_finds(
+        [
+            find("https://partstown.ca/p/hamilton-beach-commercial/ham990043600/"),
+            find(
+                "https://www.fix.com/parts/drink-mixer/hamilton-beach/fix16654296/"
+                "agitator-solid-990043600/"
+            ),
+            find(ereplace + "?utm_source=assistant"),
+            find("https://www.webstaurantstore.com/hamilton-beach-990043600-agitator/"),
+        ],
+        output,
+    )
+    assert [f.url for f in kept] == [partstown, fix, ereplace]
+    assert dropped == 1 and notes == ["1 find(s) rest on no search result and were left out"]
 
 
 def test_a_find_reads_as_a_listing_the_pattern_and_the_price_can_score() -> None:

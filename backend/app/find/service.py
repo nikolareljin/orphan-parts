@@ -60,6 +60,7 @@ from app.match.service import Assessor
 from app.model_api import (
     ModelApiClient,
     backed_pages,
+    backing,
     norm_url,
     searches,
     text_part,
@@ -99,20 +100,22 @@ PLAN_INSTRUCTIONS = (
 
 
 # one web search for the part: what the model may write, and how many finds one click keeps
-PART_OUTPUT_TOKENS = 1200
+PART_OUTPUT_TOKENS = 2000
 WEB_MAX = 10
 # what the model writes is shown as it is, so it is cut, not trusted
 WEB_FIELD_MAX = 300
 PART_INSTRUCTIONS = (
-    "You look for a used or spare part on the web for someone who needs it. Search for pages"
-    " that offer this part for sale: shops, second-hand listings, the maker's spare-parts"
-    " pages. When the device the part came from is given, look first for the maker's own part"
-    " for that device (brand, model and the part's name), then for parts sold as fitting that"
-    " device, then for parts with the same measured values. Report only pages you saw in a"
-    " search, one per page, with its URL as the search gave it, the page title, the site, the"
-    " price and the dimensions as the page states them (empty when it states none), and a short"
-    " quote from the page that shows it is this part. Never invent a page, a price or a"
-    " dimension; never guess a part number the need does not give."
+    "You look for a part on the web for someone who needs it. Find up to 10 distinct pages"
+    " that offer this part, or a replacement that fits, for sale. In this order: the maker's"
+    " own part for the device it came from (search the brand and model with the part's names"
+    " and 'replacement', and the maker's part numbers when a page gives them), then compatible"
+    " aftermarket parts sold as fitting that device, then used parts or donor devices with the"
+    " same values. Prefer product pages (a shop, a parts seller, a listing) over manuals,"
+    " forums and videos. One find per page; copy each URL exactly as the search result gave"
+    " it. For each: the page title, the site, the price and the dimensions as the page states"
+    " them (empty when it states none), and a short quote from the page that shows it is this"
+    " part. Never invent a page, a price or a dimension; never guess a part number no page"
+    " gives."
 )
 
 
@@ -152,25 +155,35 @@ def web_text(find: WebFind) -> str:
 def backed_finds(
     found: list[WebFind], output: list[dict[str, Any]]
 ) -> tuple[list[WebFind], int, list[str]]:
-    """Keep a find only when a search result or a citation carries its page, query and all
-    (only a fragment and tracking parameters are let go), and only a web link; the URL kept is
-    the one the search gave. One find per page, at most WEB_MAX, none without text to score.
-    Say how many were dropped and why."""
+    """Keep a find only when a search result or a citation carries its page: exactly (after a
+    light cleanup: fragment, tracking parameters, scheme, ``www.``, trailing slash), or, when
+    the model dropped or reordered the query, by host and path when one search URL alone fits
+    (see ``backing``). The URL kept is always the one the search gave; only a web link, one
+    find per page, at most WEB_MAX, none without text to score. Say how many were dropped and
+    why."""
     pages = backed_pages(output)
     kept: list[WebFind] = []
     seen: set[str] = set()
     unbacked = 0
+    ambiguous = 0
     empty = 0
     for f in found:
         url = f.url.strip()
-        page = norm_url(url)
-        if not url.lower().startswith(("https://", "http://")) or page not in pages:
+        if not url.lower().startswith(("https://", "http://")):
             unbacked += 1
             continue
+        source, how = backing(url, pages)
+        if not source:
+            if how == "ambiguous":
+                ambiguous += 1
+            else:
+                unbacked += 1
+            continue
+        page = norm_url(source)
         if page in seen or len(kept) >= WEB_MAX:
             continue
         cut = WebFind(
-            url=pages[page][:LINE_MAX],
+            url=source[:LINE_MAX],
             title=_cut(f.title),
             site=_cut(f.site),
             price_as_stated=_cut(f.price_as_stated),
@@ -189,9 +202,14 @@ def backed_finds(
         notes.append("the search returned no pages, so nothing the model wrote can be backed")
     if unbacked:
         notes.append(f"{unbacked} find(s) rest on no search result and were left out")
+    if ambiguous:
+        notes.append(
+            f"{ambiguous} find(s) match several search results on the same page path and were"
+            " left out: which page was meant is not known"
+        )
     if empty:
         notes.append(f"{empty} find(s) said nothing about the part and were left out")
-    return kept, unbacked + empty, notes
+    return kept, unbacked + ambiguous + empty, notes
 
 
 class FindError(ValueError):
@@ -522,24 +540,38 @@ class Finder:
         return await asyncio.to_thread(self._keep_plan, search_id, plan)
 
     def web_brief(self, search: Search) -> str:
-        """The plan's brief, led by the maker's own part for the device it came from when that
-        is recorded ("Hamilton Beach 729 blender agitator"), then the rest in order."""
+        """The plan's brief, led by what to search for: the device the part came from when it
+        is recorded, with the part's plain names ("Hamilton Beach 729 replacement agitator
+        shaft"), then compatible and used parts; the part's names alone when no device is."""
         brief = self.plan_brief(search)
-        if search.need_item_id is None:
+        profile = self.profiles.get(search.profile)
+        item = self.inventory.get(search.need_item_id) if search.need_item_id is not None else None
+        # the plain names a seller uses first, then the item's own kind and the profile's
+        names: list[str] = []
+        for name in (*profile.search_terms, item.item_type if item else "", profile.label):
+            name = " ".join(name.split()).lower()
+            if name and name not in names:
+                names.append(name)
+        device = ""
+        if item is not None:
+            model = item.fields.get(PARENT_MODEL)
+            device = model.value.strip() if model else ""
+            if not device:
+                words = item.fields.get(PARENT_DEVICE)
+                device = words.value.strip() if words else ""
+        also = f" (also: {', '.join(names[1:])})" if len(names) > 1 else ""
+        if device:
+            lead = (
+                f"Look first for the maker's own part for this device: search \"{device}"
+                f" replacement {names[0]}\"{also} and the maker's part numbers; then compatible"
+                " aftermarket parts sold as fitting that device; then used or donor parts with"
+                " the same values."
+            )
+        elif profile.search_terms:
+            lead = f"Names for the part: {names[0]}{also}."
+        else:
             return brief
-        item = self.inventory.get(search.need_item_id)
-        model = item.fields.get(PARENT_MODEL)
-        device = model.value.strip() if model else ""
-        if not device:
-            words = item.fields.get(PARENT_DEVICE)
-            device = words.value.strip() if words else ""
-        if not device:
-            return brief
-        part = item.item_type.strip() or self.profiles.get(search.profile).label
-        return (
-            f"Look first for the maker's own part: {device} {part}; then for parts sold as"
-            " fitting that device; then for parts with the same values.\n" + brief
-        )
+        return f"{lead}\n{brief}"
 
     async def search_web(self, search_id: int) -> WebSearchResult:
         """One Muse Spark call with web search: pages that offer the part. Only finds whose page

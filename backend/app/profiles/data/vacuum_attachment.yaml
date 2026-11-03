@@ -5,6 +5,7 @@ description: >
   opening and the insertion geometry; a powered head also needs documented electrical
   compatibility, which no dimension can establish.
 part_of_device: true
+search_terms: [attachment, tool, nozzle, brush]
 features:
   - key: opening_inner_diameter
     label: Opening inner diameter
