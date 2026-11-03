@@ -613,6 +613,7 @@ function ItemPhotos({ id, device = false, owner = false }: { id: number; device?
                 (byN.get(n)?.areas ?? []).map((a) => (
                   <span
                     key={a.id}
+                    aria-hidden="true"
                     className={`privacy-box${a.hidden ? '' : ' shown'}`}
                     style={{ left: `${a.x * 100}%`, top: `${a.y * 100}%`, width: `${a.w * 100}%`, height: `${a.h * 100}%` }}
                     title={`${a.label}: ${a.hidden ? 'hidden when shared' : 'shown by you'}`}
@@ -634,11 +635,16 @@ function ItemPhotos({ id, device = false, owner = false }: { id: number; device?
       )}
       {owner && opened && opened.areas.length > 0 && (
         <div className="privacy-areas" aria-label={`Areas on photo ${opened.n}`}>
-          {opened.areas.map((a) => (
-            <button key={a.id} type="button" className="secondary" onClick={() => void choose(opened.n, a)}>
-              {a.hidden ? `Show ${a.label}` : `Hide ${a.label}`}
-            </button>
-          ))}
+          {opened.areas.map((a) => {
+            // two areas of one kind (two MAC addresses) are told apart by their number
+            const same = opened.areas.filter((b) => b.label === a.label)
+            const which = same.length > 1 ? ` ${same.indexOf(a) + 1}` : ''
+            return (
+              <button key={a.id} type="button" className="secondary" onClick={() => void choose(opened.n, a)}>
+                {a.hidden ? `Show ${a.label}${which}` : `Hide ${a.label}${which}`}
+              </button>
+            )
+          })}
         </div>
       )}
       {owner && waiting && (
