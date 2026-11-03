@@ -1,0 +1,19 @@
+{
+  "endpoint": "/asr/transcribe",
+  "op": "transcribe",
+  "model": "muse-voice-transcribe-1.0",
+  "digest": "e6c2cf869705becd832b2ce3",
+  "request": {
+    "audioEncoding": "WAV",
+    "audio_sha256": "b29ab28c7dbf884f",
+    "mode": "PUSH_TO_TALK",
+    "model": "muse-voice-transcribe-1.0"
+  },
+  "response": {
+    "sessionId": "voyager/transcribe/850DE1EE5F8546918E7C48036B043AB3",
+    "transcript": "There is dust on the fan..",
+    "audioDurationMs": 1520,
+    "turns": []
+  },
+  "status": 200
+}

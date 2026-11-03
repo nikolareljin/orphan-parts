@@ -15,12 +15,12 @@ needs a paid plan.
 
 ## The cut
 
-1. Import everything under `brand/`, `titles/` and `diagrams/` (the PNG files), the takes, and
+1. Import everything under `brand/` and `titles/` (the PNG files), the takes, and
    the narration.
-2. Track order, bottom to top: picture (takes, cards, diagrams), titles, corner overlay,
+2. Track order, bottom to top: picture (takes, cards, photos), titles, corner overlay,
    captions; narration and any music on the audio tracks.
 3. Lay the picture by the storyboard's times (`storyboard/main.md`). Stills: cards 6 to 10 s,
-   diagrams by the shot list, with a slow zoom to 105 percent.
+   photos by the shot list, with a slow zoom to 105 percent.
 4. Titles: each `titles/*.png` on its track for the first 4 s of its shot, fade in and out
    0.3 s. Full-frame transparent PNGs, so no repositioning.
 5. Corner overlay: `brand/corner-overlay.png` over every screen recording and phone shot, not

@@ -27,15 +27,15 @@ Name the part number only when the recorded take shows it (see `main.md`).
 
 Shots K5 to K7.
 
-> For unused electronics, Muse Spark proposes builds from the inventory. The homework
-> workstation is selected and drawn. What is missing becomes a Marketplace search that the
+> For unused electronics, Muse Spark proposes builds from the inventory. A home automation
+> server is selected and drawn. What is missing becomes a Marketplace search that the
 > owner runs.
 
-## 0:43 to 0:48 · Concept preview
+## 0:43 to 0:48 · Sell
 
 Shot K8.
 
-> The connection diagram is a concept preview of the next step.
+> What is not needed becomes a Marketplace draft.
 
 ## 0:48 to 0:55 · Close
 

@@ -6,9 +6,14 @@ the response body. Files live under ``<fixtures_dir>/<endpoint>/``:
 * ``<key>.json``: exact match on the digest of the request body
 * ``<op>.json``: fallback shared by every request made for that operation
 
-Tests and the offline demo read them; ``OPL_RECORD_FIXTURES=1`` writes them.
+Tests and the offline demo read them; ``OPL_RECORD_FIXTURES=1`` writes them. A generated
+image in a response (``data[n].b64_json``) is kept beside its fixture as ``<key>-<n>.jpg`` (or
+``.png``) and the field says ``@<that file>``: the picture stays a picture, and the JSON holds
+no long base64 run for a secret scanner to mistake for a token. Inline images still load.
 """
 
+import base64
+import binascii
 import hashlib
 import json
 import logging
@@ -78,6 +83,46 @@ def _slug(text: str) -> str:
     return _SAFE.sub("-", text.strip("/").lower()).strip("-") or "root"
 
 
+def _image_suffix(data: bytes) -> str:
+    return ".png" if data.startswith(b"\x89PNG") else ".jpg"
+
+
+def _images_out(response: dict[str, Any], folder: Path, key: str) -> dict[str, Any]:
+    """The response with each generated image written beside the fixture, named in its place."""
+    items = response.get("data")
+    if not isinstance(items, list):
+        return response
+    out = []
+    for n, item in enumerate(items, 1):
+        b64 = item.get("b64_json") if isinstance(item, dict) else None
+        if isinstance(b64, str) and b64 and not b64.startswith("@"):
+            try:
+                data = base64.b64decode(b64, validate=True)
+            except (binascii.Error, ValueError):
+                out.append(item)
+                continue
+            name = f"{key}-{n}{_image_suffix(data)}"
+            (folder / name).write_bytes(data)
+            item = {**item, "b64_json": f"@{name}"}
+        out.append(item)
+    return {**response, "data": out}
+
+
+def _images_in(fixture: "Fixture", folder: Path) -> "Fixture":
+    """The fixture with every ``@file`` image read back as base64, as the API sent it."""
+    items = fixture.response.get("data")
+    if not isinstance(items, list):
+        return fixture
+    out = []
+    for item in items:
+        ref = item.get("b64_json") if isinstance(item, dict) else None
+        if isinstance(ref, str) and ref.startswith("@"):
+            file = folder / Path(ref[1:]).name
+            item = {**item, "b64_json": base64.b64encode(file.read_bytes()).decode("ascii")}
+        out.append(item)
+    return fixture.model_copy(update={"response": {**fixture.response, "data": out}})
+
+
 class FixtureStore:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -92,13 +137,15 @@ class FixtureStore:
         key = request_key(endpoint, body)
         exact = self.path_for(endpoint, key)
         if exact.is_file():
-            return Fixture.model_validate_json(exact.read_text(encoding="utf-8"))
+            found = Fixture.model_validate_json(exact.read_text(encoding="utf-8"))
+            return _images_in(found, exact.parent)
         fallback = self.path_for(endpoint, op)
         if fallback.is_file():
             # said in the log: a recorded set that stops matching (a photo changed, or what is
             # sent of it, as EXTRACT_ENHANCE does) answers from here without an error
             log.info("fixture by operation", extra={"op": op, "endpoint": endpoint, "key": key})
-            return Fixture.model_validate_json(fallback.read_text(encoding="utf-8"))
+            found = Fixture.model_validate_json(fallback.read_text(encoding="utf-8"))
+            return _images_in(found, fallback.parent)
         return None
 
     def save(
@@ -112,16 +159,16 @@ class FixtureStore:
     ) -> Path:
         key = request_key(endpoint, body)
         model = body.get("model")
+        path = self.path_for(endpoint, key)
+        path.parent.mkdir(parents=True, exist_ok=True)
         fixture = Fixture(
             endpoint=endpoint,
             op=op,
             model=model if isinstance(model, str) else None,
             key=key,
             request=_summarise(body),
-            response=_without_reasoning(response),
+            response=_images_out(_without_reasoning(response), path.parent, path.stem),
             status=status,
         )
-        path = self.path_for(endpoint, key)
-        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(fixture.model_dump_json(indent=2, by_alias=True) + "\n", encoding="utf-8")
         return path

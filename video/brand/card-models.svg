@@ -25,8 +25,5 @@
   <rect x="220" y="702" width="8" height="96" rx="4" fill="#cbd5e1"/>
   <text x="270" y="766" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">The rules</text>
   <text x="770" y="762" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">decide fits, prices and what is kept; the model only proposes</text>
-  <rect x="220" y="822" width="1480" height="96" rx="18" fill="none" stroke="#7b2cbf" stroke-width="2" stroke-dasharray="10 8"/>
-  <text x="270" y="886" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#94a3b8" text-anchor="start">Planned</text>
-  <text x="770" y="882" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#94a3b8" text-anchor="start">Muse Spark Open on Baseten or Fireworks: not integrated</text>
   <text x="960" y="1010" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="400" fill="#94a3b8" text-anchor="middle">Marketplace by handoff only: the search and the create page open for you; nothing is posted or fetched.</text>
 </svg>

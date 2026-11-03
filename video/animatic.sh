@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# A silent animatic of the main video: the cards, diagrams and titles at the storyboard's
+# A silent animatic of the main video: the cards and titles at the storyboard's
 # times, a dark frame with the shot number where a take goes, the captions burned in. A timing
 # check, not footage.
 #
@@ -16,28 +16,26 @@ mkdir -p "$out"
 # shot|seconds|picture (a PNG under video/, or "take")|title PNG under titles/ (or -)
 shots="S01|6|take|-
 S02|6|take|-
-S03|6|brand/card-open.png|-
-S04|8|take|t01-story-a
-S05|6|take|t02-capture
-S06|5|take|t03-read
-S07|5|take|t04-measure
-S08|3|take|t05-find
-S08b|4|take|t07-routes
-S08c|6|take|t06-sample-values
-S09|8|take|t08-story-b
-S10|9|take|t09-preferences
-S11|8|take|t10-propose
-S12|7|take|t11-select
-S13|9|take|t12-marketplace
-S14|6|take|t13-pack
-S15|5|diagrams/arcade-connections.png|t14-connections
-S16|5|diagrams/arcade-placement.png|t15-placement
-S17|12|diagrams/arcade-swap.png|t16-swap
-S18|11|take|t17-brackets
-S19|7|brand/card-models.png|-
-S20|9|take|t18-candidates
-S21|9|take|t19-eval
-S22|10|brand/card-close.png|-"
+S03|5|brand/card-open.png|-
+S04|7|take|t01-story-a
+S05|8|take|t21-which-device
+S06|5|take|t22-label
+S07|7|take|t23-device-read
+S08|16|take|t24-search-web
+S09|8|take|t25-decide
+S10|6|take|t08-story-b
+S11|9|take|t09-preferences
+S12|9|take|t10-propose
+S13|8|take|t11-select
+S14|7|take|t26-draw
+S15|8|take|t12-marketplace
+S16|6|take|t13-pack
+S17|6|take|t30-value
+S18|11|take|t31-sell
+S19|6|take|t27-phone
+S20|6|brand/card-models.png|-
+S21|13|take|t28-gallery
+S22|9|brand/card-close.png|-"
 
 : >"$work/list.txt"
 while IFS='|' read -r shot secs picture title; do

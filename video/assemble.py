@@ -10,7 +10,7 @@ owner's recording, or the synthetic narrator tts.py writes from the captions.
           longer than the shot (at most 2x), held on its last frame when shorter
 - phone:  a phone take (out/work/takes/<shot>.mp4) or, without one, the app's screenshots
 - photo:  the owner's photos side by side on a blurred fill, with a slow push in
-- still:  a picture under video/ (a diagram) with a slow push in
+- still:  a picture under video/ with a slow push in
 - card:   a card under video/brand, held, faded in and out
 
 A take whose model answer came from an operation's stub rather than a recording of that very
@@ -56,11 +56,11 @@ MAIN = [
     ("S14", 7, "take", "S14", [("t26-draw", 0)]),
     ("S15", 8, "take", "S15", [("t12-marketplace", 0)]),
     ("S16", 6, "take", "S16", [("t13-pack", 0)]),
-    ("S17", 5, "still", "diagrams/arcade-connections.png", [("t14-connections", 0)]),
-    ("S18", 6, "still", "diagrams/arcade-swap.png", [("t16-swap", 0)]),
+    ("S17", 6, "take", "S17", [("t30-value", 0)]),
+    ("S18", 11, "take", "S18", [("t31-sell", 0)]),
     ("S19", 6, "phone", "S19", [("t27-phone", 0)]),
     ("S20", 6, "card", "card-models.png", []),
-    ("S21", 9, "take", "S21", [("t28-gallery", 0)]),
+    ("S21", 13, "take", "S21", [("t28-gallery", 0)]),
     ("S22", 9, "card", "card-close.png", []),
 ]
 
@@ -73,7 +73,7 @@ SHORT = [
     ("K5", 6, "take", "S12@proposed", [("t10-propose", 0)]),
     ("K6", 6, "take", "S14", [("t26-draw", 0)]),
     ("K7", 5, "take", "S15", [("t12-marketplace", 0)]),
-    ("K8", 5, "still", "diagrams/arcade-connections.png", [("t14-connections", 0)]),
+    ("K8", 5, "take", "S18@drafted", [("t31-sell", 0)]),
     ("K9", 7, "card", "card-close.png", []),
 ]
 
