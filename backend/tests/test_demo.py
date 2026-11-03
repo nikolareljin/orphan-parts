@@ -489,3 +489,45 @@ async def test_the_committed_set_searches_the_web_for_the_agitator(
     assert len(web) == outcome.web_finds
     assert any("990010200" in e.text and e.source_url.startswith("https://") for e in web)
     assert search.candidates == 4
+
+
+async def test_a_measurement_in_the_set_is_the_items_measured_value(
+    recorded_settings: Settings,
+) -> None:
+    # geometry on the marks the set gives, no model: accepted, the value is the item's with the
+    # source "measurement"; a capture not declared straight on is refused and said so
+    from tests.measure_images import ruler_photo
+
+    loader, client = build_loader(recorded_settings)
+    base = recorded_settings.data_dir.parent / "demo"
+    path = write_set(
+        base,
+        "items:\n"
+        "  - key: rod\n    name: Agitator\n    profile: blender_agitator\n"
+        "    measurements:\n"
+        "      - photo: photos/ruler.png\n        feature: rod_length\n"
+        "        reference: {kind: two_point, points: [{x: 100, y: 400}, {x: 500, y: 400}],"
+        " length_mm: 100}\n"
+        "        points: [{x: 200, y: 200}, {x: 340, y: 200}]\n        straight_on: true\n"
+        "      - photo: photos/ruler.png\n        feature: rod_diameter\n"
+        "        reference: {kind: two_point, points: [{x: 100, y: 400}, {x: 500, y: 400}],"
+        " length_mm: 100}\n"
+        "        points: [{x: 200, y: 200}, {x: 340, y: 200}]\n",
+    )
+    (base / "photos" / "ruler.png").write_bytes(ruler_photo())
+    try:
+        outcome = await loader.run(load_set(path), path.parent)
+    finally:
+        await client.aclose()
+    assert outcome.measurements == 1 and outcome.cost_usd == 0.0
+    assert [s for s in outcome.skipped if "rod_diameter refused" in s]
+    rod = loader.inventory.get(loader.ids["rod"])
+    length = rod.fields["rod_length"]
+    assert (length.source, length.review, length.value, length.unit) == (
+        "measurement",
+        "accepted",
+        "35.0",
+        "mm",
+    )
+    assert "rod_diameter" not in rod.fields
+    assert len(loader.inventory.measurements(rod.id)) == 2

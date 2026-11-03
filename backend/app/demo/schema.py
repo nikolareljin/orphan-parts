@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from app.find.schema import CURRENCY
 from app.inventory.schema import PROFILE_ID, Availability, Intent
 from app.listing.checklists import Mode
+from app.measure.schema import FEATURE_KEY, ImageSize, Point, Reference
 from app.projects.schema import Preferences
 
 KEY = r"^[a-z][a-z0-9_]{0,63}$"
@@ -38,6 +39,23 @@ class Expect(BaseModel):
     )
 
 
+class DemoMeasurement(BaseModel):
+    """A feature measured on one of the item's photos, as the owner marks it under Measure a
+    feature: geometry computes the value, no model is called, and an accepted capture is the
+    item's value with the source ``measurement``."""
+
+    photo: str = Field(description="relative to the set file; the photo the marks are on")
+    feature: str = Field(pattern=FEATURE_KEY)
+    image: ImageSize | None = Field(
+        default=None, description="the size the marks refer to; the photo's own when left out"
+    )
+    reference: Reference
+    points: list[Point] = Field(min_length=2, max_length=2)
+    straight_on: bool = Field(
+        default=False, description="the owner's statement; a two-point scale needs it"
+    )
+
+
 class DemoItem(BaseModel):
     """One thing in the drawer: its photos go through extraction and become an item."""
 
@@ -54,6 +72,9 @@ class DemoItem(BaseModel):
     intent: Intent = "keep"
     availability: Availability = "available"
     fields: dict[str, str] = Field(default={}, description="owner values, by field")
+    measurements: list[DemoMeasurement] = Field(
+        default=[], description="features measured on the item's photos, in this order"
+    )
     voice_note: str = Field(default="", description="a WAV file, relative to the set file")
     draft: Mode | None = Field(default=None, description="write a sell or a give draft")
     holds_data: bool = False
@@ -156,7 +177,7 @@ class DemoSet(BaseModel):
         """Every file the set names, relative to the set file."""
         out: list[str] = []
         for i in self.items:
-            out += i.photos + i.parent_photos
+            out += i.photos + i.parent_photos + [m.photo for m in i.measurements]
             if i.voice_note:
                 out.append(i.voice_note)
         for s in self.searches:
@@ -210,6 +231,7 @@ class Outcome(BaseModel):
     items: int = 0
     photos: int = 0
     voice_notes: int = 0
+    measurements: int = Field(default=0, description="features measured on the items' photos")
     drafts: int = 0
     guidances: int = 0
     searches: int = 0
@@ -235,7 +257,8 @@ class Outcome(BaseModel):
     def lines(self) -> list[str]:
         out = [
             f"mode {self.mode}: {self.items} item(s) from {self.photos} photo(s),"
-            f" {self.voice_notes} voice note(s), {self.drafts} draft(s), {self.guidances}"
+            f" {self.voice_notes} voice note(s), {self.measurements} measurement(s),"
+            f" {self.drafts} draft(s), {self.guidances}"
             f" guidance(s), {self.searches} search(es) with {self.candidates} candidate(s)"
             f" and {self.web_finds} web find(s), {self.projects} project(s),"
             f" {self.pictures} picture(s); {self.cost_usd:.4f} USD"

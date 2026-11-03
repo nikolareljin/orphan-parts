@@ -3,6 +3,7 @@
 from app.demo.schema import (
     DemoItem,
     DemoListing,
+    DemoMeasurement,
     DemoPropose,
     DemoSearch,
     DemoSet,
@@ -15,6 +16,7 @@ from app.demo.service import Loader, load_set, reset, scrub
 __all__ = [
     "DemoItem",
     "DemoListing",
+    "DemoMeasurement",
     "DemoPropose",
     "DemoSearch",
     "DemoSet",

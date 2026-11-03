@@ -54,13 +54,17 @@ async def test_the_run_scores_the_committed_set_and_writes_the_files(
     assert s.fields_read == 43
     assert (s.expected, s.matches) == (14, 14)
     assert (s.fits_right, s.fits_total) == (0, 0)
-    assert (s.proposals_proposed, s.proposals_kept, s.proposals_dropped) == (2, 2, 0)
+    assert (s.proposals_proposed, s.proposals_kept, s.proposals_dropped) == (3, 3, 0)
     by_key = {i.key: i for i in report.items}
     assert by_key["monitor_u2419h"].proposals_in == 1
     assert by_key["monitor_1800fp"].proposals_in == 1
-    # the agitator has no label: its values are the owner's measurements
+    # the agitator has no label: its rod diameter is measured on the ruler photo (geometry,
+    # not a reading), the material is the owner's
     agitator = by_key["frappe_agitator"]
-    assert agitator.fields_read == 0 and agitator.owner_values == 6
+    assert agitator.fields_read == 0 and agitator.owner_values == 1
+    diameter = rod.fields["rod_diameter"]
+    assert (diameter.source, diameter.review, diameter.value) == ("measurement", "accepted", "4.7")
+    assert not {"tab_span", "tab_width", "tab_length", "rod_length"} & set(rod.fields)
     out = tmp_path / "eval"
     written = write_report(report, out)
     assert [p.name for p in written] == ["report.json", "report.md", "fields.png", "proposals.png"]

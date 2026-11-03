@@ -102,16 +102,18 @@ its uncertainty and the method. A blurred or oblique capture is refused with the
 
 ## 3. Does a listed rod fit?
 
-**Does it fit?** checks a candidate against the agitator's profile rule by rule: the all-metal
-rod of the same size passes, the plastic one is rejected on its material and its diameter, the metal
-one with wider tabs is rejected on the span, and the listing with no measurements stays at
-*needs evidence*, its unknowns turned into questions. The verdict is one of five on the
+**Does it fit?** checks a candidate against the agitator's profile rule by rule. In the demo
+set the rod's diameter is the measurement above (4.7 ± 0.49 mm, from the photo with the tape
+measure beside it); nothing else was measured. The two metal rods listed at 4 mm are rejected on
+that diameter, the plastic one on its material and its diameter, and the listing with no
+measurements stays at *needs evidence*; the tabs and the length, unknown on both sides, are
+never counted as a pass. The verdict is one of five on the
 [ladder](../concepts/verdicts.md), decided by the rules, never by the model.
 [Does it fit?](../guides/match.md).
 
 ## 4. Find the missing piece
 
-**Find a part** records what the agitator needs (all metal, a 4 mm rod, two tabs 9 mm across)
+**Find a part** records what the agitator needs (all metal, the rod's measured diameter)
 with a top price. **Plan the search** has Muse Spark write three to six Marketplace search links
 you open yourself, a match pattern and the words that rule a listing out. Listings pasted back
 are ranked by the pattern and the price with no model call; **Check fit** has Muse Spark read
