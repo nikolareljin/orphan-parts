@@ -207,7 +207,11 @@ def test_load_demo_replays_the_recordings_unless_asked_live(
 
     monkeypatch.setattr(demo_main, "main", main)
     for name in ("OPL_FAKE_API", "DATA_DIR", "LOG_FORMAT", "SQLITE_JOURNAL_MODE", "DEMO_SET"):
-        monkeypatch.delenv(name, raising=False)
+        # set first, so the undo removes what load_demo sets with setdefault: a delenv of a
+        # name that is not there records nothing, and the module's values would reach every
+        # later test's settings (a DELETE journal, a demo set under /root)
+        monkeypatch.setenv(name, "")
+        monkeypatch.delenv(name)
     monkeypatch.setenv("MODEL_API_KEY", key)
     spec = importlib.util.spec_from_file_location("modal_app_load_demo", MODAL_APP)
     assert spec and spec.loader
