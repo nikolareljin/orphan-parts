@@ -35,7 +35,7 @@ theme:
 
 # the screenshot tool (docs/shots/generate.sh) lives beside the pages, not in the site
 exclude_docs: |
-  shots/
+  /shots/
 
 extra_css:
   - assets/extra.css
