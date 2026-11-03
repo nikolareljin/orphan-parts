@@ -74,7 +74,9 @@ pictures; a search from values written in, one for a private item and a project 
 item on it answer 404, as a private item does. The owner's words and money stay out wherever
 these are answered: a search's notes and a candidate's note are blank, the radius, the budget
 left, the budget and what remains of it are left out, an outcome is shown only once shared,
-and a pack comes without its budget line and its outcome section. Every write and every call
+and a pack comes without its budget line, its condition notes (where a voice note is kept),
+the searches under what is still needed (their title, their top price, which is the budget
+left, and their candidates) and its outcome section. Every write and every call
 that spends on these pages (**Start the search**, **Plan the search**, **Search the web**,
 **Bring back listings**, **Check fit**, **Propose**, **Select**, **Write the build pack**,
 **Save profile**) is still `403`; the web app shows the sign-in line in their place, so a
