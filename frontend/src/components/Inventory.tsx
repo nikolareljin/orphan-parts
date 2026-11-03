@@ -515,7 +515,13 @@ function ItemPanel({
               Yes, delete item #{item.id}
             </button>
           ) : (
-            <button type="button" className="danger quiet" onClick={() => setConfirmDelete(true)}>
+            <button
+              type="button"
+              className="danger quiet"
+              disabled={readOnly}
+              title={readOnly ? 'The demo set cannot be deleted' : undefined}
+              onClick={() => setConfirmDelete(true)}
+            >
               Delete
             </button>
           )}
