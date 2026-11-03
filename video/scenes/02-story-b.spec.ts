@@ -1,12 +1,18 @@
-import { expect, test, type Scene } from './lib'
+import { expect, openItem, test, type Scene } from './lib'
 import type { Locator } from '@playwright/test'
 
 // Story B, unused electronics: the inventory, the skills profile and what the owner wants from
 // a build, the proposals, one selected with its items committed, drawn, what it still needs
 // as a Marketplace search, and the build pack. One project carries the shots after
-// the proposals: the arcade when the proposals have one, else the first proposed.
+// the proposals: the arcade when the proposals have one, else the first proposed. Then the
+// graphics card, for sale: its price guidance, a voice note becoming its condition notes, and
+// its draft in Marketplace's fields.
 
 test.describe.configure({ mode: 'serial' })
+
+const GPU = 'EVGA GeForce 9800 GT graphics card'
+// a short spoken note in WAV, the condition the demo set states for the card
+const NOTE = 'notes/gpu-note.wav'
 
 const INTERESTS = 'a tabletop arcade for the living room; home automation; a smart mirror in the hall'
 
@@ -148,4 +154,58 @@ test('S16 the build pack', async ({ scene }) => {
   await expect(packs.getByRole('list', { name: 'Packs' })).toContainText('version 1')
   await scene.point(packs.getByRole('link', { name: 'Download' }).first())
   await scene.hold(2200)
+})
+
+test('S17 the graphics card: what it is worth', async ({ scene }) => {
+  const { page } = scene
+  await page.goto('/#inventory')
+  await scene.ready()
+  const item = await openItem(scene, GPU)
+  await scene.click(item.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Value', exact: true }), 1000)
+  const value = item.getByRole('region', { name: 'What is it worth?' })
+  const guide = value.getByRole('status').first()
+  await expect(guide).toBeVisible()
+  // the figures kept apart, then the pages they come from
+  await scene.reveal(guide, 'start')
+  await scene.point(guide.getByRole('table', { name: 'Quantities' }))
+  await scene.hold(1600)
+  const comparables = guide.getByRole('list', { name: 'Comparables' })
+  if (await comparables.count()) {
+    await scene.reveal(comparables, 'center')
+    await scene.point(comparables.getByRole('listitem').first())
+  }
+  await scene.hold(1800)
+})
+
+test('S18 a voice note, then the draft in Marketplace fields', async ({ scene }) => {
+  const { page } = scene
+  await page.goto('/#inventory')
+  await scene.ready()
+  const item = await openItem(scene, GPU)
+  await scene.click(item.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Sell or give away', exact: true }), 1000)
+  const details = item.getByRole('form', { name: 'Listing details' })
+  const voice = details.getByLabel('Voice note (WAV)')
+  await scene.point(voice)
+  await scene.hold(300)
+  await voice.setInputFiles(NOTE)
+  const heard = details.getByText(/Transcribed and saved as condition notes/)
+  await expect(heard).toBeVisible({ timeout: 90_000 })
+  scene.mark('heard')
+  await scene.settle(300)
+  await scene.point(heard)
+  await scene.hold(1600)
+  await scene.click(details.getByRole('button', { name: 'Write the draft' }))
+  const handoff = item.getByRole('region', { name: 'Marketplace handoff' })
+  await expect(handoff.getByRole('status').first()).toContainText('draft 2', { timeout: 120_000 })
+  scene.mark('drafted')
+  await scene.settle(300)
+  const fields = handoff.getByLabel('Fields to paste')
+  await scene.reveal(fields, 'start')
+  await scene.point(fields.getByRole('button', { name: 'Copy title' }))
+  await scene.hold(1000)
+  // pointed at, never opened: no Marketplace page on camera
+  await scene.point(handoff.getByRole('button', { name: 'Download photos' }))
+  await scene.hold(700)
+  await scene.point(handoff.getByRole('link', { name: 'Open Marketplace' }))
+  await scene.hold(1600)
 })

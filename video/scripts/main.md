@@ -1,4 +1,4 @@
-# Main video: narration (2:42)
+# Main video: narration (2:52)
 
 The narration, section by section, read by a neutral narrator: a synthetic voice
 (`generate.sh --tts`, one clip per caption), never the owner speaking. It describes what is on
@@ -31,7 +31,7 @@ Shots S04 to S09.
 > answers that. Search the web looks first for the maker's own part. It keeps only pages the
 > search returned, each a listing with its link. Check fit turns every unknown into a question
 > for the seller. Decide weighs fixing, reusing or selling against the owner's skills. It
-> calls the fix hard. But with the maker's part found, the owner keeps it and fixes it.
+> recommends keeping it and fixing it, and the owner chooses that.
 
 - The question is the item's own (`needs_parent`): a part profile, no model or part number. A
   photo of the device is one Muse Spark reading; the model read off it stays *to confirm*.
@@ -44,10 +44,12 @@ Shots S04 to S09.
 - Check fit reads the listing (one Muse Spark reading); the verdict is the rules', and what
   the listing does not say becomes a seller question.
 - Decide writes three cards for the owner's skills profile (none rated yet at this point, so
-  the answer is for an average person): the recorded answer calls the fix hard, not worth it,
-  and recommends selling; the owner chooses *Keep and fix* anyway, with the maker's part found.
-- The demo set's rod values (diameter, tab span) are the set's unconfirmed entries; some
-  screens show them. The narration, titles and captions state no rod or tab size.
+  the answer is for an average person): the recorded answer recommends *Keep and fix* (the
+  base runs, and the fix is cheap hand work), and the owner chooses it.
+- The rod's diameter in the demo set is the app's own measurement on the photo with the tape
+  measure beside it (Measure a feature, two-point scale: 4.7 ± 0.49 mm); the tabs and the
+  rod's length were never measured and stay unknown, so Check fit asks the seller for them.
+  Some screens show the diameter; the narration, titles and captions state no rod or tab size.
 
 ## 1:08 to 2:01 · Story B: unused electronics
 
@@ -56,44 +58,62 @@ Shots S10 to S16.
 > The same approach works for unused electronics. Laptops, monitors and parts go into the
 > inventory, beside a skills profile. The preferences say what the build is for and what it
 > can cost. Muse Spark proposes projects from what is in the inventory. The rules keep only
-> what the inventory backs. The arcade that was asked for isn't among them. So the homework
-> workstation is selected, and its items are committed to it. Draw it shows how it could look,
+> what the inventory backs. The arcade that was asked for isn't among them. So the home
+> automation server is selected, and its laptop is committed to it. Draw it shows how it could look,
 > marked as a drawing. What is missing becomes a Marketplace search that the owner runs. The
 > build pack collects the items, the steps, and the safety notes.
 
 - The demo set holds monitors, ThinkPads, a laptop board, a graphics card, a processor and a
   powerline adapter; every item named here is in it.
-- The recorded proposals for the arcade preferences keep four projects: a homework
-  workstation (the ThinkPad T510 and the Dell U2419H), a home automation server, a smart
-  mirror and a retro console on the TV; an arcade the model proposed was not kept by the
-  rules. The narration says so and follows the homework workstation, the first proposal,
-  whose drawing is recorded. Record again and change these lines together if that changes.
+- The recorded proposals for the arcade preferences keep three projects: a home automation
+  server base (the ThinkPad T510), a smart mirror from a spare monitor and a retro console on a
+  spare monitor; no arcade among them. The table also lists the three the demo set proposed
+  when it was loaded. The narration says the arcade is not among them and follows the home
+  automation server, the first proposal, whose drawing is recorded. Record again and change
+  these lines together if that changes.
 - Draw it is one Muse Image call, captioned as drawn, never evidence.
 - The app opens a Marketplace search; you run it. It does not search Marketplace on its own.
 
-## 2:01 to 2:12 · The next step
+## 2:01 to 2:18 · Sell what is not needed
 
 Shots S17 and S18.
 
-> Next, a plan that adapts. A connection diagram, and a different display that re-plans the
-> build. These are concept previews, not built yet.
+> The graphics card is for sale. Price guidance keeps each figure apart, with its sources.
+> Muse Voice Transcribe turns a voice note into its condition. The draft fills Marketplace's
+> fields, ready to paste.
 
-Not built: titles `t14-connections` and `t16-swap` and the badge in each picture carry the label.
+- S17 is the price guidance the demo set keeps for the EVGA graphics card (recorded once with
+  the set): asking prices, sold prices and the owner's reported sales kept apart, each with its
+  count and basis, and the pages the comparables come from.
+- S18: the voice note is a short WAV of the condition the demo set states for the card (*dust
+  on the fan*), spoken by a synthetic voice (`scenes/notes/gpu-note.wav`), not the owner;
+  Muse Voice Transcribe's transcript is saved as the item's condition notes. Write the draft is
+  one Muse Spark call; the draft is shown in Marketplace's fields with Copy, Download photos
+  and Open Marketplace, which is pointed at and never opened. Nothing is posted.
 
-## 2:12 to 2:33 · On the phone, the models, try it
+## 2:18 to 2:30 · On the phone, the models
 
-Shots S19 to S21.
+Shots S19 and S20.
 
-> On the phone, photos and a spoken note go into the same inventory. The models are Muse
-> Spark, SAM 3.1, Muse Voice Transcribe and Muse Image. They do the reading, the searching and
-> the drawing. Anyone can try it on the owner's own photos.
+> On the phone, photos go into the same inventory. The models are Muse Spark, SAM 3.1, Muse
+> Voice Transcribe and Muse Image.
 
-- S19 is the Android app (its Capture and Captures screens). The phone also asks which device
-  a part came from (built); the video does not show that screen unless the phone take does.
-- S21: signed out, Read a label offers the demo set's photos; each answer is the recording of
-  that photo, and the page says so.
+- S19 is the Android app on a real phone: two photos from the gallery, a name, **Send**, then
+  **Read it now** on the Captures screen. The phone take shows photos only, so the line names
+  photos only.
 
-## 2:33 to 2:42 · Close
+## 2:30 to 2:43 · Try it
+
+Shot S21.
+
+> Anyone can try it on the owner's own photos. SAM 3.1 finds the label, then Muse Spark reads
+> it.
+
+- S21: signed out, Read a label offers the demo set's photos; the Sun monitor's label photo
+  with *Find the label in the photo first* on shows SAM 3.1's label region over the photo and
+  the label crop, then the reading (the one sample photo where SAM 3.1 finds a label). Each answer is the recording of that photo, and the page says so.
+
+## 2:43 to 2:52 · Close
 
 Shot S22.
 

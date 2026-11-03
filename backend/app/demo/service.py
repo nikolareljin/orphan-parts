@@ -11,9 +11,9 @@ from pathlib import Path
 import yaml
 
 from app.config import Settings
-from app.demo.schema import DemoItem, DemoSet, Outcome
+from app.demo.schema import DemoItem, DemoMeasurement, DemoSet, Outcome
 from app.extract import Extractor
-from app.extract.imaging import BadImageError, prepare
+from app.extract.imaging import BadImageError, dimensions, prepare
 from app.find import Finder
 from app.find.schema import CandidateCreate, SearchCreate
 from app.inventory import Inventory
@@ -21,10 +21,13 @@ from app.inventory.parent import PARENT_DEVICE, PARENT_MODEL, device_model
 from app.inventory.schema import FieldCreate, ItemCreate
 from app.listing import Lister, VoiceNotes
 from app.listing.schema import DraftRequest
+from app.measure import Measurer, MeasureRequest
+from app.measure.schema import ImageSize
 from app.model_api import ModelApiClient, ModelApiError, NoRecordingError, exact_replay
 from app.photos import DevicePhotos, ItemPhotos, PhotoError
 from app.picture import Pictures, PicturesOffError
 from app.privacy import Privacy
+from app.profiles import Profiles
 from app.projects import Planner, ProposeRequest
 from app.value import Valuer
 from app.value.schema import PriceRequest
@@ -126,6 +129,8 @@ class Loader:
         self.photos = ItemPhotos(settings, inventory)
         # a part's photos of the device it came from, kept apart from its own
         self.device_photos = DevicePhotos(settings, inventory)
+        # geometry only: a measurement calls no model, so it is the same in every mode
+        self.measurer = Measurer(settings, Profiles())
 
     async def run(self, demo: DemoSet, base: Path) -> Outcome:
         out = Outcome(mode=self.settings.model_api_mode)
@@ -271,6 +276,8 @@ class Loader:
                 self.inventory.add_field(created.id, FieldCreate(field=field, value=value))
             except ValueError as exc:
                 out.skipped.append(f"{item.key}: field {field}: {exc}")
+        for measurement in item.measurements:
+            await self.measure(item, created.id, measurement, base, out)
         if item.parent_photos or item.parent_device_model:
             await self.load_parent(item, created.id, base, out)
         if item.parent_device:
@@ -318,6 +325,41 @@ class Loader:
                 out.guidances += 1
                 out.cost_usd += guidance.cost_usd
         return created.id
+
+    async def measure(
+        self, item: DemoItem, item_id: int, spec: DemoMeasurement, base: Path, out: Outcome
+    ) -> None:
+        """One feature measured from the marks the set gives, kept on the item as the owner's
+        own capture is; an accepted value is confirmed like the item's other readings."""
+        file = base / spec.photo
+        if not file.is_file():
+            out.skipped.append(f"{item.key}: measurement photo {spec.photo} missing")
+            return
+        try:
+            photo = file.read_bytes()
+            image = spec.image
+            if image is None:
+                width, height = dimensions(photo)
+                image = ImageSize(width=width, height=height)
+            request = MeasureRequest(
+                feature=spec.feature,
+                profile=item.profile or None,
+                image=image,
+                reference=spec.reference,
+                points=spec.points,
+                straight_on=spec.straight_on,
+            )
+            result, prepared = await self.measurer.measure(photo, request)
+        except (OSError, ValueError, BadImageError) as exc:
+            out.skipped.append(f"{item.key}: measurement of {spec.feature}: {exc}")
+            return
+        kept = self.inventory.add_measurement(item_id, result, prepared)
+        if not result.accepted or kept.assertion_id is None:
+            out.skipped.append(f"{item.key}: measurement of {spec.feature} refused: {result.redo}")
+            return
+        out.measurements += 1
+        if item.accept_all:
+            self.inventory.review(item_id, kept.assertion_id, "accepted")
 
     async def check_photos(self, item: DemoItem, item_id: int, out: Outcome) -> None:
         """The item's photos checked for private details, as an upload is, so the demo visitor

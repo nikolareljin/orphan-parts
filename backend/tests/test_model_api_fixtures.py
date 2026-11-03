@@ -105,3 +105,30 @@ def test_find_falls_back_to_the_operation_fixture(tmp_path: Path) -> None:
 def test_paths_are_filesystem_safe() -> None:
     store = FixtureStore(Path("/x"))
     assert store.path_for("/images/edits", "My Op!") == Path("/x/images-edits/my-op.json")
+
+
+def test_a_generated_image_is_kept_beside_its_fixture(tmp_path: Path) -> None:
+    store = FixtureStore(tmp_path)
+    body = {"model": "muse-image-1.0", "prompt": "a lamp"}
+    jpeg = b"\xff\xd8\xff\xe0" + b"EAA" + b"x" * 64
+    response = {"created": 1, "data": [{"b64_json": base64.b64encode(jpeg).decode("ascii")}]}
+    path = store.save("/images/generations", body, "picture", response)
+    saved = json.loads(path.read_text())
+    ref = saved["response"]["data"][0]["b64_json"]
+    assert ref == f"@{path.stem}-1.jpg"
+    assert (path.parent / ref[1:]).read_bytes() == jpeg
+    found = store.find("/images/generations", body, "picture")
+    assert found is not None
+    assert base64.b64decode(found.response["data"][0]["b64_json"]) == jpeg
+
+
+def test_an_inline_image_still_loads(tmp_path: Path) -> None:
+    store = FixtureStore(tmp_path)
+    body = {"model": "muse-image-1.0", "prompt": "a lamp"}
+    path = store.save("/images/generations", body, "picture", {"data": []})
+    saved = json.loads(path.read_text())
+    saved["response"]["data"] = [{"b64_json": base64.b64encode(b"\x89PNGdata").decode("ascii")}]
+    path.write_text(json.dumps(saved))
+    found = store.find("/images/generations", body, "picture")
+    assert found is not None
+    assert base64.b64decode(found.response["data"][0]["b64_json"]) == b"\x89PNGdata"

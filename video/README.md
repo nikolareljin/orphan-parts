@@ -1,11 +1,13 @@
 # The demo video kit
 
 Everything needed to make the two videos for the Meta Global AI Developer Hackathon entry:
-the main video (2:42, the limit is under 3:00) and a short one (55 s) for the social post.
+the main video (2:52, the limit is under 3:00) and a short one (55 s) for the social post.
 Two stories: **A**, a favorite frappé routine stopped by a worn mixer agitator, the app asking
 which device it came from and searching the web for the maker's part; **B**, unused
-electronics turned into a build (an arcade was asked for; the recorded proposals keep a homework
-workstation, a home automation server, a smart mirror and a retro console).
+electronics turned into a build (an arcade was asked for; the recorded proposals keep a home
+automation server, a smart mirror and a retro console), then the graphics
+card priced and drafted for Marketplace with a voice note. Every shot is a feature built
+during the hackathon; no concept previews.
 
 ## What is here
 
@@ -24,8 +26,7 @@ workstation, a home automation server, a smart mirror and a retro console).
 | [clipchamp.md](clipchamp.md) | the edit in Clipchamp (free plan, 1080p), Kdenlive as the local alternative |
 | `brand/` | the logo (the SVG untouched, a 2048 px PNG), the cards, the overlays, [palette.md](brand/palette.md) |
 | `titles/` | the on-screen titles: transparent 1920x1080 PNGs, top left, one per scene |
-| `diagrams/` | the arcade's connection diagram, its layout and the display-swap concept, SVG and PNG |
-| `cad/arcade_panel.scad` | an unvalidated control-panel concept, every size a named placeholder |
+| `scenes/notes/gpu-note.wav` | the voice note S18 sends: a synthetic voice reading the condition the demo set states for the graphics card |
 | [assets.md](assets.md) | every asset with its source and license |
 | [runway-prompts.md](runway-prompts.md) | optional establishing clips, context only |
 | [checklist.md](checklist.md) | the final export checklist |
@@ -79,8 +80,6 @@ box, centered.
 
 `video/render.sh` needs Inkscape (or `rsvg-convert`) and the Noto Sans font
 (`sudo apt install inkscape fonts-noto-core`). It fails if a PNG comes out over 2 MB.
-`video/animatic.sh` needs ffmpeg. The control-panel concept in `cad/` is OpenSCAD source; it
-is not rendered here, and it is not a design to build from until every placeholder is
-replaced by a measured value.
+`video/animatic.sh` needs ffmpeg.
 
 Videos, takes and the generator's work files are never committed: `video/out/` is ignored.

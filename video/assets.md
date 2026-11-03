@@ -11,8 +11,7 @@ every take, clip or track that goes into the cut.
 | `brand/logo.png`, `logo-plate.png`, `corner-overlay*.png` | rendered from `logo.svg` by `render.sh` | as above |
 | `brand/card-*.svg`, `card-*.png` | drawn for the video; the logo linked, not copied | MIT, with the repository |
 | `titles/*.svg`, `*.png` | drawn for the video | MIT |
-| `diagrams/*.svg`, `*.png` | drawn for the video from the arcade template's requirements; concept previews | MIT |
-| `cad/arcade_panel.scad` | written for the video; unvalidated, placeholders only | MIT |
+| `scenes/notes/gpu-note.wav` | the voice note of S18: the condition the demo set states for the graphics card, spoken by Piper with `en_US-norman-medium`, not the owner | the voice model's card lists its dataset as public domain; the clip is the owner's |
 | `scripts/*.md`, `*.srt` | the narration, written for a neutral narrator; each section notes what the app does and what is not claimed | the owner's |
 | Text in every PNG | Noto Sans, rendered into the pictures; the font file is not distributed | SIL Open Font License 1.1 |
 

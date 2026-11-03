@@ -13,8 +13,8 @@ cropped or redrawn: the cards and overlays link to the file and place it whole.
 | Paper | `#f8fafc` | prong gradient | titles |
 | Teal | `#00f5d4` | ring and loop | the one accent: title rule, *in the app* titles, data lines |
 | Sky | `#00bbf9` | loop | recorded answers, sample data, video lines |
-| Violet | `#7b2cbf` | loop | the *planned* border on the models card; never text |
-| Magenta | `#d946ef` | loop | *concept preview* only, power lines, missing parts |
+| Violet | `#7b2cbf` | loop | a border only; never text |
+| Magenta | `#d946ef` | loop | power lines, missing parts |
 
 Card backgrounds run from `#121a28` to `#0a0e15`, a shade either side of Ink, so the logo's
 own tile and its border stay visible.

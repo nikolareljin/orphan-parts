@@ -7,7 +7,9 @@ Tick every line before uploading.
 - [ ] Every scene shown as working is in the app on `main` (`readiness.md`, *Capabilities*).
 - [ ] No red DRAFT line anywhere: every model answer on screen is a recording of that very
   request (`video/out/work/standins.txt` is empty), never an operation's stub.
-- [ ] S17 and S18 (K8) carry the *Concept preview, not built* badge for their whole duration.
+- [ ] No concept preview and nothing planned or not integrated anywhere in the cut: every shot
+  is a feature built during the hackathon (Oct 27 to Nov 4).
+- [ ] S18 (K8): no facebook.com page; the voice note is never presented as the owner speaking.
 - [ ] S07 shows the model read off the mixer's own label; S08 names the part number only as
   the recorded page shows it, and no price the page did not state.
 - [ ] S12 to S16: the narration names the project the recorded proposals actually hold.
@@ -16,7 +18,8 @@ Tick every line before uploading.
 - [ ] No Marketplace page, no Meta or Facebook logo, no other people's listings or faces.
 - [ ] Marketplace is described only as a search the owner runs and a create page he fills.
 - [ ] Meta's models named as implemented: Muse Spark, SAM 3.1, Muse Voice Transcribe, Muse
-  Image. Baseten and Fireworks only as *planned*, on the models card. No other AI tool named.
+  Image, each shown working. No planned model or host named. Muse Code only as *used in
+  development* on the closing card, never as what built the project. No other AI tool named.
 - [ ] The mixer: no model number, part name or fit stated unless the label photo and the
   takes in the video show it. No 3D-printed food-contact or rotating part suggested.
 - [ ] The hosted demo is not named as live unless it is on the day of upload.
@@ -25,7 +28,7 @@ Tick every line before uploading.
 ## Picture and sound
 
 - [ ] 1920x1080, 30 fps, H.264, AAC.
-- [ ] Main video under 3:00 (the draft is 2:42); short video 45 to 60 s (`ffprobe`).
+- [ ] Main video under 3:00 (the draft is 2:52); short video 45 to 60 s (`ffprobe`).
 - [ ] Corner logo on every screen recording, not on the cards; not over captions or titles.
 - [ ] Titles readable for at least 3 s; none in the bottom 200 px.
 - [ ] Captions match the narration word for word and in time; two lines at most.

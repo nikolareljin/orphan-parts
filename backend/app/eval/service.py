@@ -165,7 +165,8 @@ def score(
             row.loaded = True
             # the item's own values: what is known of the device a part came from is not scored
             own = [a for a in item.assertions if a.field not in PARENT_FIELDS]
-            observed = [a for a in own if a.provenance == "observed"]
+            # a measurement is geometry on the owner's marks, not a reading: scored as neither
+            observed = [a for a in own if a.provenance == "observed" and a.source != "measurement"]
             row.fields_read = len(observed)
             row.fields_accepted = sum(1 for a in observed if a.review == "accepted")
             row.owner_values = sum(1 for a in own if a.provenance != "observed")
@@ -353,7 +354,11 @@ def training_lines(inventory: Inventory, items: Iterable[Item] | None = None) ->
             k: {"value": a.value, "unit": a.unit}
             for k, a in current_fields(item.assertions).items()
             # a model read off the device a part came from is not this item's label
-            if a.provenance == "observed" and a.review == "accepted" and k not in PARENT_FIELDS
+            # nor is a measurement, computed from marks rather than read
+            if a.provenance == "observed"
+            and a.review == "accepted"
+            and a.source != "measurement"
+            and k not in PARENT_FIELDS
         }
         if not accepted:
             continue

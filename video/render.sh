@@ -46,6 +46,6 @@ render "$here/brand/logo.svg" "$here/brand/logo.png" 2048
 for name in logo-plate card-open card-close card-models corner-overlay corner-overlay-plate; do
   render "$here/brand/$name.svg" "$here/brand/$name.png"
 done
-for src in "$here"/titles/*.svg "$here"/diagrams/*.svg; do
+for src in "$here"/titles/*.svg; do
   render "$src" "${src%.svg}.png"
 done

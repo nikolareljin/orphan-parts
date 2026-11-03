@@ -2,13 +2,13 @@
   "endpoint": "/responses",
   "op": "listing-text",
   "model": "muse-spark-1.3",
-  "digest": "7bd8e3486d111d7d66d1e882",
+  "digest": "4924734603e049aa1318fdf4",
   "request": {
     "input": [
       {
         "content": [
           {
-            "text": "Listing text, as pasted:\n---\nHamilton Beach 990010200 Drink Mixer Mixing Shaft fits DrinkMaster Models 727b 727W 729 730C 750RC · $ 4.84 · Compatible with Hamilton Beach DrinkMaster drink mixer models 727B, 727W, 729, 730C and 750RC. Compatible with Hamilton Beach mixing shaft part number 990010200. (found on goodmans.net)\n---\nField names you may use: brand, certifications, condition_notes, connector, head_diameter, input_voltage, material, model_number, output_current, output_power, output_voltage, part_number, polarity, rod_diameter, rod_length, tab_length, tab_span, tab_width",
+            "text": "Listing text, as pasted:\n---\nHamilton Beach 990010200 Drink Mixer Mixing Shaft fits DrinkMaster Models 727b 727W 729 730C 750RC · 4.84 USD · Univen replacement drink mixer shaft compatible with select Hamilton Beach drink mixers and milkshake makers. Compatible with Hamilton Beach DrinkMaster drink mixer models 727B, 727W, 729, 730C and 750RC. Compatible with Hamilton Beach mixing shaft part number 990010200. (found on goodmans.net)\n---\nField names you may use: brand, certifications, condition_notes, connector, head_diameter, input_voltage, material, model_number, output_current, output_power, output_voltage, part_number, polarity, rod_diameter, rod_length, tab_length, tab_span, tab_width",
             "type": "input_text"
           }
         ],
@@ -123,36 +123,6 @@
         "type": "json_schema",
         "name": "ListingReading",
         "schema": {
-          "properties": {
-            "asking_price": {
-              "title": "Asking Price",
-              "type": "string"
-            },
-            "currency": {
-              "title": "Currency",
-              "type": "string"
-            },
-            "fields": {
-              "items": {
-                "$ref": "#/$defs/ReadField"
-              },
-              "title": "Fields",
-              "type": "array"
-            },
-            "included": {
-              "title": "Included",
-              "type": "string"
-            },
-            "location": {
-              "title": "Location",
-              "type": "string"
-            },
-            "title": {
-              "title": "Title",
-              "type": "string"
-            }
-          },
-          "description": "Strict output schema of a listing-text call: every property required, no extras.",
           "$defs": {
             "ReadField": {
               "additionalProperties": false,
@@ -185,6 +155,35 @@
               "type": "object"
             }
           },
+          "properties": {
+            "asking_price": {
+              "title": "Asking Price",
+              "type": "string"
+            },
+            "currency": {
+              "title": "Currency",
+              "type": "string"
+            },
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/ReadField"
+              },
+              "title": "Fields",
+              "type": "array"
+            },
+            "included": {
+              "title": "Included",
+              "type": "string"
+            },
+            "location": {
+              "title": "Location",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            }
+          },
           "required": [
             "title",
             "asking_price",
@@ -193,8 +192,9 @@
             "included",
             "fields"
           ],
-          "additionalProperties": false,
           "title": "ListingReading",
+          "additionalProperties": false,
+          "description": "Strict output schema of a listing-text call: every property required, no extras.",
           "type": "object"
         },
         "strict": true
@@ -203,29 +203,29 @@
     "tools": [],
     "tool_choice": "auto",
     "truncation": "disabled",
-    "id": "resp_6ae94720eebdee2f43ca49b7",
+    "id": "resp_6aea148fc2096b0e68cb40a7",
     "object": "response",
     "status": "completed",
-    "created_at": 1793672992.0,
-    "completed_at": 1793672992.0,
+    "created_at": 1793725583.0,
+    "completed_at": 1793725583.0,
     "error": null,
     "incomplete_details": null,
     "output": [
       {
         "type": "reasoning",
-        "id": "rs_6ae94720eebdee2f43ca49b7:rs_1e6f1e6f-4d87-4707-9652-47a674d4186f",
+        "id": "rs_6aea148fc2096b0e68cb40a7:rs_5e63ce5b-bede-4c09-ae2e-2ae2773eebb2",
         "encrypted_content": "",
         "summary": [],
         "status": "completed"
       },
       {
         "type": "message",
-        "id": "msg_eb27c660-27c4-4bac-adfc-da88a521e797",
+        "id": "msg_11348a27-d8c8-436f-a5bf-ee0671e8c6e0",
         "role": "assistant",
         "content": [
           {
             "type": "output_text",
-            "text": "{\"asking_price\":\"4.84\",\"currency\":\"$\",\"fields\":[{\"confidence\":1,\"name\":\"brand\",\"unit\":\"\",\"value\":\"Hamilton Beach\"},{\"confidence\":1,\"name\":\"part_number\",\"unit\":\"\",\"value\":\"990010200\"}],\"included\":\"Compatible with Hamilton Beach DrinkMaster drink mixer models 727B, 727W, 729, 730C and 750RC. Compatible with Hamilton Beach mixing shaft part number 990010200. (found on goodmans.net)\",\"location\":\"\",\"title\":\"Hamilton Beach 990010200 Drink Mixer Mixing Shaft fits DrinkMaster Models 727b 727W 729 730C 750RC\"}",
+            "text": "{\"asking_price\":\"4.84\",\"currency\":\"USD\",\"fields\":[{\"confidence\":0.98,\"name\":\"brand\",\"unit\":\"\",\"value\":\"Hamilton Beach\"},{\"confidence\":1.0,\"name\":\"part_number\",\"unit\":\"\",\"value\":\"990010200\"},{\"confidence\":0.95,\"name\":\"model_number\",\"unit\":\"\",\"value\":\"727B, 727W, 729, 730C, 750RC\"}],\"included\":\"Univen replacement drink mixer shaft compatible with select Hamilton Beach drink mixers and milkshake makers. Compatible with Hamilton Beach DrinkMaster drink mixer models 727B, 727W, 729, 730C and 750RC. Compatible with Hamilton Beach mixing shaft part number 990010200.\",\"location\":\"\",\"title\":\"Hamilton Beach 990010200 Drink Mixer Mixing Shaft fits DrinkMaster Models 727b 727W 729 730C 750RC\"}",
             "annotations": [],
             "logprobs": []
           }
@@ -235,15 +235,15 @@
     ],
     "instructions": "You read a second-hand listing someone pasted: the title, the asking price with its currency, the place, and what is included, as written. Then the specification fields the text supports, from the list given, with a confidence per field; leave out any field the text does not state, and never infer a value the seller did not write.",
     "usage": {
-      "input_tokens": 454,
+      "input_tokens": 473,
       "input_tokens_details": {
         "cached_tokens": 0
       },
-      "output_tokens": 1857,
+      "output_tokens": 1206,
       "output_tokens_details": {
-        "reasoning_tokens": 1718
+        "reasoning_tokens": 1018
       },
-      "total_tokens": 2311
+      "total_tokens": 1679
     },
     "parallel_tool_calls": true,
     "store": false,

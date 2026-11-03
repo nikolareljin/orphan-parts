@@ -25,24 +25,24 @@ Check fit turns every unknown into a
 question for the seller.
 
 7
-00:00:26,000 --> 00:00:31,943
+00:00:26,000 --> 00:00:31,738
 For unused electronics, Muse Spark
 proposes builds from the inventory.
 
 8
-00:00:32,063 --> 00:00:36,223
-The homework workstation is selected and
+00:00:31,858 --> 00:00:36,448
+A home automation server is selected and
 drawn.
 
 9
-00:00:36,343 --> 00:00:42,880
+00:00:36,568 --> 00:00:42,880
 What is missing becomes a Marketplace
 search that the owner runs.
 
 10
 00:00:43,000 --> 00:00:47,880
-The connection diagram is a concept
-preview of the next step.
+What is not needed becomes a Marketplace
+draft.
 
 11
 00:00:48,000 --> 00:00:49,956

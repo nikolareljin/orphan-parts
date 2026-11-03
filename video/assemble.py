@@ -10,8 +10,11 @@ owner's recording, or the synthetic narrator tts.py writes from the captions.
           longer than the shot (at most 2x), held on its last frame when shorter
 - phone:  a phone take (out/work/takes/<shot>.mp4) or, without one, the app's screenshots
 - photo:  the owner's photos side by side on a blurred fill, with a slow push in
-- still:  a picture under video/ (a diagram) with a slow push in
+- still:  a picture under video/ with a slow push in
 - card:   a card under video/brand, held, faded in and out
+
+The closing card shows its own words (the name, the tagline, the links): the captions read
+over it are not burned in, so none covers the card's lines. The narrator still reads them.
 
 A take whose model answer came from an operation's stub rather than a recording of that very
 request (listed by generate.sh in out/work/standins.txt) carries a red DRAFT line naming the
@@ -56,11 +59,11 @@ MAIN = [
     ("S14", 7, "take", "S14", [("t26-draw", 0)]),
     ("S15", 8, "take", "S15", [("t12-marketplace", 0)]),
     ("S16", 6, "take", "S16", [("t13-pack", 0)]),
-    ("S17", 5, "still", "diagrams/arcade-connections.png", [("t14-connections", 0)]),
-    ("S18", 6, "still", "diagrams/arcade-swap.png", [("t16-swap", 0)]),
+    ("S17", 6, "take", "S17", [("t30-value", 0)]),
+    ("S18", 11, "take", "S18", [("t31-sell", 0)]),
     ("S19", 6, "phone", "S19", [("t27-phone", 0)]),
     ("S20", 6, "card", "card-models.png", []),
-    ("S21", 9, "take", "S21", [("t28-gallery", 0)]),
+    ("S21", 13, "take", "S21", [("t28-gallery", 0)]),
     ("S22", 9, "card", "card-close.png", []),
 ]
 
@@ -73,7 +76,7 @@ SHORT = [
     ("K5", 6, "take", "S12@proposed", [("t10-propose", 0)]),
     ("K6", 6, "take", "S14", [("t26-draw", 0)]),
     ("K7", 5, "take", "S15", [("t12-marketplace", 0)]),
-    ("K8", 5, "still", "diagrams/arcade-connections.png", [("t14-connections", 0)]),
+    ("K8", 5, "take", "S18@drafted", [("t31-sell", 0)]),
     ("K9", 7, "card", "card-close.png", []),
 ]
 
@@ -92,6 +95,37 @@ def probe(path: Path) -> float:
         check=True,
     )
     return float(out.stdout.strip() or 0)
+
+
+# cards whose text the captions over them only repeat: no caption is burned in over them
+UNCAPTIONED = {"card-close.png"}
+
+
+def _srt_seconds(stamp: str) -> float:
+    hms, _, ms = stamp.strip().partition(",")
+    h, m, sec = (int(x) for x in hms.split(":"))
+    return h * 3600 + m * 60 + sec + int(ms or 0) / 1000
+
+
+def captions(srt: Path, shots, out: Path) -> Path:
+    """The captions to burn in: the script's, less those that start over an uncaptioned card."""
+    spans = []
+    start = 0.0
+    for _, secs, kind, src, _ in shots:
+        if kind == "card" and src in UNCAPTIONED:
+            spans.append((start, start + secs))
+        start += secs
+    kept = []
+    for block in srt.read_text(encoding="utf-8").strip().split("\n\n"):
+        lines = block.splitlines()
+        timing = next((line for line in lines if "-->" in line), None)
+        if timing is not None:
+            at = _srt_seconds(timing.split("-->")[0])
+            if any(a <= at < b for a, b in spans):
+                continue
+        kept.append(block)
+    out.write_text("\n\n".join(kept) + "\n", encoding="utf-8")
+    return out
 
 
 ENCODE = ["-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-an"]
@@ -263,7 +297,7 @@ def build(name: str, shots, srt: Path, narration: Path | None) -> dict:
     run(["-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(joined)])
     total = sum(s[1] for s in shots)
     style = f"FontName={FONT},FontSize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H80000000,BorderStyle=3,Outline=1,Shadow=0,MarginV=36"
-    srt_path = str(srt).replace(":", r"\:")
+    srt_path = str(captions(srt, shots, SEG / f"{name}-captions.srt")).replace(":", r"\:")
     audio = ["-f", "lavfi", "-t", f"{total}", "-i", "anullsrc=r=48000:cl=stereo"]
     amap = "1:a"
     if narration is not None:
