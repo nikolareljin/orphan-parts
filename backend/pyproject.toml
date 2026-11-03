@@ -11,9 +11,10 @@ dependencies = [
   "pydantic>=2.8,<3",
   "pydantic-settings>=2.4,<3",
   "httpx>=0.27,<1",
-  # exact: the recordings are keyed on the JPEG bytes Pillow writes (resized photos, label
-  # crops), so another version would change the keys and every sample would lose its recording
-  "pillow==11.3.0",
+  # exact: the recordings are keyed on the JPEG bytes this version writes (resized photos,
+  # label crops); another version changes the keys, so a bump comes with a re-key of
+  # backend/tests/fixtures/api (the answers unchanged), or every sample loses its recording
+  "pillow==13.0.0",
   "python-multipart>=0.0.9,<1",
   "meta-sam-parser>=0.1,<0.2",
   "pyyaml>=6,<7",
