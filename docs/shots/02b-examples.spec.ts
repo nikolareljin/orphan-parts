@@ -152,6 +152,33 @@ test.describe('the visitor', () => {
     }
   })
 
+  test('the visitor reads three decisions whole', async ({ shots, page }) => {
+    // What should I do with it?: the Decide section (the plan chosen, the recommendation, the
+    // three cards with any reuse card's drawing) and the item's own drawings, the rest of the
+    // item left out; a sale, a keep and a build
+    const rest = 'dialog [data-section="facts"], dialog [data-section="value"], dialog [data-section="sell"], dialog [data-section="fit"]'
+    for (const [key, name] of [
+      ['sell', 'Sun flat panel monitor'],
+      ['keep', 'Joystick module'],
+      ['build', 'ThinkPad T510'],
+    ] as const) {
+      const item = await openItem(page, name)
+      await expect(item.getByRole('region', { name: 'What to do with it' })).toBeVisible()
+      const drawn = item.getByRole('img', { name: /^Illustrative picture/ })
+      for (const img of await drawn.all()) {
+        await img.scrollIntoViewIfNeeded()
+        await expect.poll(() => img.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+      }
+      await shots.element(`65-visitor-what-to-do-${key}`, page.getByRole('dialog'), rest)
+      if (key === 'sell') {
+        await section(item, 'Value')
+        await shots.element('66-visitor-sun-value', item.getByRole('region', { name: 'What is it worth?' }))
+        await shots.element('67-visitor-sun-draft', item.getByRole('region', { name: 'Marketplace handoff' }))
+      }
+      await close(page)
+    }
+  })
+
   test('the visitor reads the drafts', async ({ shots, page }) => {
     let item = await openItem(page, 'EVGA GeForce 9500 GT graphics card')
     await shots.element('61-visitor-9500gt-draft', item.getByRole('region', { name: 'Marketplace handoff' }))
@@ -174,6 +201,7 @@ test.describe('the visitor', () => {
     await page.getByRole('button', { name: 'Read the label' }).click()
     const reading = page.getByRole('article', { name: /^Reading: Sun flat panel monitor/ })
     await expect(reading).toBeVisible({ timeout: 60_000 })
-    await shots.element('72-visitor-reading', reading)
+    // the photo with SAM 3.1's region drawn smaller than on the page, so the picture stays light
+    await shots.element('72-visitor-reading', reading, '', '.sample-result img.overlay { max-width: 400px !important; }')
   })
 })

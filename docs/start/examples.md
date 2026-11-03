@@ -14,6 +14,43 @@ build or a reuse could look; **Muse Voice Transcribe** turns a spoken note into 
 [Voice notes and video capture](../guides/voice-and-video.md)). The rules, not a model, decide
 what is accepted, what fits and what goes into a build pack.
 
+## What should I do with it?
+
+The **Decide** step: Muse Spark writes three cards for one item and the owner's rated skills
+(keep and fix, reuse it with what else is owned, sell or give away), recommends one, and the
+owner's choice is kept as the item's plan. A reuse card can be drawn by Muse Image, and an item
+can be drawn as what it could become. Three items of the demo set, as a visitor reads them.
+
+### Sell: the Sun flat panel monitor
+
+Sell or give away recommended and chosen, with the price guidance in the card. Nothing is drawn
+for an item that is sold.
+
+![What should I do with the Sun flat panel monitor: Recommended: Sell it, the three cards with Sell or give away recommended and chosen, the price guidance about 110 USD, and Decided: Sell](../assets/shots/examples/65-visitor-what-to-do-sell.png)
+
+Where that leads: Muse Spark's price guidance, then the Marketplace draft it wrote.
+
+![What is it worth? for the Sun monitor: the four figures kept apart, the comparables with their links](../assets/shots/examples/66-visitor-sun-value.png)
+
+![The Sun monitor's Marketplace draft for a visitor: every field, the photos in order and the checklists](../assets/shots/examples/67-visitor-sun-draft.png)
+
+### Keep: the joystick module
+
+Keep and fix recommended (a thumb cap and a wipe, about $2 to $5); the owner keeps it for a
+build, reserved by the arcade coffee table, and Muse Image drew what it could become.
+
+![What should I do with the joystick module: Keep and fix recommended with its steps and parts, three reuse ideas, what would sell it, Decided: Keep and build, and the Muse Image drawing of the arcade coffee table it could become](../assets/shots/examples/65-visitor-what-to-do-keep.png)
+
+### Build and reuse: the ThinkPad T510
+
+Muse Spark recommends selling it as parts; the owner chose Reuse it (a docked spare PC), and Muse
+Image drew that card. The laptop is kept for a build and went into the home automation server,
+drawn three times.
+
+![What should I do with the ThinkPad T510: Sell recommended, Reuse it chosen with the Muse Image drawing of a docked spare PC, the ideas, Decided: Keep and build, reserved by the home automation server, and the item's own drawing](../assets/shots/examples/65-visitor-what-to-do-build.png)
+
+![The home automation server the T510 went into, drawn three times by Muse Image](../assets/shots/examples/02-automation-drawings.png)
+
 ## Build and reuse
 
 ### The proposals

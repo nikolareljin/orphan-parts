@@ -52,6 +52,14 @@ Cards Muse Spark wrote for items of the demo set, as a visitor reads them. More 
 
 ![Decide for the Sun flat panel monitor: Sell or give away recommended and chosen](../assets/shots/examples/60-visitor-decide-sell.png)
 
+Three items read whole, the item's drawings with them: a sale, a keep, a build.
+
+![What should I do with the Sun flat panel monitor: Sell recommended and chosen](../assets/shots/examples/65-visitor-what-to-do-sell.png)
+
+![What should I do with the joystick module: Keep and fix recommended, kept for the arcade table, and the drawing of what it could become](../assets/shots/examples/65-visitor-what-to-do-keep.png)
+
+![What should I do with the ThinkPad T510: Sell recommended, Reuse it chosen with the reuse card's Muse Image drawing, kept for the home automation server](../assets/shots/examples/65-visitor-what-to-do-build.png)
+
 ## Built so far
 
 **Decide**, on the item's page below its values and details and above the other panels, starts

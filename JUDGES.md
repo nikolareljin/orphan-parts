@@ -1,5 +1,10 @@
 # Orphan Parts Lens for judges
 
+**Start here:** the documentation, <https://nikolareljin.github.io/orphan-parts/>, with
+[Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/)
+and the [demo video](https://nikolareljin.github.io/orphan-parts/start/video/); the live demo,
+<https://orphan-parts.pages.dev> (temporary, while the hackathon is judged).
+
 Orphan Parts Lens turns the things in a drawer into a private inventory with evidence: a photo
 of a label becomes values you confirm one by one, and from there each item is kept and fixed,
 reused in a build, sold or given away, or completed with the part it is missing from Facebook

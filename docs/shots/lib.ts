@@ -113,12 +113,14 @@ export class Shots {
   /** One element alone (a project panel, a draft, the drawings), as <nn-name>.png of this guide:
    * the window made as tall as the element needs (up to MAX_TALL), so a dialog shows all of it
    * with no scroll, then back to 1280x800. `hide` names parts left out of this picture (shown in
-   * a picture of their own), e.g. a project's build pack. */
-  async element(name: string, target: Locator, hide = ''): Promise<void> {
+   * a picture of their own), e.g. a project's build pack; `css` is more style for this picture
+   * alone (a photo drawn smaller, say). */
+  async element(name: string, target: Locator, hide = '', css = ''): Promise<void> {
     const page = this.page
     const size = page.viewportSize() ?? { width: 1280, height: 800 }
     await target.waitFor({ state: 'visible' })
-    const hidden = hide ? await page.addStyleTag({ content: `${hide} { display: none !important; }` }) : null
+    const style = `${hide ? `${hide} { display: none !important; }` : ''}${css}`
+    const hidden = style ? await page.addStyleTag({ content: style }) : null
     // the element's height plus what a scrolling box in it (a dialog's body) or around it hides
     const needed = await target.evaluate((el) => {
       let extra = 0
