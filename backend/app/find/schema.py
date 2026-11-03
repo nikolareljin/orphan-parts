@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_serializer, field_v
 from app.extract.schema import Evidence, ReadField
 from app.match.schema import MAX_VALUE_LEN, MAX_VALUES, Assessment
 from app.ops.door import for_visitor
+from app.privacy.text import mask_text
 
 PROFILE = r"^$|^[a-z][a-z0-9_]{0,63}$"
 CURRENCY = r"^[A-Z]{3}$"
@@ -211,6 +212,11 @@ class BroughtListing(BaseModel):
         default="", description="the page a web search found it on; never fetched by the app"
     )
 
+    # a serial number, a MAC address or a key a seller wrote is masked for the demo visitor
+    @field_serializer("text")
+    def _shown_text(self, value: str) -> str:
+        return mask_text(value) if for_visitor() else value
+
 
 class WebFind(BaseModel):
     """One page the web search found, as the model wrote it: strict, every property required."""
@@ -357,6 +363,21 @@ class Candidate(BaseModel):
     @field_serializer("note")
     def _owner_note(self, value: str) -> str:
         return "" if for_visitor() else value
+
+    # what the listing says, as the demo visitor reads it: a serial number, a MAC address or a
+    # key in it masked, in the text and in every value read from it
+    @field_serializer("text")
+    def _shown_text(self, value: str) -> str:
+        return mask_text(value) if for_visitor() else value
+
+    @field_serializer("fields")
+    def _shown_fields(self, value: dict[str, Evidence]) -> dict[str, Evidence]:
+        if not for_visitor():
+            return value
+        return {
+            k: e.model_copy(update={"value": mask_text(e.value), "raw": mask_text(e.raw)})
+            for k, e in value.items()
+        }
 
 
 class SellerQuestions(BaseModel):

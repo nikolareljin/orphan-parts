@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from app.ops.door import for_visitor
+from app.privacy.text import mask_text
 from app.projects.skills import STARTER_SKILLS, RatedSkill, rated_skills
 
 KEY = r"^[a-z][a-z0-9_]{0,63}$"
@@ -299,7 +300,8 @@ VOICE_LINE = "  - condition notes: "
 
 def visitor_markdown(markdown: str) -> str:
     """A pack as the demo visitor reads it: the budget line, the condition notes, the searches
-    under what is still needed and the outcome section left out. A value written over several
+    under what is still needed and the outcome section left out, and every private value in
+    the rest masked. A value written over several
     lines goes with its first."""
     lines: list[str] = []
     section = ""
@@ -327,7 +329,8 @@ def visitor_markdown(markdown: str) -> str:
                 line = line[:cut]
                 skipping = ("- ",)
         lines.append(line)
-    return "\n".join(lines).rstrip("\n") + "\n"
+    # a pack written before private values were masked in it is masked here too
+    return mask_text("\n".join(lines).rstrip("\n") + "\n")
 
 
 class SelectRequest(BaseModel):

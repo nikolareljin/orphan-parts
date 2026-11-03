@@ -397,3 +397,31 @@ def test_lines_the_inventory_does_not_back_are_the_owners(gated: TestClient) -> 
     finally:
         live_request.reset(token)
     assert shown["dropped"] == [] and shown["outcome"] is None
+
+
+def test_a_serial_number_in_a_listing_is_masked_for_the_visitor(gated: TestClient) -> None:
+    # what a seller wrote is the seller's, but a serial number or a MAC address in it is masked
+    # for the visitor as on a label; the owner reads it whole
+    ids = _owner_records(gated)
+    serial = "C02XK1ABJG5H"
+    text = f"Vacuum hose, 1.5 m, $11. Serial: {serial}"
+    added = gated.post(
+        f"/api/searches/{ids['search']}/candidates",
+        data={"request": f'{{"text": "{text}"}}'},
+    )
+    assert added.status_code == 201, added.text
+    cid = added.json()["id"]
+    back = gated.post(f"/api/searches/{ids['search']}/listings", json={"texts": [text]})
+    assert back.status_code == 201
+    assert serial in gated.get(f"/api/candidates/{cid}").json()["text"]
+    _visitor(gated)
+    for path in (
+        f"/api/candidates/{cid}",
+        f"/api/searches/{ids['search']}/candidates",
+        f"/api/searches/{ids['search']}/listings",
+    ):
+        answer = gated.get(path)
+        assert answer.status_code == 200, path
+        assert serial not in answer.text and "JG5H" in answer.text, path
+    pack = visitor_markdown(f"# A build\n\n- serial: {serial}\n")
+    assert serial not in pack and "JG5H" in pack
