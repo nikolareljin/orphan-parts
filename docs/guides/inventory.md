@@ -63,7 +63,8 @@ clears the question; a rejected value does not. Once answered, the dialog says w
 came from in a line (*Came from: Hamilton Beach 729*). A photo that gives no model is kept all
 the same, as a new version of the item. The rule lives in the backend
 (`app/inventory/parent.py`) and is served on the item as `needs_parent`, so the web app and the
-phone ask the same. The demo visitor sees the question with no inputs. The device leads the
+phone ask the same: the phone's **Captures** tab shows the question under a capture read into
+such a part, with the same two answers, and *Came from: ...* once answered. The demo visitor sees the question with no inputs. The device leads the
 part's [web search](search.md#search-the-web) and its search plan: the maker's own part for that
 device first. In the demo set the frappé maker's agitator is answered this way, by the Hamilton
 Beach drink mixer it came off (model 729, type DM01), from its label, its badge and the mixer.

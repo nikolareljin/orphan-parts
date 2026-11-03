@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Orphan Parts Lens</string>
+
+    <!-- the device a part came from, asked as the web app's item dialog asks it -->
+    <string name="device_question">We couldn\'t tell which device this part came from. Tell us more about it, or add a photo of that device (the label under its base is best).</string>
+    <string name="device_field">Device it came from</string>
+    <string name="device_field_hint">brand, model, what it is</string>
+    <string name="device_save">Save</string>
+    <string name="device_photo">Add a photo of the device</string>
+    <string name="device_photo_gallery">From the gallery</string>
+    <string name="device_photo_hint">One Muse Spark reading of the label</string>
+    <string name="device_reading">Reading…</string>
+    <string name="device_came_from">Came from: %1$s</string>
+    <string name="device_photo_read">Read from the photo: %1$s. Confirm it in the item\'s fields on the web.</string>
+    <string name="device_photo_none">No model could be read from the photo. Tell us about the device instead.</string>
+    <string name="device_photo_unreadable">The photo could not be read.</string>
+    <string name="device_failed">Could not save: %1$s</string>
+    <string name="device_photo_failed">Could not read the photo: %1$s</string>
 </resources>

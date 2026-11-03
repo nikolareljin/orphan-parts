@@ -19,6 +19,23 @@ data class Extraction(
 
 data class SavedItem(val id: Int, val name: String, val itemType: String, val version: Int)
 
+/** An item as the phone needs it for the device question: whether the backend asks which device
+ * the part came from (`needs_parent`), and what is recorded about that device. `redacted` is the
+ * demo visitor's view, which leaves the owner's words out. */
+data class ItemView(
+    val id: Int,
+    val name: String,
+    val version: Int,
+    val needsParent: Boolean,
+    val parentDevice: String,
+    val parentDeviceModel: String,
+    val redacted: Boolean,
+)
+
+/** A photo of the device read: the item as it stands after, and the model read off the label
+ * (empty when none could be read). */
+data class DevicePhotoRead(val item: ItemView, val model: String)
+
 data class ItemLine(val id: Int, val name: String, val itemType: String, val availability: String)
 
 data class VoiceNote(val transcript: String, val seconds: Double, val cut: Boolean, val model: String)
@@ -128,6 +145,23 @@ class Client(private val baseUrl: String, private val transport: Transport, toke
         }
     }
 
+    fun item(id: Int): ItemView = parseItem(get("/api/items/$id"))
+
+    /** The device a part came from, in the owner's words: one value stated on the item
+     * (`POST /api/items/{id}/fields`, as the web app saves it), kept private like the notes. */
+    fun setParentDevice(id: Int, words: String): ItemView {
+        val spec = JSONObject().put("field", "parent_device").put("value", words).put("provenance", "owner_reported")
+        return parseItem(send("POST", "/api/items/$id/fields", spec.toString().toByteArray(), "application/json"))
+    }
+
+    /** A photo of the device the part came from: one label reading on the backend, the photo kept
+     * apart from the part's own, the model read proposed as `parent_device_model`. */
+    fun parentPhoto(id: Int, jpeg: ByteArray): DevicePhotoRead {
+        val body = Multipart().file("photo", "device.jpg", "image/jpeg", jpeg)
+        val json = send("POST", "/api/items/$id/parent-photo", body.bytes(), body.contentType)
+        return DevicePhotoRead(parseItem(json.getJSONObject("item")), json.optString("model"))
+    }
+
     fun voiceNote(itemId: Int, wav: ByteArray): VoiceNote {
         val body = Multipart().file("audio", "note.wav", "audio/wav", wav)
         val json = send("POST", "/api/items/$itemId/voice", body.bytes(), body.contentType)
@@ -203,6 +237,20 @@ class Client(private val baseUrl: String, private val transport: Transport, toke
             model = json.optString("model"),
             createdAt = json.optString("created_at"),
         )
+
+        fun parseItem(json: JSONObject): ItemView {
+            val fields = json.optJSONObject("fields") ?: JSONObject()
+            fun value(key: String): String = fields.optJSONObject(key)?.optString("value").orEmpty().trim()
+            return ItemView(
+                id = json.getInt("id"),
+                name = json.optString("name"),
+                version = json.optInt("version"),
+                needsParent = json.optBoolean("needs_parent", false),
+                parentDevice = value("parent_device"),
+                parentDeviceModel = value("parent_device_model"),
+                redacted = json.optBoolean("redacted", false),
+            )
+        }
 
         fun parseExtraction(json: JSONObject): Extraction {
             val fields = json.optJSONObject("fields") ?: JSONObject()
