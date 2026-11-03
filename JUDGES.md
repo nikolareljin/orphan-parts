@@ -53,11 +53,11 @@ The line at the foot of the page says *Demo: recorded answers only*.
    link, and the pages it found for the NAS's power supply; the eleven projects proposed from
    the demo shelf, each with its drawing, its items and why they fit, what is still needed and
    the unknowns: four are selected with their build packs, three drawings each and a search
-   with Marketplace links for every missing part (a custom NAS on the ASUS board, an arcade
-   coffee table with the joystick module, a smart desk calendar on the UNO, a home server for
-   the photos), and the rest are a kitchen dashboard, a weather station and a garage parking
-   helper from the UNO's sensor modules, a retro console, a smart mirror, a homework desk and a
-   home automation server; the skills and their levels. Where the owner would save, plan, search or
+   with Marketplace links for every missing part (a custom NAS on the ASRock board, an arcade
+   coffee table with the joystick module, a smart desk calendar on the UNO, a home automation
+   server on the ThinkPad T510), and the rest are a kitchen dashboard, a weather station and a
+   garage parking helper from the UNO's sensor modules, a retro console, a smart mirror, a
+   homework desk and a home server and backup; the skills and their levels. Where the owner would save, plan, search or
    propose, the sign-in line.
 
 ### With the access code (about ten minutes)

@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "ceacd3d25a00b7b48a788019",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Homework desk with 24 inch screen built from laptop (brand DELL), monitor (brand DELL, input voltage 100-240 V, model number U2419H); Quiet homework desk with laptop driving a 24 inch screen., finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793744686,
+    "data": [
+      {
+        "b64_json": "@ceacd3d25a00b7b48a788019-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 11815,
+      "output_tokens": 1288,
+      "total_tokens": 13103
+    }
+  },
+  "status": 200
+}

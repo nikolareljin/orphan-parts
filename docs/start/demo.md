@@ -189,18 +189,19 @@ captioned as drawn. Record the outcome once it works. [Build and reuse](../guide
 The second drawer is where **Build and reuse** fills up: three proposal calls, the last two
 steered by the owner's notes, keep eleven projects, each drawn as built, each with its items and
 why they fit, what is still needed, the effort, the spend and the unknowns. Four are selected:
-a custom NAS on the ASUS P8Z77-V LX board with the G.Skill DDR3 stick, the Kingston SSD, the
-Maxtor hard drive and the PCIe M.2 card; an arcade coffee table on the Dell laptop and the 24
-inch monitor with the joystick module put on its controls by the owner; a smart desk calendar
-on the UNO with the DS1307 clock, the buzzer, the button and the prototype shield; and a home
-server for the photos on the ThinkPad T510 with the Toshiba drive. Each has its build pack, two
-more drawings (up close, and from above), and every requirement it still needs as a search
-with its Marketplace links (the NAS's processor, power supply and case; the table, its glass
-and speakers; the calendar's screen; the server's network link); the power supply is also
-searched for on the web, with the pages found and their links. The other proposals are a
-kitchen dashboard (the DHT11, the HC-SR04, the sound sensor, the relay), a weather station, a
-garage parking helper, a retro console, a smart mirror, a homework desk and a home automation
-server. Every item meant for a build has its Decide cards.
+a custom NAS on the ASRock AB350 Pro4 board with the Patriot Viper DDR4 stick, the Kingston SSD
+and the PCIe M.2 card; an arcade coffee table on the Dell laptop and the 24 inch monitor with
+the joystick module put on its controls by the owner; a smart desk calendar on the UNO with
+the DS1307 clock, the buzzer, the button and the prototype shield; and a home automation server
+on the ThinkPad T510 with the SK hynix memory. Each has its build pack, two more drawings (up
+close, and from above), and every requirement it still needs as a search with its Marketplace
+links (the NAS's processor, power supply and case; the table, its glass and speakers; the
+calendar's screen; the server's network link and its Zigbee or Z-Wave stick); the power supply
+is also searched for on the web, with the pages found and their links. The other proposals are
+a kitchen dashboard (the DHT11, the HC-SR04, the sound sensor, the relay), a weather station, a
+garage parking helper, a retro console, a smart mirror, a homework desk and a home server and
+backup, which stays proposed: its laptop is the coffee table's. Every item meant for a build
+has its Decide cards.
 
 ## 7. Sell the graphics card, give the processor away
 

@@ -551,7 +551,7 @@ searches:
 
   # the NAS has no power supply: Search the web for one, for the board it will run
   - key: nas_power_supply
-    need: board_asus_z77
+    need: nas_board_asrock
     profile: generic_item
     title: ATX power supply for a home NAS, 450 W or more, with four SATA power leads
     max_price: 60
@@ -582,7 +582,7 @@ propose:
       why: the first control; a second joystick and buttons still to find
   # four builds selected, each with its build pack: what they still need becomes a search with
   # its Marketplace links, and each is drawn twice more, up close and from above
-  select: [custom_nas, arcade_table, smart_calendar, home_server]
+  select: [custom_nas, arcade_table, smart_calendar, home_automation_server]
   plan_missing: true
   views:
     - as a close-up of how the parts fit together

@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "0207f2bcb76da10d97df698f",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Arcade coffee table built from laptop (brand DELL), monitor (brand DELL, input voltage 100-240 V, model number U2419H), joystick module (connector 5-pin male header); Coffee table arcade if joysticks, table box and top glass are added.; shown as a close-up of how the parts fit together, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793745012,
+    "data": [
+      {
+        "b64_json": "@0207f2bcb76da10d97df698f-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 14552,
+      "output_tokens": 1779,
+      "total_tokens": 16331
+    }
+  },
+  "status": 200
+}

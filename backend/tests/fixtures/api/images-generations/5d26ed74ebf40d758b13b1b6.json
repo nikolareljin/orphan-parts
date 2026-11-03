@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "5d26ed74ebf40d758b13b1b6",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Custom NAS from a spare desktop board built from motherboard (brand ASRock, model number AB350PRO4), desktop memory (brand VIPER, model number PVE44G240C6GY), SSD (brand Kingston, connector sata, model number SA400S37/480G), adapter card (model number MK-PCIE-M2VER2); Shared photo folders and nightly backup if CPU and PSU are added.; shown as a close-up of how the parts fit together, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793744929,
+    "data": [
+      {
+        "b64_json": "@5d26ed74ebf40d758b13b1b6-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 33424,
+      "output_tokens": 1654,
+      "total_tokens": 35078
+    }
+  },
+  "status": 200
+}
