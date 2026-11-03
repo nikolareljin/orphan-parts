@@ -1,0 +1,697 @@
+{
+  "endpoint": "/responses",
+  "op": "price",
+  "model": "muse-spark-1.3",
+  "digest": "8efab03f99a2ddf2ecb121b5",
+  "request": {
+    "include": [
+      "web_search_call.results"
+    ],
+    "input": [
+      {
+        "content": [
+          {
+            "text": "name: ADATA 4 GB DDR4 laptop memory\nitem_type: laptop memory\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\ncurrency: USD\nmarket: US\nConfirmed fields (key: value):\n- brand: ADATA\n- model_number: AO1P24HC4R1-BQZS\n- certifications: CE",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You find what a used item sells for. Search the web for current listings and completed sales of the same model in the same condition. Report only prices you saw on a page you searched, one comparable per page, with its URL; never invent a listing, a sale or a price. Mark a comparable 'sold' only when the page says the item sold or was bought at that price; everything else is 'asking'. Give the date on the page when there is one. Then give a low, high and typical estimate in the requested currency with a one-line basis, and caveats for whatever makes the figures uncertain. Plain words, no hype. Search at most 4 times, then answer with what those searches found.",
+    "max_output_tokens": 900,
+    "max_tool_calls": 4,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "Findings",
+        "schema": {
+          "$defs": {
+            "Comparable": {
+              "additionalProperties": false,
+              "description": "One listing or sale the model found, with the page it rests on.",
+              "properties": {
+                "condition": {
+                  "title": "Condition",
+                  "type": "string"
+                },
+                "currency": {
+                  "title": "Currency",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "asking",
+                    "sold"
+                  ],
+                  "title": "Kind",
+                  "type": "string"
+                },
+                "observed": {
+                  "description": "the date on the page, or the day it was seen",
+                  "title": "Observed",
+                  "type": "string"
+                },
+                "price": {
+                  "title": "Price",
+                  "type": "number"
+                },
+                "source_title": {
+                  "title": "Source Title",
+                  "type": "string"
+                },
+                "source_url": {
+                  "title": "Source Url",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "title",
+                "price",
+                "currency",
+                "condition",
+                "observed",
+                "source_url",
+                "source_title"
+              ],
+              "title": "Comparable",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a price call: every property required, no extras.",
+          "properties": {
+            "basis": {
+              "title": "Basis",
+              "type": "string"
+            },
+            "caveats": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Caveats",
+              "type": "array"
+            },
+            "comparables": {
+              "items": {
+                "$ref": "#/$defs/Comparable"
+              },
+              "title": "Comparables",
+              "type": "array"
+            },
+            "currency": {
+              "title": "Currency",
+              "type": "string"
+            },
+            "estimate_high": {
+              "title": "Estimate High",
+              "type": "number"
+            },
+            "estimate_low": {
+              "title": "Estimate Low",
+              "type": "number"
+            },
+            "estimate_typical": {
+              "title": "Estimate Typical",
+              "type": "number"
+            }
+          },
+          "required": [
+            "comparables",
+            "estimate_low",
+            "estimate_high",
+            "estimate_typical",
+            "currency",
+            "basis",
+            "caveats"
+          ],
+          "title": "Findings",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    },
+    "tools": [
+      {
+        "search_context_size": "low",
+        "type": "web_search",
+        "user_location": {
+          "country": "US",
+          "type": "approximate"
+        }
+      }
+    ]
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "max_tool_calls": 4,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "Findings",
+        "schema": {
+          "type": "object",
+          "title": "Findings",
+          "additionalProperties": false,
+          "description": "Strict output schema of a price call: every property required, no extras.",
+          "$defs": {
+            "Comparable": {
+              "additionalProperties": false,
+              "description": "One listing or sale the model found, with the page it rests on.",
+              "properties": {
+                "condition": {
+                  "title": "Condition",
+                  "type": "string"
+                },
+                "currency": {
+                  "title": "Currency",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "asking",
+                    "sold"
+                  ],
+                  "title": "Kind",
+                  "type": "string"
+                },
+                "observed": {
+                  "description": "the date on the page, or the day it was seen",
+                  "title": "Observed",
+                  "type": "string"
+                },
+                "price": {
+                  "title": "Price",
+                  "type": "number"
+                },
+                "source_title": {
+                  "title": "Source Title",
+                  "type": "string"
+                },
+                "source_url": {
+                  "title": "Source Url",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "title",
+                "price",
+                "currency",
+                "condition",
+                "observed",
+                "source_url",
+                "source_title"
+              ],
+              "title": "Comparable",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "basis": {
+              "title": "Basis",
+              "type": "string"
+            },
+            "caveats": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Caveats",
+              "type": "array"
+            },
+            "comparables": {
+              "items": {
+                "$ref": "#/$defs/Comparable"
+              },
+              "title": "Comparables",
+              "type": "array"
+            },
+            "currency": {
+              "title": "Currency",
+              "type": "string"
+            },
+            "estimate_high": {
+              "title": "Estimate High",
+              "type": "number"
+            },
+            "estimate_low": {
+              "title": "Estimate Low",
+              "type": "number"
+            },
+            "estimate_typical": {
+              "title": "Estimate Typical",
+              "type": "number"
+            }
+          },
+          "required": [
+            "comparables",
+            "estimate_low",
+            "estimate_high",
+            "estimate_typical",
+            "currency",
+            "basis",
+            "caveats"
+          ]
+        },
+        "strict": true
+      }
+    },
+    "tools": [
+      {
+        "type": "web_search",
+        "user_location": {
+          "type": "approximate",
+          "country": "US"
+        },
+        "search_context_size": "low"
+      }
+    ],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea19ebfe749d34a09a4b11",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793726955.0,
+    "completed_at": 1793726974.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea19ebfe749d34a09a4b11:rs_cabb1060-a8c3-48c7-8e76-1a53fb67d058",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "rs_dcea1129-1289-4c6c-9e68-d64b4bb7a55c",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "I'll search current listings for your ADATA 4GB DDR4 module to build a priced estimate.",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "phase": "commentary",
+        "status": "completed"
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_a65c5e6f-beab-4650-bd25-544f43f7de09",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "ADATA AO1P24HC4R1-BQZS 4GB DDR4 laptop memory price"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "ADATA AO1P24HC4R1-BQZS 4GB PC4-2400T-SA1-11 1Rx8 2400MHz PC4-19200 260pin Laptop / Notebook SODIMM CL17 1.2V Non-ECC DDR4 Memory - Discount Prices, Technical Specs and Reviews [ADATA AO1P24HC4R1-BQZS 4GB PC4-2400T-SA1-11 1Rx8 2400MHz PC4-19200 260pin Laptop / Notebook SODIMM CL17 1.2V Non-ECC DDR4 Memory - Discount Prices, Technical Specs and Reviews] - £7.95 : Electrobyt, Computer Memory, Electrobyt, Computer Memory",
+            "url": "https://www.electrobyt.com/index.php?main_page=product_info&products_id=9389",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata 4GB DDR4 2666MHz Laptop RAM",
+            "url": "https://www.creatus.com.bd/adata-4gb-ddr4-2666mhz-laptop-ram-2",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata 4GB DDR4 2666MHz Laptop RAM",
+            "url": "https://web.ryanssoft.com/detail-page-print/adata-4gb-ddr4-2666mhz-laptop-ram",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata's DDR4 Memory Modules Are Finally Arriving",
+            "url": "https://www.tomshardware.com/news/adata-ddr4-memory-ram,27366.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4Gb Laptop Ram Memory Ddr4 Pc4 in Nairobi CBD, Moi Avenue | PigiaMe",
+            "url": "https://www.pigiame.co.ke/listings/4gb-laptop-ram-memory-ddr4-pc4-5289326",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata AO1P24HC4R1-BQZS 4GB 1RX8 PC4-2400T-SA1-11",
+            "url": "https://www.elecok.com/data_sheet/720367/Adata_AO1P24HC4R1-BQZS_4GB_1RX8_PC4-2400T-SA1-11(EN).pdf?download=true",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata 4GB DDR4 2400MHz Price In Bangladesh",
+            "url": "https://creatuscomputer.com/desktop-ram/adata-4gb-ddr4-2400mhz-laptop-ram",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB Adata PC4 1Rx16 3200AA SODIMM Memory Module (Laptop)",
+            "url": "https://shop.cssi.co.za/index.php?route=product/pdf&product_id=23356",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata 4GB DDR4L 2400MHz Notebook RAM",
+            "url": "https://www.computervillage.com.bd/adata-4gb-ddr4l-2400mhz-notebook-ram-5vp",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata 4GB DDR4 2400MHz Notebook RAM",
+            "url": "https://www.computervillage.com.bd/adata-4gb-ddr4-2400mhz-notebook-ram-dlgs",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "A-Tech 4GB RAM for HP 14-cm0008nf, 14-cm0045nr, 15-bs289wm, 15-bw010nr, 17-bs011dx, 20-c041d, 24-e030na, 24-f0045z, 24-f014la, 24-g201d, 24-g204d | DDR4 2666MHz PC4-21300 SODIMM Non-ECC Memory Upgrade",
+            "url": "https://www.amazon.com/Tech-14-cm0008nf-14-cm0045nr-15-bs289wm-15-bw010nr/dp/B0CGMP61CP",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "reasoning",
+        "id": "rs_6aea19ebfe749d34a09a4b11:rs_d4ea1ab7-dd89-4f58-b114-1725650453a9",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "rs_1063427f-6abb-4201-a083-de4ab2f67eb6",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "First results were mostly overseas, so I'll search specifically for US listings in dollars.",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "phase": "commentary",
+        "status": "completed"
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_9e89ed9a-3dda-4767-a8d0-262b00397935",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "ADATA 4GB DDR4 SODIMM laptop RAM used price USD"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "4Gb Ram Ddr4 Import Data from Taiwan - Seair.co.in",
+            "url": "https://www.seair.co.in/4gb-ram-ddr4-import-data/country-taiwan.aspx",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Memoria notebook cheap",
+            "url": "https://www.ninjacart.com/?n=112851417",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "ADATA RAM Compatibility Check: Find the Right Match",
+            "url": "https://www.accio.com/plp/adata-ram-compatibility-check",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "ADATA 4GB DDR3 RAM Price in BD 2025",
+            "url": "https://www.accio.com/plp/adata-4gb-ram-ddr3-price-in-bd",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "adata memory: Best DDR4 & DDR5 Options",
+            "url": "https://www.accio.com/plp/adata-memory",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB DDR4 PC4-21300 2666MHz SODIMM Laptop Memory",
+            "url": "https://computerhdd.com/products/4gb-ddr4-pc4-21300-2666mhz-sodimm",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB DDR4 PC4-19200 2400MHz SODIMM Laptop Notebook Memory – Computer HDD",
+            "url": "https://computerhdd.com/en-ca/products/4gb-ddr4-pc4-19200-2400mhz-sodimm-laptop-notebook-memory",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "xpg adata ram",
+            "url": "https://www.accio.com/plp/xpg-adata-ram",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB DDR4 PC4-19200 2400MHz SODIMM Laptop Notebook Memory – Computer HDD",
+            "url": "https://computerhdd.com/en-au/collections/laptop-memory/products/4gb-ddr4-pc4-19200-2400mhz-sodimm-laptop-notebook-memory",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB A-DATA Laptop RAM $73 + $6 rebate",
+            "url": "https://forums.anandtech.com/threads/4gb-a-data-laptop-ram-73-6-rebate.156504/",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB DDR4 PC4-19200 2400MHz SODIMM Laptop Notebook Memory – Computer HDD",
+            "url": "https://computerhdd.com/products/4gb-ddr4-pc4-19200-2400mhz-sodimm-laptop-notebook-memory",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "adata ram compatibility",
+            "url": "https://www.accio.com/plp/adata-ram-compatibility",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "reasoning",
+        "id": "rs_6aea19ebfe749d34a09a4b11:rs_20ce0164-839b-4fcd-84e2-7eb0ff8cfe45",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "rs_2bcb9ecf-6ff6-4485-8a5e-e2c636d8278e",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Those were general listings; I'll look for eBay sales and specific model matches next.",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "phase": "commentary",
+        "status": "completed"
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_6c064b4a-9bbf-4abd-adc8-94741f454bdb",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "site:ebay.com ADATA 4GB DDR4 2400 SODIMM AO1P24HC4R1"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "4GB KIT (2x4GB) DDR2  800 PC2-6400 128Mx8 GU341G0ALEPR6B2C6F1 DESKTOP RAM MEMORY",
+            "url": "https://www.ebay.com/itm/880011191260",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Hynix 128GB 4X32GB DDR4 3200MHz PC4-25600 Laptop SODIMM Memory Ram HMAA4GS6AJR8N",
+            "url": "https://www.ebay.com/p/13075170357?iid=235964820705",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "reasoning",
+        "id": "rs_6aea19ebfe749d34a09a4b11:rs_8bcadc87-0ae3-46f6-954e-4063e081395b",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "rs_3daa3817-df53-45a5-9c8d-ef64d02ffe5f",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "That model-specific query came up empty, so I'll broaden to comparable ADATA 4GB DDR4 modules.",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "phase": "commentary",
+        "status": "completed"
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_babbfe70-091e-4ca1-86ea-3150cc7e5c6c",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "ADATA 4GB DDR4 2400 SO-DIMM laptop memory ebay price"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "Buy ADATA 4gb Pc4-2400t Ddr4 Laptop Memory RAM Am1p24hc4r1-buns online | eBay",
+            "url": "https://www.ebay.ca/p/24021763808",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "ADATA 4GB PC4-19200 DDR4-2400MHz Laptop Notebook DDR4RAM Memory Used Tested #R02",
+            "url": "https://www.ebay.co.uk/itm/ADATA-4GB-PC4-19200-DDR4-2400MHz-Laptop-Notebook-DDR4RAM-Memory-Used-Tested-R02-/394708983725?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5338569647&customid=&toolid=10001&mkevt=1",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "2-Power 2P-01AG710 memory module 8 GB 1 GB DDR4 2400 MHz for sale online | eBay UK",
+            "url": "https://www.ebay.co.uk/p/22054354704",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "8GB Kit ADATA 2 of 4GB DDR4-2400 PC4-19200 1Rx8 AO1P24HC4R1-BQZS SODIMM Laptop | eBay",
+            "url": "https://www.ebay.com.my/itm/285581847085",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "adata memory: Best DDR4 & DDR5 Options",
+            "url": "https://www.accio.com/plp/adata-memory",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB DDR4-2400 Acer Aspire A715-41G-R7BA A715-41G-R7VF A715-41G-R7X4 Memory RAM",
+            "url": "https://www.ebay.ie/itm/224720537853?itmmeta=01HTQXXQ5JNS6YMNSHVMVW8011&hash=item34526348fd%3Ag%3A1E4AAOSwZupi%7EDNL",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "4GB DDR4-2400 Acer Aspire A715-41G-R7YZ A715-41G-R8GU A715-41G-R8UB Memory RAM",
+            "url": "https://www.ebay.ie/itm/324916845048?mkcid=1&mkrid=5282-53468-19255-0&siteid=205&campid=STIPPEDASNOREFERRER&customid=nxNL&toolid=10001&mkevt=1",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "DimmDeals: Find the Cheapest RAM on eBay by Price per GB (DDR5, DDR4, ECC)",
+            "url": "https://dimmdeals.com/",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata 4gb ddr4 ram 2025",
+            "url": "https://productinfo.cantabrialabs.com/?p=4461021",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Ddr4 ram for sale store",
+            "url": "https://www.expotuboda.com.mx/?e=141678021",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata ddr4 2400 hot sale",
+            "url": "https://billyscrashhelmets.co.uk/?b=4465821",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Adata 4gb ddr4 ram online",
+            "url": "https://plutotours.in/?p=4461021",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "reasoning",
+        "id": "rs_6aea19ebfe749d34a09a4b11:rs_657b724e-8eef-4d1e-9281-f01dd3fa2ed8",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_8dbfb146-3a52-4393-a7c5-d16603919230",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"basis\": \"Used ADATA 4GB DDR4-2400 SODIMM asks around $9-12, new generic 4GB DDR4 SODIMM around $40.\",\"caveats\": [\"Condition, faults and tests not given so used value assumed.\", \"Exact AO1P24HC4R1-BQZS match only in UK/EU pages, US data is for equivalent ADATA 4GB DDR4 SODIMM.\", \"Small sample and prices are asking not confirmed sold.\", \"Foreign prices converted approximately to USD for estimate.\"],\"comparables\": [{\"condition\": \"Not stated\", \"currency\": \"GBP\", \"kind\": \"asking\", \"observed\": \"2026-11-03\", \"price\": 7.95, \"source_title\": \"ADATA AO1P24HC4R1-BQZS 4GB PC4-2400T 2400MHz SODIMM - Electrobyt\", \"source_url\": \"https://electrobyt.com\", \"title\": \"ADATA AO1P24HC4R1-BQZS 4GB PC4-2400T-SA1-11 2400MHz SODIMM\"} , {\"condition\": \"Not stated\", \"currency\": \"USD\", \"kind\": \"asking\", \"observed\": \"2026-11-03\", \"price\": 8.99, \"source_title\": \"Buy ADATA 4gb Pc4-2400t Ddr4 Laptop Memory RAM Am1p24hc4r1-buns online - eBay\", \"source_url\": \"https://www.ebay.ca\", \"title\": \"ADATA 4GB DDR4 CL17 PC4-2400T Laptop SODIMM Memory RAM AM1P24HC4R1-BUNS\"} , {\"condition\": \"Used\", \"currency\": \"EUR\", \"kind\": \"asking\", \"observed\": \"2026-11-03\", \"price\": 12.0, \"source_title\": \"ADATA 4GB PC4-19200 DDR4-2400MHz Laptop Notebook DDR4 RAM Memory Used Tested - eBay\", \"source_url\": \"https://www.ebay.co.uk\", \"title\": \"ADATA 4GB PC4-19200 DDR4-2400MHz Laptop SODIMM Used Tested\"} , {\"condition\": \"New\", \"currency\": \"USD\", \"kind\": \"asking\", \"observed\": \"2026-11-03\", \"price\": 39.95, \"source_title\": \"4GB DDR4 PC4-21300 2666MHz SODIMM Laptop Memory - ComputerHDD\", \"source_url\": \"https://computerhdd.com\", \"title\": \"4GB DDR4 SODIMM Laptop Memory RAM\"}] , \"currency\": \"USD\", \"estimate_high\": 20.0, \"estimate_low\": 8.0, \"estimate_typical\": 12.0}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You find what a used item sells for. Search the web for current listings and completed sales of the same model in the same condition. Report only prices you saw on a page you searched, one comparable per page, with its URL; never invent a listing, a sale or a price. Mark a comparable 'sold' only when the page says the item sold or was bought at that price; everything else is 'asking'. Give the date on the page when there is one. Then give a low, high and typical estimate in the requested currency with a one-line basis, and caveats for whatever makes the figures uncertain. Plain words, no hype. Search at most 4 times, then answer with what those searches found.",
+    "usage": {
+      "input_tokens": 23622,
+      "input_tokens_details": {
+        "cached_tokens": 10549
+      },
+      "output_tokens": 1955,
+      "output_tokens_details": {
+        "reasoning_tokens": 943
+      },
+      "total_tokens": 25577
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4996
+  },
+  "status": 200
+}

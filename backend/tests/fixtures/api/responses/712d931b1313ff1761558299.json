@@ -1,0 +1,223 @@
+{
+  "endpoint": "/responses",
+  "op": "search-plan",
+  "model": "muse-spark-1.3",
+  "digest": "712d931b1313ff1761558299",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Needed: A sheet of glass or acrylic the size of the top for Arcade coffee table\nKind of part: Any item\nTop price: 70 USD",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You plan a search of second-hand listings for one needed part or device. Write 3 to 6 search phrasings a seller might have put in a listing title: the plain name, synonyms, the part or model number in the ways it gets written, the devices it is sold for, seller wording and common misspellings; each with one line on what it finds that the others miss. A phrasing is a few words for a search box that takes words, not operators or quotes. Then one match pattern: an RE2 regular expression, applied case-insensitively to a listing's text, that a listing which fits the need matches, built from the part number with optional separators or the deciding values with their units. Keep it under 200 characters; use short gaps such as .{0,20} and classes such as [-\\s]?; no lookarounds, no backreferences, no comments and no inline flags. Then the words or short phrases in a listing that rule it out: for parts, broken, not working, and any that name a variant that does not fit. Never invent a part or model number the need does not give.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "PlanWriting",
+        "schema": {
+          "$defs": {
+            "Phrasing": {
+              "additionalProperties": false,
+              "description": "One way a seller might have worded the listing, and the search link that runs it.",
+              "properties": {
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                },
+                "url": {
+                  "default": "",
+                  "description": "the Marketplace search for this phrasing",
+                  "title": "Url",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "why",
+                "url"
+              ],
+              "title": "Phrasing",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a search-plan call: every property required, no extras.",
+          "properties": {
+            "exclusions": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Exclusions",
+              "type": "array"
+            },
+            "pattern": {
+              "title": "Pattern",
+              "type": "string"
+            },
+            "phrasings": {
+              "items": {
+                "$ref": "#/$defs/Phrasing"
+              },
+              "title": "Phrasings",
+              "type": "array"
+            }
+          },
+          "required": [
+            "phrasings",
+            "pattern",
+            "exclusions"
+          ],
+          "title": "PlanWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "PlanWriting",
+        "schema": {
+          "properties": {
+            "exclusions": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Exclusions",
+              "type": "array"
+            },
+            "pattern": {
+              "title": "Pattern",
+              "type": "string"
+            },
+            "phrasings": {
+              "items": {
+                "$ref": "#/$defs/Phrasing"
+              },
+              "title": "Phrasings",
+              "type": "array"
+            }
+          },
+          "required": [
+            "phrasings",
+            "pattern",
+            "exclusions"
+          ],
+          "$defs": {
+            "Phrasing": {
+              "additionalProperties": false,
+              "description": "One way a seller might have worded the listing, and the search link that runs it.",
+              "properties": {
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                },
+                "url": {
+                  "default": "",
+                  "description": "the Marketplace search for this phrasing",
+                  "title": "Url",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "why",
+                "url"
+              ],
+              "title": "Phrasing",
+              "type": "object"
+            }
+          },
+          "type": "object",
+          "additionalProperties": false,
+          "title": "PlanWriting",
+          "description": "Strict output schema of a search-plan call: every property required, no extras."
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea60566769eba73737482c",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793744982.0,
+    "completed_at": 1793744982.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea60566769eba73737482c:rs_6ea89d72-40a0-49ca-b350-31d59cfc990f",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_44bec310-f084-4983-b3e6-844df58d6df2",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"exclusions\": [\"broken\", \"cracked\", \"chipped\", \"not working\", \"frame only\", \"no glass\", \"table base only\", \"wood top only\"],\"pattern\": \"arcade.{0,20}coffee.{0,20}table.{0,20}(glass|acrylic|plexiglass)\",\"phrasings\": [{\"text\": \"arcade coffee table glass top\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=arcade+coffee+table+glass+top\", \"why\": \"Finds complete listings naming the exact table and glass top together.\"}, {\"text\": \"arcade cocktail table glass\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=arcade+cocktail+table+glass\", \"why\": \"Finds sellers calling it cocktail table instead of coffee table.\"}, {\"text\": \"coffee table glass replacement\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=coffee+table+glass+replacement\", \"why\": \"Finds generic replacement glass sheets sized for coffee tables.\"}, {\"text\": \"acrylic sheet coffee table top\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=acrylic+sheet+coffee+table+top\", \"why\": \"Finds acrylic and plexiglass alternatives to glass.\"}, {\"text\": \"arcade table top glass\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=arcade+table+top+glass\", \"why\": \"Finds shorter titles that drop coffee and still describe the top.\"}]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You plan a search of second-hand listings for one needed part or device. Write 3 to 6 search phrasings a seller might have put in a listing title: the plain name, synonyms, the part or model number in the ways it gets written, the devices it is sold for, seller wording and common misspellings; each with one line on what it finds that the others miss. A phrasing is a few words for a search box that takes words, not operators or quotes. Then one match pattern: an RE2 regular expression, applied case-insensitively to a listing's text, that a listing which fits the need matches, built from the part number with optional separators or the deciding values with their units. Keep it under 200 characters; use short gaps such as .{0,20} and classes such as [-\\s]?; no lookarounds, no backreferences, no comments and no inline flags. Then the words or short phrases in a listing that rule it out: for parts, broken, not working, and any that name a variant that does not fit. Never invent a part or model number the need does not give.",
+    "usage": {
+      "input_tokens": 480,
+      "input_tokens_details": {
+        "cached_tokens": 369
+      },
+      "output_tokens": 947,
+      "output_tokens_details": {
+        "reasoning_tokens": 590
+      },
+      "total_tokens": 1427
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}

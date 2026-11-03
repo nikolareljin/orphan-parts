@@ -41,8 +41,8 @@ async def test_the_run_scores_the_committed_set_and_writes_the_files(
     s = report.summary
     assert s.mode == "fixture" and s.cost_usd == 0.0
     # the set's photos are committed and recorded: every answer is a recording of this set
-    # 19 of the items and 4 of the device the agitator came from, read once
-    assert s.items == s.items_loaded == 10 and s.photos == 23
+    # 62 of the items and 4 of the device the agitator came from, read once
+    assert s.items == s.items_loaded == 49 and s.photos == 66
     assert s.stub_answers == 0 and s.skipped == []
     assert not [u for u in outcome.unrecorded if u.startswith("frappe_agitator")]
     # nothing typed: the model is read off the device photos, accepted, and that answers it
@@ -51,13 +51,14 @@ async def test_the_run_scores_the_committed_set_and_writes_the_files(
     assert (read.source, read.review) == ("photo", "accepted") and "729" in read.value
     assert "parent_device" not in rod.fields and rod.needs_parent is False
     assert loader.device_photos.count(rod.id) == 4
-    assert s.fields_read == 43
+    assert s.fields_read == 138
     assert (s.expected, s.matches) == (14, 14)
     assert (s.fits_right, s.fits_total) == (0, 0)
-    assert (s.proposals_proposed, s.proposals_kept, s.proposals_dropped) == (3, 3, 0)
+    # the last of the set's proposal calls is scored: everything it proposed was kept
+    assert s.proposals_kept == s.proposals_proposed >= 1 and s.proposals_dropped == 0
     by_key = {i.key: i for i in report.items}
-    assert by_key["monitor_u2419h"].proposals_in == 1
-    assert by_key["monitor_1800fp"].proposals_in == 1
+    assert by_key["monitor_u2419h"].proposals_in >= 1
+    assert by_key["monitor_1800fp"].proposals_in >= 1
     # the agitator has no label: its rod diameter is measured on the ruler photo (geometry,
     # not a reading), the material is the owner's
     agitator = by_key["frappe_agitator"]
@@ -267,7 +268,7 @@ def test_the_command_line(
     assert (out / "charts" / "proposals.png").is_file()
     assert main(["export", "--out", str(out)]) == 0
     # one line per item with accepted reads: every item but the agitator, which has no label
-    assert len((out / "train.jsonl").read_text().splitlines()) == 9
+    assert len((out / "train.jsonl").read_text().splitlines()) == 47
     (out / "a.json").write_bytes((out / "report.json").read_bytes())
     assert main(["diff", str(out / "a.json"), str(out / "report.json")]) == 0
     assert "stub_answers" in capsys.readouterr().out

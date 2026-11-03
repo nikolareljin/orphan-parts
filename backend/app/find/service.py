@@ -484,14 +484,32 @@ class Finder:
 
     def shown(self, search: Search) -> bool:
         """Whether the demo visitor may see the search: one made for an item the owner marked
-        public; a search from values written in, or for a private item, is the owner's."""
+        public, or for what a project still needs when every item on that project is public; a
+        search from values written in, or for a private item, is the owner's."""
         if search.need_item_id is None:
-            return False
+            return self.for_public_project(search.id)
         try:
             self.inventory.get(search.need_item_id, public_only=True)
         except NotFoundError:
             return False
         return True
+
+    def for_public_project(self, search_id: int) -> bool:
+        """A search opened for a requirement of a project whose items are all public."""
+        for row in self.inventory.projects():
+            content = json.loads(row["content"])
+            if not any(r.get("search_id") == search_id for r in content.get("requirements", [])):
+                continue
+            allocations = self.inventory.allocations(int(row["id"]))
+            if not allocations:
+                return False
+            for a in allocations:
+                try:
+                    self.inventory.get(int(a["item_id"]), public_only=True)
+                except NotFoundError:
+                    return False
+            return True
+        return False
 
     def update(self, search_id: int, patch: SearchPatch) -> Search:
         with self.held(search_id):

@@ -1,0 +1,223 @@
+{
+  "endpoint": "/responses",
+  "op": "search-plan",
+  "model": "muse-spark-1.3",
+  "digest": "27ec9ac7ed242a40a0cfc2d8",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Needed: A small screen the board can drive (an I2C OLED or a 16x2 LCD) for Smart desk calendar and alarm\nKind of part: Any item\nTop price: 50 USD",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You plan a search of second-hand listings for one needed part or device. Write 3 to 6 search phrasings a seller might have put in a listing title: the plain name, synonyms, the part or model number in the ways it gets written, the devices it is sold for, seller wording and common misspellings; each with one line on what it finds that the others miss. A phrasing is a few words for a search box that takes words, not operators or quotes. Then one match pattern: an RE2 regular expression, applied case-insensitively to a listing's text, that a listing which fits the need matches, built from the part number with optional separators or the deciding values with their units. Keep it under 200 characters; use short gaps such as .{0,20} and classes such as [-\\s]?; no lookarounds, no backreferences, no comments and no inline flags. Then the words or short phrases in a listing that rule it out: for parts, broken, not working, and any that name a variant that does not fit. Never invent a part or model number the need does not give.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "PlanWriting",
+        "schema": {
+          "$defs": {
+            "Phrasing": {
+              "additionalProperties": false,
+              "description": "One way a seller might have worded the listing, and the search link that runs it.",
+              "properties": {
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                },
+                "url": {
+                  "default": "",
+                  "description": "the Marketplace search for this phrasing",
+                  "title": "Url",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "why",
+                "url"
+              ],
+              "title": "Phrasing",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a search-plan call: every property required, no extras.",
+          "properties": {
+            "exclusions": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Exclusions",
+              "type": "array"
+            },
+            "pattern": {
+              "title": "Pattern",
+              "type": "string"
+            },
+            "phrasings": {
+              "items": {
+                "$ref": "#/$defs/Phrasing"
+              },
+              "title": "Phrasings",
+              "type": "array"
+            }
+          },
+          "required": [
+            "phrasings",
+            "pattern",
+            "exclusions"
+          ],
+          "title": "PlanWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "PlanWriting",
+        "schema": {
+          "additionalProperties": false,
+          "required": [
+            "phrasings",
+            "pattern",
+            "exclusions"
+          ],
+          "title": "PlanWriting",
+          "type": "object",
+          "description": "Strict output schema of a search-plan call: every property required, no extras.",
+          "properties": {
+            "exclusions": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Exclusions",
+              "type": "array"
+            },
+            "pattern": {
+              "title": "Pattern",
+              "type": "string"
+            },
+            "phrasings": {
+              "items": {
+                "$ref": "#/$defs/Phrasing"
+              },
+              "title": "Phrasings",
+              "type": "array"
+            }
+          },
+          "$defs": {
+            "Phrasing": {
+              "additionalProperties": false,
+              "description": "One way a seller might have worded the listing, and the search link that runs it.",
+              "properties": {
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                },
+                "url": {
+                  "default": "",
+                  "description": "the Marketplace search for this phrasing",
+                  "title": "Url",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "why",
+                "url"
+              ],
+              "title": "Phrasing",
+              "type": "object"
+            }
+          }
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea6094b91465172c824ef7",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793745044.0,
+    "completed_at": 1793745044.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea6094b91465172c824ef7:rs_13a8024a-3451-4564-8374-2df0374bb0fa",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_3b04ac85-f64d-4940-9987-7fc892de9b6b",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"exclusions\": [\"broken\", \"not working\", \"for parts only\", \"cracked screen\", \"20x4 LCD\", \"TFT display\", \"7 inch screen\"], \"pattern\": \"(0\\\\.96.{0,20}oled|oled.{0,20}0\\\\.96|16.{0,5}x.?2.{0,20}lcd|ssd1306|1602)\", \"phrasings\": [{\"text\": \"I2C OLED display 0.96 inch\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=I2C+OLED+display+0.96+inch\", \"why\": \"Finds the plain I2C OLED size most sellers list for Arduino projects.\"}, {\"text\": \"SSD1306 OLED screen module\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=SSD1306+OLED+screen+module\", \"why\": \"Finds listings titled by driver chip instead of size or I2C.\"}, {\"text\": \"1602 LCD I2C module\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=1602+LCD+I2C+module\", \"why\": \"Finds the 16x2 LCD with I2C backpack under its model number.\"}, {\"text\": \"16x2 LCD display Arduino\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=16x2+LCD+display+Arduino\", \"why\": \"Finds 16x2 screens listed by size for Arduino without model number.\"}, {\"text\": \"Arduino mini display screen\", \"url\": \"https://www.ebay.com/sch/i.html?_nkw=Arduino+mini+display+screen\", \"why\": \"Finds generic small-screen lots that do not name OLED or LCD type.\"}]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You plan a search of second-hand listings for one needed part or device. Write 3 to 6 search phrasings a seller might have put in a listing title: the plain name, synonyms, the part or model number in the ways it gets written, the devices it is sold for, seller wording and common misspellings; each with one line on what it finds that the others miss. A phrasing is a few words for a search box that takes words, not operators or quotes. Then one match pattern: an RE2 regular expression, applied case-insensitively to a listing's text, that a listing which fits the need matches, built from the part number with optional separators or the deciding values with their units. Keep it under 200 characters; use short gaps such as .{0,20} and classes such as [-\\s]?; no lookarounds, no backreferences, no comments and no inline flags. Then the words or short phrases in a listing that rule it out: for parts, broken, not working, and any that name a variant that does not fit. Never invent a part or model number the need does not give.",
+    "usage": {
+      "input_tokens": 492,
+      "input_tokens_details": {
+        "cached_tokens": 369
+      },
+      "output_tokens": 1547,
+      "output_tokens_details": {
+        "reasoning_tokens": 1145
+      },
+      "total_tokens": 2039
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}

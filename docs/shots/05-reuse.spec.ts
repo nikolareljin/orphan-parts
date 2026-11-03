@@ -10,6 +10,8 @@ test.describe.configure({ mode: 'serial' })
 async function project(page: Page): Promise<Locator> {
   await page.goto('/#build')
   const table = page.getByRole('table', { name: 'Projects' })
+  // the rows come with the list: count them only once it is there
+  await expect(table.getByRole('button', { name: 'Open' }).first()).toBeVisible()
   const arcade = table.getByRole('row', { name: /arcade/i })
   const row = (await arcade.count()) > 0 ? arcade.first() : table.getByRole('row').filter({ hasText: /proposed|selected/ }).first()
   await row.getByRole('button', { name: 'Open' }).click()
@@ -67,11 +69,16 @@ test('what is missing, as a Marketplace search', async ({ shots, page }) => {
   const panel = await project(page)
   const need = panel.getByRole('list', { name: 'Missing requirements' }).getByRole('listitem').first()
   const words = ((await need.textContent()) ?? '').split(/[(·]/)[0].trim()
-  await need.getByRole('button', { name: 'Find it on Marketplace' }).click()
+  // the demo set opens a search for every part a selected project still needs: shoot that
+  // state as it is; on a set that does not, open the search here
+  const find = need.getByRole('button', { name: 'Find it on Marketplace' })
+  const opened = (await find.count()) === 0
+  if (!opened) await find.click()
   await expect(need).toContainText('open on Find a part')
   await shots.show(need, 'center')
   await shots.take('06-find-it')
-  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+  const close = page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true })
+  if (!opened || (await close.count())) await close.first().click()
   await page.getByRole('button', { name: 'Find a part', exact: true }).click()
   const row = page.getByRole('table', { name: 'Searches' }).getByRole('row').filter({ hasText: words.slice(0, 30) }).first()
   await row.getByRole('button', { name: 'Open' }).click()

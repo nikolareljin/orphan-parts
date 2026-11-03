@@ -100,11 +100,15 @@ hold is not proposed, and a toaster called "old laptop" does not become a laptop
 **Templates are data.** A project is a YAML file under `backend/app/projects/data/`: what it is
 for, the practical result, the effort and skills, a typical cost, the requirements (each with
 the kinds of item that fill it, whether it blocks the build, and the profile a search for it
-runs under), the steps, the safety lines and the guidance by name. Ten ship: a homework
+runs under), the steps, the safety lines and the guidance by name. Fifteen ship: a homework
 workstation, a home server and backup, a home automation server, a smart mirror, a document
 camera for calls, a home music setup, a retro console on the TV, an arcade coffee table, a
-laptop with a broken screen used as a desktop, and a vacuum restored with a fitting tool. The
-model never changes them.
+laptop with a broken screen used as a desktop, a vacuum restored with a fitting tool, a custom
+NAS from a spare desktop board, a smart desk calendar and alarm, a kitchen home-automation
+dashboard, an indoor weather station and a garage parking helper (the last four from an
+Arduino-type board and sensor modules). A module counts only where a template names it: the
+kitchen dashboard's switch takes a *relay* or a *relay module*, while a phone's *camera module*
+is no camera and a *switch module* no network switch. The model never changes them.
 
 **Projects.** A proposal becomes a project in the **proposed** state with exploratory
 allocations. **Shortlist** it, or **Select** it: selection commits its items, and a committed

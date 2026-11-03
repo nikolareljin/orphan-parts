@@ -1,0 +1,59 @@
+id: custom_nas
+label: Custom NAS from a spare desktop board
+goal: A network drive for the house built from a desktop motherboard, memory and the drives already in the drawer, serving shared folders and nightly backups to every computer and phone.
+result: a desktop board in a case with two or more drives, running a NAS operating system, reachable over the home network
+effort: high
+skills: [basic computer setup, networking]
+opens_devices: true
+typical_cost: {low: 60, high: 200, currency: USD}
+requirements:
+  - key: board
+    label: A desktop motherboard with SATA ports and a network port
+    kind: item
+    item_types: [motherboard, mainboard]
+    blocking: true
+  - key: processor
+    label: A processor that fits the board's socket
+    kind: item
+    item_types: [processor, cpu]
+    blocking: true
+    profile: generic_item
+  - key: memory
+    label: Memory of the type the board takes (DDR3 or DDR4 desktop sticks)
+    kind: item
+    item_types: [desktop memory, desktop ram]
+    blocking: true
+  - key: drives
+    label: Two or more drives, hard drives or SSDs, for the shared folders and a copy of them
+    kind: item
+    item_types: [hard drive, hdd, ssd, solid state drive, drive]
+    blocking: true
+  - key: drive_adapter
+    label: An adapter that adds M.2 or SATA drives the board cannot take on its own
+    kind: item
+    item_types: [adapter, adapter card, expansion card, enclosure]
+    blocking: false
+  - key: power
+    label: An ATX power supply with enough SATA power leads for the drives
+    kind: item
+    item_types: [power supply, psu]
+    blocking: true
+    profile: generic_item
+  - key: case
+    label: A case with room for the board and the drives
+    kind: item
+    item_types: [case, computer case, chassis]
+    blocking: false
+    profile: generic_item
+steps:
+  - Fit the processor, its cooler and the memory on the board and check it reaches the firmware screen on a monitor before anything else.
+  - Mount the board and the drives in the case; connect every drive by SATA data and power, and any M.2 drive on its adapter.
+  - Install a NAS operating system on the smallest SSD; make one pool of the other drives, mirrored when there are two of a size.
+  - Create one shared folder per person and one for the photos; give the box a fixed address on the router.
+  - Schedule a nightly copy of the shared folders to a second drive and restore one file to prove it works.
+safety:
+  - Unplug the power supply before touching the board; never open the power supply itself.
+  - An old hard drive can fail without warning; the copy on a second drive is the point of the build.
+sources:
+  - the motherboard maker's manual for the CPU support list and the memory it takes
+  - the NAS operating system's installation guide

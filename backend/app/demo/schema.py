@@ -1,6 +1,7 @@
 """The demo set, as data: which photos, texts and notes make up the walkthrough, so one run
 records every model answer the set needs and the same run replays them at no cost."""
 
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -172,6 +173,23 @@ class DemoSearch(BaseModel):
     )
 
 
+class DemoRound(BaseModel):
+    """One more proposal call after the first, steered by its own note."""
+
+    count: int = Field(default=3, ge=1, le=5)
+    note: str = Field(min_length=1, max_length=2000)
+
+
+class DemoFill(BaseModel):
+    """An item of the set put on a requirement a kept project left open, as the owner fills it;
+    the rules check that it is usable and of a kind the requirement takes."""
+
+    template: str = Field(pattern=KEY, description="the first kept project of this template")
+    requirement: str = Field(pattern=KEY)
+    item: str = Field(pattern=KEY, description="the key of the item of the set")
+    why: str = Field(default="", max_length=200)
+
+
 class DemoPropose(BaseModel):
     preferences: Preferences = Preferences()
     count: int = Field(default=3, ge=1, le=5)
@@ -187,6 +205,46 @@ class DemoPropose(BaseModel):
         " project already counts on stays proposed) and write its build pack; the rules write"
         " it, no model is asked",
     )
+    rounds: list[DemoRound] = Field(
+        default=[], max_length=5, description="further proposal calls, each with its note"
+    )
+    fill: list[DemoFill] = Field(
+        default=[], description="requirements filled by the owner before the drawings"
+    )
+    select: list[str] = Field(
+        default=[],
+        description="templates whose first kept project is selected, in this order, each with"
+        " its build pack; given, it is what is selected instead of what ``packs`` would take",
+    )
+    plan_missing: bool = Field(
+        default=False,
+        description="for each project ``select`` names, every requirement still open becomes a"
+        " search with its plan (the Marketplace search links)",
+    )
+    views: list[str] = Field(
+        default=[],
+        max_length=4,
+        description="more drawings of each project ``select`` names, one per view (in its"
+        " room, a close-up of the parts): each its own request, so its own recording",
+    )
+
+    @field_validator("select")
+    @classmethod
+    def _templates(cls, values: list[str]) -> list[str]:
+        for value in values:
+            if not re.fullmatch(KEY, value):
+                raise ValueError(f"{value!r} is not a template id")
+        if len(values) != len(set(values)):
+            raise ValueError("a template is selected twice")
+        return values
+
+    @field_validator("views")
+    @classmethod
+    def _views(cls, values: list[str]) -> list[str]:
+        cleaned = [" ".join(v.split()) for v in values]
+        if any(not v for v in cleaned) or len(set(cleaned)) != len(cleaned):
+            raise ValueError("each view is said once, in a few words")
+        return cleaned
 
 
 class DemoSet(BaseModel):
@@ -255,6 +313,16 @@ class DemoSet(BaseModel):
                     )
                 if i.expect.fit.against == i.key:
                     raise ValueError(f"item {i.key!r} expects a fit against itself")
+        if self.propose is not None:
+            from app.projects.templates import Templates
+
+            known = set(Templates().ids())
+            for template in self.propose.select:
+                if template not in known:
+                    raise ValueError(f"proposals select {template!r}, which is not a template")
+            for f in self.propose.fill:
+                if f.item not in keys:
+                    raise ValueError(f"a fill names {f.item!r}, which is not an item")
         for s in self.searches:
             if s.need and s.need not in keys:
                 raise ValueError(f"search {s.key!r} needs {s.need!r}, which is not an item")

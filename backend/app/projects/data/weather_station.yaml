@@ -1,0 +1,36 @@
+id: weather_station
+label: Indoor weather station and logger
+goal: A small station that logs the room's temperature and humidity with the time, from an Arduino-type board, a sensor module and a clock module, to see how the house heats and dries over a week.
+result: a board on a shelf logging temperature and humidity with timestamps, read on the computer as a chart
+effort: low
+skills: [basic electronics, basic coding]
+opens_devices: false
+typical_cost: {low: 0, high: 20, currency: USD}
+requirements:
+  - key: controller
+    label: A microcontroller board (an Arduino Uno or compatible)
+    kind: item
+    item_types: [microcontroller, microcontroller board, development board, arduino]
+    blocking: true
+  - key: sensor
+    label: A temperature and humidity sensor
+    kind: item
+    item_types: [humidity sensor, temperature sensor, dht11, dht22, humidity sensor module, temperature sensor module]
+    blocking: true
+  - key: clock
+    label: A real-time clock module, so each reading has its time
+    kind: item
+    item_types: [real-time clock, rtc, clock, clock module, rtc module]
+    blocking: false
+  - key: power
+    label: A power module or a USB supply that stays plugged in
+    kind: item
+    item_types: [power supply, breadboard power, breadboard power module, usb charger]
+    blocking: false
+steps:
+  - Wire the sensor to a digital pin and the clock to the I2C pins; print one reading a minute with its time over USB.
+  - Log the readings to a file on the computer and chart a day of them.
+  - Move it to the room you want to watch; leave it a week.
+safety: []
+sources:
+  - the sensor module's library and example sketch

@@ -242,6 +242,83 @@ async def test_the_set_loads_in_fixture_mode_and_says_what_it_skipped(
     assert lines[2] == "skipped: vacuum: photo photos/missing.jpg missing"
 
 
+async def test_rounds_selection_project_pictures_and_decide_cards(
+    recorded_settings: Settings,
+) -> None:
+    text = SET_TEXT.replace(
+        "    item_type: monitor\n    intent: build\n",
+        "    item_type: monitor\n    intent: build\n    decide: true\n",
+    )
+    text += (
+        "  rounds:\n    - {count: 2, note: games on the TV}\n  pictures: true\n"
+        "  fill:\n    - {template: homework_workstation, requirement: keyboard, item: keyboard}\n"
+        "  plan_missing: true\n  views: [in its room]\n"
+        "  select: [homework_workstation, smart_mirror]\n"
+    )
+    path = write_set(recorded_settings.data_dir.parent / "demo", text)
+    found = load_set(path)
+    assert found.items[2].decide and found.propose is not None
+    assert [r.note for r in found.propose.rounds] == ["games on the TV"]
+    loader, client = build_loader(recorded_settings)
+    try:
+        outcome = await loader.run(found, path.parent)
+    finally:
+        await client.aclose()
+    projects = loader.planner.projects().projects
+    # the first call and the round each propose; every kept project is counted
+    assert outcome.projects == len(projects) >= 2
+    # the stub proposes the desk on each call: the first one kept is the one selected
+    desks = sorted(
+        (p for p in projects if p.template == "homework_workstation"), key=lambda p: p.id
+    )
+    desk = desks[0]
+    assert desk.status == "selected" and outcome.packs == 1
+    assert all(p.status == "proposed" for p in desks[1:])
+    assert len(loader.planner.packs_of(desk.id)) == 1
+    # what the selected desk still needs became searches, each shown to the visitor as the
+    # project is; their plans and the second drawing are recordings this set has none of
+    open = [r for r in loader.planner.project(desk.id).requirements if r.state != "pass"]
+    assert open and all(r.search_id is not None for r in open)
+    searches = {s.id: s for s in loader.finder.searches()}
+    assert all(loader.finder.shown(searches[r.search_id]) for r in open if r.search_id)
+    assert outcome.searches == 2 + len(open) and outcome.plans == 0
+    assert any(
+        u.startswith("homework_workstation.") and "the search plan" in u for u in outcome.unrecorded
+    )
+    # every kept project drawn once, the selected desk once more for its view
+    drawn = [u for u in outcome.unrecorded if u.startswith("project ") and ": picture" in u]
+    assert len(drawn) == len(projects) + 1 and any("(in its room)" in u for u in drawn)
+    assert "select smart_mirror: no kept project of that template" in outcome.skipped
+    # a fill is checked by the rules: an item meant for giving away is not one a build may use
+    assert (
+        "fill homework_workstation.keyboard: the item is not one a build may use" in outcome.skipped
+    )
+    # fixture mode never passes a stub off as a drawing or as the cards: listed as not recorded
+    assert outcome.pictures == 0 and outcome.cards == 0
+    assert "monitor: Decide cards (one ./dev record-fixtures run makes it)" in outcome.unrecorded
+
+
+def test_a_selection_names_a_template(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="not a template"):
+        load_set(
+            write_set(
+                tmp_path / "bad",
+                "propose:\n  select: [flying_car]\n",
+                with_files=False,
+            )
+        )
+    with pytest.raises(ValueError, match="which is not an item"):
+        DemoSet.model_validate(
+            {
+                "propose": {
+                    "fill": [{"template": "arcade_table", "requirement": "controls", "item": "x"}]
+                }
+            }
+        ).check()
+    with pytest.raises(ValueError, match="selected twice"):
+        DemoSet.model_validate({"propose": {"select": ["custom_nas", "custom_nas"]}})
+
+
 async def test_record_mode_writes_a_fixture_per_answer(live_settings: Settings) -> None:
     recording = live_settings.model_copy(update={"record_fixtures": True})
     assert recording.model_api_mode == "record"
@@ -486,9 +563,13 @@ async def test_the_committed_set_searches_the_web_for_the_agitator(
     assert outcome.web_finds >= 1 and outcome.cost_usd == 0.0
     search = next(s for s in loader.finder.searches() if s.title.startswith("all-metal agitator"))
     web = [entry for entry in loader.finder.listings(search.id) if entry.source_kind == "web"]
-    assert len(web) == outcome.web_finds
     assert any("990010200" in e.text and e.source_url.startswith("https://") for e in web)
     assert search.candidates == 4
+    # the NAS's power supply, searched for the board it will run: the rest of the finds
+    psu = next(s for s in loader.finder.searches() if s.title.startswith("ATX power supply"))
+    found = [entry for entry in loader.finder.listings(psu.id) if entry.source_kind == "web"]
+    assert len(web) + len(found) == outcome.web_finds and found
+    assert all(e.source_url.startswith("http") for e in found)
 
 
 async def test_a_measurement_in_the_set_is_the_items_measured_value(

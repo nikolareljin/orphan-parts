@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "2eb930871dcdd6f6824e63b9",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of an arcade coffee table in a living room, a game screen under its glass top, joysticks and buttons along its edge built from joystick module (condition notes joystick thumb stick missing, dust on housing, connector 5-pin male header), on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793741047,
+    "data": [
+      {
+        "b64_json": "@2eb930871dcdd6f6824e63b9-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4068,
+      "output_tokens": 1088,
+      "total_tokens": 5156
+    }
+  },
+  "status": 200
+}

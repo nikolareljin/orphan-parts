@@ -26,7 +26,11 @@ illustration of Homework workstation built from laptop (screen size 14 in), moni
 set-up for homework, on a plain background, no text, no logos, no people*. For a reuse card,
 the card's title, what it does, this item (its kind and up to three accepted values) and the
 kinds of item the card names from the rest of the inventory; for a project, its title, what it
-results in and the items allocated to it (each its kind and up to three accepted values). A
+results in and the items allocated to it (each its kind and up to three accepted values, not
+its condition or the marks printed on it, which say nothing of the finished build), drawn
+*finished and in use in a home* rather than on a plain background. Another view of a project
+(the demo set's `propose.views`, such as *as a close-up of how the parts fit together*) adds
+*shown* and the view to the line, so each view is its own request. A
 value that identifies an item (serial, MAC, IMEI, IMSI, ICCID, MEID, service tag, by the same
 filter as above) or names money (price, cost, paid, MSRP, value, worth, resale, retail) never
 goes out, nor the location or the notes. The title and the line are the model's words, and the
