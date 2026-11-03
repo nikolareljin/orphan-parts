@@ -40,19 +40,17 @@ async def test_the_run_scores_the_committed_set_and_writes_the_files(
     )
     s = report.summary
     assert s.mode == "fixture" and s.cost_usd == 0.0
-    # the set's photos are committed and recorded: every answer is a recording of this set,
-    # 19 photos of the items. The four of the device the agitator came from are read once by
-    # a record run; until then the load says so and the question stays open (after it: 23
-    # photos, nothing unrecorded, the model read and accepted)
-    assert s.items == s.items_loaded == 10 and s.photos == 19
+    # the set's photos are committed and recorded: every answer is a recording of this set
+    # 19 of the items and 4 of the device the agitator came from, read once
+    assert s.items == s.items_loaded == 10 and s.photos == 23
     assert s.stub_answers == 0 and s.skipped == []
-    assert [u for u in outcome.unrecorded if u.startswith("frappe_agitator")] == [
-        "frappe_agitator: the reading of the device photos (one ./dev record-fixtures run"
-        " reads them)"
-    ]
+    assert not [u for u in outcome.unrecorded if u.startswith("frappe_agitator")]
+    # nothing typed: the model is read off the device photos, accepted, and that answers it
     rod = loader.inventory.get(loader.ids["frappe_agitator"])
-    assert "parent_device_model" not in rod.fields and "parent_device" not in rod.fields
-    assert rod.needs_parent is True and loader.device_photos.count(rod.id) == 4
+    read = rod.fields["parent_device_model"]
+    assert (read.source, read.review) == ("photo", "accepted") and "729" in read.value
+    assert "parent_device" not in rod.fields and rod.needs_parent is False
+    assert loader.device_photos.count(rod.id) == 4
     assert s.fields_read == 43
     assert (s.expected, s.matches) == (14, 14)
     assert (s.fits_right, s.fits_total) == (0, 0)

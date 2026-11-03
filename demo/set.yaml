@@ -140,8 +140,8 @@ items:
       material: "metal"
     # the rod alone carries no model number, so the app asks which device it came from; the
     # answer: the drink mixer it came off, read from its photos (the label under its base, its
-    # badge, the whole mixer and its side with the rod fitted), nothing typed. Until a record
-    # run has read these four photos the question stays open and the load says so.
+    # badge, the whole mixer and its side with the rod fitted), nothing typed: the recorded
+    # reading gives HAMILTON BEACH 729, accepted as the device's model.
     parent_photos: [photos/hamilton-729-label.jpg, photos/hamilton-729-badge.jpg, photos/hamilton-729-mixer.jpg, photos/hamilton-729-side.jpg]
 
 searches:

@@ -91,20 +91,10 @@ video/generate.sh               # the drafts, now on the recorded answers
 | | **Total** | | **about $0.08 to $0.17** |
 | S19 | the phone's capture, read once (`--phone --record`, still to do) | Muse Spark (and SAM 3.1) | about $0.01 |
 
-Outside the shots, the demo set itself (`./dev demo`, the hosted demo, `./dev eval`) needs one
-reading still: the agitator's device is read off its four photos (the label, the badge, the
-mixer and its side view), with nothing typed, so until that reading is recorded the loaded
-agitator still asks which device it came from. One run records it (Muse Spark, op `extract`,
-about $0.01; everything else in the set replays, and `PICTURE_ENABLED=0` leaves out the four
-item drawings the set has not recorded, which would be bought otherwise):
-
-```bash
-export MODEL_API_KEY=...        # in this shell only
-PICTURE_ENABLED=0 COMPOSE_PROJECT_NAME=opl-record ./dev record-fixtures
-COMPOSE_PROJECT_NAME=opl-record docker compose down -v   # its stack and volume
-git status backend/tests/fixtures/api   # one new recording: review, then commit it
-unset MODEL_API_KEY
-```
+Outside the shots, the demo set's agitator is answered by reading its four device photos (the
+label, the badge, the mixer and its side view), nothing typed; that reading is recorded
+(`extract`, about $0.01, Nov 2) with `PICTURE_ENABLED=0 ./dev record-fixtures`, which leaves
+the set's unrecorded item drawings out.
 
 The ranges are the live check's per-operation figures (`livecheck/README.md`); the cap holds
 the worst case. A request already recorded is replayed, not bought again, so a run that stops
