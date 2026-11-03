@@ -111,12 +111,18 @@ def test_fits_reads_the_kind_off_the_type_not_the_name(settings: Settings) -> No
     charger = inventory.create(ItemCreate(item_type="laptop charger", name="Ch"))
     assert fits(["vacuum"], cleaner) and fits(["laptop"], computer) and fits(["cable"], cables)
     assert not fits(["laptop"], charger)
-    # a sensor or a relay sold on a small board is still the sensor, the relay
+    # a module is the kind only where a template names it: a sensor or a relay on a small
+    # board fills a requirement that takes the module; a phone's camera module is no camera
+    # and a switch module no network switch
     relay = inventory.create(ItemCreate(item_type="relay module", name="R"))
     dht = inventory.create(ItemCreate(item_type="temperature and humidity sensor module", name="D"))
     power = inventory.create(ItemCreate(item_type="breadboard power module", name="P"))
-    assert fits(["relay"], relay) and fits(["humidity sensor"], dht)
-    assert fits(["breadboard power"], power) and not fits(["power supply"], power)
+    camera = inventory.create(ItemCreate(item_type="camera module", name="C"))
+    switch = inventory.create(ItemCreate(item_type="tilt switch module", name="S"))
+    assert fits(["relay module"], relay) and fits(["humidity sensor module"], dht)
+    assert fits(["breadboard power module"], power) and not fits(["power supply"], power)
+    assert not fits(["phone", "webcam", "camera"], camera)
+    assert not fits(["switch", "network switch", "router"], switch)
 
 
 @pytest.fixture

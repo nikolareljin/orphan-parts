@@ -121,22 +121,11 @@ def _words(text: str) -> list[str]:
 
 
 # A word a kind may end in without being another thing: "vacuum cleaner" is a vacuum, "laptop
-# computer" a laptop, "speaker system" speakers, "relay module" a relay. A "tv stand" or a
-# "laptop charger" is not.
+# computer" a laptop, "speaker system" speakers. A "tv stand" or a "laptop charger" is not, and
+# neither is a "module": a "camera module" is a part of a phone, not a camera, and a "switch
+# module" no network switch, so a template that takes a module names it ("relay module").
 GENERIC_HEADS = frozenset(
-    {
-        "cleaner",
-        "computer",
-        "device",
-        "unit",
-        "set",
-        "system",
-        "machine",
-        "player",
-        "kit",
-        "pc",
-        "module",
-    }
+    {"cleaner", "computer", "device", "unit", "set", "system", "machine", "player", "kit", "pc"}
 )
 
 

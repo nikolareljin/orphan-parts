@@ -20,7 +20,7 @@ requirements:
   - key: controls
     label: Two joysticks and buttons on a USB encoder, or two gamepads
     kind: item
-    item_types: [joystick, gamepad, controller, arcade encoder]
+    item_types: [joystick, joystick module, gamepad, controller, arcade encoder]
     blocking: true
   - key: table
     label: A coffee table or a box with room for the screen and the controls

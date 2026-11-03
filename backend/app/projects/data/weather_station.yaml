@@ -15,17 +15,17 @@ requirements:
   - key: sensor
     label: A temperature and humidity sensor
     kind: item
-    item_types: [humidity sensor, temperature sensor, dht11, dht22]
+    item_types: [humidity sensor, temperature sensor, dht11, dht22, humidity sensor module, temperature sensor module]
     blocking: true
   - key: clock
     label: A real-time clock module, so each reading has its time
     kind: item
-    item_types: [real-time clock, rtc, clock]
+    item_types: [real-time clock, rtc, clock, clock module, rtc module]
     blocking: false
   - key: power
     label: A power module or a USB supply that stays plugged in
     kind: item
-    item_types: [power supply, breadboard power, usb charger]
+    item_types: [power supply, breadboard power, breadboard power module, usb charger]
     blocking: false
 steps:
   - Wire the sensor to a digital pin and the clock to the I2C pins; print one reading a minute with its time over USB.

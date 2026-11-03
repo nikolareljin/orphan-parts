@@ -15,23 +15,23 @@ requirements:
   - key: clock
     label: A real-time clock module with its coin cell
     kind: item
-    item_types: [real-time clock, rtc, clock]
+    item_types: [real-time clock, rtc, clock, clock module, rtc module]
     blocking: true
   - key: screen
     label: A small screen the board can drive (an I2C OLED or a 16x2 LCD)
     kind: item
-    item_types: [display, screen, lcd, oled]
+    item_types: [display, screen, lcd, oled, display module, lcd module, oled module]
     blocking: true
     profile: generic_item
   - key: alarm
     label: A buzzer for the reminders
     kind: item
-    item_types: [buzzer]
+    item_types: [buzzer, buzzer module]
     blocking: false
   - key: button
     label: A push button to snooze
     kind: item
-    item_types: [push button, button]
+    item_types: [push button, button, button module]
     blocking: false
   - key: shield
     label: A prototype shield or a breadboard to wire it on

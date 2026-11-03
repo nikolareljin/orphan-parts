@@ -25,22 +25,22 @@ requirements:
   - key: climate
     label: A temperature and humidity sensor
     kind: item
-    item_types: [humidity sensor, temperature sensor, dht11, dht22]
+    item_types: [humidity sensor, temperature sensor, dht11, dht22, humidity sensor module, temperature sensor module]
     blocking: false
   - key: presence
     label: A distance sensor that wakes the screen when someone walks up
     kind: item
-    item_types: [ultrasonic sensor, distance sensor, motion sensor, obstacle sensor]
+    item_types: [ultrasonic sensor, distance sensor, motion sensor, obstacle sensor, distance sensor module, motion sensor module, obstacle sensor module]
     blocking: false
   - key: sound
     label: A sound sensor that hears the extractor hood or the kettle
     kind: item
-    item_types: [sound sensor, microphone]
+    item_types: [sound sensor, microphone, sound sensor module]
     blocking: false
   - key: switch
     label: A relay that switches a light or a fan
     kind: item
-    item_types: [relay]
+    item_types: [relay, relay module]
     blocking: false
 steps:
   - Run a home automation dashboard on the laptop; show it full screen on the monitor on the wall.
