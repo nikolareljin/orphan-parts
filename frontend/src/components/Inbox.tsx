@@ -139,7 +139,13 @@ export default function Inbox({
                       Open item #{c.item_id}
                     </button>
                   )}
-                  <button type="button" className="link" disabled={busyId !== null} onClick={() => void act(c.id, () => api.captures.remove(c.id))}>
+                  <button
+                    type="button"
+                    className="link"
+                    disabled={demo || busyId !== null}
+                    title={demo ? 'The demo set cannot be deleted' : undefined}
+                    onClick={() => void act(c.id, () => api.captures.remove(c.id))}
+                  >
                     Delete
                   </button>
                 </div>
