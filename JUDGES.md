@@ -7,8 +7,9 @@ Marketplace. Meta's models read and write; rules decide what is kept.
 
 - **The hosted demo, while it is up:** <https://orphan-parts.pages.dev> (nothing to install).
   It may be taken down after judging.
-- **On your own computer:** everything the hosted demo does, with no hosted site and no key
-  needed: [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)
+- **On your own computer:** the same app with no hosted site: every flow on recorded answers
+  with no key, and live readings with a Model API key of your own:
+  [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)
   (`docs/start/local.md`), about ten minutes with Docker.
 - **The Android app:** the APK from the
   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest).

@@ -29,7 +29,8 @@ cp .env.example .env
 ## 3. Fill in `.env`
 
 `.env.example` lists every setting with a line on what it does. A local run needs only a few.
-This is the part that matters, with placeholders, not real values:
+Set these lines in `.env` (the copy starts with `OPL_FAKE_API=0` and `SPEND_CAP_USD=25`; the
+values below are the ones to start with, and no real value goes on this page):
 
 ```bash
 # The Meta Model API key (step 4). Empty: the stack runs on recorded answers.
