@@ -544,11 +544,12 @@ class Decider:
         sale or a gift breaks that build, so the view says it before the choice. With
         public_only, only the projects the demo visitor may read."""
         # an item can fill more than one requirement of a project: each title once, in order
-        titles = [str(r["title"]) for r in self.inventory.committed_elsewhere(item_id, 0)]
+        rows = self.inventory.committed_elsewhere(item_id, 0)
         if public_only:
-            shown = {p.title for p in self.planner.projects(public_only=True).projects}
-            titles = [t for t in titles if t in shown]
-        return list(dict.fromkeys(titles))
+            # by id: a private project may carry the title of one the visitor reads
+            shown = {p.id for p in self.planner.projects(public_only=True).projects}
+            rows = [r for r in rows if int(r["project_id"]) in shown]
+        return list(dict.fromkeys(str(r["title"]) for r in rows))
 
     def decision(self, item_id: int, *, public_only: bool = False) -> Decision:
         """The view; with public_only (the demo visitor) a private item is not found and the

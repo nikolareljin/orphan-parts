@@ -70,13 +70,18 @@ def current_fields(assertions: list[Assertion]) -> dict[str, Assertion]:
 
 # the history line of a decision; decisions are not changes to what the item is
 DECIDED = "decided: "
+# the history line of an item reserved or freed as a selected project takes it or lets it go:
+# the owner's choice for it, like a decision, never a change to what the item is
+RESERVED_BY_PROJECT = "availability by a project: "
 # the results the list marks an item with, as kept for it
 SAVED_KINDS = ("cards", "ideas", "sell_draft", "give_draft", "price")
-# whether anything but a decision changed the item after the version a written row (alias
-# ``row``) was written from: what the owner chooses does not change what the item is or is worth
+# whether anything but a decision (or a selected project reserving the item) changed the item
+# after the version a written row (alias ``row``) was written from: what the owner chooses does
+# not change what the item is or is worth
 CHANGED_SINCE = (
     "EXISTS (SELECT 1 FROM events e WHERE e.item_id = {row}.item_id"
-    " AND e.version > {row}.item_version AND e.change NOT LIKE '" + DECIDED + "%')"
+    " AND e.version > {row}.item_version AND e.change NOT LIKE '" + DECIDED + "%'"
+    " AND e.change NOT LIKE '" + RESERVED_BY_PROJECT + "%')"
 )
 
 
@@ -210,7 +215,8 @@ class Inventory:
 
     # changes
 
-    def update(self, item_id: int, patch: ItemPatch) -> Item:
+    def update(self, item_id: int, patch: ItemPatch, *, change: str = "") -> Item:
+        """The patch applied; ``change`` is the history line in place of the fields named."""
         # a key sent as null means "not given", never "set to nothing"
         data = {
             k: v
@@ -230,7 +236,7 @@ class Inventory:
             version = int(row["version"]) + 1
             for k in changed:
                 conn.execute(SET_COLUMN[k], (data[k], version, at, item_id))
-            self._event(conn, item_id, "changed " + ", ".join(changed), version, at)
+            self._event(conn, item_id, change or "changed " + ", ".join(changed), version, at)
             return self._item(conn, item_id)
 
     def add_field(self, item_id: int, spec: FieldCreate, *, source: Source = "user_edit") -> Item:
@@ -525,6 +531,14 @@ class Inventory:
                 (item_id,),
             ).fetchone()
             return found
+
+    def sell_details_all(self, item_id: int) -> list[sqlite3.Row]:
+        """Every version saved, oldest first."""
+        with self.store.connect() as conn:
+            self._row(conn, item_id)
+            return conn.execute(
+                "SELECT * FROM sell_details WHERE item_id = ? ORDER BY version", (item_id,)
+            ).fetchall()
 
     def add_marketplace_event(
         self,

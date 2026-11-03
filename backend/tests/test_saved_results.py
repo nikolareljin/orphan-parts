@@ -190,18 +190,41 @@ def test_asking_again_adds_a_version_and_keeps_the_earlier_ones(gated: TestClien
     assert [d["version"] for d in gated.get(f"/api/items/{item}/drafts").json()] == [1, 2]
 
 
+def test_the_visitor_reads_no_pickup_area_of_any_draft(gated: TestClient) -> None:
+    item = _saved_item(gated)
+    # the details saved again with another area, and a draft whose pickup was typed for it
+    # alone: neither the earlier area, the later one nor the typed pickup reaches the visitor
+    details = {"handover": "pickup", "area": "Sunnyside", "asking_price": 35}
+    assert gated.put(f"/api/items/{item}/sell-details", json=details).status_code == 200
+    typed = gated.post(
+        f"/api/items/{item}/drafts", json={"mode": "sell", "pickup": "Corner of Elm and 5th"}
+    )
+    assert typed.status_code == 201 and "Elm" in typed.json()["pickup"]
+    assert gated.post(f"/api/items/{item}/drafts", json={"mode": "sell"}).status_code == 201
+    gated.cookies.clear()
+    seen = gated.get(f"/api/items/{item}/drafts")
+    assert seen.status_code == 200 and len(seen.json()) == 3
+    for secret in (SECRETS[3], "Sunnyside", "Elm"):
+        assert secret not in seen.text, secret
+    assert all("the owner's area" in d["pickup"] for d in seen.json())
+
+
 @pytest.mark.anyio
+@pytest.mark.parametrize("pictures_on", [True, False])
 async def test_every_item_of_the_committed_set_has_its_saved_outcome(
-    recorded_settings: Settings,
+    recorded_settings: Settings, pictures_on: bool
 ) -> None:
     # the demo set as ./dev demo loads it: every result replayed from its own recording, and
-    # each item kept with what its plan calls for, so a visitor reads them and nothing is asked
+    # each item kept with what its plan calls for, so a visitor reads them and nothing is asked;
+    # the recorded drawings are shown whatever PICTURE_ENABLED says (the hosted load's case)
     from app.demo import load_set
     from app.demo.__main__ import build_loader
 
     path = Path(__file__).resolve().parents[2] / "demo" / "set.yaml"
     demo = load_set(path)
-    loader, client = build_loader(recorded_settings.model_copy(update={"picture_enabled": True}))
+    loader, client = build_loader(
+        recorded_settings.model_copy(update={"picture_enabled": pictures_on})
+    )
     try:
         outcome = await loader.run(demo, path.parent)
     finally:
@@ -213,7 +236,10 @@ async def test_every_item_of_the_committed_set_has_its_saved_outcome(
         item_id = loader.ids[item.key]
         kept = loader.decider.decision(item_id)
         if item.decide:
-            assert kept.scenarios is not None, item.key
+            # current as loaded: a project selected later reserves the item, which is no edit
+            assert kept.scenarios is not None and not kept.scenarios.stale, item.key
+        if item.ideas:
+            assert kept.uses is not None, item.key
         if item.decision:
             assert kept.last is not None and kept.last.choice == item.decision, item.key
         if item.draft:

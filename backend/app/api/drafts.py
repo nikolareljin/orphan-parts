@@ -47,20 +47,40 @@ async def write_draft(item_id: int, request: DraftRequest, lister: ListerDep) ->
 AREA_SHOWN = "the owner's area"
 
 
+# the pickup lines a draft carries when no area was given: nothing of the owner's in them
+NO_AREA_PICKUPS = frozenset({"", "Local pickup.", "Shipping only.", "Local pickup, or shipping."})
+
+
+def _in_json(text: str) -> re.Pattern[str]:
+    """The text as it reads inside a JSON dump, as a whole word, so a short one never eats
+    into another word."""
+    return re.compile(rf"(?<!\w){re.escape(json.dumps(text)[1:-1])}(?!\w)")
+
+
 def _shown(drafts: list[Draft], lister: Lister) -> list[Draft]:
-    """The drafts as the demo visitor reads them: the pickup area of the owner's listing
-    details left out of every field it was written into; the owner gets them whole."""
+    """The drafts as the demo visitor reads them: every pickup area the owner ever saved in the
+    listing details (a draft may be older than the latest save) left out of every field it was
+    written into, and a pickup typed for one draft alone left out whole; the owner gets them
+    whole."""
     if not for_visitor() or not drafts:
         return drafts
-    details, _ = lister.details(drafts[0].item_id)
-    area = details.area if details is not None else ""
-    if not area:
-        return drafts
-    # as a whole word, so a short area never eats into another word
-    found = re.compile(rf"(?<!\w){re.escape(json.dumps(area)[1:-1])}(?!\w)")
-    return [
-        Draft.model_validate(json.loads(found.sub(AREA_SHOWN, d.model_dump_json()))) for d in drafts
-    ]
+    areas = {
+        SellDetails.model_validate_json(row["content"]).area
+        for row in lister.inventory.sell_details_all(drafts[0].item_id)
+    }
+    # the longest first, so an area that holds a shorter one is replaced whole
+    found = [_in_json(a) for a in sorted(areas - {""}, key=len, reverse=True)]
+    shown = []
+    for d in drafts:
+        text = d.model_dump_json()
+        for pattern in found:
+            text = pattern.sub(AREA_SHOWN, text)
+        draft = Draft.model_validate(json.loads(text))
+        if draft.pickup not in NO_AREA_PICKUPS and AREA_SHOWN not in draft.pickup:
+            text = _in_json(draft.pickup).sub(AREA_SHOWN, text)
+            draft = Draft.model_validate(json.loads(text))
+        shown.append(draft)
+    return shown
 
 
 @router.get("/items/{item_id}/drafts", response_model=list[Draft])
