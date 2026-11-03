@@ -31,6 +31,7 @@ from app.listing import Lister, VoiceNotes
 from app.match import Assessor
 from app.model_api import CostLedger, ModelApiClient
 from app.picture import Pictures
+from app.privacy import Privacy
 from app.profiles import Profiles
 from app.projects import Planner, Templates
 from app.samples import SampleReader, Samples, SamplesOutcome, record_samples
@@ -88,6 +89,7 @@ def build_loader(settings: Settings) -> tuple[Loader, ModelApiClient]:
         finder,
         Planner(settings, client, inventory, templates, finder),
         pictures,
+        Privacy(settings, client),
     )
     return loader, client
 

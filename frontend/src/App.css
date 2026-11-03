@@ -218,10 +218,51 @@ body.has-dialog {
 }
 
 .item-photos .photo.open img {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
   max-height: 45vh;
   object-fit: contain;
+}
+
+/* the opened photo and the areas outlined on it share one box, so the outlines sit where the
+   areas are */
+.item-photos .photo-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.privacy-box {
+  position: absolute;
+  border: 2px solid var(--error);
+  background: color-mix(in srgb, var(--error) 18%, transparent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.privacy-box.shown {
+  border-style: dashed;
+  background: none;
+}
+
+.privacy-notes {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.privacy-note.failed,
+.privacy-note.unchecked {
+  color: var(--warn, #a15c00);
+}
+
+.privacy-areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
 }
 
 /* what the item could look like: drawn on a click, labeled as drawn, under the photos */

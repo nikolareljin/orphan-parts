@@ -19,7 +19,7 @@ from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from app.config import Settings
 from app.decide.schema import Scenarios
@@ -27,6 +27,8 @@ from app.extract.imaging import BadImageError, prepare
 from app.inventory.schema import Item
 from app.inventory.service import Inventory, NotFoundError
 from app.model_api import IncompleteResponseError, ModelApiClient
+from app.ops.door import for_visitor
+from app.privacy.text import mask_text
 from app.projects.pack import shown_fields
 from app.projects.schema import Project
 from app.projects.templates import Templates, UnknownTemplateError
@@ -60,6 +62,12 @@ class Picture(BaseModel):
     cost_usd: float
     from_fixture: bool
     created_at: str
+
+    # the owner's own words: a product key or a password typed into them is masked for the
+    # demo visitor, as an item's name is
+    @field_serializer("use")
+    def _shown_use(self, value: str) -> str:
+        return mask_text(value) if for_visitor() else value
 
 
 class PictureList(BaseModel):

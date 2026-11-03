@@ -13,6 +13,7 @@ from pydantic import (
 
 from app.extract.schema import Extraction, Source
 from app.ops.door import PRIVATE_FIELDS, PRIVATE_SOURCES, for_visitor
+from app.privacy.text import mask_text, mask_value, private_field
 
 # How a value is known. An observation never goes away: a correction sits beside it.
 Provenance = Literal["observed", "owner_reported", "documented", "tested", "estimated"]
@@ -72,6 +73,20 @@ class ItemSummary(BaseModel):
     updated_at: str
     public: bool = Field(default=False, description="shown to the demo visitor")
 
+    # a product key, a MAC address or a password typed into a name is masked for the visitor
+    @field_serializer("name", "condition")
+    def _shown_name(self, value: str) -> str:
+        return mask_text(value) if for_visitor() else value
+
+
+def shown_assertion(a: Assertion) -> Assertion:
+    """An assertion as the demo visitor gets it: a value that identifies the item (a serial
+    number, a MAC address) masked to its last four characters, and any private value written
+    into another field's text masked as well."""
+    if private_field(a.field):
+        return a.model_copy(update={"value": mask_value(a.value), "raw": mask_value(a.raw)})
+    return a.model_copy(update={"value": mask_text(a.value), "raw": mask_text(a.raw)})
+
 
 class Item(ItemSummary):
     faults: str
@@ -105,12 +120,18 @@ class Item(ItemSummary):
     def _owner_text(self, value: str) -> str:
         return "" if for_visitor() else value
 
+    @field_serializer("faults", "tests_done", "accessories")
+    def _shown_text(self, value: str) -> str:
+        return mask_text(value) if for_visitor() else value
+
     @field_serializer("assertions")
     def _owner_assertions(self, value: list[Assertion]) -> list[Assertion]:
         if not for_visitor():
             return value
         return [
-            a for a in value if a.source not in PRIVATE_SOURCES and a.field not in PRIVATE_FIELDS
+            shown_assertion(a)
+            for a in value
+            if a.source not in PRIVATE_SOURCES and a.field not in PRIVATE_FIELDS
         ]
 
     @field_serializer("fields")
@@ -118,7 +139,7 @@ class Item(ItemSummary):
         if not for_visitor():
             return value
         return {
-            k: a
+            k: shown_assertion(a)
             for k, a in value.items()
             if a.source not in PRIVATE_SOURCES and k not in PRIVATE_FIELDS
         }

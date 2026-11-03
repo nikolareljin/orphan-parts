@@ -88,7 +88,7 @@ def test_a_picture_is_drawn_kept_served_and_charged(
     assert served.headers["cache-control"] == "no-store"
     assert served.content[:2] == b"\xff\xd8"
     assert drawing.get(f"/api/items/{item_id}/pictures/2").status_code == 404
-    assert drawing.get(f"/api/items/{item_id}/photos").json() == {"count": 1}
+    assert drawing.get(f"/api/items/{item_id}/photos").json()["count"] == 1
     folder = drawing_settings.data_dir / "items" / str(item_id)
     assert sorted(p.name for p in folder.iterdir()) == [
         "photo-1.jpg",

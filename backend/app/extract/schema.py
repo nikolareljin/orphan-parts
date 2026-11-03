@@ -2,7 +2,10 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
+
+from app.ops.door import for_visitor
+from app.privacy.text import mask_text
 
 # Where a value came from. Segmentation, grounding, voice and video add their own later.
 Source = Literal[
@@ -57,3 +60,18 @@ class Extraction(BaseModel):
     model: str
     from_fixture: bool
     cost_usd: float
+
+    # what the demo visitor reads of a label: a product key, a MAC address, a serial number or
+    # a password on it masked, in the transcription and in every value
+    @field_serializer("label_text")
+    def _shown_label(self, value: str) -> str:
+        return mask_text(value) if for_visitor() else value
+
+    @field_serializer("fields")
+    def _shown_fields(self, value: dict[str, Evidence]) -> dict[str, Evidence]:
+        if not for_visitor():
+            return value
+        return {
+            k: e.model_copy(update={"value": mask_text(e.value), "raw": mask_text(e.raw)})
+            for k, e in value.items()
+        }

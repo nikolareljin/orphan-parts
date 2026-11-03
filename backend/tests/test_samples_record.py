@@ -174,7 +174,8 @@ async def test_a_picture_named_in_the_set_waits_for_its_recording(
         await client.aclose()
     # the stub image is never drawn onto the item: it is said to be not recorded yet
     assert outcome.pictures == 0 and outcome.skipped == []
-    assert outcome.unrecorded == [
+    # the photo checks of this small set are not recorded either; the picture is the point here
+    assert [u for u in outcome.unrecorded if "private details" not in u] == [
         "monitor_u2419h: picture (one ./dev record-fixtures run draws it)"
     ]
     assert "not recorded yet: monitor_u2419h" in "\n".join(outcome.lines())
@@ -193,6 +194,7 @@ async def test_record_mode_draws_the_picture_and_fixture_mode_replays_it(
     await client.aclose()
     faked = ModelApiClient(recording, CostLedger(25.0), transport=fake_api(recording, calls))
     loader.client = loader.extractor.client = faked
+    loader.privacy = None  # the pictures are the point here; the photo checks have their tests
     assert loader.pictures is not None
     loader.pictures.client = faked
     try:
@@ -208,6 +210,7 @@ async def test_record_mode_draws_the_picture_and_fixture_mode_replays_it(
         update={"record_fixtures": False, "fake_api": True, "data_dir": recording.data_dir / "r"}
     )
     loader, client = build_loader(replay)
+    loader.privacy = None
     try:
         again = await loader.run(load_set(path), path.parent)
     finally:
@@ -228,6 +231,7 @@ async def test_a_live_run_draws_no_picture_unless_pictures_are_on(live_settings:
         live_settings, CostLedger(25.0), transport=fake_api(live_settings, calls)
     )
     loader.client = loader.extractor.client = faked
+    loader.privacy = None  # the pictures are the point here; the photo checks have their tests
     assert loader.pictures is not None
     loader.pictures.client = faked
     try:

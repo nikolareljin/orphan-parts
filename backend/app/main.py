@@ -43,6 +43,7 @@ from app.ops.logging import configure_logging
 from app.ops.middleware import RequestContextMiddleware
 from app.photos import DevicePhotos, ItemPhotos
 from app.picture import Pictures
+from app.privacy import Privacy
 from app.profiles import Profiles
 from app.projects import Planner, Templates
 from app.samples import SampleReader, Samples
@@ -114,11 +115,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     gate.keys = AccessKeys(app.state.inventory.store, gate.master_tag)
     app.state.photos = ItemPhotos(settings, app.state.inventory)
     app.state.device_photos = DevicePhotos(settings, app.state.inventory)
+    app.state.privacy = Privacy(settings, client)
     app.state.profiles = Profiles()
     app.state.measurer = Measurer(settings, app.state.profiles)
     app.state.assessor = Assessor(app.state.profiles, app.state.inventory)
     app.state.lister = Lister(settings, client, app.state.inventory, app.state.photos)
-    app.state.handoff = Handoff(app.state.inventory, app.state.photos, app.state.lister)
+    app.state.handoff = Handoff(
+        app.state.inventory, app.state.photos, app.state.lister, app.state.privacy
+    )
     app.state.voice = VoiceNotes(settings, client, app.state.inventory)
     app.state.valuer = Valuer(settings, client, app.state.inventory)
     app.state.finder = Finder(
@@ -136,6 +140,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.segmenter,
         app.state.voice,
         app.state.photos,
+        app.state.privacy,
     )
     app.state.templates = Templates()
     app.state.planner = Planner(

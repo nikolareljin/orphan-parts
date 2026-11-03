@@ -36,7 +36,7 @@ from app.listing.schema import (
 )
 from app.model_api import ModelApiClient, image_part, text_part, user_message
 from app.photos import ItemPhotos
-from app.projects.pack import private_field
+from app.privacy.text import KIND_LABELS, kinds_in, mask_text, private_field
 
 log = logging.getLogger("app.listing")
 
@@ -335,7 +335,8 @@ class Lister:
         facts: list[DraftFact] = []
         for fact in writing.facts:
             if fact.field in allowed and fact.text.strip():
-                facts.append(DraftFact(text=fact.text.strip(), field=fact.field))
+                line = mask_text(strip_values(fact.text.strip(), secrets))
+                facts.append(DraftFact(text=line, field=fact.field))
             else:
                 warnings.append(f"left out a line that rested on nothing confirmed: {fact.text!r}")
         if not item.tests_done and claims_working(writing.title + "\n" + writing.description):
@@ -353,19 +354,28 @@ class Lister:
                 " price come from Listing details"
             )
 
-        title, removed = strip_personal(strip_values(" ".join(writing.title.split()), secrets))
+        title, removed = strip_personal(
+            mask_text(strip_values(" ".join(writing.title.split()), secrets))
+        )
         if request.mode == "give" and not title.lower().startswith("free"):
             title = f"Free: {title}"
         title = title[:TITLE_MAX].rstrip()
         holds_data = request.holds_data or (details is not None and details.data != "none")
-        text, more = strip_personal(strip_values(writing.description.strip(), secrets))
+        text, more = strip_personal(mask_text(strip_values(writing.description.strip(), secrets)))
         removed += more
-        description = text + "\n\n" + "\n".join(disclosures(item, request, details))
+        # the disclosures carry the owner's own words (faults, what was tested): masked the same
+        description = mask_text(text + "\n\n" + "\n".join(disclosures(item, request, details)))
         if removed:
             warnings.append(
                 "took out " + ", ".join(sorted(set(removed))) + "; buyers write through Marketplace"
             )
         written = writing.title + "\n" + writing.description
+        masked = kinds_in(strip_values(written, secrets))
+        if masked:
+            warnings.append(
+                "masked " + ", ".join(KIND_LABELS[k] for k in masked) + " the text held; check"
+                " the photos hide it too"
+            )
         if strip_values(written, secrets) != written:
             warnings.append(
                 "took out a serial number, MAC address or IMEI the item holds; cover it on the"
@@ -407,6 +417,7 @@ class Lister:
                 tag
                 and not strip_personal(tag)[1]
                 and strip_values(tag, secrets) == tag
+                and not kinds_in(tag)
                 and tag.casefold() not in map(str.casefold, tags)
             ):
                 tags.append(tag)

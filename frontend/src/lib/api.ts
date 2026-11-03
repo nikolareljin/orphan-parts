@@ -242,9 +242,35 @@ export interface ComponentCreate {
   notes?: string
 }
 
+// A private detail found on a photo (a product key, a MAC address, a serial number, a password,
+// a QR code or a barcode): a box as fractions of the photo, blacked out on every shared copy
+// unless the owner chose to show it. Never the value itself.
+export interface PrivacyArea {
+  id: number
+  kind: string
+  label: string
+  what: string
+  x: number
+  y: number
+  w: number
+  h: number
+  hidden: boolean
+}
+
+// One photo's check for private details, and the line shown under it.
+export interface PhotoPrivacy {
+  n: number
+  status: 'clear' | 'found' | 'failed' | 'unchecked'
+  areas: PrivacyArea[]
+  note: string
+  shared: boolean
+  reason: string
+}
+
 // How many photos are kept with an item; each is at /api/items/{id}/photos/{n}, 1 first.
 export interface PhotoCount {
   count: number
+  photos?: PhotoPrivacy[]
 }
 
 // A picture of what the item could become, drawn by Muse Image on a click and kept beside the
@@ -1206,6 +1232,12 @@ export const api = {
     events: (id: number) => getJson<ItemEvent[]>(`/api/items/${id}/events`),
     photos: (id: number) => getJson<PhotoCount>(`/api/items/${id}/photos`),
     photoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/photos/${n}`),
+    // the copy that leaves the owner's view: private details blacked out
+    sharedPhotoUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/photos/${n}?copy=shared`),
+    checkPhotos: (id: number, again = false) =>
+      sendJson<PhotoCount>('POST', `/api/items/${id}/photos/check${again ? '?again=true' : ''}`),
+    chooseArea: (id: number, n: number, area: number, hidden: boolean) =>
+      sendJson<PhotoPrivacy>('PATCH', `/api/items/${id}/photos/${n}/areas/${area}`, { hidden }),
     pictures: (id: number) => getJson<PictureList>(`/api/items/${id}/pictures`),
     drawPicture: (id: number, use: string) => sendJson<Picture>('POST', `/api/items/${id}/picture`, { use }),
     pictureUrl: (id: number, n: number) => apiUrl(`/api/items/${id}/pictures/${n}`),
@@ -1235,7 +1267,8 @@ export const api = {
     write: (itemId: number, request: DraftRequest) => sendJson<Draft>('POST', `/api/items/${itemId}/drafts`, request),
     get: (id: number) => getJson<Draft>(`/api/drafts/${id}`),
     setStep: (id: number, key: string, done: boolean) => sendJson<Draft>('POST', `/api/drafts/${id}/checklist`, { key, done }),
-    photosZipUrl: (id: number) => apiUrl(`/api/drafts/${id}/photos.zip`),
+    // the shared copies; with unchecked, photos not checked for private details go in as they are
+    photosZipUrl: (id: number, unchecked = false) => apiUrl(`/api/drafts/${id}/photos.zip${unchecked ? '?unchecked=true' : ''}`),
   },
   marketplace: {
     data: () => getJson<MarketplaceData>('/api/marketplace/us'),

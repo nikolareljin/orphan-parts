@@ -113,6 +113,33 @@ and cut to 200 characters, at most six needs and three uses are kept, and a use 
 is dropped. Operation name `uses`, which is also the recorded fixture: three uses for a laptop.
 The code path is `app/decide/service.py`; see [Decide what it becomes](../guides/decide.md).
 
+## Private details on photos
+
+Each photo kept with an item is checked once for private details, one call per photo (effort
+`low`, an answer budget of 900 tokens) with the strict JSON schema of `SensitiveReading`: a list
+of areas, each with a `kind` (`product_key`, `mac_address`, `serial_number`, `imei`,
+`password`, `qr_code`, `barcode`, `other`), a few words on what it is (`what`, never the value)
+and a box as `x_min`, `y_min`, `x_max`, `y_max` on a 0 to 1000 scale of the width and height.
+
+- **Input.** The stored photo with a thin magenta grid drawn every 100 units and numbered along
+  its edges, and the instructions to read each box off the grid. On a blank photo the boxes
+  came back far off on portrait shots (a label's lines boxed below the label); read off the
+  grid they land on the value or close to it. The stored photo itself is never changed.
+- **Checks.** A box off the photo, one with no size, or more than 24 areas fail the whole
+  check, which keeps the photo out of anything shared: one area that cannot be placed would be
+  one area left showing. Each box is then padded (30 percent of its shorter side, within 0.8
+  and 3 percent of the photo's longer side, a little more at the ends of a line of text). A
+  value copied into `what` is masked by the text rules.
+- **Kept.** The areas, as fractions of the photo, are kept by the digest of the stored photo
+  under `DATA_DIR/privacy/`, with the owner's show or hide for each; the shared copy is drawn
+  from them on each request.
+- **Operation name** `find-sensitive`. There is no stub: in fixture mode only the recording of
+  the very photo answers, and a photo without one is a check that did not finish. The recordings
+  are the demo set's photos and a made-up label (`backend/tests/fixtures/fake-sticker.png`),
+  about 0.008 USD each. It is not in the live check.
+
+The code path is `app/privacy/service.py`; see [Private details on photos](../guides/private-details.md).
+
 ## Label extraction
 
 One call per request, however many photos (up to `MAX_PHOTOS`, default 4):

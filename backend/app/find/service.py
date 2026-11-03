@@ -519,7 +519,7 @@ class Finder:
             )
         if search.need_item_id is not None:
             # imported here: app.projects imports this module
-            from app.projects.pack import private_field
+            from app.privacy.text import private_field
 
             item = self.inventory.get(search.need_item_id)
             lines.append(f"Needed by: {item.name or item.item_type}")

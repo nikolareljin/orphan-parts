@@ -20,7 +20,7 @@ def create(client: TestClient, **spec: Any) -> int:
 
 def test_photos_are_kept_after_a_save_and_served_one_by_one(client: TestClient) -> None:
     item_id = create(client, item_type="USB webcam")
-    assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 0}
+    assert client.get(f"/api/items/{item_id}/photos").json()["count"] == 0
     res = client.post(
         f"/api/items/{item_id}/photos",
         files=[
@@ -29,8 +29,8 @@ def test_photos_are_kept_after_a_save_and_served_one_by_one(client: TestClient) 
         ],
     )
     assert res.status_code == 201, res.text
-    assert res.json() == {"count": 2}
-    assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 2}
+    assert res.json()["count"] == 2
+    assert client.get(f"/api/items/{item_id}/photos").json()["count"] == 2
     one = client.get(f"/api/items/{item_id}/photos/1")
     assert one.status_code == 200
     assert one.headers["content-type"] == "image/jpeg"
@@ -47,7 +47,7 @@ def test_the_limit_the_empty_send_and_the_file_that_is_not_an_image(
     res = client.post(f"/api/items/{item_id}/photos", files=too_many)
     assert res.status_code == 422
     assert "at most 4 photos" in res.json()["detail"]
-    assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 0}
+    assert client.get(f"/api/items/{item_id}/photos").json()["count"] == 0
     res = client.post(
         f"/api/items/{item_id}/photos",
         files=[("uploads", ("x.jpg", b"not an image", "image/jpeg"))],
@@ -72,7 +72,7 @@ def test_the_count_and_the_size_are_checked_on_the_way_in(
     part = [("uploads", ("big.jpg", big, "image/jpeg"))]
     res = client.post(f"/api/items/{item_id}/photos", files=part)
     assert res.status_code == 400 and "larger than" in res.json()["detail"]
-    assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 0}
+    assert client.get(f"/api/items/{item_id}/photos").json()["count"] == 0
 
 
 def test_a_stray_file_in_the_folder_is_not_a_photo(client: TestClient, settings: Settings) -> None:
@@ -84,14 +84,14 @@ def test_a_stray_file_in_the_folder_is_not_a_photo(client: TestClient, settings:
     folder = settings.data_dir / "items" / str(item_id)
     (folder / "photo-x.jpg").write_bytes(b"junk")
     (folder / "notes.txt").write_bytes(b"junk")
-    assert client.get(f"/api/items/{item_id}/photos").json() == {"count": 1}
+    assert client.get(f"/api/items/{item_id}/photos").json()["count"] == 1
     # a gap left by hand: the next photo is numbered past the highest, nothing is overwritten
     (folder / "photo-3.jpg").write_bytes((folder / "photo-1.jpg").read_bytes())
     (folder / "photo-1.jpg").unlink()
     res = client.post(
         f"/api/items/{item_id}/photos", files=[("uploads", ("b.jpg", make_photo(), "image/jpeg"))]
     )
-    assert res.status_code == 201 and res.json() == {"count": 2}
+    assert res.status_code == 201 and res.json()["count"] == 2
     assert sorted(p.name for p in folder.glob("photo-[0-9]*.jpg")) == ["photo-3.jpg", "photo-4.jpg"]
     assert client.get(f"/api/items/{item_id}/photos/1").status_code == 200
     assert client.get(f"/api/items/{item_id}/photos/1").headers["cache-control"] == "no-store"

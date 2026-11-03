@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_serializer
 
 from app.ops.door import for_visitor
+from app.privacy.text import mask_text
 
 Status = Literal["received", "processed", "failed"]
 TEXT_MAX = 2000
@@ -43,6 +44,10 @@ class Capture(BaseModel):
     @field_serializer("note")
     def _owner_note(self, value: str) -> str:
         return "" if for_visitor() else value
+
+    @field_serializer("name")
+    def _shown_name(self, value: str) -> str:
+        return mask_text(value) if for_visitor() else value
 
     @field_serializer("clip", "audio")
     def _owner_media(self, value: bool) -> bool:

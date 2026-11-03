@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { api, type Item, type ItemEvent, type ItemSummary, type ProfileSummary, type Provenance } from '../lib/api'
+import { api, type Item, type ItemEvent, type ItemSummary, type PhotoPrivacy, type PrivacyArea, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, cameFrom, photoReadLine, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
@@ -307,7 +307,7 @@ function ItemPanel({
             </div>
           )
         )}
-        <ItemPhotos key={item.version} id={item.id} />
+        <ItemPhotos key={item.version} id={item.id} owner={!readOnly} />
         <div className="row">
           <label>
             <span>Plan</span>
@@ -536,10 +536,15 @@ function ItemPanel({
 
 // The photos the item was read from (the capture's, or the label photos saved with it), a row
 // of thumbnails above the values to confirm, so each value can be checked against the picture.
-// One click makes a photo large, another shrinks it.
-function ItemPhotos({ id, device = false }: { id: number; device?: boolean }) {
+// One click makes a photo large, another shrinks it. Each photo says what was hidden on the
+// copies that leave the owner's view; the owner sees the original with those areas outlined,
+// and can show an area that is nothing private after all, or hide it again.
+function ItemPhotos({ id, device = false, owner = false }: { id: number; device?: boolean; owner?: boolean }) {
   const [count, setCount] = useState<number | null>(null)
+  const [checks, setChecks] = useState<PhotoPrivacy[]>([])
   const [big, setBig] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [problem, setProblem] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -548,7 +553,9 @@ function ItemPhotos({ id, device = false }: { id: number; device?: boolean }) {
     const counted = device ? api.items.devicePhotos(id) : api.items.photos(id)
     counted
       .then((p) => {
-        if (!cancelled) setCount(p.count)
+        if (cancelled) return
+        setCount(p.count)
+        setChecks(p.photos ?? [])
       })
       .catch(() => {
         if (!cancelled) setCount(-1) // not known: nothing is said either way
@@ -558,21 +565,98 @@ function ItemPhotos({ id, device = false }: { id: number; device?: boolean }) {
     }
   }, [id, device])
 
+  async function checkAgain() {
+    setBusy(true)
+    setProblem('')
+    try {
+      const p = await api.items.checkPhotos(id)
+      setChecks(p.photos ?? [])
+    } catch (err: unknown) {
+      setProblem(message(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function choose(n: number, area: PrivacyArea) {
+    setProblem('')
+    try {
+      const updated = await api.items.chooseArea(id, n, area.id, !area.hidden)
+      setChecks((all) => all.map((c) => (c.n === n ? updated : c)))
+    } catch (err: unknown) {
+      setProblem(message(err))
+    }
+  }
+
   if (count === null || count < 0) return null
   if (count === 0) return device ? null : <p className="muted no-photos">No photos saved with this item.</p>
+  const byN = new Map(checks.map((c) => [c.n, c]))
+  const waiting = checks.some((c) => !c.shared)
+  const opened = big !== null ? byN.get(big) : undefined
   return (
-    <div className="item-photos" aria-label={device ? 'Photos of the device' : 'Photos'}>
-      {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
-        <button
-          key={n}
-          type="button"
-          className={`link photo${big === n ? ' open' : ''}`}
-          title={big === n ? 'Shrink' : 'Enlarge'}
-          onClick={() => setBig(big === n ? null : n)}
-        >
-          <GatedImage src={device ? api.items.devicePhotoUrl(id, n) : api.items.photoUrl(id, n)} alt={device ? `Device photo ${n}` : `Item photo ${n}`} loading="lazy" />
+    <div className="item-photos-block">
+      <div className="item-photos" aria-label={device ? 'Photos of the device' : 'Photos'}>
+        {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
+          <button
+            key={n}
+            type="button"
+            className={`link photo${big === n ? ' open' : ''}`}
+            title={big === n ? 'Shrink' : 'Enlarge'}
+            onClick={() => setBig(big === n ? null : n)}
+          >
+            <span className="photo-frame">
+              <GatedImage src={device ? api.items.devicePhotoUrl(id, n) : api.items.photoUrl(id, n)} alt={device ? `Device photo ${n}` : `Item photo ${n}`} loading="lazy" />
+              {/* the owner sees the original: on the opened photo, the areas hidden on shared
+                  copies are outlined (a thumbnail is cropped square, so not there) */}
+              {owner &&
+                big === n &&
+                (byN.get(n)?.areas ?? []).map((a) => (
+                  <span
+                    key={a.id}
+                    aria-hidden="true"
+                    className={`privacy-box${a.hidden ? '' : ' shown'}`}
+                    style={{ left: `${a.x * 100}%`, top: `${a.y * 100}%`, width: `${a.w * 100}%`, height: `${a.h * 100}%` }}
+                    title={`${a.label}: ${a.hidden ? 'hidden when shared' : 'shown by you'}`}
+                  />
+                ))}
+            </span>
+          </button>
+        ))}
+      </div>
+      {!device && checks.length > 0 && (
+        <ul className="privacy-notes" aria-label="Private details">
+          {checks.map((c) => (
+            <li key={c.n} className={`privacy-note ${c.status}`}>
+              {count > 1 && <span className="muted">Photo {c.n}: </span>}
+              {c.note}
+            </li>
+          ))}
+        </ul>
+      )}
+      {owner && opened && opened.areas.length > 0 && (
+        <div className="privacy-areas" aria-label={`Areas on photo ${opened.n}`}>
+          {opened.areas.map((a) => {
+            // two areas of one kind (two MAC addresses) are told apart by their number
+            const same = opened.areas.filter((b) => b.label === a.label)
+            const which = same.length > 1 ? ` ${same.indexOf(a) + 1}` : ''
+            return (
+              <button key={a.id} type="button" className="secondary" onClick={() => void choose(opened.n, a)}>
+                {a.hidden ? `Show ${a.label}${which}` : `Hide ${a.label}${which}`}
+              </button>
+            )
+          })}
+        </div>
+      )}
+      {owner && waiting && (
+        <button type="button" className="secondary" disabled={busy} onClick={() => void checkAgain()}>
+          {busy ? 'Checking…' : 'Check for private details'}
         </button>
-      ))}
+      )}
+      {problem && (
+        <p className="error" role="alert">
+          {problem}
+        </p>
+      )}
     </div>
   )
 }

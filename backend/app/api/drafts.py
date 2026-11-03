@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 
 from app.api.deps import HandoffDep, ListerDep
@@ -16,6 +18,7 @@ from app.listing import (
     StepChange,
 )
 from app.listing.marketplace import MarketplaceData, data
+from app.privacy import NotCheckedError
 
 router = APIRouter(prefix="/api", tags=["listing"])
 
@@ -81,9 +84,24 @@ def save_sell_details(item_id: int, details: SellDetails, handoff: HandoffDep) -
 
 
 @router.get("/drafts/{draft_id}/photos.zip", response_class=Response)
-def draft_photos(draft_id: int, handoff: HandoffDep) -> Response:
-    """The item's photos in the draft's order, as stored (re-encoded, metadata dropped)."""
-    item_id, archive = handoff.zip(draft_id)
+def draft_photos(
+    draft_id: int,
+    handoff: HandoffDep,
+    unchecked: Annotated[
+        bool,
+        Query(
+            description="the owner's choice to put photos without a finished check in as they"
+            " are; without it such a photo refuses the download (409)"
+        ),
+    ] = False,
+) -> Response:
+    """The item's photos in the draft's order, as shared copies: each photo's private details
+    blacked out, re-encoded, metadata dropped. A photo not checked for private details refuses
+    the download with 409 and says which, unless ``unchecked`` is set."""
+    try:
+        item_id, archive = handoff.zip(draft_id, unchecked=unchecked)
+    except NotCheckedError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return Response(
         archive,
         media_type="application/zip",

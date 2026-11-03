@@ -240,3 +240,29 @@ describe('api.access.leave', () => {
     expect(store.has('opl-session')).toBe(false)
   })
 })
+
+describe('photo privacy', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('asks for the shared copy, checks again and records the owner choice', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ count: 1, photos: [] }))
+    vi.stubGlobal('fetch', fetchMock)
+    expect(api.items.sharedPhotoUrl(3, 1)).toBe('/api/items/3/photos/1?copy=shared')
+    await api.items.checkPhotos(3)
+    await api.items.checkPhotos(3, true)
+    await api.items.chooseArea(3, 1, 2, false)
+    const calls = fetchMock.mock.calls.map(([url, init]) => [url, init?.method, init?.body])
+    expect(calls).toEqual([
+      ['/api/items/3/photos/check', 'POST', undefined],
+      ['/api/items/3/photos/check?again=true', 'POST', undefined],
+      ['/api/items/3/photos/1/areas/2', 'PATCH', JSON.stringify({ hidden: false })],
+    ])
+  })
+
+  it('downloads unchecked photos only when asked', () => {
+    expect(api.drafts.photosZipUrl(5)).toBe('/api/drafts/5/photos.zip')
+    expect(api.drafts.photosZipUrl(5, true)).toBe('/api/drafts/5/photos.zip?unchecked=true')
+  })
+})

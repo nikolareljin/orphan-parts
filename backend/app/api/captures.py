@@ -4,11 +4,12 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, ValidationError
 
-from app.api.deps import CapturesDep
+from app.api.deps import CapturesDep, PrivacyDep
 from app.api.model_errors import as_http
 from app.captures import Capture, CaptureCreate, CaptureError, CaptureList
 from app.listing import BadAudioError
-from app.ops.door import live_request
+from app.ops.door import for_visitor, live_request
+from app.privacy import NotCheckedError
 
 router = APIRouter(prefix="/api", tags=["captures"])
 
@@ -90,10 +91,19 @@ def mark_capture_public(capture_id: int, mark: PublicMark, captures: CapturesDep
 
 
 @router.get("/captures/{capture_id}/photos/{n}", response_class=Response)
-def capture_photo(capture_id: int, n: int, captures: CapturesDep) -> Response:
-    return Response(
-        captures.photo(capture_id, n, public_only=not live_request.get()), media_type="image/jpeg"
-    )
+def capture_photo(capture_id: int, n: int, captures: CapturesDep, privacy: PrivacyDep) -> Response:
+    """The photo as kept for the owner; the demo visitor gets its shared copy, with its private
+    details blacked out, and nothing of a photo not checked yet (one is checked when the
+    capture is read into an item)."""
+    data = captures.photo(capture_id, n, public_only=not live_request.get())
+    if for_visitor():
+        try:
+            data = privacy.shared_copy(data)
+        except NotCheckedError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+    # never cached: the same address answers the owner the original and the visitor the
+    # shared copy
+    return Response(data, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 @router.get("/captures/{capture_id}/clip", response_class=Response)

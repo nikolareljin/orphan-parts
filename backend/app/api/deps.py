@@ -17,6 +17,7 @@ from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import Gate
 from app.photos import DevicePhotos, ItemPhotos
 from app.picture import Pictures
+from app.privacy import Privacy
 from app.profiles import Profiles
 from app.projects.service import Planner
 from app.samples import SampleReader, Samples
@@ -156,6 +157,14 @@ def app_photos(request: Request) -> ItemPhotos:
 
 
 PhotosDep = Annotated[ItemPhotos, Depends(app_photos)]
+
+
+def app_privacy(request: Request) -> Privacy:
+    privacy: Privacy = request.app.state.privacy
+    return privacy
+
+
+PrivacyDep = Annotated[Privacy, Depends(app_privacy)]
 
 
 def app_device_photos(request: Request) -> DevicePhotos:

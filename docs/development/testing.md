@@ -90,6 +90,22 @@ guidance, searches, committed projects and last decision, the same choice again 
 without a new version, a choice from an older version refused with 409, and the demo visitor
 refused on every route.
 
+Private details are tested at every layer (`tests/test_privacy.py`): each text rule on its own
+positives and on ordinary label text it must leave alone (a key without a digit, four groups,
+mixed MAC separators, a number that fails the Luhn check, *Memtest pass*), the masks (the last
+four of an identifier, nothing of a password, the sentence's punctuation kept); the model's
+boxes placed, padded and swapped corners put right, and a box off the photo, without size or
+one of 25 failing the whole check; the shared copy black inside a hidden area, untouched in a
+shown one and outside, without EXIF; the grid on the copy the model reads and not on the photo;
+the notes; the one live recording, of a made-up label (`tests/fixtures/fake-sticker.png`),
+finding all six kinds on it with no stub; a check with no recording kept as failed and the
+photo refused to a share unless the owner chooses it; the request through a mock server (the
+schema, the grid, the image part); the routes: an upload checked, its shared copy black where
+the original is not, an area shown and hidden, the zip carrying shared copies and refusing an
+unchecked photo with 409 unless asked; and the demo visitor getting shared copies whatever is
+asked, 404 for an unchecked photo, masked values, label text and free text, and 403 on the
+check and the area choice.
+
 Listing drafts are tested against the recorded Muse Spark answers (`draft-sell`, `draft-give`):
 facts resting on unconfirmed fields dropped, the disclosures appended, the free title, the
 data steps, a stale draft after the item changes, and a working claim without a recorded test
@@ -130,7 +146,8 @@ so the browser sees exactly what a user sees and no credit is spent; `PICTURE_EN
 the run, so the item dialog draws its picture from the recorded stub. The runner shares the
 frontend container's network and runs as the host user; results, traces and videos land under
 `e2e/test-results/`. Specs live in `e2e/tests/`, one per surface (`extract`, `inventory`,
-`measure`, `assess`, `value`, `listing`, `decide`, `find`, `search-plan`, `build`, `inbox`, and
+`measure`, `assess`, `value`, `listing`, `decide`, `find`, `search-plan`, `build`, `inbox`,
+`privacy` (the made-up label's note, its six areas outlined, one shown and the note after), and
 `access`, `door` and `samples` for the two doors and the visitor's gallery), and address the page by role and label, the way a user
 does. CI runs the same command in its `e2e` job. Expectations wait ten seconds rather
 than the default five: six workers share one backend process, and while the segmentation test
