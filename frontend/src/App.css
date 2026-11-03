@@ -56,6 +56,12 @@ footer.service .error {
   color: var(--error);
 }
 
+footer.service .links {
+  display: flex;
+  gap: 1.25rem;
+  margin-left: auto;
+}
+
 /* dialogs: the panel that opens from a list */
 dialog.modal {
   width: min(900px, calc(100vw - 2rem));

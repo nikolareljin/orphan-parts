@@ -308,6 +308,15 @@ export default function App() {
             </details>
           </>
         )}
+        {/* shown whatever the server says: the way to the docs and the code even when it is down */}
+        <span className="links">
+          <a href="https://nikolareljin.github.io/orphan-parts/" target="_blank" rel="noreferrer">
+            Documentation
+          </a>
+          <a href="https://github.com/nikolareljin/orphan-parts" target="_blank" rel="noreferrer">
+            Source on GitHub
+          </a>
+        </span>
       </footer>
     </main>
   )
