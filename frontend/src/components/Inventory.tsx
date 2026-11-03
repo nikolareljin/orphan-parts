@@ -514,6 +514,7 @@ function ItemPanel({
           <input
             type="checkbox"
             checked={item.public}
+            disabled={readOnly}
             onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
           />
           <span>
