@@ -18,7 +18,7 @@ from app.projects.schema import VOICE_LINE, Project, visitor_markdown
 from tests.conftest import RECORDED_FIXTURES
 from tests.test_gate import CODE, gated_settings
 
-NOTE = "ask my neighbour first"
+NOTE = "ask my neighbor first"
 LISTING_NOTE = "the seller sounded unsure"
 CONFIGURATION = "wand taped in the hall closet"
 # the owner's words on an item's condition, where a voice note is kept: they reach the pack
