@@ -5,157 +5,160 @@ One worn part can stop a favorite routine.
 2
 00:00:03,598 --> 00:00:09,684
 Useful electronics sit in drawers because
-we don't know what to do with them.
+no one knows what to do with them.
 
 3
-00:00:09,804 --> 00:00:13,282
+00:00:09,804 --> 00:00:12,847
 Orphan Parts Lens starts with two
-questions: what
+questions.
 
 4
-00:00:13,402 --> 00:00:16,880
-do you have, and what do you want?
+00:00:12,967 --> 00:00:16,880
+What do you have, and what do you want?
 
 5
-00:00:17,000 --> 00:00:21,075
-I make frappé coffee with this older
-Hamilton
+00:00:17,000 --> 00:00:21,621
+This older Hamilton Beach drink mixer
+makes frappé coffee.
 
 6
-00:00:21,195 --> 00:00:25,270
-Beach drink mixer, and its agitator is
-worn.
+00:00:21,741 --> 00:00:23,794
+Its agitator is worn.
 
 7
-00:00:25,390 --> 00:00:33,031
+00:00:23,914 --> 00:00:31,615
 The rod has no model number, so the app
 asks which device it came from.
 
 8
-00:00:33,151 --> 00:00:36,717
+00:00:31,735 --> 00:00:35,329
 The label under the base answers that.
 
 9
-00:00:36,837 --> 00:00:42,949
+00:00:35,449 --> 00:00:40,583
 Search the web looks first for the maker's
-own part, and keeps
+own part.
 
 10
-00:00:43,069 --> 00:00:48,673
-only pages the search returned, each a
-listing with its link.
+00:00:40,703 --> 00:00:47,377
+It keeps only pages the search returned,
+each a listing with its link.
 
 11
-00:00:48,793 --> 00:00:54,396
+00:00:47,497 --> 00:00:53,145
 Check fit turns every unknown into a
 question for the seller.
 
 12
-00:00:54,516 --> 00:01:01,138
+00:00:53,265 --> 00:00:58,399
 Decide weighs fixing, reusing or selling
-for my skills; it calls the fix
+against the owner's skills.
 
 13
-00:01:01,258 --> 00:01:07,880
-hard, but with the maker's part found, I
-keep it and fix it.
+00:00:58,519 --> 00:01:01,086
+It calls the fix hard.
 
 14
-00:01:08,000 --> 00:01:12,063
-The same approach works for my unused
-electronics.
+00:01:01,206 --> 00:01:07,880
+But with the maker's part found, the owner
+keeps it and fixes it.
 
 15
-00:01:12,183 --> 00:01:17,769
-I catalog laptops, monitors and parts,
-rate my skills, and say
+00:01:08,000 --> 00:01:11,421
+The same approach works for unused
+electronics.
 
 16
-00:01:17,889 --> 00:01:23,475
-what I want from a build and what I can
-spend.
+00:01:11,541 --> 00:01:17,405
+Laptops, monitors and parts go into the
+inventory, beside a skills profile.
 
 17
-00:01:23,595 --> 00:01:28,166
-Muse Spark proposes projects from what I
-own, and
+00:01:17,525 --> 00:01:23,878
+The preferences say what the build is for
+and what it can cost.
 
 18
-00:01:28,286 --> 00:01:32,349
-the rules keep only what my inventory
-backs.
+00:01:23,998 --> 00:01:28,885
+Muse Spark proposes projects from what is
+in the inventory.
 
 19
-00:01:32,469 --> 00:01:38,055
-The arcade I asked for isn't among them,
-so I pick
+00:01:29,005 --> 00:01:32,914
+The rules keep only what the inventory
+backs.
 
 20
-00:01:38,175 --> 00:01:43,253
-the homework workstation, and its items
-are committed to it.
+00:01:33,034 --> 00:01:37,432
+The arcade that was asked for isn't among
+them.
 
 21
-00:01:43,373 --> 00:01:48,960
+00:01:37,552 --> 00:01:43,905
+So the homework workstation is selected,
+and its items are committed to it.
+
+22
+00:01:44,025 --> 00:01:49,400
 Draw it shows how it could look, marked as
 a drawing.
 
-22
-00:01:49,080 --> 00:01:54,666
-What is missing becomes a Marketplace
-search that I run myself.
-
 23
-00:01:54,786 --> 00:02:00,880
+00:01:49,520 --> 00:01:54,896
+What is missing becomes a Marketplace
+search that the owner runs.
+
+24
+00:01:55,016 --> 00:02:00,880
 The build pack collects the items, the
 steps, and the safety notes.
 
-24
-00:02:01,000 --> 00:02:04,701
-Next, a plan that adapts: a connection
-diagram,
-
 25
-00:02:04,821 --> 00:02:08,522
-and a different display that re-plans the
-build.
+00:02:01,000 --> 00:02:03,313
+Next, a plan that adapts.
 
 26
+00:02:03,433 --> 00:02:08,522
+A connection diagram, and a different
+display that re-plans the build.
+
+27
 00:02:08,642 --> 00:02:11,880
 These are concept previews, not built yet.
 
-27
-00:02:12,000 --> 00:02:19,007
-On my phone, I capture photos and a spoken
-note into the same inventory.
-
 28
-00:02:19,127 --> 00:02:23,631
-Muse Spark, SAM 3.1, Muse Voice Transcribe
-and Muse
+00:02:12,000 --> 00:02:18,063
+On the phone, photos and a spoken note go
+into the same inventory.
 
 29
-00:02:23,751 --> 00:02:28,256
-Image do the reading, the searching and
-the drawing.
+00:02:18,183 --> 00:02:24,245
+The models are Muse Spark, SAM 3.1, Muse
+Voice Transcribe and Muse Image.
 
 30
-00:02:28,376 --> 00:02:32,880
-And anyone can try it on my own photos.
+00:02:24,365 --> 00:02:28,563
+They do the reading, the searching and the
+drawing.
 
 31
+00:02:28,683 --> 00:02:32,880
+Anyone can try it on the owner's own
+photos.
+
+32
 00:02:33,000 --> 00:02:35,556
 Orphan Parts Lens.
 
-32
+33
 00:02:35,676 --> 00:02:37,380
 Find replacements.
 
-33
+34
 00:02:37,500 --> 00:02:39,204
 Discover reuse.
 
-34
+35
 00:02:39,324 --> 00:02:41,880
 Build something useful.
 

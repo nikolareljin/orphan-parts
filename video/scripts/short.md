@@ -4,7 +4,8 @@ For the social post: Story A, then Story B, the same cards, titles and caption s
 main video, 1920x1080. Shot numbers point at [the short storyboard](../storyboard/short.md);
 the captions in `short.srt` come from the quoted lines below through `captions.py`.
 
-Pace: 104 words in 55 seconds, about 1.9 words a second.
+Read by the same neutral narrator as the main video (`generate.sh --tts`): third person, one
+spoken clip per caption, never the owner speaking.
 
 ## 0:00 to 0:05 · Hook
 
@@ -16,9 +17,9 @@ Shot K1.
 
 Shots K2 to K4.
 
-> My frappé maker's agitator is worn. The app asks which device it came from, and the label
-> under the base answers. Search the web brings back the maker's part, and Check fit turns
-> every unknown into a question for the seller.
+> This frappé maker's agitator is worn. The app asks which device it came from. The label
+> under the base answers. Search the web brings back the maker's part. Check fit turns every
+> unknown into a question for the seller.
 
 Name the part number only when the recorded take shows it (see `main.md`).
 
@@ -26,8 +27,9 @@ Name the part number only when the recorded take shows it (see `main.md`).
 
 Shots K5 to K7.
 
-> For my unused electronics, Muse Spark proposes builds from what I own. I pick a homework
-> workstation and draw it, and what is missing becomes a Marketplace search I run myself.
+> For unused electronics, Muse Spark proposes builds from the inventory. The homework
+> workstation is selected and drawn. What is missing becomes a Marketplace search that the
+> owner runs.
 
 ## 0:43 to 0:48 · Concept preview
 

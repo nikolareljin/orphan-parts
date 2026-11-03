@@ -5,8 +5,8 @@
 # contact sheet of the main video's shots (video/out/main-shots.jpg). The stack is torn down
 # at the end, its volumes with it; nothing outside video/out/ changes.
 #
-# Usage: video/generate.sh [--record] [--narration FILE] [--tts] [--phone] [--keep]
-#                          [--assemble]
+# Usage: video/generate.sh [--record] [--narration FILE] [--tts] [--voice NAME|FILE]
+#                          [--phone] [--keep] [--assemble]
 #
 #   --record           record the model answers the scenes need, once, with MODEL_API_KEY from
 #                      this shell (never written anywhere): the stack runs live with
@@ -14,10 +14,16 @@
 #                      every answer kept under backend/tests/fixtures/api; a request already
 #                      recorded is replayed, not bought again. Review and commit the new
 #                      fixtures, then run without --record for the drafts
-#   --narration FILE   the owner's narration (WAV, the cut's length), mixed in as is; nothing
-#                      is retimed
-#   --tts              a rough narration from a local text-to-speech (espeak-ng, espeak or
-#                      pico2wave) when one is installed; skipped otherwise
+#   --narration FILE   a recorded narration of the main video (WAV, the cut's length), mixed
+#                      in as is; nothing is retimed
+#   --tts              the synthetic narrator for both cuts (video/tts.py): Piper, offline, reads
+#                      every caption of scripts/main.srt and short.srt in its window, at most
+#                      1.15x its natural pace, at -16 LUFS. Piper is $PIPER or piper on PATH
+#                      (pip install piper-tts in a virtual environment); without it the drafts
+#                      stay silent. A line that does not fit stops the run: shorten it
+#   --voice NAME|FILE  the narrator's voice: en_US-ljspeech-high (default, or VIDEO_VOICE),
+#                      en_US-norman-medium, or a .onnx Piper model; a named voice is downloaded
+#                      once into PIPER_VOICES (~/.cache/piper-voices), never into the repository
 #   --phone            record the phone scene (S19) on the phone or emulator VIDEO_PHONE_SERIAL
 #                      names (video/phone.sh: unlocked, the app installed); without it the
 #                      app's screenshots stand in. With --record the phone's capture is read
@@ -38,12 +44,13 @@ ROOT="$(cd "$HERE/.." && pwd)"
 parse_common_args "${BASH_SOURCE[0]}" "$@"
 set -- "${ARGS[@]+"${ARGS[@]}"}"
 
-record=0 narration="" tts=0 android=0 keep=0 assemble_only=0 started=0
+record=0 narration="" tts=0 voice="${VIDEO_VOICE:-}" android=0 keep=0 assemble_only=0 started=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --record) record=1 ;;
     --narration) [[ $# -ge 2 && -f "$2" ]] || die "--narration needs a WAV file"; narration="$(abs_path "$2")"; shift ;;
     --tts) tts=1 ;;
+    --voice) [[ $# -ge 2 && -n "$2" ]] || die "--voice needs a voice name or a .onnx file"; voice="$2"; shift ;;
     --phone) android=1 ;;
     --keep) keep=1 ;;
     --assemble) assemble_only=1 ;;
@@ -186,19 +193,28 @@ android_scene() {
   bash "$HERE/phone.sh" "$WORK/takes/S19.mp4" || log_warn "phone scene: not recorded; the app's screenshots stand in"
 }
 
+# The narration tracks: the recorded one for the main video, else the synthetic narrator's
+# for both cuts (--tts), else none.
+voice_main="" voice_short=""
 narrate() {
   if [[ -n "$narration" ]]; then
-    printf '%s\n' "$narration"
-    return
-  fi
-  [[ $tts -eq 1 ]] || return 0
-  local engine=""
-  for engine in espeak-ng espeak pico2wave; do has_cmd "$engine" && break || engine=""; done
-  if [[ -z "$engine" ]]; then
-    log_warn "--tts: no local text-to-speech (espeak-ng, espeak, pico2wave) is installed; the drafts stay silent" >&2
+    voice_main="$narration"
     return 0
   fi
-  python3 "$HERE/tts.py" "$engine" "$HERE/scripts/main.md" "$WORK/tts-main.wav" >&2 && printf '%s\n' "$WORK/tts-main.wav"
+  [[ $tts -eq 1 ]] || return 0
+  local piper="${PIPER:-}"
+  [[ -n "$piper" ]] || piper="$(command -v piper || true)"
+  if [[ -z "$piper" || ! -x "$piper" ]]; then
+    log_warn "--tts: Piper is not installed (set PIPER or put piper on PATH); the drafts stay silent"
+    return 0
+  fi
+  export PIPER="$piper"
+  local cut
+  for cut in main short; do
+    log_info "narrating the $cut video"
+    python3 "$HERE/tts.py" "$HERE/scripts/$cut.srt" "$WORK/tts-$cut.wav" ${voice:+--voice "$voice"} || die "--tts: the $cut narration was not written"
+  done
+  voice_main="$WORK/tts-main.wav" voice_short="$WORK/tts-short.wav"
 }
 
 main() {
@@ -214,10 +230,9 @@ main() {
     [[ $record -eq 0 ]] || { log_ok "recorded: new answers under backend/tests/fixtures/api (git status); review and commit them, then run video/generate.sh"; return 0; }
     _down
   fi
-  local voice
-  voice="$(narrate)"
+  narrate
   log_info "cutting the drafts"
-  python3 "$HERE/assemble.py" ${voice:+--narration "$voice"}
+  python3 "$HERE/assemble.py" ${voice_main:+--narration "$voice_main"} ${voice_short:+--narration-short "$voice_short"}
   log_ok "video/out/main-draft.mp4, video/out/short-draft.mp4, video/out/main-shots.jpg"
 }
 

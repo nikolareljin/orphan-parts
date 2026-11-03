@@ -59,7 +59,23 @@ the camera's *high efficiency* video setting so clips are H.264.
 
 ## Narration
 
-Record it after the picture is cut, in a quiet room, one section at a time from
+The narrator is a synthetic voice by default: `video/generate.sh --tts` (or `--assemble --tts`
+on takes already recorded) has Piper read every caption of `scripts/main.srt` and
+`scripts/short.srt` in its window, offline, and mixes the track under both cuts at -16 LUFS.
+Piper is installed once in a virtual environment of its own, outside the repository:
+
+```bash
+python3 -m venv ~/.venvs/piper && ~/.venvs/piper/bin/pip install piper-tts
+export PIPER=~/.venvs/piper/bin/piper     # or put it on PATH
+video/generate.sh --assemble --tts        # --voice en_US-norman-medium for the other voice
+```
+
+The voice model is downloaded on first use into `~/.cache/piper-voices` (`PIPER_VOICES`),
+checked against its published checksum; `assets.md` names it and its license. A caption the
+voice cannot say in its window at up to 1.15 times its natural pace stops the run with the
+line named: shorten it in the script and run `captions.py` again.
+
+A recorded voice can replace it: record it after the picture is cut, in a quiet room, one section at a time from
 `scripts/main.md`, in OBS with only the microphone, or any recorder at 48 kHz. Leave a second
 of silence at each end. Then shift the section times in `scripts/main.md` to where each
 section starts in the edit and run `python3 scripts/captions.py scripts/main.md
