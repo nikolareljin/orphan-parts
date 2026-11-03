@@ -10,16 +10,19 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from app.listing.voice import FIELD as VOICE_FIELD
 from app.main import create_app
 from app.ops.door import live_request
 from app.ops.gate import DEMO_LINE, demo_allowed, expensive
-from app.projects.schema import Project, visitor_markdown
+from app.projects.schema import VOICE_LINE, Project, visitor_markdown
 from tests.conftest import RECORDED_FIXTURES
 from tests.test_gate import CODE, gated_settings
 
 NOTE = "ask my neighbour first"
 LISTING_NOTE = "the seller sounded unsure"
 CONFIGURATION = "wand taped in the hall closet"
+# the owner's words on an item's condition, where a voice note is kept: they reach the pack
+SPOKEN = "rattles since the move upstairs"
 BUDGET, RADIUS, LEFT = 75.0, 30, 12.5
 
 
@@ -96,6 +99,8 @@ def _owner_records(c: TestClient) -> dict[str, Any]:
         "working": False,
     }
     assert c.post(f"/api/projects/{pid}/outcome", json=record).status_code == 200
+    spoken = {"field": VOICE_FIELD, "value": SPOKEN}
+    assert c.post(f"/api/items/{ids['vacuum']}/fields", json=spoken).status_code == 200
     written = c.post(f"/api/projects/{pid}/pack")
     assert written.status_code == 201, written.text
     ids["pack"] = written.json()["id"]
@@ -122,6 +127,7 @@ def test_the_owner_gets_the_notes_the_budget_and_the_outcome(gated: TestClient) 
     assert project["outcome"]["configuration"] == CONFIGURATION
     pack = gated.get(f"/api/packs/{ids['pack']}").json()["markdown"]
     assert "Across the selected projects: " in pack and "## Outcome" in pack
+    assert f"condition notes: {SPOKEN}" in pack
 
 
 def test_the_demo_visitor_reads_find_build_and_the_profile(gated: TestClient) -> None:
@@ -213,7 +219,7 @@ def test_no_page_the_visitor_reads_carries_the_owners_words(gated: TestClient) -
     ):
         answer = gated.get(path)
         assert answer.status_code == 200, path
-        for secret in (NOTE, LISTING_NOTE, CONFIGURATION):
+        for secret in (NOTE, LISTING_NOTE, CONFIGURATION, SPOKEN):
             assert secret not in answer.text, (path, secret)
         if path.endswith(".md"):
             continue
@@ -335,6 +341,48 @@ def test_a_pack_for_the_visitor_leaves_the_budget_and_the_outcome_out() -> None:
     assert "in the hall" not in shown
     assert "Expected spending for this project: 10 USD." in shown and "1. [ ] Begin" in shown
     assert shown.endswith("Begin\n")
+
+
+def test_a_pack_for_the_visitor_leaves_the_spoken_notes_and_the_searches_out() -> None:
+    # the searches opened for what is still needed are made from values, with the budget left
+    # as their top price: the owner's, like a voice note kept as the condition notes
+    pack = "\n".join(
+        [
+            "## From the inventory",
+            "",
+            "- **Upright vacuum** as body (committed). It runs.",
+            "  - condition: worn",
+            f"{VOICE_LINE}it rattles",
+            "since the move",
+            "",
+            "  - weight: 5 kg",
+            "- **Narrow tool** as attachment (committed).",
+            "",
+            "## Still needed",
+            "",
+            "- Hose (blocks the build). Search: Hose for A build, top price 40 USD; 1 candidate(s),"
+            " 1 documented",
+            "  - Vacuum hose, 12 USD seen 2026-10-30",
+            "- Filter (optional)",
+            "",
+            "## Costs",
+            "",
+            "Expected spending for this project: 10 USD.",
+            "",
+        ]
+    )
+    shown = visitor_markdown(pack)
+    for secret in ("rattles", "since the move", "Search:", "top price 40", "Vacuum hose"):
+        assert secret not in shown, secret
+    for kept in (
+        "  - condition: worn",
+        "  - weight: 5 kg",
+        "- **Narrow tool** as attachment (committed).",
+        "- Hose (blocks the build)\n- Filter (optional)\n\n## Costs",
+        "Expected spending for this project: 10 USD.",
+    ):
+        assert kept in shown, kept
+    assert f"  - {VOICE_FIELD.replace('_', ' ')}: " == VOICE_LINE
 
 
 def test_lines_the_inventory_does_not_back_are_the_owners(gated: TestClient) -> None:

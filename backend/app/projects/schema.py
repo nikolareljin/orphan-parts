@@ -277,26 +277,56 @@ class Pack(BaseModel):
     markdown: str
     created_at: str
 
-    # for the demo visitor, the pack without the owner's budget line and without the outcome
-    # section (a shared outcome is on the project itself)
+    # for the demo visitor, the pack without the owner's budget line, spoken notes, searches
+    # and outcome section (a shared outcome is on the project itself)
     @field_serializer("markdown")
     def _visitor_markdown(self, value: str) -> str:
         return visitor_markdown(value) if for_visitor() else value
 
 
-# the line of a pack that states the owner's budget, and the heading of its outcome section
+# The lines of a pack the demo visitor never reads: the owner's budget, the outcome section,
+# the condition notes (a voice note is kept there, as the owner said it) and, under what is
+# still needed, the search opened for it (made from values, so the owner's: its title, its top
+# price, which is the budget left, and its candidates).
 BUDGET_LINE = "Across the selected projects: "
 OUTCOME_HEADING = "## Outcome"
+INVENTORY_HEADING = "## From the inventory"
+NEEDED_HEADING = "## Still needed"
+SEARCH_MARK = ". Search: "
+# app.listing.voice.FIELD as a pack writes it
+VOICE_LINE = "  - condition notes: "
 
 
 def visitor_markdown(markdown: str) -> str:
-    """A pack as the demo visitor reads it: the budget line and the outcome section left out."""
+    """A pack as the demo visitor reads it: the budget line, the condition notes, the searches
+    under what is still needed and the outcome section left out. A value written over several
+    lines goes with its first."""
     lines: list[str] = []
+    section = ""
+    # while a line is being left out, the prefixes of the line that ends it
+    skipping: tuple[str, ...] = ()
     for line in markdown.split("\n"):
         if line == OUTCOME_HEADING:
             break
-        if not line.startswith(BUDGET_LINE):
-            lines.append(line)
+        if line.startswith("## "):
+            section, skipping = line, ()
+            if lines and lines[-1] != "":
+                lines.append("")
+        elif skipping:
+            if not line.startswith(skipping):
+                continue
+            skipping = ()
+        if line.startswith(BUDGET_LINE):
+            continue
+        if section == INVENTORY_HEADING and line.startswith(VOICE_LINE):
+            skipping = ("- ", "  - ")
+            continue
+        if section == NEEDED_HEADING and line.startswith("- "):
+            cut = line.find(SEARCH_MARK)
+            if cut >= 0:
+                line = line[:cut]
+                skipping = ("- ",)
+        lines.append(line)
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
