@@ -43,6 +43,15 @@ Decide section is read-only (see [Without the access code](#without-the-access-c
 The decision buttons under the rows (**Keep and fix**, **Keep as a spare**, **Keep and build**, **Sell**,
 **Give away**, **Not worth it**, with a note) record the same choice without the cards.
 
+### On the demo set
+
+Cards Muse Spark wrote for items of the demo set, as a visitor reads them. More on
+[Examples: what the models produced](../start/examples.md).
+
+![Decide for the Dell U2419H: Keep and fix recommended, Reuse it chosen with its Muse Image picture](../assets/shots/examples/60-visitor-decide-build.png)
+
+![Decide for the Sun flat panel monitor: Sell or give away recommended and chosen](../assets/shots/examples/60-visitor-decide-sell.png)
+
 ## Built so far
 
 **Decide**, on the item's page below its values and details and above the other panels, starts

@@ -60,6 +60,11 @@ What it does (`docs/shots/generate.sh`):
   lists. The specs that come first follow the demo video's scenes in order, so each model
   request is the one recorded for the video and replays as such; the run lists any answer that
   was a stand-in for want of a recording.
+- Runs `02b-examples.spec.ts` right after the search guide's spec, before anything later
+  changes the set, for [Examples](../start/examples.md): each picture is one element whole (a
+  project panel, its drawings, a draft, a reading), the window made as tall as the element
+  needs for the shot (`Shots.element` in `docs/shots/lib.ts`), signed in and as the visitor.
+  It only reads, so the specs after it find the set as before.
 - The privacy guide's pictures use the made-up label the browser checks use
   (`e2e/tests/fake-sticker.png`, every value on it fake), mounted read-only; no real photo.
 - Before each picture: the pairing QR code is swapped for a fixed pattern and blurred, and every

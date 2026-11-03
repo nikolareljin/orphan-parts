@@ -60,6 +60,15 @@ demo set wrote for them. Without the access code a public item's drafts are show
 
 Posting is yours: nothing here fills, reads or submits a Facebook page.
 
+### On the demo set
+
+The second drawer's drafts: a graphics card for sale and four flex cables given away. More on
+[Examples: what the models produced](../start/examples.md).
+
+![The EVGA 9500 GT sell draft: every Marketplace field with Copy, the photo, Open Marketplace, the steps and the checklists](../assets/shots/examples/21-9500gt-sell-draft.png)
+
+![The iPhone flex cables give-away: Free Stuff, the description, four photos in order and who could use them](../assets/shots/examples/22-flex-give-draft.png)
+
 ## The hard limit
 
 No public API posts a personal Facebook Marketplace listing, and automating the site is against

@@ -109,13 +109,54 @@ export class Shots {
     mkdirSync(dir, { recursive: true })
     await this.page.screenshot({ path: join(dir, `${name}.png`), animations: 'disabled', caret: 'hide', style: BLUR })
   }
+
+  /** One element alone (a project panel, a draft, the drawings), as <nn-name>.png of this guide:
+   * the window made as tall as the element needs (up to MAX_TALL), so a dialog shows all of it
+   * with no scroll, then back to 1280x800. `hide` names parts left out of this picture (shown in
+   * a picture of their own), e.g. a project's build pack. */
+  async element(name: string, target: Locator, hide = ''): Promise<void> {
+    const page = this.page
+    const size = page.viewportSize() ?? { width: 1280, height: 800 }
+    await target.waitFor({ state: 'visible' })
+    const hidden = hide ? await page.addStyleTag({ content: `${hide} { display: none !important; }` }) : null
+    // the element's height plus what a scrolling box in it (a dialog's body) or around it hides
+    const needed = await target.evaluate((el) => {
+      let extra = 0
+      for (const box of [...el.querySelectorAll('*'), ...(function* () {
+        for (let up = el.parentElement; up; up = up.parentElement) yield up
+      })()]) {
+        if (box.scrollHeight > box.clientHeight + 1 && getComputedStyle(box).overflowY !== 'visible') extra += box.scrollHeight - box.clientHeight
+      }
+      return el.getBoundingClientRect().height + extra
+    })
+    await page.setViewportSize({ width: size.width, height: Math.min(MAX_TALL, Math.max(size.height, Math.ceil(needed) + 160)) })
+    try {
+      // a box scrolled inside the element (a dialog's body) back at its top
+      await target.evaluate((el) => el.querySelectorAll('*').forEach((box) => box.scrollTop > 0 && box.scrollTo({ top: 0, behavior: 'instant' })))
+      await this.show(target)
+      await this.settle()
+      await steadyPage(page)
+      await steadyTimes(page)
+      await page.mouse.move(0, 0)
+      const dir = join(OUT, 'png', this.guide)
+      mkdirSync(dir, { recursive: true })
+      await target.screenshot({ path: join(dir, `${name}.png`), animations: 'disabled', caret: 'hide', style: BLUR })
+    } finally {
+      await hidden?.evaluate((el) => el.remove())
+      await page.setViewportSize(size)
+    }
+  }
 }
+
+// the tallest window an element shot opens (a long project panel is cut there)
+const MAX_TALL = 4000
 
 export const test = base.extend<{ shots: Shots }>({
   shots: async ({ page }, use, info) => {
     await page.clock.setFixedTime(NOW)
-    // the guide is the spec's file name without its number: 03-profile.spec.ts is profile
-    const guide = info.file.replace(/^.*\/\d\d-/, '').replace(/\.spec\.ts$/, '')
+    // the guide is the spec's file name without its number: 03-profile.spec.ts is profile, and
+    // 02b-examples.spec.ts (run between 02- and 03-) is examples
+    const guide = info.file.replace(/^.*\/\d\d[a-z]?-/, '').replace(/\.spec\.ts$/, '')
     await use(new Shots(page, guide))
   },
 })

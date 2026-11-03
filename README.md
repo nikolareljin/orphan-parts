@@ -15,6 +15,17 @@ Meta's Muse models.
 | **Demo video** | [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/) (2:52) |
 | **Android app** | the APK on the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) |
 
+**What the models produced**, from the demo set (recorded answers; the hosted demo shows the
+same read-only), more on
+[Examples](https://nikolareljin.github.io/orphan-parts/start/examples/):
+
+<p>
+<img src="docs/assets/shots/examples/02-arcade-drawings.png" alt="The arcade coffee table drawn three times by Muse Image" width="49%">
+<img src="docs/assets/shots/examples/02-nas-drawings.png" alt="The custom NAS drawn three times by Muse Image" width="49%">
+<img src="docs/assets/shots/examples/60-visitor-decide-build.png" alt="The Decide cards Muse Spark wrote for the Dell U2419H monitor, the reuse card with its Muse Image picture" width="49%">
+<img src="docs/assets/shots/examples/20-9500gt-value.png" alt="Muse Spark's price guidance for the EVGA 9500 GT, the four figures kept apart" width="49%">
+</p>
+
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
 Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*

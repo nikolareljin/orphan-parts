@@ -71,6 +71,15 @@ Without the access code, **My inventory** lists the items marked public, read-on
 
     ![Answered: Came from Hamilton Beach 729, the device photo above the part's photos](../assets/shots/inventory/11-device-answered.png)
 
+### On the demo set
+
+The demo set's two drawers, and an item of the second as a visitor reads it. More on
+[Examples: what the models produced](../start/examples.md).
+
+![My inventory: the second drawer's items, each with the Saved results column](../assets/shots/examples/40-inventory.png)
+
+![The Kingston A400 SSD for a visitor: its photos, each checked with nothing private found, each value with where it came from and its confidence](../assets/shots/examples/71-visitor-item.png)
+
 ## From a reading to a record
 
 Read a label, then **Save privately**. Every field the model read becomes an **observed** value

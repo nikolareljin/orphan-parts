@@ -29,3 +29,12 @@ a table comparing the candidates of one need side by side is under
 3. **Ask the seller** turns what is still unknown into a message to copy.
 
     ![The message to the seller with Copy the message](../assets/shots/search/15-ask-the-seller.png)
+
+### On the demo set
+
+The agitator rod and the NAS power supply, found on the web and ranked. More on
+[Examples: what the models produced](../start/examples.md).
+
+![Check fit on a page found for the agitator: needs evidence, and the questions for the seller](../assets/shots/examples/32-agitator-fit.png)
+
+![Power supplies for the NAS found on the web, ranked with price and link](../assets/shots/examples/33-nas-psu-search.png)

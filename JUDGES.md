@@ -5,6 +5,17 @@ of a label becomes values you confirm one by one, and from there each item is ke
 reused in a build, sold or given away, or completed with the part it is missing from Facebook
 Marketplace. Meta's models read and write; rules decide what is kept.
 
+**What the models produced**, from the demo set (recorded answers; the hosted demo shows the
+same read-only), more on
+[Examples](https://nikolareljin.github.io/orphan-parts/start/examples/):
+
+<p>
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/02-arcade-drawings.png" alt="The arcade coffee table drawn three times by Muse Image" width="49%">
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/02-nas-drawings.png" alt="The custom NAS drawn three times by Muse Image" width="49%">
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/60-visitor-decide-build.png" alt="The Decide cards Muse Spark wrote for the Dell U2419H monitor, the reuse card with its Muse Image picture" width="49%">
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/20-9500gt-value.png" alt="Muse Spark's price guidance for the EVGA 9500 GT, the four figures kept apart" width="49%">
+</p>
+
 - **The hosted demo, while it is up:** <https://orphan-parts.pages.dev> (nothing to install).
   It may be taken down after judging.
 - **On your own computer:** the same app with no hosted site: every flow on recorded answers

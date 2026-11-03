@@ -30,6 +30,13 @@ item's guidance is shown read-only, without the form or the sales you reported.
 
     ![Add a sale you know of: the sale listed as 20 USD on 2026-10-12, a friend](../assets/shots/value/03-sale-reported.png)
 
+### On the demo set
+
+Price guidance Muse Spark wrote for the EVGA 9500 GT, with web search. More on
+[Examples: what the models produced](../start/examples.md).
+
+![What is it worth? for the EVGA 9500 GT: the four figures kept apart, ways to price, a similar listing with its link, the cautions](../assets/shots/examples/20-9500gt-value.png)
+
 ## Built so far
 
 **What is it worth?**, on the item's page. Pick the currency, and the country and city for local
