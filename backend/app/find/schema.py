@@ -3,6 +3,7 @@
 import re
 from datetime import UTC, date, datetime
 from typing import Literal
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import BaseModel, Field, ValidationInfo, field_serializer, field_validator
 
@@ -282,6 +283,39 @@ class Search(BaseModel):
     @field_serializer("radius_km", "budget_left")
     def _owner_numbers(self, value: float | None) -> float | None:
         return None if for_visitor() else value
+
+    # A search opened for what a project still needs has the budget left as its ceiling: for
+    # the visitor that ceiling, in the search and in its links, would be the owner's budget.
+    def _ceiling_is_budget(self) -> bool:
+        return self.budget_left is not None and self.max_price == self.budget_left and for_visitor()
+
+    @field_serializer("max_price")
+    def _owner_ceiling(self, value: float | None) -> float | None:
+        return None if self._ceiling_is_budget() else value
+
+    @field_serializer("handoff_url")
+    def _owner_link(self, value: str) -> str:
+        return without_ceiling(value) if self._ceiling_is_budget() else value
+
+    @field_serializer("plan")
+    def _owner_plan(self, value: SearchPlan | None) -> SearchPlan | None:
+        if value is None or not self._ceiling_is_budget():
+            return value
+        return value.model_copy(
+            update={
+                "max_price": None,
+                "phrasings": [
+                    p.model_copy(update={"url": without_ceiling(p.url)}) for p in value.phrasings
+                ],
+            }
+        )
+
+
+def without_ceiling(url: str) -> str:
+    """A Marketplace search link without its top price."""
+    parts = urlsplit(url)
+    query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k != "maxPrice"]
+    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 class ListingReading(BaseModel):

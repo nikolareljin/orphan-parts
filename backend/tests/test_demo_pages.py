@@ -200,6 +200,73 @@ def test_the_demo_visitor_never_sees_a_private_search_or_project(gated: TestClie
         assert gated.get(path).status_code == 404, path
 
 
+def test_a_ceiling_that_is_the_budget_left_is_not_shown_to_the_visitor(gated: TestClient) -> None:
+    """A search for what a project still needs has the budget left as its top price, in the
+    search and in its Marketplace links: the visitor sees neither."""
+    ids = _owner_records(gated)
+    made = gated.post(
+        "/api/searches",
+        json={
+            "need_item_id": ids["vacuum"],
+            "profile": "vacuum_attachment",
+            "title": "a brush for the upright vacuum",
+            "max_price": LEFT,
+            "budget_left": LEFT,
+        },
+    ).json()
+    assert made["max_price"] == LEFT and "maxPrice=12.5" in made["handoff_url"]
+    _visitor(gated)
+    seen = gated.get(f"/api/searches/{made['id']}").json()
+    assert seen["max_price"] is None and seen["budget_left"] is None
+    assert "maxPrice" not in seen["handoff_url"] and "query=" in seen["handoff_url"]
+    # a top price the owner set apart from the budget stays shown
+    assert gated.get(f"/api/searches/{ids['search']}").json()["max_price"] == 20
+
+
+def test_the_plan_links_of_such_a_search_lose_the_ceiling_too() -> None:
+    from app.find.schema import Phrasing, Search, SearchPlan
+
+    url = "https://www.facebook.com/marketplace/search?query=atx+psu&maxPrice=260"
+    plan = SearchPlan(
+        phrasings=[Phrasing(text="atx psu", why="w", url=url)],
+        pattern="",
+        exclusions=[],
+        max_price=260,
+        radius_km=None,
+        model="m",
+        from_fixture=True,
+        cost_usd=0,
+        planned_at="t",
+    )
+    search = Search(
+        id=1,
+        need_item_id=None,
+        profile="generic_item",
+        title="An ATX power supply for Custom NAS",
+        spec={},
+        radius_km=None,
+        max_price=260,
+        currency="USD",
+        budget_left=260,
+        notes="",
+        status="open",
+        handoff_url=url,
+        candidates=0,
+        plan=plan,
+        created_at="t",
+        updated_at="t",
+    )
+    assert search.model_dump(mode="json")["plan"]["phrasings"][0]["url"] == url
+    token = live_request.set(False)
+    try:
+        shown = search.model_dump(mode="json")
+    finally:
+        live_request.reset(token)
+    assert shown["max_price"] is None and shown["plan"]["max_price"] is None
+    assert shown["handoff_url"].endswith("?query=atx+psu")
+    assert shown["plan"]["phrasings"][0]["url"].endswith("?query=atx+psu")
+
+
 def test_no_page_the_visitor_reads_carries_the_owners_words(gated: TestClient) -> None:
     ids = _owner_records(gated)
     _visitor(gated)
