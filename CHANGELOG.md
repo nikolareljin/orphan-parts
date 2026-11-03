@@ -9,6 +9,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 - Five project templates: `custom_nas` (a desktop board, a processor, desktop memory, drives, an M.2 or SATA adapter, an ATX power supply and a case), `smart_calendar`, `kitchen_dashboard`, `weather_station` and `parking_sensor` (an Arduino-type board with sensor modules). The new templates name the modules they take (*relay module*, *buzzer module*, *distance sensor module* and the like; the arcade table and the retro console take a *joystick module*); *module* is not a generic head for the rules, so a phone's *camera module* is no camera and a *switch module* no network switch.
 - The demo loader proposes and selects as the owner would for a larger shelf: `propose.rounds` asks for proposals again with the owner's note each time; `propose.fill` puts an item of the set on a requirement a proposal left open (the rules check it, as **Use it** under the requirement does); `propose.select` selects the first kept project of each template named, in that order, with its build pack (in place of what `propose.packs` would take); `propose.plan_missing` turns every requirement a selected project still needs into a search with its plan; `propose.views` draws each selected project again, once per view (`Pictures.draw_project(project, view)` adds *shown as a close-up of how the parts fit together* and the like to the prompt, so each view is its own request and recording). In fixture mode the plans and the drawings come only from a recording of that very request, else they are listed as not recorded yet.
 - The demo visitor sees the searches opened for what a project still needs, with their plans and Marketplace links, when every item on that project is public (`Finder.shown`), as the project itself is shown. The top price of such a search is the budget left, so the visitor sees it without that price, in the search and in its Marketplace links.
+- On the documentation site, a click on any picture or screenshot opens it enlarged, with a close button (the `glightbox` plugin, `mkdocs-glightbox` in `docker/docs/requirements.txt`); the APK's QR code is left out (`no-zoom`).
 - The README and the docs overview link the live demo (marked temporary, while the hackathon is judged), the documentation, the demo video and the Android release at the top.
 - The demo video on the documentation site: *Start > Demo video* (`docs/start/video.md`), a 1280-wide copy without metadata (`docs/assets/video/`, about 4.7 MB) with a poster frame, linked from the overview.
 - The web app's footer links to the documentation site (https://nikolareljin.github.io/orphan-parts/) and the source on GitHub, both in a new tab and shown even while the server cannot be reached.
@@ -40,6 +41,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ### Security
 - `minimatch` is held at `^11.0.1` through `overrides` in `frontend/package.json` (Dependabot alert #59, a regular-expression denial of service below 11.0.1): it reached the web app's lint tooling only, as 3.1.5 under ESLint and `@eslint/*` and 10.2.6 under `@typescript-eslint/typescript-estree`, with no fixed release of either. Both now resolve 11.0.4; ESLint still lints and honors its ignores, and `npm audit` reports nothing.
+
+### Fixed
+- The documentation site publishes its screenshots again: the rule that keeps the screenshot tool (`docs/shots/`) out of the site also matched `docs/assets/shots/`, so every guide picture was missing; it now names the top-level folder only (`/shots/`).
 
 ## 0.3.2 - 2026-11-02
 
