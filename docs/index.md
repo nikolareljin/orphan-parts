@@ -21,7 +21,7 @@ Running it yourself, with no hosted site: [Run it on your own computer](start/lo
 1. **Install the app** on an Android 8.0 or newer phone. The QR code, scanned with the phone's
    camera, or `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`
    opened on the phone, downloads the newest release's APK.<br>
-   <img src="assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140"><br>
+   <img class="no-zoom" src="assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140"><br>
    Or, on the phone, open the
    [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) and tap either
    APK. The app is not on Google Play, so allow the browser to install unknown apps when the
