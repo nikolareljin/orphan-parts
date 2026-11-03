@@ -4,8 +4,8 @@
 # Playwright (docs/shots/*.spec.ts) at 1280x800 in the light scheme, each step kept as
 # docs/assets/shots/<guide>/<nn-name>.png. Pairing codes and code fields are blurred in the
 # page before a shot is taken; every PNG is written again with its pixels alone (no text,
-# time or color-profile chunks). A shot with the same pixels as the one already there is left
-# as it was, so a second run on the same day changes nothing.
+# time or color-profile chunks). A shot that is the same picture as the one already there (equal,
+# or a few pixels off by decoding noise) is left as it was, so a second run changes nothing.
 # The stack is torn down at the end, its volumes with it.
 #
 # Usage: docs/shots/generate.sh [--only PATTERN] [--force] [--keep]
@@ -13,7 +13,7 @@
 #   --only PATTERN   only the tests whose file name or title matches PATTERN (a Playwright
 #                    grep, e.g. --only profile); they start from the fresh demo set, so a
 #                    guide whose steps build on earlier ones may get stand-in answers
-#   --force          write every shot taken, even one with the same pixels as the one there
+#   --force          write every shot taken, even one that is the same picture as the one there
 #   --keep           leave the stack up afterwards (SHOTS_PROJECT, default opl-docs-shots)
 #
 # Ports: SHOTS_BACKEND_PORT (18410) and SHOTS_FRONTEND_PORT (18473), so a running ./dev up is
@@ -141,7 +141,7 @@ EOF
 }
 
 # Every PNG under work/png written again into docs/assets/shots with its pixels alone, unless
-# the one there has the same pixels (docs/shots/png_clean.py).
+# the one there is the same picture (docs/shots/png_clean.py).
 publish() {
   local args=("$WORK/png" "$DEST")
   [[ $force -eq 1 ]] && args+=(--force)

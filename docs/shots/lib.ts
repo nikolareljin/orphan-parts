@@ -60,12 +60,14 @@ async function steadyPage(page: Page): Promise<void> {
         .map((el) => el.scrollTop)
         .join(','),
     )
-  let last = ''
-  for (let i = 0; i < 20; i++) {
+  // at rest: the same positions read three times, 200 ms apart
+  let last = await positions()
+  let same = 0
+  for (let i = 0; i < 30 && same < 2; i++) {
+    await page.waitForTimeout(200)
     const now = await positions()
-    if (now === last) break
+    same = now === last ? same + 1 : 0
     last = now
-    await page.waitForTimeout(150)
   }
 }
 
@@ -126,5 +128,6 @@ export async function openItem(page: Page, name: string): Promise<Locator> {
 /** A section of the open item, by the dialog's section links. */
 export async function section(item: Locator, name: string): Promise<void> {
   await item.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name, exact: true }).click()
-  await item.page().waitForTimeout(400)
+  // the link scrolls smoothly: the shot waits for the dialog to come to rest
+  await item.page().waitForTimeout(1200)
 }

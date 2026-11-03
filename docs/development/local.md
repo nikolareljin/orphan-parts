@@ -63,8 +63,8 @@ What it does (`docs/shots/generate.sh`):
 - Before each picture: the pairing QR code is swapped for a fixed pattern and blurred, and every
   password or code field (and anything marked `data-shot-blur`) is blurred.
 - Writes `docs/assets/shots/<guide>/<nn-name>.png` with the pixels alone (no text, time or
-  color-profile chunks, `docs/shots/png_clean.py`). A picture with the same pixels as the one
-  already there is left untouched, so a second run changes nothing; `--force` writes them all.
+  color-profile chunks, `docs/shots/png_clean.py`). A picture that is the same as the one already
+  there (a few pixels of decoding noise aside) is left untouched, so a second run changes nothing; `--force` writes them all.
 - Tears the stack down, volumes included.
 
 A run with `--only` starts from the fresh demo set too, so a guide whose steps build on earlier

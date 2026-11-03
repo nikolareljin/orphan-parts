@@ -88,7 +88,10 @@ a few minutes once. Open <http://localhost:5173>. The footer says
 `recorded answers only (nothing spent)` in recorded mode, or `live mode, spent $0.00 of $5.00`
 with a key.
 
-![The foot of every page: the version, recorded answers only (nothing spent), the models, storage writable, Pair the phone](../assets/shots/pairing/01-footer.png)
+The foot of every page also links the **Documentation** (this site) and the **Source on
+GitHub**, and opens **Pair the phone**.
+
+![The foot of every page: the version, recorded answers only (nothing spent), the models, storage writable, the Documentation and Source on GitHub links, Pair the phone](../assets/shots/pairing/01-footer.png)
 
 `./dev down` stops it; `./dev up` again keeps what you saved. `./dev demo` again resets the
 inventory to the demo set.
