@@ -64,6 +64,9 @@
 #                      (OPL_RECORD_FIXTURES=1), the sample readings and the pictures the set
 #                      names (PICTURE_ENABLED=1) included; spends credits once; --keep adds to
 #                      what is there
+#   video [options]    draft cuts of the demo videos into video/out/ from a stack of its own in
+#                      fixture mode (video/generate.sh -h); --record records the answers the
+#                      scenes need once, with MODEL_API_KEY from the shell
 #   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
 #                      WAV notes copied into demo/notes/
 #   shell <service>    open a shell in a running service
@@ -709,6 +712,7 @@ case "$cmd" in
   eval) cmd_eval "$@" ;;
   record-fixtures) cmd_record_fixtures "$@" ;;
   demo-scrub) cmd_demo_scrub "$@" ;;
+  video) bash "$ROOT/video/generate.sh" "$@" ;;
   shell) cmd_shell "$@" ;;
   help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
   *) die "unknown command: $cmd (try ./dev help)" 2 ;;

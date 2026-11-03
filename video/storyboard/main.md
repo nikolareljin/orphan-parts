@@ -1,69 +1,66 @@
-# Main video: storyboard and shot list (2:50)
+# Main video: storyboard and shot list (2:42)
 
-22 shots, cut to the narration's estimated timing (`scripts/main.srt`). Times are the edit's timeline; durations in seconds. Status is the one in
-[readiness.md](../readiness.md): **now** (fixture mode), **key** (working, needs a live Muse
-Spark run), **photos** (needs the owner's photos or footage), **concept** (concept preview),
-**card** (rendered here). Overlays: `brand/corner-overlay.png` on every screen recording;
-titles from `titles/`, top left, in for the first 4 s of a shot unless said otherwise.
-Captions bottom center, from `scripts/main.srt`.
+22 shots, cut to the narration's estimated timing (`scripts/main.srt`). Times are the edit's
+timeline; durations in seconds. Status is the one in [readiness.md](../readiness.md): **now**
+(fixture mode, recorded answers), **record** (working; its model answer is recorded once with
+`video/generate.sh --record`, then replayed), **photos** (the owner's photos from the demo
+set), **concept** (concept preview), **card** (rendered here). Overlays: `brand/corner-overlay.png`
+on every screen recording; titles from `titles/`, top left, in for 4 s from the time given
+(0 unless said otherwise). Captions bottom center, from `scripts/main.srt`.
 
-Browser: the web app at `http://localhost:5173`, window content 1920x1080, zoom 110 percent.
-Reset once, `./dev demo` (the inventory reset and the demo set loaded), before the fixture
-scenes. Record S11 to S14 as one session with no reset in between: a reset clears the live
-proposals and the selection S12 needs for **Move it here**. Stage the conflicting selection
-first (select a second project that commits the laptop), then record S11 to S14.
+`video/generate.sh` records every web shot with Playwright from the actions below
+(`video/scenes/*.spec.ts`, one test per shot) and cuts the draft with `video/assemble.py`,
+whose shot list follows this table: change both together. The browser is 1920x1080 with the
+page at 150 percent, so the text reads on a phone. The stage is the demo set as `./dev demo`
+loads it, with the agitator's device left unanswered so S05 can ask for it; the shots run in
+order on one stage, no reset between them.
 
-| Shot | Time | Dur | Picture | Exact actions | Source | Overlay | Status |
+| Shot | Time | Dur | Picture | Exact actions | Source | Title | Status |
 |---|---|---|---|---|---|---|---|
-| S01 | 0:00 | 6 | The frappé routine: the mixer base on the counter, the cup, the worn agitator in hand | Handheld or tripod, 1080p30, daylight; no brand close-up beyond what is on the appliance | phone camera | none | photos |
-| S02 | 0:06 | 6 | The shelf or drawer of unused laptops, tablets, monitors, cables | Slow pan, left to right | phone camera (or Runway clip R2, labeled) | none | photos |
-| S03 | 0:12 | 6 | Opening card | 1 s fade in from black | `brand/card-open.png` | none | card |
-| S04 | 0:18 | 8 | The mixer and the worn agitator, close: the tabs at the top of the rod | Macro or close focus; the label on the base visible in frame | phone camera | `t01-story-a` | photos |
-| S05 | 0:26 | 6 | The phone's Capture tab | Capture tab: photograph the base, the label (fills the frame), the agitator; hold to talk: "the rod wobbles in the drive; the base runs"; type a name; **Send** | scrcpy window in OBS, or `adb shell screenrecord` | `t02-capture` | photos |
-| S06 | 0:32 | 5 | The capture read into an item | **Inbox**, the new capture, **Read it**; open the item: the label crop and the values *to confirm*; **Accept** one value | OBS, browser | `t03-read` | photos (and key) |
-| S07 | 0:37 | 5 | A dimension from a ruler | **My inventory**, *Frappé maker agitator, worn*, **Measure a feature**, feature *Rod diameter*, upload the side photo with the ruler, mark two points on the ruler and the two edges of the rod, **Measure**; the value with its method and uncertainty | OBS, browser | `t04-measure` | photos |
-| S08 | 0:42 | 13 | The replacement search, its open questions | **Find a part**, the search *all-metal agitator rod for the frappé maker*; hover **Search Marketplace** (do not open it on camera); **Bring a listing back**, choose **Values I know**, type only what a seller might state, **Check fit**; the state (*needs evidence* expected), **Ask the seller**, the questions | OBS, browser | `t05-find` 0 to 3 s, `t07-routes` 3 to 7 s, `t06-sample-values` 7 to 11 s | now |
-| S09 | 0:55 | 8 | The inventory: laptops, RAM, tablets, monitors, mice, switches | **My inventory**, scroll the list slowly; open *Third laptop, works* for 2 s | OBS, browser | `t08-story-b` | now |
-| S10 | 1:03 | 9 | What I want from a build | **Build and reuse**, **What I want from a build**: Interests *an arcade table for the living room; home automation; a smart mirror*, Effort, Skills, Budget; **Save** | OBS, browser | `t09-preferences` | now |
-| S11 | 1:12 | 8 | Five proposals | **Propose projects**, How many **5**, **Propose**; let the list settle; pan over the proposals, stop on the arcade | OBS, browser, live key | `t10-propose` | key |
-| S12 | 1:20 | 7 | The arcade selected | Open the arcade proposal: *From your inventory*, *Check before starting*, *Still needed*; **Select and commit the items**; if another selected project holds the laptop, the conflict line and **Move it here** | OBS, browser, live key | `t11-select` | key |
-| S13 | 1:27 | 9 | The missing controls as a search | On *Still needed*, the controls requirement, **Find it on Marketplace**; the new search with its top price; hover **Search Marketplace**, cut before any Marketplace page | OBS, browser | `t12-marketplace` | key |
-| S14 | 1:36 | 6 | The build pack | Back on the project, **Write the build pack**; scroll the Markdown; **Download** | OBS, browser | `t13-pack` | key |
-| S15 | 1:42 | 5 | Connection diagram | Still, slow push in (105 percent over the shot) | `diagrams/arcade-connections.png` | `t14-connections` (the badge is in the picture too) | concept |
-| S16 | 1:47 | 5 | Assembly layout | Still, slow push in | `diagrams/arcade-placement.png` | `t15-placement` | concept |
-| S17 | 1:52 | 12 | A different display | Still; reveal the four dashed rows one by one (crop or wipe in the editor, 2 s apart) | `diagrams/arcade-swap.png` | `t16-swap` | concept |
-| S18 | 2:04 | 11 | Bracket and housing designs | A text editor showing `cad/arcade_panel.scad` from the top: the UNVALIDATED header, the placeholder parameters; scroll slowly. No render | OBS, editor, dark theme, 18 pt | `t17-brackets` for the whole shot | concept |
-| S19 | 2:15 | 7 | Meta models in the app | Still | `brand/card-models.png` | none | card |
-| S20 | 2:22 | 9 | Candidates side by side | **Find a part**, the search *crevice tool for the upright vacuum*; the candidates table, each with its state, asking price and the day seen; open one for its checks | OBS, browser | `t18-candidates` | now |
-| S21 | 2:31 | 9 | The evaluation loop | A terminal: `./dev eval`, then the report under `eval/` in the browser or a viewer | OBS, terminal, then report | `t19-eval` | now |
-| S22 | 2:40 | 10 | Closing card | Hold; fade to black over the last second | `brand/card-close.png` | none | card |
+| S01 | 0:00 | 6 | The frappé maker on the counter | Still, slow push in | `demo/photos/hamilton-729-mixer.jpg` | none | photos |
+| S02 | 0:06 | 6 | Unused electronics: a graphics card, a slot 1 processor, a powerline adapter | Three photos side by side, slow push in | `demo/photos/evga-9800gt-front.jpg`, `intel-slot-cpu.jpg`, `tplink-pa2010.jpg` | none | photos |
+| S03 | 0:12 | 5 | Opening card | Hold | `brand/card-open.png` | none | card |
+| S04 | 0:17 | 7 | The worn agitator: the head and the coupling | Two photos side by side, slow push in | `demo/photos/agitator-head.jpg`, `agitator-coupling.jpg` | `t01-story-a` | photos |
+| S05 | 0:24 | 8 | The app asks which device the part came from | **My inventory**, *Frappé maker agitator, worn*, **Open**; the photos, then the question *We couldn't tell which device this part came from* | web take | `t21-which-device` | now |
+| S06 | 0:32 | 5 | The label under the mixer's base | Still, slow push in | `demo/photos/hamilton-729-label.jpg` | `t22-label` | photos |
+| S07 | 0:37 | 7 | The label answers it | The agitator again, **Add a photo of the device**, the label photo; *Came from: ...*, *Read from the photo: ... Confirm it in the fields*, the device photo | web take | `t23-device-read` | record |
+| S08 | 0:44 | 16 | Search the web, then Check fit | **Find a part**, *all-metal agitator rod for the frappé maker*, **Open**; **Search the web**; *Added N pages*; the first page *found on the web*, its link (pointed at, never opened); **Check fit**; the state and *Ask the seller* | web take | `t24-search-web` at 0, `t29-fit` at 9 | record |
+| S09 | 1:00 | 8 | Decide: keep and fix | The agitator, **Decide**, **What should I do with it?**; the three cards; *Keep and fix*, its steps, **Choose this: Keep and fix** | web take | `t25-decide` | record |
+| S10 | 1:08 | 6 | The inventory | **My inventory**, scroll the list down and back | web take | `t08-story-b` | now |
+| S11 | 1:14 | 9 | Skills, and what I want from a build | **Profile**: *software* confident, *electronics and soldering* some, **Save profile**; **Build and reuse**, **What I want from a build**, **Edit**, Interests *a tabletop arcade for the living room; home automation; a smart mirror in the hall*, Budget *120*, **Save** | web take | `t09-preferences` | now |
+| S12 | 1:23 | 9 | Five proposals | **Propose projects**, How many **5**, **Propose**; the projects table | web take | `t10-propose` | record |
+| S13 | 1:32 | 8 | The homework workstation selected | **Open** the first proposal (an arcade when the proposals keep one): *From your inventory*, *Still needed*; **Select and commit the items** (**Move it here** if another build holds an item) | web take | `t11-select` | now, after S12 |
+| S14 | 1:40 | 7 | Draw it | On the project, **Draw it**; the picture, captioned as drawn | web take | `t26-draw` | record |
+| S15 | 1:47 | 8 | What is missing, as a search | *Still needed*, **Find it on Marketplace**; **Find a part**, the new search, **Open**; **Search Marketplace** pointed at, never opened | web take | `t12-marketplace` | now, after S12 |
+| S16 | 1:55 | 6 | The build pack | The project, **Write the build pack**; *version 1*, **Download** pointed at | web take | `t13-pack` | now, after S12 |
+| S17 | 2:01 | 5 | Connection diagram | Still, slow push in | `diagrams/arcade-connections.png` | `t14-connections` | concept |
+| S18 | 2:06 | 6 | A different display | Still, slow push in | `diagrams/arcade-swap.png` | `t16-swap` | concept |
+| S19 | 2:12 | 6 | On the phone | The Android app: Capture, a photo of the agitator from the gallery, a name, **Send**, *Sent as capture* | emulator take (`--android`), else the app's screenshots | `t27-phone` | now |
+| S20 | 2:18 | 6 | Meta models in the app | Hold | `brand/card-models.png` | none | card |
+| S21 | 2:24 | 9 | Try it: the sample gallery | **Sign out**; **Read a label**: the gallery; *EVGA GeForce 9800 GT graphics card*, **Select all photos of this item**, **Read the label**; the reading and *Recorded answer for this sample* | web take | `t28-gallery` | now |
+| S22 | 2:33 | 9 | Closing card | Hold; fade to black over the last second | `brand/card-close.png` | none | card |
 
 ## Notes per shot
 
-- **S01, S02, S04.** The owner's own things only. No people's faces, no other brands in focus.
-  If S02 uses a Runway clip, put the line *Illustrative clip, made with Runway* in the
-  bottom right for its whole duration.
-- **S05 to S07** wait for the photos. Until then put `titles/t20-mixer-placeholder.png` over a
-  black frame or S04's footage, so the edit holds its timing.
-- **S06.** In fixture mode a new photo gets the recorded answer for the operation, which is the
-  power adapter label from the test set, not the mixer. Record this shot only with the key
-  (`OPL_FAKE_API=0`, `MODEL_API_KEY` set), and only keep it if the values shown are what the
-  mixer's label says.
-- **S07.** No model is involved: the number is geometry on the marks. A blurred or angled photo
-  is refused with the reason; if it is, retake the photo, do not stage the refusal.
-- **S08.** Check the *Needs* line first. The demo set records the material the replacement
-  must be, metal (the worn rod's plastic is in its faults), and the material rule is an
-  equality: a candidate stated as metal, steel or all-metal passes it, one stated as plastic
-  is a conflict, and leaving the material out of the typed values makes it a question to the
-  seller. To search from the measurement of S07 instead, start a new search (**I need one that fits**, *Needed by*: **Values I type below**)
-  under the agitator profile. The rod numbers in the demo set (4 mm rod, 9 mm
-  across the tabs) are the set's entries: confirm them against S07 before they appear. Never
-  type an asking price that a real listing did not state.
-- **S11 to S14** need a live run: in fixture mode **Propose** answers with the recorded
-  proposals (homework desk, vacuum, kitchen music; one of them dropped by the rules), not the
-  arcade. Keep whatever five the live run proposes; the narration names three of them, so cut
-  the narration if one is missing, never the picture.
-- **S13.** Do not open the Marketplace page on camera: no facebook.com page, no Meta or
-  Facebook logo, no other people's listings.
-- **S15 to S18** are concept previews: the magenta badge stays in frame for the whole shot.
-- **S20.** The two listings are written examples from `demo/listings/`; `t18-candidates` says so.
+- **Owner photos (S01, S02, S04, S06).** The scrubbed copies in `demo/photos/` (no metadata,
+  serial numbers and keys masked); no faces. Portrait photos sit on a blurred fill of
+  themselves.
+- **S07.** The model on screen is what Muse Spark read off the label photo, *to confirm*. Until
+  that reading is recorded, fixture mode answers with the operation's stub (a power adapter's
+  model), and the draft carries the red DRAFT line: never keep that take for the final.
+- **S08.** Search the web keeps only pages among the search's own results. The recorded live
+  answer brings back the maker's part for the model 729 (Hamilton Beach 990010200) with the
+  price each page states; the fixture stand-in brings back example.org pages under the DRAFT line.
+  The links are pointed at, never opened on camera. Never type a price no page stated.
+- **S09.** The cards are Muse Spark's for the owner's skills profile; the stand-in cards are a
+  laptop's (the DRAFT line says so) until the agitator's are recorded.
+- **S12 to S16** run on the project S12 leaves: an arcade when the recorded proposals keep
+  one, else the first proposal. The recorded run keeps four, no arcade, so the shots follow
+  the homework workstation and the narration says the arcade was not kept; never stage the
+  picture.
+- **S14.** One Muse Image call; fixture mode shows a drawing only once it is recorded.
+- **S15.** No Marketplace page on camera: no facebook.com page, no Meta or Facebook logo, no
+  other people's listings.
+- **S17, S18** are concept previews: the magenta badge stays in frame for the whole shot.
+- **S19.** The phone shows no access code: pairing happens before the recording starts.
+- **S21.** The gallery's readings are recordings of those very photos; the page says so.

@@ -1,0 +1,35 @@
+# The video generator's additions to the dev stack (video/generate.sh): the scenes runner, in
+# the Playwright image the browser checks use, sharing the frontend container's network so the
+# web app is http://localhost:5173 to it. Never started by ./dev up.
+services:
+  scenes:
+    # the tag must match the @playwright/test version in video/scenes/package.json
+    image: mcr.microsoft.com/playwright:v1.64.1-noble
+    profiles: ["video"]
+    working_dir: /scenes
+    command: sh -c "npm ci --no-audit --no-fund --loglevel=error && npx playwright test"
+    # the host user, so node_modules/ and the takes are not owned by root
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    environment:
+      HOME: /tmp
+      CI: "1"
+      SCENES_BASE_URL: http://localhost:5173
+      SCENES_OUT: /out
+      SCENES_PHOTOS: /photos
+      SCENES_ACCESS_CODE: ${DEMO_ACCESS_CODE:-}
+    volumes:
+      - ./video/scenes:/scenes
+      - ${VIDEO_WORK:-./video/out/work}:/out
+      - ./demo/photos:/photos:ro
+    network_mode: "service:frontend"
+    depends_on:
+      - frontend
+
+  # what the generator sets on the backend beside docker-compose.yml's own: fixture mode by
+  # default, with no key at all (a key in .env is not handed in); with --record, the key from
+  # the generator's shell by name only, recording on, and a spend cap of its own
+  backend:
+    environment:
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      OPL_RECORD_FIXTURES: ${VIDEO_RECORD:-0}
+      SPEND_CAP_USD: ${VIDEO_SPEND_CAP_USD:-1}

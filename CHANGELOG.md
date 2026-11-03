@@ -4,6 +4,12 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- `video/generate.sh` (`./dev video`): draft cuts of the demo videos in one command. It starts a stack of its own (`VIDEO_PROJECT`, default `opl-video`, on ports 18310 and 18373) in fixture mode with a throwaway access code it never shows, loads the demo set with the agitator's device left unanswered, records every web shot with Playwright (`video/scenes/*.spec.ts`, one test per shot, a drawn cursor, 1920x1080 with the page at 150 percent), and cuts `video/out/main-draft.mp4` (2:42), `video/out/short-draft.mp4` (55 s) and a contact sheet `video/out/main-shots.jpg` with `video/assemble.py`: the owner's photos with a slow push in, the cards, the titles, the corner logo and the captions burned in, silent or with `--narration file.wav`. A shot whose model answer came from an operation's stub instead of a recording carries a red DRAFT line naming the operation. `--record` records the answers the shots still need, once, with `MODEL_API_KEY` from the shell under a spend cap (`VIDEO_SPEND_CAP_USD`, 1 USD); `--phone` records the phone shot on the device `VIDEO_PHONE_SERIAL` names (`video/phone.sh`, through `adb reverse`), else the app's screenshots stand in. The stack and its volumes are removed at the end.
+
+### Changed
+- The video kit follows the app as it is: the storyboards, the narration and the captions tell Story A as the worn agitator, the app's question about the device it came from, the Hamilton Beach 729 label as the answer, **Search the web**, **Check fit** and **Decide**, and Story B as the inventory, the skills profile, the proposals, **Select**, **Draw it**, **Find it on Marketplace** and the build pack; new titles for those shots, Muse Image on the models card and the closing card, and `readiness.md` lists the live recordings still needed with their cost.
+
 ## 0.3.2 - 2026-11-02
 
 ### Fixed

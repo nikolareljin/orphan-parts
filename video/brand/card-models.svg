@@ -5,24 +5,28 @@
   <image x="96" y="72" width="96" height="96" preserveAspectRatio="xMidYMid meet" href="logo.svg" xlink:href="logo.svg"/>
   <text x="220" y="135" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="56" font-weight="600" fill="#f8fafc" text-anchor="start">Meta models in the app</text>
   <rect x="220" y="160" width="120" height="6" rx="3" fill="#00f5d4"/>
-  <rect x="220" y="242" width="1480" height="104" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
-  <rect x="220" y="242" width="8" height="104" rx="4" fill="#00f5d4"/>
-  <text x="270" y="312" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">Muse Spark</text>
-  <text x="770" y="310" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">reads labels and listings, writes drafts, proposes projects</text>
-  <rect x="220" y="382" width="1480" height="104" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
-  <rect x="220" y="382" width="8" height="104" rx="4" fill="#00f5d4"/>
-  <text x="270" y="452" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">SAM 3.1</text>
-  <text x="770" y="450" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">finds the item, its label and its connector in a photo</text>
-  <rect x="220" y="522" width="1480" height="104" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
-  <rect x="220" y="522" width="8" height="104" rx="4" fill="#00f5d4"/>
-  <text x="270" y="592" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">Muse Voice Transcribe</text>
-  <text x="770" y="590" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">keeps spoken notes as the owner's words</text>
-  <rect x="220" y="662" width="1480" height="104" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
-  <rect x="220" y="662" width="8" height="104" rx="4" fill="#cbd5e1"/>
-  <text x="270" y="732" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">The rules</text>
-  <text x="770" y="730" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">decide fits, prices and what is kept; the model only proposes</text>
-  <rect x="220" y="802" width="1480" height="104" rx="18" fill="none" stroke="#7b2cbf" stroke-width="2" stroke-dasharray="10 8"/>
-  <text x="270" y="872" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#94a3b8" text-anchor="start">Planned</text>
-  <text x="770" y="870" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#94a3b8" text-anchor="start">Muse Spark Open on Baseten or Fireworks: not integrated</text>
+  <rect x="220" y="222" width="1480" height="96" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
+  <rect x="220" y="222" width="8" height="96" rx="4" fill="#00f5d4"/>
+  <text x="270" y="286" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">Muse Spark</text>
+  <text x="770" y="282" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">reads labels and listings, searches the web for parts, proposes projects</text>
+  <rect x="220" y="342" width="1480" height="96" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
+  <rect x="220" y="342" width="8" height="96" rx="4" fill="#00f5d4"/>
+  <text x="270" y="406" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">SAM 3.1</text>
+  <text x="770" y="402" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">finds the item, its label and its connector in a photo</text>
+  <rect x="220" y="462" width="1480" height="96" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
+  <rect x="220" y="462" width="8" height="96" rx="4" fill="#00f5d4"/>
+  <text x="270" y="526" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">Muse Voice Transcribe</text>
+  <text x="770" y="522" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">keeps spoken notes as the owner's words</text>
+  <rect x="220" y="582" width="1480" height="96" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
+  <rect x="220" y="582" width="8" height="96" rx="4" fill="#00f5d4"/>
+  <text x="270" y="646" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">Muse Image</text>
+  <text x="770" y="642" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">draws how a finished project could look, marked as drawn</text>
+  <rect x="220" y="702" width="1480" height="96" rx="18" fill="#1b2436" stroke="#2d384d" stroke-width="2"/>
+  <rect x="220" y="702" width="8" height="96" rx="4" fill="#cbd5e1"/>
+  <text x="270" y="766" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#f8fafc" text-anchor="start">The rules</text>
+  <text x="770" y="762" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#cbd5e1" text-anchor="start">decide fits, prices and what is kept; the model only proposes</text>
+  <rect x="220" y="822" width="1480" height="96" rx="18" fill="none" stroke="#7b2cbf" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="270" y="886" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="600" fill="#94a3b8" text-anchor="start">Planned</text>
+  <text x="770" y="882" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="#94a3b8" text-anchor="start">Muse Spark Open on Baseten or Fireworks: not integrated</text>
   <text x="960" y="1010" font-family="'Noto Sans', 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="400" fill="#94a3b8" text-anchor="middle">Marketplace by handoff only: the search and the create page open for you; nothing is posted or fetched.</text>
 </svg>

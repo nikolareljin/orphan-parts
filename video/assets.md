@@ -20,9 +20,9 @@ every take, clip or track that goes into the cut.
 
 | Asset | Source | License |
 |---|---|---|
-| Screen recordings of the web app | the owner's machine, OBS Studio | the owner's |
-| Phone recordings | the owner's phone, scrcpy or `adb shell screenrecord` | the owner's |
-| The mixer, the shelf, the agitator | the owner's own things, filmed by the owner | the owner's |
+| Screen recordings of the web app | `generate.sh`, Playwright against the owner's local stack (or OBS Studio) | the owner's |
+| Phone recordings | the owner's phone, `phone.sh` (`adb shell screenrecord`) or scrcpy; without one, the app's screenshots in `docs/assets/pairing/` | the owner's |
+| The mixer, its label, the agitator, the electronics | the owner's own photos, the scrubbed copies in `demo/photos/` | the owner's |
 | Narration | the owner's voice | the owner's |
 | Demo set data: the items, the sample listings L1 to L4 | `demo/set.yaml`, `demo/listings/`; the listings are written examples, labeled as such | MIT |
 
@@ -38,4 +38,5 @@ every take, clip or track that goes into the cut.
 - No Marketplace or facebook.com pages, no Meta or Facebook logos, no imitation of either.
 - No other people's names, faces, listings or photos.
 - No stock photos of products, no images or clips that imitate the app's screens.
-- No generated images. Meta's model names appear as text only.
+- No generated images other than the app's own **Draw it** picture, shown as the app labels it
+  (drawn, not a photo). Meta's model names appear as text only.
