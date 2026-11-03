@@ -12,12 +12,11 @@ planning pictures follow a search for a laptop's 65 W charger, made for these pa
 values on its old adapter's label. Each step says whether it calls a model.
 
 1. **The searches.** **Find a part** lists every search with its status and candidates.
-   **Open** one, or start one under **New search**: **Looking for**, **Needed by** (an item) or a
-   **Profile** with the values, **Max price**, then **Start the search**. No model call.
+   **Open** one, or start one under **I need one that fits**: **Looking for**, **Needed by** (an
+   item) or a **Profile** with the values, **Max price**, then **Start the search**. No model
+   call.
 
-    ![Find a part: the Searches table](../assets/shots/search/01-searches.png)
-
-    ![New search: Looking for, Needed by or a Profile, Max price, Start the search](../assets/shots/search/02-new-search.png)
+    ![Find a part: I need one that fits (Needed by, Profile, Looking for, Max price, Start the search) above the Searches table](../assets/shots/search/01-searches.png)
 
 2. **The search.** Its title, the rules it runs under and **Search Marketplace**, which opens
    the search on Marketplace in a new tab for you to run. Under it, **Plan the search**,
