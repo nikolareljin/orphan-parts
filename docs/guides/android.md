@@ -4,6 +4,33 @@ The phone is the capture device for the same inventory: a photo of a label read 
 and saved privately, and a voice note kept on an item as your words and read back to you. The
 backend does the work; the app talks to it and nothing else.
 
+## Step by step
+
+Install the app first ([on the phone's browser or over USB](../start/local.md#7-put-the-app-on-the-phone)).
+
+1. **Backend** tab: **Scan to pair** reads the QR code under **Pair the phone** at the foot of
+   the web app; or type the address under it into **Backend URL** and the access code into the
+   field below, then **Save**. **Check** says whether the backend answers and in which mode.
+   Every screen of it: [Pair the phone with the web app](../start/pairing.md).
+
+    ![The Backend tab: Scan to pair, Backend URL, the access code field, Save and Check](../assets/pairing/android-backend.png){ width=300 }
+
+    ![After Check: Backend ok, Model API fixture, demo gated. The code opens it.](../assets/pairing/android-check.png){ width=300 }
+
+2. **Capture** tab: photos, a clip, what you know, **Send**.
+
+    ![The Capture tab with two photos and a name, ready to Send](../assets/phone/capture-ready.png){ width=300 }
+
+3. **Captures** tab: **Read it now** reads a capture into an item; the line then names the item
+   and **Talk about item #…** opens it on the **Talk** tab.
+
+    ![The Captures tab: received, not read yet, Read it now](../assets/phone/captures-received.png){ width=300 }
+
+    ![The capture read into item 11, with Talk about item 11](../assets/phone/captures-read.png){ width=300 }
+
+4. **Talk** tab: hold and say what you know about the item; the transcript is kept on it as
+   your words and read back aloud (one Muse Voice Transcribe call).
+
 ## Built so far
 
 **Backend.** The first page is where the backend is. **Scan to pair** reads the code the web
@@ -141,6 +168,8 @@ adaptive icon's background color (`values/ic_launcher_background.xml`) is set by
    allowed this computer and stops.
 5. If the phone asks to allow installing apps over USB (some makers add this under Developer
    options as **Install via USB**), allow that too.
+6. On a Samsung phone with One UI 6 or newer, **Settings**, **Security and privacy**, **Auto
+   Blocker** must be off while installing over USB: it blocks commands over the cable.
 
 With several phones connected, `./dev phone` lists them and asks which one; `ANDROID_SERIAL`
 picks one without asking. The emulator is a device like any other once it is running.

@@ -52,3 +52,5 @@ scan/
 
 # video takes and renders
 /video/out/
+# the docs screenshot tool's work area (the shots themselves are under docs/assets/shots)
+/docs/shots/out/

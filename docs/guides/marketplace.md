@@ -17,3 +17,21 @@ record what happened after.
 The other way round, **Search Marketplace** on a [search request](search.md) opens the search
 page with the request's words and top price (`MARKETPLACE_SEARCH_URL`); you run it and bring a
 listing back.
+
+## Step by step
+
+1. In the item, **Sell or give away**, **Write the draft** (one Muse Spark call), then copy each
+   field with its **Copy** button.
+
+    ![The fields to paste, each with Copy](../assets/shots/seller/03-fields-to-paste.png)
+
+2. **Download photos** for the zip, **Open Marketplace** for the create page in a new tab, and
+   follow **On Marketplace**.
+
+    ![Open Marketplace, Download photos, the steps on Marketplace](../assets/shots/seller/04-open-marketplace.png)
+
+3. After posting, **Mark as listed**, then **Mark as sold** or **Mark as given**.
+
+    ![After posting: date, price, listing link, Mark as listed, Mark as sold](../assets/shots/seller/05-after-posting.png)
+
+The whole flow, pictured: [Seller flow](seller.md#step-by-step).

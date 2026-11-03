@@ -5,6 +5,36 @@ MAC addresses and a serial number; a powerline adapter prints its Wi-Fi password
 has a service tag and QR codes that encode it. The app finds these on every photo you add and
 blacks them out on every copy that leaves your view. You keep the original.
 
+## Step by step
+
+The pictures use a made-up label (every value on it is fake), the one the browser checks use,
+whose photo check is recorded; nothing is spent.
+
+1. **Add the photo** to an item: from **Read a label** with **Save privately**, from a capture,
+   or on the item. The check runs once, when the photo is kept: one Muse Spark call. Under the
+   item's photos a line says what was hidden.
+
+    ![Under the item's photo: 6 areas hidden: product key, MAC address, password or PIN, serial number, barcode, QR code](../assets/shots/private-details/01-areas-hidden.png)
+
+2. **Open the photo** (click it). Each hidden area is outlined on your original, and each has a
+   button: **Show product key**, **Show MAC address**, and so on. No model call.
+
+    ![The opened photo with six areas outlined, and a Show button for each](../assets/shots/private-details/02-areas-outlined.png)
+
+3. **Show** an area that is nothing private after all; the line under the photo counts it as
+   shown by the owner, and its button reads **Hide** to put it back. The choice applies to
+   every copy shared from then on.
+
+    ![The barcode shown by the owner: its button now reads Hide barcode](../assets/shots/private-details/03-area-shown.png)
+
+4. **What others get.** Every copy that leaves your view is the shared copy: each hidden area a
+   solid black box. Here, the same item as the demo visitor sees it once it is public.
+
+    ![The demo visitor's view of the photo: product key, MAC address, password, serial number, barcode and QR code blacked out](../assets/shots/private-details/04-shared-copy.png)
+
+**Review the outlined areas before you share a photo**: the boxes are approximate (see
+[Limits](#limits)).
+
 ## What is found
 
 | Kind | On a photo | In text |

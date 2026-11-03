@@ -4,6 +4,78 @@ What could you build from what you already own? Say what you want from a build, 
 proposals, and pick the ones you will do. Every proposal rests on items in your inventory;
 what is missing becomes a search you run on Marketplace.
 
+## Step by step
+
+The pictures come from the demo set (`./dev demo`) on a stack answering from recordings. Each
+step says whether it calls a model. Without the access code the page is read-only (see the end of this section): proposing,
+selecting, drawing and writing a pack are refused with the demo line.
+
+1. **Say what you want.** On **Build and reuse**, **What I want from a build**, **Edit**: your
+   interests, effort, budget and how you buy parts, then **Save**. The skills come from your
+   [Profile](profile.md#step-by-step). No model call.
+2. **Ask for proposals.** Under **What could I build from what I own?**, pick **How many** (up
+   to five), add a line under **Anything else this time** if you like, and press **Propose**.
+   One Muse Spark call that reads the inventory through tools (about $0.01 to $0.03).
+
+    ![What could I build from what I own: the templates named, How many set to 5, Anything else this time, Propose](../assets/shots/reuse/01-propose.png)
+
+3. **Read the table.** Each kept proposal is a row: the project, its status (*proposed*), how
+   many of your items it uses, how many requirements are still missing and the estimated cost.
+   The line above it is the budget across the selected projects. **Open** one.
+
+    ![The Projects table after Propose: four proposed, each with items, missing and estimated cost](../assets/shots/reuse/02-proposals.png)
+
+4. **Look at a project.** The panel says what it is for, the estimated cost and the skills it
+   asks for; **From your inventory**, the items it would use and why; **Still needed**, each
+   missing requirement with **Find it on Marketplace** and, to fill it with something you
+   own, *pick one of my items* and **Use it**; **Check before starting**, the unknowns; and
+   **Steps**. At the foot: **Shortlist**, **Select and commit the items**, **Abandon**.
+
+    ![A proposed project: From your inventory, Still needed with Find it on Marketplace and Use it, Check before starting, Steps, and the buttons](../assets/shots/reuse/03-project.png)
+
+5. **Select it.** **Select and commit the items** reserves the items for this build: the status
+   reads *selected: items committed* and each item says *(committed)*. An item another build
+   holds is named, with **Move it here**. The steps become a checklist. No model call.
+
+    ![The project selected: items committed, the steps as a checklist](../assets/shots/reuse/04-selected.png)
+
+6. **Draw it** (when pictures are on): one Muse Image call (about $0.01) draws how the finished
+   build could look, captioned as drawn, *not a photo of a real build*.
+
+    ![The project with its drawing and the caption: Illustrative picture drawn by Muse Image; not a photo of a real build](../assets/shots/reuse/05-drawn.png)
+
+7. **Turn a missing piece into a search.** **Find it on Marketplace** beside a requirement
+   opens a search for it on **Find a part**, with the budget left as its top price; the line
+   then reads *search #… open on Find a part*. No model call.
+
+    ![Still needed: the video cable now reads search #2 open on Find a part](../assets/shots/reuse/06-find-it.png)
+
+    On **Find a part**, the new search has **Search Marketplace** and the planning tools of
+    [Find a part](search.md#step-by-step).
+
+    ![The search the build opened: Search Marketplace, Plan the search, Search the web](../assets/shots/reuse/07-search-from-build.png)
+
+8. **Write the build pack.** Under **Build pack**, **Write the build pack**: one Markdown
+   document written by the rules, no model call. **Download** keeps it; a change to an item,
+   the project or the budget marks it *out of date*.
+
+    ![Build pack: Write the build pack, then Download version 1](../assets/shots/reuse/08-build-pack.png)
+
+9. **Build and record it.** Once every blocking requirement is filled, **Start building**; tick
+   the steps as you go; **Record the outcome** with what was set up, how it was tested and
+   its limits. No model call.
+
+### Without the access code
+
+The demo visitor sees **Build and reuse** read-only: what the owner wants from a build, and the
+projects built on public items alone, each with its items, what is still needed, what to check
+and the steps. **Propose**, the project's buttons and **Draw it** give way to the sign-in line;
+nothing is spent and nothing is kept.
+
+![Build and reuse for a visitor: the build wishes, Propose: Sign in with the access code to use this., the projects](../assets/shots/demo/06-visitor-build.png)
+
+![A project for a visitor: Draw it disabled with Sign in with the access code to draw., and the sign-in line in place of Shortlist and Select](../assets/shots/demo/09-visitor-project.png)
+
 ## Built so far
 
 **What I want from a build.** A few answers kept once and read by every proposal: your

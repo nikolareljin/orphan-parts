@@ -35,6 +35,7 @@
 | `./dev demo [--keep]` | resets the inventory, the issued access codes with it (`--keep` adds instead) and loads `demo/set.yaml` in fixture mode; the backend is stopped for it and started again |
 | `./dev eval [--keep] [--live]` | resets the inventory (`--keep` adds instead), loads `demo/set.yaml` as `./dev demo` does and scores the load by the rules into `eval/` (`report.json`, `report.md`, `charts/`); fixture mode unless `--live`, which uses the key from `.env` and spends; the backend is stopped for it and started again |
 | `./dev record-fixtures [--keep]` | resets the inventory (`--keep` adds instead) and loads the set once with the key from the shell or `.env` under `OPL_RECORD_FIXTURES=1`, so every model answer is kept under `backend/tests/fixtures/api/`, the set's pictures with `PICTURE_ENABLED=1` (`PICTURE_ENABLED=0` in the shell leaves them out); spends credits once; the backend is stopped for it and started again however the run ends |
+| `./dev docs-shots [--only PATTERN] [--force] [--keep]` | the docs' screenshots into `docs/assets/shots/<guide>/`, from a stack of its own in fixture mode with the demo set loaded; nothing spent; see [Local development](../development/local.md#screenshots-for-the-docs) |
 | `./dev demo-scrub <dir>` | re-encodes the raw photos in `<dir>` into `demo/photos/` without metadata, copies WAV notes into `demo/notes/` |
 | `./dev shell [service]` | shell in a running service |
 | `./dev help` | every command with its options (also `-h`, `--help`) |

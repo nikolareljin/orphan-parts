@@ -4,6 +4,41 @@ A dimension from a photo, computed by geometry from marks you place, with the un
 follows from how it was captured. No model produces the number. Without a scale reference there
 is no number at all.
 
+## Step by step
+
+No step here calls a model: the number is geometry from your marks. The pictures use the
+agitator's photo from the demo set, with a tape measure beside the rod; the inch marks 1 and 5
+are the known length, 101.6 mm.
+
+1. **Open the section.** In the item, **Measure and fit**, then under **Measure a feature** pick
+   the **Feature**; the line under it says how to photograph it. Choose the **Photo with a ruler
+   or card in it**, keep **Two points on a ruler**, enter the **Known length (mm)** and the
+   **Reference accuracy (± mm)**, and tick **Taken straight on** when it was.
+
+    ![Measure a feature: the feature picked, the hint on how to photograph it, the photo, the reference and the straight-on box](../assets/shots/measure/01-measure-section.png)
+
+2. **Mark the photo.** Click the two ends of the known length on the ruler, then the two ends of
+   the feature. The line above the photo says which mark comes next, and *All marks placed* at
+   the end; **Clear marks** starts again.
+
+    ![The photo marked: the two reference marks on the tape, the two feature marks on the rod](../assets/shots/measure/02-marks-placed.png)
+
+3. **Measure.** A capture that cannot carry a number is refused with every check and the one
+   that failed: here the edge of the rod's disc is too soft to mark
+   (*sharpness: edge response … around the marks; at least 150*).
+
+    ![Could not measure: the checks, with sharpness failed](../assets/shots/measure/03-refused.png)
+
+    Marked on sharp edges, the rod's diameter comes back with its uncertainty and the basis it
+    rests on, and is proposed on the item as a value *to confirm*. When the profile's tolerance
+    is tighter than the capture can give, the result says so and asks for a caliper or ruler
+    reading.
+
+    ![The rod diameter measured: the value with its uncertainty, the method and the note to check it with a caliper](../assets/shots/measure/04-measured.png)
+
+Without the access code, the photo is one of the demo set's, picked in a gallery, and nothing
+is stored.
+
 ## What to photograph
 
 The item's profile names the features that decide fit and how to capture each one: for a

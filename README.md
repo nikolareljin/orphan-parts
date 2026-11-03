@@ -13,8 +13,11 @@ Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
 on the docs site). One diagram of the whole, every box a link:
 [How it fits together](https://nikolareljin.github.io/orphan-parts/project/flow/).
-**Judging it?** [JUDGES.md](JUDGES.md) starts with a two-minute fast path on the hosted app,
-then the Android app and the access code. **Trying it on a phone?**
+**Judging it?** [JUDGES.md](JUDGES.md) starts with a two-minute fast path on the hosted demo
+(while it is up) or on your own computer, then the Android app and the access code.
+**Running it yourself?**
+[Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)
+is the whole path with no hosted site: Docker, a `.env`, the demo set, the phone. **Trying it on a phone?**
 [Five steps](#on-a-phone-in-five-steps) below.
 
 Orphan Parts Lens starts from a private inventory of the devices, parts and other things you
@@ -56,7 +59,8 @@ agitators, and vacuum attachments ship as profiles, with a generic one for anyth
   estimate, each with its page and date; weak evidence is called weak.
 - **Private details stay private.** Product keys, MAC addresses, serial numbers, IMEIs,
   passwords, QR codes and barcodes are found on every photo and blacked out on every copy that
-  leaves your view; you see the original with the areas outlined, and choose.
+  leaves your view; you see the original with the areas outlined, and choose
+  ([Private details on photos](https://nikolareljin.github.io/orphan-parts/guides/private-details/)).
 - **A demo you can leave running.** Without the access code a visitor clicks the demo set's
   own photos and gets the answer recorded for each, at no cost; the code opens uploads and the
   live models behind allowances per visitor and per day, a per-address limit, a spend cap and
@@ -80,10 +84,11 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
-2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and
-   `http://localhost:5173` on your own computer. To pair a phone with a local server, open the
-   site at the computer's network address, not `localhost` (for example
-   `http://192.168.1.20:5173`), with the phone on the same network.
+2. **Open the web app**: the hosted demo, `https://orphan-parts.pages.dev`, while it is up; or
+   on your own computer `./dev up`, `./dev demo` and `http://localhost:5173`
+   ([Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)).
+   To pair a phone with a local server, open the site at the computer's network address, not
+   `localhost` (for example `http://192.168.1.20:5173`), with the phone on the same network.
 3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
    (**Sign out**, in the same place, ends it).
    A local stack has no door until `./dev gate on`, which prints a code for you and one for
@@ -126,7 +131,7 @@ Changes go through pull requests; a release is a pull request from a `release/x.
    create a key under API keys, and put it in `.env` as `MODEL_API_KEY`. The key never leaves
    the backend. With `OPL_FAKE_API=1` instead, every call is answered from recorded fixtures,
    which is how the tests and CI run.
-3. **Muse Code**, the coding agent used on this repository:
+3. **Muse Code**, used in the development of this repository:
 
    ```bash
    curl -fsSL https://dev.meta.ai/install.sh -o muse-install.sh   # read it, then run it
@@ -147,7 +152,7 @@ Changes go through pull requests; a release is a pull request from a `release/x.
 | Muse Image | a picture of what an item could become or of a finished project, drawn only when you click and the switch is on; illustrative, never evidence |
 | Muse Wonder, Muse Glimmer, Muse Spark Open | considered, not used in this version; the docs say what for |
 
-Built with Muse Code.
+Muse Code was used in the development.
 
 ## Layout
 

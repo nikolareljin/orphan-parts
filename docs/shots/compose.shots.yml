@@ -1,0 +1,51 @@
+# The docs screenshot tool's additions to the dev stack (docs/shots/generate.sh, ./dev docs-shots):
+# the shots runner, in the Playwright image the browser checks use. The web app sits on a small
+# network of its own at a fixed private address, which stands in for a computer's address on
+# the Wi-Fi (the pairing shots need one a phone could reach); http://localhost:5173 is the web
+# app too, through the frontend's published port inside that network. Never started by ./dev up.
+services:
+  shots:
+    # the tag must match the @playwright/test version in docs/shots/package.json
+    image: mcr.microsoft.com/playwright:v1.64.1-noble
+    profiles: ["shots"]
+    working_dir: /shots
+    command: sh -c "npm ci --no-audit --no-fund --loglevel=error && npx playwright test"
+    # the host user, so node_modules/ and the shots are not owned by root
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    environment:
+      HOME: /tmp
+      CI: "1"
+      SHOTS_BASE_URL: http://localhost:5173
+      SHOTS_LAN_URL: http://${SHOTS_LAN_PREFIX:-192.168.250}.10:5173
+      SHOTS_OUT: /out
+      SHOTS_PHOTOS: /photos
+      SHOTS_ONLY: ${SHOTS_ONLY:-}
+      SHOTS_ACCESS_CODE: ${DEMO_ACCESS_CODE:-}
+    volumes:
+      - ./docs/shots:/shots
+      - ${SHOTS_WORK:-./docs/shots/out}:/out
+      - ./demo/photos:/photos:ro
+      # the made-up label the privacy guide is shot with (every value on it is fake)
+      - ./e2e/tests/fake-sticker.png:/fixtures/fake-sticker.png:ro
+    network_mode: "service:frontend"
+    depends_on:
+      - frontend
+
+  frontend:
+    networks:
+      default: {}
+      lan:
+        ipv4_address: ${SHOTS_LAN_PREFIX:-192.168.250}.10
+
+  # fixture mode, with no key at all: a key in .env or this shell is never handed in
+  backend:
+    environment:
+      MODEL_API_KEY: ""
+      OPL_RECORD_FIXTURES: "0"
+      SPEND_CAP_USD: "1"
+
+networks:
+  lan:
+    ipam:
+      config:
+        - subnet: ${SHOTS_LAN_PREFIX:-192.168.250}.0/24

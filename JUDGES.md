@@ -5,7 +5,12 @@ of a label becomes values you confirm one by one, and from there each item is ke
 reused in a build, sold or given away, or completed with the part it is missing from Facebook
 Marketplace. Meta's models read and write; rules decide what is kept.
 
-- **The hosted app:** <https://orphan-parts.pages.dev> (nothing to install).
+- **The hosted demo, while it is up:** <https://orphan-parts.pages.dev> (nothing to install).
+  It may be taken down after judging.
+- **On your own computer:** the same app with no hosted site: every flow on recorded answers
+  with no key, and live readings with a Model API key of your own:
+  [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)
+  (`docs/start/local.md`), about ten minutes with Docker.
 - **The Android app:** the APK from the
   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest).
 - **The access code** comes with the submission, separately. It is never in this repository.
@@ -18,7 +23,10 @@ Marketplace. Meta's models read and write; rules decide what is kept.
 The site opens as the demo: recorded answers for the demo set, nothing saved, nothing spent.
 The line at the foot of the page says *Demo: recorded answers only*.
 
-1. Open <https://orphan-parts.pages.dev>. The first page, **Read a label**, shows the demo
+1. Open the hosted demo, <https://orphan-parts.pages.dev>, while it is up; or, on your own
+   computer, `./dev up`, `./dev demo` and `./dev gate on`, then <http://localhost:5173>
+   ([Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)).
+   The first page, **Read a label**, shows the demo
    set's photos grouped by item (monitors, ThinkPads, a laptop motherboard, a graphics card, a
    slot 1 processor, a powerline adapter, a frappé maker's agitator).
 2. Tick one photo, several, or **Select all photos of this item**; leave *Find the label in
@@ -40,10 +48,13 @@ The line at the foot of the page says *Demo: recorded answers only*.
 
 ### With the access code (about ten minutes)
 
-4. **Sign in with the code** in the header, type the code, **Enter**. The header now shows
+4. **Sign in with the code** in the header, type the code (the one that came with the
+   submission on the hosted demo; on your own computer, the master code `./dev gate on`
+   printed), **Enter**. The header now shows
    **Sign out**; the foot of the page counts the live calls used today.
 5. **Read a label**: choose up to four photos of a label of your own (JPEG, PNG or WebP),
-   **Read the label** (live, on the models), then **Save privately**. The page moves to
+   **Read the label** (live, on the models, when the server has a key; a local stack without
+   one answers from recordings), then **Save privately**. The page moves to
    **My inventory**; **Open** the new item, where every value read is marked *to confirm*:
    **Accept** or **Reject** each one.
 6. In the item, **Decide**: **What should I do with it?** writes three cards, *Keep and fix*,
@@ -137,7 +148,9 @@ repository's releases as an app from an unknown source.
 Only if you prefer a cable, or the phone's browser refuses the download. On the phone:
 **Settings**, **About phone** (on Samsung, **About phone**, **Software information**), tap
 **Build number** seven times; then **Developer options** (under **System** on some phones),
-**USB debugging** on. Connect a cable that carries data, choose **File transfer** if asked, and
+**USB debugging** on. On a Samsung phone with One UI 6 or newer, turn **Auto Blocker** off
+first (**Settings**, **Security and privacy**, **Auto Blocker**): it blocks commands over USB.
+Connect a cable that carries data, choose **File transfer** if asked, and
 on **Allow USB debugging?** tick **Always allow from this computer** and tap **Allow**. Then one
 command on the computer; it downloads Google's `platform-tools` (about 10 MB) when `adb` is
 missing, then the latest release's APK, installs it and opens the app. No Java, Android SDK or
@@ -163,25 +176,32 @@ Docker is needed.
 `--version x.y.z` (`-Version x.y.z` on Windows) picks a release other than the latest; `--apk file.apk` (`-Apk`)
 installs a file you already have.
 
-## Pair the phone with the hosted app
+## Pair the phone
+
+The same steps on the hosted demo and on your own computer. On your own computer, open the web
+app at the computer's address on the Wi-Fi (for example `http://192.168.1.20:5173`), not at
+`localhost`, with the phone on the same Wi-Fi; the details, firewall included, are in
+[Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/#8-pair-the-phone).
 
 The QR code never carries the access code. Signed in, it carries the server's address and a
 pairing good for fifteen minutes, with which the app claims an access code of its own and
 keeps it. Every screen, pictured:
 [Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/).
 
-1. Open <https://orphan-parts.pages.dev> on a laptop (or on the phone's browser) and
-   **Sign in with the code**.
+1. Open the web app on a laptop (or on the phone's browser): the hosted demo while it is up,
+   or your own stack at the computer's address. **Sign in with the code**.
 2. At the foot of the page, open **Pair the phone**. A QR code appears.
 3. In the app, on the **Backend** tab, tap **Scan to pair** and point the camera at the QR code
-   on the other screen. The app says **Paired with https://….modal.run; this phone now has a
-   code of its own (phone …, until …)**.
+   on the other screen. The app says **Paired with …; this phone now has a code of its own
+   (phone …, until …)**, naming the address it will use.
 4. Tap **Check**. It says **Backend ok, Model API live for the code, recorded otherwise, demo
-   gated. The phone's own code (phone …, until …) opens it.**
+   gated. The phone's own code (phone …, until …) opens it.** (`Model API fixture` on a stack
+   that answers from recordings.)
 
 **Without Google Play services, or without a second screen:** the page shows the address under
-the QR code. On the **Backend** tab type it into **Backend URL**, type the access code into the
-field under it, tap **Save**, then **Check**; the answer ends with **The code opens it.**
+the QR code. On the **Backend** tab type it into **Backend URL** exactly as shown, type the
+access code into the field under it (on your own computer, the phone's code from
+`./dev gate on`), tap **Save**, then **Check**; the answer ends with **The code opens it.**
 
 The phone's own code lasts thirty days, or until the code you were given ends if that is
 sooner. A QR code scanned from a page that is not signed in pairs the phone as the demo
@@ -202,7 +222,11 @@ phone forget the address, its code and its session; the code itself is revoked o
 
 ## Run it on your own computer
 
-Docker Desktop on macOS or Windows (run the commands in WSL there), Docker Engine on Linux:
+The complete path, with the `.env` to fill in, the Model API key, the phone over the Wi-Fi and
+USB debugging step by step, and a troubleshooting table:
+[Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/). In
+short, with Docker Desktop on macOS or Windows (run the commands in WSL there), Docker Engine
+on Linux:
 
 ```bash
 git clone https://github.com/nikolareljin/orphan-parts.git
@@ -258,7 +282,9 @@ a photo are blacked out on every copy a visitor or a download gets, and a photo 
 not shown to a visitor at all. A serial number, MAC address or IMEI never goes to a model as
 text. A session is one cookie that holds no account; issued codes are kept as hashes and logged
 by their label only. Nothing is posted or searched anywhere on anyone's behalf. Details:
-[Privacy](https://nikolareljin.github.io/orphan-parts/operations/privacy/).
+[Privacy](https://nikolareljin.github.io/orphan-parts/operations/privacy/), and what is
+blacked out on a photo, pictured:
+[Private details on photos](https://nikolareljin.github.io/orphan-parts/guides/private-details/).
 
 ## If something does not work
 
@@ -269,8 +295,9 @@ by their label only. Nothing is posted or searched anywhere on anyone's behalf. 
 | Play Protect: "unsafe app blocked" or "unknown developer" | **More details**, **Install anyway**; then a Play Protect scan (step 5 of the install) checks it |
 | `phone-install`: "the phone has not allowed this computer" | Unlock the phone, tick **Always allow**, tap **Allow** on its prompt, run again |
 | `phone-install`: "no phone found" | A cable that carries data; **USB debugging** on; **File transfer** chosen; on Windows the maker's USB driver |
-| The app: "that code points at localhost" | The site was opened at `localhost`; open it at the computer's network address, or use the hosted site |
-| **Check**: "Not reachable" | The phone is off the server's network, or the address has a typo; the hosted address is `https://`, a local one `http://…:5173` |
+| The install over USB fails on a Samsung phone | **Auto Blocker** is on: **Settings**, **Security and privacy**, **Auto Blocker**, off |
+| The app: "that code points at localhost" | The site was opened at `localhost`; open it at the computer's network address |
+| **Check**: "Not reachable" | The phone is off the server's network, the address has a typo, or (on your own computer) the firewall blocks port 5173; the hosted address is `https://`, a local one `http://…:5173` |
 | **Check**: "The code is refused" | The code was mistyped or has expired |
 | "This phone's code has ended or was revoked; scan the code on a signed-in page" | The code you were given, or the phone's own, has ended or was revoked; the app has cleared it: sign in on the site with a current code and scan again |
 | After a scan: "no code of its own: the pairing has ended" | The fifteen minutes ran out before the claim: reload the signed-in page and scan its new code |

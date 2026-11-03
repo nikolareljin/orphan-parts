@@ -2,7 +2,7 @@
 
 **This repository is the entry for the Meta Global AI Developer Hackathon**, Indie track, created
 by Nik Reljin and built between October 27 and November 4, 2026. Everything in it was written in that window, with the
-Meta Model API for the models and Muse Code as the coding agent. This log grows with each feature
+Meta Model API for the models and Muse Code in the development. This log grows with each feature
 and links to the commits.
 
 | Date | What landed |
