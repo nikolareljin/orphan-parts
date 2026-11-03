@@ -1,7 +1,7 @@
 from io import BytesIO
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageCms
 
 from app.extract import BadImageError, dimensions, imaging, prepare
 from tests.conftest import make_photo
@@ -40,6 +40,29 @@ def test_exif_is_dropped_and_orientation_applied() -> None:
     assert dimensions(out) == (100, 200)
     with Image.open(BytesIO(out)) as cleaned:
         assert dict(cleaned.getexif()) == {}
+
+
+@pytest.mark.parametrize("enhance", [None, False, True])
+def test_no_metadata_survives_the_re_encode(enhance: bool | None) -> None:
+    img = Image.new("RGB", (1600, 1200), (120, 80, 40))
+    exif = Image.Exif()
+    exif[0x010F] = "CameraCo"  # Make
+    exif.get_ifd(0x8825)[2] = (45.0, 0.0, 0.0)  # GPS latitude
+    icc = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
+    xmp = b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF/></x:xmpmeta>'
+    buf = BytesIO()
+    img.save(buf, "JPEG", exif=exif.tobytes(), icc_profile=icc, comment=b"a note", xmp=xmp)
+    data = buf.getvalue()
+
+    if enhance is None:
+        out = prepare(data, max_px=800, max_bytes=12 * MB)
+    else:
+        out = imaging.read_copy(data, max_px=800, max_bytes=12 * MB, enhance=enhance)[0]
+
+    with Image.open(BytesIO(out)) as cleaned:
+        assert dict(cleaned.getexif()) == {}
+        assert not {"exif", "icc_profile", "xmp", "comment"} & set(cleaned.info)
+    assert b"a note" not in out and b"xmpmeta" not in out and b"CameraCo" not in out
 
 
 def test_empty_upload_is_rejected() -> None:
