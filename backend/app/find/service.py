@@ -4,6 +4,7 @@ back as text, a screenshot or typed values, each assessed by the profile's rules
 import asyncio
 import json
 import logging
+import re
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -59,11 +60,13 @@ from app.match.schema import Assessment, AssessRequest, Side
 from app.match.service import Assessor
 from app.model_api import (
     ModelApiClient,
-    backed_pages,
     backing,
+    citations,
     norm_url,
+    search_results,
     searches,
     text_part,
+    url_parts,
     user_message,
 )
 from app.profiles import Profiles, UnknownProfileError
@@ -111,11 +114,12 @@ PART_INSTRUCTIONS = (
     " and 'replacement', and the maker's part numbers when a page gives them), then compatible"
     " aftermarket parts sold as fitting that device, then used parts or donor devices with the"
     " same values. Prefer product pages (a shop, a parts seller, a listing) over manuals,"
-    " forums and videos. One find per page; copy each URL exactly as the search result gave"
-    " it. For each: the page title, the site, the price and the dimensions as the page states"
-    " them (empty when it states none), and a short quote from the page that shows it is this"
-    " part. Never invent a page, a price or a dimension; never guess a part number no page"
-    " gives."
+    " forums and videos. One find per page. Copy the full page URL from the search result,"
+    " path included, exactly as the result gives it; a bare domain is not a page. Put the"
+    " search result's title, verbatim, in title. For each, also: the site, the price and the"
+    " dimensions as the page states them (empty when it states none), and a short quote from"
+    " the page that shows it is this part. Never invent a page, a price or a dimension; never"
+    " guess a part number no page gives."
 )
 
 
@@ -152,39 +156,100 @@ def web_text(find: WebFind) -> str:
     return f"{text} (found on {find.site})" if find.site else text
 
 
+# words that say nothing about which page a title names
+TITLE_STOP = frozenset(
+    {"the", "and", "for", "with", "of", "to", "in", "on", "by", "at", "a", "an", "or", "from"}
+)
+# the share of a result title's words a find's title and quote must carry to name that result
+TITLE_MATCH = 0.5
+
+
+def _words(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]+", text.lower()) if len(w) > 1} - TITLE_STOP
+
+
+def _by_title(find: WebFind, results: list[dict[str, str]]) -> dict[str, str] | None:
+    """The one result whose title the find's title and quote carry best, at TITLE_MATCH or
+    more and ahead of every other; None when none does, or two tie."""
+    said = _words(f"{find.title} {find.quote}")
+    scored = sorted(
+        (
+            (len(said & words) / len(words), r)
+            for r in results
+            if (words := _words(r.get("title", "")))
+        ),
+        key=lambda pair: -pair[0],
+    )
+    if not scored or scored[0][0] < TITLE_MATCH:
+        return None
+    if len(scored) > 1 and scored[1][0] == scored[0][0]:
+        return None
+    return scored[0][1]
+
+
+def match_result(
+    find: WebFind, results: dict[str, dict[str, str]]
+) -> tuple[dict[str, str] | None, str]:
+    """The search result a find stands on, by ``norm_url`` key, and how it was found: the
+    page itself, exactly or by host and path (``backing``); else, for a bare domain, the one
+    result on that host, or among several the one its title names (``_by_title``); else, for
+    a path no result on that host has, the result its title names. A path a result has with
+    another query is another page. ``ambiguous`` when several results fit and nothing tells
+    them apart; ``none`` when nothing backs it."""
+    source, how = backing(find.url, {k: r["url"] for k, r in results.items()})
+    if source:
+        return results[norm_url(source)], how
+    if how == "ambiguous":
+        return None, how
+    host, path, query = url_parts(find.url)
+    on_host = [r for r in results.values() if url_parts(r["url"])[0] == host]
+    if not host or not on_host:
+        return None, "none"
+    if not path and not query:
+        if len(on_host) == 1:
+            return on_host[0], "host"
+        pick = _by_title(find, on_host)
+        return (pick, "title") if pick else (None, "ambiguous")
+    if any(url_parts(r["url"])[1] == path for r in on_host):
+        return None, "none"
+    pick = _by_title(find, on_host)
+    return (pick, "title") if pick else (None, "none")
+
+
 def backed_finds(
     found: list[WebFind], output: list[dict[str, Any]]
 ) -> tuple[list[WebFind], int, list[str]]:
-    """Keep a find only when a search result or a citation carries its page: exactly (after a
-    light cleanup: fragment, tracking parameters, scheme, ``www.``, trailing slash), or, when
-    the model dropped or reordered the query, by host and path when one search URL alone fits
-    (see ``backing``). The URL kept is always the one the search gave; only a web link, one
-    find per page, at most WEB_MAX, none without text to score. Say how many were dropped and
-    why."""
-    pages = backed_pages(output)
+    """Keep a find only when a search result or a citation of the same answer stands behind it
+    (``match_result``); the URL and the title kept are always the search result's, never the
+    model's. Only a web link, one find per page, at most WEB_MAX, none without text to score.
+    Say how many were dropped and why."""
+    results: dict[str, dict[str, str]] = {}
+    for r in (*search_results(output), *citations(output)):
+        key = norm_url(r["url"])
+        if key and key not in results:
+            results[key] = {"url": r["url"].strip(), "title": r.get("title", "")}
     kept: list[WebFind] = []
     seen: set[str] = set()
     unbacked = 0
     ambiguous = 0
     empty = 0
     for f in found:
-        url = f.url.strip()
-        if not url.lower().startswith(("https://", "http://")):
+        if not f.url.strip().lower().startswith(("https://", "http://")):
             unbacked += 1
             continue
-        source, how = backing(url, pages)
-        if not source:
+        result, how = match_result(f, results)
+        if result is None:
             if how == "ambiguous":
                 ambiguous += 1
             else:
                 unbacked += 1
             continue
-        page = norm_url(source)
+        page = norm_url(result["url"])
         if page in seen or len(kept) >= WEB_MAX:
             continue
         cut = WebFind(
-            url=source[:LINE_MAX],
-            title=_cut(f.title),
+            url=result["url"][:LINE_MAX],
+            title=_cut(result["title"] or f.title),
             site=_cut(f.site),
             price_as_stated=_cut(f.price_as_stated),
             dimensions_as_stated=_cut(f.dimensions_as_stated),
@@ -198,14 +263,14 @@ def backed_finds(
     notes: list[str] = []
     if searches(output) == 0:
         notes.append("the model made no web search, so nothing it wrote can be backed")
-    elif not pages and found:
+    elif not results and found:
         notes.append("the search returned no pages, so nothing the model wrote can be backed")
     if unbacked:
         notes.append(f"{unbacked} find(s) rest on no search result and were left out")
     if ambiguous:
         notes.append(
-            f"{ambiguous} find(s) match several search results on the same page path and were"
-            " left out: which page was meant is not known"
+            f"{ambiguous} find(s) match several search results and were left out: which page"
+            " was meant is not known"
         )
     if empty:
         notes.append(f"{empty} find(s) said nothing about the part and were left out")

@@ -113,7 +113,8 @@ def test_the_web_brief_leads_with_the_device_and_carries_nothing_private(
     assert finder.web_brief(plain) == finder.plan_brief(plain)
     said = part_instructions(4)
     assert "up to 10 distinct pages" in said and "Prefer product pages" in said
-    assert "copy each URL exactly as the search result gave it" in said
+    assert "Copy the full page URL from the search result, path included" in said
+    assert "a bare domain is not a page" in said and "title, verbatim" in said
     assert "Search at most 4 times" in said
     assert "Search at most 1 time," in part_instructions(1)
 
@@ -229,8 +230,8 @@ def test_a_rewritten_url_is_backed_by_its_host_and_path_when_one_page_alone_fits
     )
     assert kept == [] and dropped == 1
     assert notes == [
-        "1 find(s) match several search results on the same page path and were left out:"
-        " which page was meant is not known"
+        "1 find(s) match several search results and were left out: which page was meant is"
+        " not known"
     ]
 
 
@@ -568,3 +569,101 @@ def test_device_photos_stay_out_of_the_parts_photos_drafts_zip_and_the_visitor(
         assert c.get(f"/api/items/{item}/photos").json()["count"] == 4
         assert c.get(f"/api/items/{item}/device-photos").status_code == 403
         assert c.get(f"/api/items/{item}/device-photos/1").status_code == 403
+
+
+def titled(url: str, title: str, quote: str = "") -> WebFind:
+    return WebFind(
+        url=url,
+        title=title,
+        site="",
+        price_as_stated="$5",
+        dimensions_as_stated="",
+        quote=quote,
+    )
+
+
+def titled_output(*pairs: tuple[str, str]) -> list[dict[str, Any]]:
+    return [
+        {
+            "type": "web_search_call",
+            "results": [
+                {"type": "text_result", "url": u, "title": t, "snippet": ""} for u, t in pairs
+            ],
+        }
+    ]
+
+
+def test_a_bare_domain_is_backed_by_the_one_result_on_its_host() -> None:
+    """From a live run: the model named three sites and no pages."""
+    shaft = "https://www.goodmans.net/item/5-5mm-spindle-shaft-for-hamilton-beach-mixers.htm"
+    output = titled_output(
+        (shaft, "5.5mm Spindle Shaft for Hamilton Beach Mixers"),
+        ("https://www.partstown.com/hamilton-beach/ham990043600", "Agitator 990043600"),
+    )
+    kept, dropped, notes = backed_finds(
+        [
+            titled("https://goodmans.net", "Goodman's spindle"),
+            titled("https://fix.com", "Fix.com agitator"),  # no result on that host
+        ],
+        output,
+    )
+    # the result's URL and title are kept, never the model's
+    assert [(f.url, f.title) for f in kept] == [
+        (shaft, "5.5mm Spindle Shaft for Hamilton Beach Mixers")
+    ]
+    assert dropped == 1 and notes == ["1 find(s) rest on no search result and were left out"]
+
+
+def test_several_results_on_a_host_are_told_apart_by_the_title() -> None:
+    shaft = "https://www.goodmans.net/item/5-5mm-spindle-shaft.htm"
+    blender = "https://www.goodmans.net/item/blender-jar-gasket.htm"
+    output = titled_output(
+        (shaft, "5.5mm Spindle Shaft for Hamilton Beach Mixers"),
+        (blender, "Blender Jar Gasket, Waring"),
+    )
+    kept, _, _ = backed_finds(
+        [titled("https://goodmans.net/", "Spindle Shaft for Hamilton Beach Mixers")], output
+    )
+    assert [f.url for f in kept] == [shaft]
+    # the quote counts too
+    kept, _, _ = backed_finds(
+        [
+            titled(
+                "https://goodmans.net",
+                "Goodman's",
+                "a 5.5mm spindle shaft for Hamilton Beach mixers",
+            )
+        ],
+        output,
+    )
+    assert [f.url for f in kept] == [shaft]
+    # a title that names neither, or both alike, leaves it unknown
+    kept, dropped, notes = backed_finds([titled("https://goodmans.net", "Goodman's")], output)
+    assert kept == [] and dropped == 1
+    assert notes == [
+        "1 find(s) match several search results and were left out: which page was meant is"
+        " not known"
+    ]
+    twins = titled_output((shaft, "Spindle shaft"), (blender, "Spindle shaft"))
+    kept, _, notes = backed_finds([titled("https://goodmans.net", "Spindle shaft")], twins)
+    assert kept == [] and "which page was meant is not known" in notes[0]
+
+
+def test_a_wrong_path_is_backed_only_by_a_title_that_names_a_result() -> None:
+    shaft = "https://www.goodmans.net/item/5-5mm-spindle-shaft.htm"
+    output = titled_output((shaft, "5.5mm Spindle Shaft for Hamilton Beach Mixers"))
+    kept, _, _ = backed_finds(
+        [titled("https://goodmans.net/shafts/5mm", "5.5mm Spindle Shaft for Hamilton Beach")],
+        output,
+    )
+    assert [f.url for f in kept] == [shaft]
+    kept, dropped, _ = backed_finds(
+        [titled("https://goodmans.net/shafts/5mm", "Blender jar")], output
+    )
+    assert kept == [] and dropped == 1
+    # the same path with another product id is another page, whatever the title says
+    one = "https://shop.example/item?id=1"
+    kept, _, _ = backed_finds(
+        [titled("https://shop.example/item?id=999", "Agitator")], titled_output((one, "Agitator"))
+    )
+    assert kept == []

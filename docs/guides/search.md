@@ -94,10 +94,15 @@ result or a citation of that same answer carries it:
 - or, when the model dropped or reordered the query, by host and path, when exactly one
   search URL there holds every parameter the model wrote with the same value. Two or more
   such URLs leave the page unknown and the find is left out and said; a parameter the
-  search's URL does not have, or has with another value, names another page.
+  search's URL does not have, or has with another value, names another page;
+- or, for a bare domain (the model named a site, not a page), the one result on that host,
+  or among several the one whose title the find's title and quote carry (half its words or
+  more, ahead of every other); a find whose path no result on that host has is backed only
+  by such a title. Several results and nothing to tell them apart: left out and said.
 
-Only a web link (`http`/`https`) with some text to score is kept, and the link kept is always
-the one the search returned, never the model's. One per page, at most ten a click. The rest are left out and counted
+The model is told to copy the full page URL from the search result and the result's title
+verbatim. Only a web link (`http`/`https`) with some text to score is kept, and the link and
+title kept are always the search result's, never the model's. One per page, at most ten a click. The rest are left out and counted
 (*Added 3 pages to the listings. 1 left out: no search result showed it.*). Each page kept
 becomes a listing with its link, scored by the pattern, the exclusion words and the top
 price like a pasted one, and **Check fit** reads it the same way; the candidate keeps the

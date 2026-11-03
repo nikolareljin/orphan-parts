@@ -236,7 +236,7 @@ def _tracking(key: str) -> bool:
     return k.startswith("utm_") or k in TRACKING_PARAMS
 
 
-def _parts(url: str) -> tuple[str, str, list[tuple[str, str]]]:
+def url_parts(url: str) -> tuple[str, str, list[tuple[str, str]]]:
     """The host (lower case, no ``www.``), the path (no trailing slash) and the query without
     tracking parameters, in its order."""
     parts = urlsplit(url.strip())
@@ -254,7 +254,7 @@ def norm_url(url: str) -> str:
     trailing slash, no tracking parameters (``utm_*``, ``fbclid`` and the like), the host in
     lower case. The rest of the query stays, in its order: ``?id=1`` and ``?id=999`` are two
     pages."""
-    host, path, query = _parts(url)
+    host, path, query = url_parts(url)
     page = host + path
     return f"{page}?{urlencode(query)}" if query else page
 
@@ -281,13 +281,13 @@ def backing(url: str, pages: dict[str, str]) -> tuple[str, str]:
     page = norm_url(url)
     if page in pages:
         return pages[page], "exact"
-    host, path, query = _parts(url)
+    host, path, query = url_parts(url)
     if not host:
         return "", "none"
     wanted = dict(query)
     fits: list[str] = []
     for original in pages.values():
-        h, p, q = _parts(original)
+        h, p, q = url_parts(original)
         have = dict(q)
         if h == host and p == path and all(have.get(k) == v for k, v in wanted.items()):
             fits.append(original)

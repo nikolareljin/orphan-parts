@@ -16,6 +16,7 @@ from app.model_api.client import (
     searches,
     strict_schema,
     text_part,
+    url_parts,
     user_message,
 )
 from app.model_api.errors import (
@@ -56,5 +57,6 @@ __all__ = [
     "searches",
     "strict_schema",
     "text_part",
+    "url_parts",
     "user_message",
 ]
