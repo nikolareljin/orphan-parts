@@ -109,8 +109,9 @@ photos.
 
 ## Public items at a link
 
-**What.** An item the owner marks public already shows to the demo visitor, its values, photos
-and drawn pictures and never its location, its notes, a clip or a draft. What is missing is a
+**What.** An item the owner marks public already shows to the demo visitor, its values, photos,
+drawn pictures and saved results (cards, drafts, price guidance) and never its location, its
+notes, a clip or the lowest price. What is missing is a
 link of its own: a redacted record a buyer or a repairer opens from a listing, with the kind
 of item, the confirmed values and their sources, the photos chosen for it, the faults and the
 tests, and never a serial, a location or a note.

@@ -9,7 +9,7 @@ ideas for what the item is good for. Nothing is decided for you; the choice is y
 ## Step by step
 
 The pictures follow the frappé maker's agitator from the demo set. Without the access code the
-Decide section is not offered (the demo line takes its place).
+Decide section is read-only (see [Without the access code](#without-the-access-code)).
 
 1. **Open the item and go to Decide.** In **My inventory**, **Open** the item, then **Decide**
    in the row of section links at the top of the dialog. The section starts with **What
@@ -106,7 +106,12 @@ location, the notes, a photo, a price or a search. One structured call at low ef
 The last cards are kept on the item with the item version they were written from, like the
 ideas: they say *item changed since* once the item is edited (a decision is no edit, so the
 cards you chose from stay current), and **Ask again** writes
-a new version. The demo visitor is refused, as on every other call that spends.
+a new version beside the earlier ones. Opening the section asks no model: it shows the latest
+cards as kept, with their version, date, model and cost, and **Earlier cards (n)** lists the
+ones before them (version, date, model) to pick and read again; the ideas the same way under
+**Earlier ideas**. Before the cards or the ideas were ever asked, the panel says what they are
+for, what they give back and what one asking costs (*One Muse Spark call, about $0.01.*). The
+demo visitor's **Ask again** is refused, as on every other call that spends.
 
 ### The rows
 
@@ -117,7 +122,7 @@ a new version. The demo visitor is refused, as on every other call that spends.
 | What it is good for | the project templates in the catalog with a requirement this kind of item fills, named with the requirement; then **Ask for ideas** | the templates are the rules, from the item's type against each requirement's kinds; the ideas are the model's proposals, shown under *Ideas from the model* |
 | Parts it still needs | the open searches from this item with their candidate counts, the Marketplace search to run, and a link to [Find a part](search.md) | the inventory |
 | What it could look like | a link to the picture section | draw on request when enabled |
-| Decision | **Keep and fix**, **Keep and build**, **Sell**, **Give away**, **Not worth it**, with a note; an item a selected project counts on says so first: *Reserved by <project>: selling or giving it away breaks that build* | you |
+| Decision | **Keep and fix**, **Keep as a spare**, **Keep and build**, **Sell**, **Give away**, **Not worth it**, with a note; an item a selected project counts on says so first: *Reserved by <project>: selling or giving it away breaks that build* | you |
 
 **Ask for ideas** has Muse Spark propose up to three uses for the item: a title, what it would
 do, what else it needs that the item does not bring, the effort (low, medium or high) for a
@@ -129,7 +134,7 @@ item is edited (including while the request is running), and is shown under the 
 is: the rules did not check it, and a part the tests do not call working is not working because
 an idea assumes it.
 
-The decision sets the item's **Plan** (`intent` in the API: **Keep and fix** to *keep*, **Keep and build** to *build*,
+The decision sets the item's **Plan** (`intent` in the API: **Keep and fix** and **Keep as a spare** to *keep*, **Keep and build** to *build*,
 **Sell** and **Give away** to the same, **Not worth it** to *keep*, with the note saying why) and writes
 `decided: <choice>: <note>` into the item's history, so the why is kept beside the what. The
 version is bumped when the intent changes, a note is given, or the notes gain the repair steps; the same choice said again with
@@ -144,7 +149,16 @@ as typed; nothing scrolls, because nothing was decided. The choice carries the i
 panel showed: if the item changed in another tab since, the choice is refused, the item is
 reloaded, and you choose again from what it is now.
 
-Everything on the panel is behind the access code: the demo visitor sees the demo line in its place.
+### Without the access code
+
+The demo visitor reads the panel as the owner left it, for a public item: the cards with the
+recommendation, the pictures drawn of the reuse cards, the ideas, the worth line, and the plan
+chosen (*Decided: Keep and build*) without the note said with it; the earlier cards and ideas
+are listed too. **Ask again**, **Ask for ideas**, **Draw it**, the note and the decision
+buttons give way to *Sign in with the access code to use this.*; reading asks no model and
+nothing is kept. Every item of the demo set has its cards and its plan saved. The inventory
+list marks the results kept for each item (*Decide cards*, *ideas*, *sell draft*, *give
+draft*, *price guidance*) and its **Plan** column shows the last choice.
 
 ## Next
 

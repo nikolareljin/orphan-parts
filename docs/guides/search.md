@@ -75,7 +75,9 @@ values on its old adapter's label. Each step says whether it calls a model.
 The demo visitor sees **Find a part** read-only: the searches made for public items, each with
 its candidates and the listings brought back (the web finds with their links among them), and
 in place of every button that would start, plan, search or bring back, *Sign in with the access
-code to use this.* Nothing is spent.
+code to use this.* The plan is shown as written: the search phrasings, each a Marketplace link,
+the date and the model, the pattern and the words that rule a listing out (the demo set's
+agitator search is loaded planned). Nothing is spent.
 
 ![Find a part for a visitor: the agitator's search, and Start a search: Sign in with the access code to use this.](../assets/shots/demo/05-visitor-find.png)
 
@@ -187,8 +189,8 @@ price like a pasted one, and **Check fit** reads it the same way; the candidate 
 link. A page already in the listings is not added again. The link opens in a new tab and the
 app never fetches it.
 
-The call counts against the hourly and daily allowance like the plan. The demo visitor does not
-reach *Find a part* (the page shows the line to sign in); a session that ends while the search
+The call counts against the hourly and daily allowance like the plan. The demo visitor sees the
+finds already made and the line to sign in in place of the button; a session that ends while the search
 is open turns the button into *Sign in with the access code to search the web.*
 
 ## The pattern and its limits

@@ -69,12 +69,13 @@ selecting, drawing and writing a pack are refused with the demo line.
 
 The demo visitor sees **Build and reuse** read-only: what the owner wants from a build, and the
 projects built on public items alone, each with its items, what is still needed, what to check
-and the steps. **Propose**, the project's buttons and **Draw it** give way to the sign-in line;
-nothing is spent and nothing is kept.
+and the steps, and the picture drawn of each (the demo set draws its projects once). **Propose**,
+the project's buttons and **Draw it** give way to the sign-in line; nothing is spent and nothing
+is kept.
 
 ![Build and reuse for a visitor: the build wishes, Propose: Sign in with the access code to use this., the projects](../assets/shots/demo/06-visitor-build.png)
 
-![A project for a visitor: Draw it disabled with Sign in with the access code to draw., and the sign-in line in place of Shortlist and Select](../assets/shots/demo/09-visitor-project.png)
+![A project for a visitor: its drawn picture, Draw again disabled with Sign in with the access code to draw., and the sign-in line in place of Shortlist and Select](../assets/shots/demo/09-visitor-project.png)
 
 ## Built so far
 

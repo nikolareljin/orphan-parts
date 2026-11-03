@@ -8,7 +8,9 @@ is worth the effort. Every estimate is labelled as an estimate.
 ## Step by step
 
 The pictures show the graphics card from the demo set, whose price guidance the demo set keeps.
-Without the access code price guidance is not shown.
+Opening **Value** asks no model: the latest guidance is shown as kept, with **Earlier guidance
+(n)** to read one before it, and **Ask again** adds a version. Without the access code a public
+item's guidance is shown read-only, without the form or the sales you reported.
 
 1. In the item, **Value**. Under **What is it worth?**: **Currency**, **Country**, **City**
    (optional, for local prices), then **Get price guidance**: one Muse Spark call with web
