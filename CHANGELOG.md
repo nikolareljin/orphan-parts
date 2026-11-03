@@ -18,6 +18,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 - `./dev record-fixtures` takes `PICTURE_ENABLED` from the shell (on unless set to `0`), so a run that records one new reading need not draw the set's pictures too.
 - The demo set's search for the agitator rod runs **Search the web** once the mixer's photos are read (`web: true` in `demo/set.yaml`; `DemoSearch.web`, `Outcome.web_finds`): only the recording of that very request answers in fixture mode, otherwise the step is said not recorded, never the stub's pages. The recording (`part-search`, 0.0328 USD once) keeps the maker's mixing shaft, OEM Hamilton Beach 990010200 on fix.com at $10.47, with its link, so the demo shows it among the listings.
 
+### Security
+- `minimatch` is held at `^11.0.1` through `overrides` in `frontend/package.json` (Dependabot alert #59, a regular-expression denial of service below 11.0.1): it reached the web app's lint tooling only, as 3.1.5 under ESLint and `@eslint/*` and 10.2.6 under `@typescript-eslint/typescript-estree`, with no fixed release of either. Both now resolve 11.0.4; ESLint still lints and honors its ignores, and `npm audit` reports nothing.
+
 ## 0.3.2 - 2026-11-02
 
 ### Fixed
