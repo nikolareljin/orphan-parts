@@ -34,7 +34,8 @@ item.
     ![The fields to paste: price not set, category, condition, the description with the disclosures, tags, each with Copy](../assets/shots/seller/03-fields-to-paste.png)
 
 4. **Photos and Marketplace.** The photos in the draft's order, each with why it is there;
-   **Download photos** gets them as a zip in that order; **Open Marketplace** opens
+   **Download photos** gets them as a zip in that order, each with its private details blacked
+   out ([Private details on photos](private-details.md)); **Open Marketplace** opens
    Marketplace's create page in a new tab. **On Marketplace** lists the steps there, and
    **Before handing it over** is a checklist kept with the draft.
 

@@ -281,7 +281,9 @@ a photo are blacked out on every copy a visitor or a download gets, and a photo 
 not shown to a visitor at all. A serial number, MAC address or IMEI never goes to a model as
 text. A session is one cookie that holds no account; issued codes are kept as hashes and logged
 by their label only. Nothing is posted or searched anywhere on anyone's behalf. Details:
-[Privacy](https://nikolareljin.github.io/orphan-parts/operations/privacy/).
+[Privacy](https://nikolareljin.github.io/orphan-parts/operations/privacy/), and what is
+blacked out on a photo, pictured:
+[Private details on photos](https://nikolareljin.github.io/orphan-parts/guides/private-details/).
 
 ## If something does not work
 

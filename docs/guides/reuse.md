@@ -7,7 +7,7 @@ what is missing becomes a search you run on Marketplace.
 ## Step by step
 
 The pictures come from the demo set (`./dev demo`) on a stack answering from recordings. Each
-step says whether it calls a model. Without the access code nothing here is kept: proposing,
+step says whether it calls a model. Without the access code the page is read-only (see the end of this section): proposing,
 selecting, drawing and writing a pack are refused with the demo line.
 
 1. **Say what you want.** On **Build and reuse**, **What I want from a build**, **Edit**: your
@@ -64,6 +64,17 @@ selecting, drawing and writing a pack are refused with the demo line.
 9. **Build and record it.** Once every blocking requirement is filled, **Start building**; tick
    the steps as you go; **Record the outcome** with what was set up, how it was tested and
    its limits. No model call.
+
+### Without the access code
+
+The demo visitor sees **Build and reuse** read-only: what the owner wants from a build, and the
+projects built on public items alone, each with its items, what is still needed, what to check
+and the steps. **Propose**, the project's buttons and **Draw it** give way to the sign-in line;
+nothing is spent and nothing is kept.
+
+![Build and reuse for a visitor: the build wishes, Propose: Sign in with the access code to use this., the projects](../assets/shots/demo/06-visitor-build.png)
+
+![A project for a visitor: Draw it disabled with Sign in with the access code to draw., and the sign-in line in place of Shortlist and Select](../assets/shots/demo/09-visitor-project.png)
 
 ## Built so far
 

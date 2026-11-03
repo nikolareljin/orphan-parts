@@ -54,6 +54,9 @@ recording of the app on a phone.
 
     ![Name and Save privately under the reading](../assets/shots/capture/05-save.png)
 
+    Each photo kept is checked once for private details, which are then blacked out on every
+    copy that leaves your view ([Private details on photos](private-details.md)).
+
 8. **Inbox**, **Send a capture from this computer**: **Photos**, **A short video (optional)**,
    **Name (optional)**, **What you know (optional)**, **Send**. The capture waits in the Inbox
    with **Read it** and **Delete**, as one from the phone does.

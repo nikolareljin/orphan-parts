@@ -60,6 +60,8 @@ What it does (`docs/shots/generate.sh`):
   lists. The specs that come first follow the demo video's scenes in order, so each model
   request is the one recorded for the video and replays as such; the run lists any answer that
   was a stand-in for want of a recording.
+- The privacy guide's pictures use the made-up label the browser checks use
+  (`e2e/tests/fake-sticker.png`, every value on it fake), mounted read-only; no real photo.
 - Before each picture: the pairing QR code is swapped for a fixed pattern and blurred, and every
   password or code field (and anything marked `data-shot-blur`) is blurred.
 - Writes `docs/assets/shots/<guide>/<nn-name>.png` with the pixels alone (no text, time or

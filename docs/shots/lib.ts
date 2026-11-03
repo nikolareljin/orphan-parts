@@ -88,8 +88,15 @@ export class Shots {
   /** The element into view, at the top of the page or of the open dialog (or centered). */
   async show(target: Locator, block: 'start' | 'center' | 'end' = 'start'): Promise<void> {
     await target.waitFor({ state: 'visible' })
-    await target.evaluate((el, b) => el.scrollIntoView({ block: b, behavior: 'instant' }), block)
-    await this.page.waitForTimeout(150)
+    // twice: photos that load once scrolled to (lazy) move what is under them, so the second
+    // scroll lands where the first meant to, after they have
+    for (let round = 0; round < 2; round++) {
+      await target.evaluate((el, b) => el.scrollIntoView({ block: b, behavior: 'instant' }), block)
+      await this.page
+        .waitForFunction(() => [...document.images].every((img) => img.complete), undefined, { timeout: 5_000 })
+        .catch(() => undefined)
+      await this.page.waitForTimeout(150)
+    }
   }
 
   /** The page as it is now, as <nn-name>.png of this guide. */
@@ -125,9 +132,27 @@ export async function openItem(page: Page, name: string): Promise<Locator> {
   return item
 }
 
+// the item dialog's section links and the sections they lead to (Inventory.tsx)
+const SECTION_IDS: Record<string, string> = {
+  Facts: 'facts',
+  Decide: 'decide',
+  Value: 'value',
+  'Sell or give away': 'sell',
+  'Measure and fit': 'fit',
+  Picture: 'picture',
+}
+
 /** A section of the open item, by the dialog's section links. */
 export async function section(item: Locator, name: string): Promise<void> {
   await item.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name, exact: true }).click()
-  // the link scrolls smoothly: the shot waits for the dialog to come to rest
+  // the link scrolls smoothly; once it has, the section is put at the top again at once, so
+  // the shot does not depend on where the smooth scroll happened to stop
   await item.page().waitForTimeout(1200)
+  const id = SECTION_IDS[name]
+  if (id) {
+    await item
+      .locator(`:scope > [data-section="${id}"]`)
+      .evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
+    await item.page().waitForTimeout(300)
+  }
 }

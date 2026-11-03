@@ -63,6 +63,19 @@ drawn pictures, never a note, a location or a draft.
 
 ![A public item opened by a visitor: its photos and values, read-only](../assets/shots/demo/04-visitor-item.png)
 
+**Find a part**, **Build and reuse** and **Profile** are read-only too: the agitator's search
+with its candidates and what **Search the web** found, the projects proposed from the demo
+shelf, the skills and their levels. Wherever the owner would save, plan, search or propose,
+the page says *Sign in with the access code to use this.*
+
+![Find a part for a visitor: the agitator's search, read-only](../assets/shots/demo/05-visitor-find.png)
+
+![The agitator's search for a visitor: the candidates, and the sign-in line where the owner would plan or search](../assets/shots/demo/08-visitor-search.png)
+
+![Build and reuse for a visitor: the build wishes and the proposed projects, read-only](../assets/shots/demo/06-visitor-build.png)
+
+![Profile for a visitor: the skills and their levels, read-only](../assets/shots/demo/07-visitor-profile.png)
+
 Signed in, everything below is open. The pictures in each step are on the guide it links to.
 
 ## 1. Read a label and save it

@@ -23,6 +23,10 @@ Without the access code, **My inventory** lists the items marked public, read-on
 
     ![An item: the photo, Plan, Availability, Profile, and the Fields table](../assets/shots/inventory/02-item.png)
 
+    Under the photos, a line says which private details (a product key, a MAC address, a
+    serial number, a password, a QR code) were found and are blacked out on every shared copy:
+    [Private details on photos](private-details.md#step-by-step).
+
     ![The Fields table: each value, where it is known from, and accepted](../assets/shots/inventory/03-values.png)
 
 3. **Confirm what was read.** A reading saved from **Read a label** (see

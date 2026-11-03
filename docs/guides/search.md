@@ -6,7 +6,8 @@ by the category's rules. Nothing is searched, fetched or posted for you.
 
 ## Step by step
 
-Behind the access code. The first pictures follow the agitator's search from the demo set; the
+Starting, planning, searching and bringing back need the access code; the demo visitor sees
+the searches read-only (below). The first pictures follow the agitator's search from the demo set; the
 planning pictures follow a search for a laptop's 65 W charger, made for these pages from the
 values on its old adapter's label. Each step says whether it calls a model.
 
@@ -70,13 +71,25 @@ values on its old adapter's label. Each step says whether it calls a model.
 
     ![The candidates table: documented candidate, rejected, needs evidence; Mark found and Close search](../assets/shots/search/05-candidates.png)
 
+### Without the access code
+
+The demo visitor sees **Find a part** read-only: the searches made for public items, each with
+its candidates and the listings brought back (the web finds with their links among them), and
+in place of every button that would start, plan, search or bring back, *Sign in with the access
+code to use this.* Nothing is spent.
+
+![Find a part for a visitor: the agitator's search, and Start a search: Sign in with the access code to use this.](../assets/shots/demo/05-visitor-find.png)
+
+![The agitator's search for a visitor: Search Marketplace, the sign-in line in place of Plan the search and Search the web, the candidates](../assets/shots/demo/08-visitor-search.png)
+
 ## Built so far
 
 **Find a part**: a search request for something you need, run on Marketplace by you. Say what
 is needed, as another item's requirements (a laptop that needs an adapter, a frappé maker
 whose agitator wore out) or as values written in under a profile, with a top price, a currency
-and a radius. The page is behind the access code: the demo visitor sees *Sign in with the
-access code to use this.* in its place.
+and a radius. Without the access code the page is read-only: the searches for public items
+with their candidates and listings, and *Sign in with the access code to use this.* wherever
+the owner would start, plan, search or bring back.
 The request carries one link, **Search Marketplace**, that opens the search for you to run;
 the service searches nothing, fetches nothing and posts nothing, and never implies a signed-in
 session. A link you bring back is kept as given and never opened.

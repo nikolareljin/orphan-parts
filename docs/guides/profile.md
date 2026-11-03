@@ -7,7 +7,8 @@ What you can do and what you have, kept once for the inventory. The scenarios on
 ## Step by step
 
 No step on this page calls a model: the profile is a form, read later by the calls that write
-the scenarios and the proposals. It is behind the access code.
+the scenarios and the proposals. Saving it needs the access code; the demo visitor sees it
+read-only (below).
 
 1. Open **Profile** in the header. **Skills** lists ten skills, each with four levels:
    *none*, *some*, *confident*, *pro*. A skill added on top of them has **Remove** beside it
@@ -71,4 +72,8 @@ plumbing is *none*. Without a saved profile the cards are written for an average
 household tools and the panel says so. The answers the demo loader writes (`./dev demo`) do not
 count as a saved profile until you save the form yourself.
 
-The profile is behind the access code; the demo visitor sees the demo line in its place.
+Without the access code the profile is read-only: the skills with their levels, the tools, the
+effort and whether devices are opened up, never the budget or the radius, and no **Save
+profile**.
+
+![Profile for a visitor: the skills with their levels as text, What you have and how you work, no Save](../assets/shots/demo/07-visitor-profile.png)

@@ -25,6 +25,8 @@ services:
       - ./docs/shots:/shots
       - ${SHOTS_WORK:-./docs/shots/out}:/out
       - ./demo/photos:/photos:ro
+      # the made-up label the privacy guide is shot with (every value on it is fake)
+      - ./e2e/tests/fake-sticker.png:/fixtures/fake-sticker.png:ro
     network_mode: "service:frontend"
     depends_on:
       - frontend
