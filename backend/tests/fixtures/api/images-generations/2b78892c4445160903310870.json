@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "2b78892c4445160903310870",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Homework desk built from laptop (brand DELL, certifications CE, condition notes bottom cover removed, internals exposed, dus), monitor (brand DELL, certifications CUL, FCC, CE, VCI, GS, S, N, B, PC, NOM, MIC, input voltage 100-240 V); Quiet desk with laptop plus bigger screen for homework., on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793733333,
+    "data": [
+      {
+        "b64_json": "@2b78892c4445160903310870-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4094,
+      "output_tokens": 1280,
+      "total_tokens": 5374
+    }
+  },
+  "status": 200
+}

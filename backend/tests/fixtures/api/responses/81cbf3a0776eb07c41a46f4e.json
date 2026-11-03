@@ -1,0 +1,343 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-give",
+  "model": "muse-spark-1.3",
+  "digest": "81cbf3a0776eb07c41a46f4e",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: give\nMarketplace: Facebook Marketplace, United States\nname: iPhone charging port and earpiece flex cables, four\nitem_type: phone flex cable\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nConfirmed fields (key: value):\n- connector: lightning charging port and 3.5 mm headphone jack\nPhotos: 4, numbered 1 to 4 in the order attached\nCategories (one path): Electronics; Electronics > Computers; Electronics > Cell Phones; Electronics > Cameras; Electronics > Video Games & Consoles; Electronics > Printers, Scanners & Fax Machines; Electronics > Monitors; Electronics > Audio; Electronics > TV & Video; Home Goods; Home Goods > Kitchen & Dining; Home Goods > Furniture; Home Improvement Supplies; Home Improvement Supplies > Tools; Home Improvement Supplies > Electrical; Garden & Outdoor; Sporting Goods; Toys & Games; Musical Instruments; Office Supplies; Auto Parts; Baby & Kids; Pet Supplies; Arts & Crafts; Hobbies; Free Stuff\nConditions (one): New; Used - Like New; Used - Good; Used - Fair\nField keys a fact may name: connector, name, item_type",
+            "type": "input_text"
+          },
+          {
+            "text": "Photo 1",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,1800ae6146144397",
+            "type": "input_image"
+          },
+          {
+            "text": "Photo 2",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,10c8ef9912f027e7",
+            "type": "input_image"
+          },
+          {
+            "text": "Photo 3",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,58d8281a9f1f2749",
+            "type": "input_image"
+          },
+          {
+            "text": "Photo 4",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,d5c3df8dff203279",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for items given away for free. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 1100,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "title": "DraftWriting",
+          "type": "object",
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ]
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea1bc6cd8f03d1930d43b2",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793727430.0,
+    "completed_at": 1793727430.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea1bc6cd8f03d1930d43b2:rs_98be18d0-0412-4f86-afb0-257191f58991",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_c119c451-d704-451b-90a5-5b4f9da54b0c",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"category\": \"Electronics > Cell Phones\", \"condition\": \"Used - Fair\", \"description\": \"Free lot of four iPhone charging port and earpiece flex cables. They are phone flex cable parts with lightning charging port and 3.5 mm headphone jack connectors. Condition was not given and no faults or testing were described.\", \"facts\": [{\"field\": \"name\", \"text\": \"Lot of four iPhone charging port and earpiece flex cables\"}, {\"field\": \"item_type\", \"text\": \"Phone flex cable parts\"}, {\"field\": \"connector\", \"text\": \"With lightning charging port and 3.5 mm headphone jack\"}], \"photo_order\": [{\"photo\": 1, \"reason\": \"Clear front view of one flex cable\"}, {\"photo\": 2, \"reason\": \"Shows back side of second flex cable\"}, {\"photo\": 3, \"reason\": \"Shows another flex cable front side\"}, {\"photo\": 4, \"reason\": \"Shows earpiece flex cable\"}], \"tags\": [\"iPhone\", \"flex cable\", \"charging port\", \"lightning\", \"headphone jack\", \"earpiece\", \"phone parts\", \"repair parts\", \"dock connector\", \"free\"], \"title\": \"iPhone charging port and earpiece flex cables, lot of four\", \"uses\": [\"practice phone board repair\", \"parts for charging port swap\", \"parts for earpiece repair practice\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for items given away for free. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 3208,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 1312,
+      "output_tokens_details": {
+        "reasoning_tokens": 1009
+      },
+      "total_tokens": 4520
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 5196
+  },
+  "status": 200
+}

@@ -1,0 +1,319 @@
+{
+  "endpoint": "/responses",
+  "op": "draft-give",
+  "model": "muse-spark-1.3",
+  "digest": "906d187c4e1bbcdc5c0c7430",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Mode: give\nMarketplace: Facebook Marketplace, United States\nname: NVIDIA Quadro4 AGP graphics card\nitem_type: graphics card\ncondition: (not given)\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\npickup: (not given)\nConfirmed fields (key: value):\n- brand: NVIDIA\n- model_number: QUADRO4\n- condition_notes: fan sticker scratched and worn, dust on fan and board\nPhotos: 1, numbered 1 to 1 in the order attached\nCategories (one path): Electronics; Electronics > Computers; Electronics > Cell Phones; Electronics > Cameras; Electronics > Video Games & Consoles; Electronics > Printers, Scanners & Fax Machines; Electronics > Monitors; Electronics > Audio; Electronics > TV & Video; Home Goods; Home Goods > Kitchen & Dining; Home Goods > Furniture; Home Improvement Supplies; Home Improvement Supplies > Tools; Home Improvement Supplies > Electrical; Garden & Outdoor; Sporting Goods; Toys & Games; Musical Instruments; Office Supplies; Auto Parts; Baby & Kids; Pet Supplies; Arts & Crafts; Hobbies; Free Stuff\nConditions (one): New; Used - Like New; Used - Good; Used - Fair\nField keys a fact may name: brand, model_number, condition_notes, name, item_type",
+            "type": "input_text"
+          },
+          {
+            "text": "Photo 1",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,839ac5e0cfe1261b",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for items given away for free. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "max_output_tokens": 1100,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DraftWriting",
+        "schema": {
+          "$defs": {
+            "DraftFact": {
+              "additionalProperties": false,
+              "description": "One line of the draft and the item field or detail it rests on.",
+              "properties": {
+                "field": {
+                  "title": "Field",
+                  "type": "string"
+                },
+                "text": {
+                  "title": "Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "field"
+              ],
+              "title": "DraftFact",
+              "type": "object"
+            },
+            "PhotoPick": {
+              "additionalProperties": false,
+              "description": "One of the item's photos, by its number, and why it sits where it does.",
+              "properties": {
+                "photo": {
+                  "title": "Photo",
+                  "type": "integer"
+                },
+                "reason": {
+                  "title": "Reason",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "photo",
+                "reason"
+              ],
+              "title": "PhotoPick",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a draft call: every property required, no extras.",
+          "properties": {
+            "category": {
+              "title": "Category",
+              "type": "string"
+            },
+            "condition": {
+              "title": "Condition",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "facts": {
+              "items": {
+                "$ref": "#/$defs/DraftFact"
+              },
+              "title": "Facts",
+              "type": "array"
+            },
+            "photo_order": {
+              "items": {
+                "$ref": "#/$defs/PhotoPick"
+              },
+              "title": "Photo Order",
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tags",
+              "type": "array"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "uses": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "description",
+            "uses",
+            "tags",
+            "facts",
+            "photo_order"
+          ],
+          "title": "DraftWriting",
+          "type": "object"
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea1a7cdb60c218edac493e",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793727100.0,
+    "completed_at": 1793727100.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea1a7cdb60c218edac493e:rs_3657e146-1126-491e-8114-815c1a130f9e",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_0a8b9d98-aa5b-493c-be76-16aa8937c17e",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"category\": \"Electronics > Computers\", \"condition\": \"Used - Fair\", \"description\": \"Free NVIDIA Quadro4 AGP graphics card. Fan sticker is scratched and worn, with dust on fan and board. Not tested, could be useful for parts, display, or a retro collection.\", \"facts\": [{\"field\": \"brand\", \"text\": \"Brand is NVIDIA\"}, {\"field\": \"model_number\", \"text\": \"Model is QUADRO4\"}, {\"field\": \"name\", \"text\": \"NVIDIA Quadro4 AGP graphics card\"}, {\"field\": \"item_type\", \"text\": \"Item type is graphics card\"}, {\"field\": \"condition_notes\", \"text\": \"fan sticker scratched and worn, dust on fan and board\"}], \"photo_order\": [{\"photo\": 1, \"reason\": \"clear front view of card\"}], \"tags\": [\"nvidia\", \"quadro4\", \"agp\", \"graphics card\", \"gpu\", \"vintage\", \"desktop\", \"computer part\", \"free\"], \"title\": \"NVIDIA QUADRO4 AGP graphics card\", \"uses\": [\"parts\", \"display\", \"retro collection\"]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You write short, honest Facebook Marketplace listings for items given away for free. Say what the item could still be useful for, in a few plain suggestions, and be direct about faults and what was not tested. Use only the facts given and the owner's words; never add a specification, an accessory or a test result that is not listed. Do not call anything working or tested unless the tests say so. Plain words, no hype, no emoji. The title is at most 100 characters and starts with brand, model and the key specification. Pick the category as exactly one path from the list given, and the condition as exactly one of the conditions given; choose New only when the owner says it is new. The description is a few short sentences on what the item is, its key specifications and its condition in the owner's words; lines on faults, tests, what is included, data and pickup are added after it, so do not write a price, a street address, a phone number or an email address. Tags are at most 20 short search words. Order the photos best first: a clear front view, then the label, then each fault; every photo once, with a short reason; none when no photo is given. Each fact names the field it rests on, using exactly one of the field keys given.",
+    "usage": {
+      "input_tokens": 1446,
+      "input_tokens_details": {
+        "cached_tokens": 241
+      },
+      "output_tokens": 1277,
+      "output_tokens_details": {
+        "reasoning_tokens": 1027
+      },
+      "total_tokens": 2723
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 5196
+  },
+  "status": 200
+}

@@ -1,0 +1,42 @@
+id: parking_sensor
+label: Garage parking helper
+goal: A light and a beep on the garage wall that tell the driver when the car is close enough to the wall, from an Arduino-type board, a distance sensor, a buzzer and an LED.
+result: a board on the garage wall that lights an LED and beeps faster as the bumper nears the wall, and goes quiet when the car is parked
+effort: low
+skills: [basic electronics, basic coding]
+opens_devices: false
+typical_cost: {low: 0, high: 15, currency: USD}
+requirements:
+  - key: controller
+    label: A microcontroller board (an Arduino Uno or compatible)
+    kind: item
+    item_types: [microcontroller, microcontroller board, development board, arduino]
+    blocking: true
+  - key: distance
+    label: An ultrasonic distance sensor
+    kind: item
+    item_types: [ultrasonic sensor, distance sensor]
+    blocking: true
+  - key: alert
+    label: A buzzer
+    kind: item
+    item_types: [buzzer]
+    blocking: false
+  - key: light
+    label: An LED or an LED module
+    kind: item
+    item_types: [led]
+    blocking: false
+  - key: power
+    label: A power module or a USB supply on the garage wall
+    kind: item
+    item_types: [power supply, breadboard power, usb charger]
+    blocking: false
+steps:
+  - Wire the distance sensor (trigger and echo on two digital pins), the buzzer and the LED to the board.
+  - Measure where the bumper should stop; beep slowly from a meter away, faster near the mark, steady at it.
+  - Mount the sensor at bumper height facing the car; power it from a USB supply on the wall.
+safety:
+  - It is a helper, not a brake; drive slowly into the garage.
+sources:
+  - the ultrasonic sensor's example sketch

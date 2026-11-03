@@ -1,0 +1,86 @@
+{
+  "endpoint": "/responses",
+  "op": "segment-connector",
+  "model": "sam-3.1",
+  "digest": "8cb00a65e0fe8e903d63b63f",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "plug or connector at the end of a cable",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,253c558bb9ccc441",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "metadata": {
+      "include_confidence": "true",
+      "mask_encoding": "one_bit"
+    },
+    "model": "sam-3.1",
+    "prompt_cache_key": "orphan-parts",
+    "store": false
+  },
+  "response": {
+    "metadata": {
+      "mask_encoding": "one_bit",
+      "include_confidence": "true"
+    },
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "sam-3.1",
+    "background": false,
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea1fe8440871b514824e7f",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793728488.0,
+    "completed_at": 1793728488.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_54bf7237-c71a-464d-96e2-23359079290f",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "<0f>0<|box;x1=67;y1=318;x2=111;y2=359;w=600;h=800;c=0.6097560524940491|><|mask;x=0;y=0;c=0.6097560524940491;data=42,45,!!!!!PEVyAs*bm_)g&G&xRe#lqSWm'Nhr=y(%Dk+9Z.OAQL?{.i0fxvnWlJ|>\n",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": null,
+    "usage": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 0,
+      "images_processed": 1
+    },
+    "parallel_tool_calls": true,
+    "store": false
+  },
+  "status": 200
+}

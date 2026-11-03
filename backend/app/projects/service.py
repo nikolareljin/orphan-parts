@@ -121,9 +121,22 @@ def _words(text: str) -> list[str]:
 
 
 # A word a kind may end in without being another thing: "vacuum cleaner" is a vacuum, "laptop
-# computer" a laptop, "speaker system" speakers. A "tv stand" or a "laptop charger" is not.
+# computer" a laptop, "speaker system" speakers, "relay module" a relay. A "tv stand" or a
+# "laptop charger" is not.
 GENERIC_HEADS = frozenset(
-    {"cleaner", "computer", "device", "unit", "set", "system", "machine", "player", "kit", "pc"}
+    {
+        "cleaner",
+        "computer",
+        "device",
+        "unit",
+        "set",
+        "system",
+        "machine",
+        "player",
+        "kit",
+        "pc",
+        "module",
+    }
 )
 
 

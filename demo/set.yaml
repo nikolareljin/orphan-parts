@@ -21,7 +21,10 @@
 # `propose: pictures: true` draws each kept project and `packs: true` selects the kept
 # projects their items allow and writes their build packs (rules, no model). In fixture mode each of these is
 # answered only by the recording of that very request; a new item's are recorded once with
-# ./dev record-fixtures (it replays what is kept and buys only what is missing).
+# ./dev record-fixtures (it replays what is kept and buys only what is missing). Under
+# `propose:`, `rounds` asks again with a note each, `fill` puts an item on a requirement left
+# open, `select` selects the named templates' projects in order (in place of `packs`),
+# `plan_missing` plans a search for what each still needs, `views` draws each once more per view.
 title: a drawer of idle things
 currency: USD
 country: US
@@ -191,6 +194,336 @@ items:
     # reading gives HAMILTON BEACH 729, accepted as the device's model.
     parent_photos: [photos/hamilton-729-label.jpg, photos/hamilton-729-badge.jpg, photos/hamilton-729-mixer.jpg, photos/hamilton-729-side.jpg]
 
+  # the second drawer: desktop boards, memory, drives and adapters for a NAS, three old
+  # graphics cards to pass on, a laptop opened up, an Arduino starter kit's board and modules,
+  # and phone flex cables; the plans are the owner's, everything else is read off the photos
+  - key: nas_board_asrock
+    name: ASRock AB350 Pro4 motherboard, in a case
+    item_type: motherboard
+    intent: build
+    photos: [photos/asrock-ab350-pro4-in-case.jpg]
+    condition: mounted in a case; no processor in the socket
+    decide: true
+    decision: keep_build
+
+  - key: board_gigabyte_z77
+    name: Gigabyte GA-Z77X-D3H motherboard
+    item_type: motherboard
+    intent: build
+    photos: [photos/gigabyte-ga-z77x-d3h.jpg]
+    condition: no processor in the socket
+    decide: true
+    decision: keep_build
+
+  - key: board_asus_z77
+    name: ASUS P8Z77-V LX motherboard
+    item_type: motherboard
+    intent: build
+    photos: [photos/asus-p8z77-v-lx.jpg]
+    condition: no processor in the socket
+    decide: true
+    decision: keep_build
+
+  - key: ram_patriot_ddr4
+    name: Patriot Viper DDR4 desktop memory stick
+    item_type: desktop memory
+    intent: build
+    photos: [photos/patriot-viper-ddr4-dimm.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ram_gskill_ddr3
+    name: G.Skill Sniper DDR3 desktop memory stick
+    item_type: desktop memory
+    intent: build
+    photos: [photos/gskill-sniper-ddr3-dimm.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ram_ddr3_dimm
+    name: DDR3-1600 4 GB desktop memory stick
+    item_type: desktop memory
+    intent: build
+    photos: [photos/ddr3-4gb-desktop-dimm.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ssd_kingston_a400
+    name: Kingston A400 480 GB SSD
+    item_type: SSD
+    intent: build
+    photos: [photos/kingston-a400-480gb-label.jpg, photos/kingston-a400-480gb-top.jpg]
+    picture: custom_nas
+    decide: true
+    decision: keep_build
+
+  - key: hdd_toshiba
+    name: Toshiba 2.5 inch hard drive
+    item_type: hard drive
+    intent: build
+    photos: [photos/toshiba-mq01acf050-label.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: hdd_maxtor
+    name: Maxtor 3.5 inch hard drive
+    item_type: hard drive
+    intent: build
+    photos: [photos/maxtor-3-5in-hdd-board.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: hdd_laptop
+    name: 2.5 inch laptop hard drive
+    item_type: hard drive
+    intent: build
+    photos: [photos/laptop-hdd-2-5in-board.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: adapter_pcie_m2
+    name: PCIe adapter card for two M.2 drives
+    item_type: adapter card
+    intent: build
+    photos: [photos/pcie-dual-m2-adapter.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: adapter_m2_sata
+    name: M.2 and mSATA to SATA adapter
+    item_type: adapter
+    intent: build
+    photos: [photos/m2-msata-to-sata-adapter.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: adapter_m2_u2
+    name: M.2 to U.2 adapter
+    item_type: adapter
+    intent: build
+    photos: [photos/m2-to-u2-adapter.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: enclosure_m2_usb
+    name: M.2 SSD to USB enclosure, open
+    item_type: enclosure
+    intent: build
+    photos: [photos/m2-usb-enclosure.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ram_skhynix
+    name: SK hynix 8 GB DDR4 laptop memory
+    item_type: laptop memory
+    intent: build
+    photos: [photos/skhynix-ddr4-8gb-sodimm.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ram_adata_ddr3l
+    name: ADATA 8 GB DDR3L laptop memory
+    item_type: laptop memory
+    intent: build
+    photos: [photos/adata-ddr3l-8gb-sodimm.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ram_ramaxel_4gb
+    name: Ramaxel 4 GB DDR4 laptop memory
+    item_type: laptop memory
+    intent: build
+    photos: [photos/ramaxel-ddr4-4gb-sodimm.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ram_adata_ddr4_4gb
+    name: ADATA 4 GB DDR4 laptop memory
+    item_type: laptop memory
+    intent: sell
+    photos: [photos/adata-ddr4-4gb-sodimm.jpg]
+    draft: sell
+    asking_price: "8"
+    price: true
+    decision: sell
+
+  - key: gpu_firepro
+    name: ATI FirePro graphics card
+    item_type: graphics card
+    intent: sell
+    photos: [photos/ati-firepro-card.jpg]
+    draft: sell
+    asking_price: "15"
+    price: true
+    decision: sell
+
+  - key: gpu_9500gt
+    name: EVGA GeForce 9500 GT graphics card
+    item_type: graphics card
+    intent: sell
+    photos: [photos/evga-9500gt-card.jpg]
+    draft: sell
+    asking_price: "20"
+    price: true
+    decision: sell
+
+  - key: gpu_quadro4
+    name: NVIDIA Quadro4 AGP graphics card
+    item_type: graphics card
+    intent: give
+    photos: [photos/nvidia-quadro4-agp-card.jpg]
+    draft: give
+    decision: give
+
+  - key: laptop_dell
+    name: Dell laptop, opened
+    item_type: laptop
+    intent: build
+    photos: [photos/dell-laptop-inside.jpg]
+    condition: opened; the bottom cover is off
+    decide: true
+    decision: keep_build
+
+  - key: uno_r3
+    name: Elegoo UNO R3 board
+    item_type: microcontroller board
+    intent: build
+    photos: [photos/elegoo-uno-r3.jpg]
+    picture: smart_calendar
+    decide: true
+    decision: keep_build
+
+  - key: proto_shield
+    name: Prototype shield for the UNO
+    item_type: prototype shield
+    intent: build
+    photos: [photos/prototype-shield.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: joystick
+    name: Joystick module
+    item_type: joystick module
+    intent: build
+    photos: [photos/joystick-module.jpg]
+    picture: arcade_table
+    decide: true
+    decision: keep_build
+
+  - key: rtc_ds1307
+    name: DS1307 real-time clock module
+    item_type: real-time clock module
+    intent: build
+    photos: [photos/ds1307-rtc-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: dht11
+    name: DHT11 temperature and humidity module
+    item_type: temperature and humidity sensor module
+    intent: build
+    photos: [photos/dht11-module.jpg]
+    picture: kitchen_dashboard
+    decide: true
+    decision: keep_build
+
+  - key: hcsr04
+    name: HC-SR04 ultrasonic distance module
+    item_type: ultrasonic distance sensor module
+    intent: build
+    photos: [photos/hc-sr04-ultrasonic-module.jpg]
+    picture: parking_sensor
+    decide: true
+    decision: keep_build
+
+  - key: sound_sensor
+    name: Sound sensor module with a microphone
+    item_type: sound sensor module
+    intent: build
+    photos: [photos/sound-sensor-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: relay
+    name: Single relay module
+    item_type: relay module
+    intent: build
+    photos: [photos/relay-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: buzzer
+    name: Buzzer module
+    item_type: buzzer module
+    intent: build
+    photos: [photos/buzzer-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: push_button
+    name: Push button module
+    item_type: push button module
+    intent: build
+    photos: [photos/push-button-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: led_module
+    name: LED module
+    item_type: LED module
+    intent: build
+    photos: [photos/led-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ir_obstacle
+    name: Infrared obstacle sensor module
+    item_type: infrared obstacle sensor module
+    intent: build
+    photos: [photos/ir-obstacle-sensor-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: ir_receiver
+    name: Infrared receiver module
+    item_type: infrared receiver module
+    intent: build
+    photos: [photos/ir-receiver-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: breadboard_power
+    name: Breadboard power module
+    item_type: breadboard power module
+    intent: build
+    photos: [photos/breadboard-power-module.jpg]
+    decide: true
+    decision: keep_build
+
+  - key: solder_practice
+    name: SMD soldering practice board, not yet soldered
+    item_type: soldering practice kit
+    intent: keep
+    photos: [photos/smd-soldering-practice-board.jpg]
+    decide: true
+    decision: keep_spare
+
+  - key: battery_tester
+    name: Phone battery test board with a small screen and three buttons
+    item_type: battery tester
+    intent: keep
+    photos: [photos/battery-test-board-screen.jpg]
+    decide: true
+    decision: keep_spare
+
+  - key: iphone_flex
+    name: iPhone charging port and earpiece flex cables, four
+    item_type: phone flex cable
+    intent: give
+    photos: [photos/iphone-charging-flex-white.jpg, photos/iphone-charging-flex-blue.jpg, photos/iphone-charging-flex-black.jpg, photos/iphone-earpiece-flex.jpg]
+    draft: give
+    decision: give
+
 searches:
   # `web: true` runs Search the web once the agitator's device is read, as the owner's button
   # does: the pages it finds join the listings with their links (only a recording of this very
@@ -211,13 +544,41 @@ searches:
       - text: "@listings/L4.txt"
         asking_price: "5"
 
+  # the NAS has no power supply: Search the web for one, for the board it will run
+  - key: nas_power_supply
+    need: board_asus_z77
+    profile: generic_item
+    title: ATX power supply for a home NAS, 450 W or more, with four SATA power leads
+    max_price: 60
+    web: true
+
 propose:
   count: 3
   pictures: true
   packs: true
   preferences:
-    interests: a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos
-    effort: low
-    skills: [basic computer setup]
-    budget: 50
+    interests: a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos; a custom NAS from the spare desktop boards and drives; a gaming coffee table with joysticks; a smart desk calendar; a kitchen home-automation dashboard; a weather station; a garage parking helper; retro games on the TV
+    effort: medium
+    skills: [basic computer setup, {skill: electronics and soldering, level: some}, {skill: software, level: confident}]
+    budget: 400
     currency: USD
+  note: builds around the screens (a smart mirror for the hall, a homework desk) and a home automation server
+  # two more calls, each steered by the owner's note, then every kept project drawn as built
+  rounds:
+    - count: 4
+      note: builds from the spare desktop boards, memory, drives and M.2 adapters (a custom NAS for the family's photos, a home server), and games in a coffee table or on the TV with the joystick module as the controls
+    - count: 4
+      note: builds from the UNO board and the sensor modules (a smart desk calendar with the clock module and the buzzer, a kitchen dashboard with the sensors and the relay, a weather station, a garage parking helper)
+  # the coffee table's proposal left its controls open: the owner puts the joystick module there
+  fill:
+    - template: arcade_table
+      requirement: controls
+      item: joystick
+      why: the first control, read by the UNO board; a second joystick and buttons still to find
+  # four builds selected, each with its build pack: what they still need becomes a search with
+  # its Marketplace links, and each is drawn twice more, in its room and up close
+  select: [custom_nas, arcade_table, smart_calendar, home_server]
+  plan_missing: true
+  views:
+    - in its room, in use
+    - as a close-up of how the parts fit together

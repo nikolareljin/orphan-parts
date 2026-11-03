@@ -1,0 +1,50 @@
+id: smart_calendar
+label: Smart desk calendar and alarm
+goal: A small desk clock that keeps the date and time through power cuts, shows the day's reminders on a small screen and beeps for them, from an Arduino-type board and the modules already in the drawer.
+result: a board with a real-time clock module, a small screen and a buzzer, showing the date and the next reminder, with buttons to snooze
+effort: medium
+skills: [basic electronics, basic coding]
+opens_devices: false
+typical_cost: {low: 5, high: 25, currency: USD}
+requirements:
+  - key: controller
+    label: A microcontroller board (an Arduino Uno or compatible)
+    kind: item
+    item_types: [microcontroller, microcontroller board, development board, arduino]
+    blocking: true
+  - key: clock
+    label: A real-time clock module with its coin cell
+    kind: item
+    item_types: [real-time clock, rtc, clock]
+    blocking: true
+  - key: screen
+    label: A small screen the board can drive (an I2C OLED or a 16x2 LCD)
+    kind: item
+    item_types: [display, screen, lcd, oled]
+    blocking: true
+    profile: generic_item
+  - key: alarm
+    label: A buzzer for the reminders
+    kind: item
+    item_types: [buzzer]
+    blocking: false
+  - key: button
+    label: A push button to snooze
+    kind: item
+    item_types: [push button, button]
+    blocking: false
+  - key: shield
+    label: A prototype shield or a breadboard to wire it on
+    kind: item
+    item_types: [prototype shield, shield, breadboard]
+    blocking: false
+steps:
+  - Wire the clock module to the board's I2C pins (SDA, SCL, 5 V, GND) and set the time once from the computer.
+  - Add the screen on the same I2C pins and show the date and the time; then the buzzer on a digital pin.
+  - Keep the reminders in the sketch as a short list of dates and times; beep and show the next one when it comes.
+  - Add the button to snooze; solder everything on the prototype shield once it works on the bench.
+safety:
+  - Keep the coin cell away from children; it is dangerous if swallowed.
+sources:
+  - the real-time clock module's library and example sketch
+  - the Arduino guide to I2C

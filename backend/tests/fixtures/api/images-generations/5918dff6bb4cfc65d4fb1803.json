@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "5918dff6bb4cfc65d4fb1803",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Home automation server built from laptop (brand lenovo, certifications FC, CE, UL, NOM, KC, VCI, TUV, N14608, condition notes disassembled with internal components expose), laptop memory (brand ADATA, certifications CE, model number AM1L16BC8R2-B1QS); One always-on laptop running home automation schedules., on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793733343,
+    "data": [
+      {
+        "b64_json": "@5918dff6bb4cfc65d4fb1803-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4095,
+      "output_tokens": 1344,
+      "total_tokens": 5439
+    }
+  },
+  "status": 200
+}

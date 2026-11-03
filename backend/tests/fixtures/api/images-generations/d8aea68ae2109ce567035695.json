@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "d8aea68ae2109ce567035695",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Smart mirror in the hall built from monitor (brand DELL, certifications CCC, ETL, condition notes part of label blacked out/redacted, housing ); Hall mirror that shows time, weather and calendar behind the glass., on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793733321,
+    "data": [
+      {
+        "b64_json": "@d8aea68ae2109ce567035695-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4065,
+      "output_tokens": 1262,
+      "total_tokens": 5327
+    }
+  },
+  "status": 200
+}

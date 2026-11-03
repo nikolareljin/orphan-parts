@@ -28,7 +28,9 @@ The line at the foot of the page says *Demo: recorded answers only*.
    ([Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)).
    The first page, **Read a label**, shows the demo
    set's photos grouped by item (monitors, ThinkPads, a laptop motherboard, a graphics card, a
-   slot 1 processor, a powerline adapter, a frappé maker's agitator).
+   slot 1 processor, a powerline adapter, a frappé maker's agitator, and a second drawer of
+   desktop boards, memory, drives, M.2 adapters, an opened laptop, an Arduino board with its
+   sensor modules, graphics cards and iPhone flex cables).
 2. Tick one photo, several, or **Select all photos of this item**; leave *Find the label in
    the photo first* on and press **Read the label**. Each reading appears side by side under
    *Recorded answer for this sample.*: the SAM 3.1 pass over the photo (the regions it found,
@@ -48,8 +50,14 @@ The line at the foot of the page says *Demo: recorded answers only*.
    **Profile** are read-only: the search for the frappé maker's agitator rod with its plan (the
    search phrasings, each a Marketplace link, and the match pattern), its four
    candidates and the maker's part (OEM 990010200) that **Search the web** found, with its
-   link; the projects proposed from the demo shelf (a homework workstation, a smart mirror
-   for the hall), each with its drawn picture; the skills and their levels. Where the owner would save, plan, search or
+   link, and the pages it found for the NAS's power supply; the eleven projects proposed from
+   the demo shelf, each with its drawing, its items and why they fit, what is still needed and
+   the unknowns: four are selected with their build packs, three drawings each and a search
+   with Marketplace links for every missing part (a custom NAS on the ASUS board, an arcade
+   coffee table with the joystick module, a smart desk calendar on the UNO, a home server for
+   the photos), and the rest are a kitchen dashboard, a weather station and a garage parking
+   helper from the UNO's sensor modules, a retro console, a smart mirror, a homework desk and a
+   home automation server; the skills and their levels. Where the owner would save, plan, search or
    propose, the sign-in line.
 
 ### With the access code (about ten minutes)

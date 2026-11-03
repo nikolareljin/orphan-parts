@@ -249,5 +249,8 @@ async def test_every_item_of_the_committed_set_has_its_saved_outcome(
     search = loader.finder.searches()[0]
     assert search.plan is not None and search.plan.phrasings
     projects = loader.planner.projects().projects
-    assert projects and all(loader.planner.packs_of(p.id) for p in projects)
+    # the projects the set selects have their build packs; every project its drawing
+    selected = [p for p in projects if p.status == "selected"]
+    assert demo.propose is not None and len(selected) == len(demo.propose.select)
+    assert all(loader.planner.packs_of(p.id) for p in selected)
     assert all(loader.pictures and loader.pictures.project_list(p.id).pictures for p in projects)

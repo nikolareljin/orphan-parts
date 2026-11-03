@@ -16,7 +16,7 @@ import yaml
 from app.config import Settings
 from app.decide import DecisionCreate
 from app.decide.service import Decider
-from app.demo.schema import DemoItem, DemoMeasurement, DemoSet, Outcome
+from app.demo.schema import DemoItem, DemoMeasurement, DemoPropose, DemoSet, Outcome
 from app.extract import Extractor
 from app.extract.imaging import BadImageError, dimensions, prepare
 from app.find import Finder
@@ -34,6 +34,8 @@ from app.picture import Pictures, PicturesOffError
 from app.privacy import Privacy
 from app.profiles import Profiles
 from app.projects import Planner, ProposeRequest
+from app.projects.schema import FillRequest, Project
+from app.projects.service import ProjectsError
 from app.value import Valuer
 from app.value.schema import PriceRequest
 
@@ -218,29 +220,7 @@ class Loader:
                     out.plans += 1
                     out.cost_usd += planned.plan.cost_usd
         if demo.propose is not None:
-            try:
-                self.planner.set_preferences(demo.propose.preferences, by_demo=True)
-                projects = await self.planner.propose(
-                    ProposeRequest(count=demo.propose.count, note=demo.propose.note)
-                )
-            except (ValueError, ModelApiError) as exc:
-                out.skipped.append(f"proposals: {exc}")
-            else:
-                out.projects += len(projects)
-                out.cost_usd += sum(p.cost_usd for p in projects)
-                if demo.propose.pictures and self.pictures is not None:
-                    pictures = self.pictures
-                    for project in projects:
-                        drawn = await self.exactly(
-                            f"project {project.title}: picture",
-                            partial(pictures.draw_project, project),
-                            out,
-                        )
-                        if drawn is not None:
-                            out.pictures += 1
-                            out.cost_usd += drawn.cost_usd
-                if demo.propose.packs:
-                    self.write_packs([p.id for p in projects], out)
+            await self.propose(demo.propose, out)
         self.record_decisions(demo, out)
         out.stub_answers = self.client.fixture_fallbacks - stubs_before
         log.info(
@@ -445,6 +425,105 @@ class Loader:
                     if drawn is not None:
                         out.pictures += 1
                         out.cost_usd += drawn.cost_usd
+
+    async def propose(self, propose: DemoPropose, out: Outcome) -> None:
+        """The proposals, as the owner asks for them: the first call, then each round with its
+        note; the requirements the owner fills from the set; every kept project drawn as built;
+        then the templates ``select`` names selected in that order, each with what it still needs
+        searched for and planned, more drawings of it, and its build pack (without ``select``,
+        ``packs`` selects every kept project its items allow)."""
+        calls = [(propose.count, propose.note), *((r.count, r.note) for r in propose.rounds)]
+        kept: list[Project] = []
+        for n, (count, note) in enumerate(calls, 1):
+            try:
+                projects = await self.planner.propose(ProposeRequest(count=count, note=note))
+            except (ValueError, ModelApiError) as exc:
+                out.skipped.append(f"proposals, call {n}: {exc}")
+                continue
+            kept += projects
+            out.projects += len(projects)
+            out.cost_usd += sum(p.cost_usd for p in projects)
+        for fill in propose.fill:
+            target = next((p for p in kept if p.template == fill.template), None)
+            item_id = self.ids.get(fill.item)
+            where = f"fill {fill.template}.{fill.requirement}"
+            if target is None:
+                out.skipped.append(f"{where}: no kept project of that template")
+                continue
+            if item_id is None:
+                out.skipped.append(f"{where}: {fill.item} was not loaded")
+                continue
+            try:
+                filled = self.planner.fill(
+                    target.id, fill.requirement, FillRequest(item_id=item_id, why=fill.why)
+                )
+            except (ProjectsError, LookupError) as exc:
+                out.skipped.append(f"{where}: {exc}")
+                continue
+            kept = [filled if p.id == filled.id else p for p in kept]
+        if propose.pictures:
+            for project in kept:
+                await self.draw_project(project, out)
+        if not propose.select:
+            if propose.packs:
+                self.write_packs([p.id for p in kept], out)
+            return
+        for template in propose.select:
+            chosen = next((p for p in kept if p.template == template), None)
+            if chosen is None:
+                out.skipped.append(f"select {template}: no kept project of that template")
+                continue
+            try:
+                self.planner.select(chosen.id)
+            except (ProjectsError, LookupError) as exc:
+                out.skipped.append(f"select {template}: {exc}")
+                continue
+            if propose.plan_missing:
+                await self.plan_missing(chosen.id, template, out)
+            for view in propose.views:
+                await self.draw_project(self.planner.project(chosen.id), out, view)
+            try:
+                self.planner.write_pack(chosen.id)
+            except (ProjectsError, LookupError) as exc:
+                out.skipped.append(f"select {template}: build pack: {exc}")
+                continue
+            out.packs += 1
+
+    async def draw_project(self, project: Project, out: Outcome, view: str = "") -> None:
+        """A kept project drawn as built, or shown as ``view`` asks (each view its own request,
+        so its own recording)."""
+        if self.pictures is None:
+            return
+        pictures = self.pictures
+        what = f"project {project.title}: picture" + (f" ({view})" if view else "")
+        drawn = await self.exactly(what, partial(pictures.draw_project, project, view), out)
+        if drawn is not None:
+            out.pictures += 1
+            out.cost_usd += drawn.cost_usd
+
+    async def plan_missing(self, project_id: int, template: str, out: Outcome) -> None:
+        """Every requirement the selected project still needs becomes a search with its plan,
+        the Marketplace search links, as **Find it on Marketplace** and **Plan the search**
+        make them; in fixture mode only a recording of that very plan answers."""
+        project = self.planner.project(project_id)
+        for req in project.requirements:
+            if req.state == "pass" or req.search_id is not None:
+                continue
+            try:
+                project = self.planner.search_for(project_id, req.key)
+            except (ProjectsError, LookupError) as exc:
+                out.skipped.append(f"{template}.{req.key}: search: {exc}")
+                continue
+            search_id = next(r.search_id for r in project.requirements if r.key == req.key)
+            if search_id is None:
+                continue
+            out.searches += 1
+            planned = await self.exactly(
+                f"{template}.{req.key}: the search plan", partial(self.finder.plan, search_id), out
+            )
+            if planned is not None and planned.plan is not None:
+                out.plans += 1
+                out.cost_usd += planned.plan.cost_usd
 
     def write_packs(self, project_ids: list[int], out: Outcome) -> None:
         """Each project selected as the owner's Select does, and its build pack written by the

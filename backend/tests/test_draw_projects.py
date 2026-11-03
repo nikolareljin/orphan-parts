@@ -184,6 +184,15 @@ def test_the_prompt_is_capped() -> None:
     )
 
 
+def test_another_view_of_a_project_is_asked_for_in_its_own_words() -> None:
+    plain = finished_prompt("Desk", ["laptop"], "a quiet desk")
+    assert plain == finished_prompt("Desk", ["laptop"], "a quiet desk", "  ")
+    shown = finished_prompt("Desk", ["laptop"], "a quiet desk", "in its room, in use")
+    assert shown == plain.replace("a quiet desk,", "a quiet desk; shown in its room, in use,")
+    assert finished_prompt("Desk", [], "", "up close").endswith("Desk; shown up close, " + TAIL)
+    assert "v" * 121 not in finished_prompt("Desk", [], "", "v" * 500)
+
+
 def test_a_part_is_its_kind_and_a_few_safe_values(settings: Settings) -> None:
     inventory = Inventory(settings)
     item = inventory.get(private_laptop(inventory))

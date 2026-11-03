@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "6c8b065aad1d70f182f7f179",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Kitchen home-automation dashboard built from monitor (brand DELL, certifications CUL, FCC, CE, VCI, GS, S, N, B, PC, NOM, MIC, input voltage 100-240 V), laptop (brand DELL, certifications CE, condition notes bottom cover removed, internals exposed, dus), microcontroller board (brand ELEGOO, connector usb-b, dc barrel jack, model number UNOR3), temperature and humidity sensor module (connector 3-pin male header), ultrasonic distance sensor module (connector 4-pin male header, model number HC-SR04), sound sensor module (connector 4-pin header: ao g + do); Kitchen wall display with climate readout, walk-up wake, sound trigger and relay-switched light or fan., on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793733432,
+    "data": [
+      {
+        "b64_json": "@6c8b065aad1d70f182f7f179-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4177,
+      "output_tokens": 1755,
+      "total_tokens": 5932
+    }
+  },
+  "status": 200
+}

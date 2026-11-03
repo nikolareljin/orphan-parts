@@ -41,15 +41,20 @@ def test_the_shipped_templates_load_and_say_what_they_need() -> None:
     templates = Templates()
     assert templates.ids() == [
         "arcade_table",
+        "custom_nas",
         "document_camera",
         "external_monitor_workaround",
         "home_automation_server",
         "home_music_setup",
         "home_server",
         "homework_workstation",
+        "kitchen_dashboard",
+        "parking_sensor",
         "retro_console",
+        "smart_calendar",
         "smart_mirror",
         "vacuum_restored",
+        "weather_station",
     ]
     vacuum = templates.get("vacuum_restored")
     assert [r.key for r in vacuum.requirements] == ["vacuum", "attachment"]
@@ -106,6 +111,12 @@ def test_fits_reads_the_kind_off_the_type_not_the_name(settings: Settings) -> No
     charger = inventory.create(ItemCreate(item_type="laptop charger", name="Ch"))
     assert fits(["vacuum"], cleaner) and fits(["laptop"], computer) and fits(["cable"], cables)
     assert not fits(["laptop"], charger)
+    # a sensor or a relay sold on a small board is still the sensor, the relay
+    relay = inventory.create(ItemCreate(item_type="relay module", name="R"))
+    dht = inventory.create(ItemCreate(item_type="temperature and humidity sensor module", name="D"))
+    power = inventory.create(ItemCreate(item_type="breadboard power module", name="P"))
+    assert fits(["relay"], relay) and fits(["humidity sensor"], dht)
+    assert fits(["breadboard power"], power) and not fits(["power supply"], power)
 
 
 @pytest.fixture
@@ -481,7 +492,7 @@ def test_project_routes(recorded_client: TestClient) -> None:
     )
     assert saved.status_code == 200 and saved.json()["budget"] == 30
     assert recorded_client.put("/api/preferences", json={"effort": "heroic"}).status_code == 422
-    assert len(recorded_client.get("/api/templates").json()) == 10
+    assert len(recorded_client.get("/api/templates").json()) == 15
 
     proposed = recorded_client.post("/api/projects/propose", json={"count": 3})
     assert proposed.status_code == 201, proposed.text

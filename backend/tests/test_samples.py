@@ -73,7 +73,7 @@ def test_the_catalog_lists_every_photo_by_item_and_the_listings(visitor: TestCli
     assert got.status_code == 200
     body = got.json()
     photos = [p for item in body["items"] for p in item["photos"]]
-    assert len(body["items"]) == 10 and len(photos) == 19
+    assert len(body["items"]) == 49 and len(photos) == 62
     gpu = next(i for i in body["items"] if i["key"] == "gpu_9800gt")
     assert gpu["name"] == "EVGA GeForce 9800 GT graphics card"
     assert [p["id"] for p in gpu["photos"]] == ["evga-9800gt-front", "evga-9800gt-back"]
@@ -146,7 +146,7 @@ def test_every_sample_photo_answers_with_its_own_recording(
     stubs_before = client.fixture_fallbacks
     stub = stub_item_type()
     ids = photo_ids()
-    assert len(ids) == 19
+    assert len(ids) == 62
     for sid in ids:
         got = visitor.post(
             "/api/samples/read", json={"sample_ids": [sid], "find_label": find_label}

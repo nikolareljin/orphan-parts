@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "76c04ea1211937a8aa7b14fb",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Home server for photos built from laptop (brand lenovo, certifications FC, CE, UL, NOM, KC, VCI, TUV, N14608, condition notes disassembled with internal components expose), hard drive (brand TOSHIBA, certifications CE, EAC, KC, connector sata), laptop memory (brand ADATA, certifications CE, model number AM1L16BC8R2-B1QS); Always-on shelf server for family photos and documents.; shown in its room, in use, on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793733825,
+    "data": [
+      {
+        "b64_json": "@76c04ea1211937a8aa7b14fb-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4125,
+      "output_tokens": 1523,
+      "total_tokens": 5648
+    }
+  },
+  "status": 200
+}

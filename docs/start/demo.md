@@ -4,7 +4,11 @@ Sixty seconds through what is built, in the order a person meets it, on a stack 
 `./dev up` in fixture mode (no key: every model answer is a recorded one and nothing is spent).
 With a key, the same steps run live. The demo set is a drawer of idle things, photographed by
 the owner: three monitors, two ThinkPads and a spare laptop board, an old graphics card, a slot 1
-processor, a powerline adapter still in its wrap, and the worn agitator of a frappé maker.
+processor, a powerline adapter still in its wrap, and the worn agitator of a frappé maker. A
+second drawer adds 39 things: three desktop motherboards, desktop and laptop memory, an SSD and
+three hard drives, M.2 adapters, an opened Dell laptop, an Elegoo UNO R3 with a prototype shield
+and a dozen sensor modules, three graphics cards to sell or give away, a spare memory stick to
+sell and four iPhone flex cables to give away.
 
 ## The set, loaded
 
@@ -53,7 +57,15 @@ guidance, sell draft and *Sell*; the 9461 and the slot 1 processor their give dr
 away*; the agitator its cards and *Keep and fix*.
 
 An item may name a `picture:` (a template id such as `smart_mirror`, or a few words), drawn by
-Muse Image after its drafts; four items of the set do. A drawing is a paid call, so a live load
+Muse Image after its drafts; nine items of the set do. Under `propose:`, `rounds` asks for
+proposals again with a note each, `fill` puts an item of the set on a requirement a proposal
+left open, `select` selects the first kept project of each template named, in that order, and
+writes its build pack (in place of what `packs: true` would take), `plan_missing` turns what
+each selected project still needs into searches with their plans, and `views` draws each
+selected project again, once per view, each its own request. The second drawer's items each
+have a saved outcome too: the 34 meant for a build or kept their cards and *Keep and build* or
+*Keep as a spare*, the FirePro, the 9500 GT and the ADATA stick their price guidance, sell
+draft and *Sell*, the Quadro4 and the iPhone flex cables their give draft and *Give away*. A drawing is a paid call, so a live load
 draws it only with `PICTURE_ENABLED=1` (`./dev record-fixtures` sets it for its run unless the shell sets `PICTURE_ENABLED=0`). Fixture
 mode shows a drawing only once a record run has kept it, and until then the load says *not
 recorded yet* for it and shows none, never the stub image as a drawing.
@@ -174,6 +186,22 @@ captioned as drawn. Record the outcome once it works. [Build and reuse](../guide
 
 ![A project selected, its drawing captioned as drawn](../assets/shots/reuse/05-drawn.png)
 
+The second drawer is where **Build and reuse** fills up: three proposal calls, the last two
+steered by the owner's notes, keep eleven projects, each drawn as built, each with its items and
+why they fit, what is still needed, the effort, the spend and the unknowns. Four are selected:
+a custom NAS on the ASUS P8Z77-V LX board with the G.Skill DDR3 stick, the Kingston SSD, the
+Maxtor hard drive and the PCIe M.2 card; an arcade coffee table on the Dell laptop and the 24
+inch monitor with the joystick module put on its controls by the owner; a smart desk calendar
+on the UNO with the DS1307 clock, the buzzer, the button and the prototype shield; and a home
+server for the photos on the ThinkPad T510 with the Toshiba drive. Each has its build pack, two
+more drawings (in its room, and up close), and every requirement it still needs as a search
+with its Marketplace links (the NAS's processor, power supply and case; the table, its glass
+and speakers; the calendar's screen; the server's network link); the power supply is also
+searched for on the web, with the pages found and their links. The other proposals are a
+kitchen dashboard (the DHT11, the HC-SR04, the sound sensor, the relay), a weather station, a
+garage parking helper, a retro console, a smart mirror, a homework desk and a home automation
+server. Every item meant for a build has its Decide cards.
+
 ## 7. Sell the graphics card, give the processor away
 
 On the graphics card, **What is it worth?** has Muse Spark search for listings and sales of the
@@ -182,7 +210,9 @@ stay four numbers. Under **Prepare to sell or give away**, **Listing details** t
 condition, what is included, the faults, the handover and the area and the asking price;
 **Write the draft** has Muse Spark write a Facebook Marketplace (US) draft from confirmed values,
 with the disclosures the rules append; the slot 1 processor goes as a free-pickup draft, and
-the older ThinkPad as one with the data-removal steps. Each field has **Copy**, **Download
+the older ThinkPad as one with the data-removal steps. From the second drawer, the FirePro, the
+9500 GT and the ADATA 4 GB stick each have price guidance and a sell draft at the owner's
+price; the Quadro4 and the iPhone flex cables go as free-pickup drafts. Each field has **Copy**, **Download
 photos** zips them in order, and **Open Marketplace** opens the create page; posting is yours.
 [Value an item](../guides/value.md), [Seller flow](../guides/seller.md).
 
