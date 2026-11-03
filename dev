@@ -67,6 +67,10 @@
 #   video [options]    draft cuts of the demo videos into video/out/ from a stack of its own in
 #                      fixture mode (video/generate.sh -h); --record records the answers the
 #                      scenes need once, with MODEL_API_KEY from the shell
+#   docs-shots [--only PATTERN] [--force] [--keep]
+#                      the docs' screenshots into docs/assets/shots/ from a stack of its own in
+#                      fixture mode with the demo set loaded (docs/shots/generate.sh -h); no
+#                      key, nothing spent; codes and pairing images blurred, no metadata
 #   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
 #                      WAV notes copied into demo/notes/
 #   shell <service>    open a shell in a running service
@@ -713,6 +717,7 @@ case "$cmd" in
   record-fixtures) cmd_record_fixtures "$@" ;;
   demo-scrub) cmd_demo_scrub "$@" ;;
   video) bash "$ROOT/video/generate.sh" "$@" ;;
+  docs-shots) bash "$ROOT/docs/shots/generate.sh" "$@" ;;
   shell) cmd_shell "$@" ;;
   help|-h|--help) script_help "${BASH_SOURCE[0]}" ;;
   *) die "unknown command: $cmd (try ./dev help)" 2 ;;
