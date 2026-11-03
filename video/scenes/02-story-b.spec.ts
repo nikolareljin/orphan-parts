@@ -4,9 +4,9 @@ import type { Locator } from '@playwright/test'
 // Story B, unused electronics: the inventory, the skills profile and what the owner wants from
 // a build, the proposals, one selected with its items committed, drawn, what it still needs
 // as a Marketplace search, and the build pack. One project carries the shots after
-// the proposals: the arcade when the proposals have one, else the first proposed. Then what is
-// not built with: the graphics card's price guidance, a voice note becoming its condition
-// notes, and its draft in Marketplace's fields.
+// the proposals: the arcade when the proposals have one, else the first proposed. Then the
+// graphics card, for sale: its price guidance, a voice note becoming its condition notes, and
+// its draft in Marketplace's fields.
 
 test.describe.configure({ mode: 'serial' })
 

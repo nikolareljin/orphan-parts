@@ -13,7 +13,7 @@ Nine shots, cut from the main video's takes by `video/generate.sh` (`video/assem
 | K4 | 0:17 | 9 | Search the web, then Check fit | S08's take | `t24-search-web` | record |
 | K5 | 0:26 | 6 | The proposals | S12's take, from the answer | `t10-propose` | record |
 | K6 | 0:32 | 6 | Draw it | S14's take | `t26-draw` | record |
-| K7 | 0:38 | 5 | The missing controls as a search | S15's take | `t12-marketplace` | now |
+| K7 | 0:38 | 5 | What is missing, as a search | S15's take | `t12-marketplace` | now |
 | K8 | 0:43 | 5 | The draft in Marketplace's fields | S18's take, from the draft | `t31-sell` | record |
 | K9 | 0:48 | 7 | Closing card | `brand/card-close.png`, fade out | none | card |
 

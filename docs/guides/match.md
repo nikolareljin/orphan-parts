@@ -25,8 +25,9 @@ values typed in, as a seller's listing might give them.
 ## Two sides
 
 - **The need**: what the part must satisfy. Either another inventory item (the laptop that needs
-  an adapter, the frappé maker whose agitator wore out, with the required values recorded on it
-  under *Add what you know*), or values written straight into the form.
+  an adapter, the frappé maker whose agitator wore out, with the required values on it: measured
+  with [Measure a feature](measure.md) or recorded under *Add what you know*), or values written
+  straight into the form.
 - **The candidate**: the item whose page you are on. Its values are the ones it currently shows:
   accepted ones first, else the latest observation still to confirm, each with its provenance.
   A value that came from a [measurement](measure.md) carries its uncertainty into the check.

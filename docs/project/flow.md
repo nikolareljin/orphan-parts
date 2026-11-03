@@ -34,15 +34,15 @@ out, and the rods listed to replace it.
 2. In the web app's **Inbox**, **Read it**: there is no label to read, so the item keeps its
    photos and the owner's words. [My inventory](../guides/inventory.md).
 3. **Measure a feature** on the side photo: two marks on the ruler, two on the rod, and the
-   diameter comes back with its uncertainty and the method. Under **Add what you know** go the
-   tab span, width and length, the rod's length, and the material wanted: metal.
-   [Measure a feature](../guides/measure.md).
+   diameter comes back with its uncertainty and the method (4.7 ± 0.49 mm in the demo set).
+   Under **Add what you know** goes the material wanted: metal. The tabs and the rod's length
+   were never measured, so they stay unknown. [Measure a feature](../guides/measure.md).
 4. **Find a part** records what the agitator needs with a top price and hands off the
    Marketplace search for you to run. Four listings brought back as their text are read by Muse
-   Spark and checked by the rules of the `blender_agitator` profile, one at a time: the
-   all-metal rod of the same size is a documented candidate (`COMPATIBLE_LIKELY`), the plastic
-   rod fails on its material and its diameter and the metal one with wider tabs on the span
-   (`CONFLICT`), and the listing with no measurements needs evidence (`INSUFFICIENT_INFO`).
+   Spark and checked by the rules of the `blender_agitator` profile, one at a time: the two
+   metal rods listed at 4 mm fail on the measured diameter and the plastic rod on its material
+   and its diameter (`CONFLICT`), and the listing with no measurements needs evidence
+   (`INSUFFICIENT_INFO`); the tabs and the length, unknown on the agitator, are never a pass.
    **Ask the seller** turns the open questions into a message. With the code, **Plan the
    search** writes the Marketplace search links and a match pattern, and listings pasted back
    are ranked by it before any is read.

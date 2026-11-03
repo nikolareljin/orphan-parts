@@ -16,7 +16,7 @@ recorded answers and sample data; what is not built is not shown.
 | Upload a capture from a laptop (**Inbox**, *Send a capture from this computer*) | built | not shown |
 | Read a label: SAM 3.1 finds the label crop, Muse Spark reads it, values stay *to confirm* | built | working, on recordings (S21: SAM 3.1's regions, then the reading) |
 | Which device did this part come from? A part with no model of its own asks; the owner answers in words or with a photo of the device (one Muse Spark reading) | built | working (S05, S07) |
-| Spoken notes kept as the owner's words (Muse Voice Transcribe) | built | working (S18, a voice note in the listing details) |
+| Spoken notes kept as the owner's words (Muse Voice Transcribe) | built | working (S18: a synthetic voice note, the condition the set states, in the listing details) |
 | Measure a feature against a ruler, with method and uncertainty | built (no model) | not shown; the demo set's rod diameter is its result (4.7 ± 0.49 mm) |
 | Agitator profile `blender_agitator` (rod diameter, tab span, tab width, tab length, rod length, head diameter, material rule) | built (data) | working |
 | Find a part: **Plan the search** (phrasings, a match pattern, exclusion words, **Score** listings with no model call) | built | not shown (the stand-in plan is a charger's) |
