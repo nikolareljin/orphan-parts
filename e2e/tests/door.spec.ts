@@ -115,3 +115,16 @@ test('a server without a code says so in the header instead of a door', async ({
   await expect(signInLink(page)).toHaveCount(0)
   await expect(signOutLink(page)).toHaveCount(0)
 })
+
+test('the footer links to the documentation and the source', async ({ page }) => {
+  await page.goto('/')
+  const footer = page.getByRole('contentinfo', { name: 'Service' })
+  await expect(footer.getByRole('link', { name: 'Documentation' })).toHaveAttribute(
+    'href',
+    'https://nikolareljin.github.io/orphan-parts/',
+  )
+  await expect(footer.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
+    'href',
+    'https://github.com/nikolareljin/orphan-parts',
+  )
+})
