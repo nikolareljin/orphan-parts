@@ -31,6 +31,15 @@ See [Bring back listings](search.md#bring-back-listings).
 produced; it is placed by which rules passed, which failed and which are still unknown, and the
 asking price is shown beside that, not folded into it.
 
+### On the demo set
+
+The agitator rod and the NAS power supply, found on the web and ranked. More on
+[Examples: what the models produced](../start/examples.md).
+
+![Check fit on a page found for the agitator: needs evidence, and the questions for the seller](../assets/shots/examples/32-agitator-fit.png)
+
+![Power supplies for the NAS found on the web, ranked with price and link](../assets/shots/examples/33-nas-psu-search.png)
+
 ## Not yet
 
 A comparison view across the candidates of one need, with the fit, the price and the open

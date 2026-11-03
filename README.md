@@ -2,6 +2,11 @@
 
 # Orphan Parts Lens
 
+**Start here:** the documentation, <https://nikolareljin.github.io/orphan-parts/>, with
+[Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/)
+and the [demo video](https://nikolareljin.github.io/orphan-parts/start/video/); the live demo,
+<https://orphan-parts.pages.dev> (temporary, while the hackathon is judged).
+
 Scan what you already own. Decide what it can become. Find the missing piece on Marketplace, or
 prepare what you no longer need for sale or free pickup. Every answer carries its evidence, on
 Meta's Muse models.
@@ -11,9 +16,20 @@ Meta's Muse models.
 | | |
 |---|---|
 | **Live demo** (temporary, while the hackathon is judged) | <https://orphan-parts.pages.dev>: without a code, the demo set's recorded answers, read-only; with an access code, uploads and the live models. It may be taken down after judging; [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/) works without it. |
-| **Documentation** | <https://nikolareljin.github.io/orphan-parts/> |
+| **Documentation** | <https://nikolareljin.github.io/orphan-parts/>, with [Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/) |
 | **Demo video** | [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/) (2:52) |
 | **Android app** | the APK on the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) |
+
+**What the models produced**, from the demo set (recorded answers; the hosted demo shows the
+same read-only), more on
+[Examples](https://nikolareljin.github.io/orphan-parts/start/examples/):
+
+<p>
+<img src="docs/assets/shots/examples/02-arcade-drawings.png" alt="The arcade coffee table drawn three times by Muse Image" width="49%">
+<img src="docs/assets/shots/examples/02-nas-drawings.png" alt="The custom NAS drawn three times by Muse Image" width="49%">
+<img src="docs/assets/shots/examples/60-visitor-decide-build.png" alt="The Decide cards Muse Spark wrote for the Dell U2419H monitor, the reuse card with its Muse Image picture" width="49%">
+<img src="docs/assets/shots/examples/20-9500gt-value.png" alt="Muse Spark's price guidance for the EVGA 9500 GT, the four figures kept apart" width="49%">
+</p>
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
 Everything in it was built during the hackathon; the dated log is

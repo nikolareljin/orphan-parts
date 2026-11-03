@@ -76,6 +76,7 @@ nav:
   - Start:
       - Overview: index.md
       - Demo video: start/video.md
+      - "Examples: what the models produced": start/examples.md
       - For judges: start/judges.md
       - Pair the phone with the web app: start/pairing.md
       - Quickstart: start/quickstart.md

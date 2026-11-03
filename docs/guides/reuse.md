@@ -80,6 +80,20 @@ buttons and **Draw again** give way to the sign-in line; nothing is spent and no
 
 ![A project for a visitor: its drawn picture, Sign in with the access code to draw. where Draw it would be, and the sign-in line in place of Shortlist and Select](../assets/shots/demo/09-visitor-project.png)
 
+### On the demo set
+
+The demo set's eleven proposals and four selected builds, as Muse Spark proposed them and Muse
+Image drew them (recorded answers; the hosted demo shows them read-only). More on
+[Examples: what the models produced](../start/examples.md).
+
+![The arcade coffee table drawn by Muse Image in a home: as proposed, up close, and from above](../assets/shots/examples/02-arcade-drawings.png)
+
+![The custom NAS selected: the ASRock board, Patriot DDR4, Kingston SSD and PCIe M.2 card committed, each with why; three missing parts each with Search Marketplace and its search, the checks, safety notes and steps](../assets/shots/examples/03-nas-panel.png)
+
+![The NAS build pack, version 1, read in place](../assets/shots/examples/04-nas-pack.png)
+
+![A proposed project for a visitor: the kitchen dashboard with its drawing, items, what is still needed and the steps](../assets/shots/examples/52-visitor-kitchen.png)
+
 ## Built so far
 
 **What I want from a build.** A few answers kept once and read by every proposal: your

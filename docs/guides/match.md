@@ -22,6 +22,14 @@ values typed in, as a seller's listing might give them.
 
     ![The verdict and the checks table: rule, needed, this item, result and basis; the seller's questions under it](../assets/shots/match/02-checks.png)
 
+### On the demo set
+
+Check fit on a page Search the web found for the agitator rod: the page has no rod diameter,
+so no hard rule can be decided and the verdict is *needs evidence*. More on
+[Examples: what the models produced](../start/examples.md).
+
+![Check fit on the goodmans.net page: needs evidence, and the questions for the seller](../assets/shots/examples/32-agitator-fit.png)
+
 ## Two sides
 
 - **The need**: what the part must satisfy. Either another inventory item (the laptop that needs

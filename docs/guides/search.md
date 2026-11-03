@@ -83,6 +83,15 @@ agitator search is loaded planned). Nothing is spent.
 
 ![The agitator's search for a visitor: Search Marketplace, the sign-in line in place of Plan the search and Search the web, the candidates](../assets/shots/demo/08-visitor-search.png)
 
+### On the demo set
+
+A plan written for a part a selected build still needs, and the agitator's web finds. More on
+[Examples: what the models produced](../start/examples.md).
+
+![Plan the search for the NAS processor: Muse Spark's phrasings as Marketplace links with why, the pattern, the words to skip](../assets/shots/examples/30-nas-cpu-plan.png)
+
+![The agitator's listings found on the web, ranked, each with its price and link](../assets/shots/examples/31-agitator-ranked.png)
+
 ## Built so far
 
 **Find a part**: a search request for something you need, run on Marketplace by you. Say what

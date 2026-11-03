@@ -6,7 +6,7 @@ import { STATE_FILE } from './setup'
 // the light scheme. SHOTS_ONLY narrows the run to the tests whose titles match it.
 export default defineConfig({
   testDir: '.',
-  testMatch: /\d\d-.*\.spec\.ts$/,
+  testMatch: /\d\d[a-z]?-.*\.spec\.ts$/,
   timeout: 180_000,
   expect: { timeout: 30_000 },
   retries: 0,
