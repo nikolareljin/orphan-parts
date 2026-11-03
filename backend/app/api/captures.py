@@ -101,7 +101,9 @@ def capture_photo(capture_id: int, n: int, captures: CapturesDep, privacy: Priva
             data = privacy.shared_copy(data)
         except NotCheckedError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return Response(data, media_type="image/jpeg")
+    # never cached: the same address answers the owner the original and the visitor the
+    # shared copy
+    return Response(data, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 @router.get("/captures/{capture_id}/clip", response_class=Response)
