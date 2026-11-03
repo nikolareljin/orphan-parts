@@ -446,3 +446,46 @@ async def test_a_part_is_answered_by_the_device_it_came_from(recorded_settings: 
     # the device photo is kept apart from the part's own
     assert loader.photos.count(rod.id) == 0 and loader.device_photos.count(rod.id) == 1
     assert loader.inventory.get(loader.ids["bare"]).needs_parent is True
+
+
+async def test_search_the_web_answers_only_from_its_own_recording(
+    recorded_settings: Settings,
+) -> None:
+    # the committed fixtures hold a part-search stub, never a recording of this brief: the
+    # step is left out and said not recorded, never the stub's pages passed off as finds
+    loader, client = build_loader(recorded_settings)
+    path = write_set(
+        recorded_settings.data_dir.parent / "demo",
+        "items:\n  - {key: rod, name: Agitator, profile: blender_agitator}\n"
+        "searches:\n  - {key: s, need: rod, title: A metal rod, web: true}\n",
+    )
+    try:
+        outcome = await loader.run(load_set(path), path.parent)
+    finally:
+        await client.aclose()
+    assert outcome.searches == 1 and outcome.web_finds == 0 and outcome.stub_answers == 0
+    assert outcome.skipped == []
+    assert any("s: Search the web" in u for u in outcome.unrecorded)
+    assert loader.finder.listings(loader.finder.searches()[0].id) == []
+
+
+async def test_the_committed_set_searches_the_web_for_the_agitator(
+    recorded_settings: Settings,
+) -> None:
+    # the demo set as ./dev demo loads it: the device read from its photos, then the recorded
+    # web search for the maker's part, its page kept with its link among the listings
+    root = Path(__file__).resolve().parents[2]
+    path = root / "demo" / "set.yaml"
+    loader, client = build_loader(recorded_settings)
+    try:
+        outcome = await loader.run(load_set(path), path.parent)
+    finally:
+        await client.aclose()
+    assert outcome.stub_answers == 0 and outcome.skipped == []
+    assert not any("Search the web" in u for u in outcome.unrecorded)
+    assert outcome.web_finds >= 1 and outcome.cost_usd == 0.0
+    search = next(s for s in loader.finder.searches() if s.title.startswith("all-metal agitator"))
+    web = [entry for entry in loader.finder.listings(search.id) if entry.source_kind == "web"]
+    assert len(web) == outcome.web_finds
+    assert any("990010200" in e.text and e.source_url.startswith("https://") for e in web)
+    assert search.candidates == 4

@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Preferences, type RatedSkill, type SkillLevel } from '../lib/api'
-import { EFFORTS, EMPTY_PREFERENCES, numberOrNull, numberProblem } from '../lib/projects'
+import { EFFORTS, EMPTY_PREFERENCES, effortLabel, numberOrNull, numberProblem } from '../lib/projects'
 import { LEVELS, SKILL_MAX, customProblem, isStarter, skillRows, skillsToSave } from '../lib/profile'
+import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -9,8 +10,78 @@ function message(err: unknown): string {
 
 // The owner's profile: what they can do and what they have, kept once. The scenarios on an item
 // are written for it, and so is every build proposal. It is the same record as the Build page's
-// preferences; the skills are rated here.
-export default function Profile() {
+// preferences; the skills are rated here. The demo visitor reads it: the skills and their levels,
+// the tools and how the owner works, never the budget or the radius, and nothing to save.
+export default function Profile({ demo = false }: { demo?: boolean }) {
+  return demo ? <ProfileShown /> : <ProfileForm />
+}
+
+const INTRO =
+  'What you can do and what you have. The scenarios on an item (keep and fix, reuse, sell or give away) are written for it, and so are the build proposals. One profile for this inventory.'
+
+function ProfileShown() {
+  const [prefs, setPrefs] = useState<Preferences | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    api.build
+      .preferences()
+      .then((p) => {
+        if (!cancelled) setPrefs(p)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(message(err))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (error)
+    return (
+      <p className="error" role="alert">
+        {error}
+      </p>
+    )
+  if (!prefs) return <p className="muted">Loading…</p>
+  return (
+    <section className="profile" aria-label="Profile">
+      <p className="muted">{INTRO}</p>
+      <h3>Skills</h3>
+      <div className="table-wrap">
+        <table className="evidence skills" aria-label="Skills">
+          <thead>
+            <tr>
+              <th scope="col">Skill</th>
+              <th scope="col">Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {skillRows(prefs.skills).map((row) => (
+              <tr key={row.skill}>
+                <th scope="row">{row.skill}</th>
+                <td>{LEVELS.find((l) => l.value === row.level)?.label ?? row.level}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h3>What you have and how you work</h3>
+      <dl className="meta" aria-label="How you work">
+        <dt>Tools I have</dt>
+        <dd>{prefs.tools || 'none listed'}</dd>
+        <dt>Effort I will put in</dt>
+        <dd>{effortLabel(prefs.effort)}</dd>
+        <dt>Opening up devices</dt>
+        <dd>{prefs.opens_devices ? 'OK' : 'not OK'}</dd>
+      </dl>
+      <SignInLine what="Save profile" />
+    </section>
+  )
+}
+
+function ProfileForm() {
   const [prefs, setPrefs] = useState<Preferences>(EMPTY_PREFERENCES)
   const [rows, setRows] = useState<RatedSkill[]>(() => skillRows([]))
   const [custom, setCustom] = useState('')
@@ -90,10 +161,7 @@ export default function Profile() {
 
   return (
     <form className="profile" onSubmit={(e) => void save(e)} aria-label="Profile">
-      <p className="muted">
-        What you can do and what you have. The scenarios on an item (keep and fix, reuse, sell or give away) are written for it,
-        and so are the build proposals. One profile for this inventory.
-      </p>
+      <p className="muted">{INTRO}</p>
 
       <h3>Skills</h3>
       <div className="table-wrap">

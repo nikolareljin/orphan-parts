@@ -23,6 +23,7 @@ from app.find import (
 )
 from app.find.schema import seen_day
 from app.inventory import NotFoundError
+from app.ops.door import for_visitor
 from app.ops.gate import charge_more, give_back_request
 
 router = APIRouter(prefix="/api", tags=["find"])
@@ -57,12 +58,14 @@ def create_search(spec: SearchCreate, finder: FinderDep) -> Search:
 
 @router.get("/searches", response_model=list[Search])
 def list_searches(finder: FinderDep) -> list[Search]:
-    return finder.searches()
+    """Every search, newest first; the demo visitor sees those made for public items, without
+    the notes, the radius and the budget left."""
+    return finder.searches(public_only=for_visitor())
 
 
 @router.get("/searches/{search_id}", response_model=Search)
 def get_search(search_id: int, finder: FinderDep) -> Search:
-    return finder.search(search_id)
+    return finder.search(search_id, public_only=for_visitor())
 
 
 @router.patch("/searches/{search_id}", response_model=Search)
@@ -131,7 +134,7 @@ def test_pattern(spec: PatternTest, finder: FinderDep) -> PatternResult:
 @router.get("/searches/{search_id}/listings", response_model=list[BroughtListing])
 def list_listings(search_id: int, finder: FinderDep) -> list[BroughtListing]:
     """The listings brought back, ranked: fits, maybe, does not fit; cheaper first in each."""
-    return finder.listings(search_id)
+    return finder.listings(search_id, public_only=for_visitor())
 
 
 @router.post(
@@ -264,12 +267,12 @@ async def add_candidate(
 
 @router.get("/searches/{search_id}/candidates", response_model=list[Candidate])
 def list_candidates(search_id: int, finder: FinderDep) -> list[Candidate]:
-    return finder.candidates(search_id)
+    return finder.candidates(search_id, public_only=for_visitor())
 
 
 @router.get("/candidates/{candidate_id}", response_model=Candidate)
 def get_candidate(candidate_id: int, finder: FinderDep) -> Candidate:
-    return finder.candidate(candidate_id)
+    return finder.candidate(candidate_id, public_only=for_visitor())
 
 
 @router.post("/candidates/{candidate_id}/recheck", response_model=Candidate)
@@ -289,4 +292,4 @@ def withdraw_candidate(candidate_id: int, finder: FinderDep) -> Candidate:
 @router.get("/candidates/{candidate_id}/questions", response_model=SellerQuestions)
 def seller_questions(candidate_id: int, finder: FinderDep) -> SellerQuestions:
     """The rules' questions for this candidate as a message the owner can send to the seller."""
-    return finder.questions(candidate_id)
+    return finder.questions(candidate_id, public_only=for_visitor())

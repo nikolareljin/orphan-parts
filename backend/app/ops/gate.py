@@ -80,9 +80,11 @@ EXPENSIVE = [
 # What the demo visitor may do without the code (an id here is plain digits, so an odd spelling
 # of one is refused rather than let through): look (the items and captures the owner marked
 # public, their values, photos and drawn pictures; never a clip, a note, a location or a
-# draft), and try the stateless readings on recorded answers, on the demo set's sample photos
-# rather than a file of their own. Everything that saves, drafts, prices, plans, draws or
-# captures needs the code.
+# draft; the searches made for those items with their candidates and listings, the projects
+# built on them alone with their packs and pictures, and the skills profile, never the notes,
+# the budget or the radius), and try the stateless readings on recorded answers, on the demo
+# set's sample photos rather than a file of their own. Everything that saves, drafts, prices,
+# plans, searches, draws or captures needs the code.
 DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/items$")),
     ("GET", re.compile(r"^/api/items/\d+$")),
@@ -93,6 +95,17 @@ DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/captures/\d+/photos/\d+$")),
     ("GET", re.compile(r"^/api/profiles(/[A-Za-z0-9_-]+/(features|rules))?$")),
     ("GET", re.compile(r"^/api/templates$")),
+    # read-only: Find a part, Build and reuse and the profile as the owner left them
+    ("GET", re.compile(r"^/api/searches$")),
+    ("GET", re.compile(r"^/api/searches/\d+$")),
+    ("GET", re.compile(r"^/api/searches/\d+/(candidates|listings)$")),
+    ("GET", re.compile(r"^/api/candidates/\d+(/questions)?$")),
+    ("GET", re.compile(r"^/api/preferences$")),
+    ("GET", re.compile(r"^/api/projects$")),
+    ("GET", re.compile(r"^/api/projects/\d+$")),
+    ("GET", re.compile(r"^/api/projects/\d+/packs$")),
+    ("GET", re.compile(r"^/api/packs/\d+(\.md)?$")),
+    ("GET", re.compile(r"^/api/projects/\d+/pictures(/\d+)?$")),
     # the address alone, so a phone joins as the demo visitor too; a session is never in it
     ("GET", re.compile(r"^/api/pair(\.svg)?$")),
     # the demo set's photos, listings and notes, and a reading of the photos picked: what the

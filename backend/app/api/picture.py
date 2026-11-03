@@ -112,7 +112,7 @@ async def draw_project(project_id: int, pictures: PicturesDep, planner: PlannerD
 @projects_router.get("/{project_id}/pictures", response_model=PictureList)
 def project_pictures(project_id: int, pictures: PicturesDep, planner: PlannerDep) -> PictureList:
     """The pictures drawn for the project, and whether this server draws any."""
-    planner.project(project_id)
+    planner.project(project_id, public_only=not live_request.get())
     return pictures.project_list(project_id)
 
 
@@ -121,5 +121,5 @@ def project_picture(
     project_id: int, n: int, pictures: PicturesDep, planner: PlannerDep
 ) -> Response:
     """One picture of the project as JPEG, ``1`` first."""
-    planner.project(project_id)
+    planner.project(project_id, public_only=not live_request.get())
     return _jpeg(pictures.project_read(project_id, n))

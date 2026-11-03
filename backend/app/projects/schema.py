@@ -4,8 +4,10 @@ proposes, and what a project becomes once items are allocated."""
 from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from app.ops.door import for_visitor
+from app.privacy.text import mask_text
 from app.projects.skills import STARTER_SKILLS, RatedSkill, rated_skills
 
 KEY = r"^[a-z][a-z0-9_]{0,63}$"
@@ -41,6 +43,12 @@ class Preferences(BaseModel):
     @classmethod
     def _rated(cls, values: object) -> object:
         return rated_skills(values) if isinstance(values, list) else values
+
+    # the owner's budget and how far they travel are left out for the demo visitor; the skills,
+    # the interests and the rest are what the profile shows
+    @field_serializer("budget", "radius_km")
+    def _owner_numbers(self, value: float | None) -> float | None:
+        return None if for_visitor() else value
 
 
 class TemplateRequirement(BaseModel):
@@ -225,6 +233,19 @@ class Project(BaseModel):
     created_at: str
     updated_at: str
 
+    # what the model wrote that the inventory does not back may name an item the owner keeps
+    # private: left out for the demo visitor
+    @field_serializer("dropped")
+    def _owner_dropped(self, value: list[str]) -> list[str]:
+        return [] if for_visitor() else value
+
+    # the outcome is the owner's record: the demo visitor sees it only once it is shared
+    @field_serializer("outcome")
+    def _shared_outcome(self, value: Outcome | None) -> Outcome | None:
+        if for_visitor() and value is not None and not value.shared:
+            return None
+        return value
+
 
 class Budget(BaseModel):
     """What the selected set spends against the budget; nothing is committed twice."""
@@ -234,6 +255,11 @@ class Budget(BaseModel):
     committed_spend: float
     remaining: float | None
     selected: int
+
+    # what the owner has to spend is theirs: left out for the demo visitor
+    @field_serializer("budget", "remaining")
+    def _owner_budget(self, value: float | None) -> float | None:
+        return None if for_visitor() else value
 
 
 class ProjectList(BaseModel):
@@ -251,6 +277,60 @@ class Pack(BaseModel):
     stale: bool
     markdown: str
     created_at: str
+
+    # for the demo visitor, the pack without the owner's budget line, spoken notes, searches
+    # and outcome section (a shared outcome is on the project itself)
+    @field_serializer("markdown")
+    def _visitor_markdown(self, value: str) -> str:
+        return visitor_markdown(value) if for_visitor() else value
+
+
+# The lines of a pack the demo visitor never reads: the owner's budget, the outcome section,
+# the condition notes (a voice note is kept there, as the owner said it) and, under what is
+# still needed, the search opened for it (made from values, so the owner's: its title, its top
+# price, which is the budget left, and its candidates).
+BUDGET_LINE = "Across the selected projects: "
+OUTCOME_HEADING = "## Outcome"
+INVENTORY_HEADING = "## From the inventory"
+NEEDED_HEADING = "## Still needed"
+SEARCH_MARK = ". Search: "
+# app.listing.voice.FIELD as a pack writes it
+VOICE_LINE = "  - condition notes: "
+
+
+def visitor_markdown(markdown: str) -> str:
+    """A pack as the demo visitor reads it: the budget line, the condition notes, the searches
+    under what is still needed and the outcome section left out, and every private value in
+    the rest masked. A value written over several
+    lines goes with its first."""
+    lines: list[str] = []
+    section = ""
+    # while a line is being left out, the prefixes of the line that ends it
+    skipping: tuple[str, ...] = ()
+    for line in markdown.split("\n"):
+        if line == OUTCOME_HEADING:
+            break
+        if line.startswith("## "):
+            section, skipping = line, ()
+            if lines and lines[-1] != "":
+                lines.append("")
+        elif skipping:
+            if not line.startswith(skipping):
+                continue
+            skipping = ()
+        if line.startswith(BUDGET_LINE):
+            continue
+        if section == INVENTORY_HEADING and line.startswith(VOICE_LINE):
+            skipping = ("- ", "  - ")
+            continue
+        if section == NEEDED_HEADING and line.startswith("- "):
+            cut = line.find(SEARCH_MARK)
+            if cut >= 0:
+                line = line[:cut]
+                skipping = ("- ",)
+        lines.append(line)
+    # a pack written before private values were masked in it is masked here too
+    return mask_text("\n".join(lines).rstrip("\n") + "\n")
 
 
 class SelectRequest(BaseModel):

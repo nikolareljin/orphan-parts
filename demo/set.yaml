@@ -145,10 +145,14 @@ items:
     parent_photos: [photos/hamilton-729-label.jpg, photos/hamilton-729-badge.jpg, photos/hamilton-729-mixer.jpg, photos/hamilton-729-side.jpg]
 
 searches:
+  # `web: true` runs Search the web once the agitator's device is read, as the owner's button
+  # does: the pages it finds join the listings with their links (only a recording of this very
+  # request answers in fixture mode)
   - key: metal_agitator
     need: frappe_agitator
     title: all-metal agitator rod for the frappé maker, 4 mm rod, two tabs 9 mm across
     max_price: 20
+    web: true
     listings:
       - text: "@listings/L1.txt"
         asking_price: "12"

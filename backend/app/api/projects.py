@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, Response
 
 from app.api.deps import PlannerDep
 from app.api.model_errors import as_http
+from app.ops.door import for_visitor
 from app.projects import (
     AllocationConflictError,
     FillRequest,
@@ -19,6 +20,7 @@ from app.projects import (
     ShareText,
     TemplateSummary,
 )
+from app.projects.schema import visitor_markdown
 
 router = APIRouter(prefix="/api", tags=["projects"])
 
@@ -60,13 +62,14 @@ async def propose(request: ProposeRequest, planner: PlannerDep) -> list[Project]
 
 @router.get("/projects", response_model=ProjectList)
 def list_projects(planner: PlannerDep) -> ProjectList:
-    """Every project, newest first, and what the selected set spends against the budget."""
-    return planner.projects()
+    """Every project, newest first, and what the selected set spends against the budget. The
+    demo visitor sees the projects built on public items alone, without the budget."""
+    return planner.projects(public_only=for_visitor())
 
 
 @router.get("/projects/{project_id}", response_model=Project)
 def get_project(project_id: int, planner: PlannerDep) -> Project:
-    return planner.project(project_id)
+    return planner.project(project_id, public_only=for_visitor())
 
 
 @router.post("/projects/{project_id}/shortlist", response_model=Project)
@@ -148,16 +151,17 @@ def write_pack(project_id: int, planner: PlannerDep) -> Pack:
 @router.get("/projects/{project_id}/packs", response_model=list[Pack])
 def packs(project_id: int, planner: PlannerDep) -> list[Pack]:
     """Every pack written for the project, each `stale` when its inputs changed since."""
-    return planner.packs_of(project_id)
+    return planner.packs_of(project_id, public_only=for_visitor())
 
 
 @router.get("/packs/{pack_id}.md", response_class=Response)
 def pack_markdown(pack_id: int, planner: PlannerDep) -> Response:
     """The pack as a Markdown file to keep."""
-    found = planner.pack(pack_id)
+    visitor = for_visitor()
+    found = planner.pack(pack_id, public_only=visitor)
     name = f"build-pack-{found.project_id}-v{found.version}.md"
     return Response(
-        found.markdown,
+        visitor_markdown(found.markdown) if visitor else found.markdown,
         media_type="text/markdown; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{name}"'},
     )
@@ -165,7 +169,7 @@ def pack_markdown(pack_id: int, planner: PlannerDep) -> Response:
 
 @router.get("/packs/{pack_id}", response_model=Pack)
 def pack(pack_id: int, planner: PlannerDep) -> Pack:
-    return planner.pack(pack_id)
+    return planner.pack(pack_id, public_only=for_visitor())
 
 
 @router.post("/projects/{project_id}/progress", response_model=Project)

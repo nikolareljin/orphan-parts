@@ -134,7 +134,9 @@ def test_without_a_session_the_visitor_is_the_demo(gated: TestClient) -> None:
     captures = gated.get("/api/captures")
     assert captures.status_code == 200 and captures.json() == {"captures": []}
     assert gated.post("/api/captures", data={"request": "{}"}).status_code == 403
-    assert gated.get("/api/searches").status_code == 403
+    # the searches and projects made for public items are read-only; there are none here
+    assert gated.get("/api/searches").json() == []
+    assert gated.post("/api/searches", json={}).status_code == 403
     assert gated.post("/api/projects/propose", json={}).status_code == 403
     # the open paths, the profiles and the stateless tries stay reachable
     for path in ("/healthz", "/readyz", "/api/version", "/openapi.json", "/docs", "/api/profiles"):
@@ -153,7 +155,7 @@ def test_without_a_session_the_visitor_is_the_demo(gated: TestClient) -> None:
     assert gated.get("/readyz").json()["demo"]["gated"] is True
     assert demo_allowed("POST", "/api/assess") and demo_allowed("POST", "/api/measure")
     assert not demo_allowed("POST", "/api/items") and demo_allowed("GET", "/api/items")
-    assert not demo_allowed("GET", "/api/searches")
+    assert demo_allowed("GET", "/api/searches") and not demo_allowed("POST", "/api/searches")
     assert not demo_allowed("GET", "/api/items/1/events")
     assert not demo_allowed("DELETE", "/api/captures/1")
 
@@ -171,11 +173,11 @@ def test_the_right_code_opens_a_session_in_a_cookie_and_as_a_token(gated: TestCl
     assert gated.get("/api/items").status_code == 200  # the client keeps the cookie
     assert gated.get("/api/access").json()["granted"] is True
     gated.cookies.clear()
-    assert gated.get("/api/searches").status_code == 403
+    assert gated.get("/api/spend").status_code == 403
     bearer = {"Authorization": f"Bearer {body['token']}"}
     assert gated.get("/api/items", headers=bearer).status_code == 200
     nonsense = {"Authorization": "Bearer nonsense"}
-    assert gated.get("/api/searches", headers=nonsense).status_code == 403
+    assert gated.get("/api/spend", headers=nonsense).status_code == 403
 
 
 def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) -> None:
@@ -195,9 +197,9 @@ def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) ->
     assert gated.get("/api/items", headers=bearer).status_code == 200
     keys.revoke("judges")
     # the sessions it opened end with it, the phone's too, not only new ones
-    assert gated.get("/api/searches", headers=bearer).status_code == 403
+    assert gated.get("/api/spend", headers=bearer).status_code == 403
     gated.cookies.update(browser)
-    assert gated.get("/api/searches").status_code == 403
+    assert gated.get("/api/spend").status_code == 403
     gated.cookies.clear()
     refused = gated.post("/api/access", json={"code": code})
     assert refused.status_code == 401
@@ -248,7 +250,7 @@ def test_leaving_clears_the_cookie(gated: TestClient) -> None:
     # the same attributes the cookie was set with, or a browser keeps it
     assert "Path=/" in cleared and "HttpOnly" in cleared and "SameSite=strict" in cleared
     assert "Secure" not in cleared
-    assert gated.get("/api/searches").status_code == 403  # the demo visitor again
+    assert gated.get("/api/spend").status_code == 403  # the demo visitor again
 
 
 def test_leaving_clears_a_secure_cookie_as_secure(tmp_path: Path) -> None:
@@ -467,6 +469,20 @@ DEMO_ROUTES = {
     ("get", "/api/profiles/{profile_id}/features"),
     ("get", "/api/profiles/{profile_id}/rules"),
     ("get", "/api/templates"),
+    ("get", "/api/searches"),
+    ("get", "/api/searches/{search_id}"),
+    ("get", "/api/searches/{search_id}/candidates"),
+    ("get", "/api/searches/{search_id}/listings"),
+    ("get", "/api/candidates/{candidate_id}"),
+    ("get", "/api/candidates/{candidate_id}/questions"),
+    ("get", "/api/preferences"),
+    ("get", "/api/projects"),
+    ("get", "/api/projects/{project_id}"),
+    ("get", "/api/projects/{project_id}/packs"),
+    ("get", "/api/projects/{project_id}/pictures"),
+    ("get", "/api/projects/{project_id}/pictures/{n}"),
+    ("get", "/api/packs/{pack_id}"),
+    ("get", "/api/packs/{pack_id}.md"),
     ("get", "/api/pair"),
     ("get", "/api/pair.svg"),
     ("get", "/api/samples"),
@@ -485,6 +501,10 @@ def _concrete(path: str, item_id: int, capture_id: int) -> str:
         path.replace("{item_id}", str(item_id))
         .replace("{capture_id}", str(capture_id))
         .replace("{profile_id}", "power_adapter")
+        .replace("{search_id}", "1")
+        .replace("{candidate_id}", "1")
+        .replace("{project_id}", "1")
+        .replace("{pack_id}", "1")
         .replace("{sample_id}", "dell-u2419h-label")
         .replace("{n}", "1")
     )

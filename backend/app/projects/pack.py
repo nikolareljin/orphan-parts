@@ -10,7 +10,16 @@ from datetime import UTC, datetime
 from app.find.schema import Candidate, Search
 from app.inventory.schema import Item
 from app.privacy.text import mask_text, private_field
-from app.projects.schema import Budget, Preferences, Project
+from app.projects.schema import (
+    BUDGET_LINE,
+    INVENTORY_HEADING,
+    NEEDED_HEADING,
+    OUTCOME_HEADING,
+    SEARCH_MARK,
+    Budget,
+    Preferences,
+    Project,
+)
 
 
 def shown_fields(item: Item) -> list[tuple[str, str]]:
@@ -80,7 +89,7 @@ def render(
         "",
         f"Effort: {project.effort}. Skills: {', '.join(project.skills) or 'none in particular'}.",
         "",
-        "## From the inventory",
+        INVENTORY_HEADING,
         "",
     ]
     if not project.allocations:
@@ -103,7 +112,7 @@ def render(
             lines.append(f"  - with: {item.accessories}")
         for key, value in shown_fields(item):
             lines.append(f"  - {key}: {value}")
-    lines += ["", "## Still needed", ""]
+    lines += ["", NEEDED_HEADING, ""]
     open_reqs = [r for r in project.requirements if r.state != "pass"]
     if not open_reqs:
         lines.append("Nothing: every requirement is filled from the inventory.")
@@ -113,7 +122,7 @@ def render(
         if r.search_id is not None and r.search_id in searches:
             search, candidates = searches[r.search_id]
             documented = [c for c in candidates if c.state == "documented"]
-            line += f". Search: {search.title}"
+            line += f"{SEARCH_MARK}{search.title}"
             if search.max_price is not None:
                 line += f", top price {money(search.max_price)} {search.currency}"
             line += f"; {len(candidates)} candidate(s), {len(documented)} documented"
@@ -131,7 +140,7 @@ def render(
     ]
     if budget.budget is not None:
         lines.append(
-            f"Across the selected projects: {money(budget.committed_spend)} of"
+            f"{BUDGET_LINE}{money(budget.committed_spend)} of"
             f" {money(budget.budget)} {budget.currency}, {money(budget.remaining or 0)} left."
         )
     if prefs.tools:
@@ -164,7 +173,7 @@ def render(
     if project.outcome is not None:
         o = project.outcome
         lines += [
-            "## Outcome",
+            OUTCOME_HEADING,
             "",
             f"Tested {o.tested_on}: {'working' if o.working else 'not working'}.",
             "",

@@ -32,7 +32,10 @@ app (nothing gated without a code; every page 401 with one and the open paths op
 code as a cookie and as a bearer token, a wrong one refused and limited; leaving; the hourly and
 daily allowances on calls that spend; the operator's switch refusing only what spends; the
 per-address limit with the open paths exempt; the forwarded address trusted only when told to;
-the settings checked). Playwright runs behind the gate: one session from a global setup for
+the settings checked; the visitor's read-only *Find a part*, *Build and reuse* and profile:
+only searches and projects on public items, the notes, the budget, the radius and an outcome
+not shared left out, a private one 404 and every write and spending call on them 403, in
+`test_demo_pages.py`). Playwright runs behind the gate: one session from a global setup for
 every test, and `access.spec.ts` starts without one.
 
 Build and reuse is tested with a recorded two-step tool loop (`propose-1`, `propose-2`): the

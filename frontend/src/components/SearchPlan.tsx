@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError, api, type BroughtListing, type Candidate, type Item, type ListingScore, type PatternResult, type Search } from '../lib/api'
 import { usd } from '../lib/format'
+import SignInLine from './SignInLine'
 import { WEB_SIGN_IN, askingPrice, highlightSegments, maxPriceLine, siteOf, splitListings, stateLabel, stateTone, verdictLabel, verdictTone, webLink, webSummary } from '../lib/find'
 
 const TEST_DELAY_MS = 350
@@ -54,7 +55,8 @@ export default function SearchPlan({
   search: Search
   onChanged: (s: Search) => void
   onCandidate?: (c: Candidate) => void
-  // the demo visitor: no web search, the line to sign in instead
+  // the demo visitor: the plan, the pattern and the listings as the owner left them; planning,
+  // searching the web, editing, bringing back and checking are the line to sign in instead
   demo?: boolean
 }) {
   const plan = search.plan
@@ -128,26 +130,40 @@ export default function SearchPlan({
             </p>
           </>
         )}
-        <div className="row">
-          <button type="button" onClick={() => void planIt()} disabled={busy}>
-            {busy ? 'Planning…' : plan?.model ? 'Plan again' : 'Plan the search'}
-          </button>
-          <span className="muted">one Muse Spark call: phrasings, a match pattern and exclusion words</span>
-        </div>
+        {demo ? (
+          <SignInLine what="Plan the search" />
+        ) : (
+          <div className="row">
+            <button type="button" onClick={() => void planIt()} disabled={busy}>
+              {busy ? 'Planning…' : plan?.model ? 'Plan again' : 'Plan the search'}
+            </button>
+            <span className="muted">one Muse Spark call: phrasings, a match pattern and exclusion words</span>
+          </div>
+        )}
         <WebSearch searchId={search.id} closed={search.status === 'closed'} demo={demo} onListings={setListings} />
-        {/* a new plan starts the editor over; saving a word or the pattern keeps the test line */}
-        <PatternEditor key={plan?.model ? plan.planned_at : 'by-hand'} search={search} onSaved={onChanged} />
+        {demo ? (
+          <PatternShown search={search} />
+        ) : (
+          /* a new plan starts the editor over; saving a word or the pattern keeps the test line */
+          <PatternEditor key={plan?.model ? plan.planned_at : 'by-hand'} search={search} onSaved={onChanged} />
+        )}
       </section>
 
       <section aria-label="Bring back listings">
         <h4>Bring back listings</h4>
-        {closed ? <p className="muted">This search is closed; reopen it to bring listings back.</p> : <BringBack searchId={search.id} onAdded={setListings} />}
+        {demo ? (
+          <SignInLine what="Bring back listings" />
+        ) : closed ? (
+          <p className="muted">This search is closed; reopen it to bring listings back.</p>
+        ) : (
+          <BringBack searchId={search.id} onAdded={setListings} />
+        )}
         {error && (
           <p className="error" role="alert">
             {error}
           </p>
         )}
-        {listings.length > 0 && <Ranked searchId={search.id} listings={listings} onListings={setListings} onCandidate={onCandidate} />}
+        {listings.length > 0 && <Ranked searchId={search.id} listings={listings} demo={demo} onListings={setListings} onCandidate={onCandidate} />}
       </section>
     </div>
   )
@@ -192,6 +208,26 @@ function WebSearch({ searchId, closed, demo, onListings }: { searchId: number; c
       {error && (
         <p className="error" role="alert">
           {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+// The pattern and the words that rule a listing out, as the owner kept them: read, not edited.
+function PatternShown({ search }: { search: Search }) {
+  const plan = search.plan
+  if (!plan) return null
+  return (
+    <div className="pattern-editor" aria-label="Match pattern">
+      {plan.pattern && (
+        <p className="meta">
+          Words to match (pattern): <code>{plan.pattern}</code>
+        </p>
+      )}
+      {plan.exclusions.length > 0 && (
+        <p className="meta" aria-label="Exclusion words">
+          Skip listings with: {plan.exclusions.join(', ')}
         </p>
       )}
     </div>
@@ -426,7 +462,20 @@ function BringBack({ searchId, onAdded }: { searchId: number; onAdded: (list: Br
   )
 }
 
-function Ranked({ searchId, listings, onListings, onCandidate }: { searchId: number; listings: BroughtListing[]; onListings: (list: BroughtListing[]) => void; onCandidate?: (c: Candidate) => void }) {
+function Ranked({
+  searchId,
+  listings,
+  demo = false,
+  onListings,
+  onCandidate,
+}: {
+  searchId: number
+  listings: BroughtListing[]
+  // the demo visitor: a fit already checked is shown; checking and removing are the owner's
+  demo?: boolean
+  onListings: (list: BroughtListing[]) => void
+  onCandidate?: (c: Candidate) => void
+}) {
   const [checking, setChecking] = useState<number | null>(null)
   const [checked, setChecked] = useState<Record<number, Candidate>>({})
   const [error, setError] = useState('')
@@ -481,15 +530,25 @@ function Ranked({ searchId, listings, onListings, onCandidate }: { searchId: num
                 )}
               </div>
               <ListingText text={b.text} score={b.score} />
-              <div className="row">
-                <button type="button" onClick={() => void check(b)} disabled={checking !== null}>
-                  {checking === b.id ? 'Checking…' : b.candidate_id !== null ? 'Show the fit' : 'Check fit'}
-                </button>
-                <button type="button" className="link" onClick={() => void remove(b)}>
-                  Remove
-                </button>
-                {b.candidate_id === null && <span className="muted">One Muse Spark reading, then the profile&apos;s fit rules</span>}
-              </div>
+              {demo ? (
+                b.candidate_id !== null && (
+                  <div className="row">
+                    <button type="button" onClick={() => void check(b)} disabled={checking !== null}>
+                      {checking === b.id ? 'Checking…' : 'Show the fit'}
+                    </button>
+                  </div>
+                )
+              ) : (
+                <div className="row">
+                  <button type="button" onClick={() => void check(b)} disabled={checking !== null}>
+                    {checking === b.id ? 'Checking…' : b.candidate_id !== null ? 'Show the fit' : 'Check fit'}
+                  </button>
+                  <button type="button" className="link" onClick={() => void remove(b)}>
+                    Remove
+                  </button>
+                  {b.candidate_id === null && <span className="muted">One Muse Spark reading, then the profile&apos;s fit rules</span>}
+                </div>
+              )}
               {candidate && (
                 <div className="fit" aria-label={`Fit of listing ${b.id}`}>
                   <span className={`badge state ${stateTone(candidate.state)}`}>{stateLabel(candidate.state)}</span> {candidate.assessment && <span>{candidate.assessment.summary}</span>}

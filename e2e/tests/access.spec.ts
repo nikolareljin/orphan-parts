@@ -72,7 +72,10 @@ test('the API answers the demo visitor with recordings and refuses every write',
   test.skip(!code, 'the stack runs without a gate')
   const listed = await request.get('/api/items')
   expect(listed.status()).toBe(200) // the public shelf, whatever is on it
-  const refused = await request.get('/api/searches')
+  // the searches are read-only for the visitor; the spend ledger is the owner's
+  expect((await request.get('/api/searches')).status()).toBe(200)
+  expect((await request.post('/api/searches', { data: {} })).status()).toBe(403)
+  const refused = await request.get('/api/spend')
   expect(refused.status()).toBe(403)
   expect(((await refused.json()) as { detail: string }).detail).toContain('demo: the code unlocks saving')
   const write = await request.post('/api/items', { data: { item_type: 'kettle' } })

@@ -113,6 +113,11 @@ class DemoSearch(BaseModel):
     max_price: float | None = Field(default=None, ge=0, le=10_000_000)
     currency: str = Field(default="USD", pattern=CURRENCY)
     listings: list[DemoListing] = []
+    web: bool = Field(
+        default=False,
+        description="run Search the web once the items are loaded; only a recording of this very"
+        " request answers in fixture mode",
+    )
 
 
 class DemoPropose(BaseModel):
@@ -209,6 +214,7 @@ class Outcome(BaseModel):
     guidances: int = 0
     searches: int = 0
     candidates: int = 0
+    web_finds: int = 0
     projects: int = 0
     pictures: int = 0
     checked: int = Field(default=0, description="photos checked for private details")
@@ -230,8 +236,9 @@ class Outcome(BaseModel):
         out = [
             f"mode {self.mode}: {self.items} item(s) from {self.photos} photo(s),"
             f" {self.voice_notes} voice note(s), {self.drafts} draft(s), {self.guidances}"
-            f" guidance(s), {self.searches} search(es) with {self.candidates} candidate(s),"
-            f" {self.projects} project(s), {self.pictures} picture(s); {self.cost_usd:.4f} USD"
+            f" guidance(s), {self.searches} search(es) with {self.candidates} candidate(s)"
+            f" and {self.web_finds} web find(s), {self.projects} project(s),"
+            f" {self.pictures} picture(s); {self.cost_usd:.4f} USD"
         ]
         if self.checked:
             out.append(
