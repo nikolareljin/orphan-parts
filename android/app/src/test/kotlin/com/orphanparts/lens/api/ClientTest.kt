@@ -199,4 +199,68 @@ class CaptureClientTest {
         assertEquals("POST", t.sent[1].method)
         assertEquals("http://backend:8000/api/captures/5/process", t.sent[1].url)
     }
+
+    private val agitator = """{"id":12,"name":"Agitator","version":3,"needs_parent":true,"redacted":false,"fields":{"brand":{"value":"Hamilton Beach"}}}"""
+
+    @Test
+    fun an_item_says_whether_the_backend_asks_for_its_device() {
+        val (c, t) = client(
+            HttpResponse(200, agitator),
+            HttpResponse(200, """{"id":12,"name":"Agitator","version":4,"needs_parent":false,"fields":{"parent_device":{"value":" the drink mixer "},"parent_device_model":{"value":"Hamilton Beach 729"}}}"""),
+        )
+        c.useToken("sid.exp.1.0.sig")
+        val asked = c.item(12)
+        assertTrue(asked.needsParent)
+        assertEquals("", asked.parentDevice)
+        assertEquals("GET", t.sent[0].method)
+        assertEquals("http://backend:8000/api/items/12", t.sent[0].url)
+        assertEquals("Bearer sid.exp.1.0.sig", t.sent[0].headers["Authorization"])
+        val answered = c.item(12)
+        assertFalse(answered.needsParent)
+        assertEquals("the drink mixer", answered.parentDevice)
+        assertEquals("Hamilton Beach 729", answered.parentDeviceModel)
+        assertEquals(4, answered.version)
+    }
+
+    @Test
+    fun the_owner_words_are_stated_as_one_field_as_the_web_app_saves_them() {
+        val (c, t) = client(HttpResponse(200, """{"id":12,"version":4,"needs_parent":false,"fields":{"parent_device":{"value":"the drink mixer"}}}"""))
+        val item = c.setParentDevice(12, "the drink mixer")
+        assertFalse(item.needsParent)
+        assertEquals("the drink mixer", item.parentDevice)
+        val sent = t.sent[0]
+        assertEquals("POST", sent.method)
+        assertEquals("http://backend:8000/api/items/12/fields", sent.url)
+        assertEquals("application/json", sent.headers["Content-Type"])
+        val body = JSONObject(String(sent.body!!))
+        assertEquals("parent_device", body.getString("field"))
+        assertEquals("the drink mixer", body.getString("value"))
+        assertEquals("owner_reported", body.getString("provenance"))
+        assertEquals(setOf("field", "value", "provenance"), body.keys().asSequence().toSet())
+    }
+
+    @Test
+    fun a_photo_of_the_device_goes_as_one_part_and_the_model_read_comes_back() {
+        val (c, t) = client(
+            HttpResponse(201, """{"item":{"id":12,"version":4,"needs_parent":false,"fields":{"parent_device_model":{"value":"Hamilton Beach 729"}}},"model":"Hamilton Beach 729","extraction":{}}"""),
+            HttpResponse(403, """{"detail":"demo: the code unlocks saving, drafts, prices, projects and captures"}"""),
+        )
+        val read = c.parentPhoto(12, byteArrayOf(1, 2, 3))
+        assertEquals("Hamilton Beach 729", read.model)
+        assertEquals("Hamilton Beach 729", read.item.parentDeviceModel)
+        assertFalse(read.item.needsParent)
+        val sent = t.sent[0]
+        assertEquals("http://backend:8000/api/items/12/parent-photo", sent.url)
+        assertTrue(sent.headers["Content-Type"]!!.startsWith("multipart/form-data; boundary="))
+        val body = String(sent.body!!, Charsets.ISO_8859_1)
+        assertTrue(body.contains("name=\"photo\"; filename=\"device.jpg\""))
+        assertFalse(body.contains("name=\"photos\""))
+        try {
+            c.parentPhoto(12, byteArrayOf(1))
+            fail("a refusal is said")
+        } catch (e: ApiException) {
+            assertEquals(403, e.status)
+            assertTrue(e.message!!.startsWith("demo:"))
+        }
+    }
 }

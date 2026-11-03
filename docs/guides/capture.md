@@ -12,7 +12,9 @@ seconds at most), **Hold to talk** for what you know (what it is, what is wrong,
 tested), a name if you know it, a line, then **Send**. Photos are re-encoded on the phone before
 they leave it, pixels only; the clip is sent as recorded. **Captures** lists what was
 sent and whether the backend has read it: **Read it now** asks for that, and a capture that
-could not be read says why and can be tried again.
+could not be read says why and can be tried again. A capture read into a part the backend
+cannot tie to its device asks which device it came from, as the web app's item dialog does
+(see [Inventory](inventory.md)).
 
 ## From a computer
 

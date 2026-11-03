@@ -95,6 +95,8 @@ fun CapturesScreen(session: Session, refresh: Int, onItem: (Int) -> Unit) {
                     }
                 } else {
                     SecondaryButton("Talk about item #${c.itemId}") { c.itemId?.let(onItem) }
+                    // the backend's question about the device the part came from, when it asks
+                    c.itemId?.let { DeviceQuestionCard(session, it) }
                 }
             }
         }
