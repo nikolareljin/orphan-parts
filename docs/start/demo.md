@@ -103,8 +103,9 @@ its uncertainty and the method. A blurred or oblique capture is refused with the
 ## 3. Does a listed rod fit?
 
 **Does it fit?** checks a candidate against the agitator's profile rule by rule. In the demo
-set the rod's diameter is the measurement above (4.7 ± 0.49 mm, from the photo with the tape
-measure beside it); nothing else was measured. The two metal rods listed at 4 mm are rejected on
+set the rod's diameter is that measurement, from the same photo and marks given in the set
+(4.7 ± 0.49 mm; marked by hand through the page, as above, the marks land a pixel apart and
+give 4.8); nothing else was measured. The two metal rods listed at 4 mm are rejected on
 that diameter, the plastic one on its material and its diameter, and the listing with no
 measurements stays at *needs evidence*; the tabs and the length, unknown on both sides, are
 never counted as a pass. The verdict is one of five on the
