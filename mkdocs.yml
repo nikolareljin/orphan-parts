@@ -43,6 +43,12 @@ extra_css:
 plugins:
   - search
   - swagger-ui-tag
+  # any picture opens enlarged on a click, with a close button; the APK's QR code stays as it is
+  - glightbox:
+      zoomable: true
+      draggable: false
+      skip_classes:
+        - no-zoom
   - git-revision-date-localized:
       enabled: !ENV [DOCS_GIT_DATES, true]
       fallback_to_build_date: true

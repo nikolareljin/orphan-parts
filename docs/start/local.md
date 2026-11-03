@@ -136,7 +136,7 @@ footer counts the day's live calls.
 1. On the phone, open
    `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`,
    or scan this QR code with the camera:<br>
-   <img src="../../assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140">
+   <img class="no-zoom" src="../../assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140">
 2. Open the download. Android asks before installing an app from outside Google Play: tap
    **Settings**, turn on **Allow from this source** for the browser, go back, tap **Install**.
    If Play Protect warns about an unknown developer: **More details**, **Install anyway**.

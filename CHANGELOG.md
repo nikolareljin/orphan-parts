@@ -5,6 +5,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 ## Unreleased
 
 ### Added
+- On the documentation site, a click on any picture or screenshot opens it enlarged, with a close button (the `glightbox` plugin, `mkdocs-glightbox` in `docker/docs/requirements.txt`); the APK's QR code is left out (`no-zoom`).
 - The README and the docs overview link the live demo (marked temporary, while the hackathon is judged), the documentation, the demo video and the Android release at the top.
 - The demo video on the documentation site: *Start > Demo video* (`docs/start/video.md`), a 1280-wide copy without metadata (`docs/assets/video/`, about 4.7 MB) with a poster frame, linked from the overview.
 - The web app's footer links to the documentation site (https://nikolareljin.github.io/orphan-parts/) and the source on GitHub, both in a new tab and shown even while the server cannot be reached.
