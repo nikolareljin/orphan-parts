@@ -239,6 +239,8 @@ class Loader:
                         if drawn is not None:
                             out.pictures += 1
                             out.cost_usd += drawn.cost_usd
+                if demo.propose.packs:
+                    self.write_packs([p.id for p in projects], out)
         self.record_decisions(demo, out)
         out.stub_answers = self.client.fixture_fallbacks - stubs_before
         log.info(
@@ -443,6 +445,18 @@ class Loader:
                     if drawn is not None:
                         out.pictures += 1
                         out.cost_usd += drawn.cost_usd
+
+    def write_packs(self, project_ids: list[int], out: Outcome) -> None:
+        """Each project selected as the owner's Select does, and its build pack written by the
+        rules; one whose item another selected project counts on stays proposed, said so."""
+        for project_id in project_ids:
+            try:
+                self.planner.select(project_id)
+                self.planner.write_pack(project_id)
+            except (ValueError, LookupError) as exc:
+                out.skipped.append(f"project {project_id}: build pack: {exc}")
+            else:
+                out.packs += 1
 
     def record_decisions(self, demo: DemoSet, out: Outcome) -> None:
         """The plan chosen for each item, recorded after everything else is asked: keep and fix

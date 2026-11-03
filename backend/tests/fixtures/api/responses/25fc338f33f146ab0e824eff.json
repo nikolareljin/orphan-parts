@@ -2,13 +2,13 @@
   "endpoint": "/responses",
   "op": "search-plan",
   "model": "muse-spark-1.3",
-  "digest": "e3bf104001c5dfe46c5b6c79",
+  "digest": "25fc338f33f146ab0e824eff",
   "request": {
     "input": [
       {
         "content": [
           {
-            "text": "Needed: all-metal agitator rod for the frappé maker, 4 mm rod, two tabs 9 mm across\nKind of part: Blender or frappé maker agitator\nNeeded by: Frappé maker agitator, worn\nWhat it states: rod diameter 4; tab span 9; tab width 2.5; tab length 8; rod length 150; material metal\nIt came from this device: model HAMILTON BEACH 729\nTop price: 20 USD",
+            "text": "Needed: all-metal agitator rod for the frappé maker\nKind of part: Blender or frappé maker agitator\nNeeded by: Frappé maker agitator, worn\nWhat it states: material metal; rod diameter 4.7 mm\nIt came from this device: model HAMILTON BEACH 729\nTop price: 20 USD",
             "type": "input_text"
           }
         ],
@@ -108,6 +108,35 @@
         "type": "json_schema",
         "name": "PlanWriting",
         "schema": {
+          "additionalProperties": false,
+          "description": "Strict output schema of a search-plan call: every property required, no extras.",
+          "properties": {
+            "exclusions": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Exclusions",
+              "type": "array"
+            },
+            "pattern": {
+              "title": "Pattern",
+              "type": "string"
+            },
+            "phrasings": {
+              "items": {
+                "$ref": "#/$defs/Phrasing"
+              },
+              "title": "Phrasings",
+              "type": "array"
+            }
+          },
+          "type": "object",
+          "title": "PlanWriting",
+          "required": [
+            "phrasings",
+            "pattern",
+            "exclusions"
+          ],
           "$defs": {
             "Phrasing": {
               "additionalProperties": false,
@@ -136,36 +165,7 @@
               "title": "Phrasing",
               "type": "object"
             }
-          },
-          "title": "PlanWriting",
-          "properties": {
-            "exclusions": {
-              "items": {
-                "type": "string"
-              },
-              "title": "Exclusions",
-              "type": "array"
-            },
-            "pattern": {
-              "title": "Pattern",
-              "type": "string"
-            },
-            "phrasings": {
-              "items": {
-                "$ref": "#/$defs/Phrasing"
-              },
-              "title": "Phrasings",
-              "type": "array"
-            }
-          },
-          "description": "Strict output schema of a search-plan call: every property required, no extras.",
-          "required": [
-            "phrasings",
-            "pattern",
-            "exclusions"
-          ],
-          "additionalProperties": false,
-          "type": "object"
+          }
         },
         "strict": true
       }
@@ -173,29 +173,29 @@
     "tools": [],
     "tool_choice": "auto",
     "truncation": "disabled",
-    "id": "resp_6aea1ba38a2f4851ecfe4595",
+    "id": "resp_6aea29dae45ccdf63a854df0",
     "object": "response",
     "status": "completed",
-    "created_at": 1793727395.0,
-    "completed_at": 1793727395.0,
+    "created_at": 1793731034.0,
+    "completed_at": 1793731034.0,
     "error": null,
     "incomplete_details": null,
     "output": [
       {
         "type": "reasoning",
-        "id": "rs_6aea1ba38a2f4851ecfe4595:rs_52e962ae-d8b3-4a2f-a241-c65883de191e",
+        "id": "rs_6aea29dae45ccdf63a854df0:rs_b3630c77-cb66-4c9f-9ef6-c39257570e3f",
         "encrypted_content": "",
         "summary": [],
         "status": "completed"
       },
       {
         "type": "message",
-        "id": "msg_3d4b2306-7efd-476a-bcc4-ae58f4a07d0e",
+        "id": "msg_220fcb29-fd02-4dcb-a907-0a87ffda0cbc",
         "role": "assistant",
         "content": [
           {
             "type": "output_text",
-            "text": "{\"exclusions\":[\"broken\",\"not working\",\"for parts only\",\"plastic\",\"nylon\"],\"pattern\":\"4[-\\\\s]?mm.{0,20}9[-\\\\s]?mm\",\"phrasings\":[{\"text\":\"frappe maker agitator rod\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=frappe+maker+agitator+rod\",\"why\":\"Finds unaccented frappe listings that the accent spelling misses.\"},{\"text\":\"frappe agitator metal rod\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=frappe+agitator+metal+rod\",\"why\":\"Finds all-metal wording that filters out plastic stir sticks.\"},{\"text\":\"Hamilton Beach 729 agitator\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=Hamilton+Beach+729+agitator\",\"why\":\"Finds device-specific used pulls listed by model not by part name.\"},{\"text\":\"milkshake mixer stir rod\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=milkshake+mixer+stir+rod\",\"why\":\"Finds synonym stir rod listings sellers use instead of agitator.\"},{\"text\":\"frappe stirrer stick\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=frappe+stirrer+stick\",\"why\":\"Finds casual stirrer stick wording for the same two-tab rod.\"}]}",
+            "text": "{\"exclusions\":[\"broken\",\"not working\",\"for parts\",\"plastic\",\"rusted\",\"bent\"],\"pattern\":\"4[.,]7\\\\s?mm.{0,20}(agitat|rod|metal)|729.{0,20}(agitat|rod)\",\"phrasings\":[{\"text\":\"Hamilton Beach 729 agitator\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=Hamilton+Beach+729+agitator\",\"why\":\"Finds listings tied to the 729 device model that generic rod searches miss.\"},{\"text\":\"frappe maker mixer rod metal\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=frappe+maker+mixer+rod+metal\",\"why\":\"Finds all-metal rod listings using mixer instead of agitator.\"},{\"text\":\"frappe maker agitator stainless\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=frappe+maker+agitator+stainless\",\"why\":\"Finds metal variants listed as stainless or stainless steel.\"},{\"text\":\"Hamilton Beach stirrer rod\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=Hamilton+Beach+stirrer+rod\",\"why\":\"Finds seller wording using stirrer and stir rod for the same part.\"},{\"text\":\"frappe aggitator rod\",\"url\":\"https://www.ebay.com/sch/i.html?_nkw=frappe+aggitator+rod\",\"why\":\"Finds misspelled agitator listings other searches miss.\"}]}",
             "annotations": [],
             "logprobs": []
           }
@@ -205,15 +205,15 @@
     ],
     "instructions": "You plan a search of second-hand listings for one needed part or device. Write 3 to 6 search phrasings a seller might have put in a listing title: the plain name, synonyms, the part or model number in the ways it gets written, the devices it is sold for, seller wording and common misspellings; each with one line on what it finds that the others miss. A phrasing is a few words for a search box that takes words, not operators or quotes. Then one match pattern: an RE2 regular expression, applied case-insensitively to a listing's text, that a listing which fits the need matches, built from the part number with optional separators or the deciding values with their units. Keep it under 200 characters; use short gaps such as .{0,20} and classes such as [-\\s]?; no lookarounds, no backreferences, no comments and no inline flags. Then the words or short phrases in a listing that rule it out: for parts, broken, not working, and any that name a variant that does not fit. Never invent a part or model number the need does not give.",
     "usage": {
-      "input_tokens": 553,
+      "input_tokens": 522,
       "input_tokens_details": {
-        "cached_tokens": 0
+        "cached_tokens": 369
       },
-      "output_tokens": 1351,
+      "output_tokens": 1403,
       "output_tokens_details": {
-        "reasoning_tokens": 1045
+        "reasoning_tokens": 1079
       },
-      "total_tokens": 1904
+      "total_tokens": 1925
     },
     "parallel_tool_calls": true,
     "store": false,

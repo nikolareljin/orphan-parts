@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import Settings
 from app.main import create_app
 from app.ops.gate import DEMO_LINE
 from tests.conftest import RECORDED_FIXTURES
@@ -187,3 +188,40 @@ def test_asking_again_adds_a_version_and_keeps_the_earlier_ones(gated: TestClien
     assert len(gated.get(f"/api/items/{item}/uses").json()) == 2
     gated.post(f"/api/items/{item}/drafts", json={"mode": "sell"})
     assert [d["version"] for d in gated.get(f"/api/items/{item}/drafts").json()] == [1, 2]
+
+
+@pytest.mark.anyio
+async def test_every_item_of_the_committed_set_has_its_saved_outcome(
+    recorded_settings: Settings,
+) -> None:
+    # the demo set as ./dev demo loads it: every result replayed from its own recording, and
+    # each item kept with what its plan calls for, so a visitor reads them and nothing is asked
+    from app.demo import load_set
+    from app.demo.__main__ import build_loader
+
+    path = Path(__file__).resolve().parents[2] / "demo" / "set.yaml"
+    demo = load_set(path)
+    loader, client = build_loader(recorded_settings.model_copy(update={"picture_enabled": True}))
+    try:
+        outcome = await loader.run(demo, path.parent)
+    finally:
+        await client.aclose()
+    assert outcome.stub_answers == 0 and outcome.skipped == [] and outcome.unrecorded == []
+    assert outcome.cost_usd == 0.0
+    inventory = loader.inventory
+    for item in demo.items:
+        item_id = loader.ids[item.key]
+        kept = loader.decider.decision(item_id)
+        if item.decide:
+            assert kept.scenarios is not None, item.key
+        if item.decision:
+            assert kept.last is not None and kept.last.choice == item.decision, item.key
+        if item.draft:
+            assert [d["mode"] for d in inventory.drafts(item_id)] == [item.draft], item.key
+        if item.price:
+            assert kept.worth is not None, item.key
+    search = loader.finder.searches()[0]
+    assert search.plan is not None and search.plan.phrasings
+    projects = loader.planner.projects().projects
+    assert projects and all(loader.planner.packs_of(p.id) for p in projects)
+    assert all(loader.pictures and loader.pictures.project_list(p.id).pictures for p in projects)

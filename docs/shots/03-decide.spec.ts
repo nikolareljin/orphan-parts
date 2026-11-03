@@ -10,7 +10,9 @@ test('the decide section, the cards, and Choose this', async ({ shots, page }) =
   await section(item, 'Decide')
   await shots.show(decide)
   await shots.take('01-decide-section')
-  await decide.getByRole('button', { name: 'What should I do with it?' }).click()
+  // the demo set keeps the cards written for it; on a set without them, ask once
+  const ask = decide.getByRole('button', { name: 'What should I do with it?' })
+  if (await ask.count()) await ask.click()
   const cards = decide.getByRole('region', { name: 'What to do with it' })
   const fix = cards.getByRole('article', { name: 'Keep and fix' })
   await expect(fix).toBeVisible({ timeout: 120_000 })

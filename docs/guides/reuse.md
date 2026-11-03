@@ -56,8 +56,9 @@ selecting, drawing and writing a pack are refused with the demo line.
     ![The search the build opened: Search Marketplace, Plan the search, Search the web](../assets/shots/reuse/07-search-from-build.png)
 
 8. **Write the build pack.** Under **Build pack**, **Write the build pack**: one Markdown
-   document written by the rules, no model call. **Download** keeps it; a change to an item,
-   the project or the budget marks it *out of date*.
+   document written by the rules, no model call, read in place under the button. **Download**
+   keeps it; a change to an item, the project or the budget marks it *out of date*, and
+   **Write it again** adds a version, each listed with **Show**.
 
     ![Build pack: Write the build pack, then Download version 1](../assets/shots/reuse/08-build-pack.png)
 
@@ -69,9 +70,11 @@ selecting, drawing and writing a pack are refused with the demo line.
 
 The demo visitor sees **Build and reuse** read-only: what the owner wants from a build, and the
 projects built on public items alone, each with its items, what is still needed, what to check
-and the steps, and the picture drawn of each (the demo set draws its projects once). **Propose**,
-the project's buttons and **Draw it** give way to the sign-in line; nothing is spent and nothing
-is kept.
+the steps open, and every picture drawn of it side by side (the demo set draws each project
+once); what is still needed carries a **Search Marketplace** link for each part; and a selected
+project shows its build pack read in place, with the Markdown file to download (the demo set
+selects its projects and writes their packs, by the rules, no model). **Propose**, the project's
+buttons and **Draw again** give way to the sign-in line; nothing is spent and nothing is kept.
 
 ![Build and reuse for a visitor: the build wishes, Propose: Sign in with the access code to use this., the projects](../assets/shots/demo/06-visitor-build.png)
 

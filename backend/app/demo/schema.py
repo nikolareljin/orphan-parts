@@ -181,6 +181,12 @@ class DemoPropose(BaseModel):
         description="draw each kept project with Draw it; only a recording of this very"
         " drawing answers in fixture mode",
     )
+    packs: bool = Field(
+        default=False,
+        description="select each kept project its items allow (one whose item another selected"
+        " project already counts on stays proposed) and write its build pack; the rules write"
+        " it, no model is asked",
+    )
 
 
 class DemoSet(BaseModel):
@@ -279,6 +285,7 @@ class Outcome(BaseModel):
     ideas: int = Field(default=0, description="answers to what an item is good for")
     decisions: int = 0
     plans: int = Field(default=0, description="search plans written")
+    packs: int = Field(default=0, description="build packs written for selected projects")
     checked: int = Field(default=0, description="photos checked for private details")
     hidden: int = Field(default=0, description="areas found on them, blacked out when shared")
     skipped: list[str] = []
@@ -303,10 +310,11 @@ class Outcome(BaseModel):
             f" and {self.web_finds} web find(s), {self.projects} project(s),"
             f" {self.pictures} picture(s); {self.cost_usd:.4f} USD"
         ]
-        if self.cards or self.ideas or self.decisions or self.plans:
+        if self.cards or self.ideas or self.decisions or self.plans or self.packs:
             out.append(
                 f"{self.cards} set(s) of Decide cards, {self.ideas} answer(s) of ideas,"
-                f" {self.decisions} decision(s), {self.plans} search plan(s)"
+                f" {self.decisions} decision(s), {self.plans} search plan(s),"
+                f" {self.packs} build pack(s)"
             )
         if self.checked:
             out.append(

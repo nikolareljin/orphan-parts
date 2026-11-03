@@ -18,7 +18,8 @@
 # reuse card, `decision:` records the plan chosen (keep_fix, keep_spare, keep_build, sell,
 # give, not_worth; `decision_note:` the owner's words with it, never shown to the visitor).
 # A search's `plan: true` writes its plan (phrasings, Marketplace links, pattern), and
-# `propose: pictures: true` draws each kept project. In fixture mode each of these is
+# `propose: pictures: true` draws each kept project and `packs: true` selects the kept
+# projects their items allow and writes their build packs (rules, no model). In fixture mode each of these is
 # answered only by the recording of that very request; a new item's are recorded once with
 # ./dev record-fixtures (it replays what is kept and buys only what is missing).
 title: a drawer of idle things
@@ -213,6 +214,7 @@ searches:
 propose:
   count: 3
   pictures: true
+  packs: true
   preferences:
     interests: a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos
     effort: low
