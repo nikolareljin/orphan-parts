@@ -147,4 +147,4 @@ See the [Quickstart](start/quickstart.md).
 | [Muse Image](models/muse-image.md) | a picture of what an item could become or of a finished project, drawn only on a click when the switch is on; illustrative, never evidence |
 | [Muse Wonder](models/muse-wonder.md), [Muse Glimmer](models/muse-glimmer.md), [Muse Spark Open](models/muse-spark-open.md) | considered, not used in this version; each page says what for |
 
-Development uses Muse Code; see [Working with Muse Code](development/muse-code.md).
+Muse Code was used in the development; see [Working with Muse Code](development/muse-code.md).

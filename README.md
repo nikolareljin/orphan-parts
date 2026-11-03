@@ -131,7 +131,7 @@ Changes go through pull requests; a release is a pull request from a `release/x.
    create a key under API keys, and put it in `.env` as `MODEL_API_KEY`. The key never leaves
    the backend. With `OPL_FAKE_API=1` instead, every call is answered from recorded fixtures,
    which is how the tests and CI run.
-3. **Muse Code**, the coding agent used on this repository:
+3. **Muse Code**, used in the development of this repository:
 
    ```bash
    curl -fsSL https://dev.meta.ai/install.sh -o muse-install.sh   # read it, then run it
@@ -152,7 +152,7 @@ Changes go through pull requests; a release is a pull request from a `release/x.
 | Muse Image | a picture of what an item could become or of a finished project, drawn only when you click and the switch is on; illustrative, never evidence |
 | Muse Wonder, Muse Glimmer, Muse Spark Open | considered, not used in this version; the docs say what for |
 
-Built with Muse Code.
+Muse Code was used in the development.
 
 ## Layout
 

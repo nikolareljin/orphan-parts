@@ -1,6 +1,6 @@
 # Working with Muse Code
 
-Muse Code is the coding agent used on this repository.
+Muse Code was used in the development of this repository.
 
 ## Install and sign in
 

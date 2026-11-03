@@ -76,7 +76,7 @@ and packages are installed on first run.
 
 ## Muse Code
 
-Muse Code is the coding agent used on this repository. Install it, sign in, open the repository
+Muse Code was used in the development of this repository. To use it too, install it, sign in, open the repository
 and trust the workspace:
 
 ```bash
