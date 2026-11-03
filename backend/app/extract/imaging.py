@@ -59,8 +59,8 @@ def _decode(data: bytes, *, max_px: int, max_bytes: int) -> Image.Image:
 
 def _encode(img: Image.Image) -> bytes:
     out = BytesIO()
-    # EXIF, ICC and XMP are written only when given; a JPEG comment is carried over from the
-    # source unless one is given, so an empty one is (and an empty comment writes nothing)
+    # EXIF, ICC and XMP are written only when passed; a JPEG comment is carried over from the
+    # source unless one is passed, so an empty one goes in, and an empty comment writes nothing
     img.save(out, "JPEG", quality=JPEG_QUALITY, optimize=True, comment=b"")
     return out.getvalue()
 
