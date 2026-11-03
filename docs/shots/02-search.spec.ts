@@ -10,9 +10,8 @@ const TITLE = /all-metal agitator rod/
 test('the searches and a new search', async ({ shots, page }) => {
   await page.goto('/#find')
   await expect(page.getByRole('table', { name: 'Searches' })).toBeVisible()
+  await expect(page.getByRole('form', { name: 'New search' })).toBeVisible()
   await shots.take('01-searches')
-  await shots.show(page.getByRole('form', { name: 'New search' }))
-  await shots.take('02-new-search')
 })
 
 test('the search, its plan and its listings', async ({ shots, page }) => {

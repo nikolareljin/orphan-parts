@@ -16,15 +16,11 @@ test('the decide section, the cards, and Choose this', async ({ shots, page }) =
   await expect(fix).toBeVisible({ timeout: 120_000 })
   await shots.show(cards)
   await shots.take('02-three-cards')
+  // the cards sit side by side: one picture holds Reuse it and Sell or give away
   const reuse = cards.getByRole('article', { name: 'Reuse it' })
   if (await reuse.count()) {
     await shots.show(reuse)
     await shots.take('03-reuse-it')
-  }
-  const sell = cards.getByRole('article', { name: 'Sell or give away' })
-  if (await sell.count()) {
-    await shots.show(sell)
-    await shots.take('04-sell-or-give')
   }
   await fix.getByRole('button', { name: 'Choose this: Keep and fix' }).click()
   const made = decide.getByRole('status', { name: 'Decision made' })

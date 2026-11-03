@@ -31,9 +31,7 @@ Decide section is not offered (the demo line takes its place).
    on a click only). *Sell or give away* says what sells it and offers **Get price guidance**
    when there is none yet.
 
-    ![The Reuse it card: hand stir stick and small plant prop, each with easy for you, extra parts, cost and time, and Draw it](../assets/shots/decide/03-reuse-it.png)
-
-    ![The Sell or give away card: what sells it, the effort, Get price guidance, Sell it and Give it away](../assets/shots/decide/04-sell-or-give.png)
+    ![The Reuse it card (hand stir stick and small plant prop, each with easy for you, extra parts, cost and time, and Draw it) beside the Sell or give away card (what sells it, the effort, Get price guidance)](../assets/shots/decide/03-reuse-it.png)
 
 4. **Choose this.** Each card ends with **Choose this** (*Sell it* and *Give it away* on the
    third). The choice is recorded and the page moves to where it leads; here *Keep and fix*,
