@@ -48,7 +48,7 @@ the phone, 4 are the owner's photos, 2 are concept previews, 3 are cards rendere
 
 | Shot | Scene | Status | What it needs |
 |---|---|---|---|
-| S01, S02, S04, S06 | The owner's photos: the mixer, unused electronics, the worn agitator, the label | photos | `demo/photos/` (in the repository) |
+| S01, S02, S04, S06 | The owner's photos: the mixer, unused electronics, the mixer's side and the worn agitator, the label | photos | `demo/photos/` (in the repository) |
 | S03, S20, S22 | Cards | card | `brand/card-*.png` |
 | S05 | The app asks which device the part came from | now | the stage (the demo set, the agitator's device unanswered) |
 | S07 | The label answers it | record | the reading of `hamilton-729-label.jpg` alone (op `extract`) |

@@ -20,7 +20,7 @@ order on one stage, no reset between them.
 | S01 | 0:00 | 6 | The frappé maker on the counter | Still, slow push in | `demo/photos/hamilton-729-mixer.jpg` | none | photos |
 | S02 | 0:06 | 6 | Unused electronics: a graphics card, a slot 1 processor, a powerline adapter | Three photos side by side, slow push in | `demo/photos/evga-9800gt-front.jpg`, `intel-slot-cpu.jpg`, `tplink-pa2010.jpg` | none | photos |
 | S03 | 0:12 | 5 | Opening card | Hold | `brand/card-open.png` | none | card |
-| S04 | 0:17 | 7 | The worn agitator: the head and the coupling | Two photos side by side, slow push in | `demo/photos/agitator-head.jpg`, `agitator-coupling.jpg` | `t01-story-a` | photos |
+| S04 | 0:17 | 7 | The mixer with the agitator fitted, then the worn head and the coupling | Three photos side by side, slow push in | `demo/photos/hamilton-729-side.jpg`, `agitator-head.jpg`, `agitator-coupling.jpg` | `t01-story-a` | photos |
 | S05 | 0:24 | 8 | The app asks which device the part came from | **My inventory**, *Frappé maker agitator, worn*, **Open**; the photos, then the question *We couldn't tell which device this part came from* | web take | `t21-which-device` | now |
 | S06 | 0:32 | 5 | The label under the mixer's base | Still, slow push in | `demo/photos/hamilton-729-label.jpg` | `t22-label` | photos |
 | S07 | 0:37 | 7 | The label answers it | The agitator again, **Add a photo of the device**, the label photo; *Came from: ...*, *Read from the photo: ... Confirm it in the fields*, the device photo | web take | `t23-device-read` | record |

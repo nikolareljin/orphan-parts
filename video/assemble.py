@@ -43,7 +43,7 @@ MAIN = [
     ("S01", 6, "photo", ["hamilton-729-mixer.jpg"], []),
     ("S02", 6, "photo", ["evga-9800gt-front.jpg", "intel-slot-cpu.jpg", "tplink-pa2010.jpg"], []),
     ("S03", 5, "card", "card-open.png", []),
-    ("S04", 7, "photo", ["agitator-head.jpg", "agitator-coupling.jpg"], [("t01-story-a", 0)]),
+    ("S04", 7, "photo", ["hamilton-729-side.jpg", "agitator-head.jpg", "agitator-coupling.jpg"], [("t01-story-a", 0)]),
     ("S05", 8, "take", "S05", [("t21-which-device", 0)]),
     ("S06", 5, "photo", ["hamilton-729-label.jpg"], [("t22-label", 0)]),
     ("S07", 7, "take", "S07", [("t23-device-read", 0)]),
