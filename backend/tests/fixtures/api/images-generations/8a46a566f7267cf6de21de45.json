@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "8a46a566f7267cf6de21de45",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Home automation server built from laptop (brand lenovo, input voltage 20 V, model number TYPE4313-CTUS/), laptop memory (brand ADATA, model number AM1L16BC8R2-B1QS); One always-on laptop running home automation schedules., finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793741115,
+    "data": [
+      {
+        "b64_json": "@8a46a566f7267cf6de21de45-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 12635,
+      "output_tokens": 1412,
+      "total_tokens": 14047
+    }
+  },
+  "status": 200
+}

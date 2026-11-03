@@ -16,7 +16,7 @@ from app.inventory import FieldCreate, Inventory, ItemCreate
 from app.main import create_app
 from app.ops.gate import DEMO_LINE, demo_allowed, expensive
 from app.picture import OFF_LINE, card_prompt, finished_prompt, part_of, project_prompt
-from app.picture.service import PARTS_MAX, TAIL, TITLE_MAX
+from app.picture.service import PARTS_MAX, PROJECT_TAIL, TAIL, TITLE_MAX
 from tests.conftest import RECORDED_FIXTURES
 from tests.test_decide import _scenarios
 from tests.test_gate import CODE, gated_settings
@@ -166,7 +166,9 @@ def test_the_project_prompt_uses_only_the_allocated_items(settings: Settings) ->
         "a semi-realistic illustration of Homework workstation built from laptop"
         " (screen size 14 in)"
     )
-    assert "; a desk set-up for homework, " in prompt and prompt.endswith(TAIL)
+    # drawn finished where it is used, never on a plain background
+    assert "; a desk set-up for homework, " in prompt and prompt.endswith(PROJECT_TAIL)
+    assert "plain background" not in prompt
     assert "monitor" not in prompt and monitor.item_type == "monitor"
     for value in (*PRIVATE, "45"):
         assert value not in prompt
@@ -191,6 +193,7 @@ def test_another_view_of_a_project_is_asked_for_in_its_own_words() -> None:
     assert shown == plain.replace("a quiet desk,", "a quiet desk; shown in its room, in use,")
     assert finished_prompt("Desk", [], "", "up close").endswith("Desk; shown up close, " + TAIL)
     assert "v" * 121 not in finished_prompt("Desk", [], "", "v" * 500)
+    assert finished_prompt("Desk", [], "", "", "in a home").endswith("Desk, in a home")
 
 
 def test_a_part_is_its_kind_and_a_few_safe_values(settings: Settings) -> None:
@@ -198,6 +201,18 @@ def test_a_part_is_its_kind_and_a_few_safe_values(settings: Settings) -> None:
     item = inventory.get(private_laptop(inventory))
     assert part_of(item) == "laptop (screen size 14 in)"
     assert part_of(inventory.create(ItemCreate(name="mystery box"))) == "item"
+    # in a finished build a part is not drawn as it lies in the drawer: its wear and the marks
+    # printed on it (a label blacked out) stay out, its kind and model stay in
+    monitor = inventory.create(ItemCreate(item_type="monitor", name="M"))
+    for key, value in (
+        ("condition_notes", "part of label blacked out"),
+        ("certifications", "CE, FCC"),
+        ("model_number", "U2419H"),
+    ):
+        inventory.add_field(monitor.id, FieldCreate(field=key, value=value, provenance="tested"))
+    monitor = inventory.get(monitor.id)
+    assert "blacked out" in part_of(monitor) and "FCC" in part_of(monitor)
+    assert part_of(monitor, as_built=True) == "monitor (model number U2419H)"
 
 
 # --- on demand ----------------------------------------------------------------------------

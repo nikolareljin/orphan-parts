@@ -194,7 +194,7 @@ Maxtor hard drive and the PCIe M.2 card; an arcade coffee table on the Dell lapt
 inch monitor with the joystick module put on its controls by the owner; a smart desk calendar
 on the UNO with the DS1307 clock, the buzzer, the button and the prototype shield; and a home
 server for the photos on the ThinkPad T510 with the Toshiba drive. Each has its build pack, two
-more drawings (in its room, and up close), and every requirement it still needs as a search
+more drawings (up close, and from above), and every requirement it still needs as a search
 with its Marketplace links (the NAS's processor, power supply and case; the table, its glass
 and speakers; the calendar's screen; the server's network link); the power supply is also
 searched for on the web, with the pages found and their links. The other proposals are a
@@ -211,8 +211,13 @@ condition, what is included, the faults, the handover and the area and the askin
 **Write the draft** has Muse Spark write a Facebook Marketplace (US) draft from confirmed values,
 with the disclosures the rules append; the slot 1 processor goes as a free-pickup draft, and
 the older ThinkPad as one with the data-removal steps. From the second drawer, the FirePro, the
-9500 GT and the ADATA 4 GB stick each have price guidance and a sell draft at the owner's
-price; the Quadro4 and the iPhone flex cables go as free-pickup drafts. Each field has **Copy**, **Download
+9500 GT and the ADATA 4 GB stick each have price guidance and a sell draft: the two cards at
+the quick-sale figure of their guidance ($10 and $12, the low end of each estimate), set as
+the owner's asking price; the stick with no asking price, as its guidance found no listing in
+dollars, so its draft carries the guidance's typical figure ($12, weak evidence) as a
+suggestion to set. The FirePro's reading gives part number 109-B40961-21, kept as read; the
+board's print in the photo reads 109-B40861-21, the value for the owner to confirm before the
+draft goes up. The Quadro4 and the iPhone flex cables go as free-pickup drafts. Each field has **Copy**, **Download
 photos** zips them in order, and **Open Marketplace** opens the create page; posting is yours.
 [Value an item](../guides/value.md), [Seller flow](../guides/seller.md).
 

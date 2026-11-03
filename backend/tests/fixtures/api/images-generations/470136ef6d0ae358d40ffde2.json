@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "470136ef6d0ae358d40ffde2",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Home server for photos built from laptop (brand lenovo, input voltage 20 V, model number TYPE4313-CTUS/), hard drive (brand TOSHIBA, connector sata, model number MQ01ACF050), laptop memory (brand ADATA, model number AM1L16BC8R2-B1QS); Always-on shelf server for family photos and documents., finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793741137,
+    "data": [
+      {
+        "b64_json": "@470136ef6d0ae358d40ffde2-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4100,
+      "output_tokens": 1483,
+      "total_tokens": 5583
+    }
+  },
+  "status": 200
+}

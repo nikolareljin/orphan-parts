@@ -45,6 +45,12 @@ PARTS_MAX = 6
 PART_VALUES = 3
 VALUE_MAX = 60
 TAIL = "on a plain background, no text, no logos, no people"
+# a project is drawn finished, where it is used; never on a plain background, so the room,
+# the wall or the table it belongs to is part of the picture
+PROJECT_TAIL = "finished and in use in a home, no text, no logos, no people"
+# what a part looks like today (its wear, a label blacked out) or the marks printed on it say
+# nothing of the finished build, and drawn they turn into dust, blots and fake labels
+AS_BUILT_LEFT_OUT = ("condition", "certification")
 # how a finished project is shown, when another view of it is asked for
 VIEW_MAX = 120
 # what an item cost or would fetch is the owner's business, never part of a picture
@@ -101,20 +107,23 @@ def prompt_for(item: Item, use: str) -> str:
     return f"{head}{tail}, {TAIL}"
 
 
-def part_of(item: Item) -> str:
+def part_of(item: Item, *, as_built: bool = False) -> str:
     """One part of a finished project as the prompt names it: the kind of item and a few of its
     accepted values, never one that identifies it or its owner, never its name, location,
-    notes or a price."""
+    notes or a price; ``as_built`` also leaves out its present condition and its markings."""
     what = _line(item.item_type, VALUE_MAX) or "item"
+    left_out = MONEY_WORDS + (AS_BUILT_LEFT_OUT if as_built else ())
     known = [
         _line(f"{k} {v}", VALUE_MAX)
         for k, v in shown_fields(item)
-        if not any(word in k.lower() for word in MONEY_WORDS)
+        if not any(word in k.lower() for word in left_out)
     ][:PART_VALUES]
     return what if not known else f"{what} ({', '.join(known)})"
 
 
-def finished_prompt(title: str, parts: list[str], about: str, view: str = "") -> str:
+def finished_prompt(
+    title: str, parts: list[str], about: str, view: str = "", tail: str = TAIL
+) -> str:
     """What Muse Image is asked for a finished project: what it is, built from the parts the
     card uses (each once, at most six), and one line on it, and how it is shown when a view is
     asked for (in its room, a close-up); every text cut to its bound."""
@@ -131,7 +140,7 @@ def finished_prompt(title: str, parts: list[str], about: str, view: str = "") ->
     shown = _line(view, VIEW_MAX)
     if shown:
         line = f"{line}; shown {shown}" if line else f"shown {shown}"
-    return f"{head}; {line}, {TAIL}" if line else f"{head}, {TAIL}"
+    return f"{head}; {line}, {tail}" if line else f"{head}, {tail}"
 
 
 # an owner's name for an item and the kind to say instead
@@ -159,16 +168,17 @@ def without_names(text: str, names: list[Named]) -> str:
 def project_prompt(
     project: Project, items: list[Item], others: Sequence[Named] = (), view: str = ""
 ) -> str:
-    """A project as built: its title, the items allocated to it, and what it results in, shown
-    as ``view`` asks when given; no item's name, even where the model's title or result
-    repeats one (``others``: the rest of the inventory's names, which the proposal could read
-    too)."""
+    """A project as built, where it is used: its title, the items allocated to it (as built,
+    not as they lie in the drawer), and what it results in, shown as ``view`` asks when given;
+    no item's name, even where the model's title or result repeats one (``others``: the rest of
+    the inventory's names, which the proposal could read too)."""
     names = named(items, [*others, *((a.item_name, "item") for a in project.allocations)])
     return finished_prompt(
         without_names(project.title, names),
-        [part_of(i) for i in items],
+        [part_of(i, as_built=True) for i in items],
         without_names(project.result, names),
         view,
+        PROJECT_TAIL,
     )
 
 

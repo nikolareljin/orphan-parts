@@ -51,7 +51,7 @@ items:
     item_type: monitor
     intent: build
     photos: [photos/dell-1800fp-label.jpg]
-    picture: smart_mirror
+    picture: a smart mirror on a hall wall, a two-way mirror in a wooden frame, the time, the weather and the day's calendar glowing through the glass
     decide: true
     ideas: true
     reuse_picture: true
@@ -149,7 +149,7 @@ items:
     intent: build
     photos: [photos/tplink-pa2010.jpg, photos/tplink-pa2010-label.jpg]
     condition: still in its plastic wrap; one unit, its twin is missing
-    picture: home_automation_server
+    picture: a home automation hub on a shelf by the router, linked through this adapter, unwrapped and plugged into the wall socket
     decide: true
     ideas: true
     reuse_picture: true
@@ -342,18 +342,22 @@ items:
     item_type: laptop memory
     intent: sell
     photos: [photos/adata-ddr4-4gb-sodimm.jpg]
+    # no asking price: its guidance found no listing in dollars to back one, so the draft
+    # carries the guidance's typical figure, marked as a suggestion for the owner to set
     draft: sell
-    asking_price: "8"
     price: true
     decision: sell
 
+  # the reading gives part number 109-B40961-21, kept as read; the board's print reads
+  # 109-B40861-21 in the photo, the value for the owner to confirm before listing it
   - key: gpu_firepro
     name: ATI FirePro graphics card
     item_type: graphics card
     intent: sell
     photos: [photos/ati-firepro-card.jpg]
     draft: sell
-    asking_price: "15"
+    # the quick-sale figure of its price guidance: the low end of the estimate
+    asking_price: "10"
     price: true
     decision: sell
 
@@ -363,7 +367,8 @@ items:
     intent: sell
     photos: [photos/evga-9500gt-card.jpg]
     draft: sell
-    asking_price: "20"
+    # the quick-sale figure of its price guidance: the low end of the estimate
+    asking_price: "12"
     price: true
     decision: sell
 
@@ -406,7 +411,7 @@ items:
     item_type: joystick module
     intent: build
     photos: [photos/joystick-module.jpg]
-    picture: arcade_table
+    picture: an arcade coffee table in a living room, a game screen under its glass top, joysticks and buttons along its edge
     decide: true
     decision: keep_build
 
@@ -574,11 +579,11 @@ propose:
     - template: arcade_table
       requirement: controls
       item: joystick
-      why: the first control, read by the UNO board; a second joystick and buttons still to find
+      why: the first control; a second joystick and buttons still to find
   # four builds selected, each with its build pack: what they still need becomes a search with
-  # its Marketplace links, and each is drawn twice more, in its room and up close
+  # its Marketplace links, and each is drawn twice more, up close and from above
   select: [custom_nas, arcade_table, smart_calendar, home_server]
   plan_missing: true
   views:
-    - in its room, in use
     - as a close-up of how the parts fit together
+    - from above, as it is used

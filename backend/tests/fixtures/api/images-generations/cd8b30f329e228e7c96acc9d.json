@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "cd8b30f329e228e7c96acc9d",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Custom NAS from spare desktop board built from motherboard (brand ASUS, model number P8Z77-VLX), desktop memory (brand G.SKILL, model number F3-12800CL9D-8GBSR), SSD (brand Kingston, connector sata, model number SA400S37/480G), hard drive (connector sata), adapter card (model number MK-PCIE-M2VER2); Network photo store with nightly backup if CPU and power are added.; shown from above, as it is used, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793741306,
+    "data": [
+      {
+        "b64_json": "@cd8b30f329e228e7c96acc9d-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 14941,
+      "output_tokens": 1677,
+      "total_tokens": 16618
+    }
+  },
+  "status": 200
+}

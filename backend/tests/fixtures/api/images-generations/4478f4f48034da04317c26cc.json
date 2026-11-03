@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "4478f4f48034da04317c26cc",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Smart mirror in the hall built from monitor (brand DELL, input voltage 100-240 V, model number U2419H); Hall mirror that shows time, weather and calendar behind the glass., finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793741081,
+    "data": [
+      {
+        "b64_json": "@4478f4f48034da04317c26cc-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 9396,
+      "output_tokens": 1452,
+      "total_tokens": 10848
+    }
+  },
+  "status": 200
+}
