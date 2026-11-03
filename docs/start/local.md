@@ -94,7 +94,8 @@ GitHub**, and opens **Pair the phone**.
 ![The foot of every page: the version, recorded answers only (nothing spent), the models, storage writable, the Documentation and Source on GitHub links, Pair the phone](../assets/shots/pairing/01-footer.png)
 
 `./dev down` stops it; `./dev up` again keeps what you saved. `./dev demo` again resets the
-inventory to the demo set.
+inventory to the demo set, and drops the access codes issued with `./dev gate on` for the
+phone (the master code in `.env` stays): run `./dev gate on` again afterwards.
 
 ## 6. Sign in (optional on your own computer)
 
