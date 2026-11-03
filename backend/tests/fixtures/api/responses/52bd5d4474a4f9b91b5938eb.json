@@ -1,0 +1,229 @@
+{
+  "endpoint": "/responses",
+  "op": "uses",
+  "model": "muse-spark-1.3",
+  "digest": "52bd5d4474a4f9b91b5938eb",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "name: TP-Link TL-PA2010 powerline adapter\nitem_type: powerline adapter\ncondition: still in its plastic wrap; one unit, its twin is missing\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\nConfirmed fields (key: value):\n- brand: TP-LINK\n- model_number: TL-PA2010\n- input_voltage: 100-240 V\n- connector: integrated us 2-prong ac plug\n- certifications: FC, ROHS, CE\ninterests: a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos\nskills: basic computer setup: some\nbudget for extra parts: 50 USD\nProjects in the catalog this item already fills a part of:\n- Laptop with a broken screen as a desktop (video_cable)\n- Home music setup (link)\n- Homework workstation (video_cable)\n- Retro console on the TV (cable)\n- Smart mirror (power)",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You say what a used item is still good for, to a person deciding whether to keep it, sell it or give it away. Propose at most three uses, the most practical first. Rest each one on the facts given: the item's confirmed values, its condition, its faults and what was tested; never assume a part works when the tests do not say so. For each use say in one line what it would do, list what else it needs that is not in the facts, say the effort (low, medium or high) for a person with the skills given, and add one note on what to check first. Respect the person's interests and budget. Plain words, no hype.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "UsesWriting",
+        "schema": {
+          "$defs": {
+            "Use": {
+              "additionalProperties": false,
+              "description": "One thing the item could still be: what it would do, what else it takes, the effort.",
+              "properties": {
+                "effort": {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "needs": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Needs",
+                  "type": "array"
+                },
+                "note": {
+                  "title": "Note",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "what_it_does": {
+                  "title": "What It Does",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "what_it_does",
+                "needs",
+                "effort",
+                "note"
+              ],
+              "title": "Use",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a uses call: every property required, no extras.",
+          "properties": {
+            "uses": {
+              "items": {
+                "$ref": "#/$defs/Use"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "uses"
+          ],
+          "title": "UsesWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "UsesWriting",
+        "schema": {
+          "title": "UsesWriting",
+          "description": "Strict output schema of a uses call: every property required, no extras.",
+          "required": [
+            "uses"
+          ],
+          "type": "object",
+          "properties": {
+            "uses": {
+              "items": {
+                "$ref": "#/$defs/Use"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "$defs": {
+            "Use": {
+              "additionalProperties": false,
+              "description": "One thing the item could still be: what it would do, what else it takes, the effort.",
+              "properties": {
+                "effort": {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "needs": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Needs",
+                  "type": "array"
+                },
+                "note": {
+                  "title": "Note",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "what_it_does": {
+                  "title": "What It Does",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "what_it_does",
+                "needs",
+                "effort",
+                "note"
+              ],
+              "title": "Use",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea1b64be15df1e00fa4371",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793727332.0,
+    "completed_at": 1793727332.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea1b64be15df1e00fa4371:rs_45742229-6f74-47f3-a45a-810b0639bfaf",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_31a19cfa-f168-4441-8d4e-dc3c0cda9dd3",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"uses\": [{\"effort\": \"low\", \"needs\": [\"second compatible AV200 powerline adapter\", \"router with free Ethernet port\", \"2 Ethernet cables\", \"homework computer\"], \"note\": \"Check first that you can get a matching second unit within budget, since one unit alone cannot make a connection and this one is untested.\", \"title\": \"Wired internet for homework desk\", \"what_it_does\": \"Would carry wired internet through wall outlets to a desk computer for homework.\"}, {\"effort\": \"medium\", \"needs\": [\"second compatible AV200 powerline adapter\", \"router with free Ethernet port\", \"2 Ethernet cables\", \"smart mirror display with Ethernet\"], \"note\": \"Check first that the hall outlet is on the same house wiring as the router, then test the pair lights with the second unit.\", \"title\": \"Wired internet for hall smart mirror\", \"what_it_does\": \"Would give a wired internet feed through wall outlets to a smart mirror in the hall.\"}, {\"effort\": \"medium\", \"needs\": [\"second compatible AV200 powerline adapter\", \"router with free Ethernet port\", \"2 Ethernet cables\", \"photo server or NAS with Ethernet\"], \"note\": \"Check first that the server spot has a free wall outlet nearby and that the second unit pairs, as this unit is still sealed and untested.\", \"title\": \"Wired internet for home photo server\", \"what_it_does\": \"Would connect a photo storage computer to the router through wall outlets.\"}]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You say what a used item is still good for, to a person deciding whether to keep it, sell it or give it away. Propose at most three uses, the most practical first. Rest each one on the facts given: the item's confirmed values, its condition, its faults and what was tested; never assume a part works when the tests do not say so. For each use say in one line what it would do, list what else it needs that is not in the facts, say the effort (low, medium or high) for a person with the skills given, and add one note on what to check first. Respect the person's interests and budget. Plain words, no hype.",
+    "usage": {
+      "input_tokens": 569,
+      "input_tokens_details": {
+        "cached_tokens": 241
+      },
+      "output_tokens": 1608,
+      "output_tokens_details": {
+        "reasoning_tokens": 1285
+      },
+      "total_tokens": 2177
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}

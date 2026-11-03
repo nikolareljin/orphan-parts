@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "47cff3efd4647900f0212f03",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Smart mirror built from monitor (brand DELL, certifications CUL, FCC, CE, VCI, GS, S, N, B, PC, NOM, MIC, input voltage 100-240 V); A hall mirror that shows time and weather once two-way glass and frame are added., on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793731070,
+    "data": [
+      {
+        "b64_json": "@47cff3efd4647900f0212f03-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 10910,
+      "output_tokens": 1325,
+      "total_tokens": 12235
+    }
+  },
+  "status": 200
+}

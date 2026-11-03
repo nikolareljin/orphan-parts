@@ -1,0 +1,229 @@
+{
+  "endpoint": "/responses",
+  "op": "uses",
+  "model": "muse-spark-1.3",
+  "digest": "acfb43241b2e8409ff91a927",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "name: ThinkPad T510\nitem_type: laptop\ncondition: opened; the keyboard and the palm rest are off\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\nConfirmed fields (key: value):\n- brand: lenovo\n- model_number: TYPE4313-CTUS/\n- part_number: 0B29997\n- input_voltage: 20 V\n- certifications: FC, CE, UL, NOM, KC, VCI, TUV, N14608\n- condition_notes: disassembled with internal components exposed, serial / product ID areas blacked out\ninterests: a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos\nskills: basic computer setup: some\nbudget for extra parts: 50 USD\nProjects in the catalog this item already fills a part of:\n- Arcade coffee table (brain, screen)\n- Document camera for calls (laptop)\n- Laptop with a broken screen as a desktop (laptop)\n- Home automation server (server)\n- Home music setup (source)\n- Home server and backup (server)\n- Homework workstation (laptop)\n- Retro console on the TV (brain)\n- Smart mirror (display)",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You say what a used item is still good for, to a person deciding whether to keep it, sell it or give it away. Propose at most three uses, the most practical first. Rest each one on the facts given: the item's confirmed values, its condition, its faults and what was tested; never assume a part works when the tests do not say so. For each use say in one line what it would do, list what else it needs that is not in the facts, say the effort (low, medium or high) for a person with the skills given, and add one note on what to check first. Respect the person's interests and budget. Plain words, no hype.",
+    "max_output_tokens": 700,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "UsesWriting",
+        "schema": {
+          "$defs": {
+            "Use": {
+              "additionalProperties": false,
+              "description": "One thing the item could still be: what it would do, what else it takes, the effort.",
+              "properties": {
+                "effort": {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "needs": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Needs",
+                  "type": "array"
+                },
+                "note": {
+                  "title": "Note",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "what_it_does": {
+                  "title": "What It Does",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "what_it_does",
+                "needs",
+                "effort",
+                "note"
+              ],
+              "title": "Use",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a uses call: every property required, no extras.",
+          "properties": {
+            "uses": {
+              "items": {
+                "$ref": "#/$defs/Use"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "required": [
+            "uses"
+          ],
+          "title": "UsesWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "UsesWriting",
+        "schema": {
+          "description": "Strict output schema of a uses call: every property required, no extras.",
+          "properties": {
+            "uses": {
+              "items": {
+                "$ref": "#/$defs/Use"
+              },
+              "title": "Uses",
+              "type": "array"
+            }
+          },
+          "$defs": {
+            "Use": {
+              "additionalProperties": false,
+              "description": "One thing the item could still be: what it would do, what else it takes, the effort.",
+              "properties": {
+                "effort": {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "needs": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Needs",
+                  "type": "array"
+                },
+                "note": {
+                  "title": "Note",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "what_it_does": {
+                  "title": "What It Does",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "what_it_does",
+                "needs",
+                "effort",
+                "note"
+              ],
+              "title": "Use",
+              "type": "object"
+            }
+          },
+          "title": "UsesWriting",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "uses"
+          ]
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea1abedafb9274c0e74157",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793727165.0,
+    "completed_at": 1793727166.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea1abedafb9274c0e74157:rs_90156f79-d090-4f89-a72b-d8d83d576896",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_c53749f8-1183-4208-9a71-005e3aadcbaf",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"uses\": [{\"effort\": \"medium\", \"needs\": [\"20V Lenovo charger\", \"reattached or external keyboard and mouse\", \"working storage and OS check\"], \"note\": \"Check first if it powers on and shows an image with a known-good 20V charger.\", \"title\": \"Homework workstation\", \"what_it_does\": \"Would serve as a desk laptop for homework if it powers on and runs.\"}, {\"effort\": \"medium\", \"needs\": [\"20V Lenovo charger\", \"external keyboard and screen for setup only\", \"home network connection\"], \"note\": \"Check first if it stays on without shutting off while open with parts exposed.\", \"title\": \"Home server for photos\", \"what_it_does\": \"Would store and share photos on the home network if the board stays on.\"}, {\"effort\": \"high\", \"needs\": [\"20V Lenovo charger\", \"two-way mirror and frame\", \"mirror software on working storage\"], \"note\": \"Check first if the screen lights up with a stable image before building.\", \"title\": \"Smart mirror display\", \"what_it_does\": \"Would provide the screen and computer behind a hallway mirror if the screen works.\"}]}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You say what a used item is still good for, to a person deciding whether to keep it, sell it or give it away. Propose at most three uses, the most practical first. Rest each one on the facts given: the item's confirmed values, its condition, its faults and what was tested; never assume a part works when the tests do not say so. For each use say in one line what it would do, list what else it needs that is not in the facts, say the effort (low, medium or high) for a person with the skills given, and add one note on what to check first. Respect the person's interests and budget. Plain words, no hype.",
+    "usage": {
+      "input_tokens": 616,
+      "input_tokens_details": {
+        "cached_tokens": 241
+      },
+      "output_tokens": 1380,
+      "output_tokens_details": {
+        "reasoning_tokens": 1123
+      },
+      "total_tokens": 1996
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4796
+  },
+  "status": 200
+}

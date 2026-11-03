@@ -36,14 +36,20 @@ The line at the foot of the page says *Demo: recorded answers only*.
    read with its unit, confidence, source and the text as printed.
 3. Open **My inventory**: the demo shelf, the set's items as the owner marked them public.
    **Open** one to see its photos beside its values, each with where it came from, and any
-   picture drawn for it. **Measure a feature** in the item marks a ruler and a feature on one
-   of the set's photos and computes the dimension. Deciding, pricing, drafting and searching
-   ask for the code (*demo: the code unlocks saving, drafts, prices, projects and captures*,
+   picture drawn for it. Every item shows what was asked for it, as it was saved, without a
+   model call: the **Decide** cards (keep and fix, reuse it with its **Draw it** picture, sell
+   or give away), the recommendation and the plan chosen; on a sale, the price guidance and the
+   whole Marketplace listing (title, price, category, condition, description, tags, photo order
+   and checklist); on a give-away, the free listing and how to post it. The list marks which
+   items have saved results. **Measure a feature** in the item marks a ruler and a feature on one
+   of the set's photos and computes the dimension. Asking again, deciding, pricing, drafting and
+   searching ask for the code (*demo: the code unlocks saving, drafts, prices, projects and captures*,
    or *Sign in with the access code to use this.*). **Find a part**, **Build and reuse** and
-   **Profile** are read-only: the search for the frappé maker's agitator rod with its four
+   **Profile** are read-only: the search for the frappé maker's agitator rod with its plan (the
+   search phrasings, each a Marketplace link, and the match pattern), its four
    candidates and the maker's part (OEM 990010200) that **Search the web** found, with its
    link; the projects proposed from the demo shelf (a homework workstation, a smart mirror
-   for the hall); the skills and their levels. Where the owner would save, plan, search or
+   for the hall), each with its drawn picture; the skills and their levels. Where the owner would save, plan, search or
    propose, the sign-in line.
 
 ### With the access code (about ten minutes)
@@ -269,8 +275,9 @@ Items are private by default. The owner can mark an item public; the demo set lo
 A visitor without the code sees a public item's values, photos and drawn pictures, and never:
 
 - where it is kept, the owner's notes, a voice note or a clip;
-- a draft, the listing details (the lowest acceptable price and the reason for selling are
-  private even from the draft), price guidance, a decision or its cards;
+- the lowest acceptable price, the reason for selling, the pickup area, the note said with a
+  decision, or the sales the owner reported (a public item's drafts, price guidance, Decide
+  cards, ideas and the plan chosen are shown as saved, masked like the item);
 - a search made from values or for a private item, a project with a private item on it, an
   outcome not shared, the notes on a search or a listing, the budget or the radius, or the
   Inbox's private captures. The searches for public items, their candidates and listings, the

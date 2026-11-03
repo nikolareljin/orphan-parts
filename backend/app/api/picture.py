@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.api.deps import DeciderDep, PicturesDep, PlannerDep
 from app.api.model_errors import as_http
-from app.ops.door import live_request
+from app.ops.door import for_visitor, live_request
 from app.picture import OFF_LINE, Picture, PictureList, Pictures, PicturesOffError
 
 router = APIRouter(prefix="/api/items", tags=["inventory"])
@@ -84,7 +84,9 @@ async def draw_card(
 def card_pictures(
     item_id: int, scenarios_id: int, card: int, pictures: PicturesDep, decider: DeciderDep
 ) -> PictureList:
-    """The pictures drawn for a reuse card, and whether this server draws any."""
+    """The pictures drawn for a reuse card, and whether this server draws any; for the demo
+    visitor, a public item's (404 otherwise)."""
+    decider.inventory.get(item_id, public_only=for_visitor())
     return pictures.card_list(decider.scenarios_by_id(item_id, scenarios_id), card)
 
 
@@ -92,7 +94,9 @@ def card_pictures(
 def card_picture(
     item_id: int, scenarios_id: int, card: int, n: int, pictures: PicturesDep, decider: DeciderDep
 ) -> Response:
-    """One picture of a reuse card as JPEG, ``1`` first."""
+    """One picture of a reuse card as JPEG, ``1`` first; for the demo visitor, a public
+    item's (404 otherwise)."""
+    decider.inventory.get(item_id, public_only=for_visitor())
     return _jpeg(pictures.card_read(decider.scenarios_by_id(item_id, scenarios_id), card, n))
 
 

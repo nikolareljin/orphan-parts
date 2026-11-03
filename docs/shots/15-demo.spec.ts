@@ -60,3 +60,22 @@ test('the visitor on Profile', async ({ shots, page }) => {
   test.skip(!(await skills.isVisible()), 'Profile shows the visitor no skills on this version')
   await shots.take('07-visitor-profile')
 })
+
+test('the visitor reads the saved results', async ({ shots, page }) => {
+  // the Decide cards of a build item, with its reuse card's picture and the plan chosen
+  let item = await openItem(page, 'Dell U2419H monitor, 24 inch')
+  const cards = item.getByRole('region', { name: 'What to do with it' })
+  await cards.waitFor({ state: 'visible', timeout: 10_000 }).catch(() => undefined)
+  test.skip(!(await cards.isVisible()), 'Decide shows the visitor no saved cards on this version')
+  await shots.show(cards)
+  await shots.take('10-visitor-decide')
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+  // a sell draft in Marketplace's fields, and a give-away with how to post it
+  item = await openItem(page, 'Sun flat panel monitor')
+  await shots.show(item.getByRole('region', { name: 'Marketplace handoff' }))
+  await shots.take('11-visitor-sell-draft')
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+  item = await openItem(page, 'Older ThinkPad, type 9461')
+  await shots.show(item.getByRole('region', { name: 'Marketplace handoff' }))
+  await shots.take('12-visitor-give-draft')
+})

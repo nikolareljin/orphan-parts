@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type Picture as Drawn } from '../lib/api'
 import { pictureCaption } from '../lib/picture'
 import GatedImage from './GatedImage'
+import { NeverRun } from './Saved'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -72,7 +73,9 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
           </form>
           <p className="hint">
             Draws what the item could become, or the item itself if left blank. Marked as drawn; never counted as evidence.
+            {pictures.length > 0 && ' Drawing again adds a picture; the ones below stay.'}
           </p>
+          {pictures.length === 0 && enabled && <NeverRun step="picture" />}
         </>
       )}
       {off && !demo && <p className="muted">Drawing pictures is turned off on this server.</p>}

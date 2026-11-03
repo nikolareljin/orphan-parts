@@ -39,10 +39,10 @@ named, each once.
 
 Never by itself. One call per click on the live door; showing an item, writing scenarios,
 proposing projects, opening a project or deciding draws nothing. The demo visitor is refused (`403`) like
-every other call that spends, and sees only the pictures already drawn for a public item; the
-key is never used without the code. Scenarios and projects are not shown to the demo visitor,
-so a card's or a project's **Draw it** is disabled for them with *Sign in with the access code
-to draw.* The switch is `PICTURE_ENABLED` (off by
+every other call that spends, and sees only the pictures already drawn for a public item, a
+reuse card of its saved cards or a project built on public items; the key is never used without
+the code. In place of a card's or a project's **Draw it** the visitor reads *Sign in with the
+access code to draw.* The switch is `PICTURE_ENABLED` (off by
 default): while it is off the route answers `503` with *pictures are off on this server
 (PICTURE_ENABLED)*, and the section shows one line saying pictures are off, no field and no button; a card or a
 project shows *Pictures are off on this server.* in place of **Draw it**.

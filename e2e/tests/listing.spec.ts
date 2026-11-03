@@ -108,7 +108,7 @@ test('listing details, then the Marketplace handoff: fields to copy, the create 
   await expect(kept.getByLabel(/Clean the outside/)).toBeChecked()
   await expect(again.listing.getByLabel('Area', { exact: true })).toHaveValue('Astoria')
   // written again from the same details: a new draft, no new details version
-  await again.listing.getByRole('button', { name: 'Write the draft' }).click()
+  await again.listing.getByRole('button', { name: 'Write a new draft' }).click()
   await expect(kept).toContainText('draft 2')
   await expect(again.listing.getByRole('form', { name: 'Listing details' })).toContainText('Details saved (version 1)')
 

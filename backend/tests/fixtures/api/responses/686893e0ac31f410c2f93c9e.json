@@ -1,0 +1,713 @@
+{
+  "endpoint": "/responses",
+  "op": "price",
+  "model": "muse-spark-1.3",
+  "digest": "686893e0ac31f410c2f93c9e",
+  "request": {
+    "include": [
+      "web_search_call.results"
+    ],
+    "input": [
+      {
+        "content": [
+          {
+            "text": "name: Laptop motherboard, no processor\nitem_type: motherboard\ncondition: the processor socket is empty\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\ncurrency: USD\nmarket: US\nConfirmed fields (key: value):\n- condition_notes: used board, CPU missing from socket, dust and tape residue visible",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You find what a used item sells for. Search the web for current listings and completed sales of the same model in the same condition. Report only prices you saw on a page you searched, one comparable per page, with its URL; never invent a listing, a sale or a price. Mark a comparable 'sold' only when the page says the item sold or was bought at that price; everything else is 'asking'. Give the date on the page when there is one. Then give a low, high and typical estimate in the requested currency with a one-line basis, and caveats for whatever makes the figures uncertain. Plain words, no hype. Search at most 4 times, then answer with what those searches found.",
+    "max_output_tokens": 900,
+    "max_tool_calls": 4,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "Findings",
+        "schema": {
+          "$defs": {
+            "Comparable": {
+              "additionalProperties": false,
+              "description": "One listing or sale the model found, with the page it rests on.",
+              "properties": {
+                "condition": {
+                  "title": "Condition",
+                  "type": "string"
+                },
+                "currency": {
+                  "title": "Currency",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "asking",
+                    "sold"
+                  ],
+                  "title": "Kind",
+                  "type": "string"
+                },
+                "observed": {
+                  "description": "the date on the page, or the day it was seen",
+                  "title": "Observed",
+                  "type": "string"
+                },
+                "price": {
+                  "title": "Price",
+                  "type": "number"
+                },
+                "source_title": {
+                  "title": "Source Title",
+                  "type": "string"
+                },
+                "source_url": {
+                  "title": "Source Url",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "title",
+                "price",
+                "currency",
+                "condition",
+                "observed",
+                "source_url",
+                "source_title"
+              ],
+              "title": "Comparable",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a price call: every property required, no extras.",
+          "properties": {
+            "basis": {
+              "title": "Basis",
+              "type": "string"
+            },
+            "caveats": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Caveats",
+              "type": "array"
+            },
+            "comparables": {
+              "items": {
+                "$ref": "#/$defs/Comparable"
+              },
+              "title": "Comparables",
+              "type": "array"
+            },
+            "currency": {
+              "title": "Currency",
+              "type": "string"
+            },
+            "estimate_high": {
+              "title": "Estimate High",
+              "type": "number"
+            },
+            "estimate_low": {
+              "title": "Estimate Low",
+              "type": "number"
+            },
+            "estimate_typical": {
+              "title": "Estimate Typical",
+              "type": "number"
+            }
+          },
+          "required": [
+            "comparables",
+            "estimate_low",
+            "estimate_high",
+            "estimate_typical",
+            "currency",
+            "basis",
+            "caveats"
+          ],
+          "title": "Findings",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    },
+    "tools": [
+      {
+        "search_context_size": "low",
+        "type": "web_search",
+        "user_location": {
+          "country": "US",
+          "type": "approximate"
+        }
+      }
+    ]
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "max_tool_calls": 4,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "Findings",
+        "schema": {
+          "type": "object",
+          "$defs": {
+            "Comparable": {
+              "additionalProperties": false,
+              "description": "One listing or sale the model found, with the page it rests on.",
+              "properties": {
+                "condition": {
+                  "title": "Condition",
+                  "type": "string"
+                },
+                "currency": {
+                  "title": "Currency",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "asking",
+                    "sold"
+                  ],
+                  "title": "Kind",
+                  "type": "string"
+                },
+                "observed": {
+                  "description": "the date on the page, or the day it was seen",
+                  "title": "Observed",
+                  "type": "string"
+                },
+                "price": {
+                  "title": "Price",
+                  "type": "number"
+                },
+                "source_title": {
+                  "title": "Source Title",
+                  "type": "string"
+                },
+                "source_url": {
+                  "title": "Source Url",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "title",
+                "price",
+                "currency",
+                "condition",
+                "observed",
+                "source_url",
+                "source_title"
+              ],
+              "title": "Comparable",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a price call: every property required, no extras.",
+          "properties": {
+            "basis": {
+              "title": "Basis",
+              "type": "string"
+            },
+            "caveats": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Caveats",
+              "type": "array"
+            },
+            "comparables": {
+              "items": {
+                "$ref": "#/$defs/Comparable"
+              },
+              "title": "Comparables",
+              "type": "array"
+            },
+            "currency": {
+              "title": "Currency",
+              "type": "string"
+            },
+            "estimate_high": {
+              "title": "Estimate High",
+              "type": "number"
+            },
+            "estimate_low": {
+              "title": "Estimate Low",
+              "type": "number"
+            },
+            "estimate_typical": {
+              "title": "Estimate Typical",
+              "type": "number"
+            }
+          },
+          "required": [
+            "comparables",
+            "estimate_low",
+            "estimate_high",
+            "estimate_typical",
+            "currency",
+            "basis",
+            "caveats"
+          ],
+          "title": "Findings"
+        },
+        "strict": true
+      }
+    },
+    "tools": [
+      {
+        "type": "web_search",
+        "user_location": {
+          "type": "approximate",
+          "country": "US"
+        },
+        "search_context_size": "low"
+      }
+    ],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aea1af6cd191fcfb86b4311",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793727222.0,
+    "completed_at": 1793727245.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aea1af6cd191fcfb86b4311:rs_6a90015e-4227-49b2-ab11-7c19ffaf826e",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "rs_b397487d-48cc-4349-9207-86410f262493",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "I'll search for comparable used laptop motherboards to estimate the value of your processor-less board.",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "phase": "commentary",
+        "status": "completed"
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_dd9f01b1-3726-49d5-8730-941ed3435e41",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "used laptop motherboard no CPU processor empty socket for sale"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "Can someone tell me what all these parts are worth as a single lot",
+            "url": "https://www.vogons.org/viewtopic.php?p=1257790",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Close Up of Motherboard Old Laptop with Empty Socket Base for CPU, and Laptop Processor with Coller on White Background Stock Image - Image of hardware, base: 170764147",
+            "url": "https://www.dreamstime.com/close-up-motherboard-old-laptop-empty-socket-base-cpu-processor-coller-white-background-image170764147",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Motherboard Second Hand: Reliable & Affordable Options",
+            "url": "https://www.accio.com/plp/motherboard-second-hand",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Computer Memory, Motherboards & Processors for Sale in Clapham, London | Gumtree",
+            "url": "https://www.gumtree.com/p/memory-motherboards-processors/new-asrock-mini-itx-b85m-itx-socket-1150-intel-motherboard-/1508558683",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Desoldering CPU to use somewhere else.",
+            "url": "https://pt.ifixit.com/Answers/View/350488/Desoldering+CPU+to+use+somewhere+else.",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Used Laptop Motherboard - High Quality Tested Units",
+            "url": "https://www.alibaba.com/showroom/used-motherboard-laptop_5.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Buying CPUs, Laptops, Motherboards, Silver Plated Brass",
+            "url": "https://www.scrapmetalforum.com/scrap-buyers-sellers/30597-span-style=-font-size-13px;-buying-cpus-laptops-motherboards-silver-plated-brass-post282767.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Discarded Computer Motherboards: Bulk & Custom Options",
+            "url": "https://www.accio.com/plp/discarded-computer-motherboards",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Close Up of Laptop Processor with Cooler and Motherboard Old Laptop with Empty Socket Base for CPU on White Background Stock Image - Image of empty, component: 170758159",
+            "url": "https://www.dreamstime.com/close-up-laptop-processor-coller-motherboard-old-empty-socket-base-cpu-white-background-image170758159",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Computer scrap prices: Find top rates now",
+            "url": "https://www.accio.com/plp/computer-scrap-prices",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Close Up of Motherboard Old Laptop with Empty Socket Base for CPU on White Background Stock Photo - Image of component, micro: 170757502",
+            "url": "https://www.dreamstime.com/close-up-motherboard-old-laptop-empty-socket-base-cpu-white-background-image170757502",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_0b3cdf38-0795-4fde-8c1b-ce9b9b3d19b1",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "laptop motherboard for parts missing CPU sold eBay"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "FAULTY HP COMPAQ 615 LAPTOP MOTHERBOARD + CPU for Spare or Repair | eBay",
+            "url": "https://www.ebay.ie/itm/196307602558?itmmeta=01J5Z43WP4XAY6BMNMJR71VPXC&hash=item2db4d84c7e:g:ZEIAAOxyWt5SWZd7&amdata=enc%3AAQAJAAAAwMxmj%2BiGvOveHXEBClPb29jX0oEiUsjAbOIAJHZxy8%2F29DHV%2B52Zw4GK6QrelQqljAMtqKfIn1eEsTYHKkpwTDib%2B2FIDh7tX8Cp%2FOIvazRNwAIZbSMlTfV%2FP%2F%2BarFrDJPj3VASzNnlYspaKYK%2Fg0sBbwrMexTeWDc5iXSEFVPehUnpsQdpNu9gNpPTkHHkGGN%2FggOq8qTXE4U%2BizXlTZ7JnXh2SAMa%2F%2BgPcNnIy9q4SZDFRTU9AtsET0VQ9SgeFtw%3D%3D%7Ctkp%3ABk9SR5DLj-SvZA",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Dell Inspiron 14 5400 2in1 Motherboard Intel i5-1035G1 3.6GHz Motherboard XWV63  | eBay",
+            "url": "https://www.ebay.com.au/itm/384764116306?mkcid=1&mkrid=705-53470-19255-0&siteid=15&campid=STIPPEDASNOREFERRER&customid=nxNL&toolid=10001&mkevt=1",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "FAULTY HP COMPAQ 615 LAPTOP MOTHERBOARD + CPU for Spare or Repair | eBay",
+            "url": "https://www.ebay.com.sg/itm/196307602558",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "TOSHIBA Satellite L875 Laptop AMD Motherboard H000043850 - (for Parts /Repair) | eBay",
+            "url": "https://www.ebay.com.sg/itm/326092094604?itmmeta=01HVMBK1J66VC89KKXYHWD8VFN&hash=item4bec9a7c8c:g:YcsAAOSwo9VbBN9T",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Faulty Dell XPS 9320 Motherboard Intel Core i7-1260P CPU 16GB RAM V0059 LA-L091P • £89.99",
+            "url": "https://picclick.co.uk/Faulty-Dell-XPS-9320-Motherboard-Intel-Core-i7-1260P-355543788776.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "FAULTY HP COMPAQ 615 LAPTOP MOTHERBOARD + CPU for Spare or Repair  | eBay",
+            "url": "https://www.ebay.ca/itm/196307602558?itmmeta=01J2W0D4WTNMDFGNXFY7YB3B4K&hash=item2db4d84c7e:g:ZEIAAOxyWt5SWZd7",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Dell XPS 13 9365 FAULTY Motherboard  i5-7Y54 CPU 8GB 0DC6H2 LA-D781P (079/17)  | eBay",
+            "url": "https://www.ebay.com.au/itm/384989328699",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "*AS IS* DELL XPS L502X Intel Socket G2 DDR3 Laptop Motherboard 0C47NF *AS IS*  | eBay",
+            "url": "https://www.ebay.com.au/itm/224838993280",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "ASUS FX53VD INTEL i7-7700HQ 2.8GHz CPU MOTHERBOARD 60NB0DW0-MB3200 AS-IS!! READ!  | eBay",
+            "url": "https://www.ebay.com.au/itm/176646769090",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "ASUS E502S Laptop Intel Motherboard Mainboard Celeron N3000 CPU 60NB0B70-MB2120  | eBay",
+            "url": "https://www.ebay.com.au/itm/284906089850",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "TOSHIBA SATELLITE C650D Motherboard AMD Athlon II CPU | Laptop | Mainboard",
+            "url": "https://picclick.ca/Toshiba-Satellite-C650D-Motherboard-with-CPU-AMD-Atlhon-162858075793.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Fujitsu Lifebook U727 Laptop Motherboard Mainbord i5-6200U CP714955-Z4 NO VIDEO*  | eBay",
+            "url": "https://www.ebay.com.au/itm/284906036429",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_7a31f4b8-62d1-4712-9e38-d15028c7f837",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "used laptop motherboard untested no processor price"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "Lenovo ThinkPad SL510 Hauptplatine 63Y2102 Intel Core 2 Duo T6670, ungetestet • EUR 11,17",
+            "url": "https://picclick.de/Lenovo-ThinkPad-SL510-Motherboard-63Y2102-Intel-Core-2-165444770620.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Scheda madre Lenovo U310 Intel i3-3217U DA0LZ7MB8E0 usata, non testata • EUR 12,04",
+            "url": "https://picclick.it/Lenovo-U310-Motherboard-Intel-i3-3217U-DA0LZ7MB8E0-Used-Untested-154791760829.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Used Lenovo G570 Intel Laptop Motherboard LA-675AP 11013647 - UBB.threads",
+            "url": "https://www.ubbcentral.com/store/item/LMB163-Lenovo-G570-Intel-Laptop-Motherboard-LA-675AP-11013647_254104270618.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Used Motherboard For MSI Z370 GAMING PLUS DDR4 No Processor *Untested* - UBB.threads",
+            "url": "https://ubbcentral.com/store/item/Motherboard-For-MSI-Z370-GAMING-PLUS-DDR4-No-Processor-Untested-_305438327926.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Lenovo g580 untested motherboard g4858 48.4sg09 011 b305 used a",
+            "url": "https://www.bazaraki.com/adv/4754560_lenovo-g580-untested-motherboard-g4858-48-4sg09-011-b305-used-a/",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Lenovo thinkpad x240 motherboard fru 04x5160 i54300u used b untested",
+            "url": "https://www.bazaraki.com/adv/4754675_lenovo-thinkpad-x240-motherboard-fru-04x5160-i5-4300u-used-b-untested/?p=20",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Acer Aspire 5552 Motherboard AMD Athlon II X2 P340 NEW75 LA-5912P UNTESTED • £29.99",
+            "url": "https://picclick.co.uk/Acer-Aspire-5552-Motherboard-AMD-Athlon-II-X2-266011888575.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "165 ads for asus motherboard in Buy & Sell in Ontario | Kijiji Marketplaces",
+            "url": "https://www.kijiji.ca/b-achat-et-vente/ontario/asus-motherboard/k0c10l9004",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Lenovo thinkpad t410 intel motherboard 63y1583 09a21 3 48.4fz07.031 unteste",
+            "url": "https://www.bazaraki.com/adv/4754566_lenovo-thinkpad-t410-intel-motherboard-63y1583-09a21-3-48-4fz07-031-untest/",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Olivetti M4-4X/M4-6X BA2054 Motherboard Intel 486 SX 25 MHz 4 MB ram UNTESTED • £39.99",
+            "url": "https://picclick.co.uk/Olivetti-M4-4X-M4-6X-BA2054-Motherboard-Intel-486-SX-25-326142023332.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "DELL LATITUDE D620 Laptop Motherboard System Board Untested",
+            "url": "https://picclick.co.uk/Dell-Latitude-D620-Laptop-Motherboard-System-Board-Untested-133532765395.html",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Untested laptops – Used & Cheap Deals | PC Laptops & Netbooks | Gumtree",
+            "url": "https://www.gumtree.com/for-sale/computers-software/computers-pcs-laptops/laptops/uk/srpsearch+untested+laptops",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "reasoning",
+        "id": "rs_6aea1af6cd191fcfb86b4311:rs_3379a1d7-37ab-4030-b047-1095945153a9",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "rs_bf545db3-1898-431d-99bc-3e0f73886e9b",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Those broad searches were inconclusive, so I'll now target specific eBay listings to gather concrete prices.",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "phase": "commentary",
+        "status": "completed"
+      },
+      {
+        "type": "web_search_call",
+        "id": "ws_call_e448c0e9-9f82-4023-a1ec-b61c90fa5025",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "site ebay.com laptop motherboard untested for parts"
+        },
+        "results": [
+          {
+            "type": "text_result",
+            "title": "LMB038 - HP/Compaq ZV6000 R4000 AMD Laptop Motherboard 383901-001 - UNTESTED | eBay",
+            "url": "https://www.ebay.com.my/itm/264131461633?itmmeta=01KEPYXBAJ95HV42E6V5WD1C2N&hash=item3d7f764201:g:Qi8AAeSwWv5ofrtp&itmprp=enc%3AAQAKAAAA4NHOg0D50eDiCdi%2FfP0r02ssYFJ%2BMWqs%2FlAk%2F7gAr1oa74nleUSdmJLOXUrA6OS9eM5AatanMUupb%2BR%2BZQo38RYW4WyBWVbR6cBGi70Zhrm3bHYUjIB5JjtfRpkoBec6XOxt9O1xLnXhff1EffxNrKg8lwufGS2Hk0pXPHm%2BHg4tWP4tND8Cge6FApvhn0zH7vFkLo2DjM8votCNid8Z5qQYRo1WzF2Lfz%2F0zxsg5h4Tl6lxIER4xJ0Wtvu097txJMn6yaz%2FtxoMwmKA8DouJP88s5rxkRwFTGyCmof77WRN%7Ctkp%3ABFBMtLX13vVm",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "*AS IS* DELL XPS L502X Intel Socket G2 DDR3 Laptop Motherboard 0C47NF *AS IS*  | eBay",
+            "url": "https://www.ebay.com.au/itm/224838993280",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Acer Aspire V3-571G Q5WV1 D05 Motherboard Main Board Nvidia GT   untested",
+            "url": "https://www.ebay.com.au/itm/125641698210?itmmeta=01J0WMEDH5WJKHQH1QK2RZRPT5&hash=item1d40d42ba2:g:DicAAOSwTI5jiGcv",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Dell Inspiron 1545 Laptop Motherboard DP/N 0G849F Untested No Refunds. 178496694871 | eBay",
+            "url": "https://www.ebay.com.au/itm/167031837694",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "UNTESTED Genuine Sony Vaio Laptop Motherboard DA0HK9MB6D0 Rev D",
+            "url": "https://www.ebay.com.sg/itm/134937834500",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "UNTESTED Genuine Sony Vaio Laptop Motherboard DA0HK9MB6D0 Rev D  | eBay",
+            "url": "https://www.ebay.com.au/itm/134937834500",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "DELL INSPIRON N7010 DA0UM9MB6D0 MOTHERBOARD GENUINELY UNTESTED B403 | eBay",
+            "url": "https://www.ebay.com.my/itm/334335277761",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Pc Specialist Clevo Topstar U953 Motherboard i5 6200u Nvidia 940M 2GB *Faulty* | eBay",
+            "url": "https://www.ebay.com.sg/itm/256118050143",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "HP Compaq CQ56 - GENUINE UNTESTED MOTHERBOARD - PARTS - B484  | eBay",
+            "url": "https://www.ebay.com.au/itm/334534194345",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "M851 Foxconn Motherboard MBX-218 Intel G41 Sony Vaio Intel Laptop Mainboard  | eBay",
+            "url": "https://www.ebay.com/itm/357902295390",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Dell Inspiron N7010 Motherboard for sale | eBay",
+            "url": "https://www.ebay.ca/b/Dell-Inspiron-N7010-Motherboard/1244/bn_7023377716",
+            "snippet": ""
+          },
+          {
+            "type": "text_result",
+            "title": "Gaming Laptop Gtx | eBay",
+            "url": "https://www.ebay.ie/sch/99/i.html?_ipg=240&_nkw=gaming+laptop+gtx",
+            "snippet": ""
+          }
+        ]
+      },
+      {
+        "type": "reasoning",
+        "id": "rs_6aea1af6cd191fcfb86b4311:rs_a4ed162f-f9e1-4190-b06b-d5887baaa383",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_ab7714a4-4ebf-4117-a80b-faacb924fa77",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"basis\": \"Untested / for-parts laptop motherboards without CPU typically listed $10-$38 in searches found.\",\"caveats\": [\"Exact model, age, socket and GPU/RAM status unknown\", \"Board is untested with no tests_done and no faults given\", \"CPU missing from socket lowers value vs tested complete boards\", \"Dust and tape residue signals poor storage/cleaning needed\", \"Only asking listings found, no confirmed sold prices\"], \"comparables\": [{\"condition\": \"For parts or not working\", \"currency\": \"USD\", \"kind\": \"asking\", \"observed\": \"2026-11-03\", \"price\": 27.59, \"source_title\": \"Used Lenovo G570 Intel Laptop Motherboard LA-675AP 11013647 - UBB.threads\", \"source_url\": \"https://ubbcentral.com\", \"title\": \"Used Lenovo G570 Intel Laptop Motherboard LA-675AP 11013647\"}, {\"condition\": \"Untested\", \"currency\": \"GBP\", \"kind\": \"asking\", \"observed\": \"2026-11-03\", \"price\": 29.99, \"source_title\": \"Acer Aspire 5552 Motherboard AMD Athlon II X2 P340 NEW75 LA-5912P UNTESTED\", \"source_url\": \"https://picclick.co.uk\", \"title\": \"Acer Aspire 5552 Motherboard AMD Athlon II X2 P340 NEW75 LA-5912P UNTESTED\"}, {\"condition\": \"used, untested\", \"currency\": \"EUR\", \"kind\": \"asking\", \"observed\": \"2026-11-03\", \"price\": 12.04, \"source_title\": \"Scheda madre Lenovo U310 Intel i3-3217U DA0LZ7MB8E0 usata, non testata\", \"source_url\": \"https://picclick.it\", \"title\": \"Lenovo U310 Intel i3-3217U DA0LZ7MB8E0 used untested motherboard\"}], \"currency\": \"USD\", \"estimate_high\": 38.0, \"estimate_low\": 5.0, \"estimate_typical\": 20.0}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You find what a used item sells for. Search the web for current listings and completed sales of the same model in the same condition. Report only prices you saw on a page you searched, one comparable per page, with its URL; never invent a listing, a sale or a price. Mark a comparable 'sold' only when the page says the item sold or was bought at that price; everything else is 'asking'. Give the date on the page when there is one. Then give a low, high and typical estimate in the requested currency with a one-line basis, and caveats for whatever makes the figures uncertain. Plain words, no hype. Search at most 4 times, then answer with what those searches found.",
+    "usage": {
+      "input_tokens": 16390,
+      "input_tokens_details": {
+        "cached_tokens": 3283
+      },
+      "output_tokens": 2516,
+      "output_tokens_details": {
+        "reasoning_tokens": 1750
+      },
+      "total_tokens": 18906
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4996
+  },
+  "status": 200
+}

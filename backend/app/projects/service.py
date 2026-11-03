@@ -16,6 +16,7 @@ from app.find.service import Finder
 from app.inventory import Inventory, NotFoundError
 from app.inventory.parent import PARENT_FIELDS
 from app.inventory.schema import Item, ItemPatch
+from app.inventory.service import RESERVED_BY_PROJECT
 from app.model_api import ModelApiClient, text_part, user_message
 from app.projects import pack as packs
 from app.projects.schema import (
@@ -566,7 +567,10 @@ class Planner:
         wanted = "reserved" if self.inventory.committed_elsewhere(item_id, 0) else "available"
         item = self.inventory.get(item_id)
         if item.availability != "gone" and item.availability != wanted:
-            self.inventory.update(item_id, ItemPatch(availability=wanted))
+            # kept apart from an edit: the cards and drafts written before stay current
+            self.inventory.update(
+                item_id, ItemPatch(availability=wanted), change=RESERVED_BY_PROJECT + wanted
+            )
 
     def search_for(self, project_id: int, key: str) -> Project:
         """A missing requirement becomes a search request, with the budget left as its ceiling."""

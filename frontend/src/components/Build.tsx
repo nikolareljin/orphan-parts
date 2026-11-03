@@ -23,6 +23,8 @@ import {
 import { skillsLine } from '../lib/profile'
 import DrawIt from './DrawIt'
 import Modal from './Modal'
+import Markdown from './Markdown'
+import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
@@ -74,7 +76,14 @@ export default function Build({ demo = false }: { demo?: boolean }) {
         </p>
       )}
       {projects.length === 0 ? (
-        <p className="muted">{demo ? 'No projects to show yet.' : 'No projects yet. Press Propose above; ideas only use items in your inventory.'}</p>
+        demo ? (
+          <p className="muted">No projects to show yet.</p>
+        ) : (
+          <>
+            <p className="muted">No projects yet. Press Propose above; ideas only use items in your inventory.</p>
+            <NeverRun step="propose" />
+          </>
+        )
       ) : (
         <table className="evidence" aria-label="Projects">
           <thead>
@@ -501,6 +510,10 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
               <li key={r.key}>
                 {r.label}
                 {r.blocking ? '' : ' (optional)'}
+                {' '}
+                <a href={marketplaceSearch(r.label)} target="_blank" rel="noopener noreferrer" aria-label={`Search Marketplace for ${r.label}`}>
+                  Search Marketplace
+                </a>
                 {r.search_id !== null ? (
                   <span className="muted"> · search #{r.search_id} open on Find a part</span>
                 ) : (
@@ -559,7 +572,8 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         </ul>
       )}
       {project.steps.length > 0 && !underway && (
-        <details>
+        // the visitor reads the project whole: the steps are open for them
+        <details open={demo}>
           <summary>Steps</summary>
           <ol>
             {project.steps.map((s) => (
@@ -599,7 +613,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
           {project.sources.length > 0 && <p className="muted">Sources: {project.sources.join('; ')}</p>}
         </>
       )}
-      {underway && (
+      {(underway || packs.length > 0) && (
         <section className="packs" aria-label="Build pack">
           <h4>Build pack</h4>
           <p className="muted">
@@ -609,24 +623,15 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
           {demo ? (
             <SignInLine what="Write the build pack" />
           ) : (
+            underway && (
             <div className="row">
               <button type="button" disabled={busy} onClick={() => void writePack()}>
-                Write the build pack
+                {packs.length > 0 ? 'Write it again' : 'Write the build pack'}
               </button>
             </div>
+            )
           )}
-          {packs.length > 0 && (
-            <ul aria-label="Packs">
-              {packs.map((p) => (
-                <li key={p.id}>
-                  <a href={api.build.packUrl(p.id)} download>
-                    Download
-                  </a>{' '}
-                  {packLabel(p)}
-                </li>
-              ))}
-            </ul>
-          )}
+          {packs.length > 0 && <PackShown packs={packs} />}
         </section>
       )}
       {(project.status === 'building' || project.status === 'done') && (demo ? <OutcomeShown project={project} /> : <OutcomeSection project={project} busy={busy} onAct={act} />)}
@@ -828,4 +833,40 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
       )}
     </section>
   )
+}
+
+// The build pack read in place (the latest unless an earlier one is picked), and every version
+// listed with the Markdown file to download.
+function PackShown({ packs }: { packs: Pack[] }) {
+  const [shown, setShown] = useState<number | null>(null)
+  const pack = packs.find((p) => p.id === shown) ?? packs[packs.length - 1]
+  return (
+    <>
+      <ul aria-label="Packs">
+        {[...packs].reverse().map((p) => (
+          <li key={p.id}>
+            <a href={api.build.packUrl(p.id)} download>
+              Download
+            </a>{' '}
+            {packLabel(p)}{' '}
+            {p.id === pack.id ? (
+              <span className="badge">shown below</span>
+            ) : (
+              <button type="button" className="link" onClick={() => setShown(p.id)}>
+                Show
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      <Markdown text={pack.markdown} label={`Build pack ${pack.version}`} />
+    </>
+  )
+}
+
+// A Marketplace search for what a project still needs, opened by the owner or the visitor: the
+// requirement's words before the first comma or "or", which is what a seller would title it.
+function marketplaceSearch(label: string): string {
+  const words = label.split(/,| or /)[0].replace(/^(an?|the)\s+/i, '').trim()
+  return `https://www.facebook.com/marketplace/search/?query=${encodeURIComponent(words)}`
 }

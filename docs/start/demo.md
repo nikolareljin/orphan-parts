@@ -36,6 +36,22 @@ photo; a selection with none says so. `docker compose run --rm backend python -m
 samples --set /demo/set.yaml` checks in fixture mode that every sample has its recordings. The
 set loads with whatever files are present; a photo named but missing is skipped with a note.
 
+What the owner asked for each item is kept by the load as well, so the demo shows the answers
+and nothing is asked again when a section opens: `decide: true` writes the **Decide** cards
+(from the items loaded before it; the set's profile is the loader's, so they are written for an
+average person), `ideas: true` asks what it is good
+for, `reuse_picture: true` draws the first reuse card with **Draw it**, `decision:` records the
+plan chosen (`keep_fix`, `keep_spare`, `keep_build`, `sell`, `give`, `not_worth`; with
+`decision_note:`, never shown to a visitor) once everything else is asked; a search's `plan:
+true` writes its plan after its listings and web finds, and `propose: pictures: true` draws each
+kept project. Each of these is answered in fixture mode only by the recording of that very
+request, and listed as *not recorded yet* without one; for a new item, `./dev record-fixtures`
+replays what is recorded and buys only what is missing. Every item of the set has a saved
+outcome: the monitors, the T510 and the powerline adapter their cards, ideas, a reuse picture
+and *Keep and build*; the Sun monitor, the laptop board and the graphics card their price
+guidance, sell draft and *Sell*; the 9461 and the slot 1 processor their give draft and *Give
+away*; the agitator its cards and *Keep and fix*.
+
 An item may name a `picture:` (a template id such as `smart_mirror`, or a few words), drawn by
 Muse Image after its drafts; four items of the set do. A drawing is a paid call, so a live load
 draws it only with `PICTURE_ENABLED=1` (`./dev record-fixtures` sets it for its run unless the shell sets `PICTURE_ENABLED=0`). Fixture
@@ -59,13 +75,25 @@ spent and nothing is kept.
 ![The recorded reading of the graphics card: brand, model number, connector, certifications, condition notes](../assets/shots/demo/03-sample-reading.png)
 
 **My inventory** lists the set's items, marked public, read-only: their photos, values and
-drawn pictures, never a note, a location or a draft.
+drawn pictures, and what was asked for each, as it was saved (the list marks it under *Saved
+results*), never a note, a location or the lowest price.
 
 ![A public item opened by a visitor: its photos and values, read-only](../assets/shots/demo/04-visitor-item.png)
 
+Opening a section asks no model. **Decide** shows the cards (keep and fix, reuse it with the
+picture drawn of the first idea, sell or give away), the recommendation and the plan chosen;
+**Value** the price guidance; **Sell or give away** the whole listing in Marketplace's fields
+for a sale, and the free listing with how to post it for a give-away.
+
+![The Decide cards for a visitor: the recommendation, the reuse card's drawn picture, the plan chosen](../assets/shots/demo/10-visitor-decide.png)
+
+![The Sun monitor's sell draft for a visitor: title, price, category, condition, description and tags to copy](../assets/shots/demo/11-visitor-sell-draft.png)
+
+![The older ThinkPad's give-away for a visitor: the free listing and its warnings](../assets/shots/demo/12-visitor-give-draft.png)
+
 **Find a part**, **Build and reuse** and **Profile** are read-only too: the agitator's search
-with its candidates and what **Search the web** found, the projects proposed from the demo
-shelf, the skills and their levels. Wherever the owner would save, plan, search or propose,
+with its plan (the phrasings, each a Marketplace link), its candidates and what **Search the
+web** found, the projects proposed from the demo shelf with their drawn pictures, the skills and their levels. Wherever the owner would save, plan, search or propose,
 the page says *Sign in with the access code to use this.*
 
 ![Find a part for a visitor: the agitator's search, read-only](../assets/shots/demo/05-visitor-find.png)

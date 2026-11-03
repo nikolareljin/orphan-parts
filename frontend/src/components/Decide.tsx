@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { api, type Decision, type DecisionChoice, type Item, type Uses } from '../lib/api'
+import { api, type Decision, type DecisionChoice, type Item, type Scenarios as ScenarioSet, type Uses } from '../lib/api'
 import { CHOICES, LEADS_TO, candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from '../lib/decide'
 import { usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
+import { Earlier, NeverRun } from './Saved'
 import Scenarios from './Scenarios'
+import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -12,13 +14,16 @@ function message(err: unknown): string {
 // One place to decide what the item becomes: three scenarios written for the owner, then what it
 // is, what it is worth, what it is good for, what would complete it, and the choice. The rows
 // gather what the other panels answered; the uses and the scenarios are the model's and say so;
-// the choice is kept on the item as an event.
+// the choice is kept on the item as an event. Opening it asks no model: the answers kept are
+// shown as they were, the earlier ones a click away; asking again adds a new one. The demo
+// visitor (readOnly) reads the same, with no button that asks or decides.
 export default function Decide({
   item,
   guided,
   onDecide,
   onGuided,
   demo = false,
+  readOnly = demo,
 }: {
   item: Item
   // bumped when the Value panel writes a guidance: the worth row reads it again
@@ -28,6 +33,8 @@ export default function Decide({
   onGuided: () => void
   // the demo visitor: nothing is drawn for them
   demo?: boolean
+  // the demo visitor, or an item served as the visitor sees it: read, never ask or decide
+  readOnly?: boolean
 }) {
   const [view, setView] = useState<Decision | null>(null)
   const [note, setNote] = useState('')
@@ -39,6 +46,12 @@ export default function Decide({
   // bumped after a decision: the same choice again leaves the version as it was, yet the last
   // decision and its date change
   const [decided, setDecided] = useState(0)
+  // every set of cards and every answer of ideas kept, oldest first, and the ones shown (the
+  // latest unless an earlier one is picked)
+  const [cardsKept, setCardsKept] = useState<ScenarioSet[]>([])
+  const [usesKept, setUsesKept] = useState<Uses[]>([])
+  const [cardsShown, setCardsShown] = useState<number | null>(null)
+  const [usesShown, setUsesShown] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -52,11 +65,27 @@ export default function Decide({
       .catch((err: unknown) => {
         if (!cancelled) setError(message(err))
       })
+    // the earlier answers are a list beside the view; one that cannot be read lists none
+    api.decide
+      .history(item.id)
+      .then((list) => {
+        if (!cancelled) setCardsKept(list)
+      })
+      .catch(() => undefined)
+    api.decide
+      .usesHistory(item.id)
+      .then((list) => {
+        if (!cancelled) setUsesKept(list)
+      })
+      .catch(() => undefined)
     return () => {
       cancelled = true
     }
     // the item's version too: a decision, an edit or an accepted value changes the rows
   }, [item.id, item.version, decided, guided])
+
+  const cards = (cardsShown !== null && cardsKept.find((c) => c.id === cardsShown)) || view?.scenarios || null
+  const uses = (usesShown !== null && usesKept.find((u) => u.id === usesShown)) || view?.uses || null
 
   // The price call takes the currency and the place from the owner, on the Value panel's own
   // form; this row sends them there rather than ask with a currency it made up.
@@ -73,6 +102,8 @@ export default function Decide({
     try {
       const uses = await api.decide.uses(item.id)
       setView((current) => (current ? { ...current, uses } : current))
+      setUsesKept((kept) => [...kept, uses])
+      setUsesShown(null)
     } catch (err: unknown) {
       setError(message(err))
     } finally {
@@ -87,6 +118,8 @@ export default function Decide({
     try {
       const scenarios = await api.decide.scenarios(item.id)
       setView((current) => (current ? { ...current, scenarios } : current))
+      setCardsKept((kept) => [...kept, scenarios])
+      setCardsShown(null)
     } catch (err: unknown) {
       setError(message(err))
     } finally {
@@ -152,7 +185,7 @@ export default function Decide({
       {view === null && !error && <p className="muted">Loading…</p>}
       {view && (
         <Scenarios
-          scenarios={view.scenarios}
+          scenarios={cards}
           worth={view.worth}
           last={view.last}
           busy={busy}
@@ -160,8 +193,10 @@ export default function Decide({
           onChoose={(choice) => void choose(choice, 'cards')}
           onPrice={() => void askPrice()}
           demo={demo}
+          readOnly={readOnly}
         />
       )}
+      {view && <Earlier items={cardsKept} shown={cards?.id ?? null} onPick={(c) => setCardsShown(c.id)} what="cards" />}
       {refusal && refusedAt === 'cards' && (
         <p className="error" role="alert">
           Not decided: {refusal}
@@ -181,7 +216,7 @@ export default function Decide({
           <dt>What it is worth</dt>
           <dd>
             {worthLine(view.worth)}
-            {view.worth === null && (
+            {view.worth === null && !readOnly && (
               <>
                 {' '}
                 <button type="button" className="link" onClick={askWorth}>
@@ -201,10 +236,19 @@ export default function Decide({
               </>
             )}
             <span className="rules">{fillsLine(view.templates)}</span>{' '}
-            <button type="button" className="link" onClick={() => void askUses()} disabled={busy !== ''}>
-              {busy === 'uses' ? 'Working…' : view.uses ? 'Ask for ideas again' : 'Ask for ideas'}
-            </button>
-            {view.uses && <UsesView uses={view.uses} />}
+            {!readOnly && (
+              <button type="button" className="link" onClick={() => void askUses()} disabled={busy !== ''}>
+                {busy === 'uses' ? 'Working…' : uses ? 'Ask for ideas again' : 'Ask for ideas'}
+              </button>
+            )}
+            {uses ? (
+              <UsesView uses={uses} />
+            ) : readOnly ? (
+              <span className="muted">No ideas were asked for.</span>
+            ) : (
+              <NeverRun step="uses" />
+            )}
+            <Earlier items={usesKept} shown={uses?.id ?? null} onPick={(u) => setUsesShown(u.id)} what="ideas" />
           </dd>
 
           <dt>Parts it still needs</dt>
@@ -243,11 +287,16 @@ export default function Decide({
                 {view.last.note && <> · {view.last.note}</>}
               </p>
             )}
+            {!view.last && readOnly && <p className="muted">No plan chosen yet.</p>}
             {view.committed_to.length > 0 && (
               <p className="reserved" role="note">
                 {reservedLine(view.committed_to)}
               </p>
             )}
+            {readOnly ? (
+              <SignInLine what="Decide" />
+            ) : (
+              <>
             <div className="row">
               <label>
                 <span>Note</span>
@@ -265,6 +314,8 @@ export default function Decide({
               <p className="error" role="alert">
                 Not decided: {refusal}
               </p>
+            )}
+              </>
             )}
           </dd>
         </dl>

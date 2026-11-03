@@ -462,18 +462,22 @@ def test_the_draft_spends_and_the_rest_needs_the_code(tmp_path: Path) -> None:
     assert expensive("POST", "/api/items/3/drafts")
     for method, path in (
         ("PUT", "/api/items/3/sell-details"),
-        ("GET", "/api/items/3/sell-details"),
         ("GET", "/api/drafts/3/photos.zip"),
         ("POST", "/api/items/3/marketplace/sold"),
     ):
         assert not expensive(method, path) and not demo_allowed(method, path), path
+    # what was saved is read: the drafts, the listing details and the outcomes
+    for path in ("/api/items/3/sell-details", "/api/items/3/drafts", "/api/drafts/3"):
+        assert not expensive("GET", path) and demo_allowed("GET", path), path
     with TestClient(create_app(gated_settings(tmp_path))) as gated:
         gated.post("/api/access", json={"code": CODE})
         item_id = gated.post("/api/items", json={"item_type": "LCD monitor"}).json()["id"]
         gated.cookies.clear()
         assert gated.put(f"/api/items/{item_id}/sell-details", json={}).status_code == 403
         assert gated.post(f"/api/items/{item_id}/drafts", json={}).status_code == 403
-        assert gated.get(f"/api/items/{item_id}/marketplace").status_code == 403
+        # a private item is not there for the visitor
+        for path in ("sell-details", "drafts", "marketplace"):
+            assert gated.get(f"/api/items/{item_id}/{path}").status_code == 404, path
         # a public item too: the lowest price, the reason and the area stay with the owner
         gated.post("/api/access", json={"code": CODE})
         assert gated.post(f"/api/items/{item_id}/public", json={"public": True}).status_code == 200
@@ -481,16 +485,22 @@ def test_the_draft_spends_and_the_rest_needs_the_code(tmp_path: Path) -> None:
         assert saved.status_code == 200
         gated.cookies.clear()
         assert gated.get(f"/api/items/{item_id}").status_code == 200
+        shown = gated.get(f"/api/items/{item_id}/sell-details")
+        assert shown.status_code == 200
+        kept = shown.json()["details"]
+        assert kept["lowest_price"] is None and kept["reason"] == "" and kept["area"] == ""
+        assert kept["condition_words"].startswith("Works well")
         for path in (
             f"/api/items/{item_id}/sell-details",
             f"/api/items/{item_id}/drafts",
             f"/api/items/{item_id}/marketplace",
-            "/api/drafts/1/photos.zip",
             "/api/marketplace/us",
         ):
             seen = gated.get(path)
-            assert seen.status_code == 403, path
+            assert seen.status_code == 200, path
             assert "Denver" not in seen.text and "27.5" not in seen.text, path
+            assert "Astoria" not in seen.text, path
+        assert gated.get("/api/drafts/1/photos.zip").status_code == 403
         for path in ("listed", "sold", "given"):
             refused = gated.post(f"/api/items/{item_id}/marketplace/{path}", json={"price": 5})
             assert refused.status_code == 403, path

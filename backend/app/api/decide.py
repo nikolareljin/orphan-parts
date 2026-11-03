@@ -4,6 +4,7 @@ from app.api.deps import DeciderDep
 from app.api.model_errors import as_http
 from app.decide import Decision, DecisionCreate, Scenarios, Uses
 from app.inventory import Item
+from app.ops.door import for_visitor
 
 router = APIRouter(prefix="/api", tags=["decide"])
 
@@ -45,17 +46,34 @@ def decision_view(item_id: int, decider: DeciderDep) -> Decision:
     guidance with the strategy to start from, the latest uses and scenarios, the open searches
     from this item with their candidate counts, the templates it fills, its intent, the
     selected projects that count on it (`committed_to`) and the last decision. Nothing is
-    asked of a model."""
-    return decider.decision(item_id)
+    asked of a model. The demo visitor reads it for a public item (404 otherwise), without the
+    owner's note and with the searches and projects the visitor may read."""
+    return decider.decision(item_id, public_only=for_visitor())
+
+
+@router.get("/items/{item_id}/scenarios", response_model=list[Scenarios])
+def scenarios_history(item_id: int, decider: DeciderDep) -> list[Scenarios]:
+    """Every set of cards written for the item, oldest first, each with its model, cost and
+    date: asking again adds one and never erases the others. Nothing is asked of a model."""
+    decider.inventory.get(item_id, public_only=for_visitor())
+    return decider.all_scenarios(item_id)
+
+
+@router.get("/items/{item_id}/uses", response_model=list[Uses])
+def uses_history(item_id: int, decider: DeciderDep) -> list[Uses]:
+    """Every answer to what the item is good for, oldest first. Nothing is asked of a model."""
+    decider.inventory.get(item_id, public_only=for_visitor())
+    return decider.all_uses(item_id)
 
 
 @router.post("/items/{item_id}/decision", response_model=Item)
 def decide(item_id: int, spec: DecisionCreate, decider: DeciderDep) -> Item:
     """The owner's choice: `keep_build` sets the intent to build, `sell` and `give` to the
-    same, `keep_fix` and `not_worth` keep the item, the one to be repaired, the other with
-    the note saying why. `keep_fix` also adds the repair steps of the current scenarios to the
-    item's notes. The history gets `decided: <choice>: <note>`; the version is bumped when the
-    intent changes, a note is given or the notes gain the repair steps, not for the same
-    choice said again. With `version` set, a choice made from an older
-    version of the item is refused with 409 and nothing is written."""
+    same, `keep_fix`, `keep_spare` and `not_worth` keep the item: to be repaired, as it is
+    for when a part of it is wanted, or with the note saying why. `keep_fix` also adds the
+    repair steps of the current scenarios to the item's notes. The history gets
+    `decided: <choice>: <note>`; the version is bumped when the intent changes, a note is
+    given or the notes gain the repair steps, not for the same choice said again. With
+    `version` set, a choice made from an older version of the item is refused with 409 and
+    nothing is written."""
     return decider.decide(item_id, spec)

@@ -41,7 +41,9 @@ test('a project: its items, what it still needs, what to check', async ({ shots,
 
 test('select it and commit the items', async ({ shots, page }) => {
   const panel = await project(page)
-  await panel.getByRole('button', { name: 'Select and commit the items' }).click()
+  // the demo set selects its projects; on a set that does not, select it here
+  const select = panel.getByRole('button', { name: 'Select and commit the items' })
+  if (await select.count()) await select.click()
   const move = panel.getByRole('button', { name: 'Move it here' })
   await expect(panel.getByText('selected: items committed').or(move)).toBeVisible()
   if (await move.isVisible()) await move.click()
@@ -52,8 +54,9 @@ test('select it and commit the items', async ({ shots, page }) => {
 
 test('Draw it', async ({ shots, page }) => {
   const panel = await project(page)
-  await panel.getByRole('button', { name: /^Draw it: / }).click()
-  const picture = panel.getByRole('img', { name: /^Illustrative picture/ })
+  await panel.getByRole('button', { name: /^Draw (it|again): / }).click()
+  // the demo set draws each project once: the new picture joins the one kept
+  const picture = panel.getByRole('img', { name: /^Illustrative picture/ }).last()
   await expect(picture).toBeVisible({ timeout: 120_000 })
   await expect.poll(() => picture.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
   await shots.show(picture, 'center')
@@ -80,8 +83,9 @@ test('what is missing, as a Marketplace search', async ({ shots, page }) => {
 test('the build pack', async ({ shots, page }) => {
   const panel = await project(page)
   const packs = panel.getByRole('region', { name: 'Build pack' })
-  await packs.getByRole('button', { name: 'Write the build pack' }).click()
+  await packs.getByRole('button', { name: /^(Write the build pack|Write it again)$/ }).click()
   await expect(packs.getByRole('list', { name: 'Packs' })).toContainText('version 1')
+  await expect(packs.getByLabel(/^Build pack \d/)).toBeVisible()
   await shots.show(packs, 'center')
   await shots.take('08-build-pack')
 })

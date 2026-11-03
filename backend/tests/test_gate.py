@@ -462,6 +462,17 @@ DEMO_ROUTES = {
     ("get", "/api/items/{item_id}/photos/{n}"),
     ("get", "/api/items/{item_id}/pictures"),
     ("get", "/api/items/{item_id}/pictures/{n}"),
+    ("get", "/api/items/{item_id}/decide"),
+    ("get", "/api/items/{item_id}/scenarios"),
+    ("get", "/api/items/{item_id}/uses"),
+    ("get", "/api/items/{item_id}/drafts"),
+    ("get", "/api/items/{item_id}/price"),
+    ("get", "/api/items/{item_id}/sell-details"),
+    ("get", "/api/items/{item_id}/marketplace"),
+    ("get", "/api/items/{item_id}/scenarios/{scenarios_id}/reuse/{card}/pictures"),
+    ("get", "/api/items/{item_id}/scenarios/{scenarios_id}/reuse/{card}/pictures/{n}"),
+    ("get", "/api/drafts/{draft_id}"),
+    ("get", "/api/marketplace/us"),
     ("get", "/api/captures"),
     ("get", "/api/captures/{capture_id}"),
     ("get", "/api/captures/{capture_id}/photos/{n}"),
@@ -505,6 +516,9 @@ def _concrete(path: str, item_id: int, capture_id: int) -> str:
         .replace("{candidate_id}", "1")
         .replace("{project_id}", "1")
         .replace("{pack_id}", "1")
+        .replace("{scenarios_id}", "1")
+        .replace("{card}", "0")
+        .replace("{draft_id}", "1")
         .replace("{sample_id}", "dell-u2419h-label")
         .replace("{n}", "1")
     )

@@ -293,15 +293,17 @@ def gated(tmp_path: Path) -> Iterator[TestClient]:
         yield c
 
 
-def test_the_demo_visitor_is_refused_on_every_decide_route(gated: TestClient) -> None:
+def test_the_demo_visitor_reads_decide_and_is_refused_every_ask(gated: TestClient) -> None:
     gated.post("/api/access", json={"code": CODE})
     item = gated.post("/api/items", json={"item_type": "laptop"}).json()
     gated.post(f"/api/items/{item['id']}/public", json={"public": True})
     assert gated.get(f"/api/items/{item['id']}/decide").status_code == 200
     gated.cookies.clear()
+    # the view, as the owner left it, is read; asking a model or deciding needs the code
+    assert gated.get(f"/api/items/{item['id']}/decide").status_code == 200
     for method, path in (
         ("POST", f"/api/items/{item['id']}/uses"),
-        ("GET", f"/api/items/{item['id']}/decide"),
+        ("POST", f"/api/items/{item['id']}/scenarios"),
         ("POST", f"/api/items/{item['id']}/decision"),
     ):
         answer = gated.request(method, path, json={"choice": "sell"} if method == "POST" else None)

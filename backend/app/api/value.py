@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.deps import ValuerDep
 from app.api.model_errors import as_http
+from app.ops.door import for_visitor
 from app.value import Guidance, PriceReport, PriceReportCreate, PriceRequest
 
 router = APIRouter(prefix="/api", tags=["value"])
@@ -23,7 +24,9 @@ async def price_item(item_id: int, request: PriceRequest, valuer: ValuerDep) -> 
 @router.get("/items/{item_id}/price", response_model=list[Guidance])
 def price_history(item_id: int, valuer: ValuerDep) -> list[Guidance]:
     """Every guidance written for the item, newest last, each saying whether the item changed
-    since."""
+    since. The demo visitor reads those of a public item (404 otherwise); asking for a new
+    one is the owner's."""
+    valuer.inventory.get(item_id, public_only=for_visitor())
     return valuer.guidances(item_id)
 
 

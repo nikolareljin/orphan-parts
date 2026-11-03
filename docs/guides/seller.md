@@ -7,8 +7,8 @@ the handoff to the create page. Posting is yours.
 ## Step by step
 
 The pictures show the Sun monitor and the older ThinkPad from the demo set, with the drafts the
-demo set wrote for them. Without the access code none of this is shown, not even on a public
-item.
+demo set wrote for them. Without the access code a public item's drafts are shown read-only
+(see [The flow](#the-flow)); the listing details form is not.
 
 1. **Listing details.** In the item, **Sell or give away**. Under **Prepare to sell or give
    away**: **Listing type** (**Sell** or **Give away**), **Handover**, **Condition in your
@@ -82,8 +82,15 @@ or corrected before anything is drafted.
 ## The flow
 
 **Prepare to sell or give away** is a section of the item's dialog; **Sell** or **Give away**
-in [Decide](decide.md) scroll to it with the listing type set. It is behind the access code:
-the demo visitor sees neither the details nor a draft, not even on a public item.
+in [Decide](decide.md) scroll to it with the listing type set. Opening it asks no model: the
+latest draft is shown as kept, with **Earlier drafts (n)** to pick one before it, and **Write a
+new draft** adds a version; before the first, the section says what a draft is and what it
+costs. Without the access code a public item's drafts are read as written: every field to paste
+with its **Copy** button, the photo order, the warnings, the steps on Marketplace and the
+checklist (not ticked from there), and what happened after posting; a give-away shows the free
+listing and how to post it. The listing details form, the lowest price, the reason for selling
+and the pickup area are the owner's (*the owner's area* stands for it in the text), and
+**Download photos**, the ticks and the outcomes stay behind the code.
 
 1. **Listing details.** The listing type (sell or give away) and what a buyer asks about:
 

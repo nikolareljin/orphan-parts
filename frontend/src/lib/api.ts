@@ -180,7 +180,13 @@ export interface ItemSummary {
   version: number
   updated_at: string
   public: boolean
+  // on the list: the results kept for the item, read back without asking a model
+  saved?: SavedKind[]
+  // on the list: the last choice made for the item, '' when none
+  decided?: DecisionChoice | ''
 }
+
+export type SavedKind = 'cards' | 'ideas' | 'sell_draft' | 'give_draft' | 'price'
 
 export interface Item extends ItemSummary {
   faults: string
@@ -893,7 +899,7 @@ export interface Conflict {
 
 // Decide what an item becomes: what the rules say it fills, what the model proposes it is good
 // for, and one view that gathers what the app already answered about it.
-export type DecisionChoice = 'keep_fix' | 'keep_build' | 'sell' | 'give' | 'not_worth'
+export type DecisionChoice = 'keep_fix' | 'keep_spare' | 'keep_build' | 'sell' | 'give' | 'not_worth'
 
 export interface Use {
   title: string
@@ -1343,6 +1349,9 @@ export const api = {
   },
   decide: {
     view: (itemId: number) => getJson<Decision>(`/api/items/${itemId}/decide`),
+    // every set of cards and every answer of ideas kept, oldest first; reading asks no model
+    history: (itemId: number) => getJson<Scenarios[]>(`/api/items/${itemId}/scenarios`),
+    usesHistory: (itemId: number) => getJson<Uses[]>(`/api/items/${itemId}/uses`),
     uses: (itemId: number) => sendJson<Uses>('POST', `/api/items/${itemId}/uses`),
     scenarios: (itemId: number) => sendJson<Scenarios>('POST', `/api/items/${itemId}/scenarios`),
     // made from the item version the panel showed: a stale choice is refused with 409

@@ -6,11 +6,16 @@ match on the request digest holds for the files in the set."""
 import logging
 import shutil
 import wave
+from collections.abc import Awaitable, Callable
+from functools import partial
 from pathlib import Path
+from typing import TypeVar
 
 import yaml
 
 from app.config import Settings
+from app.decide import DecisionCreate
+from app.decide.service import Decider
 from app.demo.schema import DemoItem, DemoMeasurement, DemoSet, Outcome
 from app.extract import Extractor
 from app.extract.imaging import BadImageError, dimensions, prepare
@@ -33,6 +38,8 @@ from app.value import Valuer
 from app.value.schema import PriceRequest
 
 log = logging.getLogger("app.demo")
+
+T = TypeVar("T")
 
 SCRUB_MAX_PX = 1600
 SCRUB_MAX_BYTES = 40 * 1024 * 1024
@@ -131,11 +138,20 @@ class Loader:
         self.device_photos = DevicePhotos(settings, inventory)
         # geometry only: a measurement calls no model, so it is the same in every mode
         self.measurer = Measurer(settings, Profiles())
+        # the Decide cards, the ideas and the decision, as the owner's buttons ask for them
+        self.decider = Decider(
+            settings, client, inventory, planner.templates, planner, valuer, finder
+        )
 
     async def run(self, demo: DemoSet, base: Path) -> Outcome:
         out = Outcome(mode=self.settings.model_api_mode)
         self.currency, self.country = demo.currency, demo.country
         stubs_before = self.client.fixture_fallbacks
+        # the profile's answers first, so every step that reads them (the ideas, the cards, the
+        # proposals below) reads the same ones; marked as the loader's, the cards still say they
+        # are written for an average person until the owner saves the form
+        if demo.propose is not None:
+            self.planner.set_preferences(demo.propose.preferences, by_demo=True)
         # the set's keys to the ids the inventory gave, kept for whoever scores the run
         self.ids = ids = {}
         for item in demo.items:
@@ -192,6 +208,15 @@ class Loader:
                 out.cost_usd += candidate.cost_usd
             if search.web:
                 await self.search_web(search.key, created.id, out)
+            if search.plan:
+                planned = await self.exactly(
+                    f"search {search.key}: the search plan",
+                    partial(self.finder.plan, created.id),
+                    out,
+                )
+                if planned is not None and planned.plan is not None:
+                    out.plans += 1
+                    out.cost_usd += planned.plan.cost_usd
         if demo.propose is not None:
             try:
                 self.planner.set_preferences(demo.propose.preferences, by_demo=True)
@@ -203,6 +228,20 @@ class Loader:
             else:
                 out.projects += len(projects)
                 out.cost_usd += sum(p.cost_usd for p in projects)
+                if demo.propose.pictures and self.pictures is not None:
+                    pictures = self.pictures
+                    for project in projects:
+                        drawn = await self.exactly(
+                            f"project {project.title}: picture",
+                            partial(pictures.draw_project, project),
+                            out,
+                        )
+                        if drawn is not None:
+                            out.pictures += 1
+                            out.cost_usd += drawn.cost_usd
+                if demo.propose.packs:
+                    self.write_packs([p.id for p in projects], out)
+        self.record_decisions(demo, out)
         out.stub_answers = self.client.fixture_fallbacks - stubs_before
         log.info(
             "demo set loaded",
@@ -299,6 +338,16 @@ class Loader:
                 else:
                     out.voice_notes += 1
                     out.cost_usd += note.cost_usd
+        if item.price:
+            try:
+                guidance = await self.valuer.guide(
+                    created.id, PriceRequest(currency=self.currency, country=self.country)
+                )
+            except (ValueError, ModelApiError) as exc:
+                out.skipped.append(f"{item.key}: price guidance: {exc}")
+            else:
+                out.guidances += 1
+                out.cost_usd += guidance.cost_usd
         if item.draft is not None:
             try:
                 draft = await self.lister.draft(
@@ -314,16 +363,7 @@ class Loader:
                 out.cost_usd += draft.cost_usd
         if item.picture:
             await self.draw(item, created.id, out)
-        if item.price:
-            try:
-                guidance = await self.valuer.guide(
-                    created.id, PriceRequest(currency=self.currency, country=self.country)
-                )
-            except (ValueError, ModelApiError) as exc:
-                out.skipped.append(f"{item.key}: price guidance: {exc}")
-            else:
-                out.guidances += 1
-                out.cost_usd += guidance.cost_usd
+        await self.decide(item, created.id, out)
         return created.id
 
     async def measure(
@@ -360,6 +400,79 @@ class Loader:
         out.measurements += 1
         if item.accept_all:
             self.inventory.review(item_id, kept.assertion_id, "accepted")
+
+    async def exactly(self, what: str, call: Callable[[], Awaitable[T]], out: Outcome) -> T | None:
+        """One step the owner's button takes, answered in fixture mode only by the recording of
+        this very request (never a stub passed off as the model's answer): without one it is
+        left out and listed as not recorded yet."""
+        token = exact_replay.set(True)
+        try:
+            return await call()
+        except NoRecordingError:
+            out.unrecorded.append(f"{what} (one ./dev record-fixtures run makes it)")
+        except PicturesOffError:
+            out.unrecorded.append(f"{what} (left out: PICTURE_ENABLED is off)")
+        except (ValueError, LookupError, ModelApiError) as exc:
+            out.skipped.append(f"{what}: {exc}")
+        finally:
+            exact_replay.reset(token)
+        return None
+
+    async def decide(self, item: DemoItem, item_id: int, out: Outcome) -> None:
+        """What the owner asked under Decide, kept on the item as the buttons keep it: the
+        ideas and the cards (written from the items loaded before it) with the first reuse card
+        drawn, so the visitor reads them without asking a model; the plan chosen is recorded
+        at the end of the run (record_decisions)."""
+        if item.ideas:
+            uses = await self.exactly(f"{item.key}: ideas", lambda: self.decider.uses(item_id), out)
+            if uses is not None:
+                out.ideas += 1
+                out.cost_usd += uses.cost_usd
+        if item.decide:
+            cards = await self.exactly(
+                f"{item.key}: Decide cards", lambda: self.decider.scenarios(item_id), out
+            )
+            if cards is not None:
+                out.cards += 1
+                out.cost_usd += cards.cost_usd
+                if item.reuse_picture and cards.reuse and self.pictures is not None:
+                    pictures = self.pictures
+                    drawn = await self.exactly(
+                        f"{item.key}: reuse card picture",
+                        lambda: pictures.draw_card(cards, 0),
+                        out,
+                    )
+                    if drawn is not None:
+                        out.pictures += 1
+                        out.cost_usd += drawn.cost_usd
+
+    def write_packs(self, project_ids: list[int], out: Outcome) -> None:
+        """Each project selected as the owner's Select does, and its build pack written by the
+        rules; one whose item another selected project counts on stays proposed, said so."""
+        for project_id in project_ids:
+            try:
+                self.planner.select(project_id)
+                self.planner.write_pack(project_id)
+            except (ValueError, LookupError) as exc:
+                out.skipped.append(f"project {project_id}: build pack: {exc}")
+            else:
+                out.packs += 1
+
+    def record_decisions(self, demo: DemoSet, out: Outcome) -> None:
+        """The plan chosen for each item, recorded after everything else is asked: keep and fix
+        writes the repair steps into the item's notes, and nothing asked before may read them."""
+        for item in demo.items:
+            item_id = self.ids.get(item.key)
+            if item.decision is None or item_id is None:
+                continue
+            try:
+                self.decider.decide(
+                    item_id, DecisionCreate(choice=item.decision, note=item.decision_note)
+                )
+            except (ValueError, LookupError) as exc:
+                out.skipped.append(f"{item.key}: decision: {exc}")
+            else:
+                out.decisions += 1
 
     async def check_photos(self, item: DemoItem, item_id: int, out: Outcome) -> None:
         """The item's photos checked for private details, as an upload is, so the demo visitor

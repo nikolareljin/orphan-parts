@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "3fd383d915430a7f10c475e8",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Smart mirror built from monitor (brand DELL, certifications CUL, FCC, CE, VCI, GS, S, N, B, PC, NOM, MIC, input voltage 100-240 V, model number 1800FP), on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793727081,
+    "data": [
+      {
+        "b64_json": "@3fd383d915430a7f10c475e8-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 15438,
+      "output_tokens": 1207,
+      "total_tokens": 16645
+    }
+  },
+  "status": 200
+}

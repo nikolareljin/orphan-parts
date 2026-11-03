@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "4459456ca4804b55567f8836",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Homework workstation built from monitor (brand DELL, certifications CCC, ETL, condition notes part of label blacked out/redacted, housing ); A quiet desk with a large screen for homework once a working laptop and inputs are added., on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793731051,
+    "data": [
+      {
+        "b64_json": "@4459456ca4804b55567f8836-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 10720,
+      "output_tokens": 1101,
+      "total_tokens": 11821
+    }
+  },
+  "status": 200
+}

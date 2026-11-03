@@ -234,3 +234,42 @@ def mask_text(text: str) -> str:
         at = f.end
     out.append(text[at:])
     return "".join(out)
+
+
+# What a saved result holds that is never the owner's or the model's words: links, dates, the
+# model's name, kinds and states. Left as they are when a result is masked for the visitor.
+PLAIN_KEYS = frozenset(
+    {
+        "at",
+        "on",
+        "observed",
+        "sold_on",
+        "planned_at",
+        "edited_at",
+        "model",
+        "mode",
+        "kind",
+        "state",
+        "effort",
+        "difficulty",
+        "recommended",
+        "currency",
+        "estimate_label",
+        "key",
+        "group",
+        "name",
+    }
+)
+
+
+def mask_tree(value: object, key: str = "") -> object:
+    """A saved result (a model dump) with every private value in its text masked, as the demo
+    visitor gets it: walked through its lists and objects, links and the plain keys above left
+    as they are."""
+    if isinstance(value, dict):
+        return {k: mask_tree(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [mask_tree(v, key) for v in value]
+    if isinstance(value, str) and key not in PLAIN_KEYS and not key.endswith("url"):
+        return mask_text(value)
+    return value
