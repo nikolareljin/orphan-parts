@@ -53,7 +53,7 @@ def _saved_item(c: TestClient, *, public: bool = True) -> int:
     ).json()["id"]
     c.post(f"/api/items/{item}/fields", json={"field": "serial_number", "value": SERIAL})
     details = {
-        "condition_words": "works well",
+        "condition_words": f"works well; S/N {SERIAL} on the back",
         "handover": "pickup",
         "area": SECRETS[3],
         "asking_price": 35,

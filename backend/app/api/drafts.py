@@ -22,7 +22,7 @@ from app.listing import (
 from app.listing.marketplace import MarketplaceData, data
 from app.listing.service import Lister
 from app.ops.door import for_visitor
-from app.privacy import NotCheckedError
+from app.privacy import NotCheckedError, mask_text
 
 router = APIRouter(prefix="/api", tags=["listing"])
 
@@ -107,7 +107,19 @@ def get_sell_details(item_id: int, handoff: HandoffDep) -> SellDetailsRecord | N
     record = handoff.details(item_id)
     if record is None or not visitor:
         return record
-    kept = record.details.model_copy(update={"lowest_price": None, "reason": "", "area": ""})
+    shown = record.details
+    kept = shown.model_copy(
+        update={
+            "lowest_price": None,
+            "reason": "",
+            "area": "",
+            # the owner's words, masked as on a label (a serial number, a key)
+            **{
+                k: mask_text(getattr(shown, k))
+                for k in ("condition_words", "faults", "included_other", "untested", "availability")
+            },
+        }
+    )
     return record.model_copy(update={"details": kept})
 
 
