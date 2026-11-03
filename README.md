@@ -13,6 +13,11 @@ Meta's Muse models.
 
 ![How Orphan Parts Lens works](docs/assets/process.svg)
 
+> [!TIP]
+> **Hackathon conclusion:** what was built in the nine days, what had to change to get there, and
+> what comes next, on the docs site:
+> [Hackathon conclusion](https://nikolareljin.github.io/orphan-parts/project/conclusion/).
+
 | | |
 |---|---|
 | **Live demo** (temporary, while the hackathon is judged) | <https://orphan-parts.pages.dev>: without a code, the demo set's recorded answers, read-only; with an access code, uploads and the live models. It may be taken down after judging; [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/) works without it. |

@@ -21,6 +21,18 @@ later.*
 gate's allowances per account rather than per session, and the phone's own code tied to the
 account that paired it. See [Demo access](../operations/demo-access.md).
 
+## Email notifications
+**What.** The owner hears about what changed instead of looking for it: a listing brought back
+that fits a search, a draft or a build pack gone stale because an item changed, a price guidance
+that moved, a capture waiting in the Inbox.
+
+**Why.** Today every result waits on its page until the owner opens it; a part that turns up on
+Marketplace for a day is missed.
+
+**What it needs.** An address on an account (see accounts above), a notification setting per
+kind, and a mail sender; the events are already in the history, so each notice is one rule over
+them.
+
 ## The app on Google Play
 
 **What.** The Android app installed from the Play Store, signed with a store key and updated in
