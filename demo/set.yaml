@@ -12,6 +12,15 @@
 # A part's `parent_photos:` are photos of the device it came from, read once as a label (only a
 # recording of them answers in fixture mode); `parent_device:` is the owner's words about it and
 # `parent_device_model:` the model as its label states, saved as typed until that read is recorded.
+# What the owner asked under Decide is kept the same way, so the visitor reads the answers
+# rather than asking again: `decide: true` writes the three cards (from the items loaded
+# before it), `ideas: true` asks what it is good for, `reuse_picture: true` draws the first
+# reuse card, `decision:` records the plan chosen (keep_fix, keep_spare, keep_build, sell,
+# give, not_worth; `decision_note:` the owner's words with it, never shown to the visitor).
+# A search's `plan: true` writes its plan (phrasings, Marketplace links, pattern), and
+# `propose: pictures: true` draws each kept project. In fixture mode each of these is
+# answered only by the recording of that very request; a new item's are recorded once with
+# ./dev record-fixtures (it replays what is kept and buys only what is missing).
 title: a drawer of idle things
 currency: USD
 country: US
@@ -24,6 +33,10 @@ items:
     intent: build
     photos: [photos/dell-u2419h-label.jpg]
     picture: a second screen for the kitchen
+    decide: true
+    ideas: true
+    reuse_picture: true
+    decision: keep_build
     expect:
       fields:
         brand: Dell
@@ -35,6 +48,10 @@ items:
     intent: build
     photos: [photos/dell-1800fp-label.jpg]
     picture: smart_mirror
+    decide: true
+    ideas: true
+    reuse_picture: true
+    decision: keep_build
     expect:
       fields:
         brand: Dell
@@ -47,6 +64,8 @@ items:
     photos: [photos/sun-monitor-label.jpg, photos/sun-monitor-back.jpg]
     draft: sell
     price: true
+    decide: true
+    decision: sell
     expect:
       fields:
         brand: Sun Microsystems
@@ -60,6 +79,10 @@ items:
     photos: [photos/thinkpad-t510-inside.jpg, photos/thinkpad-t510-label.jpg]
     condition: opened; the keyboard and the palm rest are off
     picture: home_server
+    decide: true
+    ideas: true
+    reuse_picture: true
+    decision: keep_build
     expect:
       fields:
         brand: Lenovo
@@ -70,6 +93,8 @@ items:
     photos: [photos/thinkpad-9461-bottom.jpg, photos/thinkpad-9461-labels.jpg]
     holds_data: true
     draft: give
+    decide: true
+    decision: give
     expect:
       fields:
         brand: Lenovo
@@ -82,6 +107,9 @@ items:
     condition: the processor socket is empty
     draft: sell
     asking_price: "25"
+    price: true
+    decide: true
+    decision: sell
 
   # desktop parts from older machines
   - key: gpu_9800gt
@@ -92,6 +120,8 @@ items:
     condition: dust on the fan
     draft: sell
     price: true
+    decide: true
+    decision: sell
     expect:
       fields:
         brand: EVGA
@@ -102,6 +132,8 @@ items:
     intent: give
     photos: [photos/intel-slot-cpu.jpg, photos/intel-slot-cpu-fan.jpg]
     draft: give
+    decide: true
+    decision: give
     expect:
       fields:
         brand: Intel
@@ -114,6 +146,10 @@ items:
     photos: [photos/tplink-pa2010.jpg, photos/tplink-pa2010-label.jpg]
     condition: still in its plastic wrap; one unit, its twin is missing
     picture: home_automation_server
+    decide: true
+    ideas: true
+    reuse_picture: true
+    decision: keep_build
     expect:
       fields:
         brand: TP-Link
@@ -146,6 +182,8 @@ items:
       # the material wanted in a replacement (metal or plastic); the worn hub's plastic is in
       # the faults
       material: "metal"
+    decide: true
+    decision: keep_fix
     # the rod alone carries no model number, so the app asks which device it came from; the
     # answer: the drink mixer it came off, read from its photos (the label under its base, its
     # badge, the whole mixer and its side with the rod fitted), nothing typed: the recorded
@@ -161,6 +199,7 @@ searches:
     title: all-metal agitator rod for the frappé maker
     max_price: 20
     web: true
+    plan: true
     listings:
       - text: "@listings/L1.txt"
         asking_price: "12"
@@ -173,6 +212,7 @@ searches:
 
 propose:
   count: 3
+  pictures: true
   preferences:
     interests: a quiet desk for homework; a second screen for the kitchen; home automation; a smart mirror in the hall; a home server for the photos
     effort: low

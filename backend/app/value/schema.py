@@ -3,7 +3,16 @@
 from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+)
+
+from app.ops.door import for_visitor
+from app.privacy.text import mask_tree
 
 CURRENCY = r"^[A-Z]{3}$"
 DATE = r"^\d{4}-\d{2}-\d{2}$"
@@ -142,3 +151,9 @@ class Guidance(BaseModel):
     from_fixture: bool
     cost_usd: float
     at: str
+
+    # for the demo visitor, a private value written into any of its text is masked
+    @model_serializer(mode="wrap")
+    def _shown(self, handler: SerializerFunctionWrapHandler):  # type: ignore[no-untyped-def]
+        data = handler(self)
+        return mask_tree(data) if for_visitor() else data

@@ -334,7 +334,8 @@ def test_only_the_code_draws_a_project_or_a_card(tmp_path: Path) -> None:
         assert not demo_allowed("POST", path)
     # a project's pictures are read like the project: only one built on public items alone
     assert demo_allowed("GET", "/api/projects/3/pictures/1")
-    assert not demo_allowed("GET", "/api/items/2/scenarios/5/reuse/1/pictures")
+    # a reuse card's pictures are read like the item: only a public one's
+    assert demo_allowed("GET", "/api/items/2/scenarios/5/reuse/1/pictures")
     settings = gated_settings(tmp_path, fixtures_dir=RECORDED_FIXTURES, picture_enabled=True)
     with TestClient(create_app(settings)) as c:
         c.post("/api/access", json={"code": CODE})
@@ -353,7 +354,14 @@ def test_only_the_code_draws_a_project_or_a_card(tmp_path: Path) -> None:
         assert any(a["item_id"] != laptop for a in desk["allocations"])
         assert c.get(f"/api/projects/{desk['id']}/pictures").status_code == 404
         assert c.get(f"/api/projects/{desk['id']}/pictures/1").status_code == 404
-        assert c.get(f"{base}/pictures/1").status_code == 403
+        # the laptop is public: the card's picture is read, as drawn; nothing is drawn again
+        assert c.get(f"{base}/pictures").json()["pictures"][0]["n"] == 1
+        assert c.get(f"{base}/pictures/1").status_code == 200
+        c.post("/api/access", json={"code": CODE})
+        c.post(f"/api/items/{laptop}/public", json={"public": False})
+        c.cookies.clear()
+        assert c.get(f"{base}/pictures").status_code == 404
+        assert c.get(f"{base}/pictures/1").status_code == 404
 
 
 def test_the_draw_routes_are_in_the_openapi_document(client: TestClient) -> None:

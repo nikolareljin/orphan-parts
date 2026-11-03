@@ -23,6 +23,7 @@ import {
 import { skillsLine } from '../lib/profile'
 import DrawIt from './DrawIt'
 import Modal from './Modal'
+import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
@@ -74,7 +75,14 @@ export default function Build({ demo = false }: { demo?: boolean }) {
         </p>
       )}
       {projects.length === 0 ? (
-        <p className="muted">{demo ? 'No projects to show yet.' : 'No projects yet. Press Propose above; ideas only use items in your inventory.'}</p>
+        demo ? (
+          <p className="muted">No projects to show yet.</p>
+        ) : (
+          <>
+            <p className="muted">No projects yet. Press Propose above; ideas only use items in your inventory.</p>
+            <NeverRun step="propose" />
+          </>
+        )
       ) : (
         <table className="evidence" aria-label="Projects">
           <thead>

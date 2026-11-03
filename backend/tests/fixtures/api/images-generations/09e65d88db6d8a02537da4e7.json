@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "09e65d88db6d8a02537da4e7",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Second screen for computer built from monitor (brand DELL, certifications CCC, ETL, condition notes part of label blacked out/redacted, housing ); For an average person with household tools and no particular skill, adds a 24 inch display to a laptop or desktop, on a plain background, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793727064,
+    "data": [
+      {
+        "b64_json": "@09e65d88db6d8a02537da4e7-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4075,
+      "output_tokens": 1442,
+      "total_tokens": 5517
+    }
+  },
+  "status": 200
+}

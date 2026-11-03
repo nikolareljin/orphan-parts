@@ -2,9 +2,17 @@
 
 import re
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+)
 
 from app.listing.checklists import Mode, Step
+from app.ops.door import for_visitor
+from app.privacy.text import mask_tree
 
 
 class DraftFact(BaseModel):
@@ -98,6 +106,12 @@ class Draft(BaseModel):
     from_fixture: bool
     cost_usd: float
     at: str
+
+    # for the demo visitor, a private value written into any of its text is masked
+    @model_serializer(mode="wrap")
+    def _shown(self, handler: SerializerFunctionWrapHandler):  # type: ignore[no-untyped-def]
+        data = handler(self)
+        return mask_tree(data) if for_visitor() else data
 
 
 class StepChange(BaseModel):

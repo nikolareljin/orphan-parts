@@ -1,3 +1,5 @@
+import json
+import re
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
@@ -18,6 +20,8 @@ from app.listing import (
     StepChange,
 )
 from app.listing.marketplace import MarketplaceData, data
+from app.listing.service import Lister
+from app.ops.door import for_visitor
 from app.privacy import NotCheckedError
 
 router = APIRouter(prefix="/api", tags=["listing"])
@@ -39,16 +43,41 @@ async def write_draft(item_id: int, request: DraftRequest, lister: ListerDep) ->
         raise as_http(exc) from exc
 
 
+# the area the owner picks up in, as it reads in a draft the demo visitor is shown
+AREA_SHOWN = "the owner's area"
+
+
+def _shown(drafts: list[Draft], lister: Lister) -> list[Draft]:
+    """The drafts as the demo visitor reads them: the pickup area of the owner's listing
+    details left out of every field it was written into; the owner gets them whole."""
+    if not for_visitor() or not drafts:
+        return drafts
+    details, _ = lister.details(drafts[0].item_id)
+    area = details.area if details is not None else ""
+    if not area:
+        return drafts
+    # as a whole word, so a short area never eats into another word
+    found = re.compile(rf"(?<!\w){re.escape(json.dumps(area)[1:-1])}(?!\w)")
+    return [
+        Draft.model_validate(json.loads(found.sub(AREA_SHOWN, d.model_dump_json()))) for d in drafts
+    ]
+
+
 @router.get("/items/{item_id}/drafts", response_model=list[Draft])
 def list_drafts(item_id: int, lister: ListerDep) -> list[Draft]:
     """Every draft written for the item, newest last, each saying whether the item changed
-    since."""
-    return lister.drafts(item_id)
+    since. The demo visitor reads those of a public item (404 otherwise), masked like the item;
+    reading writes nothing new."""
+    lister.inventory.get(item_id, public_only=for_visitor())
+    return _shown(lister.drafts(item_id), lister)
 
 
 @router.get("/drafts/{draft_id}", response_model=Draft)
 def get_draft(draft_id: int, lister: ListerDep) -> Draft:
-    return lister.get(draft_id)
+    """One draft; for the demo visitor, only a public item's (404 otherwise)."""
+    draft = lister.get(draft_id)
+    lister.inventory.get(draft.item_id, public_only=for_visitor())
+    return _shown([draft], lister)[0]
 
 
 @router.post("/drafts/{draft_id}/checklist", response_model=Draft)
@@ -70,8 +99,16 @@ def marketplace_us() -> MarketplaceData:
 
 @router.get("/items/{item_id}/sell-details", response_model=SellDetailsRecord | None)
 def get_sell_details(item_id: int, handoff: HandoffDep) -> SellDetailsRecord | None:
-    """The latest listing details the owner saved, or null before the first save."""
-    return handoff.details(item_id)
+    """The latest listing details the owner saved, or null before the first save. The demo
+    visitor reads them for a public item (404 otherwise) without what the owner keeps to
+    themselves: the lowest price, the reason for selling and the area."""
+    visitor = for_visitor()
+    handoff.inventory.get(item_id, public_only=visitor)
+    record = handoff.details(item_id)
+    if record is None or not visitor:
+        return record
+    kept = record.details.model_copy(update={"lowest_price": None, "reason": "", "area": ""})
+    return record.model_copy(update={"details": kept})
 
 
 @router.put("/items/{item_id}/sell-details", response_model=SellDetailsRecord)
@@ -114,7 +151,9 @@ def draft_photos(
 
 @router.get("/items/{item_id}/marketplace", response_model=MarketplaceStatus)
 def marketplace_status(item_id: int, handoff: HandoffDep) -> MarketplaceStatus:
-    """What happened on Marketplace after the owner posted: listed, sold, given."""
+    """What happened on Marketplace after the owner posted: listed, sold, given. The demo
+    visitor reads it for a public item (404 otherwise)."""
+    handoff.inventory.get(item_id, public_only=for_visitor())
     return handoff.status(item_id)
 
 

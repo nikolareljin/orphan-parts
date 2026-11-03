@@ -79,8 +79,9 @@ EXPENSIVE = [
 ]
 # What the demo visitor may do without the code (an id here is plain digits, so an odd spelling
 # of one is refused rather than let through): look (the items and captures the owner marked
-# public, their values, photos and drawn pictures; never a clip, a note, a location or a
-# draft; the searches made for those items with their candidates and listings, the projects
+# public, their values, photos and drawn pictures and the results saved for them: cards,
+# ideas, drafts, price guidance; never a clip, a note, a location or the lowest price; the
+# searches made for those items with their candidates and listings, the projects
 # built on them alone with their packs and pictures, and the skills profile, never the notes,
 # the budget or the radius), and try the stateless readings on recorded answers, on the demo
 # set's sample photos rather than a file of their own. Everything that saves, drafts, prices,
@@ -90,6 +91,15 @@ DEMO_ALLOWED = [
     ("GET", re.compile(r"^/api/items/\d+$")),
     ("GET", re.compile(r"^/api/items/\d+/photos(/\d+)?$")),
     ("GET", re.compile(r"^/api/items/\d+/pictures(/\d+)?$")),
+    # what the owner already asked for a public item, as it was saved: the decision view and
+    # its cards and ideas (with every earlier answer), the drafts, the price guidance, the
+    # listing details without the private ones, the Marketplace outcomes and the pictures of
+    # the reuse cards; reading them never asks a model, and asking again needs the code
+    ("GET", re.compile(r"^/api/items/\d+/(decide|scenarios|uses|drafts|price|sell-details)$")),
+    ("GET", re.compile(r"^/api/items/\d+/marketplace$")),
+    ("GET", re.compile(r"^/api/items/\d+/scenarios/\d+/reuse/\d+/pictures(/\d+)?$")),
+    ("GET", re.compile(r"^/api/drafts/\d+$")),
+    ("GET", re.compile(r"^/api/marketplace/us$")),
     ("GET", re.compile(r"^/api/captures$")),
     ("GET", re.compile(r"^/api/captures/\d+$")),
     ("GET", re.compile(r"^/api/captures/\d+/photos/\d+$")),

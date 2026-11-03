@@ -60,9 +60,28 @@ inventory and answers 403), `/api/measure`, each so many times per address and h
 id, never a file: a photo, a crop or a measurement photo sent by the visitor answers `403`
 with *Sign in with the access code to read your own photos.* Everything else answers `403` with the line
 above (the items and captures the owner marked public are the exception: their values,
-photos and drawn pictures are shown, never a location, a note, a clip or a draft; the demo set loads as public):
+photos, drawn pictures and saved results are shown, never a location, a note, a clip, the
+lowest price or the reason for selling; the demo set loads as public):
 the rest of the inventory, the captures, every save, draft, price, plan, web search, fit
 check, proposal, picture drawn and capture.
+
+**Saved results, read-only.** What the owner already asked for a public item is read as it was
+saved, by `GET` alone with plain-digit ids, and reading it never asks a model:
+`/api/items/{id}/decide` (the view: the latest cards and ideas, the worth line, the open
+searches and the projects the visitor may read, the last decision without the owner's note),
+`/api/items/{id}/scenarios` and `/api/items/{id}/uses` (every set of cards and every answer of
+ideas, oldest first), `/api/items/{id}/drafts` and `/api/drafts/{id}` (the whole listing: title,
+price, category, condition, description, tags, facts, photo order, warnings and checklist),
+`/api/items/{id}/price` (every guidance), `/api/items/{id}/sell-details` (without the lowest
+price, the reason and the area), `/api/items/{id}/marketplace` (listed, sold, given), the
+pictures of a reuse card (`/api/items/{id}/scenarios/{s}/reuse/{card}/pictures` and each
+picture) and `/api/marketplace/us`. A private item's answer 404. The model's text in each is
+masked as on a label (a serial number, a MAC address or a key), and the pickup area of the
+owner's listing details reads *the owner's area* in a draft the visitor is shown. Asking again,
+writing a draft, pricing, deciding, ticking a step, recording an outcome, the sales the owner
+reported (`/price/reports`) and the photo zip stay behind the code. The web app shows the saved
+cards, drafts and guidance with no button that asks, and the sign-in line where the owner would
+act; the inventory list marks which items have saved results and shows the plan chosen.
 
 **Find a part, Build and reuse and the profile, read-only.** The visitor reads them as the
 owner left them, by `GET` alone with plain-digit ids: `/api/searches` (and one search, its

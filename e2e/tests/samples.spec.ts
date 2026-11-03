@@ -46,7 +46,7 @@ test('signed out: no file input on any page, the samples instead', async ({ page
     await open(page, 'My inventory')
     await page.getByRole('table', { name: 'Items' }).getByRole('row', { name }).getByRole('button', { name: 'Open' }).click()
     const panel = page.getByRole('article', { name: `Item ${name}` })
-    await expect(panel.getByText('Voice note (WAV):')).toBeVisible()
+    await expect(panel.getByText('Write a draft:')).toBeVisible()
     await expect(panel.getByRole('radio', { name: 'Frappé maker agitator, worn, photo 1 of 3' })).toBeVisible()
     await expect(panel.locator('input[type="file"]')).toHaveCount(0)
     // the demo set cannot be deleted from the demo

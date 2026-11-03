@@ -36,6 +36,7 @@ from app.inventory.schema import TEXT_MAX as NOTES_MAX
 from app.inventory.schema import Item
 from app.inventory.service import DECIDED, NotFoundError, notes_room
 from app.model_api import ModelApiClient, text_part, user_message
+from app.ops.door import for_visitor
 from app.privacy.text import private_field
 from app.projects.schema import Preferences
 from app.projects.service import Planner, fits
@@ -374,13 +375,17 @@ class Decider:
         rows = self.inventory.uses(item_id)
         return self.uses_of(rows[-1]) if rows else None
 
+    def all_uses(self, item_id: int) -> list[Uses]:
+        """Every answer kept for the item, oldest first: asking again adds one."""
+        return [self.uses_of(r) for r in self.inventory.uses(item_id)]
+
     # --- what to do with it, for this owner ---------------------------------------
 
-    def _kinds(self, item_id: int) -> list[tuple[str, int]]:
+    def _kinds(self, item_id: int, *, public_only: bool = False) -> list[tuple[str, int]]:
         """The kinds of item the owner has besides this one, with how many of each, the most
-        of a kind first; what is gone is not counted."""
+        of a kind first; what is gone is not counted (with public_only, the public ones)."""
         counts: dict[str, int] = {}
-        for summary in self.inventory.list_items():
+        for summary in self.inventory.list_items(public_only=public_only):
             if summary.id == item_id or summary.availability == "gone":
                 continue
             counts[summary.item_type] = counts.get(summary.item_type, 0) + 1
@@ -441,6 +446,10 @@ class Decider:
         rows = self.inventory.scenarios(item_id)
         return self.scenarios_of(rows[-1]) if rows else None
 
+    def all_scenarios(self, item_id: int) -> list[Scenarios]:
+        """Every set of cards kept for the item, oldest first: asking again adds one."""
+        return [self.scenarios_of(r) for r in self.inventory.scenarios(item_id)]
+
     def scenarios_by_id(self, item_id: int, scenarios_id: int) -> Scenarios:
         """One set of cards written for the item, by its id; 404 for one written for another."""
         for row in self.inventory.scenarios(item_id):
@@ -452,7 +461,9 @@ class Decider:
         """The cards as kept, with each reuse card's with_items read as the kinds the owner has
         now: the stored row stays as the model wrote it."""
         content = json.loads(row["content"])
-        kinds = [kind for kind, _ in self._kinds(int(row["item_id"]))]
+        # the demo visitor is told of the public items alone
+        shown = self._kinds(int(row["item_id"]), public_only=for_visitor())
+        kinds = [kind for kind, _ in shown]
         content["reuse"] = [
             {**card, "with_items": owned_items(card["with_items"], kinds)}
             for card in content["reuse"]
@@ -501,7 +512,7 @@ class Decider:
             at=latest.at,
         )
 
-    def searches_from(self, item_id: int) -> list[OpenSearch]:
+    def searches_from(self, item_id: int, *, public_only: bool = False) -> list[OpenSearch]:
         return [
             OpenSearch(
                 id=s.id,
@@ -510,38 +521,50 @@ class Decider:
                 candidates=s.candidates,
                 handoff_url=s.handoff_url,
             )
-            for s in self.finder.searches()
+            for s in self.finder.searches(public_only=public_only)
             if s.need_item_id == item_id and s.status == "open"
         ]
 
-    def last(self, item_id: int) -> Decided | None:
+    def last(self, item_id: int, *, public_only: bool = False) -> Decided | None:
+        """The last decision; with public_only (the demo visitor) without the owner's note."""
         for event in reversed(self.inventory.events(item_id)):
             found = parse_decided(event.change)
             if found is not None:
                 choice, note = found
-                return Decided(choice=choice, note=note, at=event.at, version=event.version)
+                return Decided(
+                    choice=choice,
+                    note="" if public_only else note,
+                    at=event.at,
+                    version=event.version,
+                )
         return None
 
-    def committed_to(self, item_id: int) -> list[str]:
+    def committed_to(self, item_id: int, *, public_only: bool = False) -> list[str]:
         """The titles of the selected, building or done projects that count on the item: a
-        sale or a gift breaks that build, so the view says it before the choice."""
+        sale or a gift breaks that build, so the view says it before the choice. With
+        public_only, only the projects the demo visitor may read."""
         # an item can fill more than one requirement of a project: each title once, in order
-        titles = (str(r["title"]) for r in self.inventory.committed_elsewhere(item_id, 0))
+        titles = [str(r["title"]) for r in self.inventory.committed_elsewhere(item_id, 0)]
+        if public_only:
+            shown = {p.title for p in self.planner.projects(public_only=True).projects}
+            titles = [t for t in titles if t in shown]
         return list(dict.fromkeys(titles))
 
-    def decision(self, item_id: int) -> Decision:
-        item = self.inventory.get(item_id)
+    def decision(self, item_id: int, *, public_only: bool = False) -> Decision:
+        """The view; with public_only (the demo visitor) a private item is not found and the
+        searches, projects and the note it names are the ones the visitor may read."""
+        item = self.inventory.get(item_id, public_only=public_only)
         return Decision(
             item=item,
             accepted_fields=sum(1 for a in item.fields.values() if a.review == "accepted"),
             worth=self.worth(item_id),
             uses=self.latest_uses(item_id),
             scenarios=self.latest_scenarios(item_id),
-            searches=self.searches_from(item_id),
+            searches=self.searches_from(item_id, public_only=public_only),
             templates=templates_for(item, self.templates),
             intent=item.intent,
-            committed_to=self.committed_to(item_id),
-            last=self.last(item_id),
+            committed_to=self.committed_to(item_id, public_only=public_only),
+            last=self.last(item_id, public_only=public_only),
         )
 
     # --- the choice ------------------------------------------------------------------------

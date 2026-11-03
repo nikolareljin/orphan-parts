@@ -4,18 +4,28 @@ the one view that gathers what is known, and the owner's choice."""
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+)
 
 from app.inventory.schema import Intent, ItemSummary
+from app.ops.door import for_visitor
+from app.privacy.text import mask_tree
 from app.value.schema import Strategy
 
 Effort = Literal["low", "medium", "high"]
-# What the owner decides. "Keep and fix" keeps the item as it is, to be repaired; "not worth
-# it" keeps it with the note saying why.
-Choice = Literal["keep_fix", "keep_build", "sell", "give", "not_worth"]
-CHOICES: tuple[Choice, ...] = ("keep_fix", "keep_build", "sell", "give", "not_worth")
+# What the owner decides. "Keep and fix" keeps the item as it is, to be repaired; "keep as a
+# spare" keeps it as it is, for when a part of it is wanted; "not worth it" keeps it with the
+# note saying why.
+Choice = Literal["keep_fix", "keep_spare", "keep_build", "sell", "give", "not_worth"]
+CHOICES: tuple[Choice, ...] = ("keep_fix", "keep_spare", "keep_build", "sell", "give", "not_worth")
 INTENT_FOR: dict[str, Intent] = {
     "keep_fix": "keep",
+    "keep_spare": "keep",
     "keep_build": "build",
     "sell": "sell",
     "give": "give",
@@ -113,6 +123,12 @@ class Scenarios(BaseModel):
     cost_usd: float
     at: str
 
+    # for the demo visitor, a private value written into any of its text is masked
+    @model_serializer(mode="wrap")
+    def _shown(self, handler: SerializerFunctionWrapHandler):  # type: ignore[no-untyped-def]
+        data = handler(self)
+        return mask_tree(data) if for_visitor() else data
+
 
 class TemplateFit(BaseModel):
     """A project template whose requirements this item fills: the rules' answer, no model."""
@@ -134,6 +150,12 @@ class Uses(BaseModel):
     from_fixture: bool
     cost_usd: float
     at: str
+
+    # for the demo visitor, a private value written into any of its text is masked
+    @model_serializer(mode="wrap")
+    def _shown(self, handler: SerializerFunctionWrapHandler):  # type: ignore[no-untyped-def]
+        data = handler(self)
+        return mask_tree(data) if for_visitor() else data
 
 
 class Worth(BaseModel):

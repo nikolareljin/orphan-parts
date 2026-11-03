@@ -2235,3 +2235,32 @@ footer.service .pair img {
   margin: 0.5rem 0 0;
   font-size: 0.85rem;
 }
+
+/* the results kept for an item, on the inventory list */
+.saved-marks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+/* earlier answers of a step, newest first */
+details.earlier {
+  margin: 0.5rem 0;
+}
+details.earlier ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+/* a step never asked: what it does, what it gives, what it costs */
+.never-run {
+  border-left: 3px solid var(--border, #d0d7de);
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  margin: 0.5rem 0;
+}
+.never-run p {
+  margin: 0.25rem 0;
+}

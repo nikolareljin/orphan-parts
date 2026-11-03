@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.decide.schema import NOTE_MAX, Choice
 from app.find.schema import CURRENCY
 from app.inventory.schema import PROFILE_ID, Availability, Intent
 from app.listing.checklists import Mode
@@ -86,6 +87,30 @@ class DemoItem(BaseModel):
         description="draw a picture of the item as this use (a template id or a few words);"
         " fixture mode shows it only when a recording of that drawing is kept",
     )
+    decide: bool = Field(
+        default=False,
+        description="write the Decide cards (keep and fix, reuse, sell or give away) once its"
+        " drafts, picture and price guidance are kept; only a recording of this very request"
+        " answers in fixture mode",
+    )
+    ideas: bool = Field(
+        default=False,
+        description="ask what it is good for (the ideas under Decide); only a recording of"
+        " this very request answers in fixture mode",
+    )
+    reuse_picture: bool = Field(
+        default=False,
+        description="draw the first reuse card of its Decide cards with Draw it (needs"
+        " decide); only a recording of this very drawing answers in fixture mode",
+    )
+    decision: Choice | None = Field(
+        default=None,
+        description="the plan the owner chose, recorded last: keep_fix, keep_spare,"
+        " keep_build, sell, give or not_worth",
+    )
+    decision_note: str = Field(
+        default="", max_length=NOTE_MAX, description="the owner's note said with the decision"
+    )
     expect: Expect | None = Field(default=None, description="what an evaluation run scores")
     parent_photos: list[str] = Field(
         default=[],
@@ -139,12 +164,23 @@ class DemoSearch(BaseModel):
         description="run Search the web once the items are loaded; only a recording of this very"
         " request answers in fixture mode",
     )
+    plan: bool = Field(
+        default=False,
+        description="write the search plan (phrasings with their Marketplace links, the match"
+        " pattern, the words that rule a listing out) after its listings and web finds; only a"
+        " recording of this very request answers in fixture mode",
+    )
 
 
 class DemoPropose(BaseModel):
     preferences: Preferences = Preferences()
     count: int = Field(default=3, ge=1, le=5)
     note: str = ""
+    pictures: bool = Field(
+        default=False,
+        description="draw each kept project with Draw it; only a recording of this very"
+        " drawing answers in fixture mode",
+    )
 
 
 class DemoSet(BaseModel):
@@ -239,6 +275,10 @@ class Outcome(BaseModel):
     web_finds: int = 0
     projects: int = 0
     pictures: int = 0
+    cards: int = Field(default=0, description="Decide cards written")
+    ideas: int = Field(default=0, description="answers to what an item is good for")
+    decisions: int = 0
+    plans: int = Field(default=0, description="search plans written")
     checked: int = Field(default=0, description="photos checked for private details")
     hidden: int = Field(default=0, description="areas found on them, blacked out when shared")
     skipped: list[str] = []
@@ -263,6 +303,11 @@ class Outcome(BaseModel):
             f" and {self.web_finds} web find(s), {self.projects} project(s),"
             f" {self.pictures} picture(s); {self.cost_usd:.4f} USD"
         ]
+        if self.cards or self.ideas or self.decisions or self.plans:
+            out.append(
+                f"{self.cards} set(s) of Decide cards, {self.ideas} answer(s) of ideas,"
+                f" {self.decisions} decision(s), {self.plans} search plan(s)"
+            )
         if self.checked:
             out.append(
                 f"{self.checked} photo(s) checked for private details,"

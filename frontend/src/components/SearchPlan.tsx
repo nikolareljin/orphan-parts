@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError, api, type BroughtListing, type Candidate, type Item, type ListingScore, type PatternResult, type Search } from '../lib/api'
 import { usd } from '../lib/format'
+import { whenText } from '../lib/inventory'
+import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 import { WEB_SIGN_IN, askingPrice, highlightSegments, maxPriceLine, siteOf, splitListings, stateLabel, stateTone, verdictLabel, verdictTone, webLink, webSummary } from '../lib/find'
 
@@ -125,11 +127,12 @@ export default function SearchPlan({
             <p className="meta">
               {maxPriceLine(plan.max_price)}
               {plan.radius_km !== null && ` Within ${plan.radius_km} km: set the distance in Marketplace's location filter, the links do not carry it.`}
-              {plan.model && ` · ${plan.model} · ${usd(plan.cost_usd)}`}
+              {plan.model && ` · ${whenText(plan.planned_at)} · ${plan.model} · ${usd(plan.cost_usd)}`}
               {plan.from_fixture && plan.model && <span className="badge">recorded answer</span>}
             </p>
           </>
         )}
+        {!plan?.model && (demo ? <p className="muted">No plan was written for this search.</p> : <NeverRun step="plan" />)}
         {demo ? (
           <SignInLine what="Plan the search" />
         ) : (

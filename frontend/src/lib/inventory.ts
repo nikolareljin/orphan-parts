@@ -1,4 +1,5 @@
-import { ApiError, type Availability, type Intent, type Item, type Provenance, type Review } from './api'
+import { ApiError, type Availability, type Intent, type Item, type ItemSummary, type Provenance, type Review, type SavedKind } from './api'
+import { choiceLabel } from './decide'
 
 export const INTENTS: { value: Intent; label: string }[] = [
   { value: 'keep', label: 'Keep' },
@@ -31,6 +32,24 @@ export function availabilityLabel(a: Availability): string {
 
 export function intentLabel(i: Intent): string {
   return INTENTS.find((x) => x.value === i)?.label ?? i
+}
+
+// The list's plan: the last choice made under Decide, else what the item is meant for.
+export function planLabel(s: Pick<ItemSummary, 'intent' | 'decided'>): string {
+  return s.decided ? choiceLabel(s.decided) : intentLabel(s.intent)
+}
+
+const SAVED_LABELS: Record<SavedKind, string> = {
+  cards: 'Decide cards',
+  ideas: 'ideas',
+  sell_draft: 'sell draft',
+  give_draft: 'give draft',
+  price: 'price guidance',
+}
+
+// A marker on the list for a result kept with the item.
+export function savedLabel(k: SavedKind): string {
+  return SAVED_LABELS[k] ?? k
 }
 
 export function reviewLabel(r: Review): string {

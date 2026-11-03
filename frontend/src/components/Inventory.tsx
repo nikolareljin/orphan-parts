@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type ItemEvent, type ItemSummary, type PhotoPrivacy, type PrivacyArea, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
-import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, cameFrom, photoReadLine, changedDetails, intentLabel, isConflict, mergeDetails, proposedCount, provenanceLabel, reviewLabel, whenText } from '../lib/inventory'
+import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, cameFrom, photoReadLine, changedDetails, isConflict, mergeDetails, planLabel, proposedCount, provenanceLabel, reviewLabel, savedLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
 import Decide from './Decide'
 import GatedImage from './GatedImage'
@@ -87,6 +87,7 @@ export default function Inventory({
               <th scope="col">Item</th>
               <th scope="col">Fields</th>
               <th scope="col">Plan</th>
+              <th scope="col">Saved results</th>
               <th scope="col">Availability</th>
               <th scope="col">Updated</th>
               <th scope="col">
@@ -103,7 +104,20 @@ export default function Inventory({
                   {s.item_type !== s.name && <span className="raw">{s.item_type}</span>}
                 </th>
                 <td>{s.field_count}</td>
-                <td>{intentLabel(s.intent)}</td>
+                <td>{planLabel(s)}</td>
+                <td>
+                  {(s.saved ?? []).length === 0 ? (
+                    <span className="muted">none</span>
+                  ) : (
+                    <ul className="saved-marks" aria-label={`Saved for ${s.name}`}>
+                      {(s.saved ?? []).map((k) => (
+                        <li key={k} className="badge">
+                          {savedLabel(k)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
                 <td>{availabilityLabel(s.availability)}</td>
                 <td>{whenText(s.updated_at)}</td>
                 <td>
@@ -472,11 +486,12 @@ function ItemPanel({
           onDecide={(choice, note) => apply(() => api.decide.choose(item.id, choice, note, item.version))}
           onGuided={() => setGuided((n) => n + 1)}
           demo={demo}
+          readOnly={readOnly}
         />
       </div>
 
       <div className="item-section" data-section="value">
-        <Value item={item} refresh={guided} onGuided={() => setGuided((n) => n + 1)} />
+        <Value item={item} refresh={guided} onGuided={() => setGuided((n) => n + 1)} readOnly={readOnly} />
       </div>
 
       <div className="item-section" data-section="sell">

@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, mediaUrl, type Draft, type DraftMode, type Included, type Item, type MarketplaceData, type MarketplaceStatus, type SellDetails } from '../lib/api'
 import { usd } from '../lib/format'
+import { whenText } from '../lib/inventory'
 import {
   DATA_STATES,
   HANDOVERS,
@@ -26,6 +27,7 @@ import {
   type CopyKey,
 } from '../lib/listing'
 import GatedImage from './GatedImage'
+import { Earlier, NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
@@ -33,7 +35,9 @@ function message(err: unknown): string {
 }
 
 // From a private record to a Facebook Marketplace listing the owner posts: what the owner adds,
-// the draft in Marketplace's shape, the fields to paste, and what happened after.
+// the draft in Marketplace's shape, the fields to paste, and what happened after. Opening it asks
+// no model: the latest draft kept is shown, the earlier ones a click away; writing a new one adds
+// a version. The demo visitor (readOnly) reads the drafts, with no form, tick or outcome to save.
 // samplesOnly: no file input until uploads are known to be open (the visitor, or access not known yet)
 export default function Listing({
   item,
@@ -57,6 +61,9 @@ export default function Listing({
   const [asking, setAsking] = useState('')
   const [lowest, setLowest] = useState('')
   const [draft, setDraft] = useState<Draft | null>(null)
+  // every draft kept for the item, oldest first, and whether the list was read
+  const [drafts, setDrafts] = useState<Draft[]>([])
+  const [draftsRead, setDraftsRead] = useState(false)
   const [status, setStatus] = useState<MarketplaceStatus | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -94,7 +101,6 @@ export default function Listing({
   }, [item.id, readOnly])
 
   useEffect(() => {
-    if (readOnly) return
     let cancelled = false
     api.drafts
       .list(item.id)
@@ -103,9 +109,14 @@ export default function Listing({
         // a draft written meanwhile is newer than anything this list holds
         const latest = list.length > 0 ? list[list.length - 1] : null
         setDraft((current) => (latest === null || (current && current.id > latest.id) ? current : latest))
+        setDrafts(list)
+        setDraftsRead(true)
       })
       .catch(() => {
-        if (!cancelled) setDraft(null)
+        if (!cancelled) {
+          setDraft(null)
+          setDraftsRead(true)
+        }
       })
     api.marketplace
       .status(item.id)
@@ -172,7 +183,9 @@ export default function Listing({
     setError('')
     try {
       if (!(await saveDetails(true))) return
-      setDraft(await api.drafts.write(item.id, { mode, holds_data: details.data !== 'none', pickup: '', asking_price: '' }))
+      const written = await api.drafts.write(item.id, { mode, holds_data: details.data !== 'none', pickup: '', asking_price: '' })
+      setDraft(written)
+      setDrafts((list) => [...list, written])
       onChanged()
     } catch (err: unknown) {
       setError(message(err))
@@ -222,16 +235,35 @@ export default function Listing({
     }
   }
 
-  // the demo visitor, or an item served as the visitor sees it: the listing details, drafts and
-  // outcomes are the owner's and are never read or written from here
+  // the demo visitor, or an item served as the visitor sees it: the drafts the owner kept, as
+  // they were written, and what happened on Marketplace; the listing details form, the ticks
+  // and the outcomes are the owner's and are never written from here
   if (readOnly)
     return (
       <section className="listing" aria-label="Prepare to sell or give away">
         <h4 tabIndex={-1}>Prepare to sell or give away</h4>
         <p className="hint limit">{HARD_LIMIT}</p>
-        <p className="meta">Sign in with the code to prepare a listing.</p>
-        {/* the demo set carries no voice note to stand in for one of the visitor's own */}
-        <SignInLine what="Voice note (WAV)" />
+        {draftsRead && !draft && <p className="muted">No listing was drafted for this item.</p>}
+        {draft && (
+          <Handoff
+            key={draft.id}
+            draft={draft}
+            itemId={item.id}
+            detailsChanged={false}
+            status={status}
+            onTick={() => undefined}
+            onRecord={async () => undefined}
+            onError={setError}
+            readOnly
+          />
+        )}
+        <Earlier items={drafts} shown={draft?.id ?? null} onPick={setDraft} what="drafts" />
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        <SignInLine what="Write a draft" />
       </section>
     )
 
@@ -346,7 +378,7 @@ export default function Listing({
         <p className="hint">Never a street address, a phone number or an email: buyers write through Marketplace.</p>
         <div className="row actions">
           <button type="submit" disabled={busy || !loaded}>
-            {busy ? 'Working…' : 'Write the draft'}
+            {busy ? 'Working…' : draft ? 'Write a new draft' : 'Write the draft'}
           </button>
           <button type="button" disabled={busy || !loaded} onClick={() => void onSave()}>
             Save details
@@ -359,6 +391,8 @@ export default function Listing({
           {error}
         </p>
       )}
+      {draftsRead && !draft && <NeverRun step="draft" />}
+      <Earlier items={drafts} shown={draft?.id ?? null} onPick={setDraft} what="drafts" />
       {draft && (
         <Handoff
           key={draft.id}
@@ -383,6 +417,7 @@ function Handoff({
   onTick,
   onRecord,
   onError,
+  readOnly = false,
 }: {
   draft: Draft
   itemId: number
@@ -391,6 +426,8 @@ function Handoff({
   onTick: (key: string, done: boolean) => void
   onRecord: (run: () => Promise<MarketplaceStatus>) => Promise<void>
   onError: (text: string) => void
+  // the demo visitor: every field and step shown, nothing ticked, downloaded or recorded
+  readOnly?: boolean
 }) {
   const [copied, setCopied] = useState<CopyKey | null>(null)
   const [unchecked, setUnchecked] = useState('')
@@ -453,6 +490,7 @@ function Handoff({
   function value(key: CopyKey, text: string) {
     if (key === 'description') return <textarea className="draft-text" readOnly aria-label="Draft text" value={text} />
     if (key === 'price') return <span className="value">{priceLabel(draft)}</span>
+    if (readOnly && (key === 'category' || key === 'condition')) return <span className="value">{text || <span className="muted">not set</span>}</span>
     if (key === 'category' && market)
       return (
         <select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -482,7 +520,7 @@ function Handoff({
     <section className="draft handoff" aria-label="Marketplace handoff">
       <h5>Marketplace handoff</h5>
       <p className="meta" role="status">
-        {draft.mode === 'sell' ? 'For sale' : 'Free'} · draft {draft.version} · {draft.model} · {usd(draft.cost_usd)}
+        {draft.mode === 'sell' ? 'For sale' : 'Free'} · draft {draft.version} · {whenText(draft.at)} · {draft.model} · {usd(draft.cost_usd)}
         {draft.from_fixture && <span className="badge">recorded answer</span>}
         {draft.stale && <span className="badge">item changed since</span>}
         {detailsChanged && <span className="badge">details changed since this draft</span>}
@@ -528,7 +566,7 @@ function Handoff({
         <a className="button" href={draft.handoff_url} target="_blank" rel="noopener noreferrer">
           Open Marketplace
         </a>
-        {draft.photos.length > 0 && (
+        {draft.photos.length > 0 && !readOnly && (
           <button type="button" className="secondary" onClick={() => void download()}>
             Download photos
           </button>
@@ -569,7 +607,7 @@ function Handoff({
             {steps.map((s) => (
               <li key={s.key}>
                 <label className="check">
-                  <input type="checkbox" checked={s.done} onChange={(e) => onTick(s.key, e.target.checked)} />
+                  <input type="checkbox" checked={s.done} disabled={readOnly} onChange={(e) => onTick(s.key, e.target.checked)} />
                   <span>
                     {s.label} {!s.required && <small>(optional)</small>}
                   </span>
@@ -580,7 +618,7 @@ function Handoff({
         </div>
       ))}
       <p className="meta">{draft.ready ? 'Every required step is done.' : `${left} required step(s) left.`}</p>
-      <Outcomes draft={draft} itemId={itemId} status={status} onRecord={onRecord} />
+      {readOnly ? <OutcomeEvents status={status} /> : <Outcomes draft={draft} itemId={itemId} status={status} onRecord={onRecord} />}
     </section>
   )
 }
@@ -620,24 +658,7 @@ function Outcomes({
   return (
     <section className="outcomes" aria-label="After posting">
       <h5>After posting</h5>
-      {status && status.events.length > 0 && (
-        <ul className="events">
-          {status.events.map((e) => (
-            <li key={e.id}>
-              {e.kind} on {e.on}
-              {e.price !== null && e.kind !== 'given' && ` at ${dollars(e.price)}`}
-              {e.url && (
-                <>
-                  {' · '}
-                  <a href={e.url} target="_blank" rel="noopener noreferrer">
-                    the listing
-                  </a>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      <Events status={status} />
       {!done && (
         <div className="row">
           <label>
@@ -682,6 +703,38 @@ function Outcomes({
           {draft.mode === 'sell' && <span className="muted">A sale is also recorded for price guidance.</span>}
         </div>
       )}
+    </section>
+  )
+}
+
+function Events({ status }: { status: MarketplaceStatus | null }) {
+  if (!status || status.events.length === 0) return null
+  return (
+    <ul className="events">
+      {status.events.map((e) => (
+        <li key={e.id}>
+          {e.kind} on {e.on}
+          {e.price !== null && e.kind !== 'given' && ` at ${dollars(e.price)}`}
+          {e.url && (
+            <>
+              {' · '}
+              <a href={e.url} target="_blank" rel="noopener noreferrer">
+                the listing
+              </a>
+            </>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// What happened on Marketplace, read: the demo visitor records nothing
+function OutcomeEvents({ status }: { status: MarketplaceStatus | null }) {
+  return (
+    <section className="outcomes" aria-label="After posting">
+      <h5>After posting</h5>
+      {status && status.events.length > 0 ? <Events status={status} /> : <p className="muted">Not posted yet.</p>}
     </section>
   )
 }

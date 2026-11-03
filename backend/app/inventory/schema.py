@@ -72,6 +72,14 @@ class ItemSummary(BaseModel):
     version: int
     updated_at: str
     public: bool = Field(default=False, description="shown to the demo visitor")
+    saved: list[str] = Field(
+        default_factory=list,
+        description="on the list: the results kept for the item (cards, ideas, sell_draft,"
+        " give_draft, price), each read back without asking a model",
+    )
+    decided: str = Field(
+        default="", description="on the list: the last choice made for the item, if any"
+    )
 
     # a product key, a MAC address or a password typed into a name is masked for the visitor
     @field_serializer("name", "condition")

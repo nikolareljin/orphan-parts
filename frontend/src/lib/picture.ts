@@ -4,6 +4,7 @@ import { usd } from './format'
 export const PICTURE_LABEL = 'Illustrative picture drawn by Muse Image; not a photo of the item'
 export const PROJECT_PICTURE_LABEL = 'Illustrative picture drawn by Muse Image; not a photo of a real build'
 export const DRAW_HINT = 'Draw how the finished project could look. One image call.'
+export const DRAW_AGAIN_HINT = 'Drawing again adds a picture; the ones drawn stay. One image call.'
 export const DRAW_DEMO_LINE = 'Sign in with the access code to draw.'
 export const DRAW_OFF_LINE = 'Pictures are off on this server.'
 

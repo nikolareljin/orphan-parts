@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, type Picture, type PictureList } from '../lib/api'
-import { DRAW_DEMO_LINE, DRAW_HINT, DRAW_OFF_LINE, PROJECT_PICTURE_LABEL, drawState, pictureCaption } from '../lib/picture'
+import { DRAW_AGAIN_HINT, DRAW_DEMO_LINE, DRAW_HINT, DRAW_OFF_LINE, PROJECT_PICTURE_LABEL, drawState, pictureCaption } from '../lib/picture'
 import GatedImage from './GatedImage'
 
 function message(err: unknown): string {
@@ -76,6 +76,8 @@ export default function DrawIt({
   // a list that cannot be read hides the section, as on the item dialog
   if (failed) return null
   const state = drawState(demo, enabled)
+  // a picture already drawn stays: drawing again adds one beside it
+  const again = pictures.length > 0
   return (
     <div className="draw-it">
       {state === 'off' ? (
@@ -87,11 +89,11 @@ export default function DrawIt({
             className="draw"
             onClick={() => void onDraw()}
             disabled={state !== 'ready' || busy}
-            aria-label={`Draw it: ${name}`}
+            aria-label={`${again ? 'Draw again' : 'Draw it'}: ${name}`}
           >
-            {busy ? 'Drawing…' : 'Draw it'}
+            {busy ? 'Drawing…' : again ? 'Draw again' : 'Draw it'}
           </button>
-          <span className="hint">{state === 'demo' ? DRAW_DEMO_LINE : DRAW_HINT}</span>
+          <span className="hint">{state === 'demo' ? DRAW_DEMO_LINE : again ? DRAW_AGAIN_HINT : DRAW_HINT}</span>
         </p>
       )}
       {error && (

@@ -36,6 +36,22 @@ photo; a selection with none says so. `docker compose run --rm backend python -m
 samples --set /demo/set.yaml` checks in fixture mode that every sample has its recordings. The
 set loads with whatever files are present; a photo named but missing is skipped with a note.
 
+What the owner asked for each item is kept by the load as well, so the demo shows the answers
+and nothing is asked again when a section opens: `decide: true` writes the **Decide** cards
+(from the items loaded before it; the set's profile is the loader's, so they are written for an
+average person), `ideas: true` asks what it is good
+for, `reuse_picture: true` draws the first reuse card with **Draw it**, `decision:` records the
+plan chosen (`keep_fix`, `keep_spare`, `keep_build`, `sell`, `give`, `not_worth`; with
+`decision_note:`, never shown to a visitor) once everything else is asked; a search's `plan:
+true` writes its plan after its listings and web finds, and `propose: pictures: true` draws each
+kept project. Each of these is answered in fixture mode only by the recording of that very
+request, and listed as *not recorded yet* without one; for a new item, `./dev record-fixtures`
+replays what is recorded and buys only what is missing. Every item of the set has a saved
+outcome: the monitors, the T510 and the powerline adapter their cards, ideas, a reuse picture
+and *Keep and build*; the Sun monitor, the laptop board and the graphics card their price
+guidance, sell draft and *Sell*; the 9461 and the slot 1 processor their give draft and *Give
+away*; the agitator its cards and *Keep and fix*.
+
 An item may name a `picture:` (a template id such as `smart_mirror`, or a few words), drawn by
 Muse Image after its drafts; four items of the set do. A drawing is a paid call, so a live load
 draws it only with `PICTURE_ENABLED=1` (`./dev record-fixtures` sets it for its run unless the shell sets `PICTURE_ENABLED=0`). Fixture

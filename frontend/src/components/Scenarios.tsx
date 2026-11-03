@@ -11,11 +11,16 @@ import {
   type ScenarioCard,
 } from '../lib/decide'
 import { usd } from '../lib/format'
+import { whenText } from '../lib/inventory'
 import DrawIt from './DrawIt'
+import { NeverRun } from './Saved'
+import SignInLine from './SignInLine'
 
 // What to do with it: one button asks Muse Spark for three cards written for this owner (keep
 // and fix, reuse, sell or give away) and the one it recommends. Each card records its choice
-// on the item through the decision route; nothing is decided by asking.
+// on the item through the decision route; nothing is decided by asking. Cards already written
+// are shown as kept, with "Ask again" beside them; the demo visitor (readOnly) reads them and
+// the pictures drawn of them, with no button that asks, draws or decides.
 export default function Scenarios({
   scenarios,
   worth,
@@ -25,6 +30,7 @@ export default function Scenarios({
   onChoose,
   onPrice,
   demo = false,
+  readOnly = demo,
 }: {
   scenarios: ScenarioSet | null
   worth: Worth | null
@@ -36,6 +42,8 @@ export default function Scenarios({
   onPrice: () => void
   // the demo visitor: Draw it is shown disabled, with the line to sign in
   demo?: boolean
+  // read the cards and the choice made, with no button that asks or decides
+  readOnly?: boolean
 }) {
   const lit = scenarios ? cardFor(scenarios.recommended) : null
   const hintId = useId()
@@ -62,6 +70,7 @@ export default function Scenarios({
   // A "Choose this" is named with its card, so a list of the page's buttons tells them apart;
   // the visible words lead the name.
   function choose(choice: DecisionChoice, label: string, id?: ScenarioCard, hint?: string) {
+    if (readOnly) return null
     return (
       <button
         type="button"
@@ -77,20 +86,32 @@ export default function Scenarios({
 
   return (
     <section className="scenarios" aria-label="What to do with it">
-      <div className="row ask">
-        <button type="button" className="ask-scenarios" onClick={onAsk} disabled={busy !== ''}>
-          {busy === 'scenarios' ? 'Working…' : scenarios ? 'Ask again' : 'What should I do with it?'}
-        </button>
-        {!scenarios && <span className="muted">Three ways to go, written for your skills and tools.</span>}
-      </div>
+      {readOnly ? (
+        !scenarios && (
+          <>
+            <p className="muted">No cards were written for this item yet.</p>
+            <SignInLine what="What should I do with it?" />
+          </>
+        )
+      ) : (
+        <>
+          <div className="row ask">
+            <button type="button" className="ask-scenarios" onClick={onAsk} disabled={busy !== ''}>
+              {busy === 'scenarios' ? 'Working…' : scenarios ? 'Ask again' : 'What should I do with it?'}
+            </button>
+            {scenarios && <span className="muted">Asking again adds new cards; these stay under earlier cards.</span>}
+          </div>
+          {!scenarios && <NeverRun step="scenarios" />}
+        </>
+      )}
       {scenarios && (
         <>
           <p className="meta">
-            The model's scenarios · {scenarios.model} · {usd(scenarios.cost_usd)}
+            The model's scenarios · version {scenarios.version} · {whenText(scenarios.at)} · {scenarios.model} · {usd(scenarios.cost_usd)}
             {scenarios.from_fixture && <span className="badge">recorded answer</span>}
             {scenarios.stale && <span className="badge">item changed since</span>}
           </p>
-          {!scenarios.profiled && (
+          {!scenarios.profiled && !readOnly && (
             <p className="hint" role="note">
               No profile yet, so these are general answers. <a href="#profile">Fill in your profile</a> for advice that fits
               you.
@@ -122,7 +143,7 @@ export default function Scenarios({
             )}
             {card(
               'sell',
-              <SellBody card={scenarios.sell} worth={worth} busy={busy} onPrice={onPrice} />,
+              <SellBody card={scenarios.sell} worth={worth} busy={busy} onPrice={onPrice} readOnly={readOnly} />,
               <>
                 {choose('sell', 'Sell it')}
                 {choose('give', 'Give it away')}
@@ -209,6 +230,7 @@ function ReuseBody({ set, demo }: { set: ScenarioSet; demo: boolean }) {
             key={`${set.id}:${i}`}
             name={r.title}
             demo={demo}
+            shownToDemo
             list={() => api.decide.cardPictures(set.item_id, set.id, i)}
             draw={() => api.decide.drawCard(set.item_id, set.id, i)}
             url={(n) => api.decide.cardPictureUrl(set.item_id, set.id, i, n)}
@@ -219,7 +241,19 @@ function ReuseBody({ set, demo }: { set: ScenarioSet; demo: boolean }) {
   )
 }
 
-function SellBody({ card, worth, busy, onPrice }: { card: SellCard; worth: Worth | null; busy: string; onPrice: () => void }) {
+function SellBody({
+  card,
+  worth,
+  busy,
+  onPrice,
+  readOnly,
+}: {
+  card: SellCard
+  worth: Worth | null
+  busy: string
+  onPrice: () => void
+  readOnly: boolean
+}) {
   return (
     <>
       <Lines label="What sells it" lines={card.selling_points} />
@@ -230,7 +264,7 @@ function SellBody({ card, worth, busy, onPrice }: { card: SellCard; worth: Worth
       {card.note && <p className="muted">{card.note}</p>}
       <p>
         <span className="label">Price guidance</span>
-        {worth ? (
+        {worth || readOnly ? (
           worthLine(worth)
         ) : (
           <button type="button" className="link" onClick={onPrice} disabled={busy !== ''}>

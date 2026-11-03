@@ -141,12 +141,17 @@ test('a public item shows the visitor neither its location nor its notes', async
     // the details are shown, never saved from here
     await expect(panel.getByRole('button', { name: 'Save details' })).toHaveCount(0)
     await expect(panel.locator('textarea[name="faults"]')).not.toBeEditable()
-    // the listing section reads and writes nothing for the visitor
+    // the listing section writes nothing for the visitor: no draft yet, no form
     const sell = panel.getByRole('region', { name: 'Prepare to sell or give away' })
-    await expect(sell).toContainText('Sign in with the code to prepare a listing.')
-    await expect(sell.getByRole('button', { name: 'Write the draft' })).toHaveCount(0)
+    await expect(sell).toContainText('No listing was drafted for this item.')
+    await expect(sell.getByRole('button', { name: /Write (the|a new) draft/ })).toHaveCount(0)
+    await expect(sell.getByRole('form', { name: 'Listing details' })).toHaveCount(0)
     await expect(panel).not.toContainText('Denver')
-    expect((await page.request.get(`/api/items/${id}/sell-details`)).status()).toBe(403)
+    // the listing details read without the lowest price, the reason and the area
+    const shown = await page.request.get(`/api/items/${id}/sell-details`)
+    expect(shown.status()).toBe(200)
+    const text = await shown.text()
+    for (const secret of ['Denver', 'Astoria', '27']) expect(text).not.toContain(secret)
 
     // a session opened in another tab shares the cookie; this page, loaded as the visitor,
     // still offers no save, and the owner's values stay as they were

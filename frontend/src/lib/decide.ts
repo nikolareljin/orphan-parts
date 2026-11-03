@@ -3,6 +3,7 @@ import { money } from './value'
 
 export const CHOICES: { value: DecisionChoice; label: string }[] = [
   { value: 'keep_fix', label: 'Keep and fix' },
+  { value: 'keep_spare', label: 'Keep as a spare' },
   { value: 'keep_build', label: 'Keep and build' },
   { value: 'sell', label: 'Sell' },
   { value: 'give', label: 'Give away' },

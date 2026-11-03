@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Guidance, type Item, type PriceReport } from '../lib/api'
 import { usd } from '../lib/format'
+import { whenText } from '../lib/inventory'
 import { evidenceText, kindLabel, money, rangeText, searchesText } from '../lib/value'
+import { Earlier, NeverRun } from './Saved'
+import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -9,9 +12,23 @@ function message(err: unknown): string {
 
 // What it is worth: four quantities kept apart, each with its pages and dates. You set the price.
 // `onGuided` is told when a new guidance is written, so a panel that reads it can read it again;
-// `refresh` changes when one was written elsewhere (the Decide panel's sell card).
-export default function Value({ item, refresh = 0, onGuided }: { item: Item; refresh?: number; onGuided?: () => void }) {
+// `refresh` changes when one was written elsewhere (the Decide panel's sell card). Opening it asks
+// no model: the latest guidance kept is shown, the earlier ones a click away; asking again adds
+// one. The demo visitor (readOnly) reads them, with no form that asks or records.
+export default function Value({
+  item,
+  refresh = 0,
+  onGuided,
+  readOnly = false,
+}: {
+  item: Item
+  refresh?: number
+  onGuided?: () => void
+  readOnly?: boolean
+}) {
   const [guide, setGuide] = useState<Guidance | null>(null)
+  const [kept, setKept] = useState<Guidance[]>([])
+  const [loaded, setLoaded] = useState(false)
   const [reports, setReports] = useState<PriceReport[]>([])
   const [currency, setCurrency] = useState('USD')
   const [country, setCountry] = useState('')
@@ -24,26 +41,30 @@ export default function Value({ item, refresh = 0, onGuided }: { item: Item; ref
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([api.value.history(item.id), api.value.reports(item.id)])
+    // the sales the owner reported are theirs: never read for the demo visitor
+    Promise.all([api.value.history(item.id), readOnly ? Promise.resolve([]) : api.value.reports(item.id)])
       .then(([history, list]) => {
         if (cancelled) return
         // a request made meanwhile may already hold a newer guidance; the history must not
         // put an older one, or none, over it
         const latest = history.length > 0 ? history[history.length - 1] : null
         setGuide((current) => (latest === null || (current && current.id > latest.id) ? current : latest))
+        setKept(history)
         setReports(list)
+        setLoaded(true)
       })
       .catch(() => {
         if (!cancelled) {
           setGuide(null)
           setReports([])
+          setLoaded(true)
         }
       })
     return () => {
       cancelled = true
     }
     // the item's version too: an edit after the guidance is what makes it stale
-  }, [item.id, item.version, refresh])
+  }, [item.id, item.version, refresh, readOnly])
 
   async function ask(event: FormEvent) {
     event.preventDefault()
@@ -51,7 +72,9 @@ export default function Value({ item, refresh = 0, onGuided }: { item: Item; ref
     setBusy(true)
     setError('')
     try {
-      setGuide(await api.value.guide(item.id, { currency, country, city }))
+      const fresh = await api.value.guide(item.id, { currency, country, city })
+      setGuide(fresh)
+      setKept((list) => [...list, fresh])
       onGuided?.()
     } catch (err: unknown) {
       setError(message(err))
@@ -81,6 +104,15 @@ export default function Value({ item, refresh = 0, onGuided }: { item: Item; ref
   return (
     <section className="value" aria-label="What is it worth?">
       <h4>What is it worth?</h4>
+      {readOnly ? (
+        <>
+          {loaded && !guide && <p className="muted">No price guidance was asked for this item.</p>}
+          {guide && <GuidanceView guide={guide} />}
+          <Earlier items={kept} shown={guide?.id ?? null} onPick={setGuide} what="guidance" />
+          <SignInLine what="Get price guidance" />
+        </>
+      ) : (
+        <>
       <form onSubmit={(e) => void ask(e)}>
         <div className="row">
           <label>
@@ -96,7 +128,7 @@ export default function Value({ item, refresh = 0, onGuided }: { item: Item; ref
             <input value={city} maxLength={80} placeholder="optional, for local prices" onChange={(e) => setCity(e.target.value)} />
           </label>
           <button type="submit" disabled={busy || currency.length !== 3}>
-            {busy ? 'Working…' : 'Get price guidance'}
+            {busy ? 'Working…' : guide ? 'Ask again' : 'Get price guidance'}
           </button>
         </div>
       </form>
@@ -105,7 +137,9 @@ export default function Value({ item, refresh = 0, onGuided }: { item: Item; ref
           {error}
         </p>
       )}
+      {loaded && !guide && <NeverRun step="price" />}
       {guide && <GuidanceView guide={guide} />}
+      <Earlier items={kept} shown={guide?.id ?? null} onPick={setGuide} what="guidance" />
       <form onSubmit={(e) => void record(e)} aria-label="Add a sale you know of">
         <h5>Add a sale you know of</h5>
         <div className="row">
@@ -136,6 +170,8 @@ export default function Value({ item, refresh = 0, onGuided }: { item: Item; ref
           ))}
         </ul>
       )}
+        </>
+      )}
     </section>
   )
 }
@@ -144,7 +180,7 @@ function GuidanceView({ guide }: { guide: Guidance }) {
   return (
     <div className="guidance" role="status" aria-label={`Guidance ${guide.version}`}>
       <p className="meta">
-        {guide.model} · {usd(guide.cost_usd)} · {searchesText(guide.searches)} · {evidenceText(guide)}
+        Version {guide.version} · {whenText(guide.at)} · {guide.model} · {usd(guide.cost_usd)} · {searchesText(guide.searches)} · {evidenceText(guide)}
         {guide.from_fixture && <span className="badge">recorded answer</span>}
         {guide.stale && <span className="badge">item changed since</span>}
       </p>
