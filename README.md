@@ -8,6 +8,13 @@ Meta's Muse models.
 
 ![How Orphan Parts Lens works](docs/assets/process.svg)
 
+| | |
+|---|---|
+| **Live demo** (temporary, while the hackathon is judged) | <https://orphan-parts.pages.dev>: without a code, the demo set's recorded answers, read-only; with an access code, uploads and the live models. It may be taken down after judging; [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/) works without it. |
+| **Documentation** | <https://nikolareljin.github.io/orphan-parts/> |
+| **Demo video** | [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/) (2:52) |
+| **Android app** | the APK on the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) |
+
 **This repository is the entry for the Meta Global AI Developer Hackathon (Oct 27 to Nov 4, 2026).**
 Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
