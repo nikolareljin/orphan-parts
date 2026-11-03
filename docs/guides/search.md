@@ -77,16 +77,32 @@ on its own and Marketplace itself is not searched. The brief is the plan's: the 
 profile, the needed values, the item's values (measured ones included, never a serial number
 or anything else that identifies the item or you), the notes and the top price. When the
 device the part came from is recorded (see [the device it came from](inventory.md#the-device-a-part-came-from)),
-the brief leads with it: *Look first for the maker's own part: Hamilton Beach 729 blender
-agitator*, then parts sold as fitting that device, then parts with the same values.
+the brief leads with it and with the part's plain names from the profile (`search_terms`):
+*Look first for the maker's own part for this device: search "Hamilton Beach 729 replacement
+agitator shaft" (also: agitator, spindle, mixing shaft, ...)*, then compatible aftermarket
+parts sold as fitting that device, then used or donor parts with the same values; without a
+device, the names alone lead. The model is asked for up to ten distinct pages, product pages
+before manuals, forums and videos, each URL copied as the search gave it.
 
 The model writes each page it found: the URL, the title, the site, the price and the
-dimensions as the page states them, and a short quote. A page is kept only when its URL is
-among the search results or the citations of that same answer, query and all (only the
-fragment, `utm_*` tracking parameters, the scheme, `www.` and a trailing slash are let go, so
-`?id=1` and `?id=999` are two pages), only a web link (`http`/`https`), and only with some
-text to score; the link kept is the one the search returned. One per page, at most ten a
-click. The rest are left out and counted
+dimensions as the page states them, and a short quote. A page is kept only when a search
+result or a citation of that same answer carries it:
+
+- exactly, after a light cleanup: the fragment, tracking parameters (`utm_*`, `fbclid`,
+  `gclid`, `ref` and the like), the scheme, `www.` and a trailing slash are let go, so
+  `?id=1` and `?id=999` are two pages;
+- or, when the model dropped or reordered the query, by host and path, when exactly one
+  search URL there holds every parameter the model wrote with the same value. Two or more
+  such URLs leave the page unknown and the find is left out and said; a parameter the
+  search's URL does not have, or has with another value, names another page;
+- or, for a bare domain (the model named a site, not a page), the one result on that host,
+  or among several the one whose title the find's title and quote carry (half its words or
+  more, ahead of every other); a find whose path no result on that host has is backed only
+  by such a title. Several results and nothing to tell them apart: left out and said.
+
+The model is told to copy the full page URL from the search result and the result's title
+verbatim. Only a web link (`http`/`https`) with some text to score is kept, and the link and
+title kept are always the search result's, never the model's. One per page, at most ten a click. The rest are left out and counted
 (*Added 3 pages to the listings. 1 left out: no search result showed it.*). Each page kept
 becomes a listing with its link, scored by the pattern, the exclusion words and the top
 price like a pasted one, and **Check fit** reads it the same way; the candidate keeps the

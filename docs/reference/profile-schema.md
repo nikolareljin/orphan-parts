@@ -11,6 +11,8 @@ description: >                 # optional
   What this kind of item is and what decides fit.
 part_of_device: true           # optional, default false: a part that comes off a device; one
                                # with no identity value of its own asks which device it came from
+search_terms: [agitator shaft, spindle]  # optional: the plain names sellers give the part, most
+                               # common first; Search the web tries them beside the device
 features:                      # dimensions worth measuring
   - key: opening_inner_diameter   # snake_case
     label: Opening inner diameter

@@ -7,6 +7,7 @@ from app.model_api.client import (
     StructuredResponse,
     Transcript,
     backed_pages,
+    backing,
     citations,
     exact_replay,
     image_part,
@@ -15,6 +16,7 @@ from app.model_api.client import (
     searches,
     strict_schema,
     text_part,
+    url_parts,
     user_message,
 )
 from app.model_api.errors import (
@@ -45,6 +47,7 @@ __all__ = [
     "Transcript",
     "Usage",
     "backed_pages",
+    "backing",
     "citations",
     "cost_usd",
     "exact_replay",
@@ -54,5 +57,6 @@ __all__ = [
     "searches",
     "strict_schema",
     "text_part",
+    "url_parts",
     "user_message",
 ]

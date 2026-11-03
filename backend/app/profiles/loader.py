@@ -58,6 +58,9 @@ class Profile(BaseModel):
     # a part that comes off a device (an agitator, a vacuum tool): without its own model
     # number it is tied to a device by the device it came from, so the app asks for that
     part_of_device: bool = False
+    # the plain names sellers give this kind of part, the most common first: what a web search
+    # for it tries beside the device it came from
+    search_terms: list[str] = []
     features: list[Feature] = []
     rules: list[Rule] = []
 

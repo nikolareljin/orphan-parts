@@ -225,25 +225,38 @@ def citations(output: list[dict[str, Any]]) -> list[dict[str, str]]:
     return found
 
 
-def norm_url(url: str) -> str:
-    """The page as one string, with only a light cleanup: no scheme, ``www.``, fragment or
-    trailing slash, no ``utm_*`` tracking parameters, the host in lower case. The rest of the
-    query stays, in its order: ``?id=1`` and ``?id=999`` are two pages."""
+# query parameters that say where a click came from, not which page it is
+TRACKING_PARAMS = frozenset(
+    {"fbclid", "gclid", "dclid", "msclkid", "yclid", "mc_cid", "mc_eid", "_ga", "srsltid", "ref"}
+)
+
+
+def _tracking(key: str) -> bool:
+    k = key.lower()
+    return k.startswith("utm_") or k in TRACKING_PARAMS
+
+
+def url_parts(url: str) -> tuple[str, str, list[tuple[str, str]]]:
+    """The host (lower case, no ``www.``), the path (no trailing slash) and the query without
+    tracking parameters, in its order."""
     parts = urlsplit(url.strip())
     host = parts.netloc.lower().removeprefix("www.")
     if not host:
         # no scheme written: the whole is host and path
-        rest = urlsplit("//" + url.strip())
-        parts, host = rest, rest.netloc.lower().removeprefix("www.")
-    query = urlencode(
-        [
-            (k, v)
-            for k, v in parse_qsl(parts.query, keep_blank_values=True)
-            if not k.lower().startswith("utm_")
-        ]
-    )
-    page = host + parts.path.rstrip("/")
-    return f"{page}?{query}" if query else page
+        parts = urlsplit("//" + url.strip())
+        host = parts.netloc.lower().removeprefix("www.")
+    query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if not _tracking(k)]
+    return host, parts.path.rstrip("/"), query
+
+
+def norm_url(url: str) -> str:
+    """The page as one string, with only a light cleanup: no scheme, ``www.``, fragment or
+    trailing slash, no tracking parameters (``utm_*``, ``fbclid`` and the like), the host in
+    lower case. The rest of the query stays, in its order: ``?id=1`` and ``?id=999`` are two
+    pages."""
+    host, path, query = url_parts(url)
+    page = host + path
+    return f"{page}?{urlencode(query)}" if query else page
 
 
 def backed_pages(output: list[dict[str, Any]]) -> dict[str, str]:
@@ -256,6 +269,31 @@ def backed_pages(output: list[dict[str, Any]]) -> dict[str, str]:
         if page and page not in pages:
             pages[page] = found["url"].strip()
     return pages
+
+
+def backing(url: str, pages: dict[str, str]) -> tuple[str, str]:
+    """The search's URL for a page the model wrote, and how it was found: ``exact`` (the same
+    page after the light cleanup); ``path`` (no exact match, but exactly one search URL on the
+    same host and path whose query holds every parameter the model wrote, with the same value:
+    the model dropped or reordered parameters); ``ambiguous`` (several such URLs, so which page
+    is meant is not known); ``none``. Only an exact or a path match is backed, and what is kept
+    is always the search's URL, never the model's."""
+    page = norm_url(url)
+    if page in pages:
+        return pages[page], "exact"
+    host, path, query = url_parts(url)
+    if not host:
+        return "", "none"
+    wanted = dict(query)
+    fits: list[str] = []
+    for original in pages.values():
+        h, p, q = url_parts(original)
+        have = dict(q)
+        if h == host and p == path and all(have.get(k) == v for k, v in wanted.items()):
+            fits.append(original)
+    if len(fits) == 1:
+        return fits[0], "path"
+    return ("", "ambiguous") if fits else ("", "none")
 
 
 # --- client ------------------------------------------------------------------

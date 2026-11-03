@@ -31,8 +31,8 @@ four figures mean.
 the instructions too, `include: ["web_search_call.results"]`, and the strict JSON schema of
 `WebFinds` (each page's URL, title, site, price and dimensions as stated, and a quote). The
 brief is the search plan's, led by the device the part came from when it is recorded. The same
-check keeps a page only when it is among the results or the citations
-(`app/model_api/client.py` `backed_pages`). Operation name `part-search`; its fixture is a stub
+check keeps a page only when it is among the results or the citations, exactly or by host and
+path when one search URL alone fits (`app/model_api/client.py` `backed_pages`, `backing`). Operation name `part-search`; its fixture is a stub
 written by hand (three results on `example.org`, four proposed pages of which one rests on no
 result), not a recording. The code path is `app/find/service.py`
 ([search guide](../guides/search.md#search-the-web)).

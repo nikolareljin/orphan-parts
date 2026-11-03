@@ -209,8 +209,11 @@ class BroughtListing(BaseModel):
 class WebFind(BaseModel):
     """One page the web search found, as the model wrote it: strict, every property required."""
 
-    url: str
-    title: str
+    url: str = Field(
+        description="the full page URL copied from the search result, path included; a bare"
+        " domain is not a page"
+    )
+    title: str = Field(description="the search result's title, verbatim")
     site: str
     price_as_stated: str
     dimensions_as_stated: str

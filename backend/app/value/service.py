@@ -13,6 +13,7 @@ from app.inventory.schema import Item
 from app.model_api import (
     ModelApiClient,
     backed_pages,
+    backing,
     norm_url,
     searches,
     text_part,
@@ -93,8 +94,9 @@ def brief(item: Item, known: dict[str, str], request: PriceRequest) -> str:
 def backed(
     found: list[Comparable], output: list[dict[str, Any]], currency: str
 ) -> tuple[list[Comparable], int, list[str]]:
-    """Keep a comparable only when a search result or a citation carries its page, in the
-    requested currency; say how many were dropped and why."""
+    """Keep a comparable only when a search result or a citation carries its page (exactly, or
+    by host and path when one search URL alone fits; see ``backing``), in the requested
+    currency, under the search's URL; say how many were dropped and why."""
     pages = backed_pages(output)
     kept: list[Comparable] = []
     dropped = 0
@@ -106,10 +108,11 @@ def backed(
         if c.price <= 0:
             no_price += 1
             continue
-        page = norm_url(c.source_url)
-        if page not in pages:
+        source, _ = backing(c.source_url, pages)
+        if not source:
             dropped += 1
             continue
+        page = norm_url(source)
         if c.currency.upper() != currency:
             other_currency += 1
             continue
@@ -121,7 +124,7 @@ def backed(
             c.model_copy(
                 update={
                     # the page as the search gave it, not as the model wrote it
-                    "source_url": pages[page],
+                    "source_url": source,
                     "observed": c.observed or today(),
                     "currency": currency,
                     "title": c.title.strip()[:TEXT_MAX],
