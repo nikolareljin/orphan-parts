@@ -8,6 +8,7 @@ download. The original never changes and stays the owner's."""
 import hashlib
 import logging
 import os
+import tempfile
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
@@ -23,6 +24,7 @@ from app.model_api import (
     ModelApiError,
     NoRecordingError,
     SpendCapError,
+    exact_replay,
     image_part,
     text_part,
     user_message,
@@ -168,10 +170,38 @@ class Privacy:
     def _save(self, check: PhotoCheck) -> PhotoCheck:
         self.root.mkdir(parents=True, exist_ok=True)
         path = self._path(check.digest)
-        part = path.with_suffix(".part")
-        part.write_text(check.model_dump_json(indent=2) + "\n", encoding="utf-8")
-        os.replace(part, path)
+        # a part of its own: an owner's choice (on a worker thread) and a check (on the loop)
+        # may save the same photo's check at once
+        fd, part = tempfile.mkstemp(dir=self.root, prefix=f"{check.digest}.", suffix=".part")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as out:
+                out.write(check.model_dump_json(indent=2) + "\n")
+            os.replace(part, path)
+        except BaseException:
+            Path(part).unlink(missing_ok=True)
+            raise
         return check
+
+    @staticmethod
+    def _finished(check: PhotoCheck | None) -> bool:
+        return check is not None and check.status in ("clear", "found")
+
+    def waiting(self, photos: list[bytes], *, again: bool = False) -> list[bytes]:
+        """The photos a check would run on, each once: those without a finished check, or
+        every one when asked again."""
+        out: dict[str, bytes] = {}
+        for data in photos:
+            if again or not self._finished(self.kept(data)):
+                out.setdefault(digest_of(data), data)
+        return list(out.values())
+
+    def not_checked(self, photos: list[bytes], reason: str) -> None:
+        """Photos whose check was refused before any call (the operator's pause, an
+        allowance), kept as failed checks with the reason, so the line under each says why it
+        is not shared; a finished check of the same photo stands."""
+        for data in photos:
+            if not self._finished(self.kept(data)):
+                self._save(PhotoCheck(digest=digest_of(data), status="failed", reason=reason))
 
     async def check(self, data: bytes, *, again: bool = False) -> PhotoCheck:
         """The photo checked once (kept, and answered from what is kept after), or again when
@@ -185,7 +215,13 @@ class Privacy:
         try:
             width, height, sent = await anyio.to_thread.run_sync(_measured, data)
         except ValueError as exc:
+            if kept is not None and kept.status in ("clear", "found"):
+                return kept
             return self._save(PhotoCheck(digest=digest, status="failed", reason=str(exc)))
+        # only a recording of this very photo answers in fixture mode, never an operation's
+        # stub: a stub's "nothing private" would share a photo nobody checked
+        loader = exact_replay.get()
+        token = exact_replay.set(True)
         try:
             result = await self.client.respond_structured(
                 SensitiveReading,
@@ -196,15 +232,14 @@ class Privacy:
                 max_output_tokens=MAX_OUTPUT_TOKENS,
                 op=OP,
             )
-        except NoRecordingError:
-            raise
+        except NoRecordingError as exc:
+            if loader:
+                raise  # the demo loader lists the photos its set has no recording of
+            return self._failed(kept, digest, exc)
         except (ModelApiError, ValueError) as exc:
-            log.info("photo check failed", extra={"digest": digest, "error": str(exc)[:200]})
-            if kept is not None and kept.status in ("clear", "found"):
-                return kept  # a check run again that fails leaves the finished one standing
-            return self._save(
-                PhotoCheck(digest=digest, status="failed", reason=_short(exc), checked_at=_now())
-            )
+            return self._failed(kept, digest, exc)
+        finally:
+            exact_replay.reset(token)
         areas, problem = place(result.parsed, width, height)
         if problem and kept is not None and kept.status in ("clear", "found"):
             log.info("photo check not placed", extra={"digest": digest, "reason": problem})
@@ -230,8 +265,22 @@ class Privacy:
         )
         return self._save(check)
 
+    def _failed(self, kept: PhotoCheck | None, digest: str, exc: Exception) -> PhotoCheck:
+        log.info("photo check failed", extra={"digest": digest, "error": str(exc)[:200]})
+        if kept is not None and kept.status in ("clear", "found"):
+            return kept  # a check run again that fails leaves the finished one standing
+        return self._save(
+            PhotoCheck(digest=digest, status="failed", reason=_short(exc), checked_at=_now())
+        )
+
     async def check_all(self, photos: list[bytes], *, again: bool = False) -> list[PhotoCheck]:
-        """Each photo checked, at the same time; in the order given."""
+        """Each photo checked, at the same time, and the same photo once; in the order
+        given."""
+        unique = {digest_of(d): d for d in photos}
+        if len(unique) < len(photos):
+            checked = await self.check_all(list(unique.values()), again=again)
+            done = dict(zip(unique, checked, strict=True))
+            return [done[digest_of(d)] for d in photos]
         out: list[PhotoCheck | None] = [None] * len(photos)
 
         async def one(n: int, data: bytes) -> None:

@@ -256,8 +256,9 @@ class Captures:
             item = self.inventory.create(spec)
             if photos and self.privacy is not None:
                 # checked once here: the item keeps the same bytes, so the same check
-                for check in await self.privacy.check_all(photos):
-                    cost += check.cost_usd
+                checks = await self.privacy.check_all(photos)
+                # the same photo twice is one check, paid once
+                cost += sum({c.digest: c.cost_usd for c in checks}.values())
             if photos:
                 # the item keeps the pictures it was read from, so the capture can go later;
                 # a copy that fails is said in the log and never undoes the read
