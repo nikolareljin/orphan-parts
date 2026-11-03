@@ -6,7 +6,7 @@ Meta's Muse models.
 
 ![How Orphan Parts Lens works](assets/process.svg)
 
-**Watch the [demo video](start/video.md) (2:52).**
+**Watch the [demo video](start/video.md) (2:52).** **Live demo** (temporary, while the hackathon is judged): <https://orphan-parts.pages.dev>, the demo set read-only without a code; it may be taken down after judging, and [Run it on your own computer](start/local.md) works without it.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
