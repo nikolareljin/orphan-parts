@@ -69,6 +69,7 @@ markdown_extensions:
 nav:
   - Start:
       - Overview: index.md
+      - Demo video: start/video.md
       - For judges: start/judges.md
       - Pair the phone with the web app: start/pairing.md
       - Quickstart: start/quickstart.md
