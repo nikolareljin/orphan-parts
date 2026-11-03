@@ -40,8 +40,8 @@ Decide section is read-only (see [Without the access code](#without-the-access-c
 
     ![The decision made: Decided Keep and fix, with the date, under the rows](../assets/shots/decide/05-decision-made.png)
 
-The decision buttons under the rows (**Keep and fix**, **Keep and build**, **Sell**, **Give
-away**, **Not worth it**, with a note) record the same choice without the cards.
+The decision buttons under the rows (**Keep and fix**, **Keep as a spare**, **Keep and build**, **Sell**,
+**Give away**, **Not worth it**, with a note) record the same choice without the cards.
 
 ## Built so far
 
@@ -105,7 +105,7 @@ location, the notes, a photo, a price or a search. One structured call at low ef
 
 The last cards are kept on the item with the item version they were written from, like the
 ideas: they say *item changed since* once the item is edited (a decision is no edit, so the
-cards you chose from stay current), and **Ask again** writes
+cards you chose from stay current; nor is the item being reserved by a project you select), and **Ask again** writes
 a new version beside the earlier ones. Opening the section asks no model: it shows the latest
 cards as kept, with their version, date, model and cost, and **Earlier cards (n)** lists the
 ones before them (version, date, model) to pick and read again; the ideas the same way under
@@ -154,8 +154,9 @@ reloaded, and you choose again from what it is now.
 The demo visitor reads the panel as the owner left it, for a public item: the cards with the
 recommendation, the pictures drawn of the reuse cards, the ideas, the worth line, and the plan
 chosen (*Decided: Keep and build*) without the note said with it; the earlier cards and ideas
-are listed too. **Ask again**, **Ask for ideas**, **Draw it**, the note and the decision
-buttons give way to *Sign in with the access code to use this.*; reading asks no model and
+are listed too. **Ask again**, **Ask for ideas**, the note and the decision buttons give way
+to *Sign in with the access code to use this.*, and **Draw it** to *Sign in with the access code
+to draw.*; reading asks no model and
 nothing is kept. Every item of the demo set has its cards and its plan saved. The inventory
 list marks the results kept for each item (*Decide cards*, *ideas*, *sell draft*, *give
 draft*, *price guidance*) and its **Plan** column shows the last choice.

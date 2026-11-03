@@ -78,7 +78,7 @@ buttons and **Draw again** give way to the sign-in line; nothing is spent and no
 
 ![Build and reuse for a visitor: the build wishes, Propose: Sign in with the access code to use this., the projects](../assets/shots/demo/06-visitor-build.png)
 
-![A project for a visitor: its drawn picture, Draw again disabled with Sign in with the access code to draw., and the sign-in line in place of Shortlist and Select](../assets/shots/demo/09-visitor-project.png)
+![A project for a visitor: its drawn picture, Sign in with the access code to draw. where Draw it would be, and the sign-in line in place of Shortlist and Select](../assets/shots/demo/09-visitor-project.png)
 
 ## Built so far
 

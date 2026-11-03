@@ -69,10 +69,11 @@ def uses_history(item_id: int, decider: DeciderDep) -> list[Uses]:
 @router.post("/items/{item_id}/decision", response_model=Item)
 def decide(item_id: int, spec: DecisionCreate, decider: DeciderDep) -> Item:
     """The owner's choice: `keep_build` sets the intent to build, `sell` and `give` to the
-    same, `keep_fix` and `not_worth` keep the item, the one to be repaired, the other with
-    the note saying why. `keep_fix` also adds the repair steps of the current scenarios to the
-    item's notes. The history gets `decided: <choice>: <note>`; the version is bumped when the
-    intent changes, a note is given or the notes gain the repair steps, not for the same
-    choice said again. With `version` set, a choice made from an older
-    version of the item is refused with 409 and nothing is written."""
+    same, `keep_fix`, `keep_spare` and `not_worth` keep the item: to be repaired, as it is
+    for when a part of it is wanted, or with the note saying why. `keep_fix` also adds the
+    repair steps of the current scenarios to the item's notes. The history gets
+    `decided: <choice>: <note>`; the version is bumped when the intent changes, a note is
+    given or the notes gain the repair steps, not for the same choice said again. With
+    `version` set, a choice made from an older version of the item is refused with 409 and
+    nothing is written."""
     return decider.decide(item_id, spec)
