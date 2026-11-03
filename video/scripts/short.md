@@ -1,52 +1,42 @@
 # Short video: narration (55 s)
 
-For the social post: Story B first, Story A as one line, the same cards and titles as the
-main video. Shot numbers point at [the short storyboard](../storyboard/short.md); the
-captions in `short.srt` come from the quoted lines below through `captions.py`.
+For the social post: Story A, then Story B, the same cards, titles and caption style as the
+main video, 1920x1080. Shot numbers point at [the short storyboard](../storyboard/short.md);
+the captions in `short.srt` come from the quoted lines below through `captions.py`.
 
-Pace: 117 words in 55 seconds, about 2.1 words a second.
+Pace: 104 words in 55 seconds, about 1.9 words a second.
 
-## 0:00 to 0:06 · Hook
+## 0:00 to 0:05 · Hook
 
 Shot K1.
 
-> Useful electronics sit in drawers because we don't know what to do with them.
+> One worn part can stop a favorite routine.
 
-## 0:06 to 0:13 · What I own, what I want
+## 0:05 to 0:26 · Story A
 
-Shot K2.
+Shots K2 to K4.
 
-> I catalog what I own, then say what I want: my interests, budget, and experience.
+> My frappé maker's agitator is worn. The app asks which device it came from, and the label
+> under the base answers. Search the web brings back the maker's part, and Check fit turns
+> every unknown into a question for the seller.
 
-## 0:13 to 0:23 · Proposals
+Name the part number only when the recorded take shows it (see `main.md`).
 
-Shot K3.
+## 0:26 to 0:43 · Story B
 
-> Muse Spark proposes projects from what I have, and the rules keep only what my inventory
-> backs. I choose the tabletop arcade.
+Shots K5 to K7.
 
-## 0:23 to 0:32 · Commit and find
+> For my unused electronics, Muse Spark proposes builds from what I own. I choose the arcade
+> and draw it, and the missing controls become a Marketplace search I run myself.
 
-Shot K4.
+## 0:43 to 0:48 · Concept preview
 
-> Each item is committed to one build. What is missing becomes a Marketplace search that I
-> run myself.
+Shot K8.
 
-## 0:32 to 0:39 · Concept preview
+> The connection diagram is a concept preview of the next step.
 
-Shot K5.
+## 0:48 to 0:55 · Close
 
-> The connection diagram and the layout here are a concept preview of the next step.
-
-## 0:39 to 0:49 · Story A in one line
-
-Shot K6.
-
-> The same approach starts the search for a replacement part for my old drink mixer, with
-> the questions to ask before I buy.
-
-## 0:49 to 0:55 · Close
-
-Shot K7.
+Shot K9.
 
 > Orphan Parts Lens. Find replacements. Discover reuse. Build something useful.

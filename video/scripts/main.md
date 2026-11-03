@@ -1,89 +1,90 @@
-# Main video: narration (2:50)
+# Main video: narration (2:42)
 
-The narration, section by section. Under each section, a note of what the app does in it and
-what is not claimed. Shot numbers point at [the storyboard](../storyboard/main.md). The captions in `main.srt` are written from the
-quoted lines below by `captions.py`; edit the text here, then run it again.
+The narration, section by section, in the owner's voice. Under each section, a note of what
+the app does in it and what is not claimed. Shot numbers point at
+[the storyboard](../storyboard/main.md). The captions in `main.srt` are written from the quoted
+lines below by `captions.py`; edit the text here, then run it again.
 
-Pace: 342 words in 170 seconds, about 2.0 words a second (120 words a minute) including
-pauses. Section 1 (0:00 to 0:18) is the densest at 2.3 words a second, then section 4 (1:12 to
-1:52) at 2.2; read them a little faster, or give section 1 a second from section 2.
+Pace: 305 words in 162 seconds, about 1.9 words a second (113 words a minute) including
+pauses. Section 1 (0:00 to 0:17) is the densest at 2.2 words a second; read it a little faster,
+or let it run into S04.
 
-## 0:00 to 0:18 · Two questions
+## 0:00 to 0:17 · Two questions
 
 Shots S01 to S03.
 
-> One missing part can interrupt a favorite routine. Meanwhile, useful electronics sit in
-> drawers because we don't know what to do with them. Orphan Parts Lens starts with two
-> questions: what do you have, and what do you want to accomplish?
+> One worn part can stop a favorite routine. Useful electronics sit in drawers because we
+> don't know what to do with them. Orphan Parts Lens starts with two questions: what do you
+> have, and what do you want?
 
-## 0:18 to 0:55 · Story A: the drink mixer
+S01 and S02 are the owner's own photos from the demo set: the mixer, then a graphics card, a
+slot 1 processor and a powerline adapter.
 
-Shots S04 to S08.
+## 0:17 to 1:08 · Story A: the frappé maker
 
-> I use this older Hamilton Beach drink mixer to make frappé coffee. Finding a replacement
-> mixing component means understanding more than its appearance. I photograph the appliance,
-> its label, and the component. The app helps identify what information is missing and what
-> needs checking. It starts with a replacement part; a donor appliance, or another device that
-> produces the result I want, is the next step. The useful answer includes the evidence and
-> questions needed before I buy.
+Shots S04 to S09.
 
-The app searches for the replacement part only: the `blender_agitator` profile and a search
-request you run on Marketplace. The donor-appliance and other-device routes are not built;
-the narration calls them the next step, and title `t07-routes` labels them a concept preview
-on screen.
+> I make frappé coffee with this older Hamilton Beach drink mixer, and its agitator is worn.
+> The rod has no model number of its own, so the app asks which device it came from. The
+> label under the mixer's base answers that. Search the web then looks first for the maker's
+> own part, and keeps only pages the search returned, each as a listing with its link. Check
+> fit holds a listing against the rod's measurements, and every unknown becomes a question
+> for the seller. Then I decide what to do with it: keep it and fix it.
 
-## 0:55 to 1:12 · Story B: what I own and what I want
+- The question is the item's own (`needs_parent`): a part profile, no model or part number. A
+  photo of the device is one Muse Spark reading; the model read off it stays *to confirm*.
+- Search the web is one Muse Spark call with web search; a find is kept only when its page is
+  among the search's results or citations. Marketplace is never searched.
+- With the live recording, the search found the maker's part for the model 729, Hamilton Beach
+  990010200, on a parts store page (Fix.com, $10.47 as the page stated). Name the number only
+  when the recorded take shows it; never a price the page did not state. The draft's stand-in
+  pages (example.org) carry the red DRAFT line until the answer is recorded.
+- Check fit reads the listing (one Muse Spark reading); the verdict is the rules', and what
+  the listing does not say becomes a seller question.
+- Decide writes three cards for the owner's skills profile; *Keep and fix* is chosen.
 
-Shots S09 and S10.
+## 1:08 to 2:01 · Story B: the arcade
 
-> The same approach applies to my unused electronics. I catalog my laptops, monitors,
-> tablets, and accessories. Then I explain my interests, budget, and experience, so the
-> suggestions fit both my equipment and me.
+Shots S10 to S16.
 
-The demo set holds laptops, RAM, tablets, two monitors, mice and switches; every item named
-here is in it.
+> The same approach works for my unused electronics. I catalog laptops, monitors and parts,
+> rate my skills, and say what I want from a build and what I can spend. Muse Spark proposes
+> projects from what I own, and the rules keep only what my inventory backs. I choose the
+> tabletop arcade, and its items are committed to it. Draw it shows how the finished build
+> could look, marked as a drawing. The missing controls become a Marketplace search that I
+> run myself. The build pack collects the items, the steps, and the safety notes.
 
-## 1:12 to 1:52 · The arcade
-
-Shots S11 to S16.
-
-> Perhaps I want a home automation server, a smart mirror, or a tabletop arcade. I choose the
-> arcade. The plan identifies which existing components could be reused, what needs testing,
-> and what is missing. Marketplace becomes a starting point for finding those missing pieces
-> locally: the app opens the search, and I run it. The build pack collects the items, the
-> steps, and the safety notes. A connection diagram and an assembly preview, shown here as
-> concept previews, would explain how the computer, display, and controls work together.
-
-- The smart mirror is one of the app's project templates: the time, the weather and a
-  calendar.
+- The demo set holds monitors, ThinkPads, a laptop board, a graphics card, a processor and a
+  powerline adapter; every item named here is in it.
+- The arcade is one of the app's project templates (*Arcade coffee table*). Keep whatever the
+  recorded proposals are; if the arcade is not among them, the narration names the project
+  that is, never the picture.
+- Draw it is one Muse Image call, captioned as drawn, never evidence.
 - The app opens a Marketplace search; you run it. It does not search Marketplace on its own.
-- The build pack is in the app. The connection diagram and the assembly preview are not; on
-  screen they are labeled concept previews.
 
-## 1:52 to 2:15 · The next step
+## 2:01 to 2:12 · The next step
 
 Shots S17 and S18.
 
-> The next step is a plan that adapts. If I choose a different display, the app should
-> reconsider the connections, enclosure dimensions, and instructions. That is the direction
-> shown in this concept preview: a downloadable build package, including designs for
-> suitable brackets or housings.
+> Next, a plan that adapts: a connection diagram, and a different display that re-plans the
+> build. These are concept previews, not built yet.
 
-Not built: a concept preview. On screen, titles `t16-swap` and `t17-brackets` carry the
-label.
+Not built: titles `t14-connections` and `t16-swap` and the badge in each picture carry the label.
 
-## 2:15 to 2:40 · Why it matters
+## 2:12 to 2:33 · On the phone, the models, try it
 
 Shots S19 to S21.
 
-> This would be useful because it connects a practical goal with things people already own.
-> It could help avoid unsuitable purchases, uncover worthwhile reuse projects, and make
-> secondhand parts easier to evaluate. Each confirmed result could also become useful
-> evidence for the next person facing the same problem.
+> On my phone, I capture photos and a spoken note into the same inventory. Muse Spark, SAM
+> 3.1, Muse Voice Transcribe and Muse Image do the reading, the searching and the drawing.
+> And anyone can try it on my own photos.
 
-Every claim here is conditional.
+- S19 is the Android app (its Capture and Captures screens). The phone also asks which device
+  a part came from (built); the video does not show that screen unless the phone take does.
+- S21: signed out, Read a label offers the demo set's photos; each answer is the recording of
+  that photo, and the page says so.
 
-## 2:40 to 2:50 · Close
+## 2:33 to 2:42 · Close
 
 Shot S22.
 

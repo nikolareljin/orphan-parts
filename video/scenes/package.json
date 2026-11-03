@@ -1,0 +1,11 @@
+{
+  "name": "orphan-parts-video-scenes",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scenes": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
