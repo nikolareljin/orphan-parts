@@ -335,7 +335,8 @@ class Lister:
         facts: list[DraftFact] = []
         for fact in writing.facts:
             if fact.field in allowed and fact.text.strip():
-                facts.append(DraftFact(text=fact.text.strip(), field=fact.field))
+                line = mask_text(strip_values(fact.text.strip(), secrets))
+                facts.append(DraftFact(text=line, field=fact.field))
             else:
                 warnings.append(f"left out a line that rested on nothing confirmed: {fact.text!r}")
         if not item.tests_done and claims_working(writing.title + "\n" + writing.description):
@@ -362,7 +363,8 @@ class Lister:
         holds_data = request.holds_data or (details is not None and details.data != "none")
         text, more = strip_personal(mask_text(strip_values(writing.description.strip(), secrets)))
         removed += more
-        description = text + "\n\n" + "\n".join(disclosures(item, request, details))
+        # the disclosures carry the owner's own words (faults, what was tested): masked the same
+        description = mask_text(text + "\n\n" + "\n".join(disclosures(item, request, details)))
         if removed:
             warnings.append(
                 "took out " + ", ".join(sorted(set(removed))) + "; buyers write through Marketplace"

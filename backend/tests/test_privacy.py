@@ -480,3 +480,24 @@ def test_the_pack_and_share_text_mask_what_the_owner_typed() -> None:
     assert pack_mask(f"Configuration: login Password: hunter2 on {FAKE_MAC}") == (
         "Configuration: login Password: •••• on •••• 4:55"
     )
+
+
+@pytest.mark.anyio
+async def test_a_check_run_again_that_fails_leaves_the_finished_one(
+    recorded_settings: Settings, settings: Settings
+) -> None:
+    photo = sticker_stored(recorded_settings)
+    client = ModelApiClient(recorded_settings, CostLedger(1.0))
+    try:
+        found = await Privacy(recorded_settings, client).check(photo)
+    finally:
+        await client.aclose()
+    # the same store, and no recording to answer the second time
+    again = settings.model_copy(update={"data_dir": recorded_settings.data_dir})
+    client = ModelApiClient(again, CostLedger(1.0))
+    privacy = Privacy(again, client)
+    try:
+        assert (await privacy.check(photo, again=True)).status == "found"
+    finally:
+        await client.aclose()
+    assert privacy.kept(photo) == found

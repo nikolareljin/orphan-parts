@@ -200,10 +200,15 @@ class Privacy:
             raise
         except (ModelApiError, ValueError) as exc:
             log.info("photo check failed", extra={"digest": digest, "error": str(exc)[:200]})
+            if kept is not None and kept.status in ("clear", "found"):
+                return kept  # a check run again that fails leaves the finished one standing
             return self._save(
                 PhotoCheck(digest=digest, status="failed", reason=_short(exc), checked_at=_now())
             )
         areas, problem = place(result.parsed, width, height)
+        if problem and kept is not None and kept.status in ("clear", "found"):
+            log.info("photo check not placed", extra={"digest": digest, "reason": problem})
+            return kept
         response = result.response
         check = PhotoCheck(
             digest=digest,
