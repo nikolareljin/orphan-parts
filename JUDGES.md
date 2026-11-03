@@ -248,9 +248,9 @@ A visitor without the code sees a public item's values, photos and drawn picture
 Photos are re-encoded on arrival, with EXIF and GPS dropped; the phone re-encodes before
 sending. Product keys, MAC addresses, serial numbers, passwords, QR codes and barcodes found on
 a photo are blacked out on every copy a visitor or a download gets, and a photo not checked is
-not shown to a visitor at all. A serial number, MAC address or IMEI never goes to a model. A session is one cookie
-that holds no account; issued codes are kept as hashes and logged by their label only. Nothing
-is posted or searched anywhere on anyone's behalf. Details:
+not shown to a visitor at all. A serial number, MAC address or IMEI never goes to a model as
+text. A session is one cookie that holds no account; issued codes are kept as hashes and logged
+by their label only. Nothing is posted or searched anywhere on anyone's behalf. Details:
 [Privacy](https://nikolareljin.github.io/orphan-parts/operations/privacy/).
 
 ## If something does not work
