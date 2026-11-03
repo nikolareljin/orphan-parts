@@ -51,6 +51,7 @@ test('signed out: no file input on any page, the samples instead', async ({ page
     await expect(panel.locator('input[type="file"]')).toHaveCount(0)
     // the demo set cannot be deleted from the demo
     await expect(panel.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled()
+    await expect(panel.getByRole('checkbox', { name: /Show in the public demo/ })).toBeDisabled()
   } finally {
     await owner.post(`/api/items/${id}/public`, { data: { public: false } })
     await owner.dispose()
