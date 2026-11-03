@@ -4,19 +4,22 @@ The Android app sends photos, clips and notes to the same backend the web app ta
 tells the app where that backend is and, when the page is signed in, gives the phone an access
 code of its own. The screens below come from a stack running on a computer with the gate on,
 in fixture mode (recorded answers, nothing spent), with the demo set loaded, and from the
-app on an Android emulator. The hosted site looks the same; where **Check** on the phone says
-`fixture` here, it says `live for the code, recorded otherwise` there, and the footer's
+app on an Android emulator. Every step works the same on your own computer
+([Run it on your own computer](local.md)) and on the hosted demo while it is up; where
+**Check** on the phone says `fixture` here, a server with a key says
+`live for the code, recorded otherwise`, and the footer's
 `recorded answers only (nothing spent)` becomes the spend so far against the cap.
 
 The address in the web pictures is the computer's network address with the port the stack was
 started on; the phone pictures show `http://10.0.2.2:5223`, the emulator's name for the same
-computer. On the hosted site the address under the QR code is the backend's,
-`https://….modal.run`, not `orphan-parts.pages.dev`: type that one.
+computer. On the hosted demo the address under the QR code is the backend's own, not the
+site's: type the one shown under the code, exactly as shown.
 
 ## 1. Open the web app and sign in
 
-Open the hosted site, or a local stack at the computer's network address (for example
-`http://192.168.1.20:5173`; not `localhost`, which on the phone is the phone). While the
+Open a local stack at the computer's network address (for example
+`http://192.168.1.20:5173`; not `localhost`, which on the phone is the phone), or the hosted
+demo while it is up. While the
 server has a gate and the page is not signed in, the header ends with **Sign in with the
 code**, **Read a label** is a gallery of the demo set's photos to pick from instead of an
 upload, and the foot of the page, under the gallery, says
@@ -70,6 +73,8 @@ shown on the phone's own screen takes a second device; the typed path in step 4 
 A page opened at `localhost` shows no code. It says why: the code would carry an address the
 phone cannot reach, and names the two ways out (the computer's network address, or
 `./dev phone`, which prints a code with that address).
+
+![Pair the phone opened at localhost: no code, and the line saying the phone cannot reach localhost](../assets/shots/pairing/04-pair-localhost.png)
 
 ## 3. Scan to pair
 

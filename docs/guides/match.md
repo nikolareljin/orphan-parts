@@ -5,6 +5,23 @@ the [ladder](../concepts/verdicts.md). The rules come from the item's
 [category profile](../concepts/profiles.md); the evidence comes from the inventory or from values
 written in. No model takes part.
 
+## Step by step
+
+No model takes part. The pictures check the frappé maker's agitator from the demo set against
+values typed in, as a seller's listing might give them.
+
+1. In the item, **Measure and fit**, then **Does it fit?**. Under **Needed by**, pick another
+   item, or keep **Values I type below** and fill the fields the profile's rules name; each says
+   whether it is *hard* or *soft* and its tolerance.
+
+    ![Does it fit?: Needed by, Values I type below, a field per rule with hard or soft and its tolerance, Check fit](../assets/shots/match/01-does-it-fit.png)
+
+2. **Check fit.** The verdict comes first with the line that decided it, then every rule with
+   what is needed, what this item has (and how that is known), the result and the basis in words,
+   then **Ask the seller** for the unknowns and the rules no value was given for.
+
+    ![The verdict and the checks table: rule, needed, this item, result and basis; the seller's questions under it](../assets/shots/match/02-checks.png)
+
 ## Two sides
 
 - **The need**: what the part must satisfy. Either another inventory item (the laptop that needs

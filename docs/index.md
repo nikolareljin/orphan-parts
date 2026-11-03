@@ -10,7 +10,8 @@ Meta's Muse models.
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
 [Built during the hackathon](project/hackathon.md). One diagram of the whole, every box a
 link: [How it fits together](project/flow.md). Judging it: [For judges](start/judges.md)
-starts with a two-minute fast path on the hosted app. Trying it on a phone: the
+starts with a two-minute fast path on the hosted demo (while it is up) or on your own computer.
+Running it yourself, with no hosted site: [Run it on your own computer](start/local.md). Trying it on a phone: the
 [five steps](#on-a-phone-in-five-steps) below.
 
 ## On a phone in five steps
@@ -29,9 +30,10 @@ starts with a two-minute fast path on the hosted app. Trying it on a phone: the
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
-2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and
-   `http://localhost:5173` on your own computer. To pair a phone with a local server, open the
-   site at the computer's network address, not `localhost` (for example
+2. **Open the web app**: the hosted demo, `https://orphan-parts.pages.dev`, while it is up; or
+   on your own computer `./dev up`, `./dev demo` and `http://localhost:5173`
+   ([Run it on your own computer](start/local.md)). To pair a phone with a local server, open
+   the site at the computer's network address, not `localhost` (for example
    `http://192.168.1.20:5173`), with the phone on the same network.
 3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
    (**Sign out**, in the same place, ends it).

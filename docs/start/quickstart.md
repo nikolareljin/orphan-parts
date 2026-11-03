@@ -1,6 +1,8 @@
 # Quickstart
 
-Docker and bash are the only requirements. Everything else runs inside containers.
+Docker and bash are the only requirements. Everything else runs inside containers. This page is
+the short version for development; [Run it on your own computer](local.md) is the whole path
+for trying it, phone included, step by step.
 
 ## 1. Configure
 
@@ -42,7 +44,7 @@ vitest and a production build in the frontend image. CI runs the same steps.
 ## 4. The phone
 
 To install the released app without a development setup, see
-[For judges](judges.md). For building it yourself:
+[Run it on your own computer](local.md#7-put-the-app-on-the-phone). For building it yourself:
 
 ```bash
 ./dev setup --check      # what the app's build needs: a JDK 17 or later, the Android command-line tools
@@ -51,7 +53,7 @@ To install the released app without a development setup, see
 ```
 
 The phone must have USB debugging on and have accepted this computer (the prompt on the
-phone the first time). In the app, **Scan to pair** reads the code: it carries this machine's
+phone the first time; [step by step](local.md#over-a-usb-cable)). In the app, **Scan to pair** reads the code: it carries this machine's
 address on the network and, when the demo is gated, a pairing good for fifteen minutes, with
 which the app claims an access code of its own on that first scan; the phone and the laptop
 have to be on the same network. [Android app](../guides/android.md).

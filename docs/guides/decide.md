@@ -6,6 +6,45 @@ fix it, keep it and build, sell it, give it away, or let it go. The panel gather
 panels already answered and adds two answers of its own: three scenarios written for you, and
 ideas for what the item is good for. Nothing is decided for you; the choice is yours.
 
+## Step by step
+
+The pictures follow the frappé maker's agitator from the demo set. Without the access code the
+Decide section is not offered (the demo line takes its place).
+
+1. **Open the item and go to Decide.** In **My inventory**, **Open** the item, then **Decide**
+   in the row of section links at the top of the dialog. The section starts with **What
+   should I do with it?** and the rows: what it is, what it is worth, what it is good for,
+   the parts it still needs, what it could look like, and the decision.
+
+    ![The Decide section: What should I do with it?, the rows, and the decision buttons](../assets/shots/decide/01-decide-section.png)
+
+2. **What should I do with it?** One Muse Spark call (under $0.01) writes three cards for this
+   item and your profile, with one recommendation above them, its card outlined. Without a
+   saved profile, as here, the cards are written for an average person with household tools and
+   the line above them says so, with a link to fill one in.
+
+    ![Three cards side by side: Keep and fix, Reuse it, Sell or give away (recommended), the recommendation above them](../assets/shots/decide/02-three-cards.png)
+
+3. **Read the cards.** *Keep and fix* names the likely problem and either the steps at your
+   level or why it is not worth fixing. *Reuse it* gives two or three things to make, each with
+   how hard it is for you, the extra parts and the time, and **Draw it** (one Muse Image call,
+   on a click only). *Sell or give away* says what sells it and offers **Get price guidance**
+   when there is none yet.
+
+    ![The Reuse it card: hand stir stick and small plant prop, each with easy for you, extra parts, cost and time, and Draw it](../assets/shots/decide/03-reuse-it.png)
+
+    ![The Sell or give away card: what sells it, the effort, Get price guidance, Sell it and Give it away](../assets/shots/decide/04-sell-or-give.png)
+
+4. **Choose this.** Each card ends with **Choose this** (*Sell it* and *Give it away* on the
+   third). The choice is recorded and the page moves to where it leads; here *Keep and fix*,
+   whose repair steps go into the item's private notes. The decision row then reads
+   *Decided: Keep and fix* with the date. No model call.
+
+    ![The decision made: Decided Keep and fix, with the date, under the rows](../assets/shots/decide/05-decision-made.png)
+
+The decision buttons under the rows (**Keep and fix**, **Keep and build**, **Sell**, **Give
+away**, **Not worth it**, with a note) record the same choice without the cards.
+
 ## Built so far
 
 **Decide**, on the item's page below its values and details and above the other panels, starts

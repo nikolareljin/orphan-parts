@@ -4,6 +4,61 @@ Photos in, a Facebook Marketplace (US) listing out: the label read and confirmed
 details you give, a draft in Marketplace's fields with the disclosures the rules require, and
 the handoff to the create page. Posting is yours.
 
+## Step by step
+
+The pictures show the Sun monitor and the older ThinkPad from the demo set, with the drafts the
+demo set wrote for them. Without the access code none of this is shown, not even on a public
+item.
+
+1. **Listing details.** In the item, **Sell or give away**. Under **Prepare to sell or give
+   away**: **Listing type** (**Sell** or **Give away**), **Handover**, **Condition in your
+   words**, **Known faults or cosmetic issues**, what is **Included**, **Other included**, **Not
+   tested**, **Personal data on it**, **Area**, **Availability**, **Asking price (USD)**, and the
+   two that never reach the listing: **Lowest you would take (private)** and **Your reason
+   (private)**. A **Voice note (WAV)** is transcribed and kept as your words. **Save details**
+   keeps them without a draft.
+
+    ![Prepare to sell or give away: the listing details form, Write the draft and Save details](../assets/shots/seller/01-listing-details.png)
+
+2. **Write the draft.** One Muse Spark call (under $0.01) writes the listing from the confirmed
+   values, your details and the photos. The **Marketplace handoff** opens with what the rules
+   want you to know first (here: no listing details saved yet, and a category to check in
+   Marketplace's picker).
+
+    ![Marketplace handoff: For sale, draft 1, the warnings, then the title](../assets/shots/seller/02-draft.png)
+
+3. **Copy the fields.** **Title**, **Price**, **Category**, **Condition**, **Description** and
+   **Tags**, each with **Copy**; the category and the condition can be changed in their lists
+   first. With no asking price and no guidance, the price is left for you (*not set*).
+
+    ![The fields to paste: price not set, category, condition, the description with the disclosures, tags, each with Copy](../assets/shots/seller/03-fields-to-paste.png)
+
+4. **Photos and Marketplace.** The photos in the draft's order, each with why it is there;
+   **Download photos** gets them as a zip in that order; **Open Marketplace** opens
+   Marketplace's create page in a new tab. **On Marketplace** lists the steps there, and
+   **Before handing it over** is a checklist kept with the draft.
+
+    ![The photo order, Open Marketplace, Download photos, the steps on Marketplace and the checklist](../assets/shots/seller/04-open-marketplace.png)
+
+5. **After posting.** Under **After posting**: the **Date**, the **Price (USD)** and the
+   **Listing link (optional)**, then **Mark as listed**, and later **Mark as sold**, which also
+   records the sale for price guidance. No model call.
+
+    ![The photo checklist and After posting: date, price, listing link, Mark as listed, Mark as sold](../assets/shots/seller/05-after-posting.png)
+
+6. **Give it away.** With **Give away** as the listing type the draft is *Free*: the title starts
+   with *Free:*, the price is 0, the category is **Free Stuff** (with the category it would
+   otherwise take named), and the description ends with *Free to collect.*
+
+    ![A give-away draft: Free: Lenovo 9461-54G..., Free (0), Free Stuff, the description](../assets/shots/seller/06-give-away.png)
+
+    An item that holds personal data gets **Wipe your data** in the checklist; **Mark as
+    given** records the gift.
+
+    ![Wipe your data: sign out, factory reset, take out cards and drives; then Mark as listed and Mark as given](../assets/shots/seller/07-wipe-your-data.png)
+
+Posting is yours: nothing here fills, reads or submits a Facebook page.
+
 ## The hard limit
 
 No public API posts a personal Facebook Marketplace listing, and automating the site is against

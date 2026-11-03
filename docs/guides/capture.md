@@ -4,6 +4,70 @@ The phone is where a thing gets photographed and where a person says what they k
 while holding it. A capture is what the phone sends in one go: photos, a short clip, a spoken
 note and a line of text. The backend keeps it, and reads it into an item when asked.
 
+## Step by step
+
+### On the phone
+
+The phone has to be [paired](../start/pairing.md) first. The phone pictures are frames from a
+recording of the app on a phone.
+
+1. **Capture** tab, *Capture an item*: **Take a photo** (or **Photos from the gallery**), as
+   many as four; **Record a video** or **A video from the gallery** for a short clip.
+
+    ![The Capture tab: Take a photo, Record a video, Photos from the gallery, A video from the gallery, Say what you know](../assets/phone/capture-tab.png){ width=300 }
+
+2. Under **Say what you know**: **Allow the microphone** once, then hold to talk; **Name, if
+   you know it** and **A line about it**. **Send**. Nothing is read yet, so nothing is spent.
+
+    ![Two photos taken, the name typed, Send and Clear, 2 photo(s) ready](../assets/phone/capture-ready.png){ width=300 }
+
+3. **Captures** tab: the capture, *Received, not read yet*, with **Read it now**.
+
+    ![The Captures tab: capture 1, two photos, received, not read yet, Read it now](../assets/phone/captures-received.png){ width=300 }
+
+4. **Read it now** reads it into an item: the label found first by SAM 3.1 and read by Muse
+   Spark (under a cent a photo), a voice note transcribed by Muse Voice Transcribe. The capture
+   then says which item it became, and **Talk about item #…** opens the **Talk** tab on it.
+
+    ![The capture read: Read into item 11 by muse-spark-1.3, Talk about item 11](../assets/phone/captures-read.png){ width=300 }
+
+### On the computer
+
+5. **Read a label** takes up to four photos of a label: **Choose Files**, keep *Find the label
+   in the photo first* on, **Read the label**.
+
+    ![Read a label: Photos of the label, Find the label in the photo first, Read the label](../assets/shots/capture/01-read-a-label.png)
+
+    ![A photo of a monitor's label chosen](../assets/shots/capture/02-photo-chosen.png)
+
+6. SAM 3.1 looks for the item, the label and the connector first (about $0.0025); it says so for
+   each it did not find, and the photo is then read whole. Muse Spark reads the values (about
+   $0.003 to $0.008): each with its confidence and its source. *Label text* holds the label as
+   printed.
+
+    ![SAM 3.1: 0 regions, no item, no label, no connector found, over the photo](../assets/shots/capture/03-regions.png)
+
+    ![The reading: brand, model number, input voltage, certifications, condition notes, each with confidence and source](../assets/shots/capture/04-values.png)
+
+7. **Name** it and **Save privately**. The page moves to **My inventory**, where every value
+   waits to be confirmed ([My inventory](inventory.md#step-by-step)).
+
+    ![Name and Save privately under the reading](../assets/shots/capture/05-save.png)
+
+8. **Inbox**, **Send a capture from this computer**: **Photos**, **A short video (optional)**,
+   **Name (optional)**, **What you know (optional)**, **Send**. The capture waits in the Inbox
+   with **Read it** and **Delete**, as one from the phone does.
+
+    ![The Inbox before anything was sent: Send a capture from this computer](../assets/shots/capture/06-inbox.png)
+
+    ![Send a capture: two photos, a name, what you know, Send](../assets/shots/capture/07-send-a-capture.png)
+
+    ![The capture in the Inbox: received, not read yet, its photos, Read it, Delete](../assets/shots/capture/08-capture-received.png)
+
+Without the access code there is no upload anywhere: **Read a label** is a gallery of the demo
+set's photos, each answered from its recording ([Demo walkthrough](../start/demo.md)), and the
+Inbox shows *Sign in with the access code to use this.*
+
 ## On the phone
 
 The **Capture** tab is one session: **Take a photo** as many times as needed (four go in one

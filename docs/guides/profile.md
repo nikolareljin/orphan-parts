@@ -4,6 +4,43 @@ What you can do and what you have, kept once for the inventory. The scenarios on
 ([Decide what it becomes](decide.md)) are written for it, and so are the build proposals
 ([Build and reuse](reuse.md)).
 
+## Step by step
+
+No step on this page calls a model: the profile is a form, read later by the calls that write
+the scenarios and the proposals. It is behind the access code.
+
+1. Open **Profile** in the header. **Skills** lists ten skills, each with four levels:
+   *none*, *some*, *confident*, *pro*. A skill added on top of them has **Remove** beside it
+   (in the pictures, *basic computer setup*, which the demo set adds).
+
+    ![Profile: the Skills table with ten skills rated none to pro, Another skill, and the tools, effort and budget below](../assets/shots/profile/01-skills.png)
+
+2. Rate each skill by its level: here **software** at *confident* and **electronics and
+   soldering** at *some*; woodworking, metalwork and the rest stay at *none* until you say
+   otherwise.
+
+    ![The Skills table with software at confident and electronics and soldering at some](../assets/shots/profile/02-levels-set.png)
+
+3. A skill that is not listed: type it into **Another skill**, pick its **Level**, then **Add
+   skill**. Under **What you have and how you work**, **Tools I have** takes your tools in a
+   line; then **Effort I will put in**, **I am OK opening up devices**, **Budget**,
+   **Currency** and **Radius (km)**.
+
+    ![Another skill filled with bike repair at some, and Tools I have filled](../assets/shots/profile/03-own-skill-and-tools.png)
+
+4. **Save profile**. The form says *saved*.
+5. On **Build and reuse**, **What I want from a build** is the same record: **Edit** opens
+   **Interests**, **Effort I will put in**, the rated skills in a line with a link back here
+   (*rate them on your Profile*), **Tools I have**, **Budget**, **Currency**, **Radius (km)**,
+   **Buy parts** (used, new or either) and **I am OK opening up devices**. **Save** keeps it.
+
+    ![What I want from a build, open: the interests, the effort, the skills in a line with the link to Profile, the budget](../assets/shots/profile/04-build-wishes.png)
+
+    ![What I want from a build, saved: the interests, the effort and the budget in a line](../assets/shots/profile/05-build-wishes-saved.png)
+
+What the profile changes is on [Decide what it becomes](decide.md) (the cards say how hard a
+step is for you) and [Build and reuse](reuse.md) (the proposals).
+
 ## Built so far
 
 **Profile**, in the header, is one form:

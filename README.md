@@ -13,8 +13,11 @@ Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
 on the docs site). One diagram of the whole, every box a link:
 [How it fits together](https://nikolareljin.github.io/orphan-parts/project/flow/).
-**Judging it?** [JUDGES.md](JUDGES.md) starts with a two-minute fast path on the hosted app,
-then the Android app and the access code. **Trying it on a phone?**
+**Judging it?** [JUDGES.md](JUDGES.md) starts with a two-minute fast path on the hosted demo
+(while it is up) or on your own computer, then the Android app and the access code.
+**Running it yourself?**
+[Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)
+is the whole path with no hosted site: Docker, a `.env`, the demo set, the phone. **Trying it on a phone?**
 [Five steps](#on-a-phone-in-five-steps) below.
 
 Orphan Parts Lens starts from a private inventory of the devices, parts and other things you
@@ -80,10 +83,11 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    computer (on Windows,
    `powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1`), or the one-line
    download in the long version.
-2. **Open the web app**: the hosted site, `https://orphan-parts.pages.dev`; or `./dev up` and
-   `http://localhost:5173` on your own computer. To pair a phone with a local server, open the
-   site at the computer's network address, not `localhost` (for example
-   `http://192.168.1.20:5173`), with the phone on the same network.
+2. **Open the web app**: the hosted demo, `https://orphan-parts.pages.dev`, while it is up; or
+   on your own computer `./dev up`, `./dev demo` and `http://localhost:5173`
+   ([Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)).
+   To pair a phone with a local server, open the site at the computer's network address, not
+   `localhost` (for example `http://192.168.1.20:5173`), with the phone on the same network.
 3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
    (**Sign out**, in the same place, ends it).
    A local stack has no door until `./dev gate on`, which prints a code for you and one for

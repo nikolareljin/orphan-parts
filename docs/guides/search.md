@@ -4,6 +4,72 @@ Find the part an item is missing on Facebook Marketplace: a search plan of links
 yourself, the listings you bring back ranked by a match pattern, and each one you pick checked
 by the category's rules. Nothing is searched, fetched or posted for you.
 
+## Step by step
+
+Behind the access code. The first pictures follow the agitator's search from the demo set; the
+planning pictures follow a search for a laptop's 65 W charger, made for these pages from the
+values on its old adapter's label. Each step says whether it calls a model.
+
+1. **The searches.** **Find a part** lists every search with its status and candidates.
+   **Open** one, or start one under **New search**: **Looking for**, **Needed by** (an item) or a
+   **Profile** with the values, **Max price**, then **Start the search**. No model call.
+
+    ![Find a part: the Searches table](../assets/shots/search/01-searches.png)
+
+    ![New search: Looking for, Needed by or a Profile, Max price, Start the search](../assets/shots/search/02-new-search.png)
+
+2. **The search.** Its title, the rules it runs under and **Search Marketplace**, which opens
+   the search on Marketplace in a new tab for you to run. Under it, **Plan the search**,
+   **Bring back listings** and **Bring a listing back**.
+
+    ![An open search: Search Marketplace with the max price, and Plan the search](../assets/shots/search/03-search-open.png)
+
+    ![Plan the search: Plan the search and Search the web, the pattern, the words to skip, Test the pattern](../assets/shots/search/04-plan-section.png)
+
+3. **Plan the search.** One Muse Spark call (under $0.01): three to six phrasings, each a
+   Marketplace link with your max price and **Copy**, a match pattern (**Words to match**) and
+   words to skip.
+
+    ![The plan: five phrasings as Marketplace links with Copy, each with why, the pattern and the words to skip](../assets/shots/search/10-plan.png)
+
+    **Test the pattern** shows at once whether a line fits it, and what matched, with no call.
+
+    ![Test the pattern: a line marked fits, the matched words highlighted](../assets/shots/search/11-pattern.png)
+
+4. **Bring back listings.** Paste what you found on Marketplace, separated by `---` or a blank
+   line (or add screenshots), then **Score 2 listings**: ranked by the pattern, the words to
+   skip and the price, with no model call.
+
+    ![Bring back listings: two listings pasted, separated by ---, Score 2 listings](../assets/shots/search/12-bring-back.png)
+
+    ![Ranked: fits at $15 with the pattern's match highlighted; does not fit at $5, it says for parts and frayed](../assets/shots/search/13-ranked.png)
+
+5. **Search the web** (beside **Plan the search**): one Muse Spark call with web search; the
+   pages it finds come back as listings with their links, *found on the web*. For the agitator,
+   whose device the label told, they are the maker's own part for the Hamilton Beach mixer.
+
+    ![Search the web: four pages found on the web, each with its price, its link and Check fit](../assets/shots/search/06-web-finds.png)
+
+6. **Check fit** on a listing: one Muse Spark reading of it, then the profile's rules. It
+   becomes a candidate with its verdict.
+
+    ![Check fit on the charger: documented candidate, every hard rule passes](../assets/shots/search/14-fit.png)
+
+    ![Check fit on a page about the agitator: needs evidence, and the questions to ask the seller](../assets/shots/search/07-check-fit.png)
+
+7. **Ask the seller.** Every unknown on the listing's side is a question. In the candidate's
+   panel, **Ask the seller** writes them as a message to copy (**Copy the message**); with
+   nothing unknown, it asks whether the item is still available. No model call.
+
+    ![The questions for the seller of the agitator page](../assets/shots/search/08-seller-questions.png)
+
+    ![The candidate's checks, Ask the seller, and the message to the seller with Copy the message](../assets/shots/search/15-ask-the-seller.png)
+
+8. **The candidates** of a search are listed with their status, price and the day they were
+   seen. **Mark found** when one is the part; **Close search** ends it.
+
+    ![The candidates table: documented candidate, rejected, needs evidence; Mark found and Close search](../assets/shots/search/05-candidates.png)
+
 ## Built so far
 
 **Find a part**: a search request for something you need, run on Marketplace by you. Say what

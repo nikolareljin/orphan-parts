@@ -75,9 +75,11 @@ that is rather the point.
 
 ## Try it
 
-- The hosted site: [orphan-parts.pages.dev](https://orphan-parts.pages.dev). Every visitor
-  clicks the demo set's photos and sees the answers recorded for them; the access code opens
-  uploads, the live models and saving.
+- The hosted demo, while it is up: [orphan-parts.pages.dev](https://orphan-parts.pages.dev).
+  Every visitor clicks the demo set's photos and sees the answers recorded for them; the access
+  code opens uploads, the live models and saving.
+- On your own computer, the same with no hosted site:
+  [Run it on your own computer](../start/local.md).
 - The release, with the Android app as an APK:
   [github.com/nikolareljin/orphan-parts/releases/latest](https://github.com/nikolareljin/orphan-parts/releases/latest).
 - The two-minute fast path, the app on your phone and the access code:

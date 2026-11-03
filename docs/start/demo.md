@@ -42,6 +42,29 @@ draws it only with `PICTURE_ENABLED=1` (`./dev record-fixtures` sets it for its 
 mode shows a drawing only once a record run has kept it, and until then the load says *not
 recorded yet* for it and shows none, never the stub image as a drawing.
 
+## Without the code
+
+On a gated server (the hosted demo, or a local stack after `./dev gate on`), a visitor without
+the code is in the demo. The header ends with **Sign in with the code**; **Read a label** is a
+gallery of the set's photos instead of an upload.
+
+![Signed out: Read a label shows the demo set's photos grouped by item](../assets/shots/demo/01-visitor-home.png)
+
+Tick one photo, several, or **Select all photos of this item**, then **Read the label**. Each
+reading is the one recorded for that photo, under *Recorded answer for this sample.*; nothing is
+spent and nothing is kept.
+
+![The graphics card's two photos picked](../assets/shots/demo/02-samples-picked.png)
+
+![The recorded reading of the graphics card: brand, model number, connector, certifications, condition notes](../assets/shots/demo/03-sample-reading.png)
+
+**My inventory** lists the set's items, marked public, read-only: their photos, values and
+drawn pictures, never a note, a location or a draft.
+
+![A public item opened by a visitor: its photos and values, read-only](../assets/shots/demo/04-visitor-item.png)
+
+Signed in, everything below is open. The pictures in each step are on the guide it links to.
+
 ## 1. Read a label and save it
 
 **Read a label** takes up to four photos (signed out on a gated host, a gallery of the set's
@@ -53,12 +76,16 @@ confidence and its source. **Save privately** makes it an item in
 [My inventory](../guides/inventory.md): every observed value waits for you to confirm or reject
 it, and anything you add beside it carries your word as its provenance.
 
+![A label read: each value with its confidence and source, then Name and Save privately](../assets/shots/capture/04-values.png)
+
 ## 2. Measure the thing that decides fit
 
 On the agitator's page, **Measure a feature**: the rod photographed from the side with a ruler
 along it, two marks on the ruler and two on the rod, and the number comes from geometry, with
 its uncertainty and the method. A blurred or oblique capture is refused with the reason.
 [Measure a feature](../guides/measure.md).
+
+![The rod's diameter measured against the tape: 4.8 ± 0.49 mm, two-point scale](../assets/shots/measure/04-measured.png)
 
 ## 3. Does a listed rod fit?
 
@@ -78,6 +105,8 @@ are ranked by the pattern and the price with no model call; **Check fit** has Mu
 one into fields, dated, assessed by the same rules and placed where it stands, and **Ask the
 seller** turns the open questions into a message. [Find a part](../guides/search.md).
 
+![Search the web for the agitator: the maker's mixing shaft on four pages, each with Check fit](../assets/shots/search/06-web-finds.png)
+
 ## 5. What should become of it?
 
 On any item, **Decide**, **What should I do with it?**: Muse Spark writes three cards for the
@@ -86,6 +115,8 @@ keep and fix (the likely problem, the steps at that level, the parts, cost and t
 (two or three builds with what else the owner has) and sell or give away, with one
 recommendation. **Choose this** keeps the choice as the item's plan and moves to the section it
 leads to. [Decide what it becomes](../guides/decide.md).
+
+![The three cards for the agitator, one recommended](../assets/shots/decide/02-three-cards.png)
 
 ## 6. What could the monitors become?
 
@@ -96,6 +127,8 @@ items you own is shown: a homework workstation on the 24 inch Dell and a smart m
 is left, the missing cable becomes a search, and the build pack is one document from
 what stands. **Draw it** has Muse Image draw how the finished desk could look, one image call,
 captioned as drawn. Record the outcome once it works. [Build and reuse](../guides/reuse.md).
+
+![A project selected, its drawing captioned as drawn](../assets/shots/reuse/05-drawn.png)
 
 ## 7. Sell the graphics card, give the processor away
 
@@ -109,11 +142,15 @@ the older ThinkPad as one with the data-removal steps. Each field has **Copy**, 
 photos** zips them in order, and **Open Marketplace** opens the create page; posting is yours.
 [Value an item](../guides/value.md), [Seller flow](../guides/seller.md).
 
+![The Marketplace handoff: each field with Copy](../assets/shots/seller/03-fields-to-paste.png)
+
 ## 8. On the phone
 
 The Android app points at the same backend: a photo of a label read and saved into the same
 inventory, and a voice note held to the item, kept as your words and read back.
 [Android app](../guides/android.md).
+
+![The app's Captures tab: a capture read into an item](../assets/phone/captures-read.png){ width=300 }
 
 ## Running it in public
 
