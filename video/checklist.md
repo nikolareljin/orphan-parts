@@ -29,7 +29,8 @@ Tick every line before uploading.
 - [ ] Corner logo on every screen recording, not on the cards; not over captions or titles.
 - [ ] Titles readable for at least 3 s; none in the bottom 200 px.
 - [ ] Captions match the narration word for word and in time; two lines at most.
-- [ ] Narration peaks around -6 dB, music (if any) about -24 dB under it, no clipping.
+- [ ] Narration at -16 LUFS integrated (`ffmpeg -i out/main-draft.mp4 -af ebur128=peak=true
+  -f null -`), true peak under -1 dBTP; music (if any) about -24 dB under it, no clipping.
 - [ ] No notifications, personal tabs, file paths with personal names, keys, access codes or
   pairing QR codes on screen (the phone's Backend tab is never on camera). `.env` never on
   screen.

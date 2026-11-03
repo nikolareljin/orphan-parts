@@ -1,20 +1,22 @@
 # Main video: narration (2:42)
 
-The narration, section by section, in the owner's voice. Under each section, a note of what
-the app does in it and what is not claimed. Shot numbers point at
-[the storyboard](../storyboard/main.md). The captions in `main.srt` are written from the quoted
-lines below by `captions.py`; edit the text here, then run it again.
+The narration, section by section, read by a neutral narrator: a synthetic voice
+(`generate.sh --tts`, one clip per caption), never the owner speaking. It describes what is on
+screen in the third person. Under each section, a note of what the app does in it and what is
+not claimed. Shot numbers point at [the storyboard](../storyboard/main.md). The captions in
+`main.srt` are written from the quoted lines below by `captions.py`; edit the text here, then
+run it again.
 
-Pace: 312 words in 162 seconds, about 1.9 words a second (113 words a minute) including
-pauses. Section 1 (0:00 to 0:17) is the densest at 2.2 words a second; read it a little faster,
-or let it run into S04.
+Each sentence is one caption (two lines of 42 characters at most) and one spoken clip, fitted
+to its caption's time. A line the voice cannot say in its window at up to 1.15 times its
+natural pace is shortened here; the pace is never pushed further.
 
 ## 0:00 to 0:17 · Two questions
 
 Shots S01 to S03.
 
-> One worn part can stop a favorite routine. Useful electronics sit in drawers because we
-> don't know what to do with them. Orphan Parts Lens starts with two questions: what do you
+> One worn part can stop a favorite routine. Useful electronics sit in drawers because no
+> one knows what to do with them. Orphan Parts Lens starts with two questions. What do you
 > have, and what do you want?
 
 S01 and S02 are the owner's own photos from the demo set: the mixer, then a graphics card, a
@@ -24,12 +26,12 @@ slot 1 processor and a powerline adapter.
 
 Shots S04 to S09.
 
-> I make frappé coffee with this older Hamilton Beach drink mixer, and its agitator is worn.
-> The rod has no model number, so the app asks which device it came from. The label under the
-> base answers that. Search the web looks first for the maker's own part, and keeps only pages
-> the search returned, each a listing with its link. Check fit turns every unknown into a
-> question for the seller. Decide weighs fixing, reusing or selling for my skills; it calls
-> the fix hard, but with the maker's part found, I keep it and fix it.
+> This older Hamilton Beach drink mixer makes frappé coffee. Its agitator is worn. The rod
+> has no model number, so the app asks which device it came from. The label under the base
+> answers that. Search the web looks first for the maker's own part. It keeps only pages the
+> search returned, each a listing with its link. Check fit turns every unknown into a question
+> for the seller. Decide weighs fixing, reusing or selling against the owner's skills. It
+> calls the fix hard. But with the maker's part found, the owner keeps it and fixes it.
 
 - The question is the item's own (`needs_parent`): a part profile, no model or part number. A
   photo of the device is one Muse Spark reading; the model read off it stays *to confirm*.
@@ -51,13 +53,13 @@ Shots S04 to S09.
 
 Shots S10 to S16.
 
-> The same approach works for my unused electronics. I catalog laptops, monitors and parts,
-> rate my skills, and say what I want from a build and what I can spend. Muse Spark proposes
-> projects from what I own, and the rules keep only what my inventory backs. The arcade I
-> asked for isn't among them, so I pick the homework workstation, and its items are committed
-> to it. Draw it shows how it could look, marked as a drawing. What is missing becomes a
-> Marketplace search that I run myself. The build pack collects the items, the steps, and the
-> safety notes.
+> The same approach works for unused electronics. Laptops, monitors and parts go into the
+> inventory, beside a skills profile. The preferences say what the build is for and what it
+> can cost. Muse Spark proposes projects from what is in the inventory. The rules keep only
+> what the inventory backs. The arcade that was asked for isn't among them. So the homework
+> workstation is selected, and its items are committed to it. Draw it shows how it could look,
+> marked as a drawing. What is missing becomes a Marketplace search that the owner runs. The
+> build pack collects the items, the steps, and the safety notes.
 
 - The demo set holds monitors, ThinkPads, a laptop board, a graphics card, a processor and a
   powerline adapter; every item named here is in it.
@@ -73,7 +75,7 @@ Shots S10 to S16.
 
 Shots S17 and S18.
 
-> Next, a plan that adapts: a connection diagram, and a different display that re-plans the
+> Next, a plan that adapts. A connection diagram, and a different display that re-plans the
 > build. These are concept previews, not built yet.
 
 Not built: titles `t14-connections` and `t16-swap` and the badge in each picture carry the label.
@@ -82,9 +84,9 @@ Not built: titles `t14-connections` and `t16-swap` and the badge in each picture
 
 Shots S19 to S21.
 
-> On my phone, I capture photos and a spoken note into the same inventory. Muse Spark, SAM
-> 3.1, Muse Voice Transcribe and Muse Image do the reading, the searching and the drawing.
-> And anyone can try it on my own photos.
+> On the phone, photos and a spoken note go into the same inventory. The models are Muse
+> Spark, SAM 3.1, Muse Voice Transcribe and Muse Image. They do the reading, the searching and
+> the drawing. Anyone can try it on the owner's own photos.
 
 - S19 is the Android app (its Capture and Captures screens). The phone also asks which device
   a part came from (built); the video does not show that screen unless the phone take does.

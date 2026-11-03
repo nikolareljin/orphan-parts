@@ -3,57 +3,60 @@
 One worn part can stop a favorite routine.
 
 2
-00:00:05,000 --> 00:00:08,003
-My frappé maker's agitator is worn.
+00:00:05,000 --> 00:00:08,138
+This frappé maker's agitator is worn.
 
 3
-00:00:08,123 --> 00:00:15,630
-The app asks which device it came from,
-and the label under the base answers.
+00:00:08,258 --> 00:00:12,443
+The app asks which device it came from.
 
 4
-00:00:15,750 --> 00:00:20,755
-Search the web brings back the maker's
-part, and Check
+00:00:12,563 --> 00:00:15,702
+The label under the base answers.
 
 5
-00:00:20,875 --> 00:00:25,880
-fit turns every unknown into a question
-for the seller.
+00:00:15,822 --> 00:00:20,006
+Search the web brings back the maker's
+part.
 
 6
-00:00:26,000 --> 00:00:32,441
-For my unused electronics, Muse Spark
-proposes builds from what I own.
+00:00:20,126 --> 00:00:25,880
+Check fit turns every unknown into a
+question for the seller.
 
 7
-00:00:32,561 --> 00:00:37,929
-I pick a homework workstation and draw it,
-and what
+00:00:26,000 --> 00:00:31,943
+For unused electronics, Muse Spark
+proposes builds from the inventory.
 
 8
-00:00:38,049 --> 00:00:42,880
-is missing becomes a Marketplace search I
-run myself.
+00:00:32,063 --> 00:00:36,223
+The homework workstation is selected and
+drawn.
 
 9
+00:00:36,343 --> 00:00:42,880
+What is missing becomes a Marketplace
+search that the owner runs.
+
+10
 00:00:43,000 --> 00:00:47,880
 The connection diagram is a concept
 preview of the next step.
 
-10
+11
 00:00:48,000 --> 00:00:49,956
 Orphan Parts Lens.
 
-11
+12
 00:00:50,076 --> 00:00:51,380
 Find replacements.
 
-12
+13
 00:00:51,500 --> 00:00:52,804
 Discover reuse.
 
-13
+14
 00:00:52,924 --> 00:00:54,880
 Build something useful.
 

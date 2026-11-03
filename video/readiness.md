@@ -48,7 +48,7 @@ the phone, 4 are the owner's photos, 2 are concept previews, 3 are cards rendere
 
 | Shot | Scene | Status | What it needs |
 |---|---|---|---|
-| S01, S02, S04, S06 | The owner's photos: the mixer, unused electronics, the worn agitator, the label | photos | `demo/photos/` (in the repository) |
+| S01, S02, S04, S06 | The owner's photos: the mixer, unused electronics, the mixer's side and the worn agitator, the label | photos | `demo/photos/` (in the repository) |
 | S03, S20, S22 | Cards | card | `brand/card-*.png` |
 | S05 | The app asks which device the part came from | now | the stage (the demo set, the agitator's device unanswered) |
 | S07 | The label answers it | record | the reading of `hamilton-729-label.jpg` alone (op `extract`) |
@@ -90,6 +90,11 @@ video/generate.sh               # the drafts, now on the recorded answers
 | S14 | Draw it on the project (`picture`) | Muse Image | $0.01 |
 | | **Total** | | **about $0.08 to $0.17** |
 | S19 | the phone's capture, read once (`--phone --record`, still to do) | Muse Spark (and SAM 3.1) | about $0.01 |
+
+Outside the shots, the demo set's agitator is answered by reading its four device photos (the
+label, the badge, the mixer and its side view), nothing typed; that reading is recorded
+(`extract`, about $0.01, Nov 2) with `PICTURE_ENABLED=0 ./dev record-fixtures`, which leaves
+the set's unrecorded item drawings out.
 
 The ranges are the live check's per-operation figures (`livecheck/README.md`); the cap holds
 the worst case. A request already recorded is replayed, not bought again, so a run that stops

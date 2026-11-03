@@ -62,8 +62,8 @@
 #                      reset the inventory and load the set once with the key from the shell
 #                      or .env, keeping every model answer as a fixture
 #                      (OPL_RECORD_FIXTURES=1), the sample readings and the pictures the set
-#                      names (PICTURE_ENABLED=1) included; spends credits once; --keep adds to
-#                      what is there
+#                      names included (PICTURE_ENABLED=0 in the shell leaves them out); spends
+#                      credits once; --keep adds to what is there
 #   video [options]    draft cuts of the demo videos into video/out/ from a stack of its own in
 #                      fixture mode (video/generate.sh -h); --record records the answers the
 #                      scenes need once, with MODEL_API_KEY from the shell
@@ -669,7 +669,7 @@ cmd_record_fixtures() {
   fi
   stop_backend_for_run
   # shellcheck disable=SC2086
-  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 -e PICTURE_ENABLED=1 ${key_env[@]+"${key_env[@]}"} backend python -m app.demo record --set /demo/set.yaml $reset
+  compose run --rm --no-deps -e OPL_FAKE_API=0 -e OPL_RECORD_FIXTURES=1 -e PICTURE_ENABLED="${PICTURE_ENABLED:-1}" ${key_env[@]+"${key_env[@]}"} backend python -m app.demo record --set /demo/set.yaml $reset
   log_ok "fixtures recorded under backend/tests/fixtures/api; review and commit them"
 }
 

@@ -270,6 +270,33 @@ async def test_record_mode_writes_a_fixture_per_answer(live_settings: Settings) 
     assert len(list((recording.fixtures_dir / "responses").glob("*.json"))) == 1
 
 
+async def test_the_device_is_answered_by_reading_its_photos(live_settings: Settings) -> None:
+    # nothing typed: the model read off the device photos is accepted, and that answers it
+    recording = live_settings.model_copy(update={"record_fixtures": True})
+    extract = json.loads((RECORDED_FIXTURES / "responses" / "extract.json").read_text())
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=extract["response"])
+
+    client = ModelApiClient(recording, CostLedger(25.0), transport=httpx.MockTransport(handler))
+    loader, _ = build_loader(recording)
+    loader.client = loader.extractor.client = client
+    path = write_set(
+        recording.data_dir.parent / "demo",
+        "items:\n"
+        "  - key: rod\n    name: Agitator\n    profile: blender_agitator\n"
+        "    parent_photos: [photos/psu.jpg]\n",
+    )
+    outcome = await loader.run(load_set(path), path.parent)
+    assert outcome.unrecorded == [] and outcome.skipped == [] and outcome.photos == 1
+    rod = loader.inventory.get(loader.ids["rod"])
+    read = rod.fields["parent_device_model"]
+    assert read.value == "Orbital Power OP-65N"
+    assert (read.source, read.review) == ("photo", "accepted")
+    assert "parent_device" not in rod.fields and rod.needs_parent is False
+    assert loader.photos.count(rod.id) == 0 and loader.device_photos.count(rod.id) == 1
+
+
 def test_reset_removes_only_the_inventory_file(recorded_settings: Settings) -> None:
     recorded_settings.data_dir.mkdir(parents=True)
     db = recorded_settings.inventory_db_path

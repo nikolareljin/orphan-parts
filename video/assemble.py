@@ -2,7 +2,8 @@
 
 The shot lists below follow storyboard/main.md and storyboard/short.md: change both together.
 Each shot becomes a 1920x1080, 30 fps segment; the segments are joined, the captions from
-scripts/*.srt burned in, and the sound is silence or the owner's narration (never retimed).
+scripts/*.srt burned in, and the sound is silence or a narration track (never retimed): the
+owner's recording, or the synthetic narrator tts.py writes from the captions.
 
 - take:   a web take from video/scenes (out/work/takes/<shot>.webm and .json), cut from the
           moment the scene called ready() (or a named mark), sped up evenly when it runs
@@ -16,7 +17,7 @@ A take whose model answer came from an operation's stub rather than a recording 
 request (listed by generate.sh in out/work/standins.txt) carries a red DRAFT line naming the
 operation, so a stand-in is never mistaken for the real answer.
 
-Usage: python3 video/assemble.py [--narration FILE] [--only main|short]
+Usage: python3 video/assemble.py [--narration FILE] [--narration-short FILE] [--only main|short]
 """
 
 import argparse
@@ -42,7 +43,7 @@ MAIN = [
     ("S01", 6, "photo", ["hamilton-729-mixer.jpg"], []),
     ("S02", 6, "photo", ["evga-9800gt-front.jpg", "intel-slot-cpu.jpg", "tplink-pa2010.jpg"], []),
     ("S03", 5, "card", "card-open.png", []),
-    ("S04", 7, "photo", ["agitator-head.jpg", "agitator-coupling.jpg"], [("t01-story-a", 0)]),
+    ("S04", 7, "photo", ["hamilton-729-side.jpg", "agitator-head.jpg", "agitator-coupling.jpg"], [("t01-story-a", 0)]),
     ("S05", 8, "take", "S05", [("t21-which-device", 0)]),
     ("S06", 5, "photo", ["hamilton-729-label.jpg"], [("t22-label", 0)]),
     ("S07", 7, "take", "S07", [("t23-device-read", 0)]),
@@ -296,7 +297,8 @@ def contact_sheet(report: dict, out: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--narration", type=Path, help="the owner's narration (WAV), mixed in as is")
+    parser.add_argument("--narration", type=Path, help="the main video's narration (WAV), mixed in as is")
+    parser.add_argument("--narration-short", type=Path, help="the short video's narration (WAV), mixed in as is")
     parser.add_argument("--only", choices=["main", "short"])
     args = parser.parse_args()
     if shutil.which("ffmpeg") is None:
@@ -313,7 +315,7 @@ def main() -> None:
         if report["duration"] >= 180:
             sys.exit(f"assemble: the main video is {report['duration']:.1f} s, the limit is under 3:00")
     if args.only in (None, "short"):
-        report = build("short", SHORT, HERE / "scripts" / "short.srt", None)
+        report = build("short", SHORT, HERE / "scripts" / "short.srt", args.narration_short)
         lines.append(f"short {report['file']}  {report['duration']:.2f} s")
         lines += [f"  {s} {d:>3}s {how}" for s, d, how in report["shots"]]
         if report["duration"] > 60:

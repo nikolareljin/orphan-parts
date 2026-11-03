@@ -67,7 +67,8 @@ phone ask the same: the phone's **Captures** tab shows the question under a capt
 such a part, with the same two answers, and *Came from: ...* once answered. The demo visitor sees the question with no inputs. The device leads the
 part's [web search](search.md#search-the-web) and its search plan: the maker's own part for that
 device first. In the demo set the frappé maker's agitator is answered this way, by the Hamilton
-Beach drink mixer it came off (model 729, type DM01), from its label, its badge and the mixer.
+Beach drink mixer it came off (model 729, type DM01): nothing is typed, the model is read off
+its label, its badge, the whole mixer and a side view with the rod fitted, and accepted.
 
 ## Measuring
 

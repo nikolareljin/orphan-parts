@@ -16,7 +16,7 @@ workstation, a home automation server, a smart mirror and a retro console).
 | `scenes/` | the web shots as Playwright tests, one per shot (`compose.video.yml` runs them) |
 | `assemble.py` | the cut: shot lists, the photos' push in, titles, corner logo, captions, sound, contact sheet |
 | `phone.sh` | the phone shot on a connected phone (`--phone`) |
-| `tts.py` | a rough local text-to-speech narration for timing (`--tts`), when one is installed |
+| `tts.py` | the synthetic narrator (`--tts`): Piper reads each caption in its window, mixed at -16 LUFS |
 | [scripts/main.md](scripts/main.md), [scripts/short.md](scripts/short.md) | the narration, with a note per section of what the app does and what is not claimed |
 | `scripts/main.srt`, `scripts/short.srt` | captions; `scripts/captions.py` writes them from the scripts |
 | [storyboard/main.md](storyboard/main.md), [storyboard/short.md](storyboard/short.md) | the shot lists: times, durations, pictures, exact actions, overlays |
@@ -48,8 +48,10 @@ workstation, a home automation server, a smart mirror and a retro console).
 3. **The phone shot**: unlock the phone, Stay awake on, the app installed, then
    `VIDEO_PHONE_SERIAL=<adb serial> video/generate.sh --phone` (with `--record` as well to have
    the capture read once live). Without it the app's screenshots stand in.
-4. **Narrate**: the owner records his own voice to the draft, one section at a time from
-   `scripts/main.md` (`recording.md`, *Narration*), as one WAV the length of the cut, then
+4. **Narrate**: `video/generate.sh --assemble --tts` reads both scripts with a synthetic
+   narrator (Piper, offline; `recording.md`, *Narration*) and cuts the drafts with it:
+   `--voice` picks the voice. The narration is third person and never speaks as the owner. A
+   recorded voice can replace it on the main video: one WAV the length of the cut, then
    `video/generate.sh --assemble --narration narration.wav`. Nothing is retimed: shift the
    section times in the script and run `scripts/captions.py` again if the voice moves.
 5. **Final**: watch `out/main-draft.mp4` end to end, go through `checklist.md`, then export or

@@ -139,12 +139,10 @@ items:
       # the faults
       material: "metal"
     # the rod alone carries no model number, so the app asks which device it came from; the
-    # answer: the drink mixer it came off, by the label under its base, its badge and the
-    # whole mixer with the rod fitted. The model the label states stands in until a record
-    # run has read the photos.
-    parent_photos: [photos/hamilton-729-label.jpg, photos/hamilton-729-badge.jpg, photos/hamilton-729-mixer.jpg]
-    parent_device: Hamilton Beach drink mixer, type DM01, 120 V 60 Hz 70 W
-    parent_device_model: Hamilton Beach 729
+    # answer: the drink mixer it came off, read from its photos (the label under its base, its
+    # badge, the whole mixer and its side with the rod fitted), nothing typed: the recorded
+    # reading gives HAMILTON BEACH 729, accepted as the device's model.
+    parent_photos: [photos/hamilton-729-label.jpg, photos/hamilton-729-badge.jpg, photos/hamilton-729-mixer.jpg, photos/hamilton-729-side.jpg]
 
 searches:
   - key: metal_agitator

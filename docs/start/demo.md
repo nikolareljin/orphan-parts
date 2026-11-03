@@ -38,7 +38,7 @@ set loads with whatever files are present; a photo named but missing is skipped 
 
 An item may name a `picture:` (a template id such as `smart_mirror`, or a few words), drawn by
 Muse Image after its drafts; four items of the set do. A drawing is a paid call, so a live load
-draws it only with `PICTURE_ENABLED=1` (`./dev record-fixtures` sets it for its run). Fixture
+draws it only with `PICTURE_ENABLED=1` (`./dev record-fixtures` sets it for its run unless the shell sets `PICTURE_ENABLED=0`). Fixture
 mode shows a drawing only once a record run has kept it, and until then the load says *not
 recorded yet* for it and shows none, never the stub image as a drawing.
 
