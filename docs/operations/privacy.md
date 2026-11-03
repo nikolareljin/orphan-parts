@@ -25,6 +25,7 @@ Only these, and only to the Meta Model API, each when you ask for it:
 |---|---|
 | Reading a label | the photos, re-encoded, and the label crops SAM 3.1 found |
 | Reading a capture | its photos and its spoken note; never the clip |
+| Keeping a photo | the photo, with a grid drawn on it, to find the private details to black out on shared copies |
 | A voice note | the recording |
 | A listing brought back | its text or the screenshot |
 | A listing draft | the accepted values (none that identifies the item: a serial number, MAC address or IMEI stays out), the public listing details (condition, faults, what was not tested, what is included, the data line, handover, area, availability) and the item's first four photos at 768 px; never the lowest price you would take or your reason for selling |
@@ -47,12 +48,23 @@ about you; it ends after `DEMO_SESSION_HOURS` or when you sign out. Codes issued
 label; the log notes the label when a session opens, never the code. The QR code never carries
 the access code.
 
+## Private details on photos
+
+Every photo kept with an item is checked for product keys, MAC addresses, serial numbers, IMEIs,
+passwords and PINs, QR codes and barcodes; every copy that leaves your view (the photo zip, the
+demo visitor's view, the demo set's gallery) has them blacked out, and a photo whose check did
+not finish is not shared until it is, unless you choose so for a download. Text that leaves your
+view is masked by rules. The boxes are approximate: review them on the opened photo before you
+share. See [Private details on photos](../guides/private-details.md).
+
 ## What a visitor without the code sees
 
 Without the code a visitor is the demo. They read the demo set's own photos, picked in a
 gallery, and each answer is a recording: nothing they do is sent to the Model API, and there is
 no upload to send. Items are private unless the owner marks one public (the demo set loads as
-public); of a public item the visitor sees its values, photos and drawn pictures, and never:
+public); of a public item the visitor sees its values (a serial number masked to its last four
+characters, any product key, MAC address or password in its text masked), its photos as shared
+copies (private details blacked out; none of a photo not checked) and drawn pictures, and never:
 
 - where it is kept, its notes, a voice note or a clip;
 - a draft, the listing details, price guidance, a decision or its cards;

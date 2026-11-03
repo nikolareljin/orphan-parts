@@ -36,7 +36,7 @@ from app.inventory.schema import TEXT_MAX as NOTES_MAX
 from app.inventory.schema import Item
 from app.inventory.service import DECIDED, NotFoundError, notes_room
 from app.model_api import ModelApiClient, text_part, user_message
-from app.projects.pack import private_field
+from app.privacy.text import private_field
 from app.projects.schema import Preferences
 from app.projects.service import Planner, fits
 from app.projects.skills import skills_line

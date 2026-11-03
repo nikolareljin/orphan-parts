@@ -18,6 +18,7 @@ from app.listing.details import (
 from app.listing.marketplace import dollars, photo_zip
 from app.listing.service import Lister
 from app.photos import ItemPhotos
+from app.privacy import NotCheckedError, Privacy
 
 log = logging.getLogger("app.listing")
 
@@ -26,10 +27,13 @@ OPEN = frozenset({"", "listed"})
 
 
 class Handoff:
-    def __init__(self, inventory: Inventory, photos: ItemPhotos, lister: Lister) -> None:
+    def __init__(
+        self, inventory: Inventory, photos: ItemPhotos, lister: Lister, privacy: Privacy
+    ) -> None:
         self.inventory = inventory
         self.photos = photos
         self.lister = lister
+        self.privacy = privacy
 
     def details(self, item_id: int) -> SellDetailsRecord | None:
         row = self.inventory.sell_details(item_id)
@@ -38,15 +42,28 @@ class Handoff:
     def save_details(self, item_id: int, details: SellDetails) -> SellDetailsRecord:
         return self._record(self.inventory.add_sell_details(item_id, details.model_dump_json()))
 
-    def zip(self, draft_id: int) -> tuple[int, bytes]:
-        """The draft's photos in its order; a photo removed since is skipped."""
+    def zip(self, draft_id: int, *, unchecked: bool = False) -> tuple[int, bytes]:
+        """The draft's photos in its order, as shared copies (their private details blacked
+        out); a photo removed since is skipped. A photo without a finished check raises
+        NotCheckedError naming it, unless the owner chose ``unchecked``."""
         draft = self.lister.get(draft_id)
         have = self.photos.count(draft.item_id)
-        chosen = [
+        stored = [
             (p.photo, self.photos.read(draft.item_id, p.photo))
             for p in draft.photos
             if p.photo <= have
         ]
+        if not unchecked:
+            waiting = [n for n, data in stored if not self.privacy.privacy(n, data).shared]
+            if waiting:
+                listed = ("photos " if len(waiting) > 1 else "photo ") + ", ".join(
+                    str(n) for n in waiting
+                )
+                raise NotCheckedError(
+                    f"{listed} not checked for private details; check the photos on the"
+                    " item, or download with them as they are"
+                )
+        chosen = [(n, self.privacy.shared_copy(data, unchecked=True)) for n, data in stored]
         return draft.item_id, photo_zip(chosen)
 
     def status(self, item_id: int) -> MarketplaceStatus:

@@ -557,7 +557,7 @@ def test_device_photos_stay_out_of_the_parts_photos_drafts_zip_and_the_visitor(
         draft = c.post(f"/api/items/{item}/drafts", json={"mode": "give"})
         assert draft.status_code == 201, draft.text
         assert {p["photo"] for p in draft.json()["photos"]} <= {1, 2, 3, 4}
-        zipped = c.get(f"/api/drafts/{draft.json()['id']}/photos.zip")
+        zipped = c.get(f"/api/drafts/{draft.json()['id']}/photos.zip", params={"unchecked": True})
         assert zipped.status_code == 200
         import io
         import zipfile

@@ -24,6 +24,7 @@ from app.listing.schema import DraftRequest
 from app.model_api import ModelApiClient, ModelApiError, NoRecordingError, exact_replay
 from app.photos import DevicePhotos, ItemPhotos, PhotoError
 from app.picture import Pictures, PicturesOffError
+from app.privacy import Privacy
 from app.projects import Planner, ProposeRequest
 from app.value import Valuer
 from app.value.schema import PriceRequest
@@ -108,6 +109,7 @@ class Loader:
         finder: Finder,
         planner: Planner,
         pictures: Pictures | None = None,
+        privacy: Privacy | None = None,
     ) -> None:
         self.settings = settings
         self.client = client
@@ -119,6 +121,7 @@ class Loader:
         self.finder = finder
         self.planner = planner
         self.pictures = pictures
+        self.privacy = privacy
         # the set's photos stay with the items they were read from, as a capture's do
         self.photos = ItemPhotos(settings, inventory)
         # a part's photos of the device it came from, kept apart from its own
@@ -251,6 +254,8 @@ class Loader:
                 self.photos.add(created.id, photos)
             except (OSError, BadImageError, PhotoError) as exc:
                 out.skipped.append(f"{item.key}: the photos could not be kept: {exc}")
+            else:
+                await self.check_photos(item, created.id, out)
         out.items += 1
         if item.accept_all:
             for assertion in created.assertions:
@@ -311,6 +316,32 @@ class Loader:
                 out.guidances += 1
                 out.cost_usd += guidance.cost_usd
         return created.id
+
+    async def check_photos(self, item: DemoItem, item_id: int, out: Outcome) -> None:
+        """The item's photos checked for private details, as an upload is, so the demo visitor
+        gets them with those areas black; in fixture mode only the recording of each very
+        photo answers (never a stub), and a photo without one stays out of the visitor's view
+        and is listed as not recorded yet."""
+        if self.privacy is None:
+            return
+        for n in range(1, self.photos.count(item_id) + 1):
+            token = exact_replay.set(True)
+            try:
+                check = await self.privacy.check(self.photos.read(item_id, n))
+            except NoRecordingError:
+                out.unrecorded.append(
+                    f"{item.key}: the check of photo {n} for private details (one"
+                    " ./dev record-fixtures run makes it)"
+                )
+                continue
+            finally:
+                exact_replay.reset(token)
+            if check.status == "failed":
+                out.skipped.append(f"{item.key}: photo {n} check: {check.reason}")
+                continue
+            out.checked += 1
+            out.hidden += len(check.areas)
+            out.cost_usd += check.cost_usd
 
     async def load_parent(self, item: DemoItem, item_id: int, base: Path, out: Outcome) -> None:
         """The device a part came from, as the owner answers the app's question: photos of it
@@ -397,15 +428,16 @@ class Loader:
 
 def reset(settings: Settings) -> list[str]:
     """Start over: the inventory file goes, and with it the captures' media, the items'
-    photos and the pictures drawn for items and projects (their rows were in the file; the
-    next inventory counts from 1 again); the spend ledger stays (the cap is cumulative)."""
+    photos, the checks of those photos for private details and the pictures drawn for items
+    and projects (their rows were in the file; the next inventory counts from 1 again); the
+    spend ledger stays (the cap is cumulative)."""
     gone: list[str] = []
     db = settings.inventory_db_path
     for path in (db, Path(f"{db}-wal"), Path(f"{db}-shm"), Path(f"{db}-journal")):
         if path.is_file():
             path.unlink()
             gone.append(path.name)
-    for name in ("captures", "items", "projects"):
+    for name in ("captures", "items", "projects", "privacy"):
         folder = settings.data_dir / name
         if folder.is_dir():
             shutil.rmtree(folder)

@@ -57,6 +57,9 @@ EXPENSIVE = [
     ("POST", re.compile(r"^/api/items/[^/]+/voice$")),
     ("POST", re.compile(r"^/api/items/[^/]+/price$")),
     ("POST", re.compile(r"^/api/items/[^/]+/parent-photo$")),
+    # photos kept are checked for private details, one call each
+    ("POST", re.compile(r"^/api/items/[^/]+/photos$")),
+    ("POST", re.compile(r"^/api/items/[^/]+/photos/check$")),
     ("POST", re.compile(r"^/api/items/[^/]+/picture$")),
     ("POST", re.compile(r"^/api/items/[^/]+/scenarios/[^/]+/reuse/[^/]+/picture$")),
     ("POST", re.compile(r"^/api/projects/[^/]+/picture$")),

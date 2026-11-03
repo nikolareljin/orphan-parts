@@ -393,6 +393,7 @@ function Handoff({
   onError: (text: string) => void
 }) {
   const [copied, setCopied] = useState<CopyKey | null>(null)
+  const [unchecked, setUnchecked] = useState('')
   const [market, setMarket] = useState<MarketplaceData | null>(null)
   const [category, setCategory] = useState(draft.category)
   const [condition, setCondition] = useState(draft.condition)
@@ -420,9 +421,21 @@ function Handoff({
     }
   }
 
-  async function download() {
-    const src = api.drafts.photosZipUrl(draft.id)
+  // the photos go out as shared copies, their private details blacked out; one not checked
+  // yet is named, and goes in as it is only when the owner says so
+  async function download(anyway = false) {
+    const src = api.drafts.photosZipUrl(draft.id, anyway)
     try {
+      if (!anyway) {
+        const kept = await api.items.photos(itemId)
+        const chosen = new Set(draft.photos.map((p) => p.photo))
+        const waiting = (kept.photos ?? []).filter((p) => chosen.has(p.n) && !p.shared).map((p) => p.n)
+        if (waiting.length > 0) {
+          setUnchecked(`Photo ${waiting.join(', ')} not checked for private details yet. Check the photos on the item, or download them as they are.`)
+          return
+        }
+      }
+      setUnchecked('')
       // same origin the link carries the cookie; across origins the zip comes with the session
       const url = await mediaUrl(src)
       const a = document.createElement('a')
@@ -502,7 +515,8 @@ function Handoff({
         <ol className="photo-order" aria-label="Photo order">
           {draft.photos.map((p, i) => (
             <li key={p.photo}>
-              <GatedImage src={api.items.photoUrl(itemId, p.photo)} alt={`Photo ${p.photo}`} loading="lazy" />
+              {/* the copy that goes to Marketplace: private details blacked out */}
+              <GatedImage src={api.items.sharedPhotoUrl(itemId, p.photo)} alt={`Photo ${p.photo}`} loading="lazy" />
               <span>
                 {i + 1}. Photo {p.photo}: {p.reason}
               </span>
@@ -521,6 +535,14 @@ function Handoff({
         )}
         <span className="muted">Paste it into the new-listing form on Marketplace. Nothing is posted from here.</span>
       </div>
+      {unchecked && (
+        <p className="muted privacy-note unchecked" role="status">
+          {unchecked}{' '}
+          <button type="button" className="secondary" onClick={() => void download(true)}>
+            Download anyway
+          </button>
+        </p>
+      )}
       <h5>On Marketplace</h5>
       <ol className="handoff-steps">
         {handoffSteps(draft).map((s) => (

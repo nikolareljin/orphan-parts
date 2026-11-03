@@ -72,7 +72,7 @@ The line at the foot of the page says *Demo: recorded answers only*.
 
 | Model | Where you see it |
 |---|---|
-| Muse Spark | reads a label into typed values with a confidence each; writes the decision cards, the ideas for what an item is good for, the Marketplace draft, the search plan and the build proposals; reads a listing brought back; searches the web for price guidance with citations |
+| Muse Spark | reads a label into typed values with a confidence each; finds the private details on each photo kept (product keys, MAC addresses, serials, passwords, QR codes) for the shared copies to black out; writes the decision cards, the ideas for what an item is good for, the Marketplace draft, the search plan and the build proposals; reads a listing brought back; searches the web for price guidance with citations |
 | SAM 3.1 | looks for the item, the label and the connector in a photo, so the label crop is what gets read when one is found (the overlay under each reading, with a note when nothing was found) |
 | Muse Image | **Draw it**: a picture of what an item could become or of a finished project, on a click only, always captioned as drawn and never used as evidence |
 | Muse Voice Transcribe | a voice note from the phone's **Talk** tab or a capture, kept on the item as the owner's words |
@@ -246,7 +246,9 @@ A visitor without the code sees a public item's values, photos and drawn picture
   captures.
 
 Photos are re-encoded on arrival, with EXIF and GPS dropped; the phone re-encodes before
-sending. A serial number, MAC address or IMEI never goes to a model. A session is one cookie
+sending. Product keys, MAC addresses, serial numbers, passwords, QR codes and barcodes found on
+a photo are blacked out on every copy a visitor or a download gets, and a photo not checked is
+not shown to a visitor at all. A serial number, MAC address or IMEI never goes to a model. A session is one cookie
 that holds no account; issued codes are kept as hashes and logged by their label only. Nothing
 is posted or searched anywhere on anyone's behalf. Details:
 [Privacy](https://nikolareljin.github.io/orphan-parts/operations/privacy/).

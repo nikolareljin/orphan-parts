@@ -211,6 +211,8 @@ class Outcome(BaseModel):
     candidates: int = 0
     projects: int = 0
     pictures: int = 0
+    checked: int = Field(default=0, description="photos checked for private details")
+    hidden: int = Field(default=0, description="areas found on them, blacked out when shared")
     skipped: list[str] = []
     unrecorded: list[str] = Field(
         default=[],
@@ -231,6 +233,11 @@ class Outcome(BaseModel):
             f" guidance(s), {self.searches} search(es) with {self.candidates} candidate(s),"
             f" {self.projects} project(s), {self.pictures} picture(s); {self.cost_usd:.4f} USD"
         ]
+        if self.checked:
+            out.append(
+                f"{self.checked} photo(s) checked for private details,"
+                f" {self.hidden} area(s) to black out when shared"
+            )
         if self.stub_answers:
             out.append(
                 f"{self.stub_answers} answer(s) came from an operation's stub, not a recording"

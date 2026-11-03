@@ -1,0 +1,245 @@
+{
+  "endpoint": "/responses",
+  "op": "find-sensitive",
+  "model": "muse-spark-1.3",
+  "digest": "f1d42fe836a8891297a65c61",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "Find the private details in this photo.",
+            "type": "input_text"
+          },
+          {
+            "image_url": "data:image/jpeg;sha256,4746ecbfe1040db0",
+            "type": "input_image"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You find private details in photos of used items and spare parts, so they can be blacked out before a photo is shared. Report every area that shows one of these: a software product key (five groups of five letters and digits, as Windows and Office print it); a MAC address; a serial number, service tag or express service code with its value; an IMEI; a password, PIN, Wi-Fi key or network key, printed or handwritten; any QR code; any barcode, except a retail UPC or EAN code on packaging; anything else that identifies the owner or unlocks the device (an account number, an email address, a network name printed beside its key), as other. Model numbers, part numbers, ratings, FCC IDs, dates and regulatory marks are not private. Each value is its own area, and the area covers all of the value: every line of it when it wraps onto the next. Give each area its kind, a few words on what it is without copying the value, and a box around the value (and its own barcode when one sits under it) as x_min, y_min, x_max, y_max on a 0 to 1000 scale of the image's width and height, 0,0 being the top left corner. The photo carries a thin magenta grid every 100 units of that scale, numbered along its edges: read each box off the grid. Never copy a value. When nothing private is visible, return no areas.",
+    "max_output_tokens": 900,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "SensitiveReading",
+        "schema": {
+          "$defs": {
+            "FoundArea": {
+              "additionalProperties": false,
+              "description": "One area as the model reports it: a box on a 0 to 1000 scale of the image's width and\nheight. Strict output schema: every property required, no extras.",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "product_key",
+                    "mac_address",
+                    "serial_number",
+                    "imei",
+                    "password",
+                    "qr_code",
+                    "barcode",
+                    "other"
+                  ],
+                  "title": "Kind",
+                  "type": "string"
+                },
+                "what": {
+                  "title": "What",
+                  "type": "string"
+                },
+                "x_max": {
+                  "title": "X Max",
+                  "type": "integer"
+                },
+                "x_min": {
+                  "title": "X Min",
+                  "type": "integer"
+                },
+                "y_max": {
+                  "title": "Y Max",
+                  "type": "integer"
+                },
+                "y_min": {
+                  "title": "Y Min",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "kind",
+                "what",
+                "x_min",
+                "y_min",
+                "x_max",
+                "y_max"
+              ],
+              "title": "FoundArea",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "properties": {
+            "areas": {
+              "items": {
+                "$ref": "#/$defs/FoundArea"
+              },
+              "title": "Areas",
+              "type": "array"
+            }
+          },
+          "required": [
+            "areas"
+          ],
+          "title": "SensitiveReading",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "SensitiveReading",
+        "schema": {
+          "$defs": {
+            "FoundArea": {
+              "additionalProperties": false,
+              "description": "One area as the model reports it: a box on a 0 to 1000 scale of the image's width and\nheight. Strict output schema: every property required, no extras.",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "product_key",
+                    "mac_address",
+                    "serial_number",
+                    "imei",
+                    "password",
+                    "qr_code",
+                    "barcode",
+                    "other"
+                  ],
+                  "title": "Kind",
+                  "type": "string"
+                },
+                "what": {
+                  "title": "What",
+                  "type": "string"
+                },
+                "x_max": {
+                  "title": "X Max",
+                  "type": "integer"
+                },
+                "x_min": {
+                  "title": "X Min",
+                  "type": "integer"
+                },
+                "y_max": {
+                  "title": "Y Max",
+                  "type": "integer"
+                },
+                "y_min": {
+                  "title": "Y Min",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "kind",
+                "what",
+                "x_min",
+                "y_min",
+                "x_max",
+                "y_max"
+              ],
+              "title": "FoundArea",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "areas": {
+              "items": {
+                "$ref": "#/$defs/FoundArea"
+              },
+              "title": "Areas",
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "areas"
+          ],
+          "title": "SensitiveReading",
+          "type": "object"
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6ae9f24a6b36a9174a3b4b2c",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793716810.0,
+    "completed_at": 1793716810.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6ae9f24a6b36a9174a3b4b2c:rs_04b1ae3f-faba-4a39-b40d-fc1d70db9a95",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_d42b44e2-4bb1-41a1-adff-552884021dc0",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"areas\": []}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You find private details in photos of used items and spare parts, so they can be blacked out before a photo is shared. Report every area that shows one of these: a software product key (five groups of five letters and digits, as Windows and Office print it); a MAC address; a serial number, service tag or express service code with its value; an IMEI; a password, PIN, Wi-Fi key or network key, printed or handwritten; any QR code; any barcode, except a retail UPC or EAN code on packaging; anything else that identifies the owner or unlocks the device (an account number, an email address, a network name printed beside its key), as other. Model numbers, part numbers, ratings, FCC IDs, dates and regulatory marks are not private. Each value is its own area, and the area covers all of the value: every line of it when it wraps onto the next. Give each area its kind, a few words on what it is without copying the value, and a box around the value (and its own barcode when one sits under it) as x_min, y_min, x_max, y_max on a 0 to 1000 scale of the image's width and height, 0,0 being the top left corner. The photo carries a thin magenta grid every 100 units of that scale, numbered along its edges: read each box off the grid. Never copy a value. When nothing private is visible, return no areas.",
+    "usage": {
+      "input_tokens": 1487,
+      "input_tokens_details": {
+        "cached_tokens": 497
+      },
+      "output_tokens": 144,
+      "output_tokens_details": {
+        "reasoning_tokens": 130
+      },
+      "total_tokens": 1631
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 4996
+  },
+  "status": 200
+}

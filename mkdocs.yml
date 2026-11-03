@@ -89,6 +89,7 @@ nav:
       - Profile: guides/profile.md
       - Voice notes and video capture: guides/voice-and-video.md
       - Marketplace handoff: guides/marketplace.md
+      - Private details on photos: guides/private-details.md
       - Catalog feed and Graph push: guides/catalog.md
       - WhatsApp and Messenger agent: guides/messaging-agent.md
       - Android app: guides/android.md

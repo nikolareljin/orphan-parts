@@ -240,7 +240,7 @@ def test_a_reuse_card_is_drawn_once_per_click_and_kept_with_the_card(
         == []
     )
     assert drawing.get(f"/api/items/{laptop}/pictures").json()["pictures"] == []
-    assert drawing.get(f"/api/items/{laptop}/photos").json() == {"count": 0}
+    assert drawing.get(f"/api/items/{laptop}/photos").json()["count"] == 0
     # a card that is not there, scenarios of another item, an item that is not there
     assert (
         drawing.post(f"/api/items/{laptop}/scenarios/{found['id']}/reuse/9/picture").status_code

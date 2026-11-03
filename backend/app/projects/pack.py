@@ -9,46 +9,8 @@ from datetime import UTC, datetime
 
 from app.find.schema import Candidate, Search
 from app.inventory.schema import Item
-from app.ops.door import PRIVATE_FIELDS
+from app.privacy.text import mask_text, private_field
 from app.projects.schema import Budget, Preferences, Project
-
-# Field names that identify the item or its owner: as whole words of the key (``mac`` keeps
-# ``mac`` and ``mac_address`` out, not ``machine``), and a few as any part of it.
-PRIVATE_WORDS = frozenset(
-    {
-        "serial",
-        "sn",
-        "imei",
-        "mac",
-        "vin",
-        "account",
-        "password",
-        "pin",
-        "location",
-        "address",
-        "phone",
-        "email",
-        "owner",
-        "plate",
-        "licence",
-        "license",
-        "ssn",
-        "iban",
-        "imsi",
-        "iccid",
-        "meid",
-    }
-)
-PRIVATE_PARTS = ("serial", "password", "passwd", "service_tag", "servicetag")
-
-
-def private_field(key: str) -> bool:
-    """A field that identifies the item or its owner, or is the owner's own words (the device a
-    part came from, as they described it): kept out of every brief and document."""
-    if key.lower() in PRIVATE_FIELDS:
-        return True
-    words = key.lower().split("_")
-    return any(w in PRIVATE_WORDS for w in words) or any(p in key.lower() for p in PRIVATE_PARTS)
 
 
 def shown_fields(item: Item) -> list[tuple[str, str]]:
@@ -213,7 +175,8 @@ def render(
             f"Limitations: {o.limitations or 'none recorded'}",
             "",
         ]
-    return "\n".join(lines)
+    # a product key, a MAC address or a password the owner typed into a note never goes out
+    return mask_text("\n".join(lines))
 
 
 def without_names(text: str, names: list[tuple[str, str]]) -> str:
@@ -266,4 +229,4 @@ def share_text(
     ]
     if o.limitations:
         lines.append(f"Limits: {without_names(o.limitations, names)}")
-    return "\n".join(lines)
+    return mask_text("\n".join(lines))

@@ -4,10 +4,11 @@ the server has a key, so it is counted as a call that spends."""
 
 from fastapi import APIRouter, HTTPException, Path, Request, Response
 
-from app.api.deps import GateDep, SampleReaderDep, SamplesDep
+from app.api.deps import GateDep, PrivacyDep, SampleReaderDep, SamplesDep
 from app.api.model_errors import as_http
 from app.ops.door import for_visitor, live_request
 from app.ops.gate import charge_more
+from app.privacy.render import redacted
 from app.samples import (
     VISITOR_UPLOAD_LINE,
     SampleCatalog,
@@ -32,23 +33,32 @@ def samples(catalog: SamplesDep) -> SampleCatalog:
 
 
 @router.get("/samples/{sample_id}/file")
-def sample_file(catalog: SamplesDep, sample_id: str = SampleId) -> Response:
-    """A sample as it is stored: the photo, the listing text or the voice note."""
+def sample_file(catalog: SamplesDep, privacy: PrivacyDep, sample_id: str = SampleId) -> Response:
+    """A sample as it is stored: the photo, the listing text or the voice note. A photo goes
+    out with the private details its check found blacked out."""
     try:
         kind = catalog.kind(sample_id)
         data = catalog.file(sample_id)
     except UnknownSampleError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if kind == "photo":
+        areas = privacy.sample_areas(sample_id, data)
+        if areas:
+            data = redacted(data, areas)
     return Response(data, media_type=MEDIA[kind], headers=CACHE)
 
 
 @router.get("/samples/{sample_id}/thumb")
-def sample_thumb(catalog: SamplesDep, sample_id: str = SampleId) -> Response:
-    """A sample photo, small (at most 320 px on its long side), for the gallery."""
+def sample_thumb(catalog: SamplesDep, privacy: PrivacyDep, sample_id: str = SampleId) -> Response:
+    """A sample photo, small (at most 320 px on its long side), for the gallery, with the
+    private details its check found blacked out."""
     try:
         data = catalog.thumb(sample_id)
+        areas = privacy.sample_areas(sample_id, catalog.photo(sample_id))
     except UnknownSampleError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if areas:
+        data = redacted(data, areas)
     return Response(data, media_type="image/jpeg", headers=CACHE)
 
 

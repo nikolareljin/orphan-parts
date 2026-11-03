@@ -19,6 +19,7 @@ from app.inventory.service import NotFoundError
 from app.listing import BadAudioError, VoiceNotes, wav_seconds
 from app.model_api import ModelApiError
 from app.photos import ItemPhotos, PhotoError
+from app.privacy import Privacy
 from app.segment import Segmenter
 
 log = logging.getLogger("app.captures")
@@ -67,6 +68,7 @@ class Captures:
         segmenter: Segmenter,
         voice: VoiceNotes,
         photos: ItemPhotos,
+        privacy: Privacy | None = None,
     ) -> None:
         self.settings = settings
         self.inventory = inventory
@@ -74,6 +76,7 @@ class Captures:
         self.segmenter = segmenter
         self.voice = voice
         self.photos = photos
+        self.privacy = privacy
         self.root = settings.data_dir / "captures"
         self._busy: set[int] = set()  # captures being read right now, one read each
         # the check of the busy set and the step after it are one: a delete and a read of the
@@ -251,6 +254,10 @@ class Captures:
                 # the item is, to the demo visitor too once the item is public
                 spec = spec.model_copy(update={"item_type": "item", "name": spec.name or "Capture"})
             item = self.inventory.create(spec)
+            if photos and self.privacy is not None:
+                # checked once here: the item keeps the same bytes, so the same check
+                for check in await self.privacy.check_all(photos):
+                    cost += check.cost_usd
             if photos:
                 # the item keeps the pictures it was read from, so the capture can go later;
                 # a copy that fails is said in the log and never undoes the read

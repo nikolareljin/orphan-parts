@@ -1,18 +1,19 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from app.api.deps import DevicePhotosDep, ExtractorDep, GateDep, PhotosDep
+from app.api.deps import DevicePhotosDep, ExtractorDep, GateDep, PhotosDep, PrivacyDep
 from app.api.model_errors import as_http
 from app.extract import Extraction
 from app.extract.imaging import BadImageError
 from app.inventory import Item, NotFoundError
 from app.inventory.parent import PARENT_MODEL, device_model
-from app.ops.door import live_request
+from app.ops.door import for_visitor, live_request
 from app.ops.gate import give_back_request
-from app.photos import PhotoError
+from app.photos import ItemPhotos, PhotoError
+from app.privacy import AreaChoice, NotCheckedError, PhotoPrivacy, Privacy
 
 router = APIRouter(prefix="/api/items", tags=["inventory"])
 
@@ -21,6 +22,11 @@ PhotosPart = Annotated[list[UploadFile], File(description="Photos of the item, u
 
 class PhotoCount(BaseModel):
     count: int
+    photos: list[PhotoPrivacy] = Field(
+        default=[],
+        description="each photo's check for private details, 1 first: what is hidden on its"
+        " shared copies and whether one may leave the owner's view",
+    )
 
 
 class ParentPhoto(BaseModel):
@@ -32,28 +38,58 @@ class ParentPhoto(BaseModel):
     extraction: Extraction
 
 
+def privacy_of(photos: ItemPhotos, privacy: Privacy, item_id: int) -> list[PhotoPrivacy]:
+    return [
+        privacy.privacy(n, photos.read(item_id, n)) for n in range(1, photos.count(item_id) + 1)
+    ]
+
+
 @router.get("/{item_id}/photos", response_model=PhotoCount)
-def item_photos(item_id: int, photos: PhotosDep) -> PhotoCount:
-    """How many photos are kept with the item; each is at ``/photos/{n}``, 1 first."""
+def item_photos(item_id: int, photos: PhotosDep, privacy: PrivacyDep) -> PhotoCount:
+    """How many photos are kept with the item, each with its check for private details; each
+    is at ``/photos/{n}``, 1 first."""
     photos.inventory.get(item_id, public_only=not live_request.get())
-    return PhotoCount(count=photos.count(item_id))
+    return PhotoCount(count=photos.count(item_id), photos=privacy_of(photos, privacy, item_id))
 
 
 @router.get("/{item_id}/photos/{n}", response_class=Response)
-def item_photo(item_id: int, n: int, photos: PhotosDep) -> Response:
+def item_photo(
+    item_id: int,
+    n: int,
+    photos: PhotosDep,
+    privacy: PrivacyDep,
+    copy: Annotated[
+        Literal["original", "shared"],
+        Query(description="the owner's original, or the shared copy with its areas blacked out"),
+    ] = "original",
+) -> Response:
+    """The photo. The owner gets the original unless the shared copy is asked for; the demo
+    visitor only ever gets the shared copy, and none of a photo that has not been checked."""
     photos.inventory.get(item_id, public_only=not live_request.get())
+    data = photos.read(item_id, n)
+    if for_visitor() or copy == "shared":
+        try:
+            data = privacy.shared_copy(data)
+        except NotCheckedError as exc:
+            raise HTTPException(status_code=404 if for_visitor() else 409, detail=str(exc)) from exc
     return Response(
-        photos.read(item_id, n),
+        data,
         media_type="image/jpeg",
         headers={"Cache-Control": "no-store"},  # private, and the number is reused after a reset
     )
 
 
 @router.post("/{item_id}/photos", response_model=PhotoCount, status_code=status.HTTP_201_CREATED)
-async def add_item_photos(item_id: int, uploads: PhotosPart, photos: PhotosDep) -> PhotoCount:
-    """Keep the photos an item was read from. Re-encoded on the way in, metadata dropped."""
+async def add_item_photos(
+    item_id: int, uploads: PhotosPart, photos: PhotosDep, privacy: PrivacyDep, gate: GateDep
+) -> PhotoCount:
+    """Keep the photos an item was read from. Re-encoded on the way in, metadata dropped, and
+    each checked for private details (one Muse Spark call a photo), so its shared copies go
+    out with them blacked out. A check that fails keeps the photo out of anything shared until
+    it is checked again."""
     limit = photos.settings.max_photos
     if len(uploads) > limit:
+        give_back_request(gate)
         # refused for its count alone, before any part is read into memory
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -65,19 +101,64 @@ async def add_item_photos(item_id: int, uploads: PhotosPart, photos: PhotosDep) 
         # one byte past the cap says the part is too large, whatever the client declared
         part = await upload.read(cap + 1)
         if len(part) > cap:
+            give_back_request(gate)
             raise HTTPException(
                 status_code=400,
                 detail=f"a photo is larger than {photos.settings.max_upload_mb} MB",
             )
         data.append(part)
     try:
-        return PhotoCount(count=photos.add(item_id, data))
+        count = photos.add(item_id, data)
     except PhotoError as exc:
+        give_back_request(gate)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
     except BadImageError as exc:
+        give_back_request(gate)
         raise as_http(exc) from exc
+    added = [photos.read(item_id, n) for n in range(count - len(data) + 1, count + 1)]
+    await privacy.check_all(added)
+    return PhotoCount(count=count, photos=privacy_of(photos, privacy, item_id))
+
+
+@router.post("/{item_id}/photos/check", response_model=PhotoCount)
+async def check_item_photos(
+    item_id: int,
+    photos: PhotosDep,
+    privacy: PrivacyDep,
+    gate: GateDep,
+    again: Annotated[
+        bool, Query(description="check every photo again, not only those without a check")
+    ] = False,
+) -> PhotoCount:
+    """The item's photos checked for private details: those never checked or whose check
+    failed, or every one with ``again``. One Muse Spark call a photo checked."""
+    try:
+        have = photos.count(item_id)
+    except NotFoundError:
+        give_back_request(gate)
+        raise
+    kept = [photos.read(item_id, n) for n in range(1, have + 1)]
+    todo = [d for d in kept if again or not privacy.privacy(0, d).shared]
+    if not todo:
+        give_back_request(gate)  # nothing to check: no call made
+    await privacy.check_all(todo, again=again)
+    return PhotoCount(count=have, photos=privacy_of(photos, privacy, item_id))
+
+
+@router.patch("/{item_id}/photos/{n}/areas/{area_id}", response_model=PhotoPrivacy)
+def choose_area(
+    item_id: int, n: int, area_id: int, choice: AreaChoice, photos: PhotosDep, privacy: PrivacyDep
+) -> PhotoPrivacy:
+    """The owner's choice for one area found on a photo: hidden on every shared copy (the
+    default), or shown when it is nothing private after all."""
+    data = photos.read(item_id, n)
+    try:
+        privacy.choose(data, area_id, choice.hidden)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return privacy.privacy(n, data)
 
 
 @router.post("/{item_id}/parent-photo", response_model=ParentPhoto, status_code=201)

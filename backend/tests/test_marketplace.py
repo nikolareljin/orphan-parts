@@ -28,6 +28,7 @@ from app.listing.marketplace import (
 from app.main import create_app
 from app.model_api import CostLedger, ModelApiClient
 from app.ops.gate import demo_allowed, expensive
+from app.privacy.render import redacted
 from tests.conftest import RECORDED_FIXTURES
 from tests.test_gate import CODE, gated_settings
 
@@ -361,14 +362,17 @@ def test_the_zip_has_the_chosen_photos_in_order_and_no_metadata(
     draft = c.post(f"/api/items/{item_id}/drafts", json={"mode": "sell"}).json()
     # the recorded order is 2, 1 and a photo 9 the item does not have
     assert [p["photo"] for p in draft["photos"]] == [2, 1]
-    res = c.get(f"/api/drafts/{draft['id']}/photos.zip")
+    # no recorded check for these photos: refused until the owner says to share them as they are
+    refused = c.get(f"/api/drafts/{draft['id']}/photos.zip")
+    assert refused.status_code == 409 and "photos 2, 1 not checked" in refused.json()["detail"]
+    res = c.get(f"/api/drafts/{draft['id']}/photos.zip", params={"unchecked": True})
     assert res.status_code == 200 and res.headers["content-type"] == "application/zip"
     assert f"item-{item_id}-photos.zip" in res.headers["content-disposition"]
     archive = zipfile.ZipFile(BytesIO(res.content))
     assert archive.namelist() == ["01-photo-2.jpg", "02-photo-1.jpg"]
     for name, n in (("01-photo-2.jpg", 2), ("02-photo-1.jpg", 1)):
         jpeg = archive.read(name)
-        assert jpeg == c.get(f"/api/items/{item_id}/photos/{n}").content
+        assert jpeg == redacted(c.get(f"/api/items/{item_id}/photos/{n}").content, [])
         assert b"Exif" not in jpeg and b"SampleCam" not in jpeg
         assert not Image.open(BytesIO(jpeg)).getexif()
         assert archive.getinfo(name).date_time == (1980, 1, 1, 0, 0, 0)
