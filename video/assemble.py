@@ -13,6 +13,9 @@ owner's recording, or the synthetic narrator tts.py writes from the captions.
 - still:  a picture under video/ with a slow push in
 - card:   a card under video/brand, held, faded in and out
 
+The closing card shows its own words (the name, the tagline, the links): the captions read
+over it are not burned in, so none covers the card's lines. The narrator still reads them.
+
 A take whose model answer came from an operation's stub rather than a recording of that very
 request (listed by generate.sh in out/work/standins.txt) carries a red DRAFT line naming the
 operation, so a stand-in is never mistaken for the real answer.
@@ -92,6 +95,37 @@ def probe(path: Path) -> float:
         check=True,
     )
     return float(out.stdout.strip() or 0)
+
+
+# cards whose text the captions over them only repeat: no caption is burned in over them
+UNCAPTIONED = {"card-close.png"}
+
+
+def _srt_seconds(stamp: str) -> float:
+    hms, _, ms = stamp.strip().partition(",")
+    h, m, sec = (int(x) for x in hms.split(":"))
+    return h * 3600 + m * 60 + sec + int(ms or 0) / 1000
+
+
+def captions(srt: Path, shots, out: Path) -> Path:
+    """The captions to burn in: the script's, less those that start over an uncaptioned card."""
+    spans = []
+    start = 0.0
+    for _, secs, kind, src, _ in shots:
+        if kind == "card" and src in UNCAPTIONED:
+            spans.append((start, start + secs))
+        start += secs
+    kept = []
+    for block in srt.read_text(encoding="utf-8").strip().split("\n\n"):
+        lines = block.splitlines()
+        timing = next((line for line in lines if "-->" in line), None)
+        if timing is not None:
+            at = _srt_seconds(timing.split("-->")[0])
+            if any(a <= at < b for a, b in spans):
+                continue
+        kept.append(block)
+    out.write_text("\n\n".join(kept) + "\n", encoding="utf-8")
+    return out
 
 
 ENCODE = ["-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-an"]
@@ -263,7 +297,7 @@ def build(name: str, shots, srt: Path, narration: Path | None) -> dict:
     run(["-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(joined)])
     total = sum(s[1] for s in shots)
     style = f"FontName={FONT},FontSize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H80000000,BorderStyle=3,Outline=1,Shadow=0,MarginV=36"
-    srt_path = str(srt).replace(":", r"\:")
+    srt_path = str(captions(srt, shots, SEG / f"{name}-captions.srt")).replace(":", r"\:")
     audio = ["-f", "lavfi", "-t", f"{total}", "-i", "anullsrc=r=48000:cl=stereo"]
     amap = "1:a"
     if narration is not None:

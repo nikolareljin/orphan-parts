@@ -6,7 +6,7 @@ timeline; durations in seconds. Status is the one in [readiness.md](../readiness
 `video/generate.sh --record`, then replayed), **photos** (the owner's photos from the demo
 set), **card** (rendered here). Every shot is something the app does: no concept previews. Overlays: `brand/corner-overlay.png`
 on every screen recording; titles from `titles/`, top left, in for 4 s from the time given
-(0 unless said otherwise). Captions bottom center, from `scripts/main.srt`.
+(0 unless said otherwise). Captions bottom center, from `scripts/main.srt`; none is burned in over the closing card, whose own lines they repeat (the narrator still reads them).
 
 `video/generate.sh` records every web shot with Playwright from the actions below
 (`video/scenes/*.spec.ts`, one test per shot) and cuts the draft with `video/assemble.py`,
