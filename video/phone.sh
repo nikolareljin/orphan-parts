@@ -14,7 +14,7 @@
 set -euo pipefail
 
 out="${1:?usage: video/phone.sh <out.mp4>}"
-serial="${VIDEO_PHONE_SERIAL:?set VIDEO_PHONE_SERIAL to the phone's serial (adb devices)}"
+serial="${VIDEO_PHONE_SERIAL:?set VIDEO_PHONE_SERIAL to the serial adb devices lists}"
 port="${FRONTEND_PORT:?FRONTEND_PORT is not set}"
 app=com.orphanparts.lens
 dir=/sdcard/Pictures/opl-demo
@@ -40,13 +40,8 @@ if a shell dumpsys window | grep -q 'isKeyguardShowing=true'; then
   exit 1
 fi
 
-# tap <text>: the middle of the first node whose text or description starts with it
-tap() {
-  local want="$1" xy
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
-    a shell uiautomator dump /sdcard/opl-ui.xml >/dev/null 2>&1 || true
-    a shell cat /sdcard/opl-ui.xml >"$work/ui.xml" 2>/dev/null || true
-    xy="$(python3 - "$work/ui.xml" "$want" <<'EOF'
+# the middle of the first node in a uiautomator dump whose text or description starts with a word
+cat >"$work/find.py" <<'PY'
 import re, sys, xml.etree.ElementTree as ET
 try:
     root = ET.parse(sys.argv[1]).getroot()
@@ -59,8 +54,15 @@ for n in root.iter("node"):
         x1, y1, x2, y2 = map(int, re.findall(r"\d+", n.get("bounds")))
         print((x1 + x2) // 2, (y1 + y2) // 2)
         break
-EOF
-)"
+PY
+
+# tap <text>: the middle of the first node whose text or description starts with it
+tap() {
+  local want="$1" xy
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    a shell uiautomator dump /sdcard/opl-ui.xml >/dev/null 2>&1 || true
+    a shell cat /sdcard/opl-ui.xml >"$work/ui.xml" 2>/dev/null || true
+    xy="$(python3 "$work/find.py" "$work/ui.xml" "$want")"
     if [[ -n "$xy" ]]; then
       # shellcheck disable=SC2086
       a shell input tap $xy

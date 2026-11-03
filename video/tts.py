@@ -24,7 +24,12 @@ def sections(path: Path) -> list[tuple[int, str]]:
     return [(start, " ".join(lines)) for start, lines in out if lines]
 
 
+ENGINES = ("espeak-ng", "espeak", "pico2wave")
+
+
 def speak(engine: str, text: str, wav: Path) -> None:
+    if engine not in ENGINES:
+        raise SystemExit(f"tts: {engine} is not one of {', '.join(ENGINES)}")
     if engine == "pico2wave":
         cmd = ["pico2wave", "-l", "en-US", "-w", str(wav), text]
     else:
