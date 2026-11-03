@@ -238,7 +238,8 @@ test.describe('the demo visitor', () => {
       for (const name of ['Select and commit the items', 'Shortlist', 'Abandon', 'Find it on Marketplace', 'Write the build pack']) {
         await expect(panel.getByRole('button', { name, exact: true })).toHaveCount(0)
       }
-      await expect(panel.getByRole('button', { name: /^Draw it/ })).toBeDisabled()
+      await expect(panel.getByRole('button', { name: /^Draw (it|again)/ })).toHaveCount(0)
+      await expect(panel).toContainText('Sign in with the access code to draw.')
       await expect(panel).toContainText('Sign in with the access code to use this.')
       await expect(panel.locator('input, textarea, select')).toHaveCount(0)
       await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()

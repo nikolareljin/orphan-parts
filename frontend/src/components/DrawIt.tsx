@@ -11,7 +11,7 @@ function message(err: unknown): string {
 // drawn by Muse Image only when the button is clicked (every click is one paid call; nothing is
 // drawn when the card appears). The pictures already drawn are listed, labeled as drawn. The
 // server says whether it draws (PICTURE_ENABLED); while it does not, one line says so and there
-// is no button. The demo visitor gets a disabled button and the line to sign in, and nothing is
+// is no button. The demo visitor gets the line to sign in in place of the button, and nothing is
 // read for them unless the pictures are theirs to see (a project built on public items). A list
 // that cannot be read hides it all.
 export default function DrawIt({
@@ -82,6 +82,9 @@ export default function DrawIt({
     <div className="draw-it">
       {state === 'off' ? (
         <p className="muted">{DRAW_OFF_LINE}</p>
+      ) : state === 'demo' ? (
+        // the visitor reads what was drawn; drawing (again) is the owner's, so no button
+        <p className="hint">{DRAW_DEMO_LINE}</p>
       ) : (
         <p className="row">
           <button
@@ -93,7 +96,7 @@ export default function DrawIt({
           >
             {busy ? 'Drawing…' : again ? 'Draw again' : 'Draw it'}
           </button>
-          <span className="hint">{state === 'demo' ? DRAW_DEMO_LINE : again ? DRAW_AGAIN_HINT : DRAW_HINT}</span>
+          <span className="hint">{again ? DRAW_AGAIN_HINT : DRAW_HINT}</span>
         </p>
       )}
       {error && (

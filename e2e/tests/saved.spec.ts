@@ -115,6 +115,9 @@ test.describe('the demo visitor', () => {
       const reuse = cards.getByRole('article', { name: 'Reuse it' })
       await expect(reuse.getByRole('img', { name: /^Illustrative picture 1: / })).toBeVisible()
       await expect(cards.getByRole('button', { name: /^Choose this/ })).toHaveCount(0)
+      // the picture is read; drawing (again) is the owner's, so no button at all
+      await expect(reuse.getByRole('button', { name: /^Draw (it|again)/ })).toHaveCount(0)
+      await expect(reuse).toContainText('Sign in with the access code to draw.')
       await expect(panel.getByRole('status', { name: 'Decision made' })).toContainText('Keep and build')
       await expect(panel).not.toContainText(`owner note ${stamp}`)
       await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()

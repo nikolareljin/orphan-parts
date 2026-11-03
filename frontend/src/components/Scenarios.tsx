@@ -40,7 +40,7 @@ export default function Scenarios({
   onAsk: () => void
   onChoose: (choice: DecisionChoice) => void
   onPrice: () => void
-  // the demo visitor: Draw it is shown disabled, with the line to sign in
+  // the demo visitor: no Draw it, the line to sign in in its place
   demo?: boolean
   // read the cards and the choice made, with no button that asks or decides
   readOnly?: boolean
