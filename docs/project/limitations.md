@@ -22,6 +22,11 @@
   focuses where it is tapped.
 - A clip from the phone is kept and played back; no frame is read from it yet, so what the
   label says has to be in a photo.
+- A project's rules check an item's kind against each requirement, not its generation or its
+  fit: *laptop memory* fills a laptop's memory requirement whether it is DDR3 or DDR4, and a
+  filled requirement has no swap, so a wrong part stays on the project until the owner builds
+  around it. The demo's home automation server shows one: the model put the SK hynix DDR4 stick
+  on the ThinkPad T510, which takes DDR3; the owner would use the ADATA DDR3L stick instead.
 - The decision cards, the uses and a drawing are the model's proposals for your profile, not
   checked by the rules: a repair step is advice, and a drawing is an illustration.
 - An access code, not accounts: every code a deployment accepts opens the same inventory, as

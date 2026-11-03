@@ -193,7 +193,10 @@ a custom NAS on the ASRock AB350 Pro4 board with the Patriot Viper DDR4 stick, t
 and the PCIe M.2 card; an arcade coffee table on the Dell laptop and the 24 inch monitor with
 the joystick module put on its controls by the owner; a smart desk calendar on the UNO with
 the DS1307 clock, the buzzer, the button and the prototype shield; and a home automation server
-on the ThinkPad T510 with the SK hynix memory. Each has its build pack, two more drawings (up
+on the ThinkPad T510 with the SK hynix memory (a DDR4 stick, which a T510 cannot take: the
+rules check the kind of memory, not its generation, and a filled requirement has no swap, so
+the owner would put the ADATA DDR3L stick in it; see [Limitations](../project/limitations.md)).
+Each has its build pack, two more drawings (up
 close, and from above), and every requirement it still needs as a search with its Marketplace
 links (the NAS's processor, power supply and case; the table, its glass and speakers; the
 calendar's screen; the server's network link and its Zigbee or Z-Wave stick); the power supply
