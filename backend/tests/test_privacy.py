@@ -89,6 +89,13 @@ def test_each_kind_of_private_value_is_found(text: str, kind: str) -> None:
         "Memtest pass: 4 passes",
         "PWR: 12V",
         "Part number 41W4721",
+        # a listing's own words after a label: a port, a pin count, a rating, a feature
+        "Interfaces: USB 3.0, Serial: RS-232, HDMI",
+        "PIN: 24-pin ATX connector",
+        "Pin: 40 GPIO header",
+        "PW: 65W",
+        "WPA2: supported",
+        "Dell U2415, 1920x1080, made 2019-03-14, $80, part 990010200, 19.5V 3.34A",
     ],
 )
 def test_ordinary_label_text_is_left_alone(text: str) -> None:
@@ -426,8 +433,11 @@ def test_the_visitor_gets_shared_copies_masked_values_and_no_unchecked_photo(
 
 
 def test_the_routes_that_check_spend_and_the_visitor_has_neither() -> None:
+    assert expensive("POST", "/api/items/1/photos/check")
+    # keeping photos is free; the checks it makes are counted in the route (spend_now)
+    assert not expensive("POST", "/api/items/1/photos")
     for path in ("/api/items/1/photos", "/api/items/1/photos/check"):
-        assert expensive("POST", path) and not demo_allowed("POST", path)
+        assert not demo_allowed("POST", path)
     assert not demo_allowed("PATCH", "/api/items/1/photos/1/areas/1")
     assert demo_allowed("GET", "/api/items/1/photos/1")
 
@@ -501,3 +511,74 @@ async def test_a_check_run_again_that_fails_leaves_the_finished_one(
     finally:
         await client.aclose()
     assert privacy.kept(photo) == found
+
+
+@pytest.mark.anyio
+async def test_an_operations_stub_never_answers_a_photo_check(
+    recorded_settings: Settings, settings: Settings
+) -> None:
+    # a stub named after the operation that says "nothing private": it must not clear a photo
+    # nobody checked
+    clear = RECORDED_FIXTURES / "responses" / "061eab9774f08aa576ee39ad.json"
+    stubs = settings.fixtures_dir / "responses"
+    stubs.mkdir(parents=True)
+    (stubs / "find-sensitive.json").write_bytes(clear.read_bytes())
+    client = ModelApiClient(settings, CostLedger(1.0))
+    privacy = Privacy(settings, client)
+    photo = make_photo()
+    try:
+        check = await privacy.check(photo)
+    finally:
+        await client.aclose()
+    assert check.status == "failed" and "no recorded answer" in check.reason
+    assert privacy.shared_or_none(photo) is None
+
+
+def test_the_same_photo_twice_is_one_check(recorded_client: TestClient) -> None:
+    c = recorded_client
+    item = c.post("/api/items", json={"item_type": "router"}).json()["id"]
+    twice = sticker_upload() + sticker_upload()
+    res = c.post(f"/api/items/{item}/photos", files=twice)
+    assert res.status_code == 201, res.text
+    assert [p["status"] for p in res.json()["photos"]] == ["found", "found"]
+
+
+def test_photos_are_kept_while_paused_and_not_shared_until_checked(tmp_path: Path) -> None:
+    settings = gated_settings(tmp_path, fixtures_dir=RECORDED_FIXTURES, demo_paused=True)
+    with TestClient(create_app(settings)) as c:
+        c.post("/api/access", json={"code": CODE})
+        item = c.post("/api/items", json={"item_type": "router"}).json()["id"]
+        res = c.post(f"/api/items/{item}/photos", files=sticker_upload())
+        assert res.status_code == 201, res.text
+        (photo,) = res.json()["photos"]
+        assert photo["status"] == "failed" and photo["shared"] is False
+        assert "paused by the operator" in photo["note"]
+        assert c.get(f"/api/items/{item}/photos/1").status_code == 200  # the owner's original
+        assert c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).status_code == 409
+        assert c.post(f"/api/items/{item}/photos/check").status_code == 503
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 0
+
+
+def test_each_photo_checked_is_counted(tmp_path: Path) -> None:
+    settings = gated_settings(
+        tmp_path, fixtures_dir=RECORDED_FIXTURES, demo_visitor_calls_per_hour=3
+    )
+    with TestClient(create_app(settings)) as c:
+        c.post("/api/access", json={"code": CODE})
+        item = c.post("/api/items", json={"item_type": "router"}).json()["id"]
+        two = [("uploads", (f"{n}.jpg", make_photo(320 + n, 240), "image/jpeg")) for n in (1, 2)]
+        assert c.post(f"/api/items/{item}/photos", files=two).status_code == 201
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 2
+        # two more calls asked, one left in the hour: refused before any call, photos kept
+        refused = c.post(f"/api/items/{item}/photos/check")
+        assert refused.status_code == 429 and "hourly allowance" in refused.json()["detail"]
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 2
+        one = [("uploads", ("3.jpg", make_photo(400, 300), "image/jpeg"))]
+        kept = c.post(f"/api/items/{item}/photos", files=one)
+        assert kept.status_code == 201 and kept.json()["count"] == 3
+        assert c.get("/readyz").json()["demo"]["daily_used"] == 3
+        # the hour is used: the next photo is kept, its check refused and said
+        four = [("uploads", ("4.jpg", make_photo(420, 300), "image/jpeg"))]
+        last = c.post(f"/api/items/{item}/photos", files=four)
+        assert last.status_code == 201
+        assert "hourly allowance" in last.json()["photos"][3]["note"]

@@ -11,7 +11,7 @@ from app.extract.imaging import BadImageError
 from app.inventory import Item, NotFoundError
 from app.inventory.parent import PARENT_MODEL, device_model
 from app.ops.door import for_visitor, live_request
-from app.ops.gate import give_back_request
+from app.ops.gate import charge_more, give_back_request, spend_now
 from app.photos import ItemPhotos, PhotoError
 from app.privacy import AreaChoice, NotCheckedError, PhotoPrivacy, Privacy
 
@@ -84,12 +84,12 @@ async def add_item_photos(
     item_id: int, uploads: PhotosPart, photos: PhotosDep, privacy: PrivacyDep, gate: GateDep
 ) -> PhotoCount:
     """Keep the photos an item was read from. Re-encoded on the way in, metadata dropped, and
-    each checked for private details (one Muse Spark call a photo), so its shared copies go
-    out with them blacked out. A check that fails keeps the photo out of anything shared until
-    it is checked again."""
+    each checked for private details (one Muse Spark call a photo, counted as a call that
+    spends), so its shared copies go out with them blacked out. Keeping a photo is never
+    refused for spend: a check the operator's pause or an allowance refuses, or one that does
+    not finish, keeps the photo out of anything shared until it is checked again."""
     limit = photos.settings.max_photos
     if len(uploads) > limit:
-        give_back_request(gate)
         # refused for its count alone, before any part is read into memory
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -101,7 +101,6 @@ async def add_item_photos(
         # one byte past the cap says the part is too large, whatever the client declared
         part = await upload.read(cap + 1)
         if len(part) > cap:
-            give_back_request(gate)
             raise HTTPException(
                 status_code=400,
                 detail=f"a photo is larger than {photos.settings.max_upload_mb} MB",
@@ -110,15 +109,18 @@ async def add_item_photos(
     try:
         count = photos.add(item_id, data)
     except PhotoError as exc:
-        give_back_request(gate)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
     except BadImageError as exc:
-        give_back_request(gate)
         raise as_http(exc) from exc
     added = [photos.read(item_id, n) for n in range(count - len(data) + 1, count + 1)]
-    await privacy.check_all(added)
+    todo = privacy.waiting(added)
+    refused = spend_now(gate, len(todo))
+    if refused:
+        privacy.not_checked(todo, refused)
+    else:
+        await privacy.check_all(todo)
     return PhotoCount(count=count, photos=privacy_of(photos, privacy, item_id))
 
 
@@ -133,16 +135,21 @@ async def check_item_photos(
     ] = False,
 ) -> PhotoCount:
     """The item's photos checked for private details: those never checked or whose check
-    failed, or every one with ``again``. One Muse Spark call a photo checked."""
+    failed, or every one with ``again``. One Muse Spark call a photo checked, each counted."""
     try:
         have = photos.count(item_id)
     except NotFoundError:
         give_back_request(gate)
         raise
     kept = [photos.read(item_id, n) for n in range(1, have + 1)]
-    todo = [d for d in kept if again or not privacy.privacy(0, d).shared]
+    todo = privacy.waiting(kept, again=again)
     if not todo:
         give_back_request(gate)  # nothing to check: no call made
+    refused = charge_more(gate, len(todo) - 1)
+    if refused is not None:
+        why, retry = refused
+        headers = {"Retry-After": str(retry)} if retry else None
+        raise HTTPException(status_code=429, detail=why, headers=headers)
     await privacy.check_all(todo, again=again)
     return PhotoCount(count=have, photos=privacy_of(photos, privacy, item_id))
 

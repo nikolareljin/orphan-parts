@@ -32,6 +32,9 @@ log = logging.getLogger("app.gate")
 # whom the call that spends was counted against, while it is served: a route that makes more
 # than one model call (screenshots, one reading each) counts the rest with charge_more
 spend_key: ContextVar[str | None] = ContextVar("spend_key", default=None)
+# whom the request is from on the live door, for a route that is free in itself and spends on
+# part of its work only (keeping photos is free, checking them spends): spend_now counts that
+caller_key: ContextVar[str | None] = ContextVar("caller_key", default=None)
 
 COOKIE = "opl_access"
 # What a visitor may read without the code; everything else needs it when a code is set.
@@ -57,8 +60,9 @@ EXPENSIVE = [
     ("POST", re.compile(r"^/api/items/[^/]+/voice$")),
     ("POST", re.compile(r"^/api/items/[^/]+/price$")),
     ("POST", re.compile(r"^/api/items/[^/]+/parent-photo$")),
-    # photos kept are checked for private details, one call each
-    ("POST", re.compile(r"^/api/items/[^/]+/photos$")),
+    # photos checked for private details, one call each (keeping them, POST .../photos, is
+    # free: the checks it makes are counted with spend_now, and a refused one leaves the photo
+    # kept and not shared)
     ("POST", re.compile(r"^/api/items/[^/]+/photos/check$")),
     ("POST", re.compile(r"^/api/items/[^/]+/picture$")),
     ("POST", re.compile(r"^/api/items/[^/]+/scenarios/[^/]+/reuse/[^/]+/picture$")),
@@ -393,6 +397,25 @@ def charge_more(gate: Gate, count: int) -> tuple[str, int] | None:
     return None
 
 
+def spend_now(gate: Gate, count: int) -> str | None:
+    """Count ``count`` calls against whoever made this request, all or none, from a route the
+    gate let through without counting; None when they are counted (or nothing is: the demo
+    visitor's tries are recordings), else why they are not. The operator's pause refuses them
+    as it refuses a route that spends."""
+    key = caller_key.get()
+    if key is None or count <= 0:
+        return None
+    if gate.paused:
+        return "paused by the operator"
+    ok, _ = gate.visitor.take(key, count=count)
+    if not ok:
+        return "this visitor's hourly allowance is used"
+    if not gate.daily.take(count):
+        gate.visitor.give_back(key, count)
+        return "the demo's daily allowance is used up"
+    return None
+
+
 def give_back_request(gate: Gate) -> None:
     """Uncount the call the gate counted for this request, when the route refuses it before
     any model call (an unknown or closed search, too many or too large files)."""
@@ -473,8 +496,10 @@ class GateMiddleware(BaseHTTPMiddleware):
         else:
             spent = spend_key.set(None)
         token = live_request.set(live)
+        caller = caller_key.set(visitor if live else None)
         try:
             return await call_next(request)
         finally:
             live_request.reset(token)
             spend_key.reset(spent)
+            caller_key.reset(caller)

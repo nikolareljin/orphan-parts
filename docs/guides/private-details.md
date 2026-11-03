@@ -47,11 +47,12 @@ black box, re-encoded, no metadata.
 
 A photo whose check did not finish, or that was never checked, is not shared at all: the
 visitor gets nothing for it, and **Download photos** names it and stops. The line under the
-photo says why; **Check for private details** runs the check again. For a download you can
+photo says why (no recording of it in fixture mode, the operator's pause, an allowance used
+up); **Check for private details** runs the check again. For a download you can
 choose **Download anyway**, which puts that photo in as it is.
 
 Text that leaves your view is masked by the same rules, without a model: a listing draft's
-title, description and tags (with a warning naming what was masked), the build pack and the
+title, description, facts and tags (with a warning naming what was masked), the build pack and the
 share text, and what the demo visitor reads of an item (its name, condition, faults, tests,
 accessories and every value) and of a label reading. A serial number keeps its last four
 characters (`•••• 7QX9`); a password keeps nothing (`••••`).
