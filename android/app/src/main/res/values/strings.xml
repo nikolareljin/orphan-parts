@@ -16,4 +16,5 @@
     <string name="device_photo_none">No model could be read from the photo. Tell us about the device instead.</string>
     <string name="device_photo_unreadable">The photo could not be read.</string>
     <string name="device_failed">Could not save: %1$s</string>
+    <string name="device_photo_failed">Could not read the photo: %1$s</string>
 </resources>

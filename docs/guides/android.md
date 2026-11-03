@@ -45,8 +45,10 @@ part the backend cannot tie to its device (`needs_parent`), the capture shows th
 question under it: *We couldn't tell which device this part came from...*, with **Device it came
 from** (saved as `parent_device`, your words, private like the notes) and **Add a photo of the
 device** or **From the gallery** (`POST /api/items/{id}/parent-photo`, one label reading); once
-answered it says *Came from: ...*. A refusal is shown in the server's words. Without a code or a
-pairing the phone is the demo visitor and shows nothing. See [Capture from the phone](capture.md)
+answered it says *Came from: ...*. A refusal is shown in the server's words. The question shows
+for the owner's view of an item: an ungated backend serves every caller as the owner, code or
+not; behind the gate the demo visitor's view (`redacted`, or 404 for a private item) shows
+nothing. Each item is read once per session, two at a time, and **Refresh** reads them again. See [Capture from the phone](capture.md)
 and [the device a part came from](inventory.md). For a feature to measure, the hint says what the web
 page needs: a ruler in the same plane, straight on; the marking stays on the web.
 

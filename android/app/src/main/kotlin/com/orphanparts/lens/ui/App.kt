@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,7 +62,9 @@ fun App() {
     val context = LocalContext.current
     val store = remember { SettingsStore(context) }
     var settings by remember { mutableStateOf(store.load()) }
-    var page by remember { mutableStateOf(if (settings.ready) 1 else 0) }
+    // kept across a process death while the camera app is in front, so its photo lands on the
+    // tab that asked for it
+    var page by rememberSaveable { mutableStateOf(if (settings.ready) 1 else 0) }
     var lastItemId by remember { mutableStateOf<Int?>(null) }
     var sent by remember { mutableStateOf(0) }
     var service by remember { mutableStateOf(serviceLine("", null, null)) }
@@ -98,6 +101,9 @@ fun App() {
             onCodeEnded = { withoutEndedCode(store.load(), held.accessCode)?.let { store.save(it) } },
         )
     }
+
+    // the Captures tab's device answers, kept across tab switches for this backend and code
+    val answers = remember(session) { DeviceAnswers(session) }
 
     LaunchedEffect(session) {
         service = serviceLine(settings.baseUrl, null, null)
@@ -175,7 +181,7 @@ fun App() {
                             settings = store.load()
                         })
                         1 -> CaptureScreen(session) { sent += 1 }
-                        2 -> CapturesScreen(session, sent) { itemId ->
+                        2 -> CapturesScreen(session, answers, sent) { itemId ->
                             lastItemId = itemId
                             page = 3
                         }

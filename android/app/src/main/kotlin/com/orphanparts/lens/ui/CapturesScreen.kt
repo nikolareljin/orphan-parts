@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
 
 /** What was sent, and whether the backend has read it into an item yet. */
 @Composable
-fun CapturesScreen(session: Session, refresh: Int, onItem: (Int) -> Unit) {
+fun CapturesScreen(session: Session, answers: DeviceAnswers, refresh: Int, onItem: (Int) -> Unit) {
     val scope = rememberCoroutineScope()
     var captures by remember { mutableStateOf<List<Capture>>(emptyList()) }
     var status by remember { mutableStateOf("") }
@@ -44,10 +45,17 @@ fun CapturesScreen(session: Session, refresh: Int, onItem: (Int) -> Unit) {
     Column {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Captures", style = MaterialTheme.typography.titleLarge)
-            SecondaryButton("Refresh") { scope.launch { load() } }
+            SecondaryButton("Refresh") {
+                // Refresh reads the items' device answers again too
+                answers.clear()
+                scope.launch { load() }
+            }
         }
         Spacer(Modifier.height(8.dp))
         StatusLine(status)
+        // one device question per item: the newest capture read into it carries it
+        val askedFor = captures.mapNotNull { c -> c.itemId?.takeIf { c.status == "processed" } }.toSet()
+        val shownFor = mutableSetOf<Int>()
         for (c in captures) {
             Spacer(Modifier.height(10.dp))
             Panel {
@@ -96,7 +104,7 @@ fun CapturesScreen(session: Session, refresh: Int, onItem: (Int) -> Unit) {
                 } else {
                     SecondaryButton("Talk about item #${c.itemId}") { c.itemId?.let(onItem) }
                     // the backend's question about the device the part came from, when it asks
-                    c.itemId?.let { DeviceQuestionCard(session, it) }
+                    c.itemId?.takeIf { it in askedFor && shownFor.add(it) }?.let { key(it) { DeviceQuestionCard(answers, session, it) } }
                 }
             }
         }
