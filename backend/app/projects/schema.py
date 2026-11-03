@@ -4,8 +4,9 @@ proposes, and what a project becomes once items are allocated."""
 from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from app.ops.door import for_visitor
 from app.projects.skills import STARTER_SKILLS, RatedSkill, rated_skills
 
 KEY = r"^[a-z][a-z0-9_]{0,63}$"
@@ -41,6 +42,12 @@ class Preferences(BaseModel):
     @classmethod
     def _rated(cls, values: object) -> object:
         return rated_skills(values) if isinstance(values, list) else values
+
+    # the owner's budget and how far they travel are left out for the demo visitor; the skills,
+    # the interests and the rest are what the profile shows
+    @field_serializer("budget", "radius_km")
+    def _owner_numbers(self, value: float | None) -> float | None:
+        return None if for_visitor() else value
 
 
 class TemplateRequirement(BaseModel):
@@ -225,6 +232,19 @@ class Project(BaseModel):
     created_at: str
     updated_at: str
 
+    # what the model wrote that the inventory does not back may name an item the owner keeps
+    # private: left out for the demo visitor
+    @field_serializer("dropped")
+    def _owner_dropped(self, value: list[str]) -> list[str]:
+        return [] if for_visitor() else value
+
+    # the outcome is the owner's record: the demo visitor sees it only once it is shared
+    @field_serializer("outcome")
+    def _shared_outcome(self, value: Outcome | None) -> Outcome | None:
+        if for_visitor() and value is not None and not value.shared:
+            return None
+        return value
+
 
 class Budget(BaseModel):
     """What the selected set spends against the budget; nothing is committed twice."""
@@ -234,6 +254,11 @@ class Budget(BaseModel):
     committed_spend: float
     remaining: float | None
     selected: int
+
+    # what the owner has to spend is theirs: left out for the demo visitor
+    @field_serializer("budget", "remaining")
+    def _owner_budget(self, value: float | None) -> float | None:
+        return None if for_visitor() else value
 
 
 class ProjectList(BaseModel):
@@ -251,6 +276,28 @@ class Pack(BaseModel):
     stale: bool
     markdown: str
     created_at: str
+
+    # for the demo visitor, the pack without the owner's budget line and without the outcome
+    # section (a shared outcome is on the project itself)
+    @field_serializer("markdown")
+    def _visitor_markdown(self, value: str) -> str:
+        return visitor_markdown(value) if for_visitor() else value
+
+
+# the line of a pack that states the owner's budget, and the heading of its outcome section
+BUDGET_LINE = "Across the selected projects: "
+OUTCOME_HEADING = "## Outcome"
+
+
+def visitor_markdown(markdown: str) -> str:
+    """A pack as the demo visitor reads it: the budget line and the outcome section left out."""
+    lines: list[str] = []
+    for line in markdown.split("\n"):
+        if line == OUTCOME_HEADING:
+            break
+        if not line.startswith(BUDGET_LINE):
+            lines.append(line)
+    return "\n".join(lines).rstrip("\n") + "\n"
 
 
 class SelectRequest(BaseModel):

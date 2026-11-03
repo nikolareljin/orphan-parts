@@ -13,13 +13,14 @@ function message(err: unknown): string {
 }
 
 // Find the one that fits: a search the owner runs on Marketplace, and the listings brought back.
+// The demo visitor reads the searches made for public items, their candidates and listings, as
+// the owner left them: every button that saves, plans, searches or checks is the sign-in line.
 export default function Find({ demo = false }: { demo?: boolean }) {
-  // searches, listings and screenshots are the owner's: the demo visitor reaches none of them
-  if (demo) return <SignInLine />
-  return <Searches />
+  // the door turned: what is read and what is shown start over
+  return <Searches key={demo ? 'demo' : 'owner'} demo={demo} />
 }
 
-function Searches() {
+function Searches({ demo }: { demo: boolean }) {
   const [searches, setSearches] = useState<Search[]>([])
   const [openId, setOpenId] = useState<number | null>(null)
   const [error, setError] = useState('')
@@ -42,14 +43,18 @@ function Searches() {
           {error}
         </p>
       )}
-      <NewSearch
-        onCreated={(s) => {
-          load()
-          setOpenId(s.id)
-        }}
-      />
+      {demo ? (
+        <SignInLine what="Start a search" />
+      ) : (
+        <NewSearch
+          onCreated={(s) => {
+            load()
+            setOpenId(s.id)
+          }}
+        />
+      )}
       {searches.length === 0 ? (
-        <p className="muted">No searches yet. Describe the part you need above; you run the search on Marketplace yourself.</p>
+        <p className="muted">{demo ? 'No searches to show yet.' : 'No searches yet. Describe the part you need above; you run the search on Marketplace yourself.'}</p>
       ) : (
         <table className="evidence" aria-label="Searches">
           <thead>
@@ -80,7 +85,7 @@ function Searches() {
       )}
       {openId !== null && (
         <Modal title={`Search #${openId}`} onClose={() => setOpenId(null)}>
-          <SearchPanel key={openId} id={openId} onChanged={load} onClosed={() => setOpenId(null)} />
+          <SearchPanel key={openId} id={openId} demo={demo} onChanged={load} onClosed={() => setOpenId(null)} />
         </Modal>
       )}
     </div>
@@ -235,7 +240,7 @@ function NewSearch({ onCreated }: { onCreated: (s: Search) => void }) {
   )
 }
 
-function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () => void; onClosed: () => void }) {
+function SearchPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boolean; onChanged: () => void; onClosed: () => void }) {
   const [search, setSearch] = useState<Search | null>(null)
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [rules, setRules] = useState<ProfileRule[]>([])
@@ -315,6 +320,7 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
       )}
       <SearchPlan
         search={search}
+        demo={demo}
         onChanged={(s) => {
           setSearch(s)
           onChanged()
@@ -326,7 +332,7 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
           setOpenCandidate(c.id)
         }}
       />
-      {search.status === 'closed' ? (
+      {demo ? null : search.status === 'closed' ? (
         <p className="muted">This search is closed; reopen it to bring a listing back.</p>
       ) : (
         <AddCandidate
@@ -375,29 +381,34 @@ function SearchPanel({ id, onChanged, onClosed }: { id: number; onChanged: () =>
         <CandidatePanel
           key={openCandidate}
           id={openCandidate}
+          demo={demo}
           onChanged={() => {
             load()
             onChanged()
           }}
         />
       )}
-      <div className="row">
-        {search.status !== 'found' && (
-          <button type="button" onClick={() => void setStatus('found')}>
-            Mark found
-          </button>
-        )}
-        {search.status !== 'closed' && (
-          <button type="button" onClick={() => void setStatus('closed')}>
-            Close search
-          </button>
-        )}
-        {search.status !== 'open' && (
-          <button type="button" onClick={() => void setStatus('open')}>
-            Reopen
-          </button>
-        )}
-      </div>
+      {demo ? (
+        <SignInLine what="Mark found, close or reopen" />
+      ) : (
+        <div className="row">
+          {search.status !== 'found' && (
+            <button type="button" onClick={() => void setStatus('found')}>
+              Mark found
+            </button>
+          )}
+          {search.status !== 'closed' && (
+            <button type="button" onClick={() => void setStatus('closed')}>
+              Close search
+            </button>
+          )}
+          {search.status !== 'open' && (
+            <button type="button" onClick={() => void setStatus('open')}>
+              Reopen
+            </button>
+          )}
+        </div>
+      )}
     </article>
   )
 }
@@ -509,7 +520,7 @@ function AddCandidate({ searchId, rules, onAdded }: { searchId: number; rules: P
   )
 }
 
-function CandidatePanel({ id, onChanged }: { id: number; onChanged: () => void }) {
+function CandidatePanel({ id, demo, onChanged }: { id: number; demo: boolean; onChanged: () => void }) {
   const [candidate, setCandidate] = useState<Candidate | null>(null)
   const [note, setNote] = useState<{ subject: string; message: string } | null>(null)
   const [copied, setCopied] = useState(false)
@@ -598,7 +609,7 @@ function CandidatePanel({ id, onChanged }: { id: number; onChanged: () => void }
         <button type="button" onClick={() => void askSeller()}>
           Ask the seller
         </button>
-        {candidate.state !== 'withdrawn' && (
+        {!demo && candidate.state !== 'withdrawn' && (
           <>
             <button type="button" onClick={() => void act(() => api.find.recheck(id))}>
               Recheck

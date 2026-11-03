@@ -23,13 +23,16 @@ import {
 import { skillsLine } from '../lib/profile'
 import DrawIt from './DrawIt'
 import Modal from './Modal'
+import SignInLine from './SignInLine'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
 // Build and reuse: what the owner wants, what Muse Spark proposes from the inventory, and the
-// projects that come of it. An item is committed to one selected build at a time.
+// projects that come of it. An item is committed to one selected build at a time. The demo
+// visitor reads the projects built on public items as the owner left them, without the budget;
+// every button that saves, proposes, commits or draws is the sign-in line.
 export default function Build({ demo = false }: { demo?: boolean }) {
   const [projects, setProjects] = useState<Project[]>([])
   const [budget, setBudget] = useState<Budget | null>(null)
@@ -57,20 +60,21 @@ export default function Build({ demo = false }: { demo?: boolean }) {
           {error}
         </p>
       )}
-      <PreferencesForm onSaved={load} />
+      <PreferencesForm demo={demo} onSaved={load} />
       <Propose
+        demo={demo}
         onProposed={(list) => {
           load()
           setOpenId(list[0]?.id ?? null)
         }}
       />
-      {budget && (
+      {budget && !demo && (
         <p className="meta" aria-label="Budget across selected projects">
           {budgetText(budget)}
         </p>
       )}
       {projects.length === 0 ? (
-        <p className="muted">No projects yet. Press Propose above; ideas only use items in your inventory.</p>
+        <p className="muted">{demo ? 'No projects to show yet.' : 'No projects yet. Press Propose above; ideas only use items in your inventory.'}</p>
       ) : (
         <table className="evidence" aria-label="Projects">
           <thead>
@@ -112,7 +116,7 @@ export default function Build({ demo = false }: { demo?: boolean }) {
   )
 }
 
-function PreferencesForm({ onSaved }: { onSaved: () => void }) {
+function PreferencesForm({ demo, onSaved }: { demo: boolean; onSaved: () => void }) {
   const [prefs, setPrefs] = useState<Preferences>(EMPTY_PREFERENCES)
   const [budget, setBudgetText] = useState('')
   const [radius, setRadius] = useState('')
@@ -170,17 +174,21 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
     <form className="preferences fields" onSubmit={(e) => void save(e)} aria-label="What I want from a build">
       <div className="row">
         <h3>What I want from a build</h3>
-        <button type="button" className="link" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          {open ? 'Hide' : 'Edit'}
-        </button>
-        {!open && (
+        {!demo && (
+          <button type="button" className="link" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+            {open ? 'Hide' : 'Edit'}
+          </button>
+        )}
+        {(demo || !open) && (
           <span className="muted">
-            {prefs.interests || 'no interests set'} · {effortLabel(prefs.effort)} ·{' '}
-            {prefs.budget === null ? 'no budget' : `budget ${money(prefs.budget, prefs.currency)}`}
+            {prefs.interests || 'no interests set'} · {effortLabel(prefs.effort)}
+            {/* the owner's budget is not shown to the demo visitor */}
+            {!demo && <> · {prefs.budget === null ? 'no budget' : `budget ${money(prefs.budget, prefs.currency)}`}</>}
+            {demo && prefs.skills.length > 0 && <> · skills: {skillsLine(prefs.skills)}</>}
           </span>
         )}
       </div>
-      {open && (
+      {open && !demo && (
         <>
           <div className="row">
             <label className="wide">
@@ -252,7 +260,7 @@ function PreferencesForm({ onSaved }: { onSaved: () => void }) {
   )
 }
 
-function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
+function Propose({ demo, onProposed }: { demo: boolean; onProposed: (list: Project[]) => void }) {
   const [templates, setTemplates] = useState<TemplateSummary[]>([])
   const [count, setCount] = useState(3)
   const [note, setNote] = useState('')
@@ -269,7 +277,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
 
   async function propose(event: FormEvent) {
     event.preventDefault()
-    if (busy) return
+    if (busy || demo) return
     setBusy(true)
     setError('')
     setOutcome('')
@@ -295,10 +303,41 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
         Muse Spark suggests builds from your inventory and the project templates; only ideas that use items you own are shown. Templates:{' '}
         {templates.map((t) => t.label).join(', ') || '…'}.
       </p>
+      {demo ? (
+        <SignInLine what="Propose" />
+      ) : (
+        <ProposeControls count={count} note={note} busy={busy} outcome={outcome} onCount={setCount} onNote={setNote} />
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+    </form>
+  )
+}
+
+function ProposeControls({
+  count,
+  note,
+  busy,
+  outcome,
+  onCount,
+  onNote,
+}: {
+  count: number
+  note: string
+  busy: boolean
+  outcome: string
+  onCount: (n: number) => void
+  onNote: (text: string) => void
+}) {
+  return (
+    <>
       <div className="row">
         <label>
           <span>How many</span>
-          <select value={count} onChange={(e) => setCount(Number(e.target.value))}>
+          <select value={count} onChange={(e) => onCount(Number(e.target.value))}>
             {[1, 2, 3, 4, 5].map((n) => (
               <option key={n} value={n}>
                 {n}
@@ -308,7 +347,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
         </label>
         <label>
           <span>Anything else this time</span>
-          <input value={note} maxLength={2000} placeholder="something for the kids, nothing with soldering" onChange={(e) => setNote(e.target.value)} />
+          <input value={note} maxLength={2000} placeholder="something for the kids, nothing with soldering" onChange={(e) => onNote(e.target.value)} />
         </label>
       </div>
       <div className="row actions">
@@ -317,12 +356,7 @@ function Propose({ onProposed }: { onProposed: (list: Project[]) => void }) {
         </button>
         {outcome && <span className="muted">{outcome}</span>}
       </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-    </form>
+    </>
   )
 }
 
@@ -351,11 +385,12 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
 
   // the items an open requirement may be filled with: not gone, not for sale or giving away
   useEffect(() => {
+    if (demo) return
     api.items
       .list()
       .then((list) => setItems(list.filter((i) => i.availability !== 'gone' && i.intent !== 'sell' && i.intent !== 'give')))
       .catch(() => undefined)
-  }, [id])
+  }, [id, demo])
 
   useEffect(() => {
     let cancelled = false
@@ -437,6 +472,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         key={project.id}
         name={project.title}
         demo={demo}
+        shownToDemo
         list={() => api.build.pictures(id)}
         draw={() => api.build.drawPicture(id)}
         url={(n) => api.build.pictureUrl(id, n)}
@@ -468,7 +504,8 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
                 {r.search_id !== null ? (
                   <span className="muted"> · search #{r.search_id} open on Find a part</span>
                 ) : (
-                  active && (
+                  active &&
+                  !demo && (
                     <>
                       {' '}
                       <button type="button" className="link" disabled={busy} onClick={() => void act(() => api.build.searchFor(id, r.key))}>
@@ -477,7 +514,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
                     </>
                   )
                 )}
-                {active && items.length > 0 && (
+                {active && !demo && items.length > 0 && (
                   <span className="fill">
                     {' '}
                     <select aria-label={`Item for ${r.label}`} value={picked[r.key] ?? ''} onChange={(e) => setPicked({ ...picked, [r.key]: e.target.value })}>
@@ -544,7 +581,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
                   <input
                     type="checkbox"
                     checked={stepDone({ progress: ticks }, i)}
-                    disabled={busy || project.status === 'done'}
+                    disabled={busy || demo || project.status === 'done'}
                     onChange={(e) => {
                       const before = ticks
                       const next = project.steps.map((_, n) => (n === i ? e.target.checked : stepDone({ progress: ticks }, n)))
@@ -569,11 +606,15 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
             One document with the goal, your items and their accepted values, what is still needed, costs, steps, safety notes, open questions and
             limits. Made from your data with no model call; it goes out of date when an item, the project or the budget changes.
           </p>
-          <div className="row">
-            <button type="button" disabled={busy} onClick={() => void writePack()}>
-              Write the build pack
-            </button>
-          </div>
+          {demo ? (
+            <SignInLine what="Write the build pack" />
+          ) : (
+            <div className="row">
+              <button type="button" disabled={busy} onClick={() => void writePack()}>
+                Write the build pack
+              </button>
+            </div>
+          )}
           {packs.length > 0 && (
             <ul aria-label="Packs">
               {packs.map((p) => (
@@ -588,9 +629,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
           )}
         </section>
       )}
-      {(project.status === 'building' || project.status === 'done') && (
-        <OutcomeSection project={project} busy={busy} onAct={act} />
-      )}
+      {(project.status === 'building' || project.status === 'done') && (demo ? <OutcomeShown project={project} /> : <OutcomeSection project={project} busy={busy} onAct={act} />)}
       {project.dropped.length > 0 && (
         <p className="muted" aria-label="Dropped lines">
           Left out (not in your inventory): {project.dropped.join('; ')}
@@ -610,36 +649,64 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
           {error}
         </p>
       )}
-      <div className="row actions">
-        {(project.status === 'proposed' || project.status === 'shortlisted') && (
-          <>
-            {project.status === 'proposed' && (
-              <button type="button" disabled={busy} onClick={() => void act(() => api.build.shortlist(id))}>
-                Shortlist
-              </button>
-            )}
-            <button type="button" disabled={busy} onClick={() => void act(() => api.build.select(id))}>
-              Select and commit the items
-            </button>
-          </>
-        )}
-        {project.status === 'selected' && (
-          <button type="button" disabled={busy || !canStart(project)} title={canStart(project) ? '' : 'a required part is still missing'} onClick={() => void act(() => api.build.advance(id, 'building'))}>
-            Start building
-          </button>
-        )}
-        {project.status === 'building' && (
-          <button type="button" disabled={busy} onClick={() => void act(() => api.build.advance(id, 'done'))}>
-            Mark done
-          </button>
-        )}
-        {active && (
-          <button type="button" className="link" disabled={busy} onClick={() => void act(() => api.build.abandon(id))}>
-            Abandon
-          </button>
-        )}
-      </div>
+      {demo ? (
+        <SignInLine what="Shortlist, select, build or abandon" />
+      ) : (
+        <ProjectActions project={project} busy={busy} onAct={act} />
+      )}
     </article>
+  )
+}
+
+// The buttons that move a project along; the owner's alone.
+function ProjectActions({ project, busy, onAct: act }: { project: Project; busy: boolean; onAct: (call: () => Promise<Project>) => Promise<boolean> }) {
+  const id = project.id
+  const active = project.status !== 'abandoned' && project.status !== 'done'
+  return (
+    <div className="row actions">
+      {(project.status === 'proposed' || project.status === 'shortlisted') && (
+        <>
+          {project.status === 'proposed' && (
+            <button type="button" disabled={busy} onClick={() => void act(() => api.build.shortlist(id))}>
+              Shortlist
+            </button>
+          )}
+          <button type="button" disabled={busy} onClick={() => void act(() => api.build.select(id))}>
+            Select and commit the items
+          </button>
+        </>
+      )}
+      {project.status === 'selected' && (
+        <button type="button" disabled={busy || !canStart(project)} title={canStart(project) ? '' : 'a required part is still missing'} onClick={() => void act(() => api.build.advance(id, 'building'))}>
+          Start building
+        </button>
+      )}
+      {project.status === 'building' && (
+        <button type="button" disabled={busy} onClick={() => void act(() => api.build.advance(id, 'done'))}>
+          Mark done
+        </button>
+      )}
+      {active && (
+        <button type="button" className="link" disabled={busy} onClick={() => void act(() => api.build.abandon(id))}>
+          Abandon
+        </button>
+      )}
+    </div>
+  )
+}
+
+// The outcome as the demo visitor reads it: only once the owner shared it, never the form.
+function OutcomeShown({ project }: { project: Project }) {
+  const outcome = project.outcome
+  if (!outcome) return null
+  return (
+    <section className="outcome" aria-label="Outcome">
+      <h4>Outcome</h4>
+      <p className="meta" aria-label="Recorded outcome">
+        Tested {outcome.tested_on}: {outcome.working ? 'working' : 'not working'}. {outcome.configuration}; {outcome.test}
+        {outcome.limitations ? `; limitations: ${outcome.limitations}` : ''}
+      </p>
+    </section>
   )
 }
 

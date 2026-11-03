@@ -12,10 +12,12 @@ function message(err: unknown): string {
 // drawn when the card appears). The pictures already drawn are listed, labeled as drawn. The
 // server says whether it draws (PICTURE_ENABLED); while it does not, one line says so and there
 // is no button. The demo visitor gets a disabled button and the line to sign in, and nothing is
-// read for them. A list that cannot be read hides it all.
+// read for them unless the pictures are theirs to see (a project built on public items). A list
+// that cannot be read hides it all.
 export default function DrawIt({
   name,
   demo,
+  shownToDemo = false,
   list,
   draw,
   url,
@@ -23,6 +25,8 @@ export default function DrawIt({
   // what is drawn, for the button's accessible name
   name: string
   demo: boolean
+  // whether the demo visitor may read the pictures already drawn
+  shownToDemo?: boolean
   list: () => Promise<PictureList>
   draw: () => Promise<Picture>
   url: (n: number) => string
@@ -37,7 +41,7 @@ export default function DrawIt({
   const listOnce = useRef(list)
 
   useEffect(() => {
-    if (demo) return
+    if (demo && !shownToDemo) return
     let cancelled = false
     listOnce
       .current()
@@ -52,7 +56,7 @@ export default function DrawIt({
     return () => {
       cancelled = true
     }
-  }, [demo])
+  }, [demo, shownToDemo])
 
   async function onDraw() {
     if (busy || demo || !enabled) return

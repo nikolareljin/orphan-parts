@@ -470,11 +470,28 @@ class Finder:
         log.info("search", extra={"search_id": int(row["id"]), "profile": profile})
         return self.search_of(row)
 
-    def searches(self) -> list[Search]:
-        return [self.search_of(r) for r in self.inventory.searches()]
+    def searches(self, *, public_only: bool = False) -> list[Search]:
+        """Every search; for the demo visitor, only those made for an item marked public."""
+        found = [self.search_of(r) for r in self.inventory.searches()]
+        return [s for s in found if self.shown(s)] if public_only else found
 
-    def search(self, search_id: int) -> Search:
-        return self.search_of(self.inventory.search(search_id))
+    def search(self, search_id: int, *, public_only: bool = False) -> Search:
+        """The search; one the demo visitor may not see is not there at all for them."""
+        found = self.search_of(self.inventory.search(search_id))
+        if public_only and not self.shown(found):
+            raise NotFoundError(f"no search {search_id}")
+        return found
+
+    def shown(self, search: Search) -> bool:
+        """Whether the demo visitor may see the search: one made for an item the owner marked
+        public; a search from values written in, or for a private item, is the owner's."""
+        if search.need_item_id is None:
+            return False
+        try:
+            self.inventory.get(search.need_item_id, public_only=True)
+        except NotFoundError:
+            return False
+        return True
 
     def update(self, search_id: int, patch: SearchPatch) -> Search:
         with self.held(search_id):
@@ -845,7 +862,9 @@ class Finder:
             raise FindError("no text could be read from the screenshots")
         return kept
 
-    def listings(self, search_id: int) -> list[BroughtListing]:
+    def listings(self, search_id: int, *, public_only: bool = False) -> list[BroughtListing]:
+        if public_only:
+            self.search(search_id, public_only=True)
         content = json.loads(self.inventory.search(search_id)["content"])
         return ranked([BroughtListing(**e) for e in content.get("listings", [])])
 
@@ -1056,12 +1075,18 @@ class Finder:
             AssessRequest(need=need, candidate=Side(profile=search.profile, values=values))
         )
 
-    def candidates(self, search_id: int) -> list[Candidate]:
-        self.inventory.search(search_id)
+    def candidates(self, search_id: int, *, public_only: bool = False) -> list[Candidate]:
+        self.search(search_id, public_only=public_only)
         return [self.candidate_of(r) for r in self.inventory.candidates(search_id)]
 
-    def candidate(self, candidate_id: int) -> Candidate:
-        return self.candidate_of(self.inventory.candidate(candidate_id))
+    def candidate(self, candidate_id: int, *, public_only: bool = False) -> Candidate:
+        found = self.candidate_of(self.inventory.candidate(candidate_id))
+        if public_only:
+            try:
+                self.search(found.search_id, public_only=True)
+            except NotFoundError:
+                raise NotFoundError(f"no candidate {candidate_id}") from None
+        return found
 
     def recheck(self, candidate_id: int) -> Candidate:
         """The same listing against the need as it stands now; the observation date stays."""
@@ -1086,8 +1111,8 @@ class Finder:
             self.inventory.update_candidate(candidate_id, "withdrawn", row["content"])
         )
 
-    def questions(self, candidate_id: int) -> SellerQuestions:
-        return seller_message(self.candidate(candidate_id))
+    def questions(self, candidate_id: int, *, public_only: bool = False) -> SellerQuestions:
+        return seller_message(self.candidate(candidate_id, public_only=public_only))
 
     def candidate_of(self, row: Any) -> Candidate:
         content = json.loads(row["content"])

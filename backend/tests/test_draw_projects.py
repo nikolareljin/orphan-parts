@@ -332,8 +332,9 @@ def test_only_the_code_draws_a_project_or_a_card(tmp_path: Path) -> None:
     for path in ("/api/projects/3/picture", "/api/items/2/scenarios/5/reuse/1/picture"):
         assert expensive("POST", path)
         assert not demo_allowed("POST", path)
-    for path in ("/api/projects/3/pictures/1", "/api/items/2/scenarios/5/reuse/1/pictures"):
-        assert not demo_allowed("GET", path)
+    # a project's pictures are read like the project: only one built on public items alone
+    assert demo_allowed("GET", "/api/projects/3/pictures/1")
+    assert not demo_allowed("GET", "/api/items/2/scenarios/5/reuse/1/pictures")
     settings = gated_settings(tmp_path, fixtures_dir=RECORDED_FIXTURES, picture_enabled=True)
     with TestClient(create_app(settings)) as c:
         c.post("/api/access", json={"code": CODE})
@@ -348,8 +349,10 @@ def test_only_the_code_draws_a_project_or_a_card(tmp_path: Path) -> None:
         for path in (f"/api/projects/{desk['id']}/picture", f"{base}/picture"):
             refused = c.post(path)
             assert refused.status_code == 403 and refused.json()["detail"] == DEMO_LINE
-        # what was drawn is the owner's: the demo visitor does not read it
-        assert c.get(f"/api/projects/{desk['id']}/pictures").status_code == 403
+        # what was drawn for a project with a private item on it is the owner's
+        assert any(a["item_id"] != laptop for a in desk["allocations"])
+        assert c.get(f"/api/projects/{desk['id']}/pictures").status_code == 404
+        assert c.get(f"/api/projects/{desk['id']}/pictures/1").status_code == 404
         assert c.get(f"{base}/pictures/1").status_code == 403
 
 

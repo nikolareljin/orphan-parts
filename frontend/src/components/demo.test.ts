@@ -4,10 +4,12 @@ import { describe, expect, it } from 'vitest'
 import type { Item, SampleCatalog } from '../lib/api'
 import { DEFAULT_LIMITS } from '../lib/photos'
 import { SIGN_IN_LINE } from '../lib/sample'
+import Build from './Build'
 import ExtractForm from './ExtractForm'
 import Find from './Find'
 import Listing from './Listing'
 import Measure from './Measure'
+import Profile from './Profile'
 import SampleGallery from './SampleGallery'
 import SendCapture from './SendCapture'
 
@@ -67,6 +69,31 @@ describe('the demo visitor gets no file input', () => {
     expect(html(createElement(SendCapture, { limits: DEFAULT_LIMITS, demo: false, onSent: noop }))).toContain('type="file"')
     expect(html(createElement(Listing, { item, onChanged: noop }))).toContain('type="file"')
     expect(html(createElement(Measure, { item, onMeasured: noop }))).toContain('type="file"')
+  })
+})
+
+describe('Find a part, Build and reuse and the profile are read-only for the demo visitor', () => {
+  it('with no input, no form and the sign-in line where the owner acts', () => {
+    const find = html(createElement(Find, { demo: true }))
+    const build = html(createElement(Build, { demo: true }))
+    const profile = html(createElement(Profile, { demo: true }))
+    for (const page of [find, build, profile]) {
+      expect(page).not.toContain('<input')
+      expect(page).not.toContain('<textarea')
+      expect(page).not.toContain('type="submit"')
+    }
+    expect(find).toContain(SIGN_IN_LINE)
+    expect(find).not.toContain('Start the search')
+    expect(build).toContain(SIGN_IN_LINE)
+    expect(build).not.toContain('>Edit<')
+  })
+
+  it('and the owner gets the forms back', () => {
+    expect(html(createElement(Find, { demo: false }))).toContain('Start the search')
+    const build = html(createElement(Build, { demo: false }))
+    expect(build).toContain('type="submit"')
+    expect(build).toContain('>Edit<')
+    expect(html(createElement(Profile, { demo: false }))).toContain('Save profile')
   })
 })
 

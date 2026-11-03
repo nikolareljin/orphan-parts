@@ -4,10 +4,11 @@ import re
 from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_serializer, field_validator
 
 from app.extract.schema import Evidence, ReadField
 from app.match.schema import MAX_VALUE_LEN, MAX_VALUES, Assessment
+from app.ops.door import for_visitor
 
 PROFILE = r"^$|^[a-z][a-z0-9_]{0,63}$"
 CURRENCY = r"^[A-Z]{3}$"
@@ -126,6 +127,11 @@ class SearchPlan(BaseModel):
     cost_usd: float
     planned_at: str
     edited_at: str = ""
+
+    # how far the owner travels stays theirs: left out for the demo visitor
+    @field_serializer("radius_km")
+    def _owner_radius(self, value: int | None) -> int | None:
+        return None if for_visitor() else value
 
 
 class PlanEdit(BaseModel):
@@ -261,6 +267,16 @@ class Search(BaseModel):
     created_at: str
     updated_at: str
 
+    # For the demo visitor the owner's notes are blank and how far they travel and what is
+    # left of their budget are left out, wherever the search is answered.
+    @field_serializer("notes")
+    def _owner_notes(self, value: str) -> str:
+        return "" if for_visitor() else value
+
+    @field_serializer("radius_km", "budget_left")
+    def _owner_numbers(self, value: float | None) -> float | None:
+        return None if for_visitor() else value
+
 
 class ListingReading(BaseModel):
     """Strict output schema of a listing-text call: every property required, no extras."""
@@ -336,6 +352,11 @@ class Candidate(BaseModel):
     cost_usd: float
     created_at: str
     assessed_at: str
+
+    # the owner's own note on a listing stays theirs: blank for the demo visitor
+    @field_serializer("note")
+    def _owner_note(self, value: str) -> str:
+        return "" if for_visitor() else value
 
 
 class SellerQuestions(BaseModel):

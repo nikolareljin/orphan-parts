@@ -61,8 +61,26 @@ id, never a file: a photo, a crop or a measurement photo sent by the visitor ans
 with *Sign in with the access code to read your own photos.* Everything else answers `403` with the line
 above (the items and captures the owner marked public are the exception: their values,
 photos and drawn pictures are shown, never a location, a note, a clip or a draft; the demo set loads as public):
-the rest of the inventory, the captures, the searches, the projects, every save, draft, price,
-proposal, picture drawn and capture. The web app shows the pages, a *Sign in with the code* link in the
+the rest of the inventory, the captures, every save, draft, price, plan, web search, fit
+check, proposal, picture drawn and capture.
+
+**Find a part, Build and reuse and the profile, read-only.** The visitor reads them as the
+owner left them, by `GET` alone with plain-digit ids: `/api/searches` (and one search, its
+`candidates` and `listings`), `/api/candidates/{id}` (and its `questions`),
+`/api/preferences`, `/api/projects` (and one project, its `packs` and `pictures`) and
+`/api/packs/{id}` (and `.md`). Only what rests on public items is there: a search made for a
+public item, a project every item of which is public, their candidates, listings, packs and
+pictures; a search from values written in, one for a private item and a project with a private
+item on it answer 404, as a private item does. The owner's words and money stay out wherever
+these are answered: a search's notes and a candidate's note are blank, the radius, the budget
+left, the budget and what remains of it are left out, an outcome is shown only once shared,
+and a pack comes without its budget line and its outcome section. Every write and every call
+that spends on these pages (**Start the search**, **Plan the search**, **Search the web**,
+**Bring back listings**, **Check fit**, **Propose**, **Select**, **Write the build pack**,
+**Save profile**) is still `403`; the web app shows the sign-in line in their place, so a
+visitor's page never meets a refusal. The demo set's search for the agitator rod is loaded
+with **Search the web** already run (`web: true` in `demo/set.yaml`, answered only by the
+recording of that very request), so the visitor sees the maker's part with its link. The web app shows the pages, a *Sign in with the code* link in the
 header, and the line on whatever a visitor tries to save; the phone says the same on its
 Capture tab when no code is set.
 
@@ -77,9 +95,9 @@ on the first photo, Muse Spark on the photos and the label crops), so the record
 that exact photo answers. Only an exact recording answers a sample: a selection with none says
 *No recorded answer for this sample yet.* rather than passing an operation's stub off as a
 reading. *Measure* in the item dialog marks a sample photo (the geometry needs no recording);
-the Inbox's capture form, the listing's voice note and *Find a part* show one line, *Sign in
-with the access code to use this.*, since the set has no sample a visitor could send there and
-those routes are behind the code. Signed in, every upload is back and read live where the
+the Inbox's capture form, the listing's voice note and *Find a part*'s new search show one
+line, *Sign in with the access code to use this.*, since the set has no sample a visitor could
+send there and those routes are behind the code. Signed in, every upload is back and read live where the
 server has a key. The set's photos are the samples wherever the set is shipped (`DEMO_SET`, by
 default `demo/set.yaml` beside the backend, which the dev stack mounts; the Modal image ships
 the set at `/root/demo` and the Modal app sets `DEMO_SET` to it); without it the gallery says there are none.
@@ -203,7 +221,10 @@ code or a token; a session opened is logged with the code's label. See
 overrides it; the value in `.env` is not used for the run), opens one session before the run
 and gives it to every test, and `tests/access.spec.ts` and `tests/samples.spec.ts` start
 without one to check both doors: no file input for the visitor, the gallery, several samples
-read side by side with their own answers, and the inputs back once signed in.
+read side by side with their own answers, and the inputs back once signed in. The visitor's
+*Find a part* (a public part's search with its candidates and web finds) and *Build and reuse*
+and *Profile* (`tests/build.spec.ts`: the homework desk, the skills) are checked to show no
+input and to meet no 403.
 
 Local gate labels must be one line, 1 to 60 characters. Invalid labels are refused before any local setting or running service changes. Duplicate settings use the last value in the file; exported shell settings still take priority. Quoted values end before a trailing comment.
 

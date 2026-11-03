@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from app.find.schema import Candidate, Search
 from app.inventory.schema import Item
 from app.privacy.text import mask_text, private_field
-from app.projects.schema import Budget, Preferences, Project
+from app.projects.schema import BUDGET_LINE, OUTCOME_HEADING, Budget, Preferences, Project
 
 
 def shown_fields(item: Item) -> list[tuple[str, str]]:
@@ -131,7 +131,7 @@ def render(
     ]
     if budget.budget is not None:
         lines.append(
-            f"Across the selected projects: {money(budget.committed_spend)} of"
+            f"{BUDGET_LINE}{money(budget.committed_spend)} of"
             f" {money(budget.budget)} {budget.currency}, {money(budget.remaining or 0)} left."
         )
     if prefs.tools:
@@ -164,7 +164,7 @@ def render(
     if project.outcome is not None:
         o = project.outcome
         lines += [
-            "## Outcome",
+            OUTCOME_HEADING,
             "",
             f"Tested {o.tested_on}: {'working' if o.working else 'not working'}.",
             "",

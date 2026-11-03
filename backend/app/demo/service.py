@@ -185,6 +185,8 @@ class Loader:
                     continue
                 out.candidates += 1
                 out.cost_usd += candidate.cost_usd
+            if search.web:
+                await self.search_web(search.key, created.id, out)
         if demo.propose is not None:
             try:
                 self.planner.set_preferences(demo.propose.preferences, by_demo=True)
@@ -396,6 +398,24 @@ class Loader:
                 )
             except ValueError as exc:
                 out.skipped.append(f"{item.key}: parent device model: {exc}")
+
+    async def search_web(self, key: str, search_id: int, out: Outcome) -> None:
+        """Search the web for the search, as the owner's button does. Only the recording of
+        this very request answers in fixture mode (its brief names the device the part came
+        from as read from its photos): without one the step is left out and listed as not
+        recorded yet, never the stub's pages passed off as finds."""
+        token = exact_replay.set(True)
+        try:
+            found = await self.finder.search_web(search_id)
+        except NoRecordingError:
+            out.unrecorded.append(f"search {key}: Search the web (one record run searches it)")
+        except (ValueError, ModelApiError) as exc:
+            out.skipped.append(f"search {key}: Search the web: {exc}")
+        else:
+            out.web_finds += found.added
+            out.cost_usd += found.cost_usd
+        finally:
+            exact_replay.reset(token)
 
     async def draw(self, item: DemoItem, item_id: int, out: Outcome) -> None:
         """The item's picture, after its drafts. With a key it is drawn (and kept, in record

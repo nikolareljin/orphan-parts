@@ -33,12 +33,13 @@ test('signed out: no file input on any page, the samples instead', async ({ page
     await expect(page.getByRole('checkbox')).not.toHaveCount(0)
     await expect(page.locator('input[type="file"]')).toHaveCount(0)
 
-    // Inbox and Find: one line, no input
+    // Inbox: one line, no input; Find: the searches read-only, the line where a new one starts
     await open(page, 'Inbox')
     await expect(page.getByText(signInLine)).toBeVisible()
     await expect(page.locator('input[type="file"]')).toHaveCount(0)
     await open(page, 'Find a part')
     await expect(page.getByText(signInLine)).toBeVisible()
+    await expect(page.getByRole('form', { name: 'New search' })).toHaveCount(0)
     await expect(page.locator('input[type="file"]')).toHaveCount(0)
 
     // the item dialog: the voice note is the line, Measure offers the sample photos
@@ -109,7 +110,63 @@ test('access check failing: no file input on any upload page', async ({ page }) 
   await expect(page.locator('input[type="file"]')).toHaveCount(0)
   await open(page, 'Find a part')
   await expect(page.getByText(signInLine)).toBeVisible()
+  await expect(page.getByRole('form', { name: 'New search' })).toHaveCount(0)
   await expect(page.locator('input[type="file"]')).toHaveCount(0)
+})
+
+test('signed out: Find a part shows the search for a public part, its candidates and web finds, read-only', async ({ page, playwright, baseURL }) => {
+  test.skip(!code, 'the stack runs without a gate')
+  test.slow() // the owner reads a listing and searches the web first, on the one shared backend
+  const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+  const owner = await playwright.request.newContext({ baseURL })
+  expect((await owner.post('/api/access', { data: { code } })).ok()).toBe(true)
+  const made = await owner.post('/api/items', { data: { name: `Agitator find ${stamp}`, item_type: 'blender agitator', profile: 'blender_agitator' } })
+  const id = ((await made.json()) as { id: number }).id
+  expect((await owner.post(`/api/items/${id}/fields`, { data: { field: 'parent_device_model', value: 'Hamilton Beach 729' } })).ok()).toBe(true)
+  expect((await owner.post(`/api/items/${id}/public`, { data: { public: true } })).ok()).toBe(true)
+  const title = `all-metal agitator rod ${stamp}`
+  const created = await owner.post('/api/searches', { data: { need_item_id: id, title, max_price: 20, notes: `owner note ${stamp}` } })
+  expect(created.status()).toBe(201)
+  const sid = ((await created.json()) as { id: number }).id
+  const listing = { text: 'All-metal agitator rod, 4 mm shaft, two tabs 9 mm across. $8', asking_price: '8' }
+  expect((await owner.post(`/api/searches/${sid}/candidates`, { multipart: { request: JSON.stringify(listing) } })).status()).toBe(201)
+  const web = await owner.post(`/api/searches/${sid}/web`)
+  expect(web.status()).toBe(200)
+  const found = (await web.json()) as { listings: { id: number; source_kind: string }[] }
+  const first = found.listings.find((l) => l.source_kind === 'web')
+  expect(first).toBeTruthy()
+  expect((await owner.post(`/api/searches/${sid}/listings/${first?.id}/check`)).ok()).toBe(true)
+
+  // nothing the visitor's pages ask for is refused: no 403, so the door never turns
+  const refused: string[] = []
+  page.on('response', (r) => {
+    if (r.status() === 403) refused.push(r.url())
+  })
+  try {
+    await page.goto('/')
+    await open(page, 'Find a part')
+    await page.getByRole('table', { name: 'Searches' }).getByRole('row', { name: new RegExp(title) }).getByRole('button', { name: 'Open' }).click()
+    const panel = page.getByRole('article', { name: `Search ${title}` })
+    // the listing brought back and the web find checked for fit, under the header row
+    await expect(panel.getByRole('table', { name: 'Candidates' }).getByRole('row')).toHaveCount(3)
+    const ranked = panel.getByRole('list', { name: 'Listings brought back, ranked' })
+    await expect(ranked).toContainText('found on the web')
+    await expect(ranked.getByRole('link', { name: 'example.org' }).first()).toHaveAttribute('href', /^https:\/\/example\.org\//)
+    // a fit already checked is shown; nothing is checked, planned, searched or saved
+    await ranked.getByRole('button', { name: 'Show the fit' }).first().click()
+    await expect(ranked.getByLabel(/^Fit of listing/)).toBeVisible()
+    await expect(panel).toContainText('Sign in with the access code to search the web.')
+    await expect(panel).not.toContainText(`owner note ${stamp}`)
+    for (const name of ['Search the web', 'Plan the search', 'Check fit', 'Remove', 'Mark found', 'Close search', 'Withdraw', 'Score the listing']) {
+      await expect(panel.getByRole('button', { name, exact: true })).toHaveCount(0)
+    }
+    await expect(panel.locator('input, textarea, select')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Sign in with the code' })).toBeVisible()
+    expect(refused).toEqual([])
+  } finally {
+    await owner.post(`/api/items/${id}/public`, { data: { public: false } })
+    await owner.dispose()
+  }
 })
 
 test('access check slow: the inputs wait for the answer, then show for the owner', async ({ page }) => {

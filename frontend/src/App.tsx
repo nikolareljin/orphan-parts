@@ -251,14 +251,14 @@ export default function App() {
       {view === 'build' && (
         <section className="card">
           <h2>Build and reuse</h2>
-          <Build demo={demo} />
+          <Build demo={samplesOnly} />
         </section>
       )}
 
       {view === 'profile' && (
         <section className="card">
           <h2>Profile</h2>
-          <Profile />
+          <Profile demo={samplesOnly} />
         </section>
       )}
 

@@ -202,3 +202,59 @@ test('a project is drawn only on a click, and the picture is labeled as drawn', 
   await expect(again.getByRole('img', { name: /^Illustrative picture 1: / })).toBeVisible()
   await expect(again.getByRole('img')).toHaveCount(1)
 })
+
+test.describe('the demo visitor', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+  const code = process.env.E2E_ACCESS_CODE ?? ''
+
+  test('reads the homework desk and the profile, with nothing to propose, commit or save', async ({ page, playwright, baseURL }) => {
+    test.skip(!code, 'the stack runs without a gate')
+    const owner = await playwright.request.newContext({ baseURL })
+    expect((await owner.post('/api/access', { data: { code } })).ok()).toBe(true)
+    await household(owner)
+    const proposed = await owner.post('/api/projects/propose', { data: {} })
+    expect(proposed.status()).toBe(201)
+    const desk = ((await proposed.json()) as { id: number; title: string; allocations: { item_id: number }[] }[]).find((p) => p.title.startsWith('Homework desk'))
+    expect(desk).toBeTruthy()
+    // a project is shown to the visitor once every item on it is public
+    const shown = [...new Set(desk?.allocations.map((a) => a.item_id) ?? [])]
+    for (const id of shown) expect((await owner.post(`/api/items/${id}/public`, { data: { public: true } })).ok()).toBe(true)
+
+    const refused: string[] = []
+    page.on('response', (r) => {
+      if (r.status() === 403) refused.push(r.url())
+    })
+    try {
+      await page.goto('/')
+      await page.getByRole('button', { name: 'Build and reuse' }).click()
+      await expect(page.getByRole('form', { name: 'Propose projects' })).toContainText('Homework workstation')
+      await expect(page.getByRole('button', { name: 'Propose', exact: true })).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Edit', exact: true })).toHaveCount(0)
+      await expect(page.getByLabel('Budget across selected projects')).toHaveCount(0)
+      await page.getByRole('table', { name: 'Projects' }).getByRole('row', { name: new RegExp(`^${desk?.title}`) }).first().getByRole('button', { name: 'Open' }).click()
+      const panel = page.getByRole('article', { name: /Project Homework desk/ })
+      await expect(panel.getByRole('list', { name: 'Items on this project' })).toContainText('Old laptop')
+      await expect(panel.getByRole('list', { name: 'Missing requirements' })).toContainText('A cable between the two')
+      for (const name of ['Select and commit the items', 'Shortlist', 'Abandon', 'Find it on Marketplace', 'Write the build pack']) {
+        await expect(panel.getByRole('button', { name, exact: true })).toHaveCount(0)
+      }
+      await expect(panel.getByRole('button', { name: /^Draw it/ })).toBeDisabled()
+      await expect(panel).toContainText('Sign in with the access code to use this.')
+      await expect(panel.locator('input, textarea, select')).toHaveCount(0)
+      await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+
+      // the profile: the skills and their levels, read; nothing to save
+      await page.getByRole('button', { name: 'Profile' }).click()
+      const skills = page.getByRole('table', { name: 'Skills' })
+      await expect(skills.getByRole('row', { name: /electronics and soldering/ })).toBeVisible()
+      await expect(skills.getByRole('row', { name: /woodworking/ })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Save profile' })).toHaveCount(0)
+      await expect(page.getByRole('radio')).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Sign in with the code' })).toBeVisible()
+      expect(refused).toEqual([])
+    } finally {
+      for (const id of shown) await owner.post(`/api/items/${id}/public`, { data: { public: false } })
+      await owner.dispose()
+    }
+  })
+})

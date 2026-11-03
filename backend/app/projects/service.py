@@ -13,7 +13,7 @@ from typing import Any
 from app.config import Settings
 from app.find.schema import SearchCreate, SearchPatch
 from app.find.service import Finder
-from app.inventory import Inventory
+from app.inventory import Inventory, NotFoundError
 from app.inventory.parent import PARENT_FIELDS
 from app.inventory.schema import Item, ItemPatch
 from app.model_api import ModelApiClient, text_part, user_message
@@ -388,9 +388,12 @@ class Planner:
 
     # --- projects ---------------------------------------------------------------
 
-    def projects(self) -> ProjectList:
+    def projects(self, *, public_only: bool = False) -> ProjectList:
+        """Every project; for the demo visitor, only those built on public items alone."""
         rows = self.inventory.projects()
         projects = [self.project_of(r) for r in rows]
+        if public_only:
+            projects = [p for p in projects if self.shown(p)]
         prefs = self.preferences()
         selected = [p for p in projects if p.status in ("selected", "building", "done")]
         spend = round(sum(p.spend_estimate for p in selected), 2)
@@ -405,8 +408,23 @@ class Planner:
             ),
         )
 
-    def project(self, project_id: int) -> Project:
-        return self.project_of(self.inventory.project(project_id))
+    def project(self, project_id: int, *, public_only: bool = False) -> Project:
+        """The project; one the demo visitor may not see is not there at all for them."""
+        found = self.project_of(self.inventory.project(project_id))
+        if public_only and not self.shown(found):
+            raise NotFoundError(f"no project {project_id}")
+        return found
+
+    def shown(self, project: Project) -> bool:
+        """Whether the demo visitor may see the project: every item on it is marked public."""
+        if not project.allocations:
+            return False
+        for allocation in project.allocations:
+            try:
+                self.inventory.get(allocation.item_id, public_only=True)
+            except NotFoundError:
+                return False
+        return True
 
     def shortlist(self, project_id: int) -> Project:
         with self._lock:
@@ -633,13 +651,17 @@ class Planner:
             markdown = packs.render(project, items, prefs, budget, searches, version, digest)
             return self.pack_of(self.inventory.add_pack(project_id, digest, markdown), digest)
 
-    def packs_of(self, project_id: int) -> list[Pack]:
-        current = self.digest(self.project(project_id))
+    def packs_of(self, project_id: int, *, public_only: bool = False) -> list[Pack]:
+        current = self.digest(self.project(project_id, public_only=public_only))
         return [self.pack_of(r, current) for r in self.inventory.packs(project_id)]
 
-    def pack(self, pack_id: int) -> Pack:
+    def pack(self, pack_id: int, *, public_only: bool = False) -> Pack:
         row = self.inventory.pack(pack_id)
-        return self.pack_of(row, self.digest(self.project(int(row["project_id"]))))
+        try:
+            project = self.project(int(row["project_id"]), public_only=public_only)
+        except NotFoundError:
+            raise NotFoundError(f"no pack {pack_id}") from None
+        return self.pack_of(row, self.digest(project))
 
     def pack_of(self, row: Any, current: str) -> Pack:
         return Pack(

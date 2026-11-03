@@ -31,7 +31,12 @@ The line at the foot of the page says *Demo: recorded answers only*.
    picture drawn for it. **Measure a feature** in the item marks a ruler and a feature on one
    of the set's photos and computes the dimension. Deciding, pricing, drafting and searching
    ask for the code (*demo: the code unlocks saving, drafts, prices, projects and captures*,
-   or *Sign in with the access code to use this.*).
+   or *Sign in with the access code to use this.*). **Find a part**, **Build and reuse** and
+   **Profile** are read-only: the search for the frappé maker's agitator rod with its four
+   candidates and the maker's part (OEM 990010200) that **Search the web** found, with its
+   link; the projects proposed from the demo shelf (a homework workstation, a smart mirror
+   for the hall); the skills and their levels. Where the owner would save, plan, search or
+   propose, the sign-in line.
 
 ### With the access code (about ten minutes)
 
@@ -242,8 +247,10 @@ A visitor without the code sees a public item's values, photos and drawn picture
 - where it is kept, the owner's notes, a voice note or a clip;
 - a draft, the listing details (the lowest acceptable price and the reason for selling are
   private even from the draft), price guidance, a decision or its cards;
-- searches, listings brought back, candidates, projects, the profile or the Inbox's private
-  captures.
+- a search made from values or for a private item, a project with a private item on it, an
+  outcome not shared, the notes on a search or a listing, the budget or the radius, or the
+  Inbox's private captures. The searches for public items, their candidates and listings, the
+  projects built on public items alone and the skills are shown read-only.
 
 Photos are re-encoded on arrival, with EXIF and GPS dropped; the phone re-encodes before
 sending. Product keys, MAC addresses, serial numbers, passwords, QR codes and barcodes found on
