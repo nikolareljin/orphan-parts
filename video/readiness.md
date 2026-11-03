@@ -42,9 +42,9 @@ and labels everything else a concept preview.
 
 ## Scenes
 
-**Summary: 22 shots in the main video. 13 are web takes recorded by `video/generate.sh` (7 on
-recorded answers already, 6 need one live recording run first), 1 is the phone, 4 are the
-owner's photos, 2 are concept previews, 3 are cards rendered here.**
+**Summary: 22 shots in the main video. 13 are web takes recorded by `video/generate.sh`, all on
+recorded answers (the six marked *record* were recorded once with `--record` on Nov 2), 1 is
+the phone, 4 are the owner's photos, 2 are concept previews, 3 are cards rendered here.**
 
 | Shot | Scene | Status | What it needs |
 |---|---|---|---|
@@ -55,19 +55,21 @@ owner's photos, 2 are concept previews, 3 are cards rendered here.**
 | S08 | Search the web, Check fit | record | the web search for the agitator search with the device read in S07 (op `part-search`); the reading of the first page found (op `listing-text`) |
 | S09 | Decide: keep and fix | record | the agitator's scenarios for the skills profile at that point (op `scenarios`) |
 | S10, S11 | The inventory; skills and what I want from a build | now | the stage |
-| S12 | Five proposals | record | the proposals for the arcade preferences of S11 (ops `propose-1`, `propose-2`, ... one per tool round) |
+| S12 | Five proposals | record | the proposals for the preferences typed in S11 (recorded: four kept, no arcade; the shots follow the homework workstation) (ops `propose-1`, `propose-2`, ... one per tool round) |
 | S13, S15, S16 | Select, Find it on Marketplace, the build pack | now | S12's project (no model call) |
 | S14 | Draw it | record | the drawing of S12's project (Muse Image, op `picture`) |
 | S17, S18 | Connection diagram, a different display | concept | `diagrams/` |
 | S19 | On the phone | now | an Android emulator (`--android`), else the app's screenshots |
 | S21 | Signed out, the sample gallery | now | the sample recordings already in the repository |
 
-Short video: K1, K8 and K9 are cards and a diagram, K2 the owner's photos, K7 a take on
-recorded answers; K3 to K6 reuse S07, S08, S12 and S14 and are ready once those are recorded.
+Short video: K1, K8 and K9 are cards and a diagram, K2 the owner's photos, K3 to K7 reuse
+S07, S08, S12, S14 and S15.
 
-## The live recordings still needed
+## The live recordings
 
-One run records every answer the shots above need, with the owner's key from the shell; it is
+The answers below are recorded (`backend/tests/fixtures/api`) and replay in fixture mode. To
+record again after a change (the stage, the preferences of S11, the photos), one run records
+every answer the shots need, with the owner's key from the shell; it is
 never written to a file, and the run stops at `VIDEO_SPEND_CAP_USD` (1 USD unless set):
 
 ```bash
@@ -87,6 +89,7 @@ video/generate.sh               # the drafts, now on the recorded answers
 | S12 | Propose, five projects (the tool loop, `propose-N`) | Muse Spark | $0.02 to $0.06 |
 | S14 | Draw it on the project (`picture`) | Muse Image | $0.01 |
 | | **Total** | | **about $0.08 to $0.17** |
+| S19 | the phone's capture, read once (`--phone --record`, still to do) | Muse Spark (and SAM 3.1) | about $0.01 |
 
 The ranges are the live check's per-operation figures (`livecheck/README.md`); the cap holds
 the worst case. A request already recorded is replayed, not bought again, so a run that stops

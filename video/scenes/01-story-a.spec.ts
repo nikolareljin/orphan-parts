@@ -13,7 +13,7 @@ test.describe.configure({ mode: 'serial' })
 
 test('S05 the app asks which device the part came from', async ({ scene }) => {
   const { page } = scene
-  await page.goto('/')
+  await page.goto('/#inventory')
   await scene.ready()
   const item = await openItem(scene, AGITATOR)
   const question = item.getByRole('region', { name: 'Which device it came from' })
@@ -49,7 +49,7 @@ test('S07 the label under the base answers it', async ({ scene }) => {
 
 test('S08 Search the web brings back the maker part, then its fit', async ({ scene }) => {
   const { page } = scene
-  await page.goto('/')
+  await page.goto('/#find')
   await scene.ready()
   await scene.click(page.getByRole('button', { name: 'Find a part', exact: true }))
   await scene.click(page.getByRole('table', { name: 'Searches' }).getByRole('row', { name: /all-metal agitator rod/ }).getByRole('button', { name: 'Open' }))
@@ -80,7 +80,7 @@ test('S08 Search the web brings back the maker part, then its fit', async ({ sce
   await scene.hold(2600)
 })
 
-test('S09 Decide: keep and fix', async ({ scene }) => {
+test('S09 Decide: the cards for my skills, then keep and fix', async ({ scene }) => {
   const { page } = scene
   await page.goto('/#inventory')
   await scene.ready()
@@ -93,9 +93,15 @@ test('S09 Decide: keep and fix', async ({ scene }) => {
   await expect(fix).toBeVisible({ timeout: 120_000 })
   scene.mark('cards')
   await scene.settle(300)
+  // the card as the answer gives it: steps when it is worth fixing for these skills, else why not
   await scene.reveal(fix, 'start')
-  await scene.point(fix.getByRole('list', { name: 'Steps' }))
-  await scene.hold(1500)
+  await scene.point(fix.getByRole('list', { name: 'Likely problem' }))
+  await scene.hold(1200)
+  const verdict = cards.getByRole('status', { name: 'Recommendation' })
+  if (await verdict.count()) {
+    await scene.point(verdict)
+    await scene.hold(1000)
+  }
   await scene.click(fix.getByRole('button', { name: 'Choose this: Keep and fix' }))
   await expect(decide.getByRole('status', { name: 'Decision made' })).toContainText('Keep and fix')
   await scene.hold(1500)

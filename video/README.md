@@ -4,7 +4,8 @@ Everything needed to make the two videos for the Meta Global AI Developer Hackat
 the main video (2:42, the limit is under 3:00) and a short one (55 s) for the social post.
 Two stories: **A**, a favorite frappé routine stopped by a worn mixer agitator, the app asking
 which device it came from and searching the web for the maker's part; **B**, unused
-electronics turned into a tabletop arcade.
+electronics turned into a build (an arcade was asked for; the recorded proposals keep a homework
+workstation, a home automation server, a smart mirror and a retro console).
 
 ## What is here
 

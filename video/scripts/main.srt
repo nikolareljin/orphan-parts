@@ -27,131 +27,135 @@ Beach drink mixer, and its agitator is
 worn.
 
 7
-00:00:25,390 --> 00:00:34,559
-The rod has no model number of its own, so
-the app asks which device it came from.
+00:00:25,390 --> 00:00:33,031
+The rod has no model number, so the app
+asks which device it came from.
 
 8
-00:00:34,679 --> 00:00:38,754
-The label under the mixer's base answers
-that.
+00:00:33,151 --> 00:00:36,717
+The label under the base answers that.
 
 9
-00:00:38,874 --> 00:00:45,496
-Search the web then looks first for the
-maker's own part, and keeps
+00:00:36,837 --> 00:00:42,949
+Search the web looks first for the maker's
+own part, and keeps
 
 10
-00:00:45,616 --> 00:00:51,729
-only pages the search returned, each as a
+00:00:43,069 --> 00:00:48,673
+only pages the search returned, each a
 listing with its link.
 
 11
-00:00:51,849 --> 00:00:56,433
-Check fit holds a listing against the
-rod's measurements,
+00:00:48,793 --> 00:00:54,396
+Check fit turns every unknown into a
+question for the seller.
 
 12
-00:00:56,553 --> 00:01:01,138
-and every unknown becomes a question for
-the seller.
+00:00:54,516 --> 00:01:01,138
+Decide weighs fixing, reusing or selling
+for my skills; it calls the fix
 
 13
 00:01:01,258 --> 00:01:07,880
-Then I decide what to do with it: keep it
-and fix it.
+hard, but with the maker's part found, I
+keep it and fix it.
 
 14
-00:01:08,000 --> 00:01:12,372
+00:01:08,000 --> 00:01:12,063
 The same approach works for my unused
 electronics.
 
 15
-00:01:12,492 --> 00:01:18,504
+00:01:12,183 --> 00:01:17,769
 I catalog laptops, monitors and parts,
 rate my skills, and say
 
 16
-00:01:18,624 --> 00:01:24,636
+00:01:17,889 --> 00:01:23,475
 what I want from a build and what I can
 spend.
 
 17
-00:01:24,756 --> 00:01:29,675
+00:01:23,595 --> 00:01:28,166
 Muse Spark proposes projects from what I
 own, and
 
 18
-00:01:29,795 --> 00:01:34,167
+00:01:28,286 --> 00:01:32,349
 the rules keep only what my inventory
 backs.
 
 19
-00:01:34,287 --> 00:01:40,845
-I choose the tabletop arcade, and its
-items are committed to it.
+00:01:32,469 --> 00:01:38,055
+The arcade I asked for isn't among them,
+so I pick
 
 20
-00:01:40,965 --> 00:01:48,070
-Draw it shows how the finished build could
-look, marked as a drawing.
+00:01:38,175 --> 00:01:43,253
+the homework workstation, and its items
+are committed to it.
 
 21
-00:01:48,190 --> 00:01:54,202
-The missing controls become a Marketplace
-search that I run myself.
+00:01:43,373 --> 00:01:48,960
+Draw it shows how it could look, marked as
+a drawing.
 
 22
-00:01:54,322 --> 00:02:00,880
+00:01:49,080 --> 00:01:54,666
+What is missing becomes a Marketplace
+search that I run myself.
+
+23
+00:01:54,786 --> 00:02:00,880
 The build pack collects the items, the
 steps, and the safety notes.
 
-23
+24
 00:02:01,000 --> 00:02:04,701
 Next, a plan that adapts: a connection
 diagram,
 
-24
+25
 00:02:04,821 --> 00:02:08,522
 and a different display that re-plans the
 build.
 
-25
+26
 00:02:08,642 --> 00:02:11,880
 These are concept previews, not built yet.
 
-26
+27
 00:02:12,000 --> 00:02:19,007
 On my phone, I capture photos and a spoken
 note into the same inventory.
 
-27
+28
 00:02:19,127 --> 00:02:23,631
 Muse Spark, SAM 3.1, Muse Voice Transcribe
 and Muse
 
-28
+29
 00:02:23,751 --> 00:02:28,256
 Image do the reading, the searching and
 the drawing.
 
-29
+30
 00:02:28,376 --> 00:02:32,880
 And anyone can try it on my own photos.
 
-30
+31
 00:02:33,000 --> 00:02:35,556
 Orphan Parts Lens.
 
-31
+32
 00:02:35,676 --> 00:02:37,380
 Find replacements.
 
-32
+33
 00:02:37,500 --> 00:02:39,204
 Discover reuse.
 
-33
+34
 00:02:39,324 --> 00:02:41,880
 Build something useful.
 

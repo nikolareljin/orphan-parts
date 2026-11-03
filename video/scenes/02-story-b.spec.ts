@@ -2,8 +2,8 @@ import { expect, test, type Scene } from './lib'
 import type { Locator } from '@playwright/test'
 
 // Story B, unused electronics: the inventory, the skills profile and what the owner wants from
-// a build, the proposals, the arcade selected with its items committed, drawn, its missing
-// controls as a Marketplace search, and the build pack. One project carries the shots after
+// a build, the proposals, one selected with its items committed, drawn, what it still needs
+// as a Marketplace search, and the build pack. One project carries the shots after
 // the proposals: the arcade when the proposals have one, else the first proposed.
 
 test.describe.configure({ mode: 'serial' })
@@ -78,9 +78,9 @@ test('S12 five proposals from what I own', async ({ scene }) => {
   await scene.hold(1800)
 })
 
-test('S13 the arcade selected, its items committed', async ({ scene }) => {
+test('S13 the build selected, its items committed', async ({ scene }) => {
   const { page } = scene
-  await page.goto('/')
+  await page.goto('/#build')
   await scene.ready()
   const panel = await project(scene)
   await scene.point(panel.getByRole('list', { name: 'Items on this project' }))
@@ -99,9 +99,9 @@ test('S13 the arcade selected, its items committed', async ({ scene }) => {
   await scene.hold(1600)
 })
 
-test('S14 Draw it: how the finished arcade could look', async ({ scene }) => {
+test('S14 Draw it: how the finished build could look', async ({ scene }) => {
   const { page } = scene
-  await page.goto('/')
+  await page.goto('/#build')
   await scene.ready()
   const panel = await project(scene)
   const draw = panel.getByRole('button', { name: /^Draw it: / })
@@ -114,19 +114,22 @@ test('S14 Draw it: how the finished arcade could look', async ({ scene }) => {
   await scene.hold(2500)
 })
 
-test('S15 the missing controls as a Marketplace search', async ({ scene }) => {
+test('S15 what is missing, as a Marketplace search', async ({ scene }) => {
   const { page } = scene
-  await page.goto('/')
+  await page.goto('/#build')
   await scene.ready()
   const panel = await project(scene)
   const missing = panel.getByRole('list', { name: 'Missing requirements' })
-  await scene.click(missing.getByRole('button', { name: 'Find it on Marketplace' }).first())
-  await expect(missing).toContainText('open on Find a part')
+  const need = missing.getByRole('listitem').first()
+  // the requirement's own words, up to its first bracket, name the search it starts
+  const words = ((await need.textContent()) ?? '').split(/[(·]/)[0].trim()
+  await scene.click(need.getByRole('button', { name: 'Find it on Marketplace' }))
+  await expect(need).toContainText('open on Find a part')
   await scene.hold(700)
   await scene.click(page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }), 300)
   await scene.click(page.getByRole('button', { name: 'Find a part', exact: true }))
-  const rows = page.getByRole('table', { name: 'Searches' }).getByRole('row')
-  await scene.click(rows.last().getByRole('button', { name: 'Open' }))
+  const row = page.getByRole('table', { name: 'Searches' }).getByRole('row').filter({ hasText: words.slice(0, 30) }).first()
+  await scene.click(row.getByRole('button', { name: 'Open' }))
   const search = page.getByRole('article', { name: /^Search / })
   const link = search.getByRole('link', { name: 'Search Marketplace' })
   // pointed at, never opened: no Marketplace page on camera
@@ -136,7 +139,7 @@ test('S15 the missing controls as a Marketplace search', async ({ scene }) => {
 
 test('S16 the build pack', async ({ scene }) => {
   const { page } = scene
-  await page.goto('/')
+  await page.goto('/#build')
   await scene.ready()
   const panel = await project(scene)
   const packs = panel.getByRole('region', { name: 'Build pack' })

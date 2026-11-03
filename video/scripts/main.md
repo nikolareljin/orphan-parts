@@ -5,7 +5,7 @@ the app does in it and what is not claimed. Shot numbers point at
 [the storyboard](../storyboard/main.md). The captions in `main.srt` are written from the quoted
 lines below by `captions.py`; edit the text here, then run it again.
 
-Pace: 305 words in 162 seconds, about 1.9 words a second (113 words a minute) including
+Pace: 312 words in 162 seconds, about 1.9 words a second (113 words a minute) including
 pauses. Section 1 (0:00 to 0:17) is the densest at 2.2 words a second; read it a little faster,
 or let it run into S04.
 
@@ -25,40 +25,47 @@ slot 1 processor and a powerline adapter.
 Shots S04 to S09.
 
 > I make frappé coffee with this older Hamilton Beach drink mixer, and its agitator is worn.
-> The rod has no model number of its own, so the app asks which device it came from. The
-> label under the mixer's base answers that. Search the web then looks first for the maker's
-> own part, and keeps only pages the search returned, each as a listing with its link. Check
-> fit holds a listing against the rod's measurements, and every unknown becomes a question
-> for the seller. Then I decide what to do with it: keep it and fix it.
+> The rod has no model number, so the app asks which device it came from. The label under the
+> base answers that. Search the web looks first for the maker's own part, and keeps only pages
+> the search returned, each a listing with its link. Check fit turns every unknown into a
+> question for the seller. Decide weighs fixing, reusing or selling for my skills; it calls
+> the fix hard, but with the maker's part found, I keep it and fix it.
 
 - The question is the item's own (`needs_parent`): a part profile, no model or part number. A
   photo of the device is one Muse Spark reading; the model read off it stays *to confirm*.
 - Search the web is one Muse Spark call with web search; a find is kept only when its page is
   among the search's results or citations. Marketplace is never searched.
 - With the live recording, the search found the maker's part for the model 729, Hamilton Beach
-  990010200, on a parts store page (Fix.com, $10.47 as the page stated). Name the number only
+  990010200, on parts store pages, each with the price the page states. Name the number only
   when the recorded take shows it; never a price the page did not state. The draft's stand-in
   pages (example.org) carry the red DRAFT line until the answer is recorded.
 - Check fit reads the listing (one Muse Spark reading); the verdict is the rules', and what
   the listing does not say becomes a seller question.
-- Decide writes three cards for the owner's skills profile; *Keep and fix* is chosen.
+- Decide writes three cards for the owner's skills profile (none rated yet at this point, so
+  the answer is for an average person): the recorded answer calls the fix hard, not worth it,
+  and recommends selling; the owner chooses *Keep and fix* anyway, with the maker's part found.
+- The demo set's rod values (diameter, tab span) are the set's unconfirmed entries; some
+  screens show them. The narration, titles and captions state no rod or tab size.
 
-## 1:08 to 2:01 · Story B: the arcade
+## 1:08 to 2:01 · Story B: unused electronics
 
 Shots S10 to S16.
 
 > The same approach works for my unused electronics. I catalog laptops, monitors and parts,
 > rate my skills, and say what I want from a build and what I can spend. Muse Spark proposes
-> projects from what I own, and the rules keep only what my inventory backs. I choose the
-> tabletop arcade, and its items are committed to it. Draw it shows how the finished build
-> could look, marked as a drawing. The missing controls become a Marketplace search that I
-> run myself. The build pack collects the items, the steps, and the safety notes.
+> projects from what I own, and the rules keep only what my inventory backs. The arcade I
+> asked for isn't among them, so I pick the homework workstation, and its items are committed
+> to it. Draw it shows how it could look, marked as a drawing. What is missing becomes a
+> Marketplace search that I run myself. The build pack collects the items, the steps, and the
+> safety notes.
 
 - The demo set holds monitors, ThinkPads, a laptop board, a graphics card, a processor and a
   powerline adapter; every item named here is in it.
-- The arcade is one of the app's project templates (*Arcade coffee table*). Keep whatever the
-  recorded proposals are; if the arcade is not among them, the narration names the project
-  that is, never the picture.
+- The recorded proposals for the arcade preferences keep four projects: a homework
+  workstation (the ThinkPad T510 and the Dell U2419H), a home automation server, a smart
+  mirror and a retro console on the TV; an arcade the model proposed was not kept by the
+  rules. The narration says so and follows the homework workstation, the first proposal,
+  whose drawing is recorded. Record again and change these lines together if that changes.
 - Draw it is one Muse Image call, captioned as drawn, never evidence.
 - The app opens a Marketplace search; you run it. It does not search Marketplace on its own.
 

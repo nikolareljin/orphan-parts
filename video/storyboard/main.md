@@ -10,8 +10,8 @@ on every screen recording; titles from `titles/`, top left, in for 4 s from the 
 
 `video/generate.sh` records every web shot with Playwright from the actions below
 (`video/scenes/*.spec.ts`, one test per shot) and cuts the draft with `video/assemble.py`,
-whose shot list follows this table: change both together. The browser is 1600x900 and the
-take is scaled to 1920x1080, the page at 120 percent. The stage is the demo set as `./dev demo`
+whose shot list follows this table: change both together. The browser is 1920x1080 with the
+page at 150 percent, so the text reads on a phone. The stage is the demo set as `./dev demo`
 loads it, with the agitator's device left unanswered so S05 can ask for it; the shots run in
 order on one stage, no reset between them.
 
@@ -28,11 +28,11 @@ order on one stage, no reset between them.
 | S09 | 1:00 | 8 | Decide: keep and fix | The agitator, **Decide**, **What should I do with it?**; the three cards; *Keep and fix*, its steps, **Choose this: Keep and fix** | web take | `t25-decide` | record |
 | S10 | 1:08 | 6 | The inventory | **My inventory**, scroll the list down and back | web take | `t08-story-b` | now |
 | S11 | 1:14 | 9 | Skills, and what I want from a build | **Profile**: *software* confident, *electronics and soldering* some, **Save profile**; **Build and reuse**, **What I want from a build**, **Edit**, Interests *a tabletop arcade for the living room; home automation; a smart mirror in the hall*, Budget *120*, **Save** | web take | `t09-preferences` | now |
-| S12 | 1:23 | 9 | Five proposals | **Propose projects**, How many **5**, **Propose**; the projects table, the arcade pointed at | web take | `t10-propose` | record |
-| S13 | 1:32 | 8 | The arcade selected | **Open** the arcade: *From your inventory*, *Still needed*; **Select and commit the items** (**Move it here** if another build holds an item) | web take | `t11-select` | now, after S12 |
-| S14 | 1:40 | 7 | Draw it | On the arcade, **Draw it**; the picture, captioned as drawn | web take | `t26-draw` | record |
-| S15 | 1:47 | 8 | The missing controls as a search | *Still needed*, **Find it on Marketplace**; **Find a part**, the new search, **Open**; **Search Marketplace** pointed at, never opened | web take | `t12-marketplace` | now, after S12 |
-| S16 | 1:55 | 6 | The build pack | The arcade, **Write the build pack**; *version 1*, **Download** pointed at | web take | `t13-pack` | now, after S12 |
+| S12 | 1:23 | 9 | Five proposals | **Propose projects**, How many **5**, **Propose**; the projects table | web take | `t10-propose` | record |
+| S13 | 1:32 | 8 | The homework workstation selected | **Open** the first proposal (an arcade when the proposals keep one): *From your inventory*, *Still needed*; **Select and commit the items** (**Move it here** if another build holds an item) | web take | `t11-select` | now, after S12 |
+| S14 | 1:40 | 7 | Draw it | On the project, **Draw it**; the picture, captioned as drawn | web take | `t26-draw` | record |
+| S15 | 1:47 | 8 | What is missing, as a search | *Still needed*, **Find it on Marketplace**; **Find a part**, the new search, **Open**; **Search Marketplace** pointed at, never opened | web take | `t12-marketplace` | now, after S12 |
+| S16 | 1:55 | 6 | The build pack | The project, **Write the build pack**; *version 1*, **Download** pointed at | web take | `t13-pack` | now, after S12 |
 | S17 | 2:01 | 5 | Connection diagram | Still, slow push in | `diagrams/arcade-connections.png` | `t14-connections` | concept |
 | S18 | 2:06 | 6 | A different display | Still, slow push in | `diagrams/arcade-swap.png` | `t16-swap` | concept |
 | S19 | 2:12 | 6 | On the phone | The Android app: Capture, a photo of the agitator from the gallery, a name, **Send**, *Sent as capture* | emulator take (`--android`), else the app's screenshots | `t27-phone` | now |
@@ -49,15 +49,15 @@ order on one stage, no reset between them.
   that reading is recorded, fixture mode answers with the operation's stub (a power adapter's
   model), and the draft carries the red DRAFT line: never keep that take for the final.
 - **S08.** Search the web keeps only pages among the search's own results. The recorded live
-  answer brings back the maker's part for the model 729 (Hamilton Beach 990010200; Fix.com
-  stated $10.47); the fixture stand-in brings back example.org pages under the DRAFT line.
+  answer brings back the maker's part for the model 729 (Hamilton Beach 990010200) with the
+  price each page states; the fixture stand-in brings back example.org pages under the DRAFT line.
   The links are pointed at, never opened on camera. Never type a price no page stated.
 - **S09.** The cards are Muse Spark's for the owner's skills profile; the stand-in cards are a
   laptop's (the DRAFT line says so) until the agitator's are recorded.
-- **S12 to S16** run on the project S12 leaves: the arcade when the recorded proposals have
-  one, else the demo set's first proposal. Keep whatever five the recorded run proposes; the
-  narration names the arcade, so record again (or cut the line) if it is missing, never stage
-  the picture.
+- **S12 to S16** run on the project S12 leaves: an arcade when the recorded proposals keep
+  one, else the first proposal. The recorded run keeps four, no arcade, so the shots follow
+  the homework workstation and the narration says the arcade was not kept; never stage the
+  picture.
 - **S14.** One Muse Image call; fixture mode shows a drawing only once it is recorded.
 - **S15.** No Marketplace page on camera: no facebook.com page, no Meta or Facebook logo, no
   other people's listings.

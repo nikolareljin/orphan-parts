@@ -8,6 +8,10 @@ import { test as base, expect, type Locator, type Page } from '@playwright/test'
 // window of the take (the generator matches it against the backend's log for stand-in answers).
 
 const OUT = process.env.SCENES_OUT ?? 'out'
+// The page at 150 percent: a 1920x1080 frame holds what a 1280x720 window shows, so the text
+// reads on a phone. Dialogs are held to the zoomed window's height, as the browser's own zoom
+// would hold them.
+const ZOOM = Number(process.env.SCENES_ZOOM ?? '1.5')
 
 // An arrow cursor in the top layer: a manual popover, shown again whenever a modal dialog
 // opens, so it stays above the dialog; it never takes a click.
@@ -15,12 +19,17 @@ const CURSOR = `
 (() => {
   if (window.__cursor) return
   window.__cursor = true
+  const zoom = ${ZOOM}
   const add = () => {
+    document.documentElement.style.zoom = String(zoom)
+    const fit = document.createElement('style')
+    fit.textContent = 'dialog.modal, .modal-frame { max-height: calc(100vh / ' + zoom + ' - 1.5rem) !important; }'
+    document.head.appendChild(fit)
     const el = document.createElement('div')
     el.setAttribute('popover', 'manual')
     el.id = 'video-cursor'
-    el.style.cssText = 'position:fixed;inset:auto;left:0;top:0;margin:0;padding:0;border:0;background:transparent;width:28px;height:28px;pointer-events:none;overflow:visible;transform:translate(-100px,-100px);transition:none'
-    el.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28"><path d="M3 2 L3 22 L8.5 17 L12.5 26 L16 24.5 L12 15.5 L19.5 15.5 Z" fill="#111827" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+    el.style.cssText = 'position:fixed;inset:auto;left:0;top:0;margin:0;padding:0;border:0;background:transparent;width:22px;height:22px;pointer-events:none;overflow:visible;transform:translate(-100px,-100px);transition:none'
+    el.innerHTML = '<svg width="22" height="22" viewBox="0 0 28 28"><path d="M3 2 L3 22 L8.5 17 L12.5 26 L16 24.5 L12 15.5 L19.5 15.5 Z" fill="#111827" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/></svg>'
     document.body.appendChild(el)
     const show = () => { try { el.hidePopover() } catch {} ; try { el.showPopover() } catch {} }
     show()
@@ -29,7 +38,7 @@ const CURSOR = `
       const now = document.querySelectorAll('dialog[open]').length
       if (now !== open) { open = now; show() }
     }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'], childList: true })
-    document.addEventListener('mousemove', (e) => { el.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)' }, true)
+    document.addEventListener('mousemove', (e) => { el.style.transform = 'translate(' + e.clientX / zoom + 'px,' + e.clientY / zoom + 'px)' }, true)
     document.addEventListener('mousedown', () => { el.style.scale = '0.85' }, true)
     document.addEventListener('mouseup', () => { el.style.scale = '1' }, true)
   }
@@ -41,8 +50,8 @@ export class Scene {
   readonly t0 = Date.now()
   private start = 0
   private readonly marks: Record<string, number> = {}
-  private x = 800
-  private y = 450
+  private x = 960
+  private y = 540
 
   constructor(
     readonly page: Page,

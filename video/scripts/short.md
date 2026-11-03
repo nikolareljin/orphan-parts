@@ -26,8 +26,8 @@ Name the part number only when the recorded take shows it (see `main.md`).
 
 Shots K5 to K7.
 
-> For my unused electronics, Muse Spark proposes builds from what I own. I choose the arcade
-> and draw it, and the missing controls become a Marketplace search I run myself.
+> For my unused electronics, Muse Spark proposes builds from what I own. I pick a homework
+> workstation and draw it, and what is missing becomes a Marketplace search I run myself.
 
 ## 0:43 to 0:48 · Concept preview
 
