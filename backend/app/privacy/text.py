@@ -97,13 +97,39 @@ _SERIAL = re.compile(
     r"|\bService\s*Tag|\bSVC\s*Tag)\s*[:#.]?\s*([A-Z0-9][A-Z0-9-]{3,39})",
     re.I,
 )
-# The value after a password's, a PIN's or a network key's label, always with ':' or '='.
+# The value after a password's or a network key's label, always with ':' or '='.
 _SECRET = re.compile(
-    r"(?:\bpass(?:word|wd|code|phrase)|\bpwd|\bPW|\bPIN(?:\s*code)?"
+    r"(?:\bpass(?:word|wd|code|phrase)|\bpwd|\bPW"
     r"|\bWPA2?(?:[\s-]*(?:PSK|key))?|\bPSK|\bWi-?Fi\s*(?:key|password)"
     r"|\b(?:network|security|wireless|SSID)\s*key)\s*[:=]\s*(\S{2,64})",
     re.I,
 )
+# A PIN is digits: "PIN: 4821", not "Pin: 24-pin" or "Pin: 40" (a connector's pin count).
+_PIN = re.compile(r"\bPIN(?:\s*code)?\s*[:=]\s*(\d{4,12})(?![\w-])", re.I)
+# What follows such a label in a listing and is no secret: a rating ("PW: 65W"), a word
+# ("WPA2: supported"), an interface named as a serial port ("Serial: RS-232").
+_RATING = re.compile(r"\d+(?:\.\d+)?\s*(?:W|V|A|mA|mAh|Wh|Hz|kHz|MHz|GHz)", re.I)
+_PLAIN_WORDS = frozenset(
+    {
+        "yes",
+        "no",
+        "none",
+        "n/a",
+        "na",
+        "supported",
+        "unsupported",
+        "enabled",
+        "disabled",
+        "on",
+        "off",
+        "required",
+        "optional",
+        "unknown",
+        "included",
+        "compatible",
+    }
+)
+_SERIAL_PORT = re.compile(r"RS-?(?:232|422|485)C?", re.I)
 
 
 TRAILING = ".,;:!?)]}'\""
@@ -160,10 +186,16 @@ def find(text: str) -> list[Finding]:
         if luhn(re.sub(r"[ -]", "", m.group(1))):
             found.append(Finding("imei", m.start(1), m.end(1)))
     for m in _SERIAL.finditer(text):
-        if _has_digit(m.group(1)):
-            found.append(Finding("serial_number", m.start(1), _trimmed(text, m.start(1), m.end(1))))
+        end = _trimmed(text, m.start(1), m.end(1))
+        if _has_digit(m.group(1)) and not _SERIAL_PORT.fullmatch(text[m.start(1) : end]):
+            found.append(Finding("serial_number", m.start(1), end))
     for m in _SECRET.finditer(text):
-        found.append(Finding("password", m.start(1), _trimmed(text, m.start(1), m.end(1))))
+        end = _trimmed(text, m.start(1), m.end(1))
+        value = text[m.start(1) : end]
+        if value.casefold() not in _PLAIN_WORDS and not _RATING.fullmatch(value):
+            found.append(Finding("password", m.start(1), end))
+    for m in _PIN.finditer(text):
+        found.append(Finding("password", m.start(1), m.end(1)))
     found.sort(key=lambda f: (f.start, -(f.end - f.start)))
     kept: list[Finding] = []
     for f in found:
