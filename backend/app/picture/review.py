@@ -1345,6 +1345,17 @@ async def run_tune(settings: Settings, opts: Options) -> tune.Proposal:
     return proposal
 
 
+def set_size(out: Path) -> int:
+    """How many drawings the reviews after a whole redraw are kept for: as many as the last
+    review had, else a set's worth."""
+    path = out / "report.json"
+    try:
+        found = len(Report.model_validate_json(path.read_text(encoding="utf-8")).reviews)
+    except (OSError, ValueError):
+        found = 0
+    return found or SET_DRAWINGS
+
+
 async def run_redraw_set(settings: Settings, opts: Options) -> Report:
     """Every drawing of the set with the parameters as they are: one record run in which only
     drawings are bought (a drawing whose request is unchanged replays its recording), the set
@@ -1367,7 +1378,7 @@ async def run_redraw_set(settings: Settings, opts: Options) -> Report:
         review_ceiling = ceiling_usd(
             settings.model_spark, REVIEW_INPUT_ALLOWANCE, REVIEW_OUTPUT_TOKENS
         )
-        cap = drawings_cap(max(opts.max_usd - review_ceiling * SET_DRAWINGS, 0.0))
+        cap = drawings_cap(max(opts.max_usd - review_ceiling * set_size(opts.out), 0.0))
         client = PicturesOnlyClient(record, CostLedger(cap))
         _, notes = await load_set(record, opts.set_file, client)
         budget.add(client.ledger.total_usd)

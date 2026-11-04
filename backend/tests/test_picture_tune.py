@@ -547,3 +547,11 @@ def test_closing_rules_are_required() -> None:
         ).facts.part_values
         == 3
     )
+
+
+def test_a_whole_redraw_keeps_room_for_a_review_of_each_drawing(tmp_path: Path) -> None:
+    from app.picture.review import SET_DRAWINGS, set_size
+
+    assert set_size(tmp_path) == SET_DRAWINGS
+    (tmp_path / "report.json").write_text(a_report().model_dump_json(), encoding="utf-8")
+    assert set_size(tmp_path) == 5
