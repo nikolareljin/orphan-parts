@@ -2319,6 +2319,11 @@ details.earlier ul {
   margin: 0 0 0.75rem;
 }
 
+/* a fieldset that only disables what is inside it until the form's record is in; no box of its own */
+fieldset.gate {
+  display: contents;
+}
+
 .profile .section-head {
   margin: 1.25rem 0 0.5rem;
 }

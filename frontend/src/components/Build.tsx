@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { ApiError, api, type Budget, type Conflict, type ItemSummary, type Pack, type Preferences, type Project, type TemplateSummary } from '../lib/api'
 import { usd } from '../lib/format'
 import {
@@ -44,14 +44,21 @@ export default function Build({ demo = false }: { demo?: boolean }) {
   const [openId, setOpenId] = useState<number | null>(null)
   const [error, setError] = useState('')
 
+  // a save, a proposal and a commit each reload; only the latest answer is shown, so an
+  // earlier read that comes back late cannot put back a budget from before the save
+  const latest = useRef(0)
   const load = useCallback(() => {
+    const call = ++latest.current
     api.build
       .projects()
       .then((list) => {
+        if (call !== latest.current) return
         setProjects(list.projects)
         setBudget(list.budget)
       })
-      .catch((err: unknown) => setError(message(err)))
+      .catch((err: unknown) => {
+        if (call === latest.current) setError(message(err))
+      })
   }, [])
 
   useEffect(() => {
@@ -135,6 +142,8 @@ function PreferencesForm({ demo, onSaved }: { demo: boolean; onSaved: () => void
   const [budget, setBudgetText] = useState('')
   const [radius, setRadius] = useState('')
   const [open, setOpen] = useState(false)
+  // the fields open for editing once the saved record is in, so it cannot land over a change
+  const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -150,6 +159,9 @@ function PreferencesForm({ demo, onSaved }: { demo: boolean; onSaved: () => void
         setRadius(p.radius_km === null ? '' : String(p.radius_km))
       })
       .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoaded(true)
+      })
     return () => {
       cancelled = true
     }
@@ -190,7 +202,7 @@ function PreferencesForm({ demo, onSaved }: { demo: boolean; onSaved: () => void
         <h3>What I want from a build</h3>
         <HelpTip entry={demo ? HELP.buildPrefsVisitor : HELP.buildPrefs} />
         {!demo && (
-          <button type="button" className="link" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <button type="button" className="link" aria-expanded={open} disabled={!loaded} onClick={() => setOpen((o) => !o)}>
             {open ? 'Hide' : 'Edit'}
           </button>
         )}
