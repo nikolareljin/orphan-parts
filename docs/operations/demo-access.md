@@ -25,12 +25,62 @@ Beside it, **codes issued as records**: `./dev keys issue --label judges
 the label and the expiry; `./dev keys list` shows each record and whether it is current,
 expired or revoked; `./dev keys revoke judges` ends one. The running backend reads the same
 file, so a new code works at once and a revoked one stops at once, its open sessions with it.
-On the hosted demo the inventory is the Modal volume's: `./dev keys --hosted issue --label
-judges --days 7` (`modal run deploy/modal_app.py::keys --args '...'`) issues there. A demo
-reset (`./dev demo`, `load_demo`) replaces the inventory file, the records with it: issue the
-codes after the set is loaded. A code is
-compared in constant time against the master and every current record, so a miss takes as
-long as a hit. The records live in the inventory database ([Data model](../reference/data-model.md)).
+On the hosted demo the codes are on the Modal volume: `./dev keys --hosted issue --label
+judges --days 7` (`modal run deploy/modal_app.py::keys --args '...'`) issues there. The records
+live in a SQLite file of their own under `DATA_DIR` (`KEYS_DB_FILE`, `access_keys.sqlite3`),
+apart from the inventory, so a demo reset (`./dev demo`, `load_demo`) keeps them, with what each
+code has used, and the sessions they opened stay signed in. Records an older build kept in the
+inventory's `access_keys` table move to that file the first time it is opened (the backend's
+start, a `./dev keys` command or a reset, which opens it before the inventory goes), with their
+ids, as owner codes. A code is compared in constant time against the master and every current
+record, so a miss takes as long as a hit.
+
+## Judge codes
+
+An issued code has a **scope**. `owner` (the default, and every code issued before scopes)
+is the master code's full access. `judge` is for the people judging the entry, so they never
+need the master code:
+
+```bash
+./dev keys --hosted issue --label jury --days 10 --scope judge --calls-per-day 20 --max-usd 5
+./dev keys --hosted issue --label jury-tape --days 10 --scope judge --recorded
+./dev keys --hosted list
+```
+
+`--calls-per-day` (default 20) and `--max-usd` (default 5.00) go with `--scope judge` only;
+`--recorded` keeps the code on the recorded answers, as the demo visitor is, so it never
+reaches the key. `list` prints, per code: id, label, scope, state, live calls today against the
+daily cap, dollars spent against the cap (and `recorded`), the dates.
+
+What a judge's code may do, enforced on the server (the gate in `app/ops/gate.py`, the
+inventory in `app/inventory/service.py`); the web app only mirrors it:
+
+| | the owner's records (the demo set) | its own records | another judge code's records |
+| --- | --- | --- | --- |
+| read | as the demo visitor reads them: public ones only, location, notes, voice notes, the device a part came from, the lowest price and the owner's reasons left out, photos as the shared copy | whole | not there (404) |
+| change, delete, decide, draft, price, draw, search from, plan | refused (403, *judge access: the demo set is read-only; ...*) | yes, live calls within its limits | not there (404) |
+| make | | items, captures, searches, project proposals (tagged with the code's id), and the stateless readings | |
+
+- What it makes is its **sandbox**: each item, capture, search and project carries the code's
+  record id (`owner_code`). Lists show the demo set's public records and its own; another
+  judge's never, and the demo visitor never sees any judge's. A search or project it makes
+  may name a demo item: the item's history gets no line and is not reserved.
+- Never: marking anything public, the owner's profile (`PUT /api/preferences`), the spend
+  ledger, a record's history or a capture's clip on the owner's records, pairing a phone (the
+  pairing QR carries the address alone for a judge's session).
+- **Limits.** Before a route that spends runs, the gate reads the code's use: the day's calls
+  used, *this code's daily calls are used; more tomorrow (UTC)* (429); the dollars spent,
+  *this code's budget is spent* (403). The model client checks again before every call that
+  bills (a route may make several) and charges the code beside the spend ledger line, with
+  what the call cost, so a code at its limit sends nothing. Use is kept per code and UTC day in
+  the codes' file (`key_usage`) and survives a reset; the owner's allowances, the daily cap,
+  the pause and `SPEND_CAP_USD` still stand under it. The master code and owner codes have no
+  per-code limits.
+- `GET /api/access` answers a judge's session with `judge`: `code_id`, `recorded`, the caps and
+  what is left (`calls_left`, `usd_left`); the footer shows *Judge access: N live calls left
+  today, $X left*, and the item dialog turns read-only (Delete, Save details, the drawing and
+  the public mark off, with the reason as a tooltip) on what the code did not add.
+- A refusal never starts with `demo:`, so the browser keeps the session.
 
 `POST /api/access` with a code opens a session: a cookie the browser keeps (`HttpOnly`,
 `SameSite=Strict`, `Secure` when `DEMO_COOKIE_SECURE=1`), and the same token in the answer for
