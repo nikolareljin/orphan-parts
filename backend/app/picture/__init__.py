@@ -4,6 +4,7 @@ request and labeled as drawn."""
 from app.picture.service import (
     OFF_LINE,
     Picture,
+    PictureCheck,
     PictureList,
     Pictures,
     PicturesOffError,
@@ -17,6 +18,7 @@ from app.picture.service import (
 __all__ = [
     "OFF_LINE",
     "Picture",
+    "PictureCheck",
     "PictureList",
     "Pictures",
     "PicturesOffError",

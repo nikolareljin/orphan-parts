@@ -299,6 +299,19 @@ def backing(url: str, pages: dict[str, str]) -> tuple[str, str]:
 # --- client ------------------------------------------------------------------
 
 
+def picture_body(model: str, prompt: str) -> dict[str, Any]:
+    """What a drawing request sends: its recording is keyed on exactly this."""
+    return {
+        "model": model,
+        "prompt": prompt,
+        "n": 1,
+        "size": "1024x1024",
+        "response_format": "b64_json",
+        "output_format": "jpeg",
+        "reasoning_strength": "low",
+    }
+
+
 class ModelApiClient:
     def __init__(
         self,
@@ -570,15 +583,7 @@ class ModelApiClient:
         if (twin := self._for_request()) is not None:
             return await twin.picture(prompt, op=op)
         model = self.settings.model_image
-        body: dict[str, Any] = {
-            "model": model,
-            "prompt": prompt,
-            "n": 1,
-            "size": "1024x1024",
-            "response_format": "b64_json",
-            "output_format": "jpeg",
-            "reasoning_strength": "low",
-        }
+        body = picture_body(model, prompt)
         # one try: an image that timed out may still have been drawn and billed, so a second
         # try could charge one click twice
         data, from_fixture, attempts, ms = await self._post(IMAGES, body, op, attempts=1)

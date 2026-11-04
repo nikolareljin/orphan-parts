@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "079f2b125a3d6fc4c6c3155a",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Garage parking helper built from ultrasonic distance sensor module (connector 4-pin male header; a tiny distance sensor module, far smaller than a laptop); no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793755097,
+    "data": [
+      {
+        "b64_json": "@079f2b125a3d6fc4c6c3155a-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4093,
+      "output_tokens": 939,
+      "total_tokens": 5032
+    }
+  },
+  "status": 200
+}

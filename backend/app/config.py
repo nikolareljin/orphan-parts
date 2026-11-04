@@ -72,6 +72,11 @@ class Settings(BaseSettings):
     # a picture of what an item could become, drawn by Muse Image on a click: off unless set,
     # since every click is a paid call
     picture_enabled: bool = False
+    # each drawing the owner asks for checked once by Muse Spark against its facts and, when
+    # it shows another device or the main part at the wrong size, drawn once more with the
+    # review's brief (PICTURE_REVIEW_GATE); unset: on when the calls are live, off in fixture
+    # mode
+    picture_review_gate: bool | None = None
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
     # the interactive API docs (/docs, /openapi.json): served on a machine of your own; the
@@ -148,6 +153,12 @@ class Settings(BaseSettings):
         if self.fake_api:
             return "fixture"
         return "record" if self.record_fixtures else "live"
+
+    @property
+    def picture_gate_on(self) -> bool:
+        if self.picture_review_gate is not None:
+            return self.picture_review_gate
+        return self.model_api_mode != "fixture"
 
     @property
     def spend_ledger_path(self) -> Path:

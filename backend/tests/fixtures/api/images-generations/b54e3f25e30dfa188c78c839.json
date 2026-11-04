@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "b54e3f25e30dfa188c78c839",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Kitchen home-automation dashboard built from monitor (screen size 24 inch, about 61 cm across the diagonal; a thin flat computer monitor, far smaller than a television, not a bulky CRT TV), laptop (a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than a bulky CRT TV), microcontroller board (connector usb-b, dc barrel jack; a tiny credit-card-sized bare board, far smaller than half a laptop width), temperature and humidity sensor module (connector 3-pin male header; a tiny sensor module, far smaller than a laptop), ultrasonic distance sensor module (connector 4-pin male header; a tiny distance sensor module, far smaller than a laptop), sound sensor module (connector 4-pin header: ao g + do; a tiny sensor module, far smaller than a laptop); Kitchen wall screen with climate, presence wake, sound trigger and relay switch.; A 24-inch 16:9 computer monitor about 55 cm wide wall-mounted above kitchen counter as dashboard, with opened laptop on counter wired to tiny credit-card-sized microcontroller board plus four tiny modules nearby including relay with cube; not a TV.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793755202,
+    "data": [
+      {
+        "b64_json": "@b54e3f25e30dfa188c78c839-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4295,
+      "output_tokens": 1739,
+      "total_tokens": 6034
+    }
+  },
+  "status": 200
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Item, type Picture as Drawn } from '../lib/api'
-import { pictureCaption } from '../lib/picture'
+import { pictureCaption, shownPictures } from '../lib/picture'
 import GatedImage from './GatedImage'
 import { NeverRun } from './Saved'
 import HelpTip from './HelpTip'
@@ -89,7 +89,7 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
           {error}
         </p>
       )}
-      {pictures.map((p) => (
+      {shownPictures(pictures).map((p) => (
         <figure key={p.n}>
           <GatedImage src={api.items.pictureUrl(item.id, p.n)} alt={`Illustrative picture ${p.n}: ${p.use}`} loading="lazy" />
           <figcaption>{pictureCaption(p)}</figcaption>

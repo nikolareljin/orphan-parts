@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Picture } from './api'
-import { DRAW_DEMO_LINE, DRAW_HINT, PICTURE_LABEL, PROJECT_PICTURE_LABEL, drawState, pictureCaption } from './picture'
+import { DRAW_DEMO_LINE, DRAW_HINT, PICTURE_LABEL, PROJECT_PICTURE_LABEL, drawState, pictureCaption, shownPictures } from './picture'
 
 const drawn: Picture = { n: 1, use: 'a bedside lamp', model: 'muse-image-1.0', cost_usd: 0.01, from_fixture: false, created_at: '2026-10-31T10:00:00+00:00' }
 
@@ -13,6 +13,18 @@ describe('the line under a picture', () => {
   })
   it('says nothing was spent on a recorded answer', () => {
     expect(pictureCaption({ ...drawn, cost_usd: 0, from_fixture: true })).toContain('nothing spent')
+  })
+  it('says what the review gate found, and that it was drawn again', () => {
+    expect(pictureCaption(drawn)).not.toContain('Checked')
+    const again = { ...drawn, n: 2, check: { verdict: 'matches', issues: [], cost_usd: 0.008, redraw_of: 1 } }
+    expect(pictureCaption(again)).toContain('Checked against its facts by Muse Spark: matches, drawn again for picture 1')
+    const unchecked = { ...drawn, check: { verdict: 'not checked', issues: [], cost_usd: 0, redraw_of: 1 } }
+    expect(pictureCaption(unchecked)).not.toContain('Checked')
+  })
+  it('shows the better of a drawing and its redraw, keeping both', () => {
+    const list = [{ ...drawn, hidden: true }, { ...drawn, n: 2 }]
+    expect(shownPictures(list).map((p) => p.n)).toEqual([2])
+    expect(shownPictures([drawn])).toEqual([drawn])
   })
 })
 

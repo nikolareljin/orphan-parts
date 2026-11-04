@@ -1,0 +1,334 @@
+{
+  "params_version": 1,
+  "at": "2026-11-04T01:02:08+00:00",
+  "report_at": "2026-11-04T00:51:16+00:00",
+  "reviewer": "muse-spark-1.3",
+  "image_model": "muse-image-1.0",
+  "drawings": 32,
+  "verdicts": {
+    "matches": 11,
+    "partly": 20,
+    "wrong": 1
+  },
+  "categories": {
+    "implausible": 2,
+    "invented_part": 1,
+    "missing_part": 2,
+    "scale": 2,
+    "text": 19
+  },
+  "by_kind": {
+    "card": {
+      "matches": 1,
+      "partly": 3
+    },
+    "item": {
+      "matches": 7,
+      "partly": 1,
+      "wrong": 1
+    },
+    "project": {
+      "matches": 3,
+      "partly": 16
+    }
+  },
+  "review_usd": 0.2136,
+  "scored": [
+    {
+      "id": "item:hcsr04#1",
+      "subject": "parking_sensor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "710a87e74d7ac88c0d15c0f8"
+    },
+    {
+      "id": "item:dht11#1",
+      "subject": "kitchen_dashboard",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "0908e59a5d8900aa5384929a"
+    },
+    {
+      "id": "item:joystick#1",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "2eb930871dcdd6f6824e63b9"
+    },
+    {
+      "id": "item:uno_r3#1",
+      "subject": "smart_calendar",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "320651e2f971818abb4d05ec"
+    },
+    {
+      "id": "item:ssd_kingston_a400#1",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "fedbdb89b75d657cb553b404"
+    },
+    {
+      "id": "item:powerline#1",
+      "subject": "kind:powerline adapter",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "bffdf4ff5a347ba85fc9c412"
+    },
+    {
+      "id": "card:powerline#1",
+      "subject": "kind:powerline adapter",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "1b92cfae91e867bd5ef1a85b"
+    },
+    {
+      "id": "item:laptop_t510#1",
+      "subject": "home_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "45f22c4b04a787044ce9dc3b"
+    },
+    {
+      "id": "card:laptop_t510#1",
+      "subject": "kind:laptop",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "b764932a9343f6eb07cd6fb6"
+    },
+    {
+      "id": "item:monitor_1800fp#1",
+      "subject": "smart_mirror",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "d240fa1cc9846787ababcf22"
+    },
+    {
+      "id": "card:monitor_1800fp#1",
+      "subject": "kind:monitor",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "5f49e6d3a86973ccaa322e5f"
+    },
+    {
+      "id": "item:monitor_u2419h#1",
+      "subject": "kind:monitor",
+      "verdict": "wrong",
+      "categories": [
+        "missing_part"
+      ],
+      "recording": "f93396d975ce611a7ed01605"
+    },
+    {
+      "id": "card:monitor_u2419h#1",
+      "subject": "kind:monitor",
+      "verdict": "partly",
+      "categories": [
+        "implausible",
+        "invented_part",
+        "text"
+      ],
+      "recording": "09e65d88db6d8a02537da4e7"
+    },
+    {
+      "id": "project:1#1",
+      "subject": "homework_workstation",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "ceacd3d25a00b7b48a788019"
+    },
+    {
+      "id": "project:2#1",
+      "subject": "smart_mirror",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "5f4ffdd97e57e945247abf73"
+    },
+    {
+      "id": "project:3#1",
+      "subject": "home_automation_server",
+      "verdict": "partly",
+      "categories": [
+        "scale",
+        "text"
+      ],
+      "recording": "545c273cf9a9dd60cf553c89"
+    },
+    {
+      "id": "project:3#2",
+      "subject": "home_automation_server",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "54e69bcd713952c3e4bef96b"
+    },
+    {
+      "id": "project:3#3",
+      "subject": "home_automation_server",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "94af7546f7ff7ef22a9065e4"
+    },
+    {
+      "id": "project:4#1",
+      "subject": "custom_nas",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "2d1ffbcca50ab339b354cf77"
+    },
+    {
+      "id": "project:4#2",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "5d26ed74ebf40d758b13b1b6"
+    },
+    {
+      "id": "project:4#3",
+      "subject": "custom_nas",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "892798e1e946941a9c4941f9"
+    },
+    {
+      "id": "project:5#1",
+      "subject": "home_server",
+      "verdict": "partly",
+      "categories": [
+        "implausible"
+      ],
+      "recording": "ddf38c43b47aa68e8839199f"
+    },
+    {
+      "id": "project:6#1",
+      "subject": "retro_console",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "3d05e4e496502395aba005cc"
+    },
+    {
+      "id": "project:7#1",
+      "subject": "arcade_table",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "a3e415d52b815494f04a1b24"
+    },
+    {
+      "id": "project:7#2",
+      "subject": "arcade_table",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "0207f2bcb76da10d97df698f"
+    },
+    {
+      "id": "project:7#3",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "f858c5d1d7c1a8efb34889d8"
+    },
+    {
+      "id": "project:8#1",
+      "subject": "smart_calendar",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "e65ea89aba5c492f23c86eb1"
+    },
+    {
+      "id": "project:8#2",
+      "subject": "smart_calendar",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "64080e38b469b44109fd707d"
+    },
+    {
+      "id": "project:8#3",
+      "subject": "smart_calendar",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "511716f117368d3c7a26c83b"
+    },
+    {
+      "id": "project:9#1",
+      "subject": "kitchen_dashboard",
+      "verdict": "partly",
+      "categories": [
+        "missing_part",
+        "scale",
+        "text"
+      ],
+      "recording": "ff417331765748a560db7abf"
+    },
+    {
+      "id": "project:10#1",
+      "subject": "weather_station",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "3de543959ec569d856585a07"
+    },
+    {
+      "id": "project:11#1",
+      "subject": "parking_sensor",
+      "verdict": "partly",
+      "categories": [
+        "text"
+      ],
+      "recording": "3e061f3f9a5fbf5eacdb2544"
+    }
+  ],
+  "params": {
+    "version": 1,
+    "facts": {
+      "item_values": 8,
+      "part_values": 3,
+      "first": [],
+      "left_out": [],
+      "left_out_as_built": [
+        "condition",
+        "certification"
+      ],
+      "from_name": false,
+      "condition": true
+    },
+    "kinds": {},
+    "projects": {},
+    "views": {},
+    "negatives": [],
+    "rules": {
+      "item": "on a plain background, no text, no logos, no people",
+      "use": "on a plain background, no text, no logos, no people",
+      "card": "on a plain background, no text, no logos, no people",
+      "project": "finished and in use in a home, no text, no logos, no people"
+    }
+  }
+}

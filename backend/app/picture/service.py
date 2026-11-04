@@ -28,6 +28,8 @@ from app.inventory.schema import Item
 from app.inventory.service import Inventory, NotFoundError
 from app.model_api import IncompleteResponseError, ModelApiClient
 from app.ops.door import for_visitor
+from app.picture.params import DrawingParams, name_sizes
+from app.picture.params import load as load_params
 from app.privacy.text import mask_text
 from app.projects.pack import shown_fields
 from app.projects.schema import Project
@@ -37,8 +39,6 @@ log = logging.getLogger("app.picture")
 PICTURE_NAME = re.compile(r"picture-(\d+)\.jpg")
 OFF_LINE = "pictures are off on this server (PICTURE_ENABLED)"
 USE_MAX = 200
-# how many accepted values the prompt carries: enough to say what the item is, not a sheet
-PROMPT_VALUES = 8
 # a finished project's prompt: what it is, the parts it is built from, one line on it
 TITLE_MAX = 120
 PARTS_MAX = 6
@@ -64,6 +64,15 @@ class PicturesOffError(RuntimeError):
     """``PICTURE_ENABLED`` is not set: no call is made."""
 
 
+class PictureCheck(BaseModel):
+    """What the review gate found of a drawing (``PICTURE_REVIEW_GATE``)."""
+
+    verdict: str = Field(description="matches, partly or wrong")
+    issues: list[str] = []
+    cost_usd: float = 0.0
+    redraw_of: int = Field(default=0, description="the picture this one was drawn again for")
+
+
 class Picture(BaseModel):
     """One picture kept on the item; the file is at ``/pictures/{n}``."""
 
@@ -73,6 +82,10 @@ class Picture(BaseModel):
     cost_usd: float
     from_fixture: bool
     created_at: str
+    check: PictureCheck | None = None
+    hidden: bool = Field(
+        default=False, description="kept, but a drawing of the same request was judged better"
+    )
 
     # the owner's own words: a product key or a password typed into them is masked for the
     # demo visitor, as an item's name is
@@ -90,46 +103,95 @@ def _line(text: str, limit: int = USE_MAX) -> str:
     return " ".join(text.split())[:limit]
 
 
+def _params(params: DrawingParams | None) -> DrawingParams:
+    return params if params is not None else load_params()
+
+
+def said(segments: Sequence[str], tail: str) -> str:
+    """The request: its segments in order, each once, then its closing words."""
+    shown: list[str] = []
+    for s in segments:
+        if s and s.casefold() not in (x.casefold() for x in shown):
+            shown.append(s)
+    return f"{'; '.join(shown)}, {tail}" if shown else tail
+
+
 def with_brief(body: str, brief: str, tail: str) -> str:
     """The prompt's body, the correction (when there is one) and its closing words: without a
     correction the prompt is exactly what it was."""
-    said = _line(brief, BRIEF_MAX)
-    return f"{body}; {said}, {tail}" if said else f"{body}, {tail}"
+    return said([body, _line(brief, BRIEF_MAX)], tail)
 
 
-def prompt_for(item: Item, use: str, brief: str = "") -> str:
+def facts_of(
+    item: Item,
+    limit: int,
+    params: DrawingParams,
+    *,
+    as_built: bool = False,
+    cut: int | None = VALUE_MAX,
+) -> list[str]:
+    """An item's facts as a request says them: the sizes its name states (when the parameters
+    say so), then its accepted values, those named first by the parameters before the rest,
+    never one that identifies it or its owner, names money, or the parameters leave out."""
+    rules = params.facts
+    left_out = (
+        MONEY_WORDS + tuple(rules.left_out) + (tuple(rules.left_out_as_built) if as_built else ())
+    )
+    values = [(k, v) for k, v in shown_fields(item) if not any(w in k.lower() for w in left_out)]
+    if rules.first:
+        values.sort(key=lambda kv: 0 if any(w in kv[0].lower() for w in rules.first) else 1)
+    sizes = name_sizes(item.name, item.item_type, params)
+    stated = [f"{k} {v}" if cut is None else _line(f"{k} {v}", cut) for k, v in values]
+    return sizes + stated[:limit]
+
+
+def _about(what: str, facts: list[str], looks: str) -> str:
+    inner = ", ".join(facts)
+    if looks:
+        inner = f"{inner}; {looks}" if inner else looks
+    return f"{what} ({inner})" if inner else what
+
+
+def prompt_for(item: Item, use: str, brief: str = "", params: DrawingParams | None = None) -> str:
     """What Muse Image is asked for: the chosen use built from the item as it is known, from
-    its type, accepted values, condition and faults; a proposed value is not yet known, and a
-    value that identifies the item or its owner (a serial, a MAC, an IMEI) never goes out.
-    ``brief``, a correction from a review, is said before the last clause."""
+    its type and accepted values (and its condition and faults, when the parameters say so); a
+    proposed value is not yet known, and a value that identifies the item or its owner (a
+    serial, a MAC, an IMEI) never goes out. Then the correction of the kind of project the use
+    names, ``brief`` (a correction from a review), the negatives and the closing rules."""
+    p = _params(params)
     what = item.item_type or item.name or "item"
-    known = [f"{k} {v}" for k, v in shown_fields(item)][:PROMPT_VALUES]
-    about = what if not known else f"{what} ({', '.join(known)})"
-    if use and use.lower() != what.lower():
-        head = f"a semi-realistic illustration of {use} built from {about}"
-    else:
+    kind = p.kind(item.item_type)
+    about = _about(
+        what, facts_of(item, p.facts.item_values, p, cut=None), kind.looks if kind else ""
+    )
+    own = not use or use.lower() == what.lower()
+    if own:
         head = f"a semi-realistic illustration of this {about}, cleaned up and ready to use"
+    else:
+        head = f"a semi-realistic illustration of {use} built from {about}"
     detail = []
-    if item.condition:
-        detail.append(f"condition: {_line(item.condition)}")
-    if item.faults:
-        detail.append(f"known faults: {_line(item.faults)}")
-    tail = f"; {'; '.join(detail)}" if detail else ""
-    return with_brief(f"{head}{tail}", brief, TAIL)
+    if p.facts.condition:
+        if item.condition:
+            detail.append(f"condition: {_line(item.condition)}")
+        if item.faults:
+            detail.append(f"known faults: {_line(item.faults)}")
+    correction = "" if own else p.correction_for(text=use)
+    return said(
+        [head, *detail, correction, _line(brief, BRIEF_MAX), *p.negatives],
+        p.rules.item if own else p.rules.use,
+    )
 
 
-def part_of(item: Item, *, as_built: bool = False) -> str:
-    """One part of a finished project as the prompt names it: the kind of item and a few of its
-    accepted values, never one that identifies it or its owner, never its name, location,
-    notes or a price; ``as_built`` also leaves out its present condition and its markings."""
+def part_of(item: Item, *, as_built: bool = False, params: DrawingParams | None = None) -> str:
+    """One part of a finished project as the prompt names it: the kind of item and its facts,
+    never one that identifies it or its owner, never its name, location, notes or a price;
+    ``as_built`` also leaves out what the parameters say a finished build does not show (its
+    present condition, the marks printed on it)."""
+    p = _params(params)
     what = _line(item.item_type, VALUE_MAX) or "item"
-    left_out = MONEY_WORDS + (AS_BUILT_LEFT_OUT if as_built else ())
-    known = [
-        _line(f"{k} {v}", VALUE_MAX)
-        for k, v in shown_fields(item)
-        if not any(word in k.lower() for word in left_out)
-    ][:PART_VALUES]
-    return what if not known else f"{what} ({', '.join(known)})"
+    kind = p.kind(item.item_type)
+    facts = facts_of(item, p.facts.part_values, p, as_built=as_built)
+    return _about(what, facts, kind.looks if kind else "")
 
 
 def finished_prompt(
@@ -139,10 +201,15 @@ def finished_prompt(
     view: str = "",
     tail: str = TAIL,
     brief: str = "",
+    *,
+    correction: str = "",
+    params: DrawingParams | None = None,
 ) -> str:
     """What Muse Image is asked for a finished project: what it is, built from the parts the
     card uses (each once, at most six), and one line on it, and how it is shown when a view is
-    asked for (in its room, a close-up); every text cut to its bound."""
+    asked for (in its room, a close-up, with the view's preset); then the correction of its
+    kind of project, the brief and the negatives; every text cut to its bound."""
+    p = _params(params)
     seen: list[str] = []
     for part in parts:
         text = _line(part, VALUE_MAX * 4)
@@ -156,7 +223,12 @@ def finished_prompt(
     shown = _line(view, VIEW_MAX)
     if shown:
         line = f"{line}; shown {shown}" if line else f"shown {shown}"
-    return with_brief(f"{head}; {line}" if line else head, brief, tail)
+        preset = p.view_preset(shown)
+        if preset:
+            line = f"{line}; {_line(preset, BRIEF_MAX)}"
+    return said(
+        [head, line, _line(correction, BRIEF_MAX), _line(brief, BRIEF_MAX), *p.negatives], tail
+    )
 
 
 # an owner's name for an item and the kind to say instead
@@ -187,34 +259,57 @@ def project_prompt(
     others: Sequence[Named] = (),
     view: str = "",
     brief: str = "",
+    params: DrawingParams | None = None,
 ) -> str:
     """A project as built, where it is used: its title, the items allocated to it (as built,
     not as they lie in the drawer), and what it results in, shown as ``view`` asks when given;
     no item's name, even where the model's title or result repeats one (``others``: the rest of
     the inventory's names, which the proposal could read too)."""
+    p = _params(params)
     names = named(items, [*others, *((a.item_name, "item") for a in project.allocations)])
     return finished_prompt(
         without_names(project.title, names),
-        [part_of(i, as_built=True) for i in items],
+        [part_of(i, as_built=True, params=p) for i in items],
         without_names(project.result, names),
         view,
-        PROJECT_TAIL,
+        p.rules.project,
         brief,
+        correction=p.correction_for(project.template),
+        params=p,
     )
 
 
-def card_prompt(scenarios: Scenarios, card: int, item: Item, brief: str = "") -> str:
+def card_prompt(
+    scenarios: Scenarios,
+    card: int,
+    item: Item,
+    brief: str = "",
+    params: DrawingParams | None = None,
+) -> str:
     """A reuse card as built: its title, the item it is about and the kinds of item it names
     from the rest of the inventory (a kind alone: the card does not say which one), and what
     it does; the item's name, which the scenarios brief carried, is said as its kind."""
+    p = _params(params)
     reuse = scenarios.reuse[card]
     names = named([item])
+    title = without_names(reuse.title, names)
     return finished_prompt(
-        without_names(reuse.title, names),
-        [part_of(item), *reuse.with_items],
+        title,
+        [part_of(item, params=p), *reuse.with_items],
         without_names(reuse.what_it_does, names),
+        tail=p.rules.card,
         brief=brief,
+        correction=p.correction_for(text=title),
+        params=p,
     )
+
+
+def keep_record(folder: Path, picture: Picture) -> None:
+    """A picture's record written whole: a reader sees the old one or the new one."""
+    record = folder / f"picture-{picture.n}.json"
+    partial = folder / f".picture-{picture.n}.json.part"
+    partial.write_text(picture.model_dump_json(), encoding="utf-8")
+    os.replace(partial, record)
 
 
 def _numbered(folder: Path) -> list[tuple[int, Path]]:
@@ -319,10 +414,7 @@ class Pictures:
         with os.fdopen(fd, "wb") as out:
             out.write(pixels)
         # the record makes the picture visible, so it lands whole or not at all
-        record = folder / f"picture-{n}.json"
-        partial = folder / f".picture-{n}.json.part"
-        partial.write_text(picture.model_dump_json(), encoding="utf-8")
-        os.replace(partial, record)
+        keep_record(folder, picture)
         log.info(
             "picture",
             extra={

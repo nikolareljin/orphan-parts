@@ -11,7 +11,20 @@ export const DRAW_OFF_LINE = 'Pictures are off on this server.'
 // The line under a picture: what it was drawn as, the label, and what the call cost.
 export function pictureCaption(p: Picture, label: string = PICTURE_LABEL): string {
   const cost = p.from_fixture ? 'recorded answer, nothing spent' : usd(p.cost_usd)
-  return `Drawn as: ${p.use}. ${label}. ${cost}`
+  return `Drawn as: ${p.use}. ${label}. ${cost}${checkLine(p)}`
+}
+
+// The review gate's line: the verdict, and that it was drawn again when it was.
+export function checkLine(p: Picture): string {
+  const c = p.check
+  if (!c || !['matches', 'partly', 'wrong'].includes(c.verdict)) return ''
+  const again = c.redraw_of ? `, drawn again for picture ${c.redraw_of}` : ''
+  return `. Checked against its facts by Muse Spark: ${c.verdict}${again} (${usd(c.cost_usd)})`
+}
+
+// The pictures to show: one the review gate judged worse than its redraw stays kept, unshown.
+export function shownPictures<T extends Picture>(pictures: T[]): T[] {
+  return pictures.filter((p) => !p.hidden)
 }
 
 // What a "Draw it" for a finished project shows: the demo visitor no button, the line to

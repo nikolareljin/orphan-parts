@@ -94,6 +94,10 @@ agitators, and vacuum attachments ship as profiles, with a generic one for anyth
   the owner approves with a corrected brief; Muse Code runs it as `/picture-review`
   ([Review and redraw the drawings](https://nikolareljin.github.io/orphan-parts/guides/picture-review/),
   [how the drawings were improved](https://nikolareljin.github.io/orphan-parts/project/picture-review-results/)).
+  The drawing parameters every request is built from are tuned the same way, measured version
+  by version; Muse Code runs it as `/picture-tune`
+  ([Tuning the drawing parameters](https://nikolareljin.github.io/orphan-parts/guides/picture-review/#tuning-the-drawing-parameters),
+  [try the skills yourself](https://nikolareljin.github.io/orphan-parts/guides/picture-review/#try-the-skills-yourself)).
 - **A demo you can leave running.** Without the access code a visitor clicks the demo set's
   own photos and gets the answer recorded for each, at no cost; the code opens uploads and the
   live models behind allowances per visitor and per day, a per-address limit, a spend cap and

@@ -73,13 +73,18 @@
 #                      key, nothing spent; codes and pairing images blurred, no metadata
 #   picture-review [--dry-run] [--only SEL,...] [--max-usd N] [--decide] [--data]
 #                  [--redraw SEL,...|all-wrong [--brief TEXT | --briefs FILE]]
+#                  [--tune [--apply] | --redraw-set | --evaluate [--prune]]
 #                      check every drawing of the demo set (loaded in fixture mode in a folder of
 #                      its own; --data: the stack's inventory) against the facts it must show,
 #                      one Muse Spark call each, into picture-review/report.md; --decide also
 #                      checks the Decide cards and the projects' allocations; --redraw draws the
 #                      named ones again with the corrected brief (written into demo/set.yaml,
 #                      only the new drawings recorded) and reviews them again; key from the
-#                      shell or .env, at most --max-usd (default 1.00); --dry-run spends nothing
+#                      shell or .env, at most --max-usd (default 1.00); --dry-run spends nothing;
+#                      --tune proposes edits to the drawing parameters from the last review
+#                      (picture-review/tune.md), --tune --apply writes them (version one up),
+#                      --redraw-set draws and records the whole set again with them and reviews
+#                      it, --evaluate keeps the score in eval/pictures/ and compares versions
 #                      (docs/guides/picture-review.md)
 #   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
 #                      WAV notes copied into demo/notes/
@@ -695,6 +700,8 @@ cmd_picture_review() {
   for arg in "$@"; do
     [[ "$arg" == "--dry-run" ]] && fake=1
     [[ "$arg" == "-h" || "$arg" == "--help" ]] && fake=1
+    # applying a proposal and keeping an evaluation read files only
+    [[ "$arg" == "--apply" || "$arg" == "--evaluate" ]] && fake=1
   done
   if [[ $fake -eq 0 ]]; then
     if [[ -n "${MODEL_API_KEY:-}" ]]; then
@@ -708,10 +715,10 @@ cmd_picture_review() {
   if [[ "${NATIVE:-0}" == "1" ]]; then
     venv_ensure "$BACKEND"
     [[ $fake -eq 1 ]] || env_load "$ROOT/.env"
-    OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 venv_run "$BACKEND" python -m app.picture.review --set "$ROOT/demo/set.yaml" --out "$ROOT/picture-review" "$@"
+    OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 venv_run "$BACKEND" python -m app.picture.review --set "$ROOT/demo/set.yaml" --out "$ROOT/picture-review" --eval-dir "$ROOT/eval/pictures" --results "$ROOT/docs/project/picture-review-results.md" "$@"
   else
     docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
-    compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 ${key_env[@]+"${key_env[@]}"} -v "$ROOT/picture-review:/picture-review" backend python -m app.picture.review --set /demo/set.yaml --out /picture-review "$@"
+    compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 ${key_env[@]+"${key_env[@]}"} -v "$ROOT/picture-review:/picture-review" -v "$ROOT/docs/project:/docs-project" backend python -m app.picture.review --set /demo/set.yaml --out /picture-review --eval-dir /eval/pictures --results /docs-project/picture-review-results.md "$@"
   fi
 }
 

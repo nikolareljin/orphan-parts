@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, type Picture, type PictureList } from '../lib/api'
-import { DRAW_AGAIN_HINT, DRAW_DEMO_LINE, DRAW_HINT, DRAW_OFF_LINE, PROJECT_PICTURE_LABEL, drawState, pictureCaption } from '../lib/picture'
+import { DRAW_AGAIN_HINT, DRAW_DEMO_LINE, DRAW_HINT, DRAW_OFF_LINE, PROJECT_PICTURE_LABEL, drawState, pictureCaption, shownPictures } from '../lib/picture'
 import GatedImage from './GatedImage'
 
 function message(err: unknown): string {
@@ -104,7 +104,7 @@ export default function DrawIt({
           {error}
         </p>
       )}
-      {pictures.map((p) => (
+      {shownPictures(pictures).map((p) => (
         <figure key={p.n} className="drawn">
           <GatedImage src={url(p.n)} alt={`Illustrative picture ${p.n}: ${p.use}`} loading="lazy" />
           <figcaption>{pictureCaption(p, PROJECT_PICTURE_LABEL)}</figcaption>

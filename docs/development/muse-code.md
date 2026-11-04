@@ -43,13 +43,22 @@ trusted; `muse skills list` shows them under `project`, and a slash command star
 once:
 
 ```bash
-mkdir -p .agents/skills && ln -s ../../tools/muse/picture-review .agents/skills/picture-review
+mkdir -p .agents/skills
+ln -s ../../tools/muse/picture-review .agents/skills/picture-review
+ln -s ../../tools/muse/picture-tune .agents/skills/picture-tune
 ```
 
 - `/picture-review`: check the drawings against their facts, show the report, redraw the ones
   the owner approves with a corrected brief, review them again and open a pull request
   ([Review and redraw the drawings](../guides/picture-review.md)).
+- `/picture-tune`: the Muse Code skill that evaluates and improves the drawing parameters:
+  score the demo set's drawings for the current version of `backend/app/picture/params.yaml`,
+  propose edits from the issues that recur, ask the owner, apply them, redraw and review the
+  whole set within a cap, compare the versions and open a pull request
+  ([Tuning the drawing parameters](../guides/picture-review.md#tuning-the-drawing-parameters)).
 
-`muse skills validate tools/muse/<id>` checks a skill file.
+`muse skills validate tools/muse/<id>` checks a skill file. To run both step by step, with a zero-cost path, a
+first live run on one drawing, the costs and how to undo, see
+[Try the skills yourself](../guides/picture-review.md#try-the-skills-yourself).
 
 Configuration and models: https://dev.meta.ai/docs/muse-code/

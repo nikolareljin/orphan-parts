@@ -10,6 +10,19 @@ the hall smart mirror built from an 18 inch monitor came out as a 50 inch televi
 skill runs the repository's own review tool and walks the owner through the fix. The guide is
 `docs/guides/picture-review.md`.
 
+## How to run
+
+1. Install once from the repository root: `mkdir -p .agents/skills && ln -s ../../tools/muse/picture-review .agents/skills/picture-review`;
+   `muse skills validate tools/muse/picture-review`; `muse skills list --source project`.
+2. Start `muse` in the repository root, trust the workspace, then `/picture-review`.
+3. Free first: `./dev picture-review --dry-run` (no key). Smallest live run: `./dev picture-review --only project:2 --max-usd 0.10`
+   (one drawing, about 0.01 USD). A full review is about 0.21 USD; a redraw 0.01 USD a drawing
+   plus its review. The key (`MODEL_API_KEY`, shell or `.env`) bills the Model API account.
+4. Outputs: `picture-review/report.md`, `redraw.md`, `before.jpg`, `after.jpg`; briefs in
+   `demo/set.yaml`; new recordings under `backend/tests/fixtures/api/images-generations/`.
+5. Undo before a commit: `git checkout -- demo/set.yaml` and
+   `git clean -f backend/tests/fixtures/api/images-generations`.
+
 ## Rules
 
 - Run everything from the repository root with `./dev`; never call the Model API another way.
