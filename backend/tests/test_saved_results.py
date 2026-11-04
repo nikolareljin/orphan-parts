@@ -209,11 +209,6 @@ def test_the_visitor_reads_no_pickup_area_of_any_draft(gated: TestClient) -> Non
     assert all("the owner's area" in d["pickup"] for d in seen.json())
 
 
-# Requests a change made new that the next record run makes, said here until it does; empty,
-# the set replays whole.
-PENDING_RECORDING: tuple[str, ...] = ()
-
-
 @pytest.mark.anyio
 @pytest.mark.parametrize("pictures_on", [True, False])
 async def test_every_item_of_the_committed_set_has_its_saved_outcome(
@@ -234,8 +229,7 @@ async def test_every_item_of_the_committed_set_has_its_saved_outcome(
         outcome = await loader.run(demo, path.parent)
     finally:
         await client.aclose()
-    assert outcome.stub_answers == 0 and outcome.skipped == []
-    assert [u for u in outcome.unrecorded if not u.startswith(PENDING_RECORDING)] == []
+    assert outcome.stub_answers == 0 and outcome.skipped == [] and outcome.unrecorded == []
     assert outcome.cost_usd == 0.0
     inventory = loader.inventory
     for item in demo.items:
@@ -252,17 +246,11 @@ async def test_every_item_of_the_committed_set_has_its_saved_outcome(
             assert [d["mode"] for d in inventory.drafts(item_id)] == [item.draft], item.key
         if item.price:
             assert kept.worth is not None, item.key
-    # a search whose plan is pending its recording is left out until the record run
-    planned = [s for s in loader.finder.searches() if s.plan is not None]
-    assert planned and planned[0].plan is not None and planned[0].plan.phrasings
+    search = loader.finder.searches()[0]
+    assert search.plan is not None and search.plan.phrasings
     projects = loader.planner.projects().projects
     # the projects the set selects have their build packs; every project its drawing
     selected = [p for p in projects if p.status == "selected"]
     assert demo.propose is not None and len(selected) == len(demo.propose.select)
     assert all(loader.planner.packs_of(p.id) for p in selected)
-    drawn = [
-        p
-        for p in projects
-        if not any(u.startswith(f"project {p.title}: picture") for u in outcome.unrecorded)
-    ]
-    assert all(loader.pictures and loader.pictures.project_list(p.id).pictures for p in drawn)
+    assert all(loader.pictures and loader.pictures.project_list(p.id).pictures for p in projects)
