@@ -79,18 +79,19 @@ feature from a photo, in [More of the tour](#more-of-the-tour).
 **Step 4. Stop it** when you are done (after Part 2, if you try the phone): `./dev down` (what you saved stays; `./dev down -v` also removes the data).
 `./dev demo` puts the demo set back as loaded, whatever you clicked.
 
-### Recorded and stand-in answers
+### Recorded answers, and requests with none
 
 Everything Part 1 shows was saved from real model calls when the demo set was recorded; each
 carries a *recorded answer* badge and costs nothing. A stack without a key never calls a model:
 
 - **Plan the search**, **Search the web** and the price guidance come back as recorded.
 - A request with no recording of its own (**Ask again** under **Decide**, **Check fit** on a new
-  listing, a photo of your own) gets a fixed **stand-in** answer, badged *recorded answer* at
-  $0.00 and **not about your item**. The earlier, recorded results stay listed.
+  listing, a photo of your own) is refused and nothing is saved: the page says *No recorded
+  answer for this request: the demo answers only what was recorded. Add a Meta Model API key in
+  .env (MODEL_API_KEY, OPL_FAKE_API=0) to run it live.* The recorded results stay as they were.
 - **Draw it** is off without a key (*Pictures are off on this server.*); the drawings already
-  made stay. **Propose** under **Build and reuse** answers *No idea fits what you own.*; the
-  eleven recorded projects stay.
+  made stay. **Propose** says the same *No recorded answer* line; the eleven recorded projects
+  stay.
 
 ## Part 2: The phone (optional)
 
@@ -203,9 +204,11 @@ Every screen, pictured: [Pair the phone with the web app](https://nikolareljin.g
 1. In the app, **Capture** tab: **Take a photo** (the label filling the frame), optionally a
    name, then **Send**. You should see *Sent as capture #1*.
 2. On the web app, **Inbox**: the capture is listed. **Read it** turns it into an item.
-3. Without a key, reading a new photo needs one (see
-   [Recorded and stand-in answers](#recorded-and-stand-in-answers)); the demo items show what the
-   models produced. To read your own photos live, see [Your own key](#optional-live-models-with-your-own-key).
+3. Without a key, a new photo has no recorded answer: **Read it** says *No recorded answer for
+   this request* and no item is made (see
+   [Recorded answers, and requests with none](#recorded-answers-and-requests-with-none)); the
+   demo items show what the models produced. To read your own photos live, see
+   [Your own key](#optional-live-models-with-your-own-key).
 
 The app's **Talk** tab keeps a voice note on an item already in the inventory. From a laptop
 instead of the phone, the Inbox's **Send a capture from this computer** takes photos and a
@@ -230,7 +233,7 @@ short video.
 | The browser will not open the APK, or *blocked by your admin* | Open it from the browser's Downloads page, or use Option A (USB) |
 | *App not installed* | An earlier release is on the phone under another key: uninstall it (**Settings**, **Apps**, **Orphan Parts Lens**, **Uninstall**) and install again |
 | The QR code will not scan | Type the address under it into **Backend URL** and the phone code into **Access code**, **Save**, **Check** |
-| A reading says *recorded answer* for a photo of your own | The stack has no key: see [Your own key](#optional-live-models-with-your-own-key) |
+| A photo of your own says *No recorded answer for this request* | The stack has no key: see [Your own key](#optional-live-models-with-your-own-key) |
 
 More of the app's own messages: [Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/)
 and [Troubleshooting](https://nikolareljin.github.io/orphan-parts/operations/troubleshooting/).

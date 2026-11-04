@@ -94,6 +94,8 @@ _mode() {
     # fixture mode hands the backend no key at all, whatever this shell or .env holds
     unset MODEL_API_KEY
     export OPL_FAKE_API=1 VIDEO_RECORD=0
+    # the scenes play requests nobody recorded on the stand-in answers
+    export FIXTURE_STUBS=1
   fi
 }
 

@@ -75,7 +75,8 @@ DEMO_ACCESS_CODE=
 | Setting | What it does |
 |---|---|
 | `MODEL_API_KEY` | The key from dev.meta.ai. Read by the backend only; it never reaches the browser or the phone. |
-| `OPL_FAKE_API` | `1` answers every call from the recordings under `backend/tests/fixtures/api`: the demo set's photos get their real readings, anything else a recorded stand-in. `0` calls the Model API with the key. Left at `0` with no key, `./dev up` starts in recorded mode anyway and says so. |
+| `OPL_FAKE_API` | `1` answers every call from the recordings under `backend/tests/fixtures/api`: the demo set's photos get their real readings, and a request with no recording of its own is refused with *No recorded answer for this request*, nothing saved. `0` calls the Model API with the key. Left at `0` with no key, `./dev up` starts in recorded mode anyway and says so. |
+| `FIXTURE_STUBS` | `0` (the default) refuses a request with no recording, as above. `1` answers it with the operation's fixed stand-in instead, not about your item; the tests, `./dev e2e`, the screenshots and the video stacks set it. |
 | `SPEND_CAP_USD` | The app's own ceiling: once its spend ledger reaches it, every model call is refused. The footer of every page shows the spend against it. |
 | `PICTURE_ENABLED` | Turns **Draw it** on. Off, the app says so where the button would be. |
 | `LAN_ADDRESS` | The address the phone uses to reach this computer, such as `192.168.1.20`. Set it when the computer has several networks (Docker, a VPN, WSL) and the first one found is the wrong one. |
@@ -265,8 +266,8 @@ step by step, with a picture of each. All of them work on this local stack: the 
 items, search and projects are there after `./dev demo`, and with `OPL_FAKE_API=1` no step
 calls a model. A request recorded for the demo set replays its recording; one with no
 recording of its own (asking again for an item's Decide cards, checking a new listing, a photo
-of your own) gets a fixed stand-in answer that is not about your item:
-[Recorded and stand-in answers](judges.md#recorded-and-stand-in-answers).
+of your own) is refused with *No recorded answer for this request* and saves nothing:
+[Recorded answers, and requests with none](judges.md#recorded-answers-and-requests-with-none).
 `./dev demo` puts the set back as loaded.
 
 ## When something does not work

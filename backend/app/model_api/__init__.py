@@ -25,6 +25,7 @@ from app.model_api.errors import (
     IncompleteResponseError,
     ModelApiError,
     NoRecordingError,
+    NoStandInError,
     SpendCapError,
 )
 from app.model_api.fixtures import FixtureStore
@@ -43,6 +44,7 @@ __all__ = [
     "ModelApiError",
     "ModelResponse",
     "NoRecordingError",
+    "NoStandInError",
     "PictureResult",
     "SpendCapError",
     "StructuredResponse",

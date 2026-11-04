@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     fake_api: bool = Field(default=False, alias="OPL_FAKE_API")
     record_fixtures: bool = Field(default=False, alias="OPL_RECORD_FIXTURES")
     key_probe: bool = Field(default=True, alias="OPL_KEY_PROBE")
+    # fixture mode only: 1 lets an operation's stand-in answer a request served to a person
+    # that has no recording of its own (tests, screenshots, video); 0 refuses it plainly
+    fixture_stubs: bool = Field(default=False, alias="FIXTURE_STUBS")
     fixtures_dir: Path = _BACKEND_ROOT / "tests" / "fixtures" / "api"
     # the demo set beside the backend (the dev stack mounts it at /demo, the Modal image ships
     # it at /root/demo): its photos are the samples the demo visitor clicks; absent, there are none

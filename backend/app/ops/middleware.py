@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.ops.door import served_request
 from app.ops.logging import request_id_var
 
 log = logging.getLogger("app.http")
@@ -39,6 +40,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         else:
             rid = uuid.uuid4().hex[:16]
         token = request_id_var.set(rid)
+        served = served_request.set(True)
         started = time.perf_counter()
         method = re.sub(_NOT_PRINTABLE, "?", request.method)[:16]
         path = re.sub(_NOT_PRINTABLE, "?", request.url.path)[:512]
@@ -62,4 +64,5 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             )
             return response
         finally:
+            served_request.reset(served)
             request_id_var.reset(token)

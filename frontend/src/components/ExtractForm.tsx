@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { api, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
+import { api, ApiError, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { asksForParent, cameFrom, photoReadLine } from '../lib/inventory'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
 import EvidenceTable from './EvidenceTable'
@@ -69,6 +69,8 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
         try {
           segmentation = await api.segment(files[0])
         } catch (err: unknown) {
+          // no recorded answer for this photo (409): reading it whole has none either
+          if (err instanceof ApiError && err.status === 409) throw err
           // the photos are still readable whole; say what was skipped and why
           note = `The label could not be found first (${messageOf(err)}), so the photos were read whole.`
         }

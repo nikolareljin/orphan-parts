@@ -89,3 +89,18 @@ class NoRecordingError(FixtureMissingError):
     def __init__(self, endpoint: str, key: str, op: str) -> None:
         super().__init__(endpoint, key, op)
         self.args = (f"no recording of {op} for this request",)
+
+
+NO_STAND_IN_LINE = (
+    "No recorded answer for this request: the demo answers only what was recorded. Add a"
+    " Meta Model API key in .env (MODEL_API_KEY, OPL_FAKE_API=0) to run it live."
+)
+
+
+class NoStandInError(FixtureMissingError):
+    """Fixture mode, a request served to a person, and no recording of this exact request:
+    refused rather than answered (and saved) with the operation's stand-in."""
+
+    def __init__(self, endpoint: str, key: str, op: str) -> None:
+        super().__init__(endpoint, key, op)
+        self.args = (NO_STAND_IN_LINE,)

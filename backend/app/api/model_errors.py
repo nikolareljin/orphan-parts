@@ -9,6 +9,7 @@ from app.model_api import (
     IncompleteResponseError,
     ModelApiError,
     NoRecordingError,
+    NoStandInError,
     SpendCapError,
 )
 from app.ops.door import live_request
@@ -35,6 +36,9 @@ def as_http(exc: Exception) -> HTTPException:
                     " models for a photo of your own"
                 ),
             )
+        if isinstance(exc, NoStandInError):
+            # a person's request with no recording of its own: refused, nothing made or saved
+            return HTTPException(status_code=409, detail=str(exc))
         return HTTPException(
             status_code=503, detail="no recorded answer for this request in fixture mode"
         )
