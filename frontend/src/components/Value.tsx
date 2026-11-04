@@ -5,6 +5,8 @@ import { whenText } from '../lib/inventory'
 import { evidenceText, kindLabel, money, rangeText, searchesText } from '../lib/value'
 import { Earlier, NeverRun } from './Saved'
 import SignInLine from './SignInLine'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -103,7 +105,10 @@ export default function Value({
 
   return (
     <section className="value" aria-label="What is it worth?">
-      <h4>What is it worth?</h4>
+      <div className="section-head">
+        <h4>What is it worth?</h4>
+        <HelpTip entry={readOnly ? HELP.valueVisitor : HELP.value} />
+      </div>
       {readOnly ? (
         <>
           {loaded && !guide && <p className="muted">No price guidance was asked for this item.</p>}

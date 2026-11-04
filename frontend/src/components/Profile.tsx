@@ -3,6 +3,8 @@ import { api, type Preferences, type RatedSkill, type SkillLevel } from '../lib/
 import { EFFORTS, EMPTY_PREFERENCES, effortLabel, numberOrNull, numberProblem } from '../lib/projects'
 import { LEVELS, SKILL_MAX, customProblem, isStarter, skillRows, skillsToSave } from '../lib/profile'
 import SignInLine from './SignInLine'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -48,7 +50,10 @@ function ProfileShown() {
   return (
     <section className="profile" aria-label="Profile">
       <p className="muted">{INTRO}</p>
-      <h3>Skills</h3>
+      <div className="section-head">
+        <h3>Skills</h3>
+        <HelpTip entry={HELP.skillsVisitor} />
+      </div>
       <div className="table-wrap">
         <table className="evidence skills" aria-label="Skills">
           <thead>
@@ -163,7 +168,10 @@ function ProfileForm() {
     <form className="profile" onSubmit={(e) => void save(e)} aria-label="Profile">
       <p className="muted">{INTRO}</p>
 
-      <h3>Skills</h3>
+      <div className="section-head">
+        <h3>Skills</h3>
+        <HelpTip entry={HELP.skills} />
+      </div>
       <div className="table-wrap">
       <table className="evidence skills" aria-label="Skills">
         <thead>

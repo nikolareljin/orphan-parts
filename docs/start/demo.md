@@ -75,6 +75,7 @@ recorded yet* for it and shows none, never the stub image as a drawing.
 On a gated server (the hosted demo, or a local stack after `./dev gate on`), a visitor without
 the code is in the demo. The header ends with **Sign in with the code**; **Read a label** is a
 gallery of the set's photos instead of an upload.
+The **?** beside **Sign in with the code** says what the code unlocks.
 
 ![Signed out: Read a label shows the demo set's photos grouped by item](../assets/shots/demo/01-visitor-home.png)
 

@@ -5,6 +5,8 @@ import EvidenceTable from './EvidenceTable'
 import SampleGallery from './SampleGallery'
 import SampleNotice from './SampleNotice'
 import SegmentView from './SegmentView'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 type State =
   | { kind: 'idle' }
@@ -86,6 +88,7 @@ export default function SampleRead({ liveModels = false }: { liveModels?: boolea
           <input type="checkbox" checked={findFirst} onChange={(e) => setFindFirst(e.target.checked)} />
           <span>Find the label in the photo first (SAM 3.1; helps with busy photos)</span>
         </label>
+        <HelpTip entry={HELP.findFirst} />
       </div>
       <div className="row actions">
         <button type="submit" disabled={selected.length === 0 || busy}>

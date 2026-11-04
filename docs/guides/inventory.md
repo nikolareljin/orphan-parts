@@ -9,6 +9,9 @@ approve.
 
 The pictures come from the demo set (`./dev demo`) on a stack answering from recordings.
 Without the access code, **My inventory** lists the items marked public, read-only.
+Look for the **?** next to **My inventory**, next to each section's title in the item, beside
+the line on what was hidden on the photos and beside *Show in the public demo*: each opens a
+short note on what can be done there.
 
 1. **The list.** **My inventory** shows every item with its kind, how many values it has, its
    plan, its availability and when it last changed. **Open** an item.

@@ -29,6 +29,8 @@ import {
 import GatedImage from './GatedImage'
 import { Earlier, NeverRun } from './Saved'
 import SignInLine from './SignInLine'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -241,7 +243,10 @@ export default function Listing({
   if (readOnly)
     return (
       <section className="listing" aria-label="Prepare to sell or give away">
-        <h4 tabIndex={-1}>Prepare to sell or give away</h4>
+        <div className="section-head">
+          <h4 tabIndex={-1}>Prepare to sell or give away</h4>
+          <HelpTip entry={HELP.sellVisitor} />
+        </div>
         <p className="hint limit">{HARD_LIMIT}</p>
         {draftsRead && !draft && <p className="muted">No listing was drafted for this item.</p>}
         {draft && (
@@ -269,7 +274,10 @@ export default function Listing({
 
   return (
     <section className="listing" aria-label="Prepare to sell or give away">
-      <h4 tabIndex={-1}>Prepare to sell or give away</h4>
+      <div className="section-head">
+        <h4 tabIndex={-1}>Prepare to sell or give away</h4>
+        <HelpTip entry={HELP.sell} />
+      </div>
       <p className="hint limit">{HARD_LIMIT}</p>
       <form className="tell" aria-label="Listing details" onSubmit={(e) => void write(e)}>
         <h5>Listing details</h5>

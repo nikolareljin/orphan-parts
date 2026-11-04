@@ -6,6 +6,8 @@ import EvidenceTable from './EvidenceTable'
 import ParentPrompt from './ParentPrompt'
 import SampleRead from './SampleRead'
 import SegmentView from './SegmentView'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 type State =
   | { kind: 'idle' }
@@ -145,6 +147,7 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
           <input type="checkbox" checked={findFirst} onChange={(e) => setFindFirst(e.target.checked)} />
           <span>Find the label in the photo first (SAM 3.1; helps with busy photos)</span>
         </label>
+        <HelpTip entry={HELP.findFirst} />
       </div>
       <div className="row actions">
         <button type="submit" disabled={files.length === 0 || busy}>

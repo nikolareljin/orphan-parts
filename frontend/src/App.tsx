@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Build from './components/Build'
 import ExtractForm from './components/ExtractForm'
+import HelpTip from './components/HelpTip'
 import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
@@ -10,6 +11,7 @@ import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type 
 
 import { pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
 import { DEFAULT_LIMITS } from './lib/photos'
+import { HELP } from './lib/help'
 import { demoText } from './lib/access'
 import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs, uploadsAllowed, type AccessState, type KnownAccess } from './lib/door'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
@@ -187,6 +189,7 @@ export default function App() {
             </button>
           )}
           {door === 'open' && <span className="door door-note">Open server (no code needed)</span>}
+          {door !== 'open' && <HelpTip entry={HELP.signIn} />}
         </div>
       </header>
 
@@ -206,7 +209,10 @@ export default function App() {
 
       {view === 'read' && (
         <section className="card">
-          <h2>Read a label</h2>
+          <div className="section-head">
+            <h2>Read a label</h2>
+            <HelpTip entry={samplesOnly ? HELP.readSamples : HELP.read} />
+          </div>
           <ExtractForm
             limits={status.kind === 'ok' ? status.version.limits : undefined}
             demo={samplesOnly}
@@ -221,7 +227,10 @@ export default function App() {
 
       {view === 'inbox' && (
         <section className="card">
-          <h2>Inbox</h2>
+          <div className="section-head">
+            <h2>Inbox</h2>
+            <HelpTip entry={samplesOnly ? HELP.inboxDemo : HELP.inbox} />
+          </div>
           <Inbox
             limits={status.kind === 'ok' ? status.version.limits : DEFAULT_LIMITS}
             demo={samplesOnly}
@@ -236,14 +245,20 @@ export default function App() {
 
       {view === 'inventory' && (
         <section className="card">
-          <h2>My inventory</h2>
+          <div className="section-head">
+            <h2>My inventory</h2>
+            <HelpTip entry={demo ? HELP.inventoryDemo : HELP.inventory} />
+          </div>
           <Inventory refresh={saved} openId={openItem} onOpened={() => setOpenItem(null)} demo={demo} samplesOnly={samplesOnly} />
         </section>
       )}
 
       {view === 'find' && (
         <section className="card">
-          <h2>Find a part</h2>
+          <div className="section-head">
+            <h2>Find a part</h2>
+            <HelpTip entry={samplesOnly ? HELP.findDemo : HELP.find} />
+          </div>
           <Find demo={samplesOnly} />
         </section>
       )}
@@ -306,6 +321,7 @@ export default function App() {
                 </p>
               )}
             </details>
+            <HelpTip entry={HELP.pair} />
           </>
         )}
         {/* shown whatever the server says: the way to the docs and the code even when it is down */}

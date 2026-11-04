@@ -7,6 +7,8 @@ import { Result } from './Assess'
 import Modal from './Modal'
 import SearchPlan from './SearchPlan'
 import SignInLine from './SignInLine'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -166,7 +168,10 @@ function NewSearch({ onCreated }: { onCreated: (s: Search) => void }) {
 
   return (
     <form className="new-search" onSubmit={(e) => void create(e)} aria-label="New search">
-      <h3>I need one that fits</h3>
+      <div className="section-head">
+        <h3>I need one that fits</h3>
+        <HelpTip entry={HELP.newSearch} />
+      </div>
       <div className="row">
         <label>
           <span>Needed by</span>
