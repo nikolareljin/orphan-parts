@@ -178,6 +178,36 @@ test('the profile rates the skills, adds one of your own, and the Build page rea
   await expect(form.getByRole('button', { name: 'Remove software' })).toHaveCount(0)
 })
 
+test('the preferences and the profile open for editing only once the saved record is in', async ({ page }) => {
+  // the first read is held, as a busy backend holds it; nothing typed before it lands is lost
+  let release = (): void => undefined
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await page.route('**/api/preferences', async (route) => {
+    if (route.request().method() === 'GET') await held
+    await route.continue()
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Build and reuse' }).click()
+  const edit = page.getByRole('form', { name: 'What I want from a build' }).getByRole('button', { name: 'Edit' })
+  await expect(edit).toBeDisabled()
+  release()
+  await expect(edit).toBeEnabled()
+
+  await page.unrouteAll()
+  let releaseProfile = (): void => undefined
+  const heldProfile = new Promise<void>((resolve) => (releaseProfile = resolve))
+  await page.route('**/api/preferences', async (route) => {
+    if (route.request().method() === 'GET') await heldProfile
+    await route.continue()
+  })
+  await page.getByRole('button', { name: 'Profile', exact: true }).click()
+  const form = page.getByRole('form', { name: 'Profile' })
+  await expect(form.getByLabel('plumbing: none')).toBeDisabled()
+  await expect(form.getByRole('button', { name: 'Save profile' })).toBeDisabled()
+  releaseProfile()
+  await expect(form.getByLabel('plumbing: none')).toBeEnabled()
+})
+
 test('a project is drawn only on a click, and the picture is labeled as drawn', async ({ page, request }) => {
   await household(request)
   await page.goto('/')

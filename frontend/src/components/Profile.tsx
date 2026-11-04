@@ -93,6 +93,8 @@ function ProfileForm() {
   const [customLevel, setCustomLevel] = useState<SkillLevel>('some')
   const [budget, setBudget] = useState('')
   const [radius, setRadius] = useState('')
+  // the fields open once the saved record is in, so it cannot land over a rating or a new skill
+  const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -110,6 +112,9 @@ function ProfileForm() {
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(message(err))
+      })
+      .finally(() => {
+        if (!cancelled) setLoaded(true)
       })
     return () => {
       cancelled = true
@@ -166,6 +171,7 @@ function ProfileForm() {
 
   return (
     <form className="profile" onSubmit={(e) => void save(e)} aria-label="Profile">
+      <fieldset className="gate" disabled={!loaded}>
       <p className="muted">{INTRO}</p>
 
       <div className="section-head">
@@ -302,6 +308,7 @@ function ProfileForm() {
           {error}
         </p>
       )}
+      </fieldset>
     </form>
   )
 }
