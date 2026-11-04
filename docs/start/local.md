@@ -5,6 +5,17 @@ the access code and the phone. Nothing here depends on `orphan-parts.pages.dev` 
 hosting account. Without a Model API key the stack answers from the recordings kept in the
 repository and spends nothing; with a key it reads your own photos live.
 
+!!! tip "The quick path: results in about 10 minutes"
+    1. Check Docker: `docker --version && docker compose version && docker run --rm hello-world`
+       (on macOS and Windows, start Docker Desktop first).
+    2. One block, nothing to edit: `git clone https://github.com/nikolareljin/orphan-parts.git`,
+       `cd orphan-parts`, `cp .env.example .env`, `./dev up`, `./dev demo`.
+    3. Open <http://localhost:5173> and follow
+       [what to click first](judges.md#part-1-start-it-and-see-results).
+    4. The phone, optional: [sign in at the network address, install the app, pair](judges.md#part-2-the-phone-optional).
+
+    The sections below are the same path with every setting explained.
+
 ## 1. What you need
 
 - **Docker** with Compose v2: [Docker Desktop](https://docs.docker.com/desktop/) on
@@ -102,7 +113,7 @@ The first `./dev up` builds the backend image and installs the web app's package
 a few minutes once; `./dev demo` about a minute. Open <http://localhost:5173>. The footer says
 `recorded answers only (nothing spent)` in recorded mode, or `live mode, spent $0.00 of $25.00`
 with a key. What to click first:
-[the guided tour in For judges](judges.md#b-run-it-on-your-own-computer-the-main-path).
+[Part 1 in For judges](judges.md#part-1-start-it-and-see-results).
 
 The foot of every page also links the **Documentation** (this site) and the **Source on
 GitHub**, and opens **Pair the phone**.
@@ -159,7 +170,7 @@ footer counts the day's live calls.
 3. **Open**. The app starts on its **Backend** tab.
 
 Every prompt on the way, and the Play Protect scan afterwards:
-[For judges](judges.md#install-the-android-app).
+[For judges](judges.md#22-install-the-app).
 
 ### Over a USB cable
 
@@ -255,7 +266,7 @@ items, search and projects are there after `./dev demo`, and with `OPL_FAKE_API=
 calls a model. A request recorded for the demo set replays its recording; one with no
 recording of its own (asking again for an item's Decide cards, checking a new listing, a photo
 of your own) gets a fixed stand-in answer that is not about your item:
-[Recorded and stand-in answers](judges.md#b-run-it-on-your-own-computer-the-main-path).
+[Recorded and stand-in answers](judges.md#recorded-and-stand-in-answers).
 `./dev demo` puts the set back as loaded.
 
 ## When something does not work

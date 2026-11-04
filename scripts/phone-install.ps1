@@ -105,4 +105,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 Say "opening the app"
 & $adb -s $serial shell monkey -p $Package -c android.intent.category.LAUNCHER 1 2>$null | Out-Null
-Say "done. In the app, open the Backend tab and tap 'Scan to pair' (JUDGES.md, step 4)."
+Say "done. In the app, open the Backend tab and tap 'Scan to pair' (JUDGES.md, 2.3 Pair the phone)."

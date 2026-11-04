@@ -22,7 +22,7 @@ Watch it on YouTube: <https://www.youtube.com/watch?v=3USMv4zCeD0> (2:52).
     instead of automatic search and posting, private details hidden in photos, a review of every
     drawing), and what comes next: [Hackathon conclusion](project/conclusion.md).
 
-**Watch the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52; [the copy kept with the docs](start/video.md)).** **Then [run it on your own computer](start/local.md)**: Docker, three commands, the demo set's recorded answers with every page open, no key and nothing spent; the guided tour is in [For judges](start/judges.md#b-run-it-on-your-own-computer-the-main-path). **Hosted demo** (read-only, temporary): <https://orphan-parts.pages.dev>; it may be taken down after judging.
+**Watch the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52; [the copy kept with the docs](start/video.md)).** **Then [run it on your own computer](start/local.md)**: Docker, three commands, the demo set's recorded answers with every page open, no key and nothing spent; the quick path, with what to click first and the phone, is in [For judges](start/judges.md#part-1-start-it-and-see-results). **Hosted demo** (read-only, temporary): <https://orphan-parts.pages.dev>; it may be taken down after judging.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
