@@ -28,7 +28,8 @@ skill runs the repository's own review tool and walks the owner through the fix.
 3. **Read** `picture-review/report.md`. Show the owner a short table: id, title, verdict, the
    first issue. Then, for each `wrong` and each `partly` with a scale or wrong-device issue,
    show the facts, the issues and the proposed brief. Open the thumbnail
-   (`picture-review/pictures/<id>.jpg`) when the owner asks to see it.
+   (the `picture` path the report gives, under `picture-review/pictures/`) when the owner asks
+   to see it.
 4. **Propose** corrections: keep the tool's brief when it is concrete (real size, proportions,
    setting, "not a TV"); otherwise rewrite it from the facts in the report. Each brief at most
    350 characters, parts named by kind, never by brand.

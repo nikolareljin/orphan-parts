@@ -43,7 +43,7 @@ from typing import Any, Literal
 
 import yaml
 from PIL import Image, ImageDraw
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from app.config import Settings, get_settings
 from app.decide.service import Decider
@@ -62,7 +62,7 @@ from app.model_api import (
 )
 from app.model_api.client import IMAGES, output_cap
 from app.model_api.fixtures import request_key
-from app.model_api.pricing import PER_MILLION, token_rates
+from app.model_api.pricing import IMAGE_UNIT_USD, PER_MILLION, token_rates
 from app.picture.briefs import SetBrief, apply
 from app.picture.service import (
     AS_BUILT_LEFT_OUT,
@@ -93,6 +93,8 @@ DEFAULT_MAX_USD = 1.0
 CONCURRENCY = 6
 ITEM_VALUES = 12
 BRIEF_MAX = 400
+# one drawing, at the published rate
+IMAGE_USD = IMAGE_UNIT_USD["muse-image"]
 
 Verdict = Literal["matches", "partly", "wrong"]
 Category = Literal[
@@ -806,7 +808,7 @@ class PicturesOnlyClient(ModelApiClient):
         if endpoint != IMAGES:
             keyed = body if key is None else key
             kept = self.fixtures.find(endpoint, keyed, op)
-            if kept is None or kept.key != request_key(endpoint, keyed):
+            if kept is None or kept.key != request_key(endpoint, keyed) or kept.status >= 400:
                 raise NoRecordingError(endpoint, request_key(endpoint, keyed), op)
         return await super()._post(endpoint, body, op, files=files, key=key, attempts=attempts)
 
@@ -908,7 +910,7 @@ def chosen_briefs(
         if sel in given:
             out[sel] = given[sel]
     if brief:
-        if len(out) != 1 and len(selectors) != 1:
+        if len(selectors) != 1 or len(out) > 1:
             raise ValueError("--brief goes with one drawing")
         out = {next(iter(out), selectors[0]): _line(brief, BRIEF_MAX)}
     missing = [k for k, v in out.items() if not v]
@@ -980,6 +982,10 @@ async def run_redraw(settings: Settings, opts: Options) -> Report:
         else None
     )
     briefs = chosen_briefs(last, opts.redraw, opts.brief, opts.briefs)
+    secret = settings.model_api_key.get_secret_value() if settings.model_api_key else ""
+    if secret and any(secret in b for b in briefs.values()):
+        # a brief goes into the set file and the request: never the key pasted into one
+        raise ValueError("a brief holds MODEL_API_KEY; nothing was written or drawn")
     before = {r.id: r for r in (last.reviews if last else [])}
     work = Path(tempfile.mkdtemp(prefix="picture-redraw-"))
     report = Report(
@@ -1072,6 +1078,13 @@ def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:8]
 
 
+def drawings_cap(left_usd: float) -> float:
+    """The record run's ledger cap: the ledger refuses a call only once its total has reached
+    the cap, so the cap allows whole drawings alone, never one that would pass ``left_usd``."""
+    whole = int((left_usd + 1e-9) / IMAGE_USD)
+    return max(whole * IMAGE_USD - 1e-9, 0.0)
+
+
 async def _redraw_set(
     settings: Settings,
     opts: Options,
@@ -1089,7 +1102,8 @@ async def _redraw_set(
     print(f"wrote {len(briefs)} brief(s) into {opts.set_file}")
     # the most the drawings may take: what the run has left after a review of each
     review_ceiling = ceiling_usd(settings.model_spark, REVIEW_INPUT_ALLOWANCE, REVIEW_OUTPUT_TOKENS)
-    cap = max(opts.max_usd - budget.spent - review_ceiling * len(briefs), 0.0)
+    left = max(opts.max_usd - budget.spent - review_ceiling * len(briefs), 0.0)
+    cap = drawings_cap(left)
     record = _scratch(
         settings, work / "record", fake_api=False, record_fixtures=True, picture_enabled=True
     )
@@ -1116,7 +1130,7 @@ async def _redraw_data(
     live = settings.model_copy(update={"picture_enabled": True, "record_fixtures": False})
     client = ModelApiClient(live, CostLedger(settings.spend_cap_usd, settings.spend_ledger_path))
     pictures = Pictures(live, client, sv.inventory, sv.pictures.templates)
-    image_ceiling = 0.01
+    image_ceiling = IMAGE_USD
     out: dict[str, Drawing] = {}
     try:
         for k, brief in briefs.items():
@@ -1189,12 +1203,22 @@ def parse(argv: list[str]) -> Options | str:
         elif arg in ("-h", "--help"):
             return "help"
         else:
-            return f"unknown argument {arg}"
+            # only an option's name is said back, never a value (a key pasted by mistake)
+            shown = arg.split("=", 1)[0] if arg.startswith("-") else "(a value)"
+            return f"unknown argument {shown[:40]}"
     if (opts.brief or opts.briefs) and not opts.redraw:
         return "--brief and --briefs go with --redraw"
     if opts.redraw and opts.dry_run:
         return "--redraw draws; it has no dry run (review with --dry-run first)"
     return opts
+
+
+def refused(exc: ValueError) -> str:
+    """Why the settings were refused, without the values they were given: a validation error
+    prints its input, and the key is part of it."""
+    if isinstance(exc, ValidationError):
+        return "; ".join(str(e["msg"]) for e in exc.errors(include_url=False, include_input=False))
+    return str(exc)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1210,7 +1234,7 @@ def main(argv: list[str] | None = None) -> int:
         settings = get_settings()
     except ValueError as exc:
         if not opts.dry_run:
-            print(f"picture-review: the settings are refused: {exc}", file=sys.stderr)
+            print(f"picture-review: the settings are refused: {refused(exc)}", file=sys.stderr)
             print(
                 "picture-review: a review needs MODEL_API_KEY; --dry-run needs none",
                 file=sys.stderr,

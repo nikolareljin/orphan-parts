@@ -473,3 +473,74 @@ async def test_the_request_shown_carries_the_correction_it_was_drawn_with(
     asked = collect(sv)[0].facts.asked
     assert "; an 18 inch monitor; not a TV, on a plain background" in asked
     assert sv.item_brief(item_id, "reuse_picture_brief") == ""
+
+
+def test_a_brief_for_several_drawings_is_refused() -> None:
+    facts = Facts(title="t")
+    report = Report(
+        at="",
+        source="",
+        mode="",
+        reviews=[
+            Review(id=f"project:4#{n}", title="", kind="project", facts=facts, brief="b")
+            for n in (1, 2)
+        ],
+    )
+    with pytest.raises(ValueError):
+        chosen_briefs(report, ["project:4"], "my own", None)
+
+
+def test_a_wrong_argument_is_named_never_echoed(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["MODEL_API_KEY=" + SAMPLE_VALUE]) == 2
+    assert main(["--key=" + SAMPLE_VALUE]) == 2
+    err = capsys.readouterr().err
+    assert SAMPLE_VALUE not in err and "--key" in err
+
+
+def test_refused_settings_never_show_the_key() -> None:
+    from app.picture.review import refused
+
+    with pytest.raises(ValueError) as caught:
+        Settings(OPL_FAKE_API=False, model_api_key=SAMPLE_VALUE, CANDIDATE_DAYS=0, _env_file=None)
+    assert SAMPLE_VALUE[:6] not in refused(caught.value)
+    assert "CANDIDATE_DAYS" in refused(caught.value)
+
+
+async def test_a_recorded_failure_is_not_bought_again_in_a_redraw_run(tmp_path: Path) -> None:
+    settings = Settings(
+        OPL_FAKE_API=False,
+        OPL_RECORD_FIXTURES=True,
+        OPL_KEY_PROBE=False,
+        model_api_key=SAMPLE_VALUE,
+        data_dir=tmp_path / "data",
+        fixtures_dir=tmp_path / "fixtures",
+        log_format="text",
+        _env_file=None,
+    )
+    sent: list[str] = []
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        sent.append(request.url.path)
+        return httpx.Response(500)
+
+    client = PicturesOnlyClient(settings, CostLedger(1.0), transport=httpx.MockTransport(answer))
+    # a failure kept on disk: the plain record mode would ask again, live
+    client.fixtures.save(
+        "/v1/responses", {"model": "m", "input": "hi"}, "scenarios", {}, status=500
+    )
+    with pytest.raises(NoRecordingError):
+        await client._post("/v1/responses", {"model": "m", "input": "hi"}, "scenarios")
+    await client.aclose()
+    assert sent == []
+
+
+def test_the_record_run_buys_whole_drawings_within_what_is_left() -> None:
+    from app.picture.review import drawings_cap
+
+    for left, most in ((0.0, 0), (0.009, 0), (0.025, 2), (0.03, 3)):
+        ledger = CostLedger(drawings_cap(left))
+        bought = 0
+        while not ledger.paused:
+            ledger._total += 0.01
+            bought += 1
+        assert bought == most

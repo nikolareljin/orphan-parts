@@ -67,8 +67,10 @@ A review is one Muse Spark call with an image, about 0.01 USD; a check of one se
 cards or one project is a text call, about 0.005 USD. `--max-usd` (default 1.00) is the run's
 own cap: a call is made only when the most it could cost (its input allowance and every output
 token it may write, with the calls still under way) still fits; the drawings past it are listed
-as not reviewed. The spend ledger's own cap (`SPEND_CAP_USD`) holds as well. A redraw is one
-Muse Image call (0.01 USD) and one more review.
+as not reviewed. The run keeps its own ledger, in memory, under the same cap; a redraw buys
+whole drawings only within what is left after a review of each. With `--data` a redraw also
+goes on the stack's spend ledger under `SPEND_CAP_USD`. A redraw is one Muse Image call
+(0.01 USD) and one more review.
 
 ## The report
 
@@ -76,7 +78,8 @@ Muse Image call (0.01 USD) and one more review.
 
 - the totals: drawings, verdicts, the spend;
 - a summary table: id, what it is, verdict, the first issue;
-- one section per drawing: its thumbnail (`pictures/<id>.jpg`), the verdict with its
+- one section per drawing: its thumbnail (under `pictures/`, named after its id:
+  `project-2-1.jpg` for `project:2#1`), the verdict with its
   confidence and cost, what it shows, the facts, the request Muse Image was sent, the issues,
   the proposed brief;
 - with `--decide`, the recommendations with flags.
@@ -116,6 +119,9 @@ single drawing, or `--briefs`, a YAML map of id to brief, for briefs the owner e
    contact sheets, `before.jpg` and `after.jpg`, and puts the new reviews into `report.json`
    and `report.md`, so a second `--redraw` of the same drawing starts from the drawing as it is
    now.
+
+The briefs are written before the drawings are bought: when a redraw stops part way,
+`git diff demo/set.yaml` shows what it wrote, and `git checkout demo/set.yaml` takes it back.
 
 A drawing redrawn twice leaves the first redraw's recording behind, never read again; when it
 was never committed, delete it before committing (a fixture load of the set touches every

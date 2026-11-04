@@ -34,6 +34,8 @@ docs/reference/openapi.json
 !/eval/README.md
 # drawing reviews (./dev picture-review)
 /picture-review/
+# Muse Code project skills, linked in from tools/muse/ (docs/development/muse-code.md)
+/.agents/
 
 # runtime
 /data/
