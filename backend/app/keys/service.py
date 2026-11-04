@@ -14,6 +14,8 @@ import hashlib
 import hmac
 import secrets
 import sqlite3
+import threading
+import time
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 
@@ -30,6 +32,11 @@ SCOPES: tuple[Scope, ...] = ("owner", "judge")
 # a judge's code when the command names no limits: a day of trying things, a few dollars
 JUDGE_CALLS_PER_DAY = 20
 JUDGE_MAX_USD = 5.0
+# A call under way, sent and not yet charged, counts as one of the day's calls and as this many
+# dollars until its cost is known: two calls at once from one code never both pass the last
+# check. A hold not settled in HOLD_SECONDS (a call whose answer was lost) is let go.
+HOLD_USD = 0.05
+HOLD_SECONDS = 600.0
 DAILY_CALLS_LINE = "this code's daily calls are used; more tomorrow (UTC)"
 BUDGET_LINE = "this code's budget is spent"
 
@@ -127,6 +134,9 @@ class AccessKeys:
         # the tag of the configured master code (master_tag), so a phone claimed under an
         # earlier one is refused; empty when there is no master code
         self.master = master
+        # the calls under way per code, by when each was let through (this process's own)
+        self._held: dict[int, list[float]] = {}
+        self._held_lock = threading.Lock()
 
     def issue(
         self,
@@ -301,6 +311,32 @@ class AccessKeys:
         found = refusal(key, self.usage(kid))
         if found is not None:
             raise found
+
+    def hold(self, kid: int) -> None:
+        """``check``, counting the calls still under way: let through, the call is held
+        against the code (one call, HOLD_USD) until ``settle``. Raises CodeLimitError."""
+        with self._held_lock:
+            now = time.monotonic()
+            held = [t for t in self._held.get(kid, []) if now - t < HOLD_SECONDS]
+            key = self.current(kid)
+            if key is None:
+                raise CodeLimitError("this code has ended", status=403)
+            used = self.usage(kid)
+            pending = Usage(
+                calls_today=used.calls_today + len(held), usd=used.usd + HOLD_USD * len(held)
+            )
+            found = refusal(key, pending)
+            if found is not None:
+                raise found
+            held.append(now)
+            self._held[kid] = held
+
+    def settle(self, kid: int) -> None:
+        """One call held for this code is over (charged, or never billed)."""
+        with self._held_lock:
+            held = self._held.get(kid)
+            if held:
+                held.pop(0)
 
     def charge(self, kid: int, usd: float) -> None:
         """One live call, at what it cost, on today's line of this code."""

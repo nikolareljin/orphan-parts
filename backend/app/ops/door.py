@@ -18,11 +18,14 @@ recorded_request: ContextVar[bool] = ContextVar("recorded_request", default=Fals
 
 class Meter(Protocol):
     """The limits of the issued code a request is from: ``check`` before a call that bills
-    (raises when the code may not make it), ``charge`` after, with what it cost."""
+    (raises when the code may not make it, and holds the call while it is under way),
+    ``charge`` after, with what it cost, or ``release`` when it failed unbilled."""
 
     def check(self) -> None: ...
 
     def charge(self, usd: float) -> None: ...
+
+    def release(self) -> None: ...
 
 
 code_meter: ContextVar[Meter | None] = ContextVar("code_meter", default=None)

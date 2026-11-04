@@ -298,17 +298,24 @@ class Session:
 
 class CodeMeter:
     """An issued code's limits on the model client (app.ops.door.Meter): read before each call
-    that bills, charged after it with what it cost."""
+    that bills, counting the calls under way, and the call held until it is charged with what
+    it cost or released unbilled."""
 
     def __init__(self, keys: AccessKeys, kid: int) -> None:
         self.keys = keys
         self.kid = kid
 
     def check(self) -> None:
-        self.keys.check(self.kid)
+        self.keys.hold(self.kid)
 
     def charge(self, usd: float) -> None:
-        self.keys.charge(self.kid, usd)
+        try:
+            self.keys.charge(self.kid, usd)
+        finally:
+            self.keys.settle(self.kid)
+
+    def release(self) -> None:
+        self.keys.settle(self.kid)
 
 
 class Gate:

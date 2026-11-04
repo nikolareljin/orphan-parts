@@ -681,10 +681,15 @@ class ModelApiClient:
         meter = code_meter.get()
         if meter is not None:
             meter.check()
-        self.ledger.require_budget()
-        data, tried, ms = await self._request(
-            "POST", endpoint, body, op, files=files, max_attempts=attempts
-        )
+        try:
+            self.ledger.require_budget()
+            data, tried, ms = await self._request(
+                "POST", endpoint, body, op, files=files, max_attempts=attempts
+            )
+        except BaseException:
+            if meter is not None:
+                meter.release()  # nothing to charge: the hold goes
+            raise
         if self.mode == "record":
             self.fixtures.save(endpoint, keyed, op, data)
         return data, False, tried, ms
