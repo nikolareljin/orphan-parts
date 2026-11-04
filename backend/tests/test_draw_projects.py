@@ -21,6 +21,9 @@ from tests.conftest import RECORDED_FIXTURES
 from tests.test_decide import _scenarios
 from tests.test_gate import CODE, gated_settings
 
+# the prompt builder's mechanics, with the drawing parameters of version 1
+pytestmark = pytest.mark.usefixtures("v1_params")
+
 
 @pytest.fixture
 def drawing_settings(tmp_path: Path) -> Settings:

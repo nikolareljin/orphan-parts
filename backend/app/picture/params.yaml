@@ -1,0 +1,50 @@
+# The drawing parameters: what every Muse Image request of Orphan Parts Lens is built from.
+# Read by backend/app/picture/service.py on each drawing (a change takes effect at once) and
+# written by `./dev picture-review --tune --apply`, which bumps `version`; the evaluation of
+# each version is kept in eval/pictures/params-v<version>.json. The guide is
+# docs/guides/picture-review.md#tuning-the-drawing-parameters.
+#
+# A request says, in order: what is drawn and its parts, each with its facts (sizes first);
+# what it does and how it is shown (a view adds its preset); the correction of its kind of
+# project; the drawing's own brief from the demo set; the negatives; the closing rules.
+# A change here changes the requests, so every drawing of the demo set is drawn and recorded
+# again (`./dev picture-review --redraw-set`).
+
+version: 1
+
+# which accepted values of a part are said: those whose name has a `first` word go
+# first, none whose name has a `left_out` word (prices never), at most `item_values`
+# for an item's own picture and `part_values` for a part of a build; `from_name` adds
+# the sizes the owner's name states (18 inch, 480 GB), nothing else of it;
+# `condition` says an item's condition and faults in its own picture
+facts:
+  item_values: 8
+  part_values: 3
+  first: []
+  left_out: []
+  left_out_as_built:
+  - condition
+  - certification
+  from_name: false
+  condition: true
+
+# by item type: how the part looks at its real size, and what a size in its name is
+# called (a monitor's is its screen size)
+kinds: {}
+
+# by project template id: the correction every drawing of that kind of project carries;
+# `match`: words in an item's use or a reuse card's title that mean it
+projects: {}
+
+# words in a view (as the demo set or the app asks it) and what it adds
+views: {}
+
+# said after the brief in every request
+negatives: []
+
+# the closing words of each kind of drawing
+rules:
+  item: on a plain background, no text, no logos, no people
+  use: on a plain background, no text, no logos, no people
+  card: on a plain background, no text, no logos, no people
+  project: finished and in use in a home, no text, no logos, no people
