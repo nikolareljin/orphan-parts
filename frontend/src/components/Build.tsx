@@ -26,6 +26,8 @@ import Modal from './Modal'
 import Markdown from './Markdown'
 import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -183,6 +185,7 @@ function PreferencesForm({ demo, onSaved }: { demo: boolean; onSaved: () => void
     <form className="preferences fields" onSubmit={(e) => void save(e)} aria-label="What I want from a build">
       <div className="row">
         <h3>What I want from a build</h3>
+        <HelpTip entry={demo ? HELP.buildPrefsVisitor : HELP.buildPrefs} />
         {!demo && (
           <button type="button" className="link" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
             {open ? 'Hide' : 'Edit'}
@@ -307,7 +310,10 @@ function Propose({ demo, onProposed }: { demo: boolean; onProposed: (list: Proje
 
   return (
     <form className="propose fields" onSubmit={(e) => void propose(e)} aria-label="Propose projects">
-      <h3>What could I build from what I own?</h3>
+      <div className="section-head">
+        <h3>What could I build from what I own?</h3>
+        <HelpTip entry={demo ? HELP.proposeVisitor : HELP.propose} />
+      </div>
       <p className="muted">
         Muse Spark suggests builds from your inventory and the project templates; only ideas that use items you own are shown. Templates:{' '}
         {templates.map((t) => t.label).join(', ') || '…'}.
@@ -466,6 +472,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         <h3>{project.title}</h3>
         <span className={`badge state ${statusTone(project.status)}`}>{statusLabel(project.status)}</span>
         <span className="muted">{effortLabel(project.effort)}</span>
+        <HelpTip entry={demo ? HELP.projectVisitor : HELP.project} />
         <button type="button" className="link" onClick={onClosed}>
           Close panel
         </button>
@@ -504,7 +511,10 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
 
       {open.length > 0 && (
         <>
-          <h4>Still needed</h4>
+          <div className="section-head">
+            <h4>Still needed</h4>
+            <HelpTip entry={demo ? HELP.stillNeededVisitor : HELP.stillNeeded} />
+          </div>
           <ul aria-label="Missing requirements">
             {open.map((r) => (
               <li key={r.key}>

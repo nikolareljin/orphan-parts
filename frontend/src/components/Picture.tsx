@@ -3,6 +3,8 @@ import { api, type Item, type Picture as Drawn } from '../lib/api'
 import { pictureCaption } from '../lib/picture'
 import GatedImage from './GatedImage'
 import { NeverRun } from './Saved'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -59,7 +61,10 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
   if (failed || (demo && pictures.length === 0)) return null
   return (
     <section className="picture" aria-label="What it could look like">
-      <h4>What it could look like</h4>
+      <div className="section-head">
+        <h4>What it could look like</h4>
+        <HelpTip entry={demo ? HELP.pictureVisitor : HELP.picture} />
+      </div>
       {!demo && !off && (
         <>
           <form className="inline" onSubmit={(e) => void draw(e)}>

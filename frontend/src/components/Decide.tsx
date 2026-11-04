@@ -6,6 +6,8 @@ import { whenText } from '../lib/inventory'
 import { Earlier, NeverRun } from './Saved'
 import Scenarios from './Scenarios'
 import SignInLine from './SignInLine'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -176,7 +178,10 @@ export default function Decide({
 
   return (
     <section className="decide" aria-label="Decide">
-      <h4>Decide</h4>
+      <div className="section-head">
+        <h4>Decide</h4>
+        <HelpTip entry={readOnly ? HELP.decideVisitor : HELP.decide} />
+      </div>
       {error && (
         <p className="error" role="alert">
           {error}

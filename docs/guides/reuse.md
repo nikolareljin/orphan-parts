@@ -9,6 +9,8 @@ what is missing becomes a search you run on Marketplace.
 The pictures come from the demo set (`./dev demo`) on a stack answering from recordings. Each
 step says whether it calls a model. Without the access code the page is read-only (see the end of this section): proposing,
 selecting, drawing and writing a pack are refused with the demo line.
+Look for the **?** next to *What I want from a build*, *What could I build from what I own?*, a
+project's title and *Still needed* for a short note on each.
 
 1. **Say what you want.** On **Build and reuse**, **What I want from a build**, **Edit**: your
    interests, effort, budget and how you buy parts, then **Save**. The skills come from your

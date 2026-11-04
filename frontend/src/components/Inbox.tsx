@@ -102,7 +102,7 @@ export default function Inbox({
         </p>
       )}
       {captures === null && !error && <p className="muted">Loading…</p>}
-      {captures !== null && captures.length === 0 && <p className="muted">Nothing captured yet. Send one from the phone.</p>}
+      {captures !== null && captures.length === 0 && <p className="muted">{demo ? 'Nothing captured yet.' : 'Nothing captured yet. Send one from the phone, or with the form above.'}</p>}
       {captures !== null && captures.length > 0 && (
         <ul className="captures" aria-label="Captures">
           {captures.map((c) => (
