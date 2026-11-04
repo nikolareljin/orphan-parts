@@ -151,7 +151,10 @@ test('a public item shows the visitor neither its location nor its notes', async
     const shown = await page.request.get(`/api/items/${id}/sell-details`)
     expect(shown.status()).toBe(200)
     const text = await shown.text()
-    for (const secret of ['Denver', 'Astoria', '27']) expect(text).not.toContain(secret)
+    for (const secret of ['Denver', 'Astoria']) expect(text).not.toContain(secret)
+    // the price by its field: a bare "27" also turns up in a timestamp of the record
+    const seenDetails = ((await shown.json()) as { details: Record<string, unknown> }).details
+    expect(seenDetails).toMatchObject({ lowest_price: null, reason: '', area: '', asking_price: 35 })
 
     // a session opened in another tab shares the cookie; this page, loaded as the visitor,
     // still offers no save, and the owner's values stay as they were
