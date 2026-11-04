@@ -340,6 +340,7 @@ function ItemPanel({
           <label>
             <span>Plan</span>
             <select
+              disabled={readOnly}
               value={item.intent}
               onChange={(e) =>
                 attempt(() =>
@@ -357,6 +358,7 @@ function ItemPanel({
           <label>
             <span>Availability</span>
             <select
+              disabled={readOnly}
               value={item.availability}
               onChange={(e) =>
                 attempt(() =>
@@ -377,6 +379,7 @@ function ItemPanel({
           <label>
             <span>Profile</span>
             <select
+              disabled={readOnly}
               value={item.profile}
               onChange={(e) => attempt(() => api.items.update(item.id, { profile: e.target.value, version: item.version }))}
             >
@@ -421,7 +424,7 @@ function ItemPanel({
                     </td>
                     <td>
                       {reviewLabel(a.review)}
-                      {a.review === 'proposed' && (
+                      {a.review === 'proposed' && !readOnly && (
                         <span className="actions">
                           <button type="button" className="link" onClick={() => attempt(() => api.items.review(item.id, a.id, 'accepted'))}>
                             Accept
@@ -439,7 +442,7 @@ function ItemPanel({
           </div>
         )}
 
-        <AddField onAdd={(spec) => apply(() => api.items.addField(item.id, spec))} />
+        {!readOnly && <AddField onAdd={(spec) => apply(() => api.items.addField(item.id, spec))} />}
 
         <form
           className="details"
@@ -479,15 +482,17 @@ function ItemPanel({
           )}
         </form>
 
-        <AddComponent
-          onAdd={(spec) =>
-            apply(async () => {
-              // the part is its own record; this page stays on the whole and shows what left
-              await api.items.addComponent(item.id, spec)
-              return api.items.get(item.id)
-            })
-          }
-        />
+        {!readOnly && (
+          <AddComponent
+            onAdd={(spec) =>
+              apply(async () => {
+                // the part is its own record; this page stays on the whole and shows what left
+                await api.items.addComponent(item.id, spec)
+                return api.items.get(item.id)
+              })
+            }
+          />
+        )}
         {item.components.length > 0 && (
           <p className="meta">Separated parts: {item.components.map((c) => `#${c}`).join(', ')}</p>
         )}
@@ -541,9 +546,12 @@ function ItemPanel({
           <HelpTip entry={HELP.publicDemo} />
         </span>
         <span className="item-actions">
-          <button type="button" className="link" onClick={() => void showEvents()}>
-            History
-          </button>
+          {/* the owner's alone: the history carries the notes said with each decision */}
+          {!readOnly && (
+            <button type="button" className="link" onClick={() => void showEvents()}>
+              History
+            </button>
+          )}
           {confirmDelete ? (
             <button type="button" className="danger" onClick={() => void remove()}>
               Yes, delete item #{item.id}
