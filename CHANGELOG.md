@@ -4,6 +4,8 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+## 1.0.0 - 2026-11-04
+
 ### Added
 - Judge codes: `./dev keys [--hosted] issue --label jury --days 10 --scope judge --calls-per-day 20 --max-usd 5 [--recorded]`. An issued code has a scope: `owner` (the default, and every code issued before) keeps the master code's full access; `judge` reads the demo set as the demo visitor does (public records only, private fields left out, photos as the shared copy) and read-only, works in a sandbox of its own (the items, captures, searches and projects it makes carry the code's id, `owner_code`, schema v15; another code's are not there for it and the demo visitor never sees them), never marks anything public, edits the profile or pairs a phone, and is capped: live calls per UTC day and dollars in all, read by the gate before a route that spends runs and by the model client before every call that bills (*this code's daily calls are used; more tomorrow (UTC)*, 429; *this code's budget is spent*, 403), charged beside the spend ledger line. `--recorded` keeps a code on the recorded answers. `./dev keys list` shows each code's scope, calls today and dollars against its caps. `GET /api/access` answers a judge's session with `judge` (what is left); the web app's footer shows *Judge access: N live calls left today, $X left* and the item dialog is read-only on what the code did not add. The master code is unchanged and never limited by these. Guide: *Demo access, Judge codes*.
 - The demo video on YouTube (https://www.youtube.com/watch?v=3USMv4zCeD0), linked from the README, JUDGES.md and the docs' Demo video page beside the smaller copy kept with the docs.
