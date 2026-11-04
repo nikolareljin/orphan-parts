@@ -32,8 +32,9 @@ apart from the inventory, so a demo reset (`./dev demo`, `load_demo`) keeps them
 code has used, and the sessions they opened stay signed in. Records an older build kept in the
 inventory's `access_keys` table move to that file the first time it is opened (the backend's
 start, a `./dev keys` command or a reset, which opens it before the inventory goes), with their
-ids, as owner codes. A code is compared in constant time against the master and every current
-record, so a miss takes as long as a hit.
+ids, as owner codes. A new file is made readable by the service alone (0600). A code is
+compared in constant time against the master and every current record, so a miss takes as
+long as a hit.
 
 ## Judge codes
 
@@ -64,7 +65,18 @@ inventory in `app/inventory/service.py`); the web app only mirrors it:
 - What it makes is its **sandbox**: each item, capture, search and project carries the code's
   record id (`owner_code`). Lists show the demo set's public records and its own; another
   judge's never, and the demo visitor never sees any judge's. A search or project it makes
-  may name a demo item: the item's history gets no line and is not reserved.
+  may name a demo item: the item's history gets no line and is not reserved. On its own
+  project it may swap or remove what is allocated (`PATCH`/`DELETE
+  /api/projects/{id}/allocations/{item_id}`); on the owner's, those are refused like every
+  other change.
+- **What the models hear.** A demo item read for a judge's own work (a search brief, a
+  proposal, Decide cards, an assessment) is the visitor's copy: no location, notes, voice
+  notes or device words, private values masked. Its proposals, packs and search ceilings read
+  the profile as the visitor does, the skills and tools without the owner's budget or radius,
+  and the owner's budget counts the owner's selected projects alone. `POST /api/assess` takes
+  only its own items by id. A check of its photos (and an area shown or hidden on one) is kept
+  apart from the owner's, so a demo photo uploaded again never unmasks the owner's copy. The
+  owner's proposals never draw on what a judge added.
 - Never: marking anything public, the owner's profile (`PUT /api/preferences`), the spend
   ledger, a record's history or a capture's clip on the owner's records, pairing a phone (the
   pairing QR carries the address alone for a judge's session).
@@ -72,7 +84,10 @@ inventory in `app/inventory/service.py`); the web app only mirrors it:
   used, *this code's daily calls are used; more tomorrow (UTC)* (429); the dollars spent,
   *this code's budget is spent* (403). The model client checks again before every call that
   bills (a route may make several) and charges the code beside the spend ledger line, with
-  what the call cost, so a code at its limit sends nothing. Use is kept per code and UTC day in
+  what the call cost, so a code at its limit sends nothing. A call under way counts as one of
+  the day's calls and as $0.05 until it is charged, so calls made at once cannot all pass the
+  last check: the dollars go over by one call at most (per backend process). A recorded code's
+  drawings are not reviewed and redrawn. Use is kept per code and UTC day in
   the codes' file (`key_usage`) and survives a reset; the owner's allowances, the daily cap,
   the pause and `SPEND_CAP_USD` still stand under it. The master code and owner codes have no
   per-code limits.
