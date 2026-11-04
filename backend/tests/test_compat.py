@@ -411,7 +411,8 @@ async def test_a_pick_that_slips_through_is_dropped_with_its_reason(
         bodies.append(json.loads(request.content))
         return httpx.Response(200, json=answer(proposal(items["t510"].id, items["hynix"].id), 1))
 
-    planner = planner_for(live_settings, httpx.MockTransport(handler))
+    off = live_settings.model_copy(update={"compat_prompts": False})
+    planner = planner_for(off, httpx.MockTransport(handler))
     items.update(demo_drawer(planner.inventory))
     [project] = await planner.propose(ProposeRequest(count=1))
     assert [t["name"] for t in bodies[0]["tools"]] == [
