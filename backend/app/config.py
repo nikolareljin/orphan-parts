@@ -72,6 +72,11 @@ class Settings(BaseSettings):
     # a picture of what an item could become, drawn by Muse Image on a click: off unless set,
     # since every click is a paid call
     picture_enabled: bool = False
+    # the compatibility rules in what the models are told: the proposals' check_allocation
+    # tool and each item's compatibility in the inventory they list, the Decide briefs'
+    # pairings, the part a missing requirement's search names. Off, every request is what it
+    # was and the recordings answer as before; the rules still check every result either way
+    compat_prompts: bool = False
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
     # the interactive API docs (/docs, /openapi.json): served on a machine of your own; the

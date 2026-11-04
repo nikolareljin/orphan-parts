@@ -1,0 +1,80 @@
+# Parts known by their model or part number, with what their label does not print. Each
+# `match` is a regular expression (case ignored) tried on the item's accepted model and part
+# numbers and on its name; the first entry that matches gives its attributes, and a value the
+# item itself states wins over these. Only what the maker documents is written here; a part
+# not listed is read from its values alone and stays unknown where they say nothing.
+#
+# memory_type: DDR2, DDR3, DDR3L, DDR4, DDR5; memory_form: DIMM or SO-DIMM; socket: LGA1155,
+# AM4, Slot 1 ...; board_form: ATX, mATX, ITX; slots: what a board takes (PCIe, PCI, AGP,
+# SATA, mSATA, M.2, U.2, IDE); bay: the drive size a laptop takes; drive_form: 2.5, 3.5, M.2,
+# mSATA, U.2; interface: SATA, NVMe, IDE; holds: the drives an adapter or enclosure takes;
+# plug: what an adapter plugs into; logic_volts: a microcontroller board's logic level.
+parts:
+  # desktop boards
+  - label: ASUS P8Z77-V LX
+    match: 'P8Z77-?V ?LX'
+    attrs: {socket: LGA1155, memory_type: DDR3, memory_form: DIMM, board_form: ATX, slots: [PCIe, PCI, SATA]}
+  - label: Gigabyte GA-Z77X-D3H
+    match: 'GA-?Z77X-?D3H'
+    attrs: {socket: LGA1155, memory_type: DDR3, memory_form: DIMM, board_form: ATX, slots: [PCIe, PCI, SATA, mSATA]}
+  - label: ASRock AB350 Pro4
+    match: 'AB350 ?PRO ?4'
+    attrs: {socket: AM4, memory_type: DDR4, memory_form: DIMM, board_form: ATX, slots: [PCIe, SATA, M.2]}
+  # laptops: the machine type is the first four digits of the model on the label
+  - label: Lenovo ThinkPad T510
+    match: '(\bT510\b|TYPE ?(4313|4314|4349|4384)\b|^(4313|4314|4349|4384)-)'
+    attrs: {memory_type: DDR3, memory_form: SO-DIMM, bay: '2.5', interface: SATA}
+  # memory modules: the maker's part-number scheme names the generation and the form
+  - label: SK hynix DDR4 SO-DIMM
+    match: '^HMA\w{1,4}S6'
+    attrs: {memory_type: DDR4, memory_form: SO-DIMM}
+  - label: SK hynix DDR4 DIMM
+    match: '^HMA\w{1,4}U6'
+    attrs: {memory_type: DDR4, memory_form: DIMM}
+  - label: SK hynix DDR3 SO-DIMM
+    match: '^HMT\w{1,4}S6'
+    attrs: {memory_type: DDR3, memory_form: SO-DIMM}
+  - label: SK hynix DDR3 DIMM
+    match: '^HMT\w{1,4}U6'
+    attrs: {memory_type: DDR3, memory_form: DIMM}
+  - label: SK hynix DDR3 chips
+    match: '^H5TQ'
+    attrs: {memory_type: DDR3}
+  - label: SK hynix DDR3L chips
+    match: '^H5TC'
+    attrs: {memory_type: DDR3L}
+  - label: SK hynix DDR4 chips
+    match: '^H5AN'
+    attrs: {memory_type: DDR4}
+  - label: G.Skill DDR3
+    match: '^F3-'
+    attrs: {memory_type: DDR3}
+  - label: G.Skill DDR4
+    match: '^F4-'
+    attrs: {memory_type: DDR4}
+  - label: Patriot DDR3
+    match: '^PVE?3\d'
+    attrs: {memory_type: DDR3}
+  - label: Patriot DDR4
+    match: '^PVE?4\d'
+    attrs: {memory_type: DDR4}
+  - label: ADATA DDR3L SO-DIMM
+    match: '^AM1L'
+    attrs: {memory_type: DDR3L, memory_form: SO-DIMM}
+  - label: ADATA DDR4 SO-DIMM
+    match: '^AO1P'
+    attrs: {memory_type: DDR4, memory_form: SO-DIMM}
+  - label: Ramaxel DDR4 SO-DIMM
+    match: '^RMSA'
+    attrs: {memory_type: DDR4, memory_form: SO-DIMM}
+  # drives
+  - label: Kingston A400 2.5 inch SATA SSD
+    match: '^SA400S37'
+    attrs: {drive_form: '2.5', interface: SATA}
+  - label: Toshiba MQ01 2.5 inch SATA drive
+    match: '^MQ0\d'
+    attrs: {drive_form: '2.5', interface: SATA}
+  # microcontroller boards
+  - label: Arduino UNO R3 and its clones
+    match: '\bUNO ?R3\b'
+    attrs: {logic_volts: '5'}

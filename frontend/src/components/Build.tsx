@@ -21,6 +21,7 @@ import {
   todayIso,
 } from '../lib/projects'
 import { skillsLine } from '../lib/profile'
+import Compatibility from './Compatibility'
 import DrawIt from './DrawIt'
 import Modal from './Modal'
 import Markdown from './Markdown'
@@ -374,6 +375,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
   const [conflicts, setConflicts] = useState<Conflict[]>([])
   const [items, setItems] = useState<ItemSummary[]>([])
   const [picked, setPicked] = useState<Record<string, string>>({})
+  const [swapTo, setSwapTo] = useState<Record<number, string>>({})
   const [packs, setPacks] = useState<Pack[]>([])
   const [ticks, setTicks] = useState<boolean[]>([])
   const [busy, setBusy] = useState(false)
@@ -497,9 +499,46 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
               <strong>{a.item_name}</strong> as {a.requirement.replace(/_/g, ' ')}
               {a.committed ? ' (committed)' : ''}
               {a.why && <span className="muted"> · {a.why}</span>}
+              {active && !demo && (
+                // a wrong pick fixed by hand: another item of yours in its place, or none
+                <span className="fill">
+                  {' '}
+                  <select
+                    aria-label={`Swap ${a.item_name} for`}
+                    value={swapTo[a.item_id] ?? ''}
+                    onChange={(e) => setSwapTo({ ...swapTo, [a.item_id]: e.target.value })}
+                  >
+                    <option value="">swap for…</option>
+                    {items
+                      .filter((i) => !project.allocations.some((b) => b.item_id === i.id))
+                      .map((i) => (
+                        <option key={i.id} value={i.id}>
+                          #{i.id} {i.name} ({i.item_type})
+                        </option>
+                      ))}
+                  </select>{' '}
+                  <button
+                    type="button"
+                    className="link"
+                    disabled={busy || !swapTo[a.item_id]}
+                    onClick={() => void act(() => api.build.swap(id, a.item_id, Number(swapTo[a.item_id])))}
+                  >
+                    Swap
+                  </button>{' '}
+                  <button type="button" className="link" disabled={busy} onClick={() => void act(() => api.build.remove(id, a.item_id))}>
+                    Take it off
+                  </button>
+                </span>
+              )}
             </li>
           ))}
         </ul>
+      )}
+      {(project.compatibility ?? []).length > 0 && (
+        <>
+          <h4>Compatibility</h4>
+          <Compatibility pairings={project.compatibility ?? []} />
+        </>
       )}
 
       {open.length > 0 && (
@@ -510,8 +549,33 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
               <li key={r.key}>
                 {r.label}
                 {r.blocking ? '' : ' (optional)'}
-                {' '}
-                <a href={marketplaceSearch(r.label)} target="_blank" rel="noopener noreferrer" aria-label={`Search Marketplace for ${r.label}`}>
+                {r.incompatible && <span className="error"> · {r.incompatible}</span>}
+                {r.need && <span className="muted"> · what fits: {r.need}</span>}
+                {r.instead && r.instead_id && (
+                  <span className="muted">
+                    {' '}
+                    · yours that fits: {r.instead}
+                    {active && !demo && (
+                      <>
+                        {' '}
+                        <button
+                          type="button"
+                          className="link"
+                          disabled={busy}
+                          onClick={() => void act(() => api.build.fill(id, r.key, Number(r.instead_id)))}
+                        >
+                          Use {r.instead}
+                        </button>
+                      </>
+                    )}
+                  </span>
+                )}{' '}
+                <a
+                  href={marketplaceSearch(r.need || r.label)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Search Marketplace for ${r.label}`}
+                >
                   Search Marketplace
                 </a>
                 {r.search_id !== null ? (

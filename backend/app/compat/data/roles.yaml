@@ -1,0 +1,46 @@
+# The part an item plays in a pairing, read from its type as a template reads kinds: the type
+# ends in one of the kinds, as whole words ("laptop memory" is memory, "adapter card" an
+# adapter). The first role whose kinds fit wins; a type listed under `not` plays none.
+# `defaults` are what the type alone says (a laptop takes SO-DIMM sticks); `hints` add
+# attributes when the type or the name holds the words (a "laptop motherboard" takes SO-DIMMs).
+# The rules that pair the roles are in app/compat/rules.py; the values come from the item's
+# accepted fields, its type, its name and the known parts in parts.yaml.
+not:
+  - powerline adapter
+  - power adapter
+  - ac adapter
+  - wifi adapter
+  - network adapter
+  - bluetooth adapter
+  - hdmi adapter
+  - display adapter
+roles:
+  memory:
+    kinds: [memory, ram, ram module, ram stick, memory stick, memory module, so-dimm, sodimm, dimm]
+    hints:
+      - words: [laptop, notebook, so-dimm, sodimm]
+        attrs: {memory_form: SO-DIMM}
+      - words: [desktop]
+        attrs: {memory_form: DIMM}
+  processor:
+    kinds: [processor, cpu]
+  board:
+    kinds: [motherboard, mainboard, system board]
+    hints:
+      - words: [laptop, notebook]
+        attrs: {memory_form: SO-DIMM}
+  laptop:
+    kinds: [laptop, notebook]
+    defaults: {memory_form: SO-DIMM}
+  drive:
+    kinds: [hard drive, hard disk, hdd, ssd, solid state drive, drive, nvme drive, m.2 drive]
+  adapter:
+    kinds: [adapter, adapter card, expansion card, riser card, drive adapter]
+  enclosure:
+    kinds: [enclosure, drive enclosure, drive caddy, caddy, docking station]
+  card:
+    kinds: [graphics card, video card, gpu, sound card, network card]
+  controller:
+    kinds: [microcontroller board, microcontroller, arduino, development board]
+  module:
+    kinds: [module, shield, prototype shield, breadboard]

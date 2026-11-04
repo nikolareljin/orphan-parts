@@ -111,6 +111,26 @@ you have, usable (not gone, not meant for sale or giving away) and of a kind the
 takes; anything else is dropped and said. Nothing is invented: a template the data does not
 hold is not proposed, and a toaster called "old laptop" does not become a laptop.
 
+**Parts that work together.** A kind is not a fit: the [compatibility
+rules](../concepts/compatibility.md) keep only picks that physically work together (memory of
+the generation and form the laptop or board takes, a processor of the board's socket, a drive
+of the size and interface its bay, port or adapter takes). The blocking requirements are
+checked first, so the laptop stays and the stick that does not fit it goes: on the demo set the
+home automation server's SK hynix DDR4 stick is refused for the DDR3 ThinkPad T510, and the
+memory requirement reads *incompatible: DDR4 SO-DIMM in a DDR3 laptop (ThinkPad T510)*, *what
+fits: DDR3 SO-DIMM laptop memory* and *yours that fits: ADATA 8 GB DDR3L laptop memory* with
+**Use** beside it. Every project lists its pairings under **Compatibility**, each *fits*, *does
+not fit* or *unknown: check*, with why and the fix of a failure (an item of yours that fits, or
+the part with **Search Marketplace**); an adapter with no drive of its kind says so (*nothing
+you own goes in it: it takes an M.2 drive*). **Use it** is refused the same way, with the
+reason.
+
+**Swap or take off.** Each item on a project you can open has *swap for…* with **Swap**, another
+item of yours on the same requirement (usable, of a kind it takes, not committed elsewhere and
+compatible with the rest, else refused with the reason), and **Take it off**, which opens the
+requirement again and frees a committed item. A build under way keeps what it blocks on: swap
+it instead. The demo visitor gets neither.
+
 **Templates are data.** A project is a YAML file under `backend/app/projects/data/`: what it is
 for, the practical result, the effort and skills, a typical cost, the requirements (each with
 the kinds of item that fill it, whether it blocks the build, and the profile a search for it
