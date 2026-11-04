@@ -110,4 +110,4 @@ say "installing $(basename "$apk") on $serial"
 "$adb_cmd" -s "$serial" install -r "$apk" || fail "the install failed. If the phone says the app is from an unknown source, allow installing over USB in Developer options (some makers call it 'Install via USB') and run this again."
 say "opening the app"
 "$adb_cmd" -s "$serial" shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
-say "done. In the app, open the Backend tab and tap 'Scan to pair' (JUDGES.md, step 4)."
+say "done. In the app, open the Backend tab and tap 'Scan to pair' (JUDGES.md, 2.3 Pair the phone)."

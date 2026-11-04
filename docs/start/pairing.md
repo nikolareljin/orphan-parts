@@ -78,7 +78,7 @@ phone cannot reach, and names the two ways out (the computer's network address, 
 
 ## 3. Scan to pair
 
-In the app ([installed](judges.md#install-the-android-app) from the latest release), open the
+In the app ([installed](judges.md#22-install-the-app) from the latest release), open the
 **Backend** tab. Its first card is **Where the inventory lives**, with **Scan to pair**; the icon at the
 top right of every tab opens the same scanner.
 

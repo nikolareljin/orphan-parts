@@ -22,7 +22,7 @@ Meta's Muse models.
 
 | | |
 |---|---|
-| **Run it locally** (the main way to review it) | `git clone`, `cp .env.example .env`, `./dev up`, `./dev demo`, then <http://localhost:5173>: every page open on the demo set's recorded answers, no key, nothing spent. [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/); the guided tour is in [JUDGES.md](JUDGES.md#b-run-it-on-your-own-computer-the-main-path). |
+| **Run it locally** (the main way to review it) | `git clone`, `cp .env.example .env`, `./dev up`, `./dev demo`, then <http://localhost:5173>: every page open on the demo set's recorded answers, no key, nothing spent. [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/); the quick path, with what to click first and the phone, is in [JUDGES.md](JUDGES.md#part-1-start-it-and-see-results). |
 | **Hosted demo** (read-only, temporary) | <https://orphan-parts.pages.dev>: the demo set's recorded answers, read-only. It may be taken down after judging. |
 | **Documentation** | <https://nikolareljin.github.io/orphan-parts/>, with [Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/) |
 | **Demo video** | [on YouTube](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52), also on the docs site: [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/) |
