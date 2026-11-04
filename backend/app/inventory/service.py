@@ -21,6 +21,7 @@ from app.inventory.schema import (
 from app.inventory.store import Store
 from app.measure.schema import Measurement, MeasureResult
 from app.ops.door import live_request, owned_sql, sandbox
+from app.privacy.text import mask_text
 
 OWNER = "owner"
 EDITABLE = (
@@ -236,7 +237,9 @@ class Inventory:
             mine = sandbox() != 0 and item.owner_code == sandbox()
             if public_only and not item.public and not mine:
                 raise NotFoundError(f"no item {item_id}")
-            return item
+            # the owner's item, for a judge's code, is what the demo visitor reads of it
+            # wherever it goes: an answer, a prompt, a rule
+            return item.as_shown() if sandbox() and not mine else item
 
     def set_public(self, item_id: int, public: bool) -> Item:
         """Shown to the demo visitor, or not: the owner's choice, item by item."""
@@ -1030,6 +1033,13 @@ class Inventory:
             )
             return self._capture(conn, int(cur.lastrowid or 0))
 
+    def capture_count(self) -> int:
+        """Every capture kept, whoever made it: what the inbox's cap counts."""
+        with self.store.connect() as conn:
+            return int(
+                conn.execute("SELECT COUNT(*) FROM captures WHERE deleted_at IS NULL").fetchone()[0]
+            )
+
     def captures(self, *, public_only: bool = False) -> list[sqlite3.Row]:
         shown, args = self._shown_sql("", public_only)
         with self.store.connect() as conn:
@@ -1215,12 +1225,14 @@ class Inventory:
         )
 
     def _summary(self, row: sqlite3.Row) -> ItemSummary:
+        # a judge's code reads the owner's names as the demo visitor does, in a prompt too
+        shown = bool(sandbox()) and row["owner_code"] != sandbox()
         return ItemSummary(
             id=row["id"],
-            name=row["name"],
+            name=mask_text(row["name"]) if shown else row["name"],
             item_type=row["item_type"],
             profile=row["profile"],
-            condition=row["condition"],
+            condition=mask_text(row["condition"]) if shown else row["condition"],
             intent=row["intent"],
             availability=row["availability"],
             parent_id=row["parent_id"],

@@ -122,6 +122,32 @@ class Item(ItemSummary):
         " no device it came from recorded; the app asks for the device",
     )
 
+    def as_shown(self) -> "Item":
+        """The item as the demo visitor is answered it, as a value: what a judge's code reads
+        of the owner's item where it is not serialized but put in a prompt or a rule (a search
+        brief, a proposal, an assessment), so the model never hears the private parts either."""
+        return self.model_copy(
+            update={
+                "name": mask_text(self.name),
+                "condition": mask_text(self.condition),
+                "faults": mask_text(self.faults),
+                "tests_done": mask_text(self.tests_done),
+                "accessories": mask_text(self.accessories),
+                "location": "",
+                "notes": "",
+                "assertions": [
+                    shown_assertion(a)
+                    for a in self.assertions
+                    if a.source not in PRIVATE_SOURCES and a.field not in PRIVATE_FIELDS
+                ],
+                "fields": {
+                    k: shown_assertion(a)
+                    for k, a in self.fields.items()
+                    if a.source not in PRIVATE_SOURCES and k not in PRIVATE_FIELDS
+                },
+            }
+        )
+
     # For the demo visitor the location and the notes are blank and the voice notes and the
     # owner's words about the device a part came from are left out, wherever the item is
     # answered; the owner gets it whole.

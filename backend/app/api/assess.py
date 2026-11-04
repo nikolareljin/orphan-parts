@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import AssessorDep
+from app.inventory import JUDGE_READ_ONLY
 from app.match import AssessError, Assessment, AssessRequest
-from app.ops.door import live_request
+from app.ops.door import live_request, sandbox
 from app.ops.gate import DEMO_LINE
 
 router = APIRouter(prefix="/api", tags=["match"])
@@ -19,6 +20,11 @@ def assess(request: AssessRequest, assessor: AssessorDep) -> Assessment:
         # the demo visitor's try is on values written in: an item by its id is the
         # owner's inventory, which the code opens
         raise HTTPException(status_code=403, detail=DEMO_LINE)
+    named = [i for i in (request.need.item_id, request.candidate.item_id) if i is not None]
+    if sandbox() and not all(assessor.inventory.writable(i) for i in named):
+        # a judge's code assesses its own items by id; the owner's measurements and values
+        # are read by the owner alone (values written in are the judge's try)
+        raise HTTPException(status_code=403, detail=JUDGE_READ_ONLY)
     try:
         return assessor.assess(request)
     except AssessError as exc:
