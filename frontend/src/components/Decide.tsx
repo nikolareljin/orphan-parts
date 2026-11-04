@@ -3,6 +3,7 @@ import { api, type Decision, type DecisionChoice, type Item, type Scenarios as S
 import { CHOICES, LEADS_TO, candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from '../lib/decide'
 import { usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
+import Compatibility from './Compatibility'
 import { Earlier, NeverRun } from './Saved'
 import Scenarios from './Scenarios'
 import SignInLine from './SignInLine'
@@ -348,6 +349,7 @@ function UsesView({ uses }: { uses: Uses }) {
               {u.what_it_does}
               {u.needs.length > 0 && <span className="raw">Needs: {u.needs.join('; ')}</span>}
               {u.note && <span className="raw">Check first: {u.note}</span>}
+              <Compatibility pairings={u.compatibility ?? []} label={`Compatibility of ${u.title}`} />
             </li>
           ))}
         </ul>

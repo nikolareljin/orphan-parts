@@ -88,6 +88,7 @@ nav:
       - Evidence model: concepts/evidence.md
       - Verdict ladder: concepts/verdicts.md
       - Category profiles: concepts/profiles.md
+      - Compatibility rules: concepts/compatibility.md
   - Guides:
       - Capture from the phone: guides/capture.md
       - My inventory: guides/inventory.md

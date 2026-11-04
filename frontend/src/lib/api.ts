@@ -837,6 +837,28 @@ export interface Requirement {
   item_id: number | null
   search_id: number | null
   profile: string
+  // why the proposed item was refused (it does not fit the rest), the part that would, and an
+  // item of yours that does
+  incompatible?: string
+  need?: string
+  instead_id?: number | null
+  instead?: string
+}
+
+// One pairing the compatibility rules checked: a part with its host, pass, fail or unknown,
+// why, and the fix of a failure (an item of yours that fits, or the part to search for).
+export type PairingState = 'pass' | 'fail' | 'unknown'
+
+export interface Pairing {
+  rule: string
+  state: PairingState
+  part_id: number | null
+  part: string
+  host_id: number | null
+  host: string
+  reason: string
+  fix: string
+  search: string
 }
 
 export interface Outcome {
@@ -879,6 +901,7 @@ export interface Project {
   steps: string[]
   safety: string[]
   dropped: string[]
+  compatibility?: Pairing[]
   progress: boolean[]
   outcome: Outcome | null
   model: string
@@ -918,6 +941,7 @@ export interface Use {
   needs: string[]
   effort: Effort
   note: string
+  compatibility?: Pairing[]
 }
 
 export interface TemplateFit {
@@ -965,6 +989,9 @@ export interface ReuseScenario {
   extra_parts: string[]
   cost: string
   time: string
+  // "with what you have" checked by the rules: the kinds taken out and why
+  compatibility?: Pairing[]
+  without?: string[]
 }
 
 export interface SellCard {
@@ -1346,6 +1373,10 @@ export const api = {
     searchFor: (id: number, key: string) => sendJson<Project>('POST', `/api/projects/${id}/requirements/${key}/search`),
     fill: (id: number, key: string, itemId: number) =>
       sendJson<Project>('POST', `/api/projects/${id}/requirements/${key}/fill`, { item_id: itemId, why: '' }),
+    // a wrong pick fixed by hand: another item of yours in its place, or none
+    swap: (id: number, itemId: number, withId: number) =>
+      sendJson<Project>('PATCH', `/api/projects/${id}/allocations/${itemId}`, { item_id: withId, why: '' }),
+    remove: (id: number, itemId: number) => sendJson<Project>('DELETE', `/api/projects/${id}/allocations/${itemId}`),
     writePack: (id: number) => sendJson<Pack>('POST', `/api/projects/${id}/pack`),
     packs: (id: number) => getJson<Pack[]>(`/api/projects/${id}/packs`),
     packUrl: (packId: number) => apiUrl(`/api/packs/${packId}.md`),

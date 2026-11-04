@@ -8,6 +8,8 @@ import logging
 import re
 from typing import Any
 
+from app.compat import Pairing, Reading, card_check, shared
+from app.compat.rules import best_hosts, missing_line
 from app.config import Settings
 from app.decide.schema import (
     CHOICES,
@@ -26,6 +28,7 @@ from app.decide.schema import (
     SellCard,
     TemplateFit,
     Use,
+    UseCard,
     Uses,
     UsesWriting,
     Worth,
@@ -104,6 +107,7 @@ def scenarios_brief(
     *,
     profiled: bool,
     others: list[str],
+    fits: list[str] | None = None,
 ) -> str:
     """What the scenarios call is told: the item's confirmed values and details, the owner's
     profile (rated skills, tools, effort, whether they open devices, budget) and the kinds of
@@ -132,10 +136,33 @@ def scenarios_brief(
     lines.extend(f"- {o}" for o in others)
     if not others:
         lines.append("- (nothing else listed)")
+    if fits:
+        lines.extend(fit_lines(fits))
     return "\n".join(lines)
 
 
-def brief(item: Item, known: dict[str, str], prefs: Preferences, fills: list[TemplateFit]) -> str:
+def fit_lines(fits: list[str]) -> list[str]:
+    """The compatibility rules' answers for the item with what else is owned, for a brief:
+    a reuse or a use may rest only on what passes."""
+    out = ["With the other items, by the compatibility rules (nothing may rest on a fail):"]
+    out.extend(f"- {f}" for f in fits)
+    return out
+
+
+def pairing_text(p: Pairing) -> str:
+    """One pairing as a line: the answer, which with which, why and the fix."""
+    who = f"{p.part} with {p.host}" if p.part_id is not None else p.host
+    fix = f"; {p.fix}" if p.fix else ""
+    return f"{p.state}: {who}: {p.reason}{fix}"
+
+
+def brief(
+    item: Item,
+    known: dict[str, str],
+    prefs: Preferences,
+    fills: list[TemplateFit],
+    fits: list[str] | None = None,
+) -> str:
     """What the model is told: confirmed values, the item's condition, faults, tests and
     accessories, the owner's preferences, and the projects the rules already found it fills.
     Nothing else: not the location, the notes, a photo or a search."""
@@ -154,6 +181,8 @@ def brief(item: Item, known: dict[str, str], prefs: Preferences, fills: list[Tem
     lines.extend(f"- {t.label} ({', '.join(t.fills)})" for t in fills)
     if not fills:
         lines.append("- (none)")
+    if fits:
+        lines.extend(fit_lines(fits))
     return "\n".join(lines)
 
 
@@ -283,6 +312,16 @@ def owned_items(texts: list[str], kinds: list[str]) -> list[str]:
     return found
 
 
+def named_kinds(use: dict[str, Any], kinds: list[str]) -> list[str]:
+    """The owned kinds a use names in what it needs or does, as whole words, each once."""
+    text = " ".join([use.get("what_it_does", ""), *use.get("needs", [])]).lower()
+    found: list[str] = []
+    for kind in kinds:
+        if re.search(rf"(?<![a-z0-9]){re.escape(kind.lower())}s?(?![a-z0-9])", text):
+            found.append(kind)
+    return found
+
+
 def _cut_reuse(card: ReuseScenario) -> ReuseScenario:
     return ReuseScenario(
         title=_line(card.title),
@@ -320,6 +359,7 @@ class Decider:
         self.planner = planner
         self.valuer = valuer
         self.finder = finder
+        self.rules = shared()
 
     # --- what it is good for ----------------------------------------------------
 
@@ -327,10 +367,12 @@ class Decider:
         item = self.inventory.get(item_id)
         known = known_fields(item)
         fills = templates_for(item, self.templates)
+        fits = self.fits_for(item) if self.settings.compat_prompts else None
+        text = brief(item, known, self.planner.preferences(), fills, fits)
         result = await self.client.respond_structured(
             UsesWriting,
             model=self.settings.model_spark,
-            input=[user_message(text_part(brief(item, known, self.planner.preferences(), fills)))],
+            input=[user_message(text_part(text))],
             instructions=INSTRUCTIONS,
             effort="low",
             max_output_tokens=MAX_OUTPUT_TOKENS,
@@ -391,6 +433,41 @@ class Decider:
             counts[summary.item_type] = counts.get(summary.item_type, 0) + 1
         return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
+    def owned(self, *, public_only: bool = False) -> list[Reading]:
+        """Every item the owner has (not gone) as the compatibility rules read it; with
+        public_only, the public ones."""
+        rules = self.rules
+        return [
+            rules.read(self.inventory.get(s.id))
+            for s in self.inventory.list_items(public_only=public_only)
+            if s.availability != "gone"
+        ]
+
+    def fits_for(self, item: Item) -> list[str]:
+        """The item with each other owned item a rule pairs it with, as brief lines: the
+        failures first, at most a dozen."""
+        anchor = self.rules.read(item)
+        owned = [o for o in self.owned() if o.id != item.id]
+        found: list[Pairing] = []
+        for other in owned:
+            for part, host, result in best_hosts([anchor, other]):
+                found.append(
+                    Pairing(
+                        rule=result.rule,
+                        state=result.state,
+                        part_id=part.id,
+                        part=part.name,
+                        host_id=host.id,
+                        host=host.name,
+                        reason=result.reason,
+                    )
+                )
+        line = missing_line(anchor, [anchor], owned)
+        if line is not None:
+            found.append(line)
+        found.sort(key=lambda p: {"fail": 0, "unknown": 1, "pass": 2}[p.state])
+        return [pairing_text(p) for p in found[:12]]
+
     def others(self, item_id: int) -> list[str]:
         """The other kinds as the brief names them, "kind (count)"; capped, so a large
         inventory does not become the brief."""
@@ -406,6 +483,7 @@ class Decider:
             self.planner.preferences(),
             profiled=profiled,
             others=self.others(item_id),
+            fits=self.fits_for(item) if self.settings.compat_prompts else None,
         )
         result = await self.client.respond_structured(
             ScenariosWriting,
@@ -462,12 +540,27 @@ class Decider:
         now: the stored row stays as the model wrote it."""
         content = json.loads(row["content"])
         # the demo visitor is told of the public items alone
-        shown = self._kinds(int(row["item_id"]), public_only=for_visitor())
+        item_id = int(row["item_id"])
+        shown = self._kinds(item_id, public_only=for_visitor())
         kinds = [kind for kind, _ in shown]
-        content["reuse"] = [
-            {**card, "with_items": owned_items(card["with_items"], kinds)}
-            for card in content["reuse"]
-        ]
+        owned = self.owned(public_only=for_visitor())
+        anchor = next((o for o in owned if o.id == item_id), None)
+        if anchor is None:
+            anchor = self.rules.read(self.inventory.get(item_id))
+        reuse = []
+        for card in content["reuse"]:
+            # "with what you have" holds only what works together: a kind whose items do not
+            # is taken out, with its fix
+            checked = card_check(anchor, owned_items(card["with_items"], kinds), owned)
+            reuse.append(
+                {
+                    **card,
+                    "with_items": checked.kept,
+                    "without": checked.dropped,
+                    "compatibility": [p.model_dump() for p in checked.pairings],
+                }
+            )
+        content["reuse"] = reuse
         return Scenarios(
             id=int(row["id"]),
             item_id=int(row["item_id"]),
@@ -481,6 +574,19 @@ class Decider:
 
     def uses_of(self, row: Any) -> Uses:
         content = json.loads(row["content"])
+        item_id = int(row["item_id"])
+        owned = self.owned(public_only=for_visitor())
+        anchor = next((o for o in owned if o.id == item_id), None)
+        if anchor is None:
+            anchor = self.rules.read(self.inventory.get(item_id))
+        kinds = sorted({o.item_type for o in owned if o.id != item_id}, key=len, reverse=True)
+        content["uses"] = [
+            UseCard(
+                **use,
+                compatibility=card_check(anchor, named_kinds(use, kinds), owned).pairings,
+            )
+            for use in content["uses"]
+        ]
         return Uses(
             id=int(row["id"]),
             item_id=int(row["item_id"]),

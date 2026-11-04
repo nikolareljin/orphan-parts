@@ -73,7 +73,7 @@ screen and one above the other on a phone:
 | Card | What it says |
 |---|---|
 | Keep and fix | the likely problem or problems behind the condition and faults you recorded (or that it works as it is), the repair steps written for your level, how hard that is for you (easy, moderate or hard) and why, naming the skill it rests on, the parts with a rough cost each, the total and the time; or that it is not worth fixing, and why |
-| Reuse it | two or three things to make of it that fit your skills and tools, each naming the other items you own it would use (shown as the kinds you have now, without a count; a name that matches nothing you own is left out), how hard it is for you, the extra parts with their cost, and the time |
+| Reuse it | two or three things to make of it that fit your skills and tools, each naming the other items you own it would use (shown as the kinds you have now, without a count; a name that matches nothing you own is left out, and so is a kind none of whose items works with this one, see below), how hard it is for you, the extra parts with their cost, and the time |
 | Sell or give away | what makes it sellable as it stands and what listing and handing it over takes; the latest price guidance in a line when there is one, else **Get price guidance**, which asks the price route in your profile's currency (the scenarios themselves never price the item) |
 
 Above the cards, one recommendation (keep and fix, reuse, sell or give away) with a one-line
@@ -129,6 +129,24 @@ ones before them (version, date, model) to pick and read again; the ideas the sa
 **Earlier ideas**. Before the cards or the ideas were ever asked, the panel says what they are
 for, what they give back and what one asking costs (*One Muse Spark call, about $0.01.*). The
 demo visitor's **Ask again** is refused, as on every other call that spends.
+
+### With what you have, checked
+
+Each reuse card's *With what you have* is checked by the [compatibility
+rules](../concepts/compatibility.md) against what you own, with no model call: the card's item
+with one item of each kind it names, chosen so the set works together as well as it can. A kind
+none of whose items works with the rest is taken out and named (*Not with what you have:
+processor (does not fit)*), and the card lists each pairing as *fits*, *does not fit* or
+*unknown: check*, with why and the fix: an item of yours that fits, else the part to search for
+with **Search Marketplace**. On the demo set, the desktop boards' and the memory sticks' desktop
+builds lose the processor (*a Slot 1 processor does not fit an LGA1155 board; needs an LGA1155
+processor — not in your inventory; search it*), the cards that build the UNO and its modules
+into the M.2 SSD enclosure lose the enclosure (*needs a project box*), and the M.2 adapters'
+cards say the drive they are for is missing (*nothing you own goes in it: it takes a U.2
+drive*). An unknown (a laptop whose memory is not recorded) stays *unknown: check*, never a
+pass. The stored cards stay as the model wrote them; the check is made each time they are read,
+so a value accepted since changes it. Each idea under *What it is good for* lists the pairings
+of the items of yours it names in the same way.
 
 ### The rows
 

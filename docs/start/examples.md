@@ -68,12 +68,13 @@ from above.
 
 ![Three Muse Image drawings of the custom NAS in a home: the case on a shelf, a close-up of how the parts fit together, and from above](../assets/shots/examples/02-nas-drawings.png)
 
-Muse Spark's proposal: the ASRock AB350 Pro4 board, the Patriot Viper DDR4 stick, the Kingston
-A400 SSD and the PCIe M.2 card from the inventory, each with why; the processor, power supply
-and case still needed, each with its Marketplace search; what to check, the safety notes and
-the steps.
+Muse Spark's proposal: the ASUS P8Z77-V LX board, the DDR3-1600 desktop stick, the Kingston
+A400 SSD, the Maxtor 3.5 inch drive and the PCIe M.2 card from the inventory, each with why;
+the processor (an LGA1155 one, as the compatibility rules name it), power supply and case still
+needed, each with its Marketplace search; how the parts pair; what to check, the safety notes
+and the steps.
 
-![The NAS project panel: From your inventory with four committed items (ASRock board, Patriot DDR4, Kingston SSD, PCIe M.2 card), Still needed with Search Marketplace links and the searches opened, Check before starting, Safety, Steps](../assets/shots/examples/03-nas-panel.png)
+![The NAS project panel: From your inventory with five committed items (ASUS board, DDR3 stick, Kingston SSD, Maxtor drive, PCIe M.2 card), the compatibility lines, Still needed with Search Marketplace links and the searches opened, Check before starting, Safety, Steps](../assets/shots/examples/03-nas-panel.png)
 
 The build pack is written by the rules from the project and the accepted values, no model call.
 
@@ -95,7 +96,7 @@ The build pack is written by the rules from the project and the accepted values,
 
 ![Three Muse Image drawings of the home automation server: the ThinkPad running the lights and schedules, a close-up, and from above](../assets/shots/examples/02-automation-drawings.png)
 
-![The home automation server panel: the ThinkPad T510 as the server and the SK hynix 8 GB stick as its memory; a wired link and a Zigbee or Z-Wave stick still needed (optional), each with Search Marketplace; the checks and steps](../assets/shots/examples/03-automation-panel.png)
+![The home automation server panel: the ThinkPad T510 as the server and the ADATA 8 GB DDR3L stick as its memory; a wired link and a Zigbee or Z-Wave stick still needed (optional), each with Search Marketplace; the checks and steps](../assets/shots/examples/03-automation-panel.png)
 
 The other three packs: [arcade](../assets/shots/examples/04-arcade-pack.png),
 [calendar](../assets/shots/examples/04-calendar-pack.png),
@@ -157,8 +158,8 @@ The visitor reads the same drafts: [the 9500 GT](../assets/shots/examples/61-vis
 
 ## Buyer flow: find and rank
 
-A search plan by Muse Spark, written for a part the NAS still needs (a processor for the
-ASRock board's AM4 socket): phrasings, each a Marketplace search link with the top price, why each one
+A search plan by Muse Spark, written for a part the NAS still needs (an LGA1155 processor
+for the ASUS board): phrasings, each a Marketplace search link with the top price, why each one
 finds listings the others miss, and the match pattern.
 
 ![Plan the search for the NAS processor: four Muse Spark phrasings as Marketplace links with Copy and why, the pattern and the words to skip](../assets/shots/examples/30-nas-cpu-plan.png)
