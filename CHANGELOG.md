@@ -49,6 +49,7 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 - `minimatch` is held at `^11.0.1` through `overrides` in `frontend/package.json` (Dependabot alert #59, a regular-expression denial of service below 11.0.1): it reached the web app's lint tooling only, as 3.1.5 under ESLint and `@eslint/*` and 10.2.6 under `@typescript-eslint/typescript-estree`, with no fixed release of either. Both now resolve 11.0.4; ESLint still lints and honors its ignores, and `npm audit` reports nothing.
 
 ### Fixed
+- A refused setting no longer shows the values it was given: `get_settings()` raises a `SettingsError` that names each field and why, so the demo loader, the evaluation and any other command that prints the error, or a traceback, never echo a part of `MODEL_API_KEY`.
 - The documentation site publishes its screenshots again: the rule that keeps the screenshot tool (`docs/shots/`) out of the site also matched `docs/assets/shots/`, so every guide picture was missing; it now names the top-level folder only (`/shots/`).
 
 ## 0.3.2 - 2026-11-02
