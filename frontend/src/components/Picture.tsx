@@ -63,7 +63,7 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
     <section className="picture" aria-label="What it could look like">
       <div className="section-head">
         <h4>What it could look like</h4>
-        <HelpTip entry={HELP.picture} />
+        <HelpTip entry={demo ? HELP.pictureVisitor : HELP.picture} />
       </div>
       {!demo && !off && (
         <>

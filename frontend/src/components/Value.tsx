@@ -107,7 +107,7 @@ export default function Value({
     <section className="value" aria-label="What is it worth?">
       <div className="section-head">
         <h4>What is it worth?</h4>
-        <HelpTip entry={HELP.value} />
+        <HelpTip entry={readOnly ? HELP.valueVisitor : HELP.value} />
       </div>
       {readOnly ? (
         <>

@@ -1,9 +1,10 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { docsUrl, helpNext, type HelpAction, type HelpEntry } from '../lib/help'
 
 // A small "?" beside a heading or a control: a click or a tap opens a short note on what can be
 // done there and how, with a link to the matching page of the docs. It is a disclosure, not a
-// dialog: Escape, a click outside or the close button ends it, and focus goes back to the "?".
+// dialog: Escape, a click outside, tabbing past it or the close button ends it; Escape and the
+// close button put focus back on the "?".
 // Inside the item dialog, Escape closes the note and leaves the dialog open.
 export default function HelpTip({ entry, defaultOpen = false }: { entry: HelpEntry; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -55,8 +56,15 @@ export default function HelpTip({ entry, defaultOpen = false }: { entry: HelpEnt
     act('escape', true)
   }
 
+  // tabbing on past the note closes it, so a later Escape reaches the dialog it may sit in;
+  // focus that leaves the page (the docs link opens a tab) has no target and keeps it open
+  function onBlur(event: FocusEvent) {
+    const next = event.relatedTarget as Node | null
+    if (open && next && wrap.current && !wrap.current.contains(next)) setOpen((was) => helpNext(was, 'outside'))
+  }
+
   return (
-    <span className="help-tip" ref={wrap} onKeyDown={onKeyDown}>
+    <span className="help-tip" ref={wrap} onKeyDown={onKeyDown} onBlur={onBlur}>
       <button
         ref={toggle}
         type="button"

@@ -245,7 +245,7 @@ export default function Listing({
       <section className="listing" aria-label="Prepare to sell or give away">
         <div className="section-head">
           <h4 tabIndex={-1}>Prepare to sell or give away</h4>
-          <HelpTip entry={HELP.sell} />
+          <HelpTip entry={HELP.sellVisitor} />
         </div>
         <p className="hint limit">{HARD_LIMIT}</p>
         {draftsRead && !draft && <p className="muted">No listing was drafted for this item.</p>}

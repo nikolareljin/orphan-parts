@@ -52,7 +52,7 @@ function ProfileShown() {
       <p className="muted">{INTRO}</p>
       <div className="section-head">
         <h3>Skills</h3>
-        <HelpTip entry={HELP.skills} />
+        <HelpTip entry={HELP.skillsVisitor} />
       </div>
       <div className="table-wrap">
         <table className="evidence skills" aria-label="Skills">

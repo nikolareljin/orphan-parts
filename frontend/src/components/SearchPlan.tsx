@@ -111,7 +111,7 @@ export default function SearchPlan({
       <section aria-label="Plan the search">
         <div className="section-head">
           <h4>Plan the search</h4>
-          <HelpTip entry={HELP.plan} />
+          <HelpTip entry={demo ? HELP.planVisitor : HELP.plan} />
         </div>
         <MarketplaceLimit />
         {plan && plan.phrasings.length > 0 && (
@@ -160,7 +160,7 @@ export default function SearchPlan({
       <section aria-label="Bring back listings">
         <div className="section-head">
           <h4>Bring back listings</h4>
-          <HelpTip entry={HELP.bringBack} />
+          <HelpTip entry={demo ? HELP.bringBackVisitor : HELP.bringBack} />
         </div>
         {demo ? (
           <SignInLine what="Bring back listings" />

@@ -180,7 +180,7 @@ export default function Decide({
     <section className="decide" aria-label="Decide">
       <div className="section-head">
         <h4>Decide</h4>
-        <HelpTip entry={HELP.decide} />
+        <HelpTip entry={readOnly ? HELP.decideVisitor : HELP.decide} />
       </div>
       {error && (
         <p className="error" role="alert">

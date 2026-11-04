@@ -312,7 +312,7 @@ function ItemPanel({
       <div className="item-section" data-section="facts">
         <div className="section-head">
           <h4>Facts</h4>
-          <HelpTip entry={HELP.facts} />
+          <HelpTip entry={readOnly ? HELP.factsVisitor : HELP.facts} />
         </div>
         {asksForParent(item) ? (
           <ParentPrompt item={item} readOnly={readOnly} save={(action) => apply(action)} />
@@ -663,7 +663,7 @@ function ItemPhotos({ id, device = false, owner = false }: { id: number; device?
               </li>
             ))}
           </ul>
-          <HelpTip entry={HELP.photos} />
+          <HelpTip entry={owner ? HELP.photos : HELP.photosVisitor} />
         </div>
       )}
       {owner && opened && opened.areas.length > 0 && (

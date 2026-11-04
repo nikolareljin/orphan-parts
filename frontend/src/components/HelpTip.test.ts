@@ -58,6 +58,18 @@ describe('HELP', () => {
     }
   })
 
+  it('tells the visitor what they see, never a button only the owner has', () => {
+    const visitor = entries.filter(([key]) => key.endsWith('Visitor'))
+    expect(visitor.length).toBeGreaterThan(0)
+    for (const [key, e] of visitor) {
+      for (const owners of ['Show or Hide', 'Accept or Reject', 'Add what you know', 'Choose this', 'Ask again', 'Get price guidance', 'Write the draft', 'Draw it', 'Plan the search', 'Check fit', 'Use it'])
+        expect(e.text, key).not.toContain(owners)
+      // the same spot keeps the same name for both
+      const ownerEntry = (HELP as Record<string, HelpEntry>)[key.replace(/Visitor$/, '')]
+      expect(ownerEntry?.topic, key).toBe(e.topic)
+    }
+  })
+
   it('links each note to a page of the docs site', () => {
     for (const [key, e] of entries) {
       expect(e.doc, key).toBeTruthy()

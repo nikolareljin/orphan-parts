@@ -185,7 +185,7 @@ function PreferencesForm({ demo, onSaved }: { demo: boolean; onSaved: () => void
     <form className="preferences fields" onSubmit={(e) => void save(e)} aria-label="What I want from a build">
       <div className="row">
         <h3>What I want from a build</h3>
-        <HelpTip entry={HELP.buildPrefs} />
+        <HelpTip entry={demo ? HELP.buildPrefsVisitor : HELP.buildPrefs} />
         {!demo && (
           <button type="button" className="link" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
             {open ? 'Hide' : 'Edit'}
@@ -312,7 +312,7 @@ function Propose({ demo, onProposed }: { demo: boolean; onProposed: (list: Proje
     <form className="propose fields" onSubmit={(e) => void propose(e)} aria-label="Propose projects">
       <div className="section-head">
         <h3>What could I build from what I own?</h3>
-        <HelpTip entry={HELP.propose} />
+        <HelpTip entry={demo ? HELP.proposeVisitor : HELP.propose} />
       </div>
       <p className="muted">
         Muse Spark suggests builds from your inventory and the project templates; only ideas that use items you own are shown. Templates:{' '}
@@ -472,7 +472,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         <h3>{project.title}</h3>
         <span className={`badge state ${statusTone(project.status)}`}>{statusLabel(project.status)}</span>
         <span className="muted">{effortLabel(project.effort)}</span>
-        <HelpTip entry={HELP.project} />
+        <HelpTip entry={demo ? HELP.projectVisitor : HELP.project} />
         <button type="button" className="link" onClick={onClosed}>
           Close panel
         </button>
@@ -513,7 +513,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         <>
           <div className="section-head">
             <h4>Still needed</h4>
-            <HelpTip entry={HELP.stillNeeded} />
+            <HelpTip entry={demo ? HELP.stillNeededVisitor : HELP.stillNeeded} />
           </div>
           <ul aria-label="Missing requirements">
             {open.map((r) => (
