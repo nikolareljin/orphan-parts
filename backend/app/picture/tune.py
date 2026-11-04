@@ -605,6 +605,11 @@ class Scored(BaseModel):
 
 class Evaluation(BaseModel):
     params_version: int
+    stage: str = Field(
+        default="",
+        description="a later score of the same version: the reviewer's facts changed, or the"
+        " best of several candidates kept",
+    )
     at: str
     report_at: str
     reviewer: str
@@ -622,10 +627,11 @@ def recording_of(image_model: str, asked: str) -> str:
     return request_key(IMAGES, picture_body(image_model, asked)) if asked else ""
 
 
-def evaluation(report: Any, params: DrawingParams, image_model: str) -> Evaluation:
+def evaluation(report: Any, params: DrawingParams, image_model: str, stage: str = "") -> Evaluation:
     agg = aggregate(report, params.version)
     return Evaluation(
         params_version=params.version,
+        stage=stage,
         at=datetime.now(tz=UTC).isoformat(timespec="seconds"),
         report_at=report.at,
         reviewer=report.model,
@@ -649,15 +655,23 @@ def evaluation(report: Any, params: DrawingParams, image_model: str) -> Evaluati
     )
 
 
-def eval_path(folder: Path, version: int) -> Path:
-    return folder / f"params-v{version}.json"
+STAGE = re.compile(r"[a-z0-9][a-z0-9-]{0,23}")
+
+
+def eval_path(folder: Path, version: int, stage: str = "") -> Path:
+    return folder / (f"params-v{version}-{stage}.json" if stage else f"params-v{version}.json")
 
 
 def history(folder: Path) -> list[Evaluation]:
+    """Every evaluation kept, by version, a version's later stages after its first score."""
     found = []
     for path in sorted(folder.glob("params-v*.json")):
         found.append(Evaluation.model_validate_json(path.read_text(encoding="utf-8")))
-    return sorted(found, key=lambda e: e.params_version)
+    return sorted(found, key=lambda e: (e.params_version, bool(e.stage), e.at))
+
+
+def label(e: Evaluation) -> str:
+    return f"params v{e.params_version}" + (f" {e.stage}" if e.stage else "")
 
 
 VERDICTS = ("matches", "partly", "wrong")
@@ -674,7 +688,7 @@ CATEGORIES = (
 
 def table(evals: list[Evaluation]) -> str:
     """The versions side by side: verdicts, then issues by category."""
-    head = "| | " + " | ".join(f"params v{e.params_version}" for e in evals) + " |"
+    head = "| | " + " | ".join(label(e) for e in evals) + " |"
     lines = [head, "|---|" + "---|" * len(evals)]
     lines.append("| drawings | " + " | ".join(str(e.drawings) for e in evals) + " |")
     for v in VERDICTS:
@@ -720,7 +734,7 @@ def history_block(evals: list[Evaluation]) -> str:
         moved = changes(evals[-2], evals[-1])
         if moved:
             lines += [
-                f"Moved from v{evals[-2].params_version} to v{evals[-1].params_version}:",
+                f"Moved from {label(evals[-2])} to {label(evals[-1])}:",
                 "",
                 *[f"- {m}" for m in moved],
                 "",
