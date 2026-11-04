@@ -12,6 +12,7 @@ from pydantic import (
     model_serializer,
 )
 
+from app.compat import Pairing
 from app.inventory.schema import Intent, ItemSummary
 from app.ops.door import for_visitor
 from app.privacy.text import mask_tree
@@ -49,6 +50,14 @@ class Use(BaseModel):
     note: str
 
 
+class UseCard(Use):
+    """A use as shown: what the model wrote, with the compatibility rules' pairings."""
+
+    compatibility: list[Pairing] = Field(
+        default=[], description="the item with what you own that the use names, checked"
+    )
+
+
 class UsesWriting(BaseModel):
     """Strict output schema of a uses call: every property required, no extras."""
 
@@ -79,6 +88,17 @@ class ReuseScenario(BaseModel):
     extra_parts: list[str] = Field(description="each part with its rough cost")
     cost: str
     time: str
+
+
+class ReuseCard(ReuseScenario):
+    """A reuse scenario as shown: "with what you have" checked by the compatibility rules. A
+    kind none of whose items works with the rest is taken out of with_items, named in
+    without, with its fix in the pairings."""
+
+    compatibility: list[Pairing] = Field(default=[])
+    without: list[str] = Field(
+        default=[], description="kinds the card named that do not work with the rest"
+    )
 
 
 class SellCard(BaseModel):
@@ -114,7 +134,7 @@ class Scenarios(BaseModel):
     )
     profiled: bool = Field(description="written for the owner's profile, not an average person")
     keep_fix: KeepFix
-    reuse: list[ReuseScenario]
+    reuse: list[ReuseCard]
     sell: SellCard
     recommended: Recommendation
     reason: str
@@ -122,6 +142,14 @@ class Scenarios(BaseModel):
     from_fixture: bool
     cost_usd: float
     at: str
+
+    @field_validator("reuse", mode="before")
+    @classmethod
+    def _cards(cls, value: object) -> object:
+        # a scenario as the model wrote it reads as a card with nothing checked yet
+        if isinstance(value, list):
+            return [v.model_dump() if isinstance(v, BaseModel) else v for v in value]
+        return value
 
     # for the demo visitor, a private value written into any of its text is masked
     @model_serializer(mode="wrap")
@@ -145,11 +173,19 @@ class Uses(BaseModel):
     item_version: int
     stale: bool = Field(description="the item changed since the answer was written")
     templates: list[TemplateFit]
-    uses: list[Use] = Field(description="the model's proposals, at most three")
+    uses: list[UseCard] = Field(description="the model's proposals, at most three")
     model: str
     from_fixture: bool
     cost_usd: float
     at: str
+
+    @field_validator("uses", mode="before")
+    @classmethod
+    def _cards(cls, value: object) -> object:
+        # a use as the model wrote it reads as a card with nothing checked yet
+        if isinstance(value, list):
+            return [v.model_dump() if isinstance(v, BaseModel) else v for v in value]
+        return value
 
     # for the demo visitor, a private value written into any of its text is masked
     @model_serializer(mode="wrap")

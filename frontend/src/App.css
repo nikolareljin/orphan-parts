@@ -2444,3 +2444,19 @@ button.link.help-tip-close {
 .item-footer .check-with-help .check {
   flex: 0 1 auto;
 }
+
+/* the compatibility rules' lines: one pairing a line, small, the badge first */
+.compat {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.compat li {
+  margin: 0.15rem 0;
+}
+
+.compat .badge {
+  margin-left: 0;
+}

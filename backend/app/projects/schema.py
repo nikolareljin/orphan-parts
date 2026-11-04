@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from app.compat import Pairing
 from app.ops.door import for_visitor
 from app.privacy.text import mask_text
 from app.projects.skills import STARTER_SKILLS, RatedSkill, rated_skills
@@ -142,6 +143,16 @@ class Requirement(BaseModel):
     item_id: int | None
     search_id: int | None = Field(description="the search opened for it, when missing")
     profile: str
+    incompatible: str = Field(
+        default="", description="why the item proposed for it was refused: it does not fit"
+    )
+    need: str = Field(
+        default="", description="the part that fits the rest of the build, when the rules know"
+    )
+    instead_id: int | None = Field(
+        default=None, description="an item of yours that fits it and works with the rest"
+    )
+    instead: str = Field(default="", description="that item's name")
 
 
 class OutcomeBase(BaseModel):
@@ -225,6 +236,9 @@ class Project(BaseModel):
     steps: list[str]
     safety: list[str]
     dropped: list[str] = Field(description="lines the model wrote that the inventory does not back")
+    compatibility: list[Pairing] = Field(
+        default=[], description="each pairing of the items on it, checked by the rules"
+    )
     progress: list[bool] = Field(default=[], description="one flag per step")
     outcome: Outcome | None = None
     model: str
@@ -293,7 +307,11 @@ BUDGET_LINE = "Across the selected projects: "
 OUTCOME_HEADING = "## Outcome"
 INVENTORY_HEADING = "## From the inventory"
 NEEDED_HEADING = "## Still needed"
+COMPAT_HEADING = "## Compatibility"
 SEARCH_MARK = ". Search: "
+# what names another item of the owner's, not on the project: left out for the visitor
+YOURS_MARK = "; yours that fits: "
+USE_MARK = "; use "
 # app.listing.voice.FIELD as a pack writes it
 VOICE_LINE = "  - condition notes: "
 
@@ -323,6 +341,13 @@ def visitor_markdown(markdown: str) -> str:
         if section == INVENTORY_HEADING and line.startswith(VOICE_LINE):
             skipping = ("- ", "  - ")
             continue
+        if section in (NEEDED_HEADING, COMPAT_HEADING) and line.startswith("- "):
+            # another item of the owner's, named as the one that fits, is not the visitor's
+            for mark in (YOURS_MARK, USE_MARK):
+                at = line.find(mark)
+                if at >= 0:
+                    end = line.find(SEARCH_MARK, at)
+                    line = line[:at] + (line[end:] if end >= 0 else "")
         if section == NEEDED_HEADING and line.startswith("- "):
             cut = line.find(SEARCH_MARK)
             if cut >= 0:
@@ -342,6 +367,13 @@ class SelectRequest(BaseModel):
 
 class FillRequest(BaseModel):
     """An item of yours for a requirement the proposal left open: bought since, or overlooked."""
+
+    item_id: int = Field(ge=1)
+    why: str = Field(default="", max_length=LINE_MAX)
+
+
+class AllocationSwap(BaseModel):
+    """Another item of yours in place of one on the project, for the same requirement."""
 
     item_id: int = Field(ge=1)
     why: str = Field(default="", max_length=LINE_MAX)

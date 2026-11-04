@@ -72,6 +72,12 @@ class Settings(BaseSettings):
     # a picture of what an item could become, drawn by Muse Image on a click: off unless set,
     # since every click is a paid call
     picture_enabled: bool = False
+    # the compatibility rules in what the models are told: the proposals' check_allocation
+    # tool and each item's compatibility in the inventory they list, the Decide briefs'
+    # pairings, the part a missing requirement's search names. Off, every request is what it
+    # was (COMPAT_PROMPTS=0); the recordings are made with it on. The rules check every result
+    # either way
+    compat_prompts: bool = True
     # each drawing the owner asks for checked once by Muse Spark against its facts and, when
     # it shows another device or the main part at the wrong size, drawn once more with the
     # review's brief (PICTURE_REVIEW_GATE); unset: on when the calls are live, off in fixture

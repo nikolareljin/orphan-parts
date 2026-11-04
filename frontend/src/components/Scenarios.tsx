@@ -12,6 +12,7 @@ import {
 } from '../lib/decide'
 import { usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
+import Compatibility from './Compatibility'
 import DrawIt from './DrawIt'
 import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
@@ -221,6 +222,8 @@ function ReuseBody({ set, demo }: { set: ScenarioSet; demo: boolean }) {
           <strong>{r.title}</strong>
           <p>{r.what_it_does}</p>
           {r.with_items.length > 0 && <p className="muted">With what you have: {r.with_items.join(', ')}</p>}
+          {(r.without ?? []).length > 0 && <p className="muted">Not with what you have: {(r.without ?? []).join(', ')} (does not fit)</p>}
+          <Compatibility pairings={r.compatibility ?? []} label={`Compatibility of ${r.title}`} />
           <Difficulty level={r.difficulty} why={r.why} />
           {r.extra_parts.length > 0 && <p className="muted">Extra parts: {r.extra_parts.join('; ')}</p>}
           <p className="muted">

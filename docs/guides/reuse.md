@@ -90,7 +90,7 @@ Image drew them (recorded answers; the hosted demo shows them read-only). More o
 
 ![The arcade coffee table drawn by Muse Image in a home: as proposed, up close, and from above](../assets/shots/examples/02-arcade-drawings.png)
 
-![The custom NAS selected: the ASRock board, Patriot DDR4, Kingston SSD and PCIe M.2 card committed, each with why; three missing parts each with Search Marketplace and its search, the checks, safety notes and steps](../assets/shots/examples/03-nas-panel.png)
+![The custom NAS selected: the ASUS board, the DDR3 stick, the Kingston SSD, the Maxtor drive and the PCIe M.2 card committed, each with why; three missing parts each with Search Marketplace and its search, the checks, safety notes and steps](../assets/shots/examples/03-nas-panel.png)
 
 ![The NAS build pack, version 1, read in place](../assets/shots/examples/04-nas-pack.png)
 
@@ -112,6 +112,27 @@ The rules keep a proposal only where the inventory backs it: an allocation must 
 you have, usable (not gone, not meant for sale or giving away) and of a kind the requirement
 takes; anything else is dropped and said. Nothing is invented: a template the data does not
 hold is not proposed, and a toaster called "old laptop" does not become a laptop.
+
+**Parts that work together.** A kind is not a fit: the [compatibility
+rules](../concepts/compatibility.md) keep only picks that physically work together (memory of
+the generation and form the laptop or board takes, a processor of the board's socket, a drive
+of the size and interface its bay, port or adapter takes). The blocking requirements are
+checked first, so the laptop stays and the stick that does not fit it goes: an SK hynix DDR4
+stick picked for the DDR3 ThinkPad T510 is refused, and the memory requirement reads
+*incompatible: DDR4 SO-DIMM in a DDR3 laptop (ThinkPad T510)*, *what fits: DDR3 SO-DIMM laptop
+memory* and *yours that fits: ADATA 8 GB DDR3L laptop memory* with **Use** beside it. Muse
+Spark sees the same refusal before it answers (the `check_allocation` tool), so on the demo set
+it puts the ADATA DDR3L stick in the T510 itself. Every project lists its pairings under **Compatibility**, each *fits*, *does
+not fit* or *unknown: check*, with why and the fix of a failure (an item of yours that fits, or
+the part with **Search Marketplace**); an adapter with no drive of its kind says so (*nothing
+you own goes in it: it takes an M.2 drive*). **Use it** is refused the same way, with the
+reason.
+
+**Swap or take off.** Each item on a project you can open has *swap for…* with **Swap**, another
+item of yours on the same requirement (usable, of a kind it takes, not committed elsewhere and
+compatible with the rest, else refused with the reason), and **Take it off**, which opens the
+requirement again and frees a committed item. A build under way keeps what it blocks on: swap
+it instead. The demo visitor gets neither.
 
 **Templates are data.** A project is a YAML file under `backend/app/projects/data/`: what it is
 for, the practical result, the effort and skills, a typical cost, the requirements (each with

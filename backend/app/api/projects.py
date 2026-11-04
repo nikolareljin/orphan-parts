@@ -20,7 +20,7 @@ from app.projects import (
     ShareText,
     TemplateSummary,
 )
-from app.projects.schema import visitor_markdown
+from app.projects.schema import AllocationSwap, visitor_markdown
 
 router = APIRouter(prefix="/api", tags=["projects"])
 
@@ -132,6 +132,31 @@ def fill(project_id: int, key: str, request: FillRequest, planner: PlannerDep) -
     kind the requirement takes. A search open for it is marked found."""
     try:
         return planner.fill(project_id, key, request)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
+
+
+@router.patch("/projects/{project_id}/allocations/{item_id}", response_model=Project)
+def swap_allocation(
+    project_id: int, item_id: int, request: AllocationSwap, planner: PlannerDep
+) -> Project:
+    """Put another item of yours in place of this one, for the same requirement: a wrong pick
+    fixed by hand. The item must be usable, of a kind the requirement takes, not committed to
+    another selected project, and compatible with the rest of the build; 422 says which it is
+    not. The owner's alone: the demo visitor is refused."""
+    try:
+        return planner.swap(project_id, item_id, request)
+    except ProjectsError as exc:
+        raise _error(exc) from exc
+
+
+@router.delete("/projects/{project_id}/allocations/{item_id}", response_model=Project)
+def remove_allocation(project_id: int, item_id: int, planner: PlannerDep) -> Project:
+    """Take the item off the project: its requirement is open again (to fill, swap or search
+    for) and a committed item is free for another build. A build under way keeps what it
+    blocks on. The owner's alone: the demo visitor is refused."""
+    try:
+        return planner.remove(project_id, item_id)
     except ProjectsError as exc:
         raise _error(exc) from exc
 

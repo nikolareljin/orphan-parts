@@ -12,10 +12,12 @@ from app.inventory.schema import Item
 from app.privacy.text import mask_text, private_field
 from app.projects.schema import (
     BUDGET_LINE,
+    COMPAT_HEADING,
     INVENTORY_HEADING,
     NEEDED_HEADING,
     OUTCOME_HEADING,
     SEARCH_MARK,
+    YOURS_MARK,
     Budget,
     Preferences,
     Project,
@@ -53,6 +55,7 @@ def digest_for(
         "project": project.version,
         "requirements": [(r.key, r.state, r.item_id, r.search_id) for r in project.requirements],
         "allocations": [(a.item_id, a.requirement, a.committed) for a in project.allocations],
+        "compatibility": [(p.rule, p.state, p.part_id, p.host_id) for p in project.compatibility],
         "items": sorted((i.id, i.version) for i in items),
         "budget": (prefs.budget, prefs.currency, budget.committed_spend, budget.remaining),
         "tools": prefs.tools,
@@ -119,6 +122,12 @@ def render(
     for r in open_reqs:
         need = "blocks the build" if r.blocking else "optional"
         line = f"- {r.label} ({need})"
+        if r.incompatible:
+            line += f"; {r.incompatible}"
+        if r.need:
+            line += f"; what fits: {r.need}"
+        if r.instead:
+            line += f"{YOURS_MARK}{r.instead}"
         if r.search_id is not None and r.search_id in searches:
             search, candidates = searches[r.search_id]
             documented = [c for c in candidates if c.state == "documented"]
@@ -131,6 +140,13 @@ def render(
                 price = f", {c.asking_price} {c.currency}" if c.asking_price else ""
                 line += f"\n  - {c.title or 'listing'}{price}{seen}"
         lines.append(line)
+    lines += ["", COMPAT_HEADING, ""]
+    if not project.compatibility:
+        lines.append("No rule pairs the items on this project.")
+    for p in project.compatibility:
+        who = f"{p.part} with {p.host}" if p.part_id is not None else p.host
+        fix = f"; {p.fix}" if p.fix else ""
+        lines.append(f"- {p.state}: {who}: {p.reason}{fix}")
     lines += [
         "",
         "## Costs",
@@ -165,6 +181,8 @@ def render(
         "",
         "- A dimension that matches is not a compatibility claim on its own; the seat, the latch"
         " and the power side count too.",
+        "- The compatibility lines are the rules' reading of the recorded values; an unknown is a"
+        " question to check, never a pass.",
         "- A documented candidate is a listing that reads as fitting, not a part in hand.",
         "- Values marked exploratory are not reserved for this build.",
         "- Nothing here was checked by a person unless the outcome record says so.",

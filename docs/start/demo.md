@@ -190,13 +190,12 @@ captioned as drawn. Record the outcome once it works. [Build and reuse](../guide
 The second drawer is where **Build and reuse** fills up: three proposal calls, the last two
 steered by the owner's notes, keep eleven projects, each drawn as built, each with its items and
 why they fit, what is still needed, the effort, the spend and the unknowns. Four are selected:
-a custom NAS on the ASRock AB350 Pro4 board with the Patriot Viper DDR4 stick, the Kingston SSD
-and the PCIe M.2 card; an arcade coffee table on the Dell laptop and the 24 inch monitor with
+a custom NAS on the ASUS P8Z77-V LX board with the DDR3-1600 desktop stick, the Kingston SSD,
+the Maxtor drive and the PCIe M.2 card; an arcade coffee table on the Dell laptop and the 24 inch monitor with
 the joystick module put on its controls by the owner; a smart desk calendar on the UNO with
 the DS1307 clock, the buzzer, the button and the prototype shield; and a home automation server
-on the ThinkPad T510 with the SK hynix memory (a DDR4 stick, which a T510 cannot take: the
-rules check the kind of memory, not its generation, and a filled requirement has no swap, so
-the owner would put the ADATA DDR3L stick in it; see [Limitations](../project/limitations.md)).
+on the ThinkPad T510 with the ADATA DDR3L stick (the [compatibility
+rules](../concepts/compatibility.md) refuse the SK hynix DDR4 stick for it).
 Each has its build pack, two more drawings (up
 close, and from above), and every requirement it still needs as a search with its Marketplace
 links (the NAS's processor, power supply and case; the table, its glass and speakers; the
