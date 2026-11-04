@@ -23,6 +23,24 @@ wrong ones drawn again with a corrected brief.
   --brief TEXT         the brief for the one drawing --redraw names
   --briefs FILE        a YAML map of drawing id to brief, in place of the report's
 
+Tuning the drawing parameters (backend/app/picture/params.yaml):
+
+  --tune               read the last review (report.json), count its issues by category and
+                       subject, and propose edits to the parameters (tune.md, tune.json): fixed
+                       rules, and one Muse Spark call to phrase the corrections (none with
+                       --dry-run)
+  --tune --apply       write the proposal (tune.json) into the parameters, version one up
+  --redraw-set         draw the whole demo set again with the parameters as they are: only the
+                       drawings whose request changed are bought and recorded (every other
+                       answer replays), then every drawing is reviewed (report.json)
+  --evaluate           keep what the last review scored for this version of the parameters
+                       (eval/pictures/params-v<N>.json), compare it with the version before
+                       (compare.md), write the history into --results, and list the drawing
+                       recordings the version before used and this one does not
+  --prune              with --evaluate: delete those recordings
+  --eval-dir DIR       where the evaluations are kept (default eval/pictures)
+  --results FILE       the page the history table is written into, between its markers
+
 The key is MODEL_API_KEY from the environment, never printed or written.
 """
 
@@ -63,7 +81,10 @@ from app.model_api import (
 from app.model_api.client import IMAGES, output_cap
 from app.model_api.fixtures import request_key
 from app.model_api.pricing import IMAGE_UNIT_USD, PER_MILLION, token_rates
+from app.picture import tune
 from app.picture.briefs import SetBrief, apply
+from app.picture.params import PARAMS_FILE, DrawingParams
+from app.picture.params import load as load_params
 from app.picture.service import (
     AS_BUILT_LEFT_OUT,
     MONEY_WORDS,
@@ -76,6 +97,7 @@ from app.picture.service import (
 from app.projects import Planner
 from app.projects.pack import shown_fields
 from app.projects.schema import Project
+from app.projects.templates import Templates
 
 OP = "picture-review"
 DECIDE_OP = "decide-review"
@@ -93,6 +115,8 @@ DEFAULT_MAX_USD = 1.0
 CONCURRENCY = 6
 ITEM_VALUES = 12
 BRIEF_MAX = 400
+# the drawings of the demo set a whole redraw reviews, for its cap
+SET_DRAWINGS = 40
 # one drawing, at the published rate
 IMAGE_USD = IMAGE_UNIT_USD["muse-image"]
 
@@ -217,6 +241,8 @@ class Drawing(BaseModel):
     template: str = ""
     project_title: str = ""
     view: str = ""
+    subject: str = Field(default="", description="its kind of project, a template id")
+    kinds: list[str] = Field(default=[], description="the item types of its parts")
     facts: Facts
 
 
@@ -225,6 +251,8 @@ class Review(BaseModel):
     title: str
     kind: Kind
     picture: str = Field(default="", description="the thumbnail, relative to the report")
+    subject: str = ""
+    kinds: list[str] = []
     facts: Facts
     verdict: Verdict | Literal["error", "not reviewed"] = "not reviewed"
     confidence: float = 0.0
@@ -264,6 +292,7 @@ class Report(BaseModel):
     skipped: list[str] = []
     cost_usd: float = 0.0
     load: list[str] = []
+    params_version: int = Field(default=0, description="the drawing parameters asked with")
 
     def counts(self) -> dict[str, int]:
         out: dict[str, int] = {}
@@ -343,9 +372,33 @@ class Services:
         return self.demo.propose.correction(project.template, project.title, view)
 
 
+def subject_of(text: str, templates: Templates, params: DrawingParams) -> str:
+    """The kind of project a use or a card title means: a template by its label or its id's
+    words, else one the parameters name by its words; empty when none."""
+    said = " ".join(text.split()).lower()
+    if not said:
+        return ""
+    for tid in templates.ids():
+        if said in (tid, templates.get(tid).label.lower()):
+            return tid
+    for tid, p in params.projects.items():
+        if any(word in said for word in p.match):
+            return tid
+    for tid in templates.ids():
+        if tid.replace("_", " ") in said or templates.get(tid).label.lower() in said:
+            return tid
+    return ""
+
+
+def _kind(item: Item) -> str:
+    return " ".join((item.item_type or "item").split()).lower()
+
+
 def collect(sv: Services) -> list[Drawing]:
     """Every kept drawing: each item's, each reuse card's, each project's, in that order."""
     found: list[Drawing] = []
+    params = load_params()
+    templates = sv.pictures.templates
     items = sv.inventory.list_items()
     for summary in items:
         item = sv.inventory.get(summary.id)
@@ -360,6 +413,8 @@ def collect(sv: Services) -> list[Drawing]:
                     use=pic.use,
                     item_id=item.id,
                     item_key=sv.keys.get(item.id, ""),
+                    subject=subject_of(pic.use, templates, params),
+                    kinds=[_kind(item)],
                     facts=Facts(
                         title=_line(pic.use),
                         setting=_line(pic.use),
@@ -384,6 +439,8 @@ def collect(sv: Services) -> list[Drawing]:
                             item_key=sv.keys.get(item.id, ""),
                             scenarios_id=scenarios.id,
                             card=card,
+                            subject=subject_of(reuse.title, templates, params),
+                            kinds=[_kind(item)],
                             facts=Facts(
                                 title=_line(reuse.title),
                                 setting=_line(reuse.what_it_does),
@@ -417,6 +474,8 @@ def collect(sv: Services) -> list[Drawing]:
                     template=project.template,
                     project_title=project.title,
                     view=view,
+                    subject=project.template,
+                    kinds=list(dict.fromkeys(_kind(i) for i in allocated)),
                     facts=project_facts(
                         project,
                         allocated,
@@ -532,7 +591,15 @@ async def review_all(
     async def job(d: Drawing) -> Review:
         thumb = Path("pictures") / f"{_safe(d.id)}{suffix}.jpg"
         thumbnail(Path(d.file), out / thumb)
-        review = Review(id=d.id, title=title_of(d), kind=d.kind, picture=str(thumb), facts=d.facts)
+        review = Review(
+            id=d.id,
+            title=title_of(d),
+            kind=d.kind,
+            picture=str(thumb),
+            subject=d.subject,
+            kinds=d.kinds,
+            facts=d.facts,
+        )
         if not budget.reserve(ceiling):
             skipped.append(f"{d.id}: not reviewed, the next call could pass --max-usd")
             return review
@@ -931,6 +998,13 @@ class Options:
     redraw: list[str] = field(default_factory=list)
     brief: str = ""
     briefs: Path | None = None
+    tune: bool = False
+    apply: bool = False
+    redraw_set: bool = False
+    evaluate: bool = False
+    prune: bool = False
+    eval_dir: Path | None = None
+    results: Path | None = None
 
 
 async def run_review(settings: Settings, opts: Options) -> Report:
@@ -945,6 +1019,7 @@ async def run_review(settings: Settings, opts: Options) -> Report:
             report = Report(at=_now(), source=str(opts.set_file), mode="demo set", load=notes)
         drawings = [d for d in collect(sv) if not opts.only or selected(d.id, opts.only)]
         report.model = settings.model_spark
+        report.params_version = load_params().version
         if opts.dry_run:
             report.mode += ", dry run"
             report.model = ""
@@ -953,7 +1028,13 @@ async def run_review(settings: Settings, opts: Options) -> Report:
                 thumbnail(Path(d.file), opts.out / thumb)
                 report.reviews.append(
                     Review(
-                        id=d.id, title=title_of(d), kind=d.kind, picture=str(thumb), facts=d.facts
+                        id=d.id,
+                        title=title_of(d),
+                        kind=d.kind,
+                        picture=str(thumb),
+                        subject=d.subject,
+                        kinds=d.kinds,
+                        facts=d.facts,
                     )
                 )
                 print(f"{d.id}: {title_of(d)}")
@@ -1016,6 +1097,8 @@ async def run_redraw(settings: Settings, opts: Options) -> Report:
                     title=title_of(old[k]),
                     kind=old[k].kind,
                     picture=str(thumb),
+                    subject=old[k].subject,
+                    kinds=old[k].kinds,
                     facts=old[k].facts,
                 )
         new: dict[str, Drawing] = {}
@@ -1160,6 +1243,203 @@ async def _redraw_data(
     return out
 
 
+# --- tuning -------------------------------------------------------------------------------
+
+
+def last_review(out: Path) -> Report:
+    path = out / "report.json"
+    if not path.is_file():
+        raise ValueError(f"no review at {path}: run ./dev picture-review first")
+    report = Report.model_validate_json(path.read_text(encoding="utf-8"))
+    if "dry run" in report.mode or not any(
+        r.verdict in ("matches", "partly", "wrong") for r in report.reviews
+    ):
+        raise ValueError(f"{path} reviews nothing: run ./dev picture-review first")
+    return report
+
+
+async def with_subjects(settings: Settings, opts: Options, report: Report) -> Report:
+    """A review written before drawings carried their subject: the set replayed (nothing
+    spent) and each drawing's subject and kinds of part filled in by its id."""
+    if all(r.subject or r.kinds for r in report.reviews):
+        return report
+    work = Path(tempfile.mkdtemp(prefix="picture-subjects-"))
+    try:
+        replay = _scratch(settings, work / "data", fake_api=True, record_fixtures=False)
+        sv, _ = await load_set(replay, opts.set_file)
+        by_id = {d.id: d for d in collect(sv)}
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    for r in report.reviews:
+        d = by_id.get(r.id)
+        if d is not None and not (r.subject or r.kinds):
+            r.subject, r.kinds = d.subject, d.kinds
+    return report
+
+
+def approved_corrections(set_file: Path) -> dict[str, str]:
+    """The corrections the demo set keeps for its projects, by template id or title."""
+    from app.demo.service import load_set as read_set
+
+    if not set_file.is_file():
+        return {}
+    demo = read_set(set_file)
+    if demo.propose is None:
+        return {}
+    return {str(k): str(v) for k, v in demo.propose.corrections.items() if str(v).strip()}
+
+
+def _same_version(report: Report, params: DrawingParams) -> None:
+    if report.params_version and report.params_version != params.version:
+        raise ValueError(
+            f"the last review is of parameters version {report.params_version}, the file is"
+            f" at {params.version}: run ./dev picture-review --redraw-set first"
+        )
+
+
+async def run_tune(settings: Settings, opts: Options) -> tune.Proposal:
+    """Edits to the parameters from the last review: the rules, then the corrections phrased
+    by one call (none in a dry run or in fixture mode)."""
+    report = last_review(opts.out)
+    params = load_params()
+    _same_version(report, params)
+    report = await with_subjects(settings, opts, report)
+    agg = tune.aggregate(report, params.version)
+    templates = Templates()
+    labels = {tid: templates.get(tid).label for tid in templates.ids()}
+    edits = tune.rule_edits(agg, params)
+    phrased, usd = None, 0.0
+    approved = approved_corrections(opts.set_file)
+    text = tune.phrase_input(agg, params, labels, approved)
+    live = settings.model_api_mode != "fixture" and not opts.dry_run
+    if live and text:
+        ceiling = ceiling_usd(
+            settings.model_spark, tune.TUNE_INPUT_ALLOWANCE, tune.TUNE_OUTPUT_TOKENS
+        )
+        if ceiling > opts.max_usd:
+            raise ValueError(f"the phrasing call could cost {ceiling:.4f} USD, over --max-usd")
+        work = Path(tempfile.mkdtemp(prefix="picture-tune-"))
+        client = reviewer(_scratch(settings, work), opts.max_usd)
+        try:
+            phrased, usd = await tune.phrase(client, settings.model_spark, text)
+        finally:
+            await client.aclose()
+            shutil.rmtree(work, ignore_errors=True)
+    corrections = tune.correction_edits(agg, params, phrased, labels)
+    taken = {e.path.split(".", 1)[1] for e in corrections if e.path.startswith("projects.")}
+    edits += corrections + tune.promoted_edits(agg, params, approved, labels, taken)
+    proposal = tune.Proposal(
+        at=_now(),
+        from_version=params.version,
+        to_version=params.version + 1,
+        report_at=report.at,
+        edits=edits,
+        aggregate=agg,
+        model=settings.model_spark if phrased else "",
+        cost_usd=usd,
+        phrased=phrased is not None,
+    )
+    opts.out.mkdir(parents=True, exist_ok=True)
+    (opts.out / "tune.json").write_text(tune.dumps(proposal), encoding="utf-8")
+    (opts.out / "tune.md").write_text(tune.proposal_markdown(proposal, params), encoding="utf-8")
+    return proposal
+
+
+async def run_redraw_set(settings: Settings, opts: Options) -> Report:
+    """Every drawing of the set with the parameters as they are: one record run in which only
+    drawings are bought (a drawing whose request is unchanged replays its recording), the set
+    replayed, every drawing reviewed."""
+    params = load_params()
+    work = Path(tempfile.mkdtemp(prefix="picture-redraw-set-"))
+    budget = Budget(opts.max_usd)
+    report = Report(
+        at=_now(),
+        source=str(opts.set_file),
+        mode=f"demo set, drawn with parameters version {params.version}",
+        model=settings.model_spark,
+        params_version=params.version,
+    )
+    try:
+        record = _scratch(
+            settings, work / "record", fake_api=False, record_fixtures=True, picture_enabled=True
+        )
+        # the drawings take what the reviews of a set this size leave: whole drawings alone
+        review_ceiling = ceiling_usd(
+            settings.model_spark, REVIEW_INPUT_ALLOWANCE, REVIEW_OUTPUT_TOKENS
+        )
+        cap = drawings_cap(max(opts.max_usd - review_ceiling * SET_DRAWINGS, 0.0))
+        client = PicturesOnlyClient(record, CostLedger(cap))
+        _, notes = await load_set(record, opts.set_file, client)
+        budget.add(client.ledger.total_usd)
+        report.load += [f"record run: {n}" for n in notes]
+        replay = _scratch(settings, work / "after", fake_api=True, record_fixtures=False)
+        sv, notes = await load_set(replay, opts.set_file)
+        report.load += [f"replay: {n}" for n in notes]
+        drawings = [d for d in collect(sv) if not opts.only or selected(d.id, opts.only)]
+        review_client = reviewer(_scratch(settings, work / "review"), opts.max_usd)
+        try:
+            report.reviews = await review_all(
+                review_client, settings, drawings, opts.out, budget, skipped=report.skipped
+            )
+        finally:
+            await review_client.aclose()
+        report.cost_usd = budget.spent
+        return report
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+async def run_evaluate(settings: Settings, opts: Options) -> tuple[tune.Evaluation, list[str]]:
+    """What the last review scored, kept for its version of the parameters, compared with the
+    version before; the recordings that version used and this one does not (deleted with
+    --prune)."""
+    report = last_review(opts.out)
+    params = load_params()
+    _same_version(report, params)
+    report = await with_subjects(settings, opts, report)
+    folder = opts.eval_dir or default_eval_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    ev = tune.evaluation(report, params, settings.model_image)
+    tune.eval_path(folder, params.version).write_text(tune.dumps(ev), encoding="utf-8")
+    evals = tune.history(folder)
+    earlier = [e for e in evals if e.params_version < params.version]
+    lines = ["# Drawing parameters, version by version", "", tune.table(evals), ""]
+    notes: list[str] = []
+    if earlier:
+        moved = tune.changes(earlier[-1], ev)
+        if moved:
+            lines += [f"Moved since version {earlier[-1].params_version}:", ""]
+            lines += [f"- {m}" for m in moved] + [""]
+        unused = tune.unused_recordings(earlier[-1], ev)
+        if unused and opts.prune:
+            removed = tune.prune(settings.fixtures_dir, unused)
+            notes.append(f"removed {len(removed)} file(s) of {len(unused)} unused recording(s)")
+        elif unused:
+            notes.append(
+                f"{len(unused)} recording(s) of version {earlier[-1].params_version} unused"
+                " now (--prune deletes them): " + ", ".join(unused)
+            )
+    (opts.out / "compare.md").write_text("\n".join(lines), encoding="utf-8")
+    contact_sheet(
+        [
+            (f"{r.id} {r.verdict}", opts.out / r.picture)
+            for r in report.reviews
+            if r.picture and (opts.out / r.picture).is_file()
+        ],
+        opts.out / f"sheet-v{params.version}.jpg",
+    )
+    if opts.results is not None:
+        if tune.write_history(opts.results, evals):
+            notes.append(f"wrote the history into {opts.results}")
+        else:
+            notes.append(f"{opts.results} has no history markers; nothing written there")
+    return ev, notes
+
+
+def default_eval_dir() -> Path:
+    return _repo_root() / "eval" / "pictures"
+
+
 # --- command line --------------------------------------------------------------------------
 
 
@@ -1172,7 +1452,17 @@ def parse(argv: list[str]) -> Options | str:
     args = list(argv)
     while args:
         arg = args.pop(0)
-        needs = arg in ("--set", "--out", "--only", "--max-usd", "--redraw", "--brief", "--briefs")
+        needs = arg in (
+            "--set",
+            "--out",
+            "--only",
+            "--max-usd",
+            "--redraw",
+            "--brief",
+            "--briefs",
+            "--eval-dir",
+            "--results",
+        )
         if needs and not args:
             return f"{arg} needs a value"
         if arg == "--set":
@@ -1194,6 +1484,20 @@ def parse(argv: list[str]) -> Options | str:
             opts.brief = args.pop(0)
         elif arg == "--briefs":
             opts.briefs = Path(args.pop(0))
+        elif arg == "--eval-dir":
+            opts.eval_dir = Path(args.pop(0))
+        elif arg == "--results":
+            opts.results = Path(args.pop(0))
+        elif arg == "--tune":
+            opts.tune = True
+        elif arg == "--apply":
+            opts.apply = True
+        elif arg == "--redraw-set":
+            opts.redraw_set = True
+        elif arg == "--evaluate":
+            opts.evaluate = True
+        elif arg == "--prune":
+            opts.prune = True
         elif arg == "--data":
             opts.data = True
         elif arg == "--dry-run":
@@ -1210,6 +1514,17 @@ def parse(argv: list[str]) -> Options | str:
         return "--brief and --briefs go with --redraw"
     if opts.redraw and opts.dry_run:
         return "--redraw draws; it has no dry run (review with --dry-run first)"
+    modes = [opts.tune, opts.redraw_set, opts.evaluate, bool(opts.redraw)]
+    if sum(modes) > 1:
+        return "--tune, --redraw-set, --evaluate and --redraw go one at a time"
+    if opts.apply and not opts.tune:
+        return "--apply goes with --tune"
+    if opts.prune and not opts.evaluate:
+        return "--prune goes with --evaluate"
+    if (opts.redraw_set or opts.tune or opts.evaluate) and opts.data:
+        return "the tuning works on the demo set, not --data"
+    if opts.redraw_set and opts.dry_run:
+        return "--redraw-set draws; it has no dry run"
     return opts
 
 
@@ -1233,7 +1548,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         settings = get_settings()
     except ValueError as exc:
-        if not opts.dry_run:
+        if not (opts.dry_run or opts.evaluate or (opts.tune and opts.apply)):
             print(f"picture-review: the settings are refused: {refused(exc)}", file=sys.stderr)
             print(
                 "picture-review: a review needs MODEL_API_KEY; --dry-run needs none",
@@ -1244,6 +1559,46 @@ def main(argv: list[str] | None = None) -> int:
     if not opts.data and not opts.set_file.is_file():
         print(f"picture-review: no set at {opts.set_file}", file=sys.stderr)
         return 1
+    if opts.tune and opts.apply:
+        try:
+            new = tune.apply_proposal(opts.out / "tune.json")
+        except (ValueError, OSError) as exc:
+            print(f"picture-review: {exc}", file=sys.stderr)
+            return 1
+        print(f"wrote {PARAMS_FILE.name}: version {new.version}")
+        print("next: ./dev picture-review --redraw-set, then --evaluate")
+        return 0
+    if opts.evaluate:
+        try:
+            ev, notes = asyncio.run(run_evaluate(settings, opts))
+        except (ValueError, OSError) as exc:
+            print(f"picture-review: {exc}", file=sys.stderr)
+            return 1
+        said = ", ".join(f"{ev.verdicts.get(v, 0)} {v}" for v in tune.VERDICTS)
+        print(f"parameters version {ev.params_version}: {ev.drawings} drawing(s), {said}")
+        for line in notes:
+            print(line)
+        print(f"wrote {opts.out / 'compare.md'}")
+        return 0
+    if opts.tune:
+        try:
+            proposal = asyncio.run(run_tune(settings, opts))
+        except (ValueError, OSError) as exc:
+            print(f"picture-review: {exc}", file=sys.stderr)
+            return 1
+        print(
+            f"{len(proposal.edits)} edit(s) proposed, version {proposal.from_version} to"
+            f" {proposal.to_version}; {proposal.cost_usd:.4f} USD"
+        )
+        print(f"wrote {opts.out / 'tune.md'} and {opts.out / 'tune.json'}")
+        return 0
+    if opts.redraw_set and settings.model_api_mode == "fixture":
+        print(
+            "picture-review: --redraw-set draws and records; it needs MODEL_API_KEY and"
+            " OPL_FAKE_API off",
+            file=sys.stderr,
+        )
+        return 1
     if opts.redraw and settings.model_api_mode == "fixture" and not opts.data:
         print(
             "picture-review: --redraw draws and records; it needs MODEL_API_KEY and"
@@ -1252,7 +1607,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     try:
-        if opts.redraw:
+        if opts.redraw_set:
+            report = asyncio.run(run_redraw_set(settings, opts))
+            paths = write(report, opts.out)
+        elif opts.redraw:
             report = asyncio.run(run_redraw(settings, opts))
             paths = write(report, opts.out, "redraw")
         else:
