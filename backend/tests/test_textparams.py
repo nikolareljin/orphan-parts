@@ -309,6 +309,23 @@ def test_the_command_line_takes_one_mode_at_a_time() -> None:
     assert tt.parse(["-h"]) == "help"
 
 
+def test_refused_settings_name_the_reason_never_the_values(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from app.config import get_settings
+
+    monkeypatch.setenv("MODEL_API_KEY", "sk-not-a-real-key")
+    monkeypatch.setenv("PICTURE_CANDIDATES", "sk-also-not-a-number")
+    get_settings.cache_clear()
+    try:
+        # a dry run falls back to fixture settings; refused there too, it says why and stops
+        assert tt.main(["--dry-run", "--out", str(tmp_path / "out")]) == 1
+    finally:
+        get_settings.cache_clear()
+    err = capsys.readouterr().err
+    assert "the settings are refused" in err and "sk-" not in err
+
+
 def test_evaluate_from_the_command_line_keeps_the_score(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

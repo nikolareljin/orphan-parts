@@ -819,7 +819,12 @@ def main(argv: list[str] | None = None) -> int:
         if not (opts.dry_run or opts.evaluate or (opts.tune and opts.apply)):
             print(f"decide-review: the settings are refused: {rv.refused(exc)}", file=sys.stderr)
             return 1
-        settings = Settings(OPL_FAKE_API=True)
+        try:
+            settings = Settings(OPL_FAKE_API=True)
+        except ValueError as again:
+            # a validation error prints its input; the reasons alone
+            print(f"decide-review: the settings are refused: {rv.refused(again)}", file=sys.stderr)
+            return 1
     if not opts.set_file.is_file():
         print(f"decide-review: no set at {opts.set_file}", file=sys.stderr)
         return 1

@@ -1700,7 +1700,12 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
-        settings = Settings(OPL_FAKE_API=True)
+        try:
+            settings = Settings(OPL_FAKE_API=True)
+        except ValueError as again:
+            # a validation error prints its input; the reasons alone
+            print(f"picture-review: the settings are refused: {refused(again)}", file=sys.stderr)
+            return 1
     if not opts.data and not opts.set_file.is_file():
         print(f"picture-review: no set at {opts.set_file}", file=sys.stderr)
         return 1
