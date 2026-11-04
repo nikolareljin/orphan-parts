@@ -80,8 +80,8 @@ test.describe('signed in', () => {
   test('a search plan: the NAS processor the build still needs', async ({ shots, page }) => {
     // the plan written when the build was selected: phrasings as Marketplace links, a pattern
     await page.goto('/#find')
-    await page.getByRole('table', { name: 'Searches' }).getByRole('row', { name: /A processor that fits the board's socket/ }).first().getByRole('button', { name: 'Open' }).click()
-    const plan = page.getByRole('article', { name: /^Search A processor that fits/ }).getByRole('region', { name: 'Plan the search' })
+    await page.getByRole('table', { name: 'Searches' }).getByRole('row', { name: /LGA1155 processor for Custom NAS/ }).first().getByRole('button', { name: 'Open' }).click()
+    const plan = page.getByRole('article', { name: /^Search LGA1155 processor for/ }).getByRole('region', { name: 'Plan the search' })
     await expect(plan.getByRole('list', { name: 'Search phrasings' }).getByRole('listitem').first()).toBeVisible()
     await shots.element('30-nas-cpu-plan', plan)
   })

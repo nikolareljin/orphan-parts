@@ -90,7 +90,7 @@ Image drew them (recorded answers; the hosted demo shows them read-only). More o
 
 ![The arcade coffee table drawn by Muse Image in a home: as proposed, up close, and from above](../assets/shots/examples/02-arcade-drawings.png)
 
-![The custom NAS selected: the ASRock board, Patriot DDR4, Kingston SSD and PCIe M.2 card committed, each with why; three missing parts each with Search Marketplace and its search, the checks, safety notes and steps](../assets/shots/examples/03-nas-panel.png)
+![The custom NAS selected: the ASUS board, the DDR3 stick, the Kingston SSD, the Maxtor drive and the PCIe M.2 card committed, each with why; three missing parts each with Search Marketplace and its search, the checks, safety notes and steps](../assets/shots/examples/03-nas-panel.png)
 
 ![The NAS build pack, version 1, read in place](../assets/shots/examples/04-nas-pack.png)
 

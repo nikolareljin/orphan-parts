@@ -38,13 +38,15 @@ number (or its name) is, what its accepted values say, its name, then its type. 
 | `204-pin` | DDR3 SO-DIMM |
 | `240-pin`, `288-pin` | DIMM (the generation is shared, so it stays unknown) |
 | `LPDDR4` | nothing: soldered memory is no module |
-| `LGA1155`, `Socket 1155` | LGA1155 |
+| `LGA1155`, `FCLGA1155`, `Socket 1155` | LGA1155 |
 | `socket AM4`, `Slot 1`, `Socket 370` | AM4, Slot 1, Socket 370 |
 | `Micro-ATX`, `mini-ITX` | mATX, ITX |
 | `2.5"`, `3.5 inch` | 2.5, 3.5 |
 | `M.2 and mSATA to SATA adapter` | takes M.2 and mSATA drives, plugs into SATA |
 | `M.2 to U.2 adapter` | takes a U.2 drive, plugs into an M.2 slot |
 | `M.2 SSD to USB enclosure` | takes an M.2 drive |
+| `2.5 to 3.5 inch adapter`, `M.2 to 2.5 inch SATA adapter` | takes a 2.5 inch drive into a 3.5 inch bay; an M.2 drive in a 2.5 inch SATA shell |
+| `mini-PCIe card` | no bus: a mini-PCIe card is no desktop PCIe card |
 
 **The pairings.** One rule per pair of roles (`backend/app/compat/rules.py`):
 
