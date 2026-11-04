@@ -10,7 +10,7 @@
 # A change here changes the requests, so every drawing of the demo set is drawn and recorded
 # again (`./dev picture-review --redraw-set`).
 
-version: 1
+version: 3
 
 # which accepted values of a part are said: those whose name has a `first` word go
 # first, none whose name has a `left_out` word (prices never), at most `item_values`
@@ -19,32 +19,133 @@ version: 1
 # `condition` says an item's condition and faults in its own picture
 facts:
   item_values: 8
-  part_values: 3
-  first: []
-  left_out: []
+  part_values: 6
+  first:
+  - size
+  - diagonal
+  - aspect
+  - capacity
+  - form factor
+  - count
+  left_out:
+  - brand
+  - model
+  - part number
+  - certification
+  - manufacturer
+  - condition
+  - fault
+  - voltage
+  - current
+  - wattage
   left_out_as_built:
   - condition
   - certification
-  from_name: false
-  condition: true
+  from_name: true
+  condition: false
 
 # by item type: how the part looks at its real size, and what a size in its name is
 # called (a monitor's is its screen size)
-kinds: {}
+kinds:
+  monitor:
+    looks: a thin flat computer monitor, far smaller than a television, not a bulky CRT TV
+    size: screen size
+  laptop:
+    looks: a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than
+      a bulky CRT TV
+    size: size
+  laptop memory:
+    looks: a tiny memory stick far smaller than laptop keys and body, not a large green board
+    size: size
+  microcontroller board:
+    looks: a tiny credit-card-sized bare board, far smaller than half a laptop width
+    size: size
+  relay module:
+    looks: a tiny module with small cube relay, far smaller than a laptop
+    size: size
+  sound sensor module:
+    looks: a tiny sensor module, far smaller than a laptop
+    size: size
+  temperature and humidity sensor module:
+    looks: a tiny sensor module, far smaller than a laptop
+    size: size
+  ultrasonic distance sensor module:
+    looks: a tiny distance sensor module, far smaller than a laptop
+    size: size
 
 # by project template id: the correction every drawing of that kind of project carries;
 # `match`: words in an item's use or a reuse card's title that mean it
-projects: {}
+projects:
+  home_automation_server:
+    match:
+    - home automation server
+    correction: An opened 15-inch laptop about 35 cm wide on a home desk for house lights and schedules,
+      with one small laptop memory stick to true small scale beside it; not a desktop tower, not a
+      TV, no large circuit board.
+  home_server:
+    match:
+    - home server and backup
+    - home server
+    correction: An opened laptop about 35 cm wide on a wooden desk wired to a router with antennas
+      and to one bare 2.5-inch hard drive about 10 cm long by a single cable for backup; memory inside
+      laptop not shown; drive plain with no ethernet ports, no second drive, no extra box, not a desktop
+      tower.
+  kitchen_dashboard:
+    match:
+    - kitchen home-automation dashboard
+    - kitchen dashboard
+    correction: A 24-inch 16:9 computer monitor about 55 cm wide wall-mounted above kitchen counter
+      as dashboard, with opened laptop on counter wired to tiny credit-card-sized microcontroller
+      board plus four tiny modules nearby including relay with cube; not a TV.
+  smart_mirror:
+    match:
+    - smart mirror
+    correction: an 18 inch 5:4 computer monitor, about 46 cm across the diagonal, hidden behind a
+      two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above
+      a small bench; only a clock and weather icons glow through the glass; a small mirror, not a
+      TV; no words or logos
+  arcade_table:
+    match:
+    - arcade coffee table
+    - arcade table
+    correction: A 24-inch flat monitor (~53x30cm widescreen) laid flat face-up inside the wooden coffee-table
+      box under full-size glass top, joystick modules flush beside it, opened laptop wired below,
+      living-room table use; no upright monitor on top, not a TV stand.
+  custom_nas:
+    match:
+    - custom nas from a spare desktop board
+    - custom nas
+    correction: Single full-size ATX motherboard (~30.5x24.4cm) mounted in open cube case as NAS with
+      one full-length desktop memory stick in DIMM slot, 2.5-inch SSD in drive bay with SATA leads,
+      small PCIe adapter with two M.2 drives in PCIe slot, ATX PSU; not two boards, no SSD on board.
+  retro_console:
+    match:
+    - retro console on the tv
+    - retro console
+    correction: Opened laptop (~35cm wide) on wooden desk cabled to 24-inch thin flat widescreen monitor
+      (~53x30cm) beside it both showing retro gaming, two wired gamepads in front in use; no cartridge
+      console, no CRT TV, no cartridges or extra boards.
+  weather_station:
+    match:
+    - indoor weather station and logger
+    - weather station
+    correction: Large microcontroller board (~7x5cm) with square USB-B and DC barrel jack on breadboard
+      on indoor desk wired to 3-pin temperature-humidity module, coin-cell clock module and breadboard
+      power module with barrel input and USB-A in use; no tiny Nano-size board.
 
 # words in a view (as the demo set or the app asks it) and what it adds
-views: {}
+views:
+  close-up: a close-up at arm's length; the parts at their real sizes side by side
+  from above: seen straight down from above; every part at its true size against the table or desk
 
 # said after the brief in every request
-negatives: []
+negatives:
+- no lettering, logos, brand names, model numbers or labels on any part, case or screen
+- 'the sizes are for scale only: no dimension lines, measurements or size labels written in the picture'
 
 # the closing words of each kind of drawing
 rules:
   item: on a plain background, no text, no logos, no people
-  use: on a plain background, no text, no logos, no people
-  card: on a plain background, no text, no logos, no people
+  use: finished and in use in a home, no text, no logos, no people
+  card: finished and in use in a home, no text, no logos, no people
   project: finished and in use in a home, no text, no logos, no people

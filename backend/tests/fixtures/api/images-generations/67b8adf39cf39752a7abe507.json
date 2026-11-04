@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "67b8adf39cf39752a7abe507",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Indoor weather station and logger built from microcontroller board (connector usb-b, dc barrel jack; a tiny credit-card-sized bare board, far smaller than half a laptop width), temperature and humidity sensor module (connector 3-pin male header; a tiny sensor module, far smaller than a laptop), real-time clock module, breadboard power module (connector dc barrel jack input, usb-a output); Small logger that records room temperature and humidity over time.; Large microcontroller board (~7x5cm) with square USB-B and DC barrel jack on breadboard on indoor desk wired to 3-pin temperature-humidity module, coin-cell clock module and breadboard power module with barrel input and USB-A in use; no tiny Nano-size board.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793755212,
+    "data": [
+      {
+        "b64_json": "@67b8adf39cf39752a7abe507-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4210,
+      "output_tokens": 1214,
+      "total_tokens": 5424
+    }
+  },
+  "status": 200
+}

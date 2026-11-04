@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "331d3416d3afabdc03d8e41f",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of a home automation hub on a shelf by the router, linked through this adapter, unwrapped and plugged into the wall socket built from powerline adapter (connector integrated us 2-prong ac plug); exactly one small white powerline adapter, the size of a deck of cards, out of its wrap and plugged straight into the wall socket under the shelf, an Ethernet cable from it up to a small hub beside the router; the plastic wrap named above is how it lies in the drawer today, do not draw it; no second adapter, no words or logos; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793755020,
+    "data": [
+      {
+        "b64_json": "@331d3416d3afabdc03d8e41f-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4177,
+      "output_tokens": 1233,
+      "total_tokens": 5410
+    }
+  },
+  "status": 200
+}

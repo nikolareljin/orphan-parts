@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "1a8eb0b1d9e163b93ab60fad",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Home automation server from spare laptop built from laptop (a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than a bulky CRT TV), laptop memory (size 8 GB; a tiny memory stick far smaller than laptop keys and body, not a large green board); Always-on laptop running lights and schedules for the house.; shown as a close-up of how the parts fit together; a close-up at arm's length; the parts at their real sizes side by side; An opened 15-inch laptop about 35 cm wide on a home desk for house lights and schedules, with one small laptop memory stick to true small scale beside it; not a desktop tower, not a TV, no large circuit board.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793755308,
+    "data": [
+      {
+        "b64_json": "@1a8eb0b1d9e163b93ab60fad-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4211,
+      "output_tokens": 1335,
+      "total_tokens": 5546
+    }
+  },
+  "status": 200
+}

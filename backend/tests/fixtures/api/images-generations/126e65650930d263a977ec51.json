@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "126e65650930d263a977ec51",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Second screen for a computer built from monitor (screen size 18 inch, about 46 cm across the diagonal; a thin flat computer monitor, far smaller than a television, not a bulky CRT TV); Shows extra window space when plugged into a computer.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793754985,
+    "data": [
+      {
+        "b64_json": "@126e65650930d263a977ec51-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4115,
+      "output_tokens": 1272,
+      "total_tokens": 5387
+    }
+  },
+  "status": 200
+}
