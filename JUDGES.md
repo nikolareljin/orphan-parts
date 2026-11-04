@@ -76,7 +76,7 @@ The page opens on **Read a label**; the **?** beside each section explains what 
 More to look at, when you have time: **Read a label** with the SAM 3.1 regions, and measuring a
 feature from a photo, in [More of the tour](#more-of-the-tour).
 
-**Step 4. Stop it:** `./dev down` (what you saved stays; `./dev down -v` also removes the data).
+**Step 4. Stop it** when you are done (after Part 2, if you try the phone): `./dev down` (what you saved stays; `./dev down -v` also removes the data).
 `./dev demo` puts the demo set back as loaded, whatever you clicked.
 
 ### Recorded and stand-in answers
