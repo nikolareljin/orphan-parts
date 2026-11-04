@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # Orphan Parts Lens
 
 Scan what you already own. Decide what it can become. Find the missing piece on Marketplace, or
