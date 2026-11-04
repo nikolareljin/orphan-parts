@@ -59,10 +59,14 @@ def _set_path(given: str | None) -> Path:
     return DEFAULT_SET
 
 
-def build_loader(settings: Settings) -> tuple[Loader, ModelApiClient]:
+def build_loader(
+    settings: Settings, client: ModelApiClient | None = None
+) -> tuple[Loader, ModelApiClient]:
+    """The loader and its client (``client``, when given, is the one every service calls)."""
     settings.data_dir.mkdir(parents=True, exist_ok=True)
-    ledger = CostLedger(settings.spend_cap_usd, settings.spend_ledger_path)
-    client = ModelApiClient(settings, ledger)
+    if client is None:
+        ledger = CostLedger(settings.spend_cap_usd, settings.spend_ledger_path)
+        client = ModelApiClient(settings, ledger)
     inventory = Inventory(settings)
     extractor = Extractor(settings, client)
     profiles = Profiles()

@@ -53,6 +53,9 @@ PROJECT_TAIL = "finished and in use in a home, no text, no logos, no people"
 AS_BUILT_LEFT_OUT = ("condition", "certification")
 # how a finished project is shown, when another view of it is asked for
 VIEW_MAX = 120
+# a correction said with a drawing (what to show and what not, from a review of an earlier
+# drawing); without one the prompt is word for word what it was, so its recording still answers
+BRIEF_MAX = 400
 # what an item cost or would fetch is the owner's business, never part of a picture
 MONEY_WORDS = ("price", "cost", "paid", "msrp", "value", "worth", "resale", "retail")
 
@@ -87,10 +90,18 @@ def _line(text: str, limit: int = USE_MAX) -> str:
     return " ".join(text.split())[:limit]
 
 
-def prompt_for(item: Item, use: str) -> str:
+def with_brief(body: str, brief: str, tail: str) -> str:
+    """The prompt's body, the correction (when there is one) and its closing words: without a
+    correction the prompt is exactly what it was."""
+    said = _line(brief, BRIEF_MAX)
+    return f"{body}; {said}, {tail}" if said else f"{body}, {tail}"
+
+
+def prompt_for(item: Item, use: str, brief: str = "") -> str:
     """What Muse Image is asked for: the chosen use built from the item as it is known, from
     its type, accepted values, condition and faults; a proposed value is not yet known, and a
-    value that identifies the item or its owner (a serial, a MAC, an IMEI) never goes out."""
+    value that identifies the item or its owner (a serial, a MAC, an IMEI) never goes out.
+    ``brief``, a correction from a review, is said before the last clause."""
     what = item.item_type or item.name or "item"
     known = [f"{k} {v}" for k, v in shown_fields(item)][:PROMPT_VALUES]
     about = what if not known else f"{what} ({', '.join(known)})"
@@ -104,7 +115,7 @@ def prompt_for(item: Item, use: str) -> str:
     if item.faults:
         detail.append(f"known faults: {_line(item.faults)}")
     tail = f"; {'; '.join(detail)}" if detail else ""
-    return f"{head}{tail}, {TAIL}"
+    return with_brief(f"{head}{tail}", brief, TAIL)
 
 
 def part_of(item: Item, *, as_built: bool = False) -> str:
@@ -122,7 +133,12 @@ def part_of(item: Item, *, as_built: bool = False) -> str:
 
 
 def finished_prompt(
-    title: str, parts: list[str], about: str, view: str = "", tail: str = TAIL
+    title: str,
+    parts: list[str],
+    about: str,
+    view: str = "",
+    tail: str = TAIL,
+    brief: str = "",
 ) -> str:
     """What Muse Image is asked for a finished project: what it is, built from the parts the
     card uses (each once, at most six), and one line on it, and how it is shown when a view is
@@ -140,7 +156,7 @@ def finished_prompt(
     shown = _line(view, VIEW_MAX)
     if shown:
         line = f"{line}; shown {shown}" if line else f"shown {shown}"
-    return f"{head}; {line}, {tail}" if line else f"{head}, {tail}"
+    return with_brief(f"{head}; {line}" if line else head, brief, tail)
 
 
 # an owner's name for an item and the kind to say instead
@@ -166,7 +182,11 @@ def without_names(text: str, names: list[Named]) -> str:
 
 
 def project_prompt(
-    project: Project, items: list[Item], others: Sequence[Named] = (), view: str = ""
+    project: Project,
+    items: list[Item],
+    others: Sequence[Named] = (),
+    view: str = "",
+    brief: str = "",
 ) -> str:
     """A project as built, where it is used: its title, the items allocated to it (as built,
     not as they lie in the drawer), and what it results in, shown as ``view`` asks when given;
@@ -179,10 +199,11 @@ def project_prompt(
         without_names(project.result, names),
         view,
         PROJECT_TAIL,
+        brief,
     )
 
 
-def card_prompt(scenarios: Scenarios, card: int, item: Item) -> str:
+def card_prompt(scenarios: Scenarios, card: int, item: Item, brief: str = "") -> str:
     """A reuse card as built: its title, the item it is about and the kinds of item it names
     from the rest of the inventory (a kind alone: the card does not say which one), and what
     it does; the item's name, which the scenarios brief carried, is said as its kind."""
@@ -192,6 +213,7 @@ def card_prompt(scenarios: Scenarios, card: int, item: Item) -> str:
         without_names(reuse.title, names),
         [part_of(item), *reuse.with_items],
         without_names(reuse.what_it_does, names),
+        brief=brief,
     )
 
 
@@ -312,8 +334,9 @@ class Pictures:
         )
         return picture
 
-    async def draw(self, item_id: int, use: str | None) -> Picture:
-        """One picture of the item, one call, kept on the item after those it has."""
+    async def draw(self, item_id: int, use: str | None, brief: str = "") -> Picture:
+        """One picture of the item, one call, kept on the item after those it has; ``brief``
+        is a correction said with it (from a review of an earlier drawing)."""
         if not self.settings.picture_enabled:
             raise PicturesOffError(OFF_LINE)
         item = self.inventory.get(item_id)
@@ -321,12 +344,12 @@ class Pictures:
         # the item may have been deleted while the picture was drawn: its folder stays gone
         return await self._draw(
             self.folder(item_id),
-            prompt_for(item, drawn_as),
+            prompt_for(item, drawn_as, brief),
             drawn_as,
             lambda: self.inventory.get(item_id),
         )
 
-    async def draw_card(self, scenarios: Scenarios, card: int) -> Picture:
+    async def draw_card(self, scenarios: Scenarios, card: int, brief: str = "") -> Picture:
         """How a reuse card's project could look once built: one call, kept with the card."""
         if not self.settings.picture_enabled:
             raise PicturesOffError(OFF_LINE)
@@ -335,26 +358,19 @@ class Pictures:
         item = self.inventory.get(item_id)
         return await self._draw(
             self.card_folder(item_id, scenarios.id, card),
-            card_prompt(scenarios, card, item),
+            card_prompt(scenarios, card, item, brief),
             _line(scenarios.reuse[card].title, TITLE_MAX),
             lambda: self.inventory.get(item_id),
         )
 
-    async def draw_project(self, project: Project, view: str = "") -> Picture:
+    async def draw_project(self, project: Project, view: str = "", brief: str = "") -> Picture:
         """How a project could look once built, from the items allocated to it: one call; a
         ``view`` (in its room, a close-up of the parts) asks for another picture of it."""
         if not self.settings.picture_enabled:
             raise PicturesOffError(OFF_LINE)
-        items: list[Item] = []
-        for item_id in dict.fromkeys(a.item_id for a in project.allocations):
-            try:
-                items.append(self.inventory.get(item_id))
-            except NotFoundError:
-                continue  # an item deleted since is not drawn
-        others = [(i.name, i.item_type) for i in self.inventory.list_items()]
         return await self._draw(
             self.project_folder(project.id),
-            project_prompt(project, items, others, view),
+            self.project_prompt(project, view, brief),
             _line(
                 f"{project.title}, {_line(view, VIEW_MAX)}" if view.strip() else project.title,
                 TITLE_MAX + VIEW_MAX,
@@ -362,6 +378,21 @@ class Pictures:
             or "project",
             lambda: None,
         )
+
+    def allocated(self, project: Project) -> list[Item]:
+        """The items allocated to the project, each once; an item deleted since is left out."""
+        items: list[Item] = []
+        for item_id in dict.fromkeys(a.item_id for a in project.allocations):
+            try:
+                items.append(self.inventory.get(item_id))
+            except NotFoundError:
+                continue
+        return items
+
+    def project_prompt(self, project: Project, view: str = "", brief: str = "") -> str:
+        """What a drawing of the project asks for, as ``draw_project`` sends it."""
+        others = [(i.name, i.item_type) for i in self.inventory.list_items()]
+        return project_prompt(project, self.allocated(project), others, view, brief)
 
     @staticmethod
     def _card(scenarios: Scenarios, card: int) -> None:

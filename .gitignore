@@ -32,6 +32,8 @@ docs/reference/openapi.json
 # evaluation runs
 /eval/*
 !/eval/README.md
+# drawing reviews (./dev picture-review)
+/picture-review/
 
 # runtime
 /data/
