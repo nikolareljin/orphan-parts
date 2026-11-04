@@ -39,8 +39,6 @@ log = logging.getLogger("app.picture")
 PICTURE_NAME = re.compile(r"picture-(\d+)\.jpg")
 OFF_LINE = "pictures are off on this server (PICTURE_ENABLED)"
 USE_MAX = 200
-# how many accepted values the prompt carries: enough to say what the item is, not a sheet
-PROMPT_VALUES = 8
 # a finished project's prompt: what it is, the parts it is built from, one line on it
 TITLE_MAX = 120
 PARTS_MAX = 6
@@ -143,8 +141,8 @@ def facts_of(
     if rules.first:
         values.sort(key=lambda kv: 0 if any(w in kv[0].lower() for w in rules.first) else 1)
     sizes = name_sizes(item.name, item.item_type, params)
-    said = [f"{k} {v}" if cut is None else _line(f"{k} {v}", cut) for k, v in values]
-    return sizes + said[:limit]
+    stated = [f"{k} {v}" if cut is None else _line(f"{k} {v}", cut) for k, v in values]
+    return sizes + stated[:limit]
 
 
 def _about(what: str, facts: list[str], looks: str) -> str:
