@@ -329,6 +329,23 @@ async def test_the_gate_is_skipped_when_off(
     assert len(asked) == 1 and shown.check is None
 
 
+async def test_the_gate_never_checks_a_demo_visitors_drawing(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.ops.door import live_request
+
+    pictures, item_id, asked = await gated(settings, monkeypatch, [answer("wrong", "scale")])
+    token = live_request.set(False)
+    try:
+        gate = PictureGate(pictures)
+        assert not gate.on
+        shown = await gate.item(item_id, "a smart mirror")
+    finally:
+        live_request.reset(token)
+    await pictures.client.aclose()
+    assert len(asked) == 1 and shown.check is None
+
+
 # --- the tuning ----------------------------------------------------------------------------
 
 

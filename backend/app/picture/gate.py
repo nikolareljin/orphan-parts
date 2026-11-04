@@ -5,8 +5,9 @@ brief and that drawing is checked too. Both are kept; the better one is shown, t
 marked ``hidden``. Each check's cost is on the picture's record and in the spend ledger.
 
 On with ``PICTURE_REVIEW_GATE=1``; unset, it is on when the calls are live and off in fixture
-mode (where a check answers only from a recording). The demo set's loader never goes through
-it: the set's drawings stay one request each.
+mode (where a check answers only from a recording). Only the owner's draws go through it: a
+demo visitor's drawing is answered from the recordings and never checked or drawn again, and
+the demo set's loader never goes through it either (the set's drawings stay one request each).
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from PIL import UnidentifiedImageError
 from app.decide.schema import Scenarios
 from app.extract.imaging import BadImageError
 from app.model_api import ModelApiError
+from app.ops.door import for_visitor
 from app.picture.review import (
     Drawing,
     Facts,
@@ -88,7 +90,8 @@ class PictureGate:
 
     @property
     def on(self) -> bool:
-        return self.settings.picture_gate_on
+        # a visitor's calls go to the recordings: a check there would be a stand-in answer
+        return self.settings.picture_gate_on and not for_visitor()
 
     async def _check(
         self, folder: Path, kind: Kind, picture: Picture, facts: Facts
