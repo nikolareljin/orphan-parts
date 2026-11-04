@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Readiness } from './api'
-import { accessLost, demoText } from './access'
+import { accessLost, demoText, judgeMayChange, judgeText } from './access'
 
 type Demo = Omit<Readiness['demo'], 'live_models'> & { live_models?: boolean }
 
@@ -39,5 +39,23 @@ describe('accessLost', () => {
     expect(accessLost(403)).toBe(false)
     expect(accessLost(403, 'demo: the code unlocks saving, drafts, prices, projects and captures')).toBe(true)
     expect(accessLost(403, 'forbidden')).toBe(false)
+  })
+})
+
+describe('judge access', () => {
+  const judge = { code_id: 4, recorded: false, calls_per_day: 20, calls_left: 7, max_usd: 5, usd_left: 3.5 }
+
+  it('says what a judge code may still spend, or that it is on the recordings', () => {
+    expect(judgeText(null)).toBe('')
+    expect(judgeText(judge)).toBe('Judge access: 7 live calls left today, $3.50 left')
+    expect(judgeText({ ...judge, calls_left: 1 })).toBe('Judge access: 1 live call left today, $3.50 left')
+    expect(judgeText({ ...judge, recorded: true })).toBe('Judge access: recorded answers only')
+  })
+
+  it('lets a judge change only the items it added, and the owner every item', () => {
+    expect(judgeMayChange(judge, { owner_code: 4 })).toBe(true)
+    expect(judgeMayChange(judge, { owner_code: null })).toBe(false)
+    expect(judgeMayChange(judge, { owner_code: 9 })).toBe(false)
+    expect(judgeMayChange(null, { owner_code: null })).toBe(true)
   })
 })

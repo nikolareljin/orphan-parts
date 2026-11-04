@@ -2,9 +2,13 @@
 // What is known about access comes from GET /api/access alone, fetched apart from the
 // service checks, so a slow or failed /readyz or /api/version never takes the door away.
 
+import type { JudgeAccess } from './api'
+
 export interface AccessState {
   gated: boolean
   granted: boolean
+  // a judge's code: what it may still do; absent or null for the owner and the visitor
+  judge?: JudgeAccess | null
 }
 
 // null while the server has not answered yet (or every try so far has failed)

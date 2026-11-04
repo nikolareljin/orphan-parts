@@ -566,6 +566,8 @@ class Planner:
 
     def reserve(self, item_id: int) -> None:
         """An item is reserved while a selected, building or done project counts on it."""
+        if not self.inventory.writable(item_id):
+            return  # a judge's project holds the demo set's items without reserving them
         wanted = "reserved" if self.inventory.committed_elsewhere(item_id, 0) else "available"
         item = self.inventory.get(item_id)
         if item.availability != "gone" and item.availability != wanted:

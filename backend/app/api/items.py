@@ -14,9 +14,11 @@ from app.inventory import (
     ItemPatch,
     ItemSummary,
     NotFoundError,
+    ReadOnlyError,
     ReviewChange,
     VersionConflictError,
 )
+from app.model_api import CodeLimitError
 from app.ops.door import live_request
 from app.profiles import Profiles, UnknownProfileError
 
@@ -31,10 +33,22 @@ def version_conflict(_: Request, exc: Exception) -> JSONResponse:
     return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_409_CONFLICT)
 
 
+def read_only(_: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_403_FORBIDDEN)
+
+
+def code_limit(_: Request, exc: Exception) -> JSONResponse:
+    found = exc if isinstance(exc, CodeLimitError) else None
+    code = found.status if found is not None and found.status else 429
+    return JSONResponse({"detail": str(exc)}, status_code=code)
+
+
 Handler = Callable[[Request, Exception], Response]
 error_handlers: dict[type[Exception], Handler] = {
     NotFoundError: not_found,
     VersionConflictError: version_conflict,
+    ReadOnlyError: read_only,
+    CodeLimitError: code_limit,
 }
 
 

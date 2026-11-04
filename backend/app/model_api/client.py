@@ -31,7 +31,7 @@ from app.model_api.errors import (
 from app.model_api.fixtures import FixtureStore, request_key
 from app.model_api.ledger import CostLedger, LedgerEntry
 from app.model_api.pricing import Usage, cost_usd
-from app.ops.door import live_request
+from app.ops.door import code_meter, live_request, recorded_request
 from app.ops.logging import request_id_var
 
 log = logging.getLogger("app.model_api")
@@ -347,8 +347,9 @@ class ModelApiClient:
         self.twin: ModelApiClient | None = None
 
     def _for_request(self) -> "ModelApiClient | None":
-        """The twin when this request came through the demo door, else None (answer here)."""
-        if self.twin is not None and not live_request.get():
+        """The twin when this request came through the demo door or from a code kept on the
+        recorded answers, else None (answer here)."""
+        if self.twin is not None and (not live_request.get() or recorded_request.get()):
             return self.twin
         return None
 
@@ -675,6 +676,11 @@ class ModelApiClient:
                     code=_opt_str(err.get("code")),
                 )
             return fixture.response, True, 1, 0.0
+        # an issued code's own limits, read before each call that bills: one at its limit
+        # sends nothing (the call is charged to it in _record, beside the ledger line)
+        meter = code_meter.get()
+        if meter is not None:
+            meter.check()
         self.ledger.require_budget()
         data, tried, ms = await self._request(
             "POST", endpoint, body, op, files=files, max_attempts=attempts
@@ -769,6 +775,9 @@ class ModelApiClient:
         attempts: int,
         ms: float,
     ) -> None:
+        meter = code_meter.get()
+        if meter is not None and not fixture:
+            meter.charge(usd)
         self.ledger.record(
             LedgerEntry(
                 request_id=request_id_var.get(),

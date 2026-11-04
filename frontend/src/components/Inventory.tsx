@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { api, type Item, type ItemEvent, type ItemSummary, type PhotoPrivacy, type PrivacyArea, type ProfileSummary, type Provenance } from '../lib/api'
+import { api, type Item, type ItemEvent, type ItemSummary, type JudgeAccess, type PhotoPrivacy, type PrivacyArea, type ProfileSummary, type Provenance } from '../lib/api'
 import { fieldLabel, percent, printedDiffers, withUnit } from '../lib/format'
 import { AVAILABILITIES, INTENTS, PROVENANCES, asksForParent, availabilityLabel, cameFrom, photoReadLine, changedDetails, isConflict, mergeDetails, planLabel, proposedCount, provenanceLabel, reviewLabel, savedLabel, whenText } from '../lib/inventory'
 import Assess from './Assess'
@@ -15,6 +15,7 @@ import SectionNav, { type SectionEntry } from './SectionNav'
 import Value from './Value'
 import HelpTip from './HelpTip'
 import { HELP } from '../lib/help'
+import { JUDGE_LOCKED, judgeMayChange } from '../lib/access'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -37,6 +38,7 @@ export default function Inventory({
   onOpened,
   demo = false,
   samplesOnly = demo,
+  judge = null,
 }: {
   refresh: number
   openId?: number | null
@@ -44,6 +46,8 @@ export default function Inventory({
   demo?: boolean
   // no upload input (voice note, measure photo) until uploads are known to be open
   samplesOnly?: boolean
+  // a judge's code: only the items it added are its to change
+  judge?: JudgeAccess | null
 }) {
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(wanted)
@@ -139,6 +143,7 @@ export default function Inventory({
             id={openId}
             demo={demo}
             samplesOnly={samplesOnly}
+            judge={judge}
             onChanged={() => void load()}
             onClosed={() => {
               setOpenId(null)
@@ -155,12 +160,14 @@ function ItemPanel({
   id,
   demo,
   samplesOnly,
+  judge = null,
   onChanged,
   onClosed,
 }: {
   id: number
   demo: boolean
   samplesOnly: boolean
+  judge?: JudgeAccess | null
   onChanged: () => void
   onClosed: () => void
 }) {
@@ -290,7 +297,9 @@ function ItemPanel({
   const toConfirm = proposedCount(item)
   // the demo, or an item served as the demo visitor sees it (a session that ended unnoticed):
   // the details are shown, never saved
-  const readOnly = demo || item.redacted === true
+  // and, for a judge's code, an item it did not add (the server refuses those writes anyway)
+  const judgeLocked = !judgeMayChange(judge, item)
+  const readOnly = demo || item.redacted === true || judgeLocked
   const detailsChanged = (Object.keys(details) as (keyof typeof details)[]).some((k) => details[k] !== item[k])
 
   return (
@@ -462,7 +471,7 @@ function ItemPanel({
               </label>
             ))}
           {readOnly ? (
-            <p className="meta">Shown as in the public demo; sign in with the code to edit the details.</p>
+            <p className="meta">{judgeLocked ? `${JUDGE_LOCKED}.` : 'Shown as in the public demo; sign in with the code to edit the details.'}</p>
           ) : (
             <button type="submit" disabled={!detailsChanged}>
               Save details
@@ -511,7 +520,7 @@ function ItemPanel({
 
       {/* the wrapper stays empty, and hidden, when there is no picture to show */}
       <div className="item-section" data-section="picture">
-        <Picture item={item} demo={demo} />
+        <Picture item={item} demo={demo || judgeLocked} />
       </div>
 
       <div className="item-footer">
@@ -520,7 +529,8 @@ function ItemPanel({
             <input
               type="checkbox"
               checked={item.public}
-              disabled={readOnly}
+              disabled={readOnly || judge !== null}
+              title={judge !== null ? 'Judge access: what you add stays out of the public demo' : undefined}
               onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
             />
             <span>
@@ -543,7 +553,7 @@ function ItemPanel({
               type="button"
               className="danger quiet"
               disabled={readOnly}
-              title={readOnly ? 'The demo set cannot be deleted' : undefined}
+              title={judgeLocked ? JUDGE_LOCKED : readOnly ? 'The demo set cannot be deleted' : undefined}
               onClick={() => setConfirmDelete(true)}
             >
               Delete

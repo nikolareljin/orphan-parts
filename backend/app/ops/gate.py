@@ -24,8 +24,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
 from app.config import Settings
-from app.keys import AccessKeys, master_tag
-from app.ops.door import live_request
+from app.keys import AccessKey, AccessKeys, master_tag
+from app.keys.service import refusal
+from app.ops.door import code_meter, judge_code, live_request, recorded_request
 
 log = logging.getLogger("app.gate")
 
@@ -129,6 +130,39 @@ DEMO_ALLOWED = [
     ("POST", re.compile(r"^/api/measure$")),
 ]
 DEMO_LINE = "demo: the code unlocks saving, drafts, prices, projects and captures"
+
+# A judge's code (app.keys scopes): it reads what the demo visitor reads, the same redacted
+# answers, and changes only what it makes. What it may make without naming a record: an item,
+# a capture, a search, a project proposal, and the stateless readings. Everything else that
+# writes without a record of its own (the profile, the public marks) is the owner's.
+JUDGE_CREATE = [
+    ("POST", re.compile(r"^/api/items$")),
+    ("POST", re.compile(r"^/api/captures$")),
+    ("POST", re.compile(r"^/api/searches$")),
+    ("POST", re.compile(r"^/api/projects/propose$")),
+    ("POST", re.compile(r"^/api/extract$")),
+    ("POST", re.compile(r"^/api/segment$")),
+    ("POST", re.compile(r"^/api/samples/read$")),
+    ("POST", re.compile(r"^/api/assess$")),
+    ("POST", re.compile(r"^/api/measure$")),
+    ("POST", re.compile(r"^/api/find/pattern$")),
+]
+# the records a path names: its kind and the segment after it. An id is plain digits for a
+# judge (the router also takes `+1` or `01`; such a path is refused rather than looked up)
+_RECORD = re.compile(r"^/api/(items|drafts|captures|searches|candidates|projects|packs)/([^/]+)")
+_KIND = {
+    "items": "item",
+    "drafts": "draft",
+    "captures": "capture",
+    "searches": "search",
+    "candidates": "candidate",
+    "projects": "project",
+    "packs": "pack",
+}
+# never a judge's, own record or not: what shows a record to the public demo
+_JUDGE_NEVER = re.compile(r"^/api/(items|captures)/[^/]+/public$")
+JUDGE_LINE = "judge access: the demo set is read-only; what you add yourself is yours to change"
+JUDGE_UNKNOWN = "not found"
 # sid.expiry.door.key.binding.signature. The door: 0 the demo, 1 a session opened with a code,
 # 2 a pairing (a QR's short session, the live door, and the one kind that claims a phone code)
 _TOKEN_RE = re.compile(
@@ -235,26 +269,56 @@ class DailyAllowance:
 class Session:
     """Who a current token stands for: its id, whether it opens the live door, the issued
     record it came from (0 and an empty stamp for the master code or the demo), and whether
-    it is a pairing's short session rather than a browser's."""
+    it is a pairing's short session rather than a browser's. ``key`` is that record, with its
+    scope and limits (None for the master code)."""
 
-    __slots__ = ("kid", "live", "pairing", "sid", "stamp")
+    __slots__ = ("key", "kid", "live", "pairing", "sid", "stamp")
 
     def __init__(
-        self, sid: str, live: bool, kid: int = 0, stamp: str = "", pairing: bool = False
+        self,
+        sid: str,
+        live: bool,
+        kid: int = 0,
+        stamp: str = "",
+        pairing: bool = False,
+        key: AccessKey | None = None,
     ) -> None:
         self.sid = sid
         self.live = live
         self.kid = kid
         self.stamp = stamp
         self.pairing = pairing
+        self.key = key
+
+    @property
+    def judge(self) -> AccessKey | None:
+        """The record when it is a judge's code, else None."""
+        return self.key if self.key is not None and self.key.judge else None
+
+
+class CodeMeter:
+    """An issued code's limits on the model client (app.ops.door.Meter): read before each call
+    that bills, charged after it with what it cost."""
+
+    def __init__(self, keys: AccessKeys, kid: int) -> None:
+        self.keys = keys
+        self.kid = kid
+
+    def check(self) -> None:
+        self.keys.check(self.kid)
+
+    def charge(self, usd: float) -> None:
+        self.keys.charge(self.kid, usd)
 
 
 class Gate:
     def __init__(self, settings: Settings, keys: AccessKeys | None = None) -> None:
         code = settings.demo_access_code.get_secret_value() if settings.demo_access_code else ""
         self.enabled = bool(code)
-        # the codes issued as records, beside the master code; set once the inventory is open
+        # the codes issued as records, beside the master code; set once their file is open
         self.keys = keys
+        # who made a record, asked for a judge's request; set once the inventory is open
+        self.owners: Callable[[str, int], int | None] | None = None
         # whether a key is configured, so the live door reaches the live models at all
         self.live_models = settings.model_api_mode != "fixture"
         # the code is the only secret there is: the session key is derived from it, so a
@@ -355,15 +419,16 @@ class Gate:
             return None
         kid = int(kid_text)
         stamp = ""
+        key: AccessKey | None = None
         if kid:
             # the record must stand, and be the one the session was opened with
-            found = self.keys.stamp(kid) if self.keys is not None else None
-            if found is None:
+            key = self.keys.current(kid) if self.keys is not None else None
+            if key is None:
                 return None
-            stamp = found
+            stamp = key.created_at
         if not hmac.compare_digest(bind, self._bind(sid, stamp)):
             return None
-        return Session(sid, door != "0", kid, stamp, pairing=door == "2")
+        return Session(sid, door != "0", kid, stamp, pairing=door == "2", key=key)
 
     def _verify_old(self, token: str, now: float) -> Session | None:
         sid, exp_text, door, kid_text, sig = token.split(".")
@@ -372,14 +437,48 @@ class Gate:
             return None
         kid = int(kid_text)
         stamp = ""
+        key: AccessKey | None = None
         if kid:
-            found = self.keys.stamp(kid) if self.keys is not None else None
-            if found is None:
+            key = self.keys.current(kid) if self.keys is not None else None
+            if key is None:
                 return None
-            stamp = found
+            stamp = key.created_at
         if not hmac.compare_digest(sig, self._mac(f"{sid}.{exp}.{door}.{kid}.{stamp}", 32)):
             return None
-        return Session(sid, door == "1", kid, stamp)
+        return Session(sid, door == "1", kid, stamp, key=key)
+
+    # --- a judge's code ---------------------------------------------------
+
+    def judge_door(self, method: str, path: str, kid: int) -> tuple[str, int, str]:
+        """How a judge's request goes: ``("live", 0, "")`` for what it may change or make (its
+        own records, the creations), ``("visitor", 0, "")`` for a read of the owner's (the demo
+        visitor's answers: public only, private fields left out), or ``("refuse", status,
+        line)``. A record another code made is not there (404); the owner's is read-only."""
+        if _JUDGE_NEVER.match(path):
+            return "refuse", 403, JUDGE_LINE
+        found = _RECORD.match(path)
+        if found is not None:
+            kind, segment = _KIND[found.group(1)], found.group(2)
+            if kind == "project" and segment == "propose":
+                found = None
+            elif kind == "pack" and re.fullmatch(r"\d{1,12}\.md", segment):
+                segment = segment[:-3]
+            elif not re.fullmatch(r"\d{1,12}", segment):
+                return "refuse", 404, JUDGE_UNKNOWN
+        if found is not None:
+            owner = self.owners(kind, int(segment)) if self.owners is not None else None
+            if owner == kid:
+                return "live", 0, ""
+            if owner is not None:
+                return "refuse", 404, JUDGE_UNKNOWN
+            if demo_allowed(method, path) and method == "GET":
+                return "visitor", 0, ""
+            return "refuse", 403, JUDGE_LINE
+        if method == "GET":
+            return ("visitor", 0, "") if demo_allowed(method, path) else ("refuse", 403, JUDGE_LINE)
+        if any(m == method and p.fullmatch(path) for m, p in JUDGE_CREATE):
+            return "live", 0, ""
+        return "refuse", 403, JUDGE_LINE
 
     # --- who is asking ---------------------------------------------------
 
@@ -475,6 +574,7 @@ class GateMiddleware(BaseHTTPMiddleware):
         # no gate: a machine of your own, every request is the owner's; with a gate, the
         # session decides the door, and no session is the demo visitor
         visitor, live = ip, True
+        judge: AccessKey | None = None
         if gate.enabled:
             # a token from an issued code is checked against its record: a read, off the loop
             given = gate.token_of(request)
@@ -486,6 +586,16 @@ class GateMiddleware(BaseHTTPMiddleware):
                 live = False
             else:
                 visitor, live = session.sid, session.live
+                judge = session.judge if live else None
+        if judge is not None:
+            # a judge's code: its own records live, the owner's read as the demo visitor reads
+            # them, everything else refused before the route runs
+            how, status, line = await asyncio.to_thread(gate.judge_door, method, path, judge.id)
+            if how == "refuse":
+                log.info("judge: refused", extra={"path": path, "status": status})
+                return _refused(status, line)
+            if how == "visitor":
+                live = False
         if not live and not demo_allowed(method, path):
             log.info("demo: a write was refused", extra={"path": path})
             return _refused(403, DEMO_LINE)
@@ -499,11 +609,19 @@ class GateMiddleware(BaseHTTPMiddleware):
                     429, f"this address's hourly allowance of tries is used; wait {retry} s", retry
                 )
         # the demo visitor's tries are answered from the recordings and cost nothing, so only
-        # the live door is counted against what spends
-        if live and expensive(method, path):
+        # the live door is counted against what spends; so is a code kept on the recordings
+        recorded = judge is not None and judge.recorded
+        if live and not recorded and expensive(method, path):
             if gate.paused:
                 log.info("paused: a call that spends was refused", extra={"path": path})
                 return _refused(503, "paused by the operator; nothing is sent to the models")
+            if judge is not None and gate.keys is not None:
+                # the code's own limits, read before anything is counted or sent
+                used = await asyncio.to_thread(gate.keys.usage, judge.id)
+                over = refusal(judge, used)
+                if over is not None:
+                    log.info("limit: judge code", extra={"path": path, "status": over.status})
+                    return _refused(over.status or 429, str(over))
             ok, retry = gate.visitor.take(visitor)
             if not ok:
                 log.info(
@@ -519,10 +637,20 @@ class GateMiddleware(BaseHTTPMiddleware):
         else:
             spent = spend_key.set(None)
         token = live_request.set(live)
-        caller = caller_key.set(visitor if live else None)
+        caller = caller_key.set(visitor if live and not recorded else None)
+        sandbox = judge_code.set(judge.id if judge is not None else 0)
+        on_tape = recorded_request.set(recorded)
+        meter = code_meter.set(
+            CodeMeter(gate.keys, judge.id)
+            if judge is not None and not recorded and gate.keys is not None
+            else None
+        )
         try:
             return await call_next(request)
         finally:
             live_request.reset(token)
             spend_key.reset(spent)
             caller_key.reset(caller)
+            judge_code.reset(sandbox)
+            recorded_request.reset(on_tape)
+            code_meter.reset(meter)

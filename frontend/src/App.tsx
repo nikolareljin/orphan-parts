@@ -12,7 +12,7 @@ import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type 
 import { pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
 import { DEFAULT_LIMITS } from './lib/photos'
 import { HELP } from './lib/help'
-import { demoText } from './lib/access'
+import { demoText, judgeText } from './lib/access'
 import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs, uploadsAllowed, type AccessState, type KnownAccess } from './lib/door'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
@@ -85,7 +85,7 @@ export default function App() {
         .then((answer) => {
           if (seq !== accessSeq.current) return
           failures = 0
-          setAccess({ gated: answer.gated, granted: answer.granted })
+          setAccess({ gated: answer.gated, granted: answer.granted, judge: answer.judge ?? null })
         })
         .catch(() => {
           if (seq !== accessSeq.current) return
@@ -128,6 +128,13 @@ export default function App() {
     return () => window.removeEventListener(ACCESS_REQUIRED_EVENT, lost)
   }, [])
 
+  // a judge's code: what it may still spend changes with what it does, so it is asked again
+  // whenever something was saved
+  useEffect(() => {
+    if (saved > 0) checkAccess.current()
+  }, [saved])
+  const judge = access?.judge ?? null
+
   // the header's one door: Sign in with the code, Sign out, or the open server's note
   const door = doorOf(access)
   // the demo door: gated, and no session; the code opens the rest
@@ -152,7 +159,7 @@ export default function App() {
     } catch {
       // the token is gone either way; the server is asked where the browser stands
     }
-    knowAccess(answer ? { gated: answer.gated, granted: answer.granted } : SIGNED_OUT)
+    knowAccess(answer ? { gated: answer.gated, granted: answer.granted, judge: null } : SIGNED_OUT)
     if (!answer) checkAccess.current()
     setReloads((n) => n + 1)
     setSaved((n) => n + 1)
@@ -198,7 +205,7 @@ export default function App() {
           <AccessGate
             onGranted={(opened) => {
               setSignIn(false)
-              knowAccess(opened.gated ? SIGNED_IN : { gated: false, granted: true })
+              knowAccess(opened.gated ? { ...SIGNED_IN, judge: opened.judge ?? null } : { gated: false, granted: true })
               setReloads((n) => n + 1)
               // the page under the dialog loads again through the door it now has
               setSaved((n) => n + 1)
@@ -249,7 +256,7 @@ export default function App() {
             <h2>My inventory</h2>
             <HelpTip entry={demo ? HELP.inventoryDemo : HELP.inventory} />
           </div>
-          <Inventory refresh={saved} openId={openItem} onOpened={() => setOpenItem(null)} demo={demo} samplesOnly={samplesOnly} />
+          <Inventory refresh={saved} openId={openItem} onOpened={() => setOpenItem(null)} demo={demo} samplesOnly={samplesOnly} judge={judge} />
         </section>
       )}
 
@@ -296,6 +303,7 @@ export default function App() {
             <span>{Object.values(status.version.models).join(', ')}</span>
             <span>{status.ready.data_dir_writable ? 'storage writable' : 'storage read-only'}</span>
             {demoText(status.ready, !demo) && <span>{demoText(status.ready, !demo)}</span>}
+            {judgeText(judge) && <span className="judge-line">{judgeText(judge)}</span>}
             <details className="pair" onToggle={(e) => setPairOpened(e.currentTarget.open ? (n) => n + 1 : 0)}>
               <summary>Pair the phone</summary>
               <p>

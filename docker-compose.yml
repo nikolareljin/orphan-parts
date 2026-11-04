@@ -81,6 +81,7 @@ services:
       E2E_BASE_URL: http://localhost:5173
       E2E_VIDEO: ${E2E_VIDEO:-retain-on-failure}
       E2E_ACCESS_CODE: ${DEMO_ACCESS_CODE:-}
+      E2E_JUDGE_CODE: ${E2E_JUDGE_CODE:-}
     volumes:
       - ./e2e:/e2e
     network_mode: "service:frontend"

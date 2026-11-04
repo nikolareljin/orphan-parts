@@ -98,7 +98,7 @@ test('the API answers the demo visitor with recordings and refuses every write',
   const profiles = await request.get('/api/profiles')
   expect(profiles.status()).toBe(200)
   const access = (await (await request.get('/api/access')).json()) as { gated: boolean; granted: boolean; live: boolean }
-  expect(access).toEqual({ gated: true, granted: false, live: false, token: '', expires_at: 0 })
+  expect(access).toEqual({ gated: true, granted: false, live: false, token: '', expires_at: 0, judge: null })
 })
 
 test('a public item shows the visitor neither its location nor its notes', async ({ page, playwright, baseURL }) => {

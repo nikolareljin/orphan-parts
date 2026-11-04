@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.keys import AccessKeys
+from app.keys import AccessKey, AccessKeys
 from app.main import create_app
 from app.ops.gate import COOKIE, DEMO_LINE, Allowance, DailyAllowance, Gate, demo_allowed, expensive
 from tests.conftest import make_photo
@@ -109,7 +109,14 @@ def test_sessions_are_signed_bound_to_the_code_and_end(tmp_path: Path) -> None:
 def test_without_a_code_nothing_is_gated(client: TestClient) -> None:
     assert client.get("/api/items").status_code == 200
     body = client.get("/api/access").json()
-    assert body == {"gated": False, "granted": True, "live": False, "token": "", "expires_at": 0}
+    assert body == {
+        "gated": False,
+        "granted": True,
+        "live": False,
+        "token": "",
+        "expires_at": 0,
+        "judge": None,
+    }
     assert client.post("/api/access", json={"code": "whatever"}).json()["granted"] is True
     demo = client.get("/readyz").json()["demo"]
     assert demo["gated"] is False and demo["paused"] is False and demo["daily_used"] == 0
@@ -181,7 +188,7 @@ def test_the_right_code_opens_a_session_in_a_cookie_and_as_a_token(gated: TestCl
 
 
 def test_an_issued_code_opens_the_door_until_it_is_revoked(gated: TestClient) -> None:
-    keys = AccessKeys(gated.app.state.inventory.store)
+    keys = gated.app.state.gate.keys
     code, _ = keys.issue("judges", 7)
     opened = gated.post("/api/access", json={"code": code})
     assert opened.status_code == 200 and opened.json()["granted"] is True
@@ -223,6 +230,7 @@ def test_with_a_key_the_code_is_the_live_door_and_the_demo_gets_recordings(
             "live": False,
             "token": "",
             "expires_at": 0,
+            "judge": None,
         }
         opened = c.post("/api/access", json={"code": CODE}).json()
         assert opened["granted"] is True and opened["live"] is True
@@ -263,9 +271,9 @@ def test_leaving_clears_a_secure_cookie_as_secure(tmp_path: Path) -> None:
 
 
 def test_a_record_with_the_same_id_after_a_reset_is_a_stranger(tmp_path: Path) -> None:
-    from app.inventory.store import Store
+    from app.keys.store import keys_store
 
-    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    keys = AccessKeys(keys_store(tmp_path / "access_keys.sqlite3"))
     gate = Gate(gated_settings(tmp_path), keys)
     _, record = keys.issue("judges", 7)
     token, _ = gate.issue(kid=record.id, stamp=record.created_at)
@@ -398,20 +406,20 @@ def test_demo_settings_are_checked(tmp_path: Path) -> None:
 
 
 def test_a_forged_new_shape_token_is_refused_before_any_record_is_read(tmp_path: Path) -> None:
-    from app.inventory.store import Store
+    from app.keys.store import keys_store
 
-    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    keys = AccessKeys(keys_store(tmp_path / "access_keys.sqlite3"))
     gate = Gate(gated_settings(tmp_path), keys)
     _, record = keys.issue("judges", 7)
     token, _ = gate.issue(kid=record.id, stamp=record.created_at)
     reads: list[int] = []
-    real = keys.stamp
+    real = keys.current
 
-    def counted(kid: int) -> str | None:
+    def counted(kid: int) -> AccessKey | None:
         reads.append(kid)
         return real(kid)
 
-    keys.stamp = counted  # type: ignore[method-assign]
+    keys.current = counted  # type: ignore[method-assign]
     sid, exp, door, kid, bind, sig = token.split(".")
     for forged in (
         f"{sid}.{exp}.{door}.{kid}.{bind}.{'a' * 32}",
@@ -429,9 +437,9 @@ def test_a_session_of_the_shape_before_the_binding_still_opens_the_door(tmp_path
     import hmac
     import time
 
-    from app.inventory.store import Store
+    from app.keys.store import keys_store
 
-    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    keys = AccessKeys(keys_store(tmp_path / "access_keys.sqlite3"))
     gate = Gate(gated_settings(tmp_path), keys)
     _, record = keys.issue("judges", 7)
     key = hashlib.sha256(b"opl-session:" + CODE.encode()).digest()

@@ -28,8 +28,9 @@ def _pairing(
     request: Request, origin: str, gate: GateDep, settings: SettingsDep, api: str = ""
 ) -> Pairing:
     session = gate.verify(gate.token_of(request)) if gate.enabled else None
-    # only a browser through the door hands out a pairing; a pairing does not beget another
-    if session is not None and (not session.live or session.pairing):
+    # only a browser through the door hands out a pairing; a pairing does not beget another,
+    # and a judge's code pairs no phone (its page pairs one as the demo visitor)
+    if session is not None and (not session.live or session.pairing or session.judge is not None):
         session = None
     served = served_origins(request.headers, settings.cors_origin_list)
     try:

@@ -80,6 +80,11 @@ class ItemSummary(BaseModel):
     decided: str = Field(
         default="", description="on the list: the last choice made for the item, if any"
     )
+    owner_code: int | None = Field(
+        default=None,
+        description="the judge's access code that added the item (its record id), or null for"
+        " the owner's and the demo set's; a judge changes only its own",
+    )
 
     # a product key, a MAC address or a password typed into a name is masked for the visitor
     @field_serializer("name", "condition")

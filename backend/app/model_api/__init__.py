@@ -20,6 +20,7 @@ from app.model_api.client import (
     user_message,
 )
 from app.model_api.errors import (
+    CodeLimitError,
     FixtureMissingError,
     IncompleteResponseError,
     ModelApiError,
@@ -31,6 +32,7 @@ from app.model_api.ledger import CostLedger, LedgerEntry, LedgerSummary
 from app.model_api.pricing import Usage, cost_usd
 
 __all__ = [
+    "CodeLimitError",
     "CostLedger",
     "FixtureMissingError",
     "FixtureStore",
