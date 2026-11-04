@@ -82,12 +82,12 @@ module.
 - [Decide](../guides/decide.md): each reuse card's *With what you have* is checked against what
   you own; a kind none of whose items works with the rest is taken out and named, with its fix;
   each idea lists the pairings of what it names.
-- With `COMPAT_PROMPTS=1` the models are told too: the proposals' tool loop has a
+- The models are told too (`COMPAT_PROMPTS`, on by default): the proposals' tool loop has a
   `check_allocation` tool that refuses an incompatible pick with the reason and what would fit
   in its place, the inventory it lists carries each item's values, the Decide briefs carry the
   item's pairings, and a missing requirement's search names the part that fits (*DDR3 SO-DIMM
-  laptop memory for ...*). Off, every request is what it was, so the recordings answer as
-  before; the rules check every result either way.
+  laptop memory for ...*). `COMPAT_PROMPTS=0` leaves them out; the rules check every result
+  either way.
 
 ## Not yet
 

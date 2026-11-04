@@ -117,11 +117,12 @@ hold is not proposed, and a toaster called "old laptop" does not become a laptop
 rules](../concepts/compatibility.md) keep only picks that physically work together (memory of
 the generation and form the laptop or board takes, a processor of the board's socket, a drive
 of the size and interface its bay, port or adapter takes). The blocking requirements are
-checked first, so the laptop stays and the stick that does not fit it goes: on the demo set the
-home automation server's SK hynix DDR4 stick is refused for the DDR3 ThinkPad T510, and the
-memory requirement reads *incompatible: DDR4 SO-DIMM in a DDR3 laptop (ThinkPad T510)*, *what
-fits: DDR3 SO-DIMM laptop memory* and *yours that fits: ADATA 8 GB DDR3L laptop memory* with
-**Use** beside it. Every project lists its pairings under **Compatibility**, each *fits*, *does
+checked first, so the laptop stays and the stick that does not fit it goes: an SK hynix DDR4
+stick picked for the DDR3 ThinkPad T510 is refused, and the memory requirement reads
+*incompatible: DDR4 SO-DIMM in a DDR3 laptop (ThinkPad T510)*, *what fits: DDR3 SO-DIMM laptop
+memory* and *yours that fits: ADATA 8 GB DDR3L laptop memory* with **Use** beside it. Muse
+Spark sees the same refusal before it answers (the `check_allocation` tool), so on the demo set
+it puts the ADATA DDR3L stick in the T510 itself. Every project lists its pairings under **Compatibility**, each *fits*, *does
 not fit* or *unknown: check*, with why and the fix of a failure (an item of yours that fits, or
 the part with **Search Marketplace**); an adapter with no drive of its kind says so (*nothing
 you own goes in it: it takes an M.2 drive*). **Use it** is refused the same way, with the

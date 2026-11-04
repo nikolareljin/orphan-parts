@@ -209,13 +209,9 @@ def test_the_visitor_reads_no_pickup_area_of_any_draft(gated: TestClient) -> Non
     assert all("the owner's area" in d["pickup"] for d in seen.json())
 
 
-# What the compatibility rules changed and the next record run makes: the home automation
-# server no longer holds the DDR4 stick, so its drawings and the search for its memory are new
-# requests. The record run empties this (compat-rerecord), and the set replays whole again.
-PENDING_RECORDING: tuple[str, ...] = (
-    "project Home automation server from spare laptop: picture",
-    "home_automation_server.memory: the search plan",
-)
+# Requests a change made new that the next record run makes, said here until it does; empty,
+# the set replays whole.
+PENDING_RECORDING: tuple[str, ...] = ()
 
 
 @pytest.mark.anyio

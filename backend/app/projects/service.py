@@ -46,6 +46,7 @@ log = logging.getLogger("app.projects")
 
 MAX_OUTPUT_TOKENS = 1600
 MAX_STEPS = 4
+CHECK_STEPS = 2
 # kept beside the answers the demo loader writes: they are not the owner's profile
 BY_DEMO = "by_demo"
 INSTRUCTIONS = (
@@ -341,7 +342,8 @@ class Planner:
             + (CHECK_INSTRUCTIONS if self.settings.compat_prompts else ""),
             effort="low",
             max_output_tokens=MAX_OUTPUT_TOKENS,
-            max_steps=MAX_STEPS,
+            # the check is one or two more steps: the picks, then the picks fixed
+            max_steps=MAX_STEPS + (CHECK_STEPS if self.settings.compat_prompts else 0),
             op="propose",
         )
         self.last_proposed = len(response.parsed.proposals)
