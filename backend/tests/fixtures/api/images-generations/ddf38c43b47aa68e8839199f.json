@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "ddf38c43b47aa68e8839199f",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Home server and backup built from laptop (brand DELL), hard drive (brand TOSHIBA, connector sata, model number MQ01ACF050), laptop memory (brand SK hynix, part number HMAA1GS6CJR6N-XNNOBD); Always-on photo and document backup reachable at home.; an opened laptop about 35 cm wide on a wooden desk, wired to a router with antennas and to one bare 2.5 inch hard drive by a single cable; the memory is inside the laptop and not shown; no second drive, no extra box, no words or logos, not a desktop tower, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793750193,
+    "data": [
+      {
+        "b64_json": "@ddf38c43b47aa68e8839199f-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4153,
+      "output_tokens": 1251,
+      "total_tokens": 5404
+    }
+  },
+  "status": 200
+}

@@ -25,6 +25,10 @@
 # `propose:`, `rounds` asks again with a note each, `fill` puts an item on a requirement left
 # open, `select` selects the named templates' projects in order (in place of `packs`),
 # `plan_missing` plans a search for what each still needs, `views` draws each once more per view.
+# A drawing can carry a correction from ./dev picture-review: an item's `picture_brief` and
+# `reuse_picture_brief`, a project's under `propose: corrections:` by its template id (or
+# title), a view's as `<template> / <view>`; each is said in that drawing's request, so it is a
+# request of its own with its own recording.
 title: a drawer of idle things
 currency: USD
 country: US
@@ -150,6 +154,7 @@ items:
     photos: [photos/tplink-pa2010.jpg, photos/tplink-pa2010-label.jpg]
     condition: still in its plastic wrap; one unit, its twin is missing
     picture: a home automation hub on a shelf by the router, linked through this adapter, unwrapped and plugged into the wall socket
+    picture_brief: "exactly one small white powerline adapter, the size of a deck of cards, out of its wrap and plugged straight into the wall socket under the shelf, an Ethernet cable from it up to a small hub beside the router; the plastic wrap named above is how it lies in the drawer today, do not draw it; no second adapter, no words or logos"
     decide: true
     ideas: true
     reuse_picture: true
@@ -587,3 +592,8 @@ propose:
   views:
     - as a close-up of how the parts fit together
     - from above, as it is used
+  corrections:
+    "smart_mirror": "an 18 inch 5:4 computer monitor, about 46 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above a small bench; only a clock and weather icons glow through the glass; a small mirror, not a TV; no words or logos"
+    "custom_nas / from above, as it is used": "seen from above: an open ATX mid-tower case on a desk, the desktop motherboard with a cooler and one full-length memory stick in the slot beside it, one 2.5 inch SSD in a drive bay, a short PCIe card holding two M.2 drives in a slot, an ATX power supply and a network cable; no second drive, no words, logos or model numbers"
+    "home_server": "an opened laptop about 35 cm wide on a wooden desk, wired to a router with antennas and to one bare 2.5 inch hard drive by a single cable; the memory is inside the laptop and not shown; no second drive, no extra box, no words or logos, not a desktop tower"
+    "arcade_table / from above, as it is used": "seen from above: a wooden coffee table with a glass top; under the glass a 24 inch widescreen monitor lies flat, about 53 x 30 cm, much wider than the opened laptop that runs it at one end; two joysticks and buttons along the edge; no words or logos"

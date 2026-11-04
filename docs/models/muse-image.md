@@ -77,6 +77,16 @@ writes into the Modal secret ([deployment](../operations/deployment.md)).
   in `DATA_DIR/projects/<id>/`, cleared with the inventory by `./dev demo`. No schema change:
   the files and their records are the storage.
 
+## Corrections and review
+
+A drawing can carry a correction: a brief said in the request before its closing words
+(*...; an 18 inch monitor behind a two-way mirror in a slim frame, not a TV, finished and in use
+in a home, no text, no logos, no people*), at most 400 characters. Without one the request is
+exactly what it was, so every recording still answers. The demo set keeps them as an item's
+`picture_brief` and `reuse_picture_brief` and a project's `propose.corrections`; `./dev
+picture-review` checks every drawing against its facts with Muse Spark, proposes the brief and,
+once approved, draws again with it ([Review and redraw the drawings](../guides/picture-review.md)).
+
 ## Cost
 
 Priced per image generated at the published rate ($0.01), recorded in the ledger under

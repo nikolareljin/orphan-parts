@@ -1,0 +1,54 @@
+{
+  "endpoint": "/responses",
+  "op": "decide-review",
+  "model": "muse-spark-1.3",
+  "key": "fallback-decide-review",
+  "request": {
+    "instructions": "decide-review instructions, see app/picture/review.py",
+    "input": "the facts and, for a drawing, the drawing itself, see app/picture/review.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "DecideAnswer",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_decide_review",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "msg_fixture_decide_review",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "{\"sound\": false, \"flags\": [{\"where\": \"memory\", \"claim\": \"DDR4 laptop memory added to the laptop\", \"fact\": \"the laptop takes DDR3 memory; a DDR4 module does not fit its slots\", \"severity\": \"major\"}]}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 900,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 120,
+      "output_tokens_details": {
+        "reasoning_tokens": 40
+      },
+      "total_tokens": 1020
+    }
+  },
+  "status": 200
+}

@@ -113,6 +113,10 @@ Each proposal is drawn once by Muse Image; the visitor reads the steps open.
 
 ![Garage parking helper, for a visitor: its drawing, the UNO, the HC-SR04 module and the buzzer, the steps](../assets/shots/examples/52-visitor-parking.png)
 
+Every drawing was checked against the facts it had to show, and the ones that missed were drawn
+again: the hall smart mirror's first drawing was a 50 inch television, not an 18 inch monitor
+behind a mirror ([How the drawings were improved](../project/picture-review-results.md)).
+
 The selected NAS, as a visitor reads it: the drawings and the project, no buttons.
 
 ![The custom NAS for a visitor: the three drawings, the items, Still needed with Search Marketplace, the steps, and the sign-in line in place of the buttons](../assets/shots/examples/51-visitor-nas.png)

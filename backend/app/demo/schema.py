@@ -88,6 +88,12 @@ class DemoItem(BaseModel):
         description="draw a picture of the item as this use (a template id or a few words);"
         " fixture mode shows it only when a recording of that drawing is kept",
     )
+    picture_brief: str = Field(
+        default="",
+        max_length=400,
+        description="a correction said with the item's picture (from a review of an earlier"
+        " drawing: what to show and what not); a new request, so its own recording",
+    )
     decide: bool = Field(
         default=False,
         description="write the Decide cards (keep and fix, reuse, sell or give away) once its"
@@ -103,6 +109,11 @@ class DemoItem(BaseModel):
         default=False,
         description="draw the first reuse card of its Decide cards with Draw it (needs"
         " decide); only a recording of this very drawing answers in fixture mode",
+    )
+    reuse_picture_brief: str = Field(
+        default="",
+        max_length=400,
+        description="a correction said with the reuse card's picture, as picture_brief is",
     )
     decision: Choice | None = Field(
         default=None,
@@ -227,6 +238,33 @@ class DemoPropose(BaseModel):
         description="more drawings of each project ``select`` names, one per view (in its"
         " room, a close-up of the parts): each its own request, so its own recording",
     )
+
+    corrections: dict[str, str] = Field(
+        default={},
+        description="a correction said with a project's drawing, by its template id or its"
+        " title (the drawing as built), or by `<template or title> / <view>` (that view's"
+        " drawing alone); each a new request, so its own recording",
+    )
+
+    @field_validator("corrections")
+    @classmethod
+    def _corrections(cls, values: dict[str, str]) -> dict[str, str]:
+        for key, brief in values.items():
+            if not key.strip() or not brief.strip() or len(brief) > 400:
+                raise ValueError(f"correction {key!r}: a key and a brief of 1 to 400 characters")
+        return values
+
+    def correction(self, template: str, title: str, view: str = "") -> str:
+        """The brief said with a project's drawing (``view`` empty: the drawing as built)."""
+        names = {template.strip().casefold(), " ".join(title.split()).casefold()}
+        shown = " ".join(view.split()).casefold()
+        for key, brief in self.corrections.items():
+            name, sep, which = key.partition(" / ")
+            if " ".join(name.split()).casefold() not in names:
+                continue
+            if (" ".join(which.split()).casefold() if sep else "") == shown:
+                return brief.strip()
+        return ""
 
     @field_validator("select")
     @classmethod

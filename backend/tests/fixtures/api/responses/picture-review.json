@@ -1,0 +1,54 @@
+{
+  "endpoint": "/responses",
+  "op": "picture-review",
+  "model": "muse-spark-1.3",
+  "key": "fallback-picture-review",
+  "request": {
+    "instructions": "picture-review instructions, see app/picture/review.py",
+    "input": "the facts and, for a drawing, the drawing itself, see app/picture/review.py",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ReviewAnswer",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "id": "resp_fixture_picture_review",
+    "object": "response",
+    "status": "completed",
+    "model": "muse-spark-1.3",
+    "output": [
+      {
+        "id": "msg_fixture_picture_review",
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "text": "{\"verdict\": \"wrong\", \"confidence\": 0.9, \"issues\": [{\"category\": \"wrong_device\", \"detail\": \"The screen is drawn as a wall television of 50 inches or more, not an 18 inch monitor.\"}, {\"category\": \"scale\", \"detail\": \"The frame fills the wall; an 18 inch monitor behind a mirror makes a frame about 45 by 40 cm.\"}], \"brief\": \"an 18 inch 5:4 monitor behind a two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall; not a TV\", \"summary\": \"A large wall television framed as a mirror in a hallway.\"}"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 1100,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 180,
+      "output_tokens_details": {
+        "reasoning_tokens": 40
+      },
+      "total_tokens": 1280
+    }
+  },
+  "status": 200
+}

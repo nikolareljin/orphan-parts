@@ -419,7 +419,7 @@ class Loader:
                     pictures = self.pictures
                     drawn = await self.exactly(
                         f"{item.key}: reuse card picture",
-                        lambda: pictures.draw_card(cards, 0),
+                        lambda: pictures.draw_card(cards, 0, item.reuse_picture_brief),
                         out,
                     )
                     if drawn is not None:
@@ -461,6 +461,7 @@ class Loader:
                 out.skipped.append(f"{where}: {exc}")
                 continue
             kept = [filled if p.id == filled.id else p for p in kept]
+        self.corrections = propose
         if propose.pictures:
             for project in kept:
                 await self.draw_project(project, out)
@@ -496,7 +497,12 @@ class Loader:
             return
         pictures = self.pictures
         what = f"project {project.title}: picture" + (f" ({view})" if view else "")
-        drawn = await self.exactly(what, partial(pictures.draw_project, project, view), out)
+        brief = (
+            ""
+            if self.corrections is None
+            else self.corrections.correction(project.template, project.title, view)
+        )
+        drawn = await self.exactly(what, partial(pictures.draw_project, project, view, brief), out)
         if drawn is not None:
             out.pictures += 1
             out.cost_usd += drawn.cost_usd
@@ -661,7 +667,7 @@ class Loader:
             return
         token = exact_replay.set(True)
         try:
-            picture = await self.pictures.draw(item_id, item.picture)
+            picture = await self.pictures.draw(item_id, item.picture, item.picture_brief)
         except NoRecordingError:
             out.unrecorded.append(f"{item.key}: picture (one ./dev record-fixtures run draws it)")
         except PicturesOffError:
@@ -678,6 +684,8 @@ class Loader:
     currency: str = "USD"
     country: str = ""
     ids: dict[str, int] = {}
+    # the set's proposals, read for the corrections said with a project's drawings
+    corrections: DemoPropose | None = None
 
 
 def reset(settings: Settings) -> list[str]:

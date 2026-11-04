@@ -109,6 +109,7 @@ nav:
       - Meta glasses: guides/glasses.md
       - Creating a new category: guides/new-category.md
       - Training and improving the reads: guides/improving.md
+      - Review and redraw the drawings: guides/picture-review.md
   - Meta models:
       - Overview: models/index.md
       - Muse Spark: models/muse-spark.md
@@ -146,6 +147,7 @@ nav:
   - Project:
       - Built during the hackathon: project/hackathon.md
       - How it fits together: project/flow.md
+      - How the drawings were improved: project/picture-review-results.md
       - Lessons learned: project/lessons.md
       - Next steps: project/next.md
       - Why you would want this: project/pitch.md
