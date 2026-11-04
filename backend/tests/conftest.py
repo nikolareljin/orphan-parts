@@ -10,6 +10,9 @@ from PIL import Image
 # Default to fixture mode before the app modules load: importing app.main builds
 # the app from the environment, which fails without a key in live mode.
 os.environ.setdefault("OPL_FAKE_API", "1")
+# the tests read requests nobody recorded on the operations' stand-ins; the refusal a person
+# gets instead is tested with FIXTURE_STUBS off
+os.environ["FIXTURE_STUBS"] = "1"
 # A code left in the shell (or passed through by Compose) would gate every test's app: the
 # tests that want the gate set their own.
 os.environ.pop("DEMO_ACCESS_CODE", None)

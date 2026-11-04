@@ -435,6 +435,8 @@ cmd_e2e() {
   need_env_file
   docker_running || die "docker is not running; $DOCKER_HELP"
   export OPL_FAKE_API=1
+  # the browser checks click requests nobody recorded: the stand-in answers them here
+  export FIXTURE_STUBS="${FIXTURE_STUBS:-1}"
   # the browser checks go through the demo gate, with a code of their own unless the shell sets one
   # (untraced: a code set in the shell is a secret); the allowances are for people, not for six
   # workers on one address, so they are wide here

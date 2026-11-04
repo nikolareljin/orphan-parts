@@ -57,6 +57,8 @@ export PICTURE_ENABLED=1
 # fixture mode hands the backend no key at all, whatever this shell or .env holds
 unset MODEL_API_KEY
 export OPL_FAKE_API=1
+# the shots show the stand-in answers of requests nobody recorded (the charger example)
+export FIXTURE_STUBS=1
 
 require_cmd python3
 require_cmd curl

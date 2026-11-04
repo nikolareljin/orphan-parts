@@ -27,11 +27,12 @@ from app.model_api.errors import (
     IncompleteResponseError,
     ModelApiError,
     NoRecordingError,
+    NoStandInError,
 )
 from app.model_api.fixtures import FixtureStore, request_key
 from app.model_api.ledger import CostLedger, LedgerEntry
 from app.model_api.pricing import Usage, cost_usd
-from app.ops.door import code_meter, live_request, recorded_request
+from app.ops.door import code_meter, live_request, recorded_request, served_request
 from app.ops.logging import request_id_var
 
 log = logging.getLogger("app.model_api")
@@ -659,13 +660,17 @@ class ModelApiClient:
                 return kept.response, True, 1, 0.0
         if self.mode == "fixture":
             fixture = self.fixtures.find(endpoint, keyed, op)
-            if fixture is None and exact_replay.get():
-                raise NoRecordingError(endpoint, request_key(endpoint, keyed), op)
-            if fixture is None:
-                raise FixtureMissingError(endpoint, request_key(endpoint, keyed), op)
-            if fixture.key != request_key(endpoint, keyed):
+            exact = request_key(endpoint, keyed)
+            if fixture is None or fixture.key != exact:
                 if exact_replay.get():
-                    raise NoRecordingError(endpoint, request_key(endpoint, keyed), op)
+                    raise NoRecordingError(endpoint, exact, op)
+                # a person's request is answered by its own recording or refused: a stand-in
+                # saved as their answer reads as the app being wrong
+                if served_request.get() and not self.settings.fixture_stubs:
+                    raise NoStandInError(endpoint, exact, op)
+            if fixture is None:
+                raise FixtureMissingError(endpoint, exact, op)
+            if fixture.key != exact:
                 self.fixture_fallbacks += 1
             if fixture.status >= 400:
                 err = fixture.response.get("error") or {}

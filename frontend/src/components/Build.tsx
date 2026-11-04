@@ -455,7 +455,9 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
       loadPacks()
       return true
     } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 409) setConflicts(conflictsOf(err.body))
+      // a 409 with no conflicts listed is another refusal (no recorded answer): said as it is
+      const conflicts = err instanceof ApiError && err.status === 409 ? conflictsOf(err.body) : []
+      if (conflicts.length) setConflicts(conflicts)
       else setError(message(err))
       return false
     } finally {

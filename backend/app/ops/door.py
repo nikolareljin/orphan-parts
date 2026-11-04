@@ -14,6 +14,10 @@ judge_code: ContextVar[int] = ContextVar("judge_code", default=0)
 # a code kept on the recorded answers: the model client answers it from the fixture twin, as it
 # answers the demo visitor, whatever door the request came through
 recorded_request: ContextVar[bool] = ContextVar("recorded_request", default=False)
+# set for every request the API serves to a person: in fixture mode such a request is answered
+# by the recording of that exact request or refused, never by an operation's stand-in
+# (FIXTURE_STUBS=1 lets the stand-ins answer, for the tests and the screenshot stacks)
+served_request: ContextVar[bool] = ContextVar("served_request", default=False)
 
 
 class Meter(Protocol):
