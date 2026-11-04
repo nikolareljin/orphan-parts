@@ -1,0 +1,753 @@
+{
+  "params_version": 4,
+  "at": "2026-11-04T08:09:33+00:00",
+  "report_at": "2026-11-04T08:04:03+00:00",
+  "reviewer": "muse-spark-1.3",
+  "checked": 59,
+  "flagged": 10,
+  "flags": 17,
+  "major": 16,
+  "by_section": {
+    "scenarios": {
+      "checked": 44,
+      "flagged": 7,
+      "flags": 14
+    },
+    "uses": {
+      "checked": 4,
+      "flagged": 0,
+      "flags": 0
+    },
+    "propose": {
+      "checked": 11,
+      "flagged": 3,
+      "flags": 3
+    }
+  },
+  "review_usd": 0.5136,
+  "scored": [
+    {
+      "id": "cards:battery_tester",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "with enclosure"
+      ]
+    },
+    {
+      "id": "cards:solder_practice",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:breadboard_power",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ir_receiver",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ir_obstacle",
+      "section": "scenarios",
+      "flags": 2,
+      "major": 2,
+      "claims": [
+        "extra parts jumper wires female-to-female 4-pack is sufficient",
+        "extra parts jumper wires female-to-female 4-pack is sufficient"
+      ]
+    },
+    {
+      "id": "cards:led_module",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:push_button",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:buzzer",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:relay",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:sound_sensor",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:hcsr04",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:dht11",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:rtc_ds1307",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:joystick",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:proto_shield",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:uno_r3",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_dell",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_ramaxel_4gb",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_adata_ddr3l",
+      "section": "scenarios",
+      "flags": 4,
+      "major": 4,
+      "claims": [
+        "fit in ThinkPad T510 and power on to check it boots and shows 8GB",
+        "adds this 8GB DDR3L stick to the ThinkPad T510 for light use, subject to its per-slot 8GB limit",
+        "kept aside to swap in when the ThinkPad T510 shows memory faults, subject to slot count and limit",
+        "Recorded as pass in a DDR3 SO-DIMM laptop such as ThinkPad T510"
+      ]
+    },
+    {
+      "id": "cards:ram_skhynix",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:enclosure_m2_usb",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:adapter_m2_u2",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:adapter_m2_sata",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:adapter_pcie_m2",
+      "section": "scenarios",
+      "flags": 2,
+      "major": 2,
+      "claims": [
+        "holds two added M.2 drives to add storage through a PCIe slot once drives and power are added",
+        "holds two added M.2 drives to add storage through a PCIe slot once drives and power are added"
+      ]
+    },
+    {
+      "id": "cards:hdd_laptop",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:hdd_maxtor",
+      "section": "scenarios",
+      "flags": 3,
+      "major": 3,
+      "claims": [
+        "Second data drive in ASUS desktop: adds bulk storage for files and backups",
+        "Second data drive in Gigabyte desktop: adds bulk storage for files alongside the existing SSD",
+        "Cased backup drive with ASRock build: holds backups accessed from the cased ASRock desktop"
+      ]
+    },
+    {
+      "id": "cards:hdd_toshiba",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "with processor, desktop memory, monitor - usable as second data drive in desktop needing a full host"
+      ]
+    },
+    {
+      "id": "cards:ssd_kingston_a400",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "reuse card 0 can be built 'with monitor, processor' using the owner's processor"
+      ]
+    },
+    {
+      "id": "cards:ram_ddr3_dimm",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_gskill_ddr3",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_patriot_ddr4",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:board_asus_z77",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:board_gigabyte_z77",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:nas_board_asrock",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:frappe_agitator",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:powerline",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:cpu_slot1",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:gpu_9800gt",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_board",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_9461",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_t510",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:monitor_sun",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:monitor_1800fp",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:monitor_u2419h",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:powerline",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:laptop_t510",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:monitor_1800fp",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:monitor_u2419h",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:1",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:2",
+      "section": "propose",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "An HDMI, DisplayPort or USB-C cable can directly connect the T510 to the 1800FP"
+      ]
+    },
+    {
+      "id": "project:3",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:4",
+      "section": "propose",
+      "flags": 1,
+      "major": 0,
+      "claims": [
+        "need to get a case with room for the board and the drives"
+      ]
+    },
+    {
+      "id": "project:5",
+      "section": "propose",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "DDR3L SO-DIMM runs in this DDR3 SO-DIMM laptop for file cache."
+      ]
+    },
+    {
+      "id": "project:6",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:7",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:8",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:9",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:10",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:11",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    }
+  ],
+  "used": {
+    "images-generations": [
+      "079f2b125a3d6fc4c6c3155a",
+      "0f653eca91daef8e02741d46",
+      "11b5729b9fa71c1a5e8b09bf",
+      "1c5874c06d52015a33f8b43d",
+      "1fd237dcb26643b20784e713",
+      "2021f9bbcf56f21f05db7bc6",
+      "2a9bb3db634f32bde23f706b",
+      "331d3416d3afabdc03d8e41f",
+      "3e899ab241468a2562fb0825",
+      "517ed1c001a2c6aabacf693b",
+      "54962e3ba6fbad86d308e1bc",
+      "56f3b02b0129375674116e6e",
+      "5988c438da2feac14e01a4f7",
+      "6a04ccada67a97a31d5b1fc2",
+      "7112a1cb9713c37de7e4b66d",
+      "8002720143c60f4c9ef26eee",
+      "897e174f326eeba5d647d36f",
+      "8cfbc5f278db1d16c682324e",
+      "90ab778c0c6176623deec4cf",
+      "91fd8f720d930d23d5e98e2f",
+      "a508a8281b81f8d090ecdaf6",
+      "a718c3c1afc77188ac83e079",
+      "a85a446e882a04aed8733cb5",
+      "a929703451bf91ec3c70ad67",
+      "c4c4d5afe5459f3085dc30ce",
+      "cea171e94888f667cc7fa238",
+      "da93140bcf46223de48d0208",
+      "eb2a19326b9b0e7237bc4f72",
+      "f2ced94de85891891f2acd21",
+      "f7b83ddb21cd06deda15b609"
+    ],
+    "responses": [
+      "051b3238fea792fc0fcbfd4a",
+      "054014446a1bb378bd45d184",
+      "061eab9774f08aa576ee39ad",
+      "0634515124f25b0befa2a484",
+      "076173b2c5fa347138eb1725",
+      "08674fbd668001c3c79f9d59",
+      "0870ed102af47d6110d6c404",
+      "087d69770332004d8afe97c5",
+      "0bf0f2744db7f3201351b34d",
+      "0ce8661fc7fe98e8dfd17e31",
+      "0ebc9b221a440924db1bc64e",
+      "0f125f0d235dd1d08b85caba",
+      "0f63f43772ef205af9ec02d9",
+      "0fe619b0ff783ad6c9f40572",
+      "13642bdd8bb39573f8121e51",
+      "140b60353805011daaf5e0af",
+      "149dfe442c885e8394b2a394",
+      "15337edda9beac54a0793ea5",
+      "177dc222e14d23dd21a13e70",
+      "19674d574332f0cd55ef1ecf",
+      "19ddc6a34d608a62273498ab",
+      "1a4070cc681eb1f5ebfc691e",
+      "1bf8e1765d1fd91a8323a804",
+      "1e2d688d1c4d79e846565a6c",
+      "1ee8b46a696ed7acbf44433c",
+      "1f5b0670039542efa6965af9",
+      "1f8d4fa011ad760dda3282f4",
+      "1fbe27332831c81b44d28967",
+      "2127ef7796014d166ff68ad9",
+      "24bba1a1fc3c84703bda9184",
+      "25fc338f33f146ab0e824eff",
+      "2802fb30b6afc48158368523",
+      "2a3cc5a212270b16df2052eb",
+      "2b7907680daf285558007c24",
+      "2ff7e67245016188d041173e",
+      "3130ab842968aa281f97ae1a",
+      "31ec2199ef4be66e56738571",
+      "321ca1a61e945841ad02b68b",
+      "35ea7985d39da49f506dc083",
+      "36a267cb0cac2e0e5a186979",
+      "3790027cf5dd31d62e266b50",
+      "381be7eb2801a4b4055d4869",
+      "3862dbe5f6d9218681ceee9c",
+      "38e6c2d93460094a0a2206aa",
+      "38ebde0441d3ac80ca801c2f",
+      "3937887458dd47d9a93ab0a8",
+      "39aaf199d755ac86bcf79b66",
+      "39f5f1c8a8fffd64c5f34a18",
+      "3ad27abfd90d7121b758e67e",
+      "3b813b5f196e10213282e03f",
+      "3cbf5322dc617535a4a227c8",
+      "3ceb38ea957265add7d2e845",
+      "3e16ddda97b69e8fbad6e258",
+      "3f721c5e558d5afd793e9c8b",
+      "41b015b63a2f309180f8c517",
+      "41dbe415237d27d38cd1a282",
+      "4275f2fa8800ca62f32ba5f8",
+      "45751bc8d4bdcd84eacb9f1c",
+      "46722233ae8bfba50304cd4e",
+      "47589a98d621235e47cf753a",
+      "4983097e716294155dee7dae",
+      "4ae39e92a2f2ab5610da78a5",
+      "4bcbc0231a4673b8794e0408",
+      "4dad849eaef8491aabddac11",
+      "4ddac442b3df679f327bda61",
+      "4f89d896cfa3dc46924e7962",
+      "5069015a96958a14b07fdce1",
+      "5071ceb6f8cfe0363e2fb3de",
+      "53fac95b581fc178c6931d20",
+      "54bac5d33641caf288b5eba2",
+      "550f4d1df488ec78835918cf",
+      "55c9df95577104973edab167",
+      "569475d931972a2c6bf3476a",
+      "588f8991afc60fb22e300ad7",
+      "598a3e5ef18ff6bd9f221092",
+      "5b038819d65e8411fa23093a",
+      "5b8c9354416e517a5ee536d9",
+      "5c0e1e390f4e89234ce46735",
+      "5c1e739d35fde4a51fd72643",
+      "5c1f135e1f86b06c90f8850d",
+      "5e19c4da728b1514a17e0bd9",
+      "6154c70a2e5b904e6185692d",
+      "61eae22015ce0dd97b6e6449",
+      "621621e0c2062acdc7b306b5",
+      "6294da4170b11b42e0820352",
+      "636fd747e04e6b1979f96b5f",
+      "644af026112a404757d531c0",
+      "659a37e3f753d9e36463bc7e",
+      "66b54bf2bb0f483dee8344c7",
+      "6864ca84d0ad73a2c02374bb",
+      "686893e0ac31f410c2f93c9e",
+      "68ff50a0c9f0a75e6c1f5fd4",
+      "69ec351cd32e08e8b5a38ca8",
+      "6ad241bf123419f4bdde995d",
+      "6cad40df880313981eb7d59f",
+      "6d3a3515a1ac8bfc986fc7b7",
+      "6e0b240905e926865fb04e8b",
+      "6ea6ce159a255f69d1a90b26",
+      "713f4fe6fd4b213b13b27257",
+      "720a251cd64151c721766240",
+      "75d81afc22be68d65ab165b4",
+      "7717caff2b355eaad6e6f9a0",
+      "7771af5dcfb32d2455832ad3",
+      "79e9405eff2da024a4a5fca7",
+      "7b19116ff8d9c1b89a9b6494",
+      "7ba8b14d315b3bbf069dc37a",
+      "7d7340974cd82ba76e0bab3a",
+      "7ee524c18b3af684ba9d2b41",
+      "81cbf3a0776eb07c41a46f4e",
+      "847fc8214a2beaab016f10b0",
+      "8608cc3120a24cc992e95cb0",
+      "873a4ab0ac80db1328083587",
+      "88b04fbd8cda99c85b67cdcf",
+      "894965b411c4a141d104526a",
+      "8a2274d8809fcd8e536be744",
+      "8efab03f99a2ddf2ecb121b5",
+      "901c90a8fd0bf33c9526295d",
+      "9045a5f688d7cf9bed0a40e0",
+      "906d187c4e1bbcdc5c0c7430",
+      "907a2502ad4eec3a21e45f1b",
+      "91d5487991ad968b91140f65",
+      "95045d6d23e6ed8c3ab19355",
+      "965c77c61386821897a92da8",
+      "97f0f2413c27b32b3ab0ec8b",
+      "98845c8230cc1865e4bf9970",
+      "996f776d433def57d6b2c370",
+      "9c6e4fa7887a9256d762fc3f",
+      "9d293455d48044de38401113",
+      "9d3a80c44fa75f95bfbf9424",
+      "9ebb1bd384d1ae300e13b924",
+      "a0a08d92a2d82b1931b42402",
+      "a0ed2fa198962e7d22cecb1b",
+      "a1a30fe6efebc7fb0ce63168",
+      "a3c5d874f06b35813cb460a1",
+      "a4c1d9cc38651097650df8da",
+      "a4f3c5b33133ee23087b6cc6",
+      "a5aff8617ec44a411558ef4e",
+      "a64d8e3b4efeaeaf47efb6b7",
+      "a73f6a601bb05e2d2f1b6e62",
+      "a7ab1238f81e66c0bec10c94",
+      "a940d1d8e1153843fcc8c507",
+      "aa4e6fd8152ba23755ff0e75",
+      "b376f20f935cca3509ffe9be",
+      "b3c9c1b6c4d4bbdf7ec5a87c",
+      "b422481c9ce3d12493b0cc89",
+      "b469b0c23c9e9deadb4e84f4",
+      "b53624991ad8eb8ef910df23",
+      "b63677d67c9b7b98dddb7434",
+      "b698f214788f09a52f596691",
+      "b6cf0c23203bf86e42fa68fa",
+      "b6e1b556493774f50ca71817",
+      "b7fd1ee328e298dc7b519eb3",
+      "b939d95cd499c1e98eb28bf9",
+      "bbd4730e03dcb046943ae45e",
+      "c1a1105f5298c2d9e3179833",
+      "c1bc8e83413971032bc70f54",
+      "c2dfc699a0c96c7e4bbcdca9",
+      "c64b96b1bc8df56c23a0ad5d",
+      "c670805bd33469d56e5292e7",
+      "c956560f647c5dff0a15286e",
+      "c9a7944c1233359069ad6c09",
+      "cbb7f804554323470d0843d6",
+      "cc826d231c48f675a2bae721",
+      "cf063d2ced82b9006be68ba5",
+      "cf33a1f34721bff3fd741754",
+      "cf9c7016278b314a7501e8ee",
+      "cfa0c9450bd34eb700b2ff10",
+      "d2f50fa3e43859d58a14ba6c",
+      "d5713d060dbc72261864c24b",
+      "d7eec8c573a7a8212c8789b9",
+      "d8ef4c608e1b9789a268cb4d",
+      "d9713bed9b624c0edee20f4e",
+      "de14eaf2d8c28963c6fee957",
+      "de9a31d9cb931b58e7cee694",
+      "df11113b06c3ed0fad0606b5",
+      "df8e2604088d298db3f2008f",
+      "e00e0693fa0cdb9d1a56d5c2",
+      "e39cb2a346195f86a8c08a23",
+      "e446776cde2d5559c9a55413",
+      "e53e1dce8709db71665bfebf",
+      "e740cd62e33da2b8e724f931",
+      "e8f2bd7fb15d154cbd93a5d7",
+      "e9889b5ee61a78b56c2904e7",
+      "eb07111bbaf770553e86ce66",
+      "ece1e8205c16b3e139ae6140",
+      "ee76dccfd86fa764a3c65edc",
+      "eff3f62d3809a53c22489f79",
+      "f0cf9aa5e1a00ee447626cd8",
+      "f18df13aecaae6616ff6e6b2",
+      "f1d42fe836a8891297a65c61",
+      "f2881c5f013ff1b6f93dd46c",
+      "f4e8349687946ab55639e46a",
+      "f5539c6b80c47a43ccc4f7b3",
+      "f5e30ff140eced93e6e61fef",
+      "f629c86925f0c85bf3bdb05f",
+      "f7eb50ea9138c11f116460ff",
+      "f92a313f7b39c3e96d0b146d",
+      "f9a0b68be2ca5b0eecf89ec4",
+      "fb306fc7f896c17987eba8af",
+      "fb6b5194e16a54c7564cb6d8",
+      "fbe203f894ea627552a80e4f",
+      "fc2ddea705225f1fd7945dc5",
+      "fd1a1f9a058817e4b2a12eb9",
+      "fd750f71ca9fc8174a7e7f40",
+      "fe558014599549fb29b15ffc",
+      "fe85a7677e46e146bbcfa6d3",
+      "fe99afe1e938cc1b24ddb39d"
+    ]
+  },
+  "params": {
+    "version": 4,
+    "scenarios": {
+      "facts_first": true,
+      "constraints": [
+        "A card or a use rests only on items the person owns that fit it; when none fits, it lists the missing part under extra parts with its cost and never calls it one the person owns",
+        "Read the condition first: a part recorded as missing, bare or unpopulated is not working as it is, and a use of it says what must be added"
+      ],
+      "corrections": [
+        "Do not claim a use works without verifying assembly state and listing every required power supply, signal source, cable, and mating part as extra.",
+        "Do not claim memory fits or can be tested without matching memory generation, per-slot limits, slot count, and a populated compatible socket with processor present.",
+        "Do not claim a controller drives a monitor or sensor or input device without matching connectors, video or power interfaces, wiring needs, and intact mechanical parts.",
+        "Do not propose storage, memory, or board use in a desktop without disclosing a missing compatible processor, power supply, or bootable host needed to run or test it."
+      ],
+      "banned": [
+        "with the processor you own",
+        "your own processor"
+      ]
+    },
+    "uses": {
+      "facts_first": false,
+      "constraints": [],
+      "corrections": [],
+      "banned": []
+    },
+    "propose": {
+      "facts_first": true,
+      "constraints": [
+        "Read the condition first: a part recorded as missing, bare or unpopulated is not working as it is, and a use of it says what must be added",
+        "A build that shows or works out anything needs what drives it: a display build (a smart mirror, a dashboard) allocates a computer or a microcontroller board behind the screen, or leaves that requirement missing and says so",
+        "A memory pick matches the host's generation and form in the compatibility facts (a DDR3 laptop takes a DDR3 or DDR3L SO-DIMM); a capacity the facts do not confirm for that host goes in the unknowns to check",
+        "A joystick module is an analog part on a pin header, not a USB game controller: it plays games only through a microcontroller board that reads it, allocated or named in the unknowns",
+        "Jumper wires, a breadboard, cables and a power adapter are still needed unless an owned item is allocated for them: name them in the unknowns, never call the build complete without them"
+      ],
+      "corrections": [],
+      "banned": [
+        "the build is complete with the allocated items"
+      ]
+    }
+  }
+}

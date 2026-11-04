@@ -23,6 +23,8 @@ parameters (backend/app/textparams/params.yaml) tuned from what the checks flag.
                        back from eval/decide/text-v<N>.json, and the recordings the latest
                        evaluated version used and N does not deleted (both must be evaluated)
   --max-usd N          stop before a call that could take the run past N USD (default 1.00)
+  --only KIND,...      check only these: cards, ideas, project, or ids (project:3); a check
+                       of some only is never kept as a version's score
   --set FILE           the set (default demo/set.yaml); --out DIR (default picture-review/decide)
   --eval-dir DIR       where the evaluations are kept (default eval/decide)
   --results FILE       the page the history table is written into, between its markers
@@ -76,7 +78,8 @@ CHECK_RESERVE_USD = 0.75
 # which recommendations each section writes: the id's head as decide_all names it
 SECTION_OF: dict[str, Section] = {"cards": "scenarios", "ideas": "uses", "project": "propose"}
 # the ops a re-record may buy: the text the parameters change and the drawings made from it
-TEXT_OPS = frozenset({"scenarios", "uses", "propose"})
+# (a proposal changed changes what a selected project still needs, so its search plans)
+TEXT_OPS = frozenset({"scenarios", "uses", "propose", "search-plan"})
 # a flag on these says a part does not fit: the brief should lead with the compatibility facts
 COMPAT = re.compile(
     r"\b(ddr\d?l?|so-?dimm|dimm|socket|lga\d*|am\d|slot ?1|form factor|m\.2|u\.2|sata|nvme"
@@ -150,6 +153,7 @@ class Report(BaseModel):
     used: dict[str, list[str]] = Field(
         default={}, description="the recordings the set's replay answered from, by endpoint"
     )
+    only: list[str] = Field(default=[], description="the kinds of check run, when not all")
 
 
 class Scored(BaseModel):
@@ -209,6 +213,13 @@ async def replay(
     return sv, notes, {k: sorted(v) for k, v in sorted(store.used.items())}
 
 
+def text_op(op: str) -> bool:
+    """An op the text parameters change: one of ``TEXT_OPS``, or a step of its tool loop
+    (``propose-2``)."""
+    head, _, step = op.rpartition("-")
+    return op in TEXT_OPS or (head in TEXT_OPS and step.isdigit())
+
+
 class TextOnlyClient(ModelApiClient):
     """Record mode for the text the parameters change and the drawings made from it: any other
     request answers only from its recording."""
@@ -222,7 +233,7 @@ class TextOnlyClient(ModelApiClient):
         key: dict[str, Any] | None = None,
         attempts: int | None = None,
     ) -> tuple[dict[str, Any], bool, int, float]:
-        if endpoint != IMAGES and op not in TEXT_OPS:
+        if endpoint != IMAGES and not text_op(op):
             keyed = body if key is None else key
             kept = self.fixtures.find(endpoint, keyed, op)
             if kept is None or kept.key != request_key(endpoint, keyed) or kept.status >= 400:
@@ -246,7 +257,7 @@ async def check(settings: Settings, sv: rv.Services, report: Report, max_usd: fl
     work = Path(tempfile.mkdtemp(prefix="decide-check-"))
     client = rv.reviewer(rv._scratch(settings, work), max_usd)
     try:
-        report.decide = await rv.decide_all(client, sv, budget, report.skipped)
+        report.decide = await rv.decide_all(client, sv, budget, report.skipped, report.only)
     finally:
         await client.aclose()
         shutil.rmtree(work, ignore_errors=True)
@@ -267,6 +278,7 @@ class Options:
     eval_dir: Path | None = None
     results: Path | None = None
     keep: int = 0
+    only: list[str] = field(default_factory=list)
     extra: list[str] = field(default_factory=list)
 
 
@@ -282,6 +294,7 @@ async def run_review(settings: Settings, opts: Options) -> Report:
             params_version=load().version,
             load=notes,
             used=used,
+            only=opts.only,
         )
         if opts.dry_run:
             report.mode += ", dry run"
@@ -317,6 +330,7 @@ async def run_rerecord(settings: Settings, opts: Options) -> Report:
             load=[f"record run: {n}" for n in notes] + [f"replay: {n}" for n in after],
             used=used,
             cost_usd=spent,
+            only=opts.only,
         )
         await check(settings, sv, report, max(opts.max_usd - spent, 0.0))
         return report
@@ -488,7 +502,7 @@ def phrased_edits(phrased: Phrased | None, report: Report) -> list[Edit]:
     return edits
 
 
-def apply_edits(params: TextParams, edits: list[Edit]) -> TextParams:
+def apply_edits(params: TextParams, edits: list[Edit], version: int = 0) -> TextParams:
     data = params.model_dump(mode="json")
     for e in edits:
         sec = data[e.section]
@@ -501,8 +515,15 @@ def apply_edits(params: TextParams, edits: list[Edit]) -> TextParams:
             if line and line not in have:
                 have.append(line)
         sec[e.field] = have[-LINES_MAX:]
-    data["version"] = params.version + 1
+    data["version"] = max(version, params.version + 1)
     return TextParams.model_validate(data)
+
+
+def next_version(params: TextParams, folder: Path) -> int:
+    """One above the file and above every version evaluated: a version tried and not kept
+    (``--keep``) keeps its number and its evaluation."""
+    tried = [e.params_version for e in history(folder)] if folder.is_dir() else []
+    return max([params.version, *tried]) + 1
 
 
 def proposal_markdown(p: Proposal) -> str:
@@ -547,7 +568,7 @@ async def run_tune(settings: Settings, opts: Options) -> Proposal:
     proposal = Proposal(
         at=_now(),
         from_version=params.version,
-        to_version=params.version + 1,
+        to_version=next_version(params, opts.eval_dir or rv._repo_root() / "eval" / "decide"),
         report_at=report.at,
         edits=edits,
         model=settings.model_spark if phrased else "",
@@ -566,7 +587,7 @@ def apply_proposal(path: Path, params_file: Path | None = None) -> TextParams:
         raise ValueError(
             f"the proposal is for version {proposal.from_version}, the file is at {params.version}"
         )
-    new = apply_edits(params, proposal.edits)
+    new = apply_edits(params, proposal.edits, proposal.to_version)
     dump(new, params_file)
     return new
 
@@ -714,6 +735,11 @@ def run_keep(settings: Settings, opts: Options) -> tuple[TextParams, list[Path]]
 
 def run_evaluate(settings: Settings, opts: Options) -> tuple[Evaluation, list[str]]:
     report = last_report(opts.out)
+    if report.only:
+        raise ValueError(
+            f"the last check ran {', '.join(report.only)} only; a version is scored on every"
+            " check: run ./dev decide-review without --only"
+        )
     params = load()
     if report.params_version and report.params_version != params.version:
         raise ValueError(
@@ -728,15 +754,19 @@ def run_evaluate(settings: Settings, opts: Options) -> tuple[Evaluation, list[st
     notes: list[str] = []
     earlier = [e for e in evals if e.params_version < params.version]
     if earlier:
-        gone = unused(earlier[-1], ev)
+        # against every earlier version, not the last alone: a version tried and not kept
+        # (--keep) is earlier too, and what the kept one used is what this one replaced
+        gone: dict[str, list[str]] = {}
+        for e in earlier:
+            for endpoint, keys in unused(e, ev).items():
+                gone[endpoint] = sorted(set(gone.get(endpoint, [])) | set(keys))
         count = sum(len(v) for v in gone.values())
         if gone and opts.prune:
             removed = prune(settings.fixtures_dir, gone)
             notes.append(f"removed {len(removed)} file(s) of {count} unused recording(s)")
         elif gone:
             notes.append(
-                f"{count} recording(s) of text v{earlier[-1].params_version} unused now"
-                " (--prune deletes them)"
+                f"{count} recording(s) of earlier versions unused now (--prune deletes them)"
             )
     if opts.results is not None:
         if write_history(opts.results, evals):
@@ -754,7 +784,10 @@ def parse(argv: list[str]) -> Options | str:
     args = list(argv)
     while args:
         arg = args.pop(0)
-        if arg in ("--set", "--out", "--max-usd", "--eval-dir", "--results", "--keep") and not args:
+        if (
+            arg in ("--set", "--out", "--max-usd", "--eval-dir", "--results", "--keep", "--only")
+            and not args
+        ):
             return f"{arg} needs a value"
         if arg == "--set":
             opts.set_file = Path(args.pop(0))
@@ -771,6 +804,10 @@ def parse(argv: list[str]) -> Options | str:
                 return "--max-usd needs a number"
             if opts.max_usd < 0:
                 return "--max-usd must not be negative"
+        elif arg == "--only":
+            opts.only = [v.strip() for v in args.pop(0).split(",") if v.strip()]
+            if any(v.split(":", 1)[0] not in SECTION_OF for v in opts.only):
+                return "--only takes cards, ideas, project or their ids (project:3)"
         elif arg == "--keep":
             try:
                 opts.keep = int(args.pop(0))

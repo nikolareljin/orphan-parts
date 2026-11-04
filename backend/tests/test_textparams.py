@@ -386,3 +386,62 @@ def test_keeping_an_earlier_version_writes_it_back_and_drops_the_later_recording
         tt.run_keep(settings, tt.Options(set_file=path, out=tmp_path, keep=3, eval_dir=folder))
     assert isinstance(tt.parse(["--keep", "two"]), str)
     assert isinstance(tt.parse(["--keep", "2", "--evaluate"]), str)
+
+
+def test_a_version_tried_and_not_kept_keeps_its_number(tmp_path: Path) -> None:
+    folder = tmp_path / "eval"
+    folder.mkdir()
+    for v in (1, 2, 3):
+        e = tt.evaluation(report(*CHECKS, version=v), TextParams(version=v))
+        tt.eval_path(folder, v).write_text(e.model_dump_json(), encoding="utf-8")
+    # version 2 was kept after 3 was tried: the next is 4, not 3 again
+    assert tt.next_version(TextParams(version=2), folder) == 4
+    assert tt.next_version(TextParams(version=2), tmp_path / "none") == 3
+    assert tt.apply_edits(TextParams(version=2), [], 4).version == 4
+
+
+def test_a_check_of_some_kinds_only_is_never_a_versions_score(tmp_path: Path) -> None:
+    opts = tt.parse(["--only", "project", "--max-usd", "0.2"])
+    assert not isinstance(opts, str) and opts.only == ["project"]
+    assert isinstance(tt.parse(["--only", "drawings"]), str)
+    out = tmp_path / "out"
+    out.mkdir()
+    partial = report(*CHECKS, version=load().version)
+    partial.only = ["project"]
+    (out / "report.json").write_text(partial.model_dump_json(), encoding="utf-8")
+    settings = Settings(OPL_FAKE_API=True, log_format="text", _env_file=None)
+    evaluate = tt.Options(set_file=out, out=out, evaluate=True, eval_dir=tmp_path / "eval")
+    with pytest.raises(ValueError, match="only"):
+        tt.run_evaluate(settings, evaluate)
+    assert "search-plan" in tt.TEXT_OPS
+    assert tt.text_op("propose-2") and tt.text_op("scenarios")
+    assert not tt.text_op("extract") and not tt.text_op("propose-x") and not tt.text_op("price-1")
+
+
+def test_a_new_version_prunes_what_any_earlier_version_used(tmp_path: Path) -> None:
+    now = load().version
+    folder = tmp_path / "eval"
+    folder.mkdir()
+    kept = tt.evaluation(report(*CHECKS, version=now - 2), TextParams(version=now - 2))
+    kept.used = {"responses": ["a" * 24, "b" * 24]}
+    tried = tt.evaluation(report(*CHECKS, version=now - 1), TextParams(version=now - 1))
+    tried.used = {"responses": ["a" * 24, "c" * 24]}
+    for e in (kept, tried):
+        tt.eval_path(folder, e.params_version).write_text(e.model_dump_json(), "utf-8")
+    fixtures = tmp_path / "fixtures" / "responses"
+    fixtures.mkdir(parents=True)
+    for key in ("a", "b", "d"):
+        (fixtures / f"{key * 24}.json").write_text("{}", encoding="utf-8")
+    out = tmp_path / "out"
+    out.mkdir()
+    latest = report(*CHECKS, version=now)
+    latest.used = {"responses": ["a" * 24, "d" * 24]}
+    (out / "report.json").write_text(latest.model_dump_json(), encoding="utf-8")
+    settings = Settings(
+        OPL_FAKE_API=True, fixtures_dir=tmp_path / "fixtures", log_format="text", _env_file=None
+    )
+    opts = tt.Options(set_file=out, out=out, evaluate=True, prune=True, eval_dir=folder)
+    _, notes = tt.run_evaluate(settings, opts)
+    # b was the kept version's, replaced now; c was only the tried one's, already gone
+    assert sorted(p.name for p in fixtures.iterdir()) == [f"{'a' * 24}.json", f"{'d' * 24}.json"]
+    assert any("removed 1 file(s) of 2 unused" in n for n in notes)

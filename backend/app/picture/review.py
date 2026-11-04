@@ -575,8 +575,10 @@ def collect(sv: Services) -> list[Drawing]:
 
 
 def selected(drawing_id: str, selectors: Iterable[str]) -> bool:
-    """``project:2`` picks every drawing of project 2, ``project:2#1`` the first alone."""
-    return any(drawing_id == s or drawing_id.startswith(s + "#") for s in selectors)
+    """``project:2`` picks every drawing of project 2, ``project:2#1`` the first alone,
+    ``project`` (a kind alone) every project drawing."""
+    kind = drawing_id.split(":", 1)[0]
+    return any(drawing_id == s or drawing_id.startswith(s + "#") or s == kind for s in selectors)
 
 
 # --- calls ---------------------------------------------------------------------------------
@@ -719,10 +721,15 @@ def inventory_lines(items: list[Item], skip: int = 0) -> list[str]:
 
 
 async def decide_all(
-    client: ModelApiClient, sv: Services, budget: Budget, skipped: list[str]
+    client: ModelApiClient,
+    sv: Services,
+    budget: Budget,
+    skipped: list[str],
+    only: Iterable[str] = (),
 ) -> list[DecideReview]:
     """Each item's latest Decide cards and each project's allocations, checked against the
-    items' facts: one text call each, reported only."""
+    items' facts: one text call each, reported only; ``only`` keeps the checks of these kinds
+    (``cards``, ``ideas``, ``project``) or ids."""
     items = [sv.inventory.get(s.id) for s in sv.inventory.list_items()]
     by_id = {i.id: i for i in items}
     ceiling = ceiling_usd(sv.settings.model_spark, DECIDE_INPUT_ALLOWANCE, DECIDE_OUTPUT_TOKENS)
@@ -824,6 +831,9 @@ async def decide_all(
         print(f"{job_id}: {said}", flush=True)
         return review
 
+    kinds = set(only)
+    if kinds:
+        jobs = [j for j in jobs if j[0] in kinds or j[0].split(":", 1)[0] in kinds]
     return await _each([partial(check, *job) for job in jobs])
 
 

@@ -75,7 +75,9 @@ measures the next one. Every step is a `./dev decide-review` command; the guide 
 2. **Evaluate version N.** If `eval/decide/text-vN.json` is missing, or the owner wants a fresh
    score: `./dev decide-review --max-usd 1`, then `./dev decide-review --evaluate`. Show the
    counts (checked, with flags, flags, major) by section and the flagged ids from
-   `picture-review/decide/report.md`.
+   `picture-review/decide/report.md`. One run moves by two or three flags: to compare two
+   versions of one section, check that section alone two or three times on each
+   (`./dev decide-review --only project --max-usd 0.3`, about 0.08 USD for 11 projects).
 3. **Propose.** `./dev decide-review --tune --max-usd 0.1` (one Muse Spark call phrases the
    corrections and the banned phrases; `--dry-run` proposes the rule edits alone, free). Show
    the owner the table from `picture-review/decide/tune.md`. Point out a banned phrase that can

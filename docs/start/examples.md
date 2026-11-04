@@ -37,19 +37,17 @@ Where that leads: Muse Spark's price guidance, then the Marketplace draft it wro
 ### Keep: the joystick module
 
 Keep and fix recommended (a thumb cap and a wipe, about $2 to $5); the owner keeps it for a
-build, reserved by the arcade coffee table, and Muse Image drew what it could become.
+build, reserved by the gaming coffee table, and Muse Image drew what it could become.
 
 ![What should I do with the joystick module: Keep and fix recommended with its steps and parts, three reuse ideas, what would sell it, Decided: Keep and build, and the Muse Image drawing of the arcade coffee table it could become](../assets/shots/examples/65-visitor-what-to-do-keep.png)
 
 ### Build and reuse: the ThinkPad T510
 
 Muse Spark recommends selling it as parts; the owner chose Reuse it (a docked spare PC), and Muse
-Image drew that card. The laptop is kept for a build and went into the home automation server,
-drawn three times.
+Image drew that card. The laptop is kept for a build; Muse Spark proposed it for a photo backup
+server and a homework desk, neither selected.
 
-![What should I do with the ThinkPad T510: Sell recommended, Reuse it chosen with the Muse Image drawing of a docked spare PC, the ideas, Decided: Keep and build, reserved by the home automation server, and the item's own drawing](../assets/shots/examples/65-visitor-what-to-do-build.png)
-
-![The home automation server the T510 went into, drawn three times by Muse Image](../assets/shots/examples/02-automation-drawings.png)
+![What should I do with the ThinkPad T510: Sell recommended, Reuse it chosen with the Muse Image drawing of a docked spare PC, the ideas, Decided: Keep and build, its ideas with their pairings, and the item's own drawing](../assets/shots/examples/65-visitor-what-to-do-build.png)
 
 ## Build and reuse
 
@@ -57,34 +55,38 @@ drawn three times.
 
 Muse Spark proposed eleven projects from the inventory in three rounds (the owner's interests,
 then a note steering it to the desktop boards and drives, then to the UNO and its sensor
-modules). Four are selected, with their items committed.
+modules). Three are selected, with their items committed: the home automation server was
+proposed on the spare Dell laptop, which the coffee table holds, so it stays proposed.
 
-![The Projects table: eleven projects, four selected (the custom NAS, the arcade coffee table, the smart desk calendar, the home automation server), each with its items, what is missing and the estimated cost](../assets/shots/examples/01-proposals.png)
+![The Projects table: eleven projects, three selected (the family photo NAS, the gaming coffee table, the smart desk calendar), each with its items, what is missing and the estimated cost](../assets/shots/examples/01-proposals.png)
 
-### Custom NAS from the spare desktop board
+### Family photo NAS from the ASRock board
 
 Muse Image drew it three times, each finished and in use in a home: as proposed, up close, and
 from above.
 
-![Three Muse Image drawings of the custom NAS in a home: the case on a shelf, a close-up of how the parts fit together, and from above](../assets/shots/examples/02-nas-drawings.png)
+![Three Muse Image drawings of the photo NAS in a home: the case on a shelf, a close-up of how the parts fit together, and from above](../assets/shots/examples/02-nas-drawings.png)
 
-Muse Spark's proposal: the ASUS P8Z77-V LX board, the DDR3-1600 desktop stick, the Kingston
-A400 SSD, the Maxtor 3.5 inch drive and the PCIe M.2 card from the inventory, each with why;
-the processor (an LGA1155 one, as the compatibility rules name it), power supply and case still
-needed, each with its Marketplace search; how the parts pair; what to check, the safety notes
-and the steps.
+Muse Spark's proposal: the ASRock AB350 Pro4 board in its case, the Patriot DDR4 desktop
+stick, the Kingston A400 SSD, the Maxtor 3.5 inch drive and the PCIe M.2 card from the
+inventory, each with why; the processor (an AM4 one, as the compatibility rules name it), power
+supply and case still needed, each with its Marketplace search; how the parts pair (the M.2
+card has no drive of yours to take); what to check, the safety notes and the steps.
 
-![The NAS project panel: From your inventory with five committed items (ASUS board, DDR3 stick, Kingston SSD, Maxtor drive, PCIe M.2 card), the compatibility lines, Still needed with Search Marketplace links and the searches opened, Check before starting, Safety, Steps](../assets/shots/examples/03-nas-panel.png)
+![The NAS project panel: From your inventory with five committed items (ASRock board in its case, DDR4 stick, Kingston SSD, Maxtor drive, PCIe M.2 card), the compatibility lines, Still needed with Search Marketplace links and the searches opened, Check before starting, Safety, Steps](../assets/shots/examples/03-nas-panel.png)
 
 The build pack is written by the rules from the project and the accepted values, no model call.
 
 ![The NAS build pack, version 1: the goal, each item with its accepted values, what is still needed, costs, steps, safety, guidance and limitations](../assets/shots/examples/04-nas-pack.png)
 
-### Arcade coffee table
+### Gaming coffee table
 
-![Three Muse Image drawings of the arcade coffee table with the joystick module, in a living room](../assets/shots/examples/02-arcade-drawings.png)
+The joystick module is listed for what it is: one analog stick on a pin header, read through the
+UNO board, with a second stick, buttons or a USB encoder still to get.
 
-![The arcade coffee table panel: the opened Dell laptop as the brain, the Dell U2419H as the screen and the joystick module as the controls; the table, the glass and the speakers still needed, each with Search Marketplace; the checks, safety notes and steps](../assets/shots/examples/03-arcade-panel.png)
+![Three Muse Image drawings of the gaming coffee table with the joystick module, in a living room](../assets/shots/examples/02-arcade-drawings.png)
+
+![The gaming coffee table panel: the opened Dell laptop as the brain, the Dell 1800FP as the screen laid flat and the joystick module as the controls; the table, the glass and the speakers still needed, each with Search Marketplace; the checks, safety notes and steps](../assets/shots/examples/03-arcade-panel.png)
 
 ### Smart desk calendar and alarm
 
@@ -92,23 +94,18 @@ The build pack is written by the rules from the project and the accepted values,
 
 ![The smart desk calendar panel: the UNO, the DS1307 clock module, the buzzer, the push button and the prototype shield from the inventory; a small screen still needed, with Search Marketplace; the checks and steps](../assets/shots/examples/03-calendar-panel.png)
 
-### Home automation server on the ThinkPad T510
-
-![Three Muse Image drawings of the home automation server: the ThinkPad running the lights and schedules, a close-up, and from above](../assets/shots/examples/02-automation-drawings.png)
-
-![The home automation server panel: the ThinkPad T510 as the server and the ADATA 8 GB DDR3L stick as its memory; a wired link and a Zigbee or Z-Wave stick still needed (optional), each with Search Marketplace; the checks and steps](../assets/shots/examples/03-automation-panel.png)
-
-The other three packs: [arcade](../assets/shots/examples/04-arcade-pack.png),
-[calendar](../assets/shots/examples/04-calendar-pack.png),
-[home automation server](../assets/shots/examples/04-automation-pack.png).
+The other two packs: [coffee table](../assets/shots/examples/04-arcade-pack.png),
+[calendar](../assets/shots/examples/04-calendar-pack.png).
 
 ### Proposed, not selected (visitor)
 
 Each proposal is drawn once by Muse Image; the visitor reads the steps open.
 
-![Kitchen home-automation dashboard, for a visitor: the Muse Image drawing, the UNO, sensors and relay it would use, what is still needed and the steps](../assets/shots/examples/52-visitor-kitchen.png)
+![Home automation server from the spare Dell laptop, for a visitor: its drawing, the laptop it would run on, what is still needed and the steps](../assets/shots/examples/52-visitor-automation.png)
 
-![Hall smart mirror, for a visitor: its drawing, the 18 inch monitor it would use, what is still needed and the steps](../assets/shots/examples/52-visitor-mirror.png)
+![Kitchen dashboard with sensors and relay, for a visitor: the Muse Image drawing, the UNO, sensors and relay it would use, what is still needed and the steps](../assets/shots/examples/52-visitor-kitchen.png)
+
+![Hall smart mirror, for a visitor: its drawing, the 24 inch monitor it would use, what is still needed and the steps](../assets/shots/examples/52-visitor-mirror.png)
 
 ![Indoor weather station and logger, for a visitor: its drawing, the UNO and the DHT11 module, the steps](../assets/shots/examples/52-visitor-weather.png)
 
@@ -120,7 +117,7 @@ behind a mirror ([How the drawings were improved](../project/picture-review-resu
 
 The selected NAS, as a visitor reads it: the drawings and the project, no buttons.
 
-![The custom NAS for a visitor: the three drawings, the items, Still needed with Search Marketplace, the steps, and the sign-in line in place of the buttons](../assets/shots/examples/51-visitor-nas.png)
+![The photo NAS for a visitor: the three drawings, the items, Still needed with Search Marketplace, the steps, and the sign-in line in place of the buttons](../assets/shots/examples/51-visitor-nas.png)
 
 ## Decide (visitor)
 
@@ -158,11 +155,11 @@ The visitor reads the same drafts: [the 9500 GT](../assets/shots/examples/61-vis
 
 ## Buyer flow: find and rank
 
-A search plan by Muse Spark, written for a part the NAS still needs (an LGA1155 processor
-for the ASUS board): phrasings, each a Marketplace search link with the top price, why each one
+A search plan by Muse Spark, written for a part the NAS still needs (an AM4 processor
+for the ASRock board): phrasings, each a Marketplace search link with the top price, why each one
 finds listings the others miss, and the match pattern.
 
-![Plan the search for the NAS processor: four Muse Spark phrasings as Marketplace links with Copy and why, the pattern and the words to skip](../assets/shots/examples/30-nas-cpu-plan.png)
+![Plan the search for the NAS processor: five Muse Spark phrasings as Marketplace links with Copy and why, the pattern and the words to skip](../assets/shots/examples/30-nas-cpu-plan.png)
 
 The frappé maker's worn agitator needs an all-metal rod. **Search the web** (Muse Spark with
 web search) found the maker's part, OEM 990010200, on several shops; every find is ranked with its price and link, by the rules, no model call.

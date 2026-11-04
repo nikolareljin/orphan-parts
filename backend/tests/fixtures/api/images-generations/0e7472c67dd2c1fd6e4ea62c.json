@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "0e7472c67dd2c1fd6e4ea62c",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Hall smart mirror from 24 inch monitor built from monitor (screen size 24 inch, about 61 cm across the diagonal; a thin flat computer monitor, far smaller than a television, not a bulky CRT TV); A hall mirror that shows time, weather and calendar from the monitor.; an 18 inch 5:4 computer monitor, about 46 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above a small bench; only a clock and weather icons glow through the glass; a small mirror, not a TV; no words or logos; a 24 inch 16:9 computer monitor, about 61 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame a little larger than the screen, hung at eye level on a hall wall above a small bench; only a clock, weather icons and the day's calendar glow through the glass; a mirror, not a TV; no words or logos; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793781989,
+    "data": [
+      {
+        "b64_json": "@0e7472c67dd2c1fd6e4ea62c-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4275,
+      "output_tokens": 1294,
+      "total_tokens": 5569
+    }
+  },
+  "status": 200
+}
