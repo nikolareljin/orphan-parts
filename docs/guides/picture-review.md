@@ -167,6 +167,146 @@ cap, shows the summary and the briefs, asks which to redraw, redraws only those,
 again, checks that no other recording moved, and opens a pull request when asked. The owner
 merges. `muse skills validate tools/muse/picture-review` checks the file.
 
+## Tuning the drawing parameters
+
+A brief fixes one drawing. What every drawing is asked with is data: the drawing parameters,
+`backend/app/picture/params.yaml`, versioned and read on each drawing
+([How the request is built](../models/muse-image.md#how-the-request-is-built)):
+
+| Section | What it holds |
+|---|---|
+| `version` | bumped by each `--tune --apply`; each version's score is `eval/pictures/params-v<N>.json` |
+| `facts` | which accepted values of a part are said: `first` (size facts before the rest), `left_out` (brand, model, part number, certifications, voltages, condition notes), `item_values` and `part_values`, `from_name` (the sizes in the owner's name: *18 inch*, *480 GB*), `condition` (an item's condition in its own picture) |
+| `kinds` | by item type: `looks`, how the part looks at its real size, and `size`, what a size in its name is called (a monitor's is its *screen size*, said in cm too) |
+| `projects` | by project template id: the `correction` every drawing of that kind of project carries, and the `match` words that find it in an item's use or a reuse card's title |
+| `views` | words in a view and the preset they add (*from above*: seen straight down, every part at its true size) |
+| `negatives` | said after the brief in every request |
+| `rules` | the closing words of an item drawn as itself, a use, a reuse card, a project |
+
+Muse Image is not fine-tuned (the Model API has no path for it); these are the levers. The
+loop that moves them is four commands:
+
+```bash
+./dev picture-review --max-usd 1          # review every drawing as it is (report.md)
+./dev picture-review --evaluate           # keep the score of this version, compare
+./dev picture-review --tune --max-usd 0.1 # propose edits (tune.md, tune.json)
+./dev picture-review --tune --apply       # write them: version one up
+./dev picture-review --redraw-set --max-usd 1.5   # draw the whole set again, review it
+./dev picture-review --evaluate --prune   # score it, compare, drop unused recordings
+```
+
+- **`--tune`** reads the last review and counts its issues by category, by kind of drawing and
+  by subject (the kind of project a drawing is of; an item drawn as *a smart mirror on a hall
+  wall* is a `smart_mirror`). Fixed rules turn the counts into edits: lettering found while the
+  requests name brands and model numbers leaves those fields out and adds a negative; sizes
+  written on the picture add a negative against dimension labels; condition notes in a request
+  leave them out; a scale or device issue says the sizes from the name and puts size facts
+  first; an issue on a view adds its preset; an item drawn as a use with its setting missing
+  is drawn in a home. For each kind of project with build issues, and each kind of part drawn
+  at the wrong size, one Muse Spark call (operation `picture-tune`, about 0.01 USD) phrases a
+  correction or a looks line from the reviews' own issues and briefs; with `--dry-run`, or
+  without a key, the shortest proposed brief is kept as it is. A correction the owner approved
+  in the demo set for a kind of project (`propose.corrections`) becomes that kind's
+  correction. `picture-review/tune.md` lists each edit with why and the drawings behind it,
+  then the diff; `tune.json` is the same list.
+- **Approve.** Read `tune.md`. To drop or change an edit, edit its entry in `tune.json`; never
+  the parameters file. Watch for a line that holds for one part but not for its whole kind.
+- **`--tune --apply`** writes the list into `params.yaml` with `version` one up; it refuses a
+  proposal made for another version.
+- **`--redraw-set`** loads the set once with the key, in a record run where only drawings are
+  bought: a drawing whose request is unchanged replays its recording, every other request
+  answers from its recording or not at all. The drawings take what the reviews of the set
+  leave of `--max-usd` (whole drawings only); then every drawing is reviewed. A parameter that
+  every request says (a negative, a rule) redraws all 32: about 0.32 USD and 0.20 USD of
+  reviews.
+- **`--evaluate`** keeps the score of the last review for the version it was made with, in
+  `eval/pictures/params-v<N>.json` (verdicts, issues by category, each drawing's verdict and
+  the digest of its recording, the parameters themselves), writes `picture-review/compare.md`
+  and the history table into *How the drawings were improved*, makes a contact sheet
+  `picture-review/sheet-v<N>.jpg`, and lists the recordings the version before used and this
+  one does not. `--prune` deletes them; nothing under `backend/tests/fixtures` is ever
+  modified.
+
+The first run, version 1 to 3, is in
+[How the drawings were improved](../project/picture-review-results.md#tuning-the-parameters-version-1-to-3):
+text issues 19 to 2, matches 11 to 21, wrong 1 to 5.
+
+### The review gate
+
+The same check runs on the owner's own drawings with `PICTURE_REVIEW_GATE` (unset: on with a
+key, off in fixture mode): a new drawing is reviewed once and, when it is wrong or shows the
+main part at the wrong size or as another device, drawn once more with the review's brief and
+reviewed again. Both are kept and the better one is shown; the caption says what the check
+found. A bad drawing costs two drawings and two checks, about 0.035 USD.
+
+## With Muse Code: the skill that tunes the parameters
+
+`/picture-tune` is the Muse Code skill that evaluates and improves the drawing parameters. Its
+source is `tools/muse/picture-tune/SKILL.md`; install it as the other one:
+
+```bash
+mkdir -p .agents/skills && ln -s ../../tools/muse/picture-tune .agents/skills/picture-tune
+muse skills validate tools/muse/picture-tune
+```
+
+The skill file says its inputs (the demo set, the parameters, the earlier scores, the owner's
+cap), its outputs (the report, the proposal, the new version, the recordings, the scores and
+the table, a pull request), its rules (only `./dev`, the key never shown, a cap on every paid
+step, never a hand edit of the parameters or the recordings, never a merge) and its approval
+points: before the first paid step, before `--apply`, before `--redraw-set`, before the pull
+request. In a session from the repository root, `/picture-tune` or *the drawings keep getting
+the sizes wrong, tune the parameters*.
+
+The first run, as the skill's steps ran it (the commands and what they printed, cut):
+
+```text
+$ ./dev picture-review --max-usd 1
+set load (fixture): 32 picture(s), 0 not recorded, 0 stand-in answer(s), 0 skipped
+32 drawing(s): 11 matches, 20 partly, 1 wrong; 0.2136 USD
+
+$ ./dev picture-review --evaluate
+parameters version 1: 32 drawing(s), 11 matches, 20 partly, 1 wrong
+
+$ ./dev picture-review --tune --max-usd 0.1
+23 edit(s) proposed, version 1 to 2; 0.0134 USD
+  | 1 | facts.left_out | 19 issue(s) of legible text or logos; 30 request(s) name a brand,
+  |   |                | a model or a part number, which the drawing then letters |
+  | 5 | facts.from_name | the sizes (18 inch, 2.5 inch, 480 GB) are in the item's name ... |
+  | 18 | kinds.monitor.looks | a computer monitor, far smaller than a television |
+  ...
+(the first proposal gave the monitor "a wide 16:9 monitor about 55 cm wide", wrong for the
+ 18 inch one; the phrasing now keeps a kind's line free of sizes, proposed again: 0.0134 USD)
+(owner: yes to all 23)
+
+$ ./dev picture-review --tune --apply
+wrote params.yaml: version 2
+
+$ ./dev picture-review --redraw-set --max-usd 1.5
+record run: set load (record): 32 picture(s), 0 not recorded, 0 stand-in answer(s), 0.3200 USD
+replay: set load (fixture): 32 picture(s), 0 not recorded, 0 stand-in answer(s)
+32 drawing(s): 21 matches, 5 partly, 6 wrong; 0.5136 USD
+
+$ ./dev picture-review --evaluate --prune
+parameters version 2: 32 drawing(s), 21 matches, 5 partly, 6 wrong
+removed 64 file(s) of 32 unused recording(s)
+
+$ ./dev picture-review --tune --max-usd 0.1
+10 edit(s) proposed, version 2 to 3; 0.0109 USD
+(owner: drop projects.home_server, it would draw the laptop disassembled; yes to the rest)
+
+$ ./dev picture-review --tune --apply
+wrote params.yaml: version 3
+
+$ ./dev picture-review --redraw-set --max-usd 1.5
+32 drawing(s): 21 matches, 6 partly, 5 wrong; 0.5189 USD
+
+$ ./dev picture-review --evaluate --prune
+parameters version 3: 32 drawing(s), 21 matches, 6 partly, 5 wrong
+removed 64 file(s) of 32 unused recording(s)
+```
+
+Then the checks of step 9 and the pull request; the owner merges.
+
 ## Getting better drawings over time
 
 Muse Image is a hosted model. The Model API documents image generation and image edits for
@@ -174,23 +314,18 @@ it, and post-training only for the open-weight models (Muse Spark Open, Muse Gli
 fine-tuning path for Muse Image was found as of November 3, 2026. The drawings get better
 through what the app sends and what it does with the answer:
 
-- **Facts first.** The prompt names at most three accepted values per part, in alphabetical
-  order, so *brand, input voltage, model number* went out for the 1800FP and *screen size* did
-  not. Leading with the values that set the look (a screen's size and aspect, a board's form
-  factor, a count) is a change to the prompt builder; it changes every drawing's request, so it
-  goes with a full re-record of the drawings.
+- **Facts first.** Built: the parameters' `facts` section (sizes from the name, size facts
+  first, no brand or model number).
 - **Negative constraints.** *not a TV*, *no text or labels*, *no tower case for a laptop
   board*: the review's briefs say them, and they work.
-- **A corrections library.** The briefs the reviews approve, kept by project template and kind
-  of item (`propose.corrections` holds them for the demo set today), applied by the prompt
-  builder to every new drawing of that kind.
-- **View presets.** A fixed set of views (in its room, a close-up of the parts, from above) with
-  their wording settled, so a view never drifts into another room.
+- **A corrections library.** Built: the parameters' `projects` and `kinds`, filled by `--tune`.
+- **View presets.** Built: the parameters' `views`.
 - **Reference photos.** The images API takes input images on its edits endpoint
   (`POST /v1/images/edits`); a drawing conditioned on the owner's photo of the part would get its
   shape and proportions right. Not built: it sends the owner's photo to the image model, which
   the privacy check of photos has to clear first.
-- **A review gate.** Review a new drawing before it is shown and, when the verdict is `wrong`,
-  draw it once more with the brief: two calls more per bad drawing, behind a setting.
-- **An evaluation set.** Each `report.json` is a labeled set: the share of `matches` before and
-  after a change to the prompt builder measures it, as `./dev eval` does for the readings.
+- **A review gate.** Built: `PICTURE_REVIEW_GATE` ([The review gate](#the-review-gate)).
+- **An evaluation set.** Built: `eval/pictures/params-v<N>.json`, one per version.
+- **The review's facts for an item drawn as a use.** They still list the item as it lies in the
+  drawer (its condition) and the item alone as its parts; judged as built, with the parts its
+  kind of project brings, two of version 3's five wrong verdicts would not stand.
