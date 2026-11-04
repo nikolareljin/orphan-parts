@@ -2,6 +2,12 @@ import { expect, test, type APIRequestContext } from '@playwright/test'
 
 const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
+// a listing seen three days ago (UTC), still within the 14 days a candidate stays valid
+const DAY_MS = 24 * 60 * 60 * 1000
+const isoDay = (ms: number): string => new Date(ms).toISOString().slice(0, 10)
+const SEEN = isoDay(Date.now() - 3 * DAY_MS)
+const VALID_UNTIL = isoDay(Date.parse(SEEN) + 14 * DAY_MS)
+
 const LISTING =
   'Orbital 65W laptop charger, 19.5V 3.34A, centre positive barrel plug 4.5 x 3.0 mm. Works, light wear, comes with the power cord. $15, Astoria.'
 
@@ -40,12 +46,12 @@ test('a search from an item hands off to Marketplace and a listing brought back 
 
   const bring = panel.getByRole('form', { name: 'Bring a listing back' })
   await bring.getByRole('textbox', { name: 'Listing text' }).fill(LISTING)
-  await bring.getByLabel('Seen on').fill('2026-10-20')
+  await bring.getByLabel('Seen on').fill(SEEN)
   await bring.getByRole('button', { name: 'Check fit' }).click()
 
   const candidate = panel.getByRole('region', { name: /Candidate Orbital 65W laptop charger/ })
   await expect(candidate).toContainText('documented candidate')
-  await expect(candidate).toContainText('seen 2026-10-20, valid until 2026-11-03')
+  await expect(candidate).toContainText(`seen ${SEEN}, valid until ${VALID_UNTIL}`)
   await expect(candidate).toContainText('15 USD')
   await expect(candidate.getByRole('status')).toContainText('Likely compatible')
   await expect(panel.getByRole('table', { name: 'Candidates' })).toContainText('Listing text')

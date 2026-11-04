@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -177,9 +178,11 @@ def test_a_search_without_a_profile_or_with_an_unknown_one_is_refused(finder: Fi
 async def test_a_text_candidate_is_read_assessed_and_dated(finder: Finder) -> None:
     need = laptop(finder.inventory)
     search = finder.create(SearchCreate(need_item_id=need, title="adapter"))
+    # seen a few days ago, so it is still within CANDIDATE_DAYS whatever day the test runs
+    seen = datetime.now(UTC).date() - timedelta(days=3)
     candidate = await finder.add_candidate(
         search.id,
-        CandidateCreate(text=LISTING, observed_on="2026-10-20", url="https://x.example/1"),
+        CandidateCreate(text=LISTING, observed_on=seen.isoformat(), url="https://x.example/1"),
     )
     assert candidate.from_fixture and candidate.cost_usd == 0.0
     assert candidate.title.startswith("Orbital 65W laptop charger")
@@ -200,7 +203,8 @@ async def test_a_text_candidate_is_read_assessed_and_dated(finder: Finder) -> No
     assert candidate.assessment is not None
     assert candidate.assessment.verdict == "COMPATIBLE_LIKELY"
     assert candidate.state == "documented"
-    assert (candidate.observed_on, candidate.expires_on) == ("2026-10-20", "2026-11-03")
+    expires = seen + timedelta(days=finder.settings.candidate_days)
+    assert (candidate.observed_on, candidate.expires_on) == (seen.isoformat(), expires.isoformat())
     assert candidate.expired is False
     assert finder.search(search.id).candidates == 1
     assert [c.id for c in finder.candidates(search.id)] == [candidate.id]
