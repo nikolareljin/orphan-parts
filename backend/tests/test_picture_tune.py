@@ -115,7 +115,7 @@ def test_the_parameters_are_validated() -> None:
     with pytest.raises(ParamsError, match="version"):
         parse(V2.replace("version: 2", "version: 0"))
     with pytest.raises(ParamsError, match=r"(?i)extra"):
-        parse(V2 + "colour: red\n")
+        parse(V2 + "color: red\n")
     with pytest.raises(ParamsError):
         parse(V2.replace("part_values: 6", "part_values: 99"))
     long = "x" * 500
