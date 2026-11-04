@@ -95,9 +95,9 @@ measures the next one. Every step is a `./dev decide-review` command; the guide 
    reuse-card drawing: review the drawings after (`/picture-review`), and score them with
    `./dev picture-review --evaluate --stage <word>`.
 8. **One more round, only if asked**, from step 3. Keep the best version: if a round flags more
-   than the one before, revert the file to the better version
-   (`git checkout -- backend/app/textparams/params.yaml backend/tests/fixtures eval/decide`) and
-   stop. Never more than three rounds in one session without the owner raising the cap.
+   than the one before, keep the better version with `./dev decide-review --keep <N>` (the
+   file written back at that version, the recordings only the later versions used removed;
+   their scores stay in `eval/decide/` as the record of what was tried) and stop. Never more than three rounds in one session without the owner raising the cap.
 9. **Check** that nothing else moved: `git status` shows `params.yaml`, `eval/decide/`, the
    results page and recordings added or deleted under `backend/tests/fixtures/api/`;
    `git diff --diff-filter=M -- backend/tests/fixtures` is empty; `./dev picture-review --dry-run`
