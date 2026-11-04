@@ -4,6 +4,12 @@ Scan what you already own. Decide what it can become. Find the missing piece on 
 prepare what you no longer need for sale or free pickup. Every answer carries its evidence, on
 Meta's Muse models.
 
+<div class="video-embed">
+  <iframe src="https://www.youtube-nocookie.com/embed/3USMv4zCeD0" title="Orphan Parts Lens demo video (2:52)" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+</div>
+
+Watch it on YouTube: <https://www.youtube.com/watch?v=3USMv4zCeD0> (2:52).
+
 ![How Orphan Parts Lens works](assets/process.svg)
 
 !!! success "Hackathon conclusion"
@@ -11,13 +17,14 @@ Meta's Muse models.
     instead of automatic search and posting, private details hidden in photos, a review of every
     drawing), and what comes next: [Hackathon conclusion](project/conclusion.md).
 
-**Watch the [demo video](start/video.md) (2:52).** **Live demo** (temporary, while the hackathon is judged): <https://orphan-parts.pages.dev>, the demo set read-only without a code; it may be taken down after judging, and [Run it on your own computer](start/local.md) works without it.
+**Watch the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52; [the copy kept with the docs](start/video.md)).** **Then [run it on your own computer](start/local.md)**: Docker, three commands, the demo set's recorded answers with every page open, no key and nothing spent; the guided tour is in [For judges](start/judges.md#b-run-it-on-your-own-computer-the-main-path). **Hosted demo** (read-only, temporary): <https://orphan-parts.pages.dev>; it may be taken down after judging.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
 November 4, 2026).** Everything in it was built during the hackathon; the dated log is on
 [Built during the hackathon](project/hackathon.md). One diagram of the whole, every box a
 link: [How it fits together](project/flow.md). Judging it: [For judges](start/judges.md)
-starts with a two-minute fast path on the hosted demo (while it is up) or on your own computer.
+starts with the video and a guided tour of a stack on your own computer (no access code
+needed), then the hosted demo read-only while it is up.
 Running it yourself, with no hosted site: [Run it on your own computer](start/local.md). Trying it on a phone: the
 [five steps](#on-a-phone-in-five-steps) below.
 
@@ -42,10 +49,9 @@ Running it yourself, with no hosted site: [Run it on your own computer](start/lo
    ([Run it on your own computer](start/local.md)). To pair a phone with a local server, open
    the site at the computer's network address, not `localhost` (for example
    `http://192.168.1.20:5173`), with the phone on the same network.
-3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
-   (**Sign out**, in the same place, ends it).
-   A local stack has no door until `./dev gate on`, which prints a code for you and one for
-   the phone; reload the page, then sign in with yours. Without it, go on to step 4.
+3. **Sign in, if there is a door**: a local stack has none until `./dev gate on`, which prints
+   a code for you and one for the phone; then **Sign in with the code** in the header with
+   yours (**Sign out**, in the same place, ends it). Without the gate, go on to step 4.
 4. **Pair the phone**: at the foot of the page, open **Pair the phone** for the QR code. In the
    app, on the **Backend** tab, tap **Scan to pair** and point the camera at the code on a
    second screen, then **Check**. Signed in, the phone gets an access code of its own on

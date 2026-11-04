@@ -7,11 +7,25 @@ repository and spends nothing; with a key it reads your own photos live.
 
 ## 1. What you need
 
-- **Docker** with Compose v2: Docker Desktop on macOS and Windows, Docker Engine on Linux.
-- **bash** and **git**. On Windows, run every command in WSL 2 (Ubuntu from the Microsoft
-  Store), with Docker Desktop's WSL integration on.
+- **Docker** with Compose v2: [Docker Desktop](https://docs.docker.com/desktop/) on
+  [macOS](https://docs.docker.com/desktop/setup/install/mac-install/) and
+  [Windows](https://docs.docker.com/desktop/setup/install/windows-install/),
+  [Docker Engine](https://docs.docker.com/engine/install/) with the
+  [Compose plugin](https://docs.docker.com/compose/install/linux/) on Linux.
+- **bash** and **git**. On Windows, run every command in
+  [WSL 2](https://learn.microsoft.com/windows/wsl/install) (Ubuntu), with Docker Desktop's
+  [WSL integration](https://docs.docker.com/desktop/features/wsl/) on.
 - For the phone: an **Android 8.0 or newer** phone on the same Wi-Fi as the computer, and a USB
   cable that carries data if you install the app over USB.
+
+**Check Docker before starting** (on macOS and Windows, start Docker Desktop first; on Linux,
+your user must be in the `docker` group, or prefix the commands with `sudo`):
+
+```bash
+docker --version              # Docker is installed
+docker compose version        # Compose v2 is there
+docker run --rm hello-world   # the daemon runs and can pull images
+```
 
 Python, Node, a JDK and the Android SDK are not needed: the backend and the web app run in
 containers, and the app comes as a ready APK.
@@ -85,9 +99,10 @@ is under [For judges](judges.md#costs-and-limits): a label read is under a cent.
 ```
 
 The first `./dev up` builds the backend image and installs the web app's packages; that takes
-a few minutes once. Open <http://localhost:5173>. The footer says
-`recorded answers only (nothing spent)` in recorded mode, or `live mode, spent $0.00 of $5.00`
-with a key.
+a few minutes once; `./dev demo` about a minute. Open <http://localhost:5173>. The footer says
+`recorded answers only (nothing spent)` in recorded mode, or `live mode, spent $0.00 of $25.00`
+with a key. What to click first:
+[the guided tour in For judges](judges.md#b-run-it-on-your-own-computer-the-main-path).
 
 The foot of every page also links the **Documentation** (this site) and the **Source on
 GitHub**, and opens **Pair the phone**.
@@ -101,8 +116,9 @@ phone (the master code in `.env` stays): run `./dev gate on` again afterwards.
 ## 6. Sign in (optional on your own computer)
 
 With `DEMO_ACCESS_CODE` empty there is no door: the header says
-*Open server (no code needed)* and every page is open. To see the app as a judge sees it, with
-the demo for visitors and the code for you, turn the gate on:
+*Open server (no code needed)* and every page is open, but **Read a label** is the upload form
+rather than the demo set's sample gallery. To see the app as a visitor to the hosted demo sees
+it, the gallery included, with the code for you, turn the gate on:
 
 ```bash
 ./dev gate on
@@ -235,8 +251,12 @@ Each screen, and every message the app can answer with:
 
 The [Demo walkthrough](demo.md) and the [Guides](../guides/capture.md) go through each page
 step by step, with a picture of each. All of them work on this local stack: the demo set's
-items, search and projects are there after `./dev demo`, and every step that calls a model
-answers from its recording when `OPL_FAKE_API=1`.
+items, search and projects are there after `./dev demo`, and with `OPL_FAKE_API=1` no step
+calls a model. A request recorded for the demo set replays its recording; one with no
+recording of its own (asking again for an item's Decide cards, checking a new listing, a photo
+of your own) gets a fixed stand-in answer that is not about your item:
+[Recorded and stand-in answers](judges.md#b-run-it-on-your-own-computer-the-main-path).
+`./dev demo` puts the set back as loaded.
 
 ## When something does not work
 
