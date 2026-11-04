@@ -1,9 +1,10 @@
 # Orphan Parts Lens for judges
 
-**Start here:** the documentation, <https://nikolareljin.github.io/orphan-parts/>, with
-[Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/)
-and the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0); the live demo,
-<https://orphan-parts.pages.dev> (temporary, while the hackathon is judged).
+**Start here:** the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52), then
+[run it on your own computer](#b-run-it-on-your-own-computer-the-main-path) on the recorded
+answers: no key, nothing spent, every page open. The documentation is at
+<https://nikolareljin.github.io/orphan-parts/>, with
+[Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/).
 
 Orphan Parts Lens turns the things in a drawer into a private inventory with evidence: a photo
 of a label becomes values you confirm one by one, and from there each item is kept and fixed,
@@ -21,104 +22,129 @@ same read-only), more on
 <img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/20-9500gt-value.png" alt="Muse Spark's price guidance for the EVGA 9500 GT, the four figures kept apart" width="49%">
 </p>
 
-- **The hosted demo, while it is up:** <https://orphan-parts.pages.dev> (nothing to install).
-  It may be taken down after judging.
-- **On your own computer:** the same app with no hosted site: every flow on recorded answers
-  with no key, and live readings with a Model API key of your own:
-  [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)
-  (`docs/start/local.md`), about ten minutes with Docker.
-- **The Android app:** the APK from the
-  [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest).
-- **The access code** comes with the submission, separately. It is never in this repository.
-  It is a judge's code of its own, not the owner's master code: it signs you in to everything
-  the demo shows, read-only on the demo set (Delete, Save details and the drawing are off on
-  those items, and the server refuses such writes); what you add yourself (a label read from
-  a photo of your own, a search, a project) is yours to change and delete, and no one else sees
-  it. Live model calls are capped per code, per day and in dollars: the foot of the page says
-  *Judge access: N live calls left today, $X left*. A code kept on the recorded answers says so
-  there instead.
-- **The documentation:** <https://nikolareljin.github.io/orphan-parts/>.
+## How to review
 
-## Fast path
+There is no access code for judges, and none is needed: a stack on your own computer has no
+gate, so every page is open, and the demo set's recorded answers are in the repository.
 
-### Without the code (under two minutes)
+### (a) Watch the video
 
-The site opens as the demo: recorded answers for the demo set, nothing saved, nothing spent.
-The line at the foot of the page says *Demo: recorded answers only*.
+[Orphan Parts Lens in 2:52](https://www.youtube.com/watch?v=3USMv4zCeD0), also on the docs
+site under [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/).
 
-1. Open the hosted demo, <https://orphan-parts.pages.dev>, while it is up; or, on your own
-   computer, `./dev up`, `./dev demo` and `./dev gate on`, then <http://localhost:5173>
-   ([Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)).
-   The first page, **Read a label**, shows the demo
-   set's photos grouped by item (monitors, ThinkPads, a laptop motherboard, a graphics card, a
-   slot 1 processor, a powerline adapter, a frappé maker's agitator, and a second drawer of
-   desktop boards, memory, drives, M.2 adapters, an opened laptop, an Arduino board with its
-   sensor modules, graphics cards and iPhone flex cables).
-2. Tick one photo, several, or **Select all photos of this item**; leave *Find the label in
-   the photo first* on and press **Read the label**. Each reading appears side by side under
-   *Recorded answer for this sample.*: the SAM 3.1 pass over the photo (the regions it found,
-   and a note for each of item, label and connector it did not), then every value Muse Spark
-   read with its unit, confidence, source and the text as printed.
-3. Open **My inventory**: the demo shelf, the set's items as the owner marked them public.
-   **Open** one to see its photos beside its values, each with where it came from, and any
-   picture drawn for it. Every item shows what was asked for it, as it was saved, without a
-   model call: the **Decide** cards (keep and fix, reuse it with its **Draw it** picture, sell
-   or give away), the recommendation and the plan chosen; on a sale, the price guidance and the
-   whole Marketplace listing (title, price, category, condition, description, tags, photo order
-   and checklist); on a give-away, the free listing and how to post it. The list marks which
-   items have saved results. **Measure a feature** in the item marks a ruler and a feature on one
-   of the set's photos and computes the dimension. Asking again, deciding, pricing, drafting and
-   searching ask for the code (*demo: the code unlocks saving, drafts, prices, projects and captures*,
-   or *Sign in with the access code to use this.*). **Find a part**, **Build and reuse** and
-   **Profile** are read-only: the search for the frappé maker's agitator rod with its plan (the
-   search phrasings, each a Marketplace link, and the match pattern), its four
-   candidates and the maker's part (OEM 990010200) that **Search the web** found, with its
-   link, and the pages it found for the NAS's power supply; the eleven projects proposed from
-   the demo shelf, each with its drawing, its items and why they fit, what is still needed and
-   the unknowns: three are selected with their build packs, three drawings each and a search
-   with Marketplace links for every missing part (a family photo NAS on the ASRock board, a
-   gaming coffee table with the joystick module, a smart desk calendar on the UNO), and the
-   rest are a home automation server on the spare Dell laptop, a kitchen dashboard, a weather
-   station and a garage parking helper from the UNO's sensor modules, retro games with the
-   joystick, a smart mirror, a homework desk and a photo backup server; the skills and their levels. Where the owner would save, plan, search or
-   propose, the sign-in line.
+### (b) Run it on your own computer (the main path)
 
-### With the access code (about ten minutes)
+The same app the hosted demo serves, on the demo set's recorded answers: no Model API key,
+nothing spent, nothing leaves the computer.
 
-4. **Sign in with the code** in the header, type the code (the one that came with the
-   submission on the hosted demo; on your own computer, the master code `./dev gate on`
-   printed), **Enter**. The header now shows
-   **Sign out**; the foot of the page counts the live calls used today (with a judge's code,
-   what is left of its own allowance).
-5. **Read a label**: choose up to four photos of a label of your own (JPEG, PNG or WebP),
-   **Read the label** (live, on the models, when the server has a key; a local stack without
-   one answers from recordings), then **Save privately**. The page moves to
-   **My inventory**; **Open** the new item, where every value read is marked *to confirm*:
-   **Accept** or **Reject** each one.
-6. In the item, **Decide**: **What should I do with it?** writes three cards, *Keep and fix*,
-   *Reuse it* and *Sell or give away*, for your **Profile** (skills rated *none* to *pro*;
-   without one, for an average person, and the panel says so) and recommends one. **Choose
-   this** records the choice and moves to where it leads.
-7. On a *Reuse it* card, **Draw it**: Muse Image draws how the finished project could look,
-   one image call, captioned as drawn. The same button is on each project under **Build and
-   reuse**.
-8. **Prepare to sell or give away**: fill **Listing details** (condition, what is included,
-   faults, area, asking price), press **Write the draft**, and the draft comes back in
-   Marketplace's fields, each with **Copy**, with **Download photos** (a zip in the draft's
-   order) and **Open Marketplace**, which opens Marketplace's create page in a new tab.
-   Posting is yours.
-9. **Find a part**: name what you need (*Looking for*, a *Profile* or the item it is *Needed
-   by*, *Max price*) and **Start the search**. In the search, **Plan the search** writes three
-   to six Marketplace search links and a match pattern; open a link, paste listings into
-   **Bring back listings** (separated by `---` or a blank line), and **Score the listing**
-   (**Score 3 listings** for three) ranks each as *fits*, *maybe* or *does not fit* with no
-   model call. **Check fit** on one reads it into a candidate with the questions to ask the
-   seller.
-10. **Pair the phone**: at the foot of the page, open **Pair the phone**. In the Android app,
-    on the **Backend** tab, **Scan to pair** and point the camera at the QR code, then
-    **Check**. [Install the app](#install-the-android-app) first; the
-    [pairing guide](https://nikolareljin.github.io/orphan-parts/start/pairing/) shows every
-    screen.
+**You need:**
+
+- **Docker with Compose v2**: Docker Desktop on macOS or Windows, Docker Engine with the
+  Compose plugin on Linux (`docker compose version` answers).
+- **git** and **bash**.
+- **On Windows: WSL 2** (Ubuntu from the Microsoft Store) with Docker Desktop's **WSL
+  integration** turned on for it; run every command in the Ubuntu terminal and clone into the
+  WSL home directory, not under `/mnt/c`.
+- About **5 GB of free disk** for the images and the web app's packages, and ports 5173 and
+  8000 free (`BACKEND_PORT` and `FRONTEND_PORT` move them).
+
+**Start it:**
+
+```bash
+git clone https://github.com/nikolareljin/orphan-parts.git
+cd orphan-parts
+cp .env.example .env    # leave MODEL_API_KEY empty: the stack runs on recorded answers
+./dev up                # builds once, then the web app on http://localhost:5173
+./dev demo              # loads the demo set: 49 items with everything the models produced
+```
+
+The first `./dev up` builds the backend image and installs the web app's packages: a few
+minutes, depending on the connection (about a minute and a quarter on a machine that already
+had the base images). `./dev demo` takes about a minute. With an empty key `./dev up` says it is
+*starting in fixture mode (recorded answers, no credits)*, and the foot of every page says
+*recorded answers only (nothing spent)*; the header says *Open server (no code needed)*.
+
+**A guided tour.** Open <http://localhost:5173>. The **?** beside each section explains what it
+does and what the rules decide there; open a few as you go.
+
+1. **My inventory**: the demo set, two drawers of the owner's own parts. **Open** the **Dell
+   U2419H monitor, 24 inch**. Each item has tabs: **Facts** (its photos beside every value,
+   each with where it came from), **Decide**, **Value**, **Sell or give away**, **Measure and
+   fit** and **Picture**.
+2. In the monitor, **Decide**: the three cards Muse Spark wrote (*Keep and fix*, *Reuse it*,
+   *Sell or give away*), the one it recommends and the plan chosen; each *Reuse it* idea has the
+   picture Muse Image drew for it, captioned as drawn. **Picture** shows the drawings kept for
+   the item.
+3. Open the **EVGA GeForce 9500 GT graphics card**: **Value** keeps the price guidance's four
+   figures apart (asking, sold, reported by you, the model's estimate), each comparable with
+   its page and date; **Sell or give away** has the whole Marketplace listing (title, price,
+   category, condition, description, tags, photo order and the checklist).
+4. **Build and reuse**: eleven projects proposed from the demo shelf, each with its drawing,
+   its items and why they fit, what is still needed and the unknowns. Three are selected,
+   with build packs, three drawings each and a search with Marketplace links for every
+   missing part: a family photo NAS on the ASRock board, a gaming coffee table with the
+   joystick module, a smart desk calendar on the UNO.
+5. **Find a part**: the search for the frappé maker's agitator rod, with its plan (the search
+   phrasings, each a Marketplace link, and the match pattern), its four candidates with the
+   questions to ask each seller, and the maker's part (OEM 990010200) that **Search the web**
+   found, with its link; and the pages found for the NAS's power supply.
+6. **Read a label**, the sample gallery with the SAM 3.1 regions. On an open stack this page is
+   the upload form; the gallery is what a visitor sees behind the gate. Run `./dev gate on` (it
+   prints codes for you and a phone; you do not need them here), reload the page and stay
+   signed out. Tick a photo, several, or **Select all photos of this item**, leave *Find the
+   label in the photo first* on and press **Read the label**: under *Recorded answer for this
+   sample.* each reading shows the SAM 3.1 pass (the regions it found, and a note for each of
+   item, label and connector it did not), then every value Muse Spark read with its unit,
+   confidence, source and the text as printed. `./dev gate off` opens the server again.
+7. **Measure a feature**, in an item's **Measure and fit**: marks a ruler and a feature on one of
+   the set's photos and computes the dimension, with its uncertainty, with no model call.
+
+**Recorded and stand-in answers.** Everything the tour shows was saved from real model calls
+when the demo set was recorded; each carries a *recorded answer* badge and costs nothing. A
+stack without a key never calls a model. What you ask again is answered from the recordings:
+
+- **Plan the search**, **Search the web** and the price guidance come back as recorded.
+- A request that has no recording of its own gets a fixed **stand-in** answer, still badged
+  *recorded answer* at $0.00, and **not about your item**: **Ask again** under **Decide** adds
+  cards about a laptop battery; **Check fit** on a listing reads it as a 65 W laptop charger; a
+  photo of your own on **Read a label** reads as the label of an *Orbital Power* 65 W adapter,
+  whatever the photo shows. The earlier, recorded results stay listed under the new ones.
+- **Draw it** and **Draw again** are off on a local stack (`PICTURE_ENABLED=0`): the page says
+  *Drawing pictures is turned off on this server.* or *Pictures are off on this server.*; the
+  drawings already made stay shown.
+- **Propose** under **Build and reuse** answers *No idea fits what you own.*; the eleven
+  recorded projects stay.
+
+`./dev demo` puts the demo set back as loaded, whatever you clicked.
+
+**Stop it:** `./dev down` stops the stack and keeps what you saved; `./dev down -v` also removes
+its data volumes. The complete path, with the phone over the Wi-Fi, USB and a
+troubleshooting table:
+[Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/).
+
+### (c) The hosted demo, read-only, while it is up
+
+<https://orphan-parts.pages.dev>: nothing to install. It may be taken down after judging, and
+after today it answers from the recordings only. Without a code it is the visitor view of the
+same demo set: **Read a label** is the sample gallery from step 6 of the tour, and **My
+inventory**, **Find a part**, **Build and reuse** and **Profile** show everything in steps 1
+to 5, read-only. Buttons that would save, ask again, draw, plan or search show the sign-in
+line instead (*Sign in with the access code to use this.*); nothing is saved and nothing is
+spent. The line at the foot of the page says *Demo: recorded answers only*.
+
+### (d) Optional: live models with your own key
+
+Not needed to review it. To see the models read a photo of your own, get a key at
+<https://dev.meta.ai> (**Billing**: a payment method; **API keys**: create one), set
+`MODEL_API_KEY=<your key>` and `OPL_FAKE_API=0` in `.env`, set `PICTURE_ENABLED=1` for
+drawings, and run `./dev up` again. Each call is charged to your key, at the rates under
+[Costs and limits](#costs-and-limits); `SPEND_CAP_USD` in `.env` (25 by default) stops every
+model call once that much has been spent through the stack.
+
+### The Android app
+
+The APK is on the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest):
+[install it](#install-the-android-app), then [pair it](#pair-the-phone) with your local stack.
 
 ## What to look for
 
@@ -216,36 +242,34 @@ installs a file you already have.
 
 ## Pair the phone
 
-The same steps on the hosted demo and on your own computer. On your own computer, open the web
-app at the computer's address on the Wi-Fi (for example `http://192.168.1.20:5173`), not at
-`localhost`, with the phone on the same Wi-Fi; the details, firewall included, are in
+With your local stack up, the phone reaches it over the Wi-Fi. Open the web app at the
+computer's address on the Wi-Fi (for example `http://192.168.1.20:5173`), not at `localhost`
+(on the phone, `localhost` is the phone), with the phone on the same Wi-Fi; the details,
+firewall included, are in
 [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/#8-pair-the-phone).
-
-The QR code never carries the access code. Signed in, it carries the server's address and a
-pairing good for fifteen minutes, with which the app claims an access code of its own and
-keeps it. Every screen, pictured:
+Every screen, pictured:
 [Pair the phone with the web app](https://nikolareljin.github.io/orphan-parts/start/pairing/).
 
-1. Open the web app on a laptop (or on the phone's browser): the hosted demo while it is up,
-   or your own stack at the computer's address. **Sign in with the code**.
-2. At the foot of the page, open **Pair the phone**. A QR code appears.
-3. In the app, on the **Backend** tab, tap **Scan to pair** and point the camera at the QR code
-   on the other screen. The app says **Paired with …; this phone now has a code of its own
-   (phone …, until …)**, naming the address it will use.
-4. Tap **Check**. It says **Backend ok, Model API live for the code, recorded otherwise, demo
-   gated. The phone's own code (phone …, until …) opens it.** (`Model API fixture` on a stack
-   that answers from recordings.)
+1. At the foot of the page, open **Pair the phone**. A QR code appears, with the address to
+   type under it. On an open stack it carries the server's address and nothing else.
+2. In the app, on the **Backend** tab, tap **Scan to pair** and point the camera at the QR code
+   on the other screen.
+3. Tap **Check**. It says **Backend ok**, with `Model API fixture` on a stack that answers from
+   recordings.
 
-**Without Google Play services, or without a second screen:** the page shows the address under
-the QR code. On the **Backend** tab type it into **Backend URL** exactly as shown, type the
-access code into the field under it (on your own computer, the phone's code from
-`./dev gate on`), tap **Save**, then **Check**; the answer ends with **The code opens it.**
+**Without Google Play services, or without a second screen:** type the address shown under the
+QR code into **Backend URL** on the **Backend** tab exactly as shown, tap **Save**, then
+**Check**.
 
-The phone's own code lasts thirty days, or until the code you were given ends if that is
-sooner. A QR code scanned from a page that is not signed in pairs the phone as the demo
-(recorded answers, nothing kept): sign in first. **Unpair** on the **Backend** tab makes the
-phone forget the address, its code and its session; the code itself is revoked on the server with
-`./dev keys revoke "phone …"`.
+**With the gate on** (`./dev gate on`, as in step 6 of the tour), sign in on the page with the
+master code it printed before opening **Pair the phone**: the QR code then also carries a
+pairing good for fifteen minutes, with which the app claims a code of its own (thirty days at
+most), and never your code. Typing it in by hand, use the phone's code `./dev gate on` printed.
+A QR code from a page that is not signed in pairs the phone as the demo (recorded answers,
+nothing kept). **Unpair** on the **Backend** tab makes the phone forget the address, its code
+and its session; `./dev keys revoke "phone …"` revokes the code on the server. With the
+Android tools installed (`./dev setup --android`), `./dev phone` builds the app, installs it
+over USB and prints the pairing code in the terminal.
 
 ### On the phone
 
@@ -258,52 +282,17 @@ phone forget the address, its code and its session; the code itself is revoked o
 - From a laptop instead, the Inbox's **Send a capture from this computer** takes photos and a
   short MP4 or 3GP video.
 
-## Run it on your own computer
-
-The complete path, with the `.env` to fill in, the Model API key, the phone over the Wi-Fi and
-USB debugging step by step, and a troubleshooting table:
-[Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/). In
-short, about ten minutes, mostly the first build, with no key and nothing spent.
-
-**You need:** Docker with Compose v2 (Docker Desktop on macOS or Windows, Docker Engine on
-Linux), git and bash, and a few GB of free disk for the images. On Windows, use WSL 2 (Ubuntu)
-with Docker Desktop's WSL integration on, and run every command in the Ubuntu terminal.
-
-```bash
-git clone https://github.com/nikolareljin/orphan-parts.git
-cd orphan-parts
-cp .env.example .env    # no key needed: without one the stack runs on recorded answers
-./dev up                # first time a few minutes to build; the web app on http://localhost:5173
-./dev demo              # load the demo set: 49 items with everything the models produced
-```
-
-Then open <http://localhost:5173>. For live models on your own photos, get a key at
-<https://dev.meta.ai> (Billing: a payment method; API keys: create one), set
-`MODEL_API_KEY=<your key>` and `OPL_FAKE_API=0` in `.env`, and run `./dev up` again; each call
-is charged to your key and `SPEND_CAP_USD` in `.env` (25 by default) stops it at that amount.
-`./dev down` stops the stack.
-
-A local stack has no access code, so every page is open. `./dev gate on` turns the gate on and
-prints a code for you and one for the phone; `./dev gate off` turns it off. To pair a phone,
-open the web app at the computer's network address (for example `http://192.168.1.20:5173`,
-with the phone on the same network), not at `localhost`, which on the phone means the phone.
-With the Android tools installed (`./dev setup --android`), `./dev phone` builds the app,
-installs it over USB and prints the pairing code in the terminal. `./dev help` lists every
-command; the [Quickstart](https://nikolareljin.github.io/orphan-parts/start/quickstart/) has
-the rest.
-
 ## Costs and limits
 
-- **Without the code, nothing is spent.** Every answer is a recording of the demo set; the
-  Model API is never called and nothing is kept. A visitor cannot upload a photo: the gallery
-  is the reader. Each reading or measurement is a try, 20 per address and hour.
-- **With the code**, each call that reaches a model is counted first: 20 per session and hour
-  and 300 per day for everyone (UTC), with 429 and a line saying which allowance ran out. Every
-  request of any kind is held to 120 per address and minute; the code may be tried 5 times per
-  address and quarter hour.
-- **A spend cap** stops every model call once the ledger reaches it (20 USD on the hosted app),
-  and the operator can pause spending without taking the site down. The live calls used today
-  show at the foot of every page.
+- **On your own computer without a key, nothing is spent.** The Model API is never called:
+  every answer is a recording or a stand-in, and the foot of the page says *recorded answers
+  only (nothing spent)*.
+- **On the hosted demo, nothing is spent either.** A visitor gets the recordings of the demo
+  set's own photos and cannot upload one; each reading or measurement is a try, 20 per address
+  and hour, and every request of any kind is held to 120 per address and minute.
+- **With your own key**, each call is charged to it, and `SPEND_CAP_USD` (25 USD by default)
+  stops every model call once the stack's ledger reaches it. The live calls used today show at
+  the foot of every page.
 - Rough cost per call at the published rates: a label read $0.003 to $0.008, finding the label
   $0.0025, a draft, the decision cards or a search plan under $0.01, a drawing $0.01, price
   guidance with web search $0.04 to $0.07, a build proposal $0.01 to $0.03.
@@ -313,7 +302,8 @@ the rest.
 ## Privacy: what a visitor never sees
 
 Items are private by default. The owner can mark an item public; the demo set loads that way.
-A visitor without the code sees a public item's values, photos and drawn pictures, and never:
+A visitor to a gated server (the hosted demo, or your stack after `./dev gate on`) who is not
+signed in sees a public item's values, photos and drawn pictures, and never:
 
 - where it is kept, the owner's notes, a voice note or a clip;
 - the lowest acceptable price, the reason for selling, the pickup area, the note said with a
@@ -347,13 +337,13 @@ blacked out on a photo, pictured:
 | The app: "that code points at localhost" | The site was opened at `localhost`; open it at the computer's network address |
 | **Check**: "Not reachable" | The phone is off the server's network, the address has a typo, or (on your own computer) the firewall blocks port 5173; the hosted address is `https://`, a local one `http://…:5173` |
 | **Check**: "The code is refused" | The code was mistyped or has expired |
-| "This phone's code has ended or was revoked; scan the code on a signed-in page" | The code you were given, or the phone's own, has ended or was revoked; the app has cleared it: sign in on the site with a current code and scan again |
+| "This phone's code has ended or was revoked; scan the code on a signed-in page" | The phone's own code, or the code that paired it, has ended or was revoked; the app has cleared it: sign in on the site with a current code (`./dev gate show` prints the master) and scan again |
 | After a scan: "no code of its own: the pairing has ended" | The fifteen minutes ran out before the claim: reload the signed-in page and scan its new code |
 | After a scan: "no code of its own: the code that paired this phone has ended" | The code the page was signed in with has ended or was revoked: sign in again with a current code and scan the new QR code |
 | After a scan: "no code of its own: … does not claim a phone's code" or "… already" | The pairing was spent or did not come from a scan: reload the signed-in page and scan within fifteen minutes |
-| After a scan: "no code of its own: a phone's own code does not pair another phone" | The page was signed in with a phone's code: sign in with the code you were given and scan again |
+| After a scan: "no code of its own: a phone's own code does not pair another phone" | The page was signed in with a phone's code: sign in with the master code (`./dev gate show`) and scan again |
 | After a scan: "no code of its own: this code has paired 10 phones already" | Have one revoked with `./dev keys revoke "phone …"` on the server, or use another code |
 | After a scan: "no code of its own: too many tries" | Wait the seconds it names and scan again |
 | "Sign in with the access code to read your own photos." | Uploads are for signed-in sessions; signed out, pick photos from the gallery |
-| "this address's hourly allowance of tries is used; wait … s" (or "… has fewer than … left") | Without the code each reading (one photo, or all photos of one item) and each measurement is a try, 20 per address and hour: pick fewer photos, or wait the seconds it names |
+| "this address's hourly allowance of tries is used; wait … s" (or "… has fewer than … left") | Signed out on a gated server, each reading (one photo, or all photos of one item) and each measurement is a try, 20 per address and hour: pick fewer photos, or wait the seconds it names |
 | "this visitor's hourly allowance is used; try again in … s" | Wait the seconds it names; the allowance is 20 calls that reach a model per session and hour |

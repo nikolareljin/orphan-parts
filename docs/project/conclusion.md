@@ -11,8 +11,8 @@ description: Where Orphan Parts Lens ended up after the nine days of the hackath
     piece, with every answer backed by its evidence, on Meta's models: Muse Spark, SAM 3.1,
     Muse Voice Transcribe and Muse Image. The demo set is two drawers of the owner's own parts,
     49 items, each with the answers the models gave, readable by anyone on the
-    [live demo](https://orphan-parts.pages.dev) (temporary, while the hackathon is judged) or on
-    [your own computer](../start/local.md).
+    [hosted demo](https://orphan-parts.pages.dev) (read-only, temporary) or on
+    [your own computer](../start/local.md), where every page is open.
 
 ## What had to change on the way
 

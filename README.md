@@ -2,10 +2,12 @@
 
 # Orphan Parts Lens
 
-**Start here:** the documentation, <https://nikolareljin.github.io/orphan-parts/>, with
-[Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/)
-and the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0); the live demo,
-<https://orphan-parts.pages.dev> (temporary, while the hackathon is judged).
+**Start here:** the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52), then
+[run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/) on the
+recorded answers (Docker, three commands, no key, nothing spent; [JUDGES.md](JUDGES.md) has
+the guided tour). The documentation is at <https://nikolareljin.github.io/orphan-parts/>, with
+[Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/);
+the hosted demo, <https://orphan-parts.pages.dev>, is read-only and temporary.
 
 Scan what you already own. Decide what it can become. Find the missing piece on Marketplace, or
 prepare what you no longer need for sale or free pickup. Every answer carries its evidence, on
@@ -20,7 +22,8 @@ Meta's Muse models.
 
 | | |
 |---|---|
-| **Live demo** (temporary, while the hackathon is judged) | <https://orphan-parts.pages.dev>: without a code, the demo set's recorded answers, read-only; with an access code, uploads and the live models. It may be taken down after judging; [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/) works without it. |
+| **Run it locally** (the main way to review it) | `git clone`, `cp .env.example .env`, `./dev up`, `./dev demo`, then <http://localhost:5173>: every page open on the demo set's recorded answers, no key, nothing spent. [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/); the guided tour is in [JUDGES.md](JUDGES.md#b-run-it-on-your-own-computer-the-main-path). |
+| **Hosted demo** (read-only, temporary) | <https://orphan-parts.pages.dev>: the demo set's recorded answers, read-only. It may be taken down after judging. |
 | **Documentation** | <https://nikolareljin.github.io/orphan-parts/>, with [Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/) |
 | **Demo video** | [on YouTube](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52), also on the docs site: [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/) |
 | **Android app** | the APK on the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) |
@@ -41,8 +44,9 @@ Everything in it was built during the hackathon; the dated log is
 [docs/project/hackathon.md](docs/project/hackathon.md) (*Project > Built during the hackathon*
 on the docs site). One diagram of the whole, every box a link:
 [How it fits together](https://nikolareljin.github.io/orphan-parts/project/flow/).
-**Judging it?** [JUDGES.md](JUDGES.md) starts with a two-minute fast path on the hosted demo
-(while it is up) or on your own computer, then the Android app and the access code.
+**Judging it?** [JUDGES.md](JUDGES.md): the video, then running it on your own computer with
+a guided tour (no access code needed), the hosted demo read-only while it is up, and the
+Android app.
 **Running it yourself?**
 [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)
 is the whole path with no hosted site: Docker, a `.env`, the demo set, the phone. **Trying it on a phone?**
@@ -126,10 +130,9 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
    ([Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/)).
    To pair a phone with a local server, open the site at the computer's network address, not
    `localhost` (for example `http://192.168.1.20:5173`), with the phone on the same network.
-3. **Sign in**: **Sign in with the code** in the header, then the access code you were given
-   (**Sign out**, in the same place, ends it).
-   A local stack has no door until `./dev gate on`, which prints a code for you and one for
-   the phone; reload the page, then sign in with yours. Without it, go on to step 4.
+3. **Sign in, if there is a door**: a local stack has none until `./dev gate on`, which prints
+   a code for you and one for the phone; then **Sign in with the code** in the header with
+   yours (**Sign out**, in the same place, ends it). Without the gate, go on to step 4.
 4. **Pair the phone**: at the foot of the page, open **Pair the phone** for the QR code. In the
    app, on the **Backend** tab, tap **Scan to pair** and point the camera at the code on a
    second screen, then **Check**. Signed in, the phone gets an access code of its own on
