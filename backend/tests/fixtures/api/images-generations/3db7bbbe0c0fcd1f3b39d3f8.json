@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "3db7bbbe0c0fcd1f3b39d3f8",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Gaming coffee table shell built from laptop (a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than a bulky CRT TV), monitor (screen size 18 inch, about 46 cm across the diagonal; a thin flat computer monitor, far smaller than a television, not a bulky CRT TV), joystick module (connector 5-pin male header); Coffee-table arcade shell idea that still needs a table box, top glass and real game controls.; shown from above, as it is used; seen straight down from above; every part at its true size against the table or desk; A 24-inch flat monitor (~53x30cm widescreen) laid flat face-up inside the wooden coffee-table box under full-size glass top, joystick modules flush beside it, opened laptop wired below, living-room table use; no upright monitor on top, not a TV stand.; Top-down coffee-table arcade shell: one small 18-inch 4:3 computer monitor (~46cm diagonal) laid flat centered in wooden table box under glass top, one opened laptop at one short edge wired to it, one small joystick control point, not a large widescreen TV, not four arcade joystick stations.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793780107,
+    "data": [
+      {
+        "b64_json": "@3db7bbbe0c0fcd1f3b39d3f8-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4307,
+      "output_tokens": 2059,
+      "total_tokens": 6366
+    }
+  },
+  "status": 200
+}

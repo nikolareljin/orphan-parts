@@ -101,6 +101,7 @@ def test_the_targets_are_named_or_every_drawing_not_matching() -> None:
     )
     assert [x.id for x in best.targets(drawings, last, [])] == ["item:b#1"]
     assert [x.id for x in best.targets(drawings, last, ["project:2"])] == ["project:2#1"]
+    assert [x.id for x in best.targets(drawings, last, ["item"])] == ["item:a#1", "item:b#1"]
 
 
 def test_the_report_says_what_each_candidate_scored_and_which_was_kept() -> None:

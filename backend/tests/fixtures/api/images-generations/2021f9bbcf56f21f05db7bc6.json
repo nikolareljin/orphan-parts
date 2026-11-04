@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "2021f9bbcf56f21f05db7bc6",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Smart desk calendar with clock and buzzer built from microcontroller board (connector usb-b, dc barrel jack; a tiny credit-card-sized bare board, far smaller than half a laptop width), real-time clock module, buzzer module (connector 3-pin male header), push button module (connector 3-pin header), prototype shield; Desk clock that keeps time and beeps for reminders once a small screen is added.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793778878,
+    "data": [
+      {
+        "b64_json": "@2021f9bbcf56f21f05db7bc6-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4147,
+      "output_tokens": 1490,
+      "total_tokens": 5637
+    }
+  },
+  "status": 200
+}

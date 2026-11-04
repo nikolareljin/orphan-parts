@@ -386,3 +386,33 @@ def test_keeping_an_earlier_version_writes_it_back_and_drops_the_later_recording
         tt.run_keep(settings, tt.Options(set_file=path, out=tmp_path, keep=3, eval_dir=folder))
     assert isinstance(tt.parse(["--keep", "two"]), str)
     assert isinstance(tt.parse(["--keep", "2", "--evaluate"]), str)
+
+
+def test_a_version_tried_and_not_kept_keeps_its_number(tmp_path: Path) -> None:
+    folder = tmp_path / "eval"
+    folder.mkdir()
+    for v in (1, 2, 3):
+        e = tt.evaluation(report(*CHECKS, version=v), TextParams(version=v))
+        tt.eval_path(folder, v).write_text(e.model_dump_json(), encoding="utf-8")
+    # version 2 was kept after 3 was tried: the next is 4, not 3 again
+    assert tt.next_version(TextParams(version=2), folder) == 4
+    assert tt.next_version(TextParams(version=2), tmp_path / "none") == 3
+    assert tt.apply_edits(TextParams(version=2), [], 4).version == 4
+
+
+def test_a_check_of_some_kinds_only_is_never_a_versions_score(tmp_path: Path) -> None:
+    opts = tt.parse(["--only", "project", "--max-usd", "0.2"])
+    assert not isinstance(opts, str) and opts.only == ["project"]
+    assert isinstance(tt.parse(["--only", "drawings"]), str)
+    out = tmp_path / "out"
+    out.mkdir()
+    partial = report(*CHECKS, version=load().version)
+    partial.only = ["project"]
+    (out / "report.json").write_text(partial.model_dump_json(), encoding="utf-8")
+    settings = Settings(OPL_FAKE_API=True, log_format="text", _env_file=None)
+    evaluate = tt.Options(set_file=out, out=out, evaluate=True, eval_dir=tmp_path / "eval")
+    with pytest.raises(ValueError, match="only"):
+        tt.run_evaluate(settings, evaluate)
+    assert "search-plan" in tt.TEXT_OPS
+    assert tt.text_op("propose-2") and tt.text_op("scenarios")
+    assert not tt.text_op("extract") and not tt.text_op("propose-x") and not tt.text_op("price-1")

@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "dd2a3e8e5481968a2e022ba0",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Garage parking helper built from microcontroller board (connector usb-b, dc barrel jack; a tiny credit-card-sized bare board, far smaller than half a laptop width), ultrasonic distance sensor module (connector 4-pin male header; a tiny distance sensor module, far smaller than a laptop), buzzer module (connector 3-pin male header), LED module, breadboard power module (connector dc barrel jack input, usb-a output); Garage wall beep and light that mark parking distance.; Draw the controller as a full UNO-size microcontroller board about credit-card size sitting left on the breadboard with USB-B socket and barrel jack, wired to sensor and buzzer, not a tiny USB-stick board with USB-A plug; a three-quarter view from slightly above, the main part centered and its real size clear; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793780175,
+    "data": [
+      {
+        "b64_json": "@dd2a3e8e5481968a2e022ba0-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4225,
+      "output_tokens": 1438,
+      "total_tokens": 5663
+    }
+  },
+  "status": 200
+}

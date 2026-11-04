@@ -11,7 +11,7 @@
 # were. A change here changes those requests, so the demo set is recorded again for them
 # (`./dev decide-review --rerecord`).
 
-version: 2
+version: 4
 scenarios:
   facts_first: true
   constraints:
@@ -37,7 +37,20 @@ uses:
   corrections: []
   banned: []
 propose:
-  facts_first: false
-  constraints: []
+  facts_first: true
+  constraints:
+  - 'Read the condition first: a part recorded as missing, bare or unpopulated is not working as it is,
+    and a use of it says what must be added'
+  - 'A build that shows or works out anything needs what drives it: a display build (a smart mirror, a
+    dashboard) allocates a computer or a microcontroller board behind the screen, or leaves that requirement
+    missing and says so'
+  - A memory pick matches the host's generation and form in the compatibility facts (a DDR3 laptop takes
+    a DDR3 or DDR3L SO-DIMM); a capacity the facts do not confirm for that host goes in the unknowns to
+    check
+  - 'A joystick module is an analog part on a pin header, not a USB game controller: it plays games only
+    through a microcontroller board that reads it, allocated or named in the unknowns'
+  - 'Jumper wires, a breadboard, cables and a power adapter are still needed unless an owned item is allocated
+    for them: name them in the unknowns, never call the build complete without them'
   corrections: []
-  banned: []
+  banned:
+  - the build is complete with the allocated items
