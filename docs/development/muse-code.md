@@ -57,6 +57,8 @@ ln -s ../../tools/muse/picture-tune .agents/skills/picture-tune
   whole set within a cap, compare the versions and open a pull request
   ([Tuning the drawing parameters](../guides/picture-review.md#tuning-the-drawing-parameters)).
 
-`muse skills validate tools/muse/<id>` checks a skill file.
+`muse skills validate tools/muse/<id>` checks a skill file. To run both step by step, with a zero-cost path, a
+first live run on one drawing, the costs and how to undo, see
+[Try the skills yourself](../guides/picture-review.md#try-the-skills-yourself).
 
 Configuration and models: https://dev.meta.ai/docs/muse-code/

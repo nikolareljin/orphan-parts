@@ -307,6 +307,98 @@ removed 64 file(s) of 32 unused recording(s)
 
 Then the checks of step 9 and the pull request; the owner merges.
 
+## Try the skills yourself
+
+Both skills, `/picture-review` (fix single drawings with a brief) and `/picture-tune` (change
+what every drawing is asked with), step by step.
+
+**1. Prerequisites.**
+
+- Muse Code installed and signed in (`muse --version`; [Working with Muse Code](../development/muse-code.md)).
+- A clone of the repository on `main`, with Docker running (`./dev setup --check`).
+- `MODEL_API_KEY` in your shell or in `.env` for the paid steps. The hackathon's Model API
+  credit ended with November 4, 2026: after that every live call bills the card on the Model
+  API account. Nothing below needs the key until step 5.
+
+**2. Install the skills** (once, from the repository root; `.agents/` stays out of git):
+
+```bash
+mkdir -p .agents/skills
+ln -s ../../tools/muse/picture-review .agents/skills/picture-review
+ln -s ../../tools/muse/picture-tune .agents/skills/picture-tune
+muse skills validate tools/muse/picture-review
+muse skills validate tools/muse/picture-tune
+muse skills list --source project     # both listed once the workspace is trusted
+```
+
+**3. Start Muse Code in the repository root** with `muse`, and trust the workspace when asked
+(project skills load only in a trusted workspace). Approve the `./dev` and `docker compose`
+commands when the sandbox asks.
+
+**4. The zero-cost path.** Nothing spent, no key:
+
+```bash
+./dev picture-review --dry-run           # every drawing and the facts it must show
+```
+
+`picture-review/report.md` lists the 32 drawings with their thumbnails, facts and requests.
+`/picture-review` starts with this step and stops to say how many drawings there are; tell it
+to stop there. The tests run in fixture mode and never spend (`./dev test`).
+
+**5. A first live run with a small cap** (one drawing, about 0.01 USD):
+
+```bash
+./dev picture-review --only project:2 --max-usd 0.10    # the hall smart mirror, reviewed
+./dev picture-review --tune --dry-run                    # rule edits from that review, free
+```
+
+`--tune --dry-run` needs a review with verdicts in `picture-review/report.json`; it proposes
+the rule edits alone (no phrasing call) into `picture-review/tune.md`. Do not `--apply` a
+proposal made from one drawing.
+
+**6. `/picture-review`.** Ask *review the drawings* or type `/picture-review`. It runs the dry
+run, says the cap and runs the review (`--max-usd 1`, about 0.21 USD for the 32 drawings),
+shows a table of verdicts and the briefs for the wrong ones, and **stops for your approval of
+each drawing to redraw** (yes, no, or your own brief). Then it redraws only those (0.01 USD a
+drawing, about 0.01 USD a review), shows `picture-review/before.jpg` and `after.jpg`, checks that
+nothing else moved, and **stops before the pull request**.
+
+**7. `/picture-tune`.** Ask *tune the drawing parameters* or type `/picture-tune`. It says the
+version, the number of drawings and the cost ahead and **stops before the first paid step**;
+scores the current version (review and `--evaluate`); proposes edits (`--tune`, about 0.01
+USD) and shows them from `picture-review/tune.md`, then **stops for your approval of each
+edit**; applies them; **stops before `--redraw-set`** (about 0.32 USD of drawings and 0.20 USD
+of reviews when every request changes); compares the versions (`--evaluate --prune`), and
+**stops before the pull request**. One round is about 0.55 USD; it offers a second only when
+drawings are still wrong.
+
+**8. Where the outputs land.**
+
+| File | Written by |
+|---|---|
+| `picture-review/report.md`, `report.json`, `pictures/` | a review, `--redraw-set` |
+| `picture-review/redraw.md`, `before.jpg`, `after.jpg` | `--redraw` |
+| `picture-review/tune.md`, `tune.json` | `--tune` |
+| `picture-review/compare.md`, `sheet-v<N>.jpg` | `--evaluate` |
+| `demo/set.yaml` (a brief) | `--redraw` |
+| `backend/app/picture/params.yaml` | `--tune --apply` |
+| `backend/tests/fixtures/api/images-generations/` (new drawings) | `--redraw`, `--redraw-set` |
+| `eval/pictures/params-v<N>.json`, the table in *How the drawings were improved* | `--evaluate` |
+
+`picture-review/` is not in git; everything else is, so `git status` shows what a run changed.
+
+**9. Undo.** Before a commit, put everything back with git:
+
+```bash
+git checkout -- demo/set.yaml backend/app/picture/params.yaml eval/pictures \
+  docs/project/picture-review-results.md backend/tests/fixtures   # restores pruned recordings too
+git clean -n backend/tests/fixtures/api/images-generations eval/pictures   # list new files
+git clean -f backend/tests/fixtures/api/images-generations eval/pictures   # delete them
+./dev demo     # 0 not recorded, 0 stand-in answers again
+```
+
+The money spent is not undone: the spend is in the Model API account's billing.
+
 ## Getting better drawings over time
 
 Muse Image is a hosted model. The Model API documents image generation and image edits for

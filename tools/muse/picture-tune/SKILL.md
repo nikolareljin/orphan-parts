@@ -13,6 +13,23 @@ skill measures a version on the demo set, changes it from what the reviews found
 the next one. Every step is a `./dev picture-review` command; the guide is
 `docs/guides/picture-review.md#tuning-the-drawing-parameters`.
 
+## How to run
+
+1. Install once from the repository root: `mkdir -p .agents/skills && ln -s ../../tools/muse/picture-tune .agents/skills/picture-tune`;
+   `muse skills validate tools/muse/picture-tune`; `muse skills list --source project`.
+2. Start `muse` in the repository root, trust the workspace, then `/picture-tune`.
+3. Free first: `./dev picture-review --dry-run` (no key). Smallest live run: `./dev picture-review --only project:2 --max-usd 0.10`
+   then `./dev picture-review --tune --dry-run` (rule edits only, free; never apply a proposal
+   made from one drawing). One full round is about 0.55 USD: review 0.21, proposal 0.01, the
+   set drawn again 0.32 and reviewed. The key (`MODEL_API_KEY`, shell or `.env`) bills the
+   Model API account.
+4. Outputs: `picture-review/report.md`, `tune.md`, `tune.json`, `compare.md`, `sheet-v<N>.jpg`;
+   `backend/app/picture/params.yaml`, `eval/pictures/params-v<N>.json`, the table in
+   `docs/project/picture-review-results.md`, recordings under
+   `backend/tests/fixtures/api/images-generations/`.
+5. Undo before a commit: `git checkout -- backend/app/picture/params.yaml eval/pictures docs/project/picture-review-results.md backend/tests/fixtures`
+   and `git clean -f backend/tests/fixtures/api/images-generations eval/pictures`.
+
 ## Inputs
 
 - The demo set, `demo/set.yaml`, and its recordings under `backend/tests/fixtures/api`.
