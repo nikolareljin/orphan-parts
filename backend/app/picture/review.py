@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field
 
 from app.config import Settings, get_settings
 from app.decide.service import Decider
+from app.demo.schema import DemoSet
 from app.extract.imaging import BadImageError, prepare
 from app.inventory import Inventory
 from app.inventory.schema import Item
@@ -324,6 +325,20 @@ class Services:
     decider: Decider
     planner: Planner
     keys: dict[int, str] = field(default_factory=dict)
+    # the set loaded, when it is the demo set: the corrections its drawings were asked with
+    demo: DemoSet | None = None
+
+    def item_brief(self, item_id: int, field_name: str) -> str:
+        if self.demo is None:
+            return ""
+        key = self.keys.get(item_id)
+        found = next((i for i in self.demo.items if i.key == key), None)
+        return str(getattr(found, field_name, "")) if found is not None else ""
+
+    def project_brief(self, project: Project, view: str) -> str:
+        if self.demo is None or self.demo.propose is None:
+            return ""
+        return self.demo.propose.correction(project.template, project.title, view)
 
 
 def collect(sv: Services) -> list[Drawing]:
@@ -347,7 +362,7 @@ def collect(sv: Services) -> list[Drawing]:
                         title=_line(pic.use),
                         setting=_line(pic.use),
                         parts=[describe(item, as_built=False)],
-                        asked=prompt_for(item, pic.use),
+                        asked=prompt_for(item, pic.use, sv.item_brief(item.id, "picture_brief")),
                     ),
                 )
             )
@@ -373,7 +388,14 @@ def collect(sv: Services) -> list[Drawing]:
                                 parts=[describe(item)]
                                 + [f"another item: {_line(w, 120)}" for w in reuse.with_items],
                                 still_to_get=[_line(p, 120) for p in reuse.extra_parts],
-                                asked=card_prompt(scenarios, card, item),
+                                asked=card_prompt(
+                                    scenarios,
+                                    card,
+                                    item,
+                                    sv.item_brief(item.id, "reuse_picture_brief")
+                                    if card == 0
+                                    else "",
+                                ),
                             ),
                         )
                     )
@@ -394,7 +416,10 @@ def collect(sv: Services) -> list[Drawing]:
                     project_title=project.title,
                     view=view,
                     facts=project_facts(
-                        project, allocated, view, sv.pictures.project_prompt(project, view)
+                        project,
+                        allocated,
+                        view,
+                        sv.pictures.project_prompt(project, view, sv.project_brief(project, view)),
                     ),
                 )
             )
@@ -808,7 +833,9 @@ async def load_set(
     notes += [f"not recorded: {u}" for u in outcome.unrecorded]
     notes += [f"skipped: {s}" for s in outcome.skipped]
     assert loader.pictures is not None
-    sv = Services(settings, loader.inventory, loader.pictures, loader.decider, loader.planner, keys)
+    sv = Services(
+        settings, loader.inventory, loader.pictures, loader.decider, loader.planner, keys, demo
+    )
     return sv, notes
 
 

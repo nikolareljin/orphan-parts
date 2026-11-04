@@ -450,3 +450,26 @@ async def test_the_recommendation_check_replays_its_stub(drawing_settings: Setti
     await client.aclose()
     assert checked and checked[0].sound is False
     assert checked[0].flags[0].severity == "major"
+
+
+async def test_the_request_shown_carries_the_correction_it_was_drawn_with(
+    drawing_settings: Settings,
+) -> None:
+    sv, client = services(drawing_settings)
+    item_id = a_monitor(sv.inventory)
+    await sv.pictures.draw(item_id, "a smart mirror", "an 18 inch monitor; not a TV")
+    await client.aclose()
+    sv.keys = {item_id: "monitor"}
+    sv.demo = DemoSet(
+        items=[
+            DemoItem(
+                key="monitor",
+                name="Dell 1800FP monitor, 18 inch",
+                picture="a smart mirror",
+                picture_brief="an 18 inch monitor; not a TV",
+            )
+        ]
+    )
+    asked = collect(sv)[0].facts.asked
+    assert "; an 18 inch monitor; not a TV, on a plain background" in asked
+    assert sv.item_brief(item_id, "reuse_picture_brief") == ""
