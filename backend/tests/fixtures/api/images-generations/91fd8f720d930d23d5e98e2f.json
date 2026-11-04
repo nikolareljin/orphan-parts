@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "91fd8f720d930d23d5e98e2f",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Wired drop for a laptop built from powerline adapter (connector integrated us 2-prong ac plug), laptop; For an average person with household tools and no particular skill: carries wired ethernet to one laptop through house wiring to reduce Wi-Fi drops; small palm-size powerline adapter box plugged directly into wall AC outlet, short ethernet cable from adapter to laptop ethernet port on desk beside it, laptop open and in use, do not show any cable plugging laptop directly into mains outlet, not a charger, no phone screen; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793769789,
+    "data": [
+      {
+        "b64_json": "@91fd8f720d930d23d5e98e2f-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4169,
+      "output_tokens": 1114,
+      "total_tokens": 5283
+    }
+  },
+  "status": 200
+}

@@ -137,10 +137,9 @@ owner.
 
 The shorter items, in rough order.
 
-- **Better drawings by default.** Facts first in the drawing prompt (a screen's size and aspect,
-  a board's form factor), the reviewed corrections applied by project kind, a review before a
-  drawing is shown with one redraw when it is wrong, and reference photos through the image
-  edits endpoint ([Review and redraw the drawings](../guides/picture-review.md#getting-better-drawings-over-time)).
+- **Better drawings by default.** Facts first, the corrections by project kind, the review gate
+  and best of N are built; next, the gate on by default with three candidates for the owner's
+  drawings, and reference photos through the image edits endpoint ([Review and redraw the drawings](../guides/picture-review.md#getting-better-drawings-over-time)).
 - **The build pack as a PDF**, with the candidate listings cited by page.
 - **Candidates side by side.** The listings brought back are ranked by the pattern; the
   candidates read from them are not yet compared in one table, with the fit, the price and the

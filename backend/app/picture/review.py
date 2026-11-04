@@ -11,8 +11,8 @@ wrong ones drawn again with a corrected brief.
   --only SEL,...       only these drawings: project:2, card:monitor_1800fp, item:uno_r3#1 ...
   --max-usd N          stop before a call that could take the run past N USD (default 1.00)
   --dry-run            list the drawings and the facts each must show; no call, no key
-  --decide             also check each Decide card set and each project's allocations against
-                       the items' facts (one text call each); report only, nothing changed
+  --decide             also check each Decide card set, each item's ideas and each project's
+                       allocations against the items' facts (one text call each); report only
   --out DIR            where the report goes (default picture-review/)
   --redraw SEL,...|all-wrong
                        draw these again with the brief proposed in the last report (or
@@ -38,6 +38,14 @@ Tuning the drawing parameters (backend/app/picture/params.yaml):
                        (compare.md), write the history into --results, and list the drawing
                        recordings the version before used and this one does not
   --prune              with --evaluate: delete those recordings
+  --stage WORD         with --evaluate: keep the score as a later stage of the same version
+                       (eval/pictures/params-v<N>-<WORD>.json), beside its first score
+  --candidates N       best of N: draw each drawing --only names (else each the last review
+                       did not find matching) N more times, each with its own brief (the
+                       corrected brief, then another framing), review every candidate and keep
+                       the best by verdict, confidence and fewer issues; only the winner's brief
+                       goes into the set file and only its recording is kept; every candidate
+                       is saved under candidates/ in --out
   --eval-dir DIR       where the evaluations are kept (default eval/pictures)
   --results FILE       the page the history table is written into, between its markers
 
@@ -64,6 +72,7 @@ from PIL import Image, ImageDraw
 from pydantic import BaseModel, Field, ValidationError
 
 from app.config import Settings, get_settings
+from app.decide.schema import ReuseScenario
 from app.decide.service import Decider
 from app.demo.schema import DemoSet
 from app.extract.imaging import BadImageError, prepare
@@ -97,7 +106,8 @@ from app.picture.service import (
 from app.projects import Planner
 from app.projects.pack import shown_fields
 from app.projects.schema import Project
-from app.projects.templates import Templates
+from app.projects.service import fits
+from app.projects.templates import Templates, UnknownTemplateError
 
 OP = "picture-review"
 DECIDE_OP = "decide-review"
@@ -115,6 +125,8 @@ DEFAULT_MAX_USD = 1.0
 CONCURRENCY = 6
 ITEM_VALUES = 12
 BRIEF_MAX = 400
+# the most candidates one drawing may take in one best-of-N run
+MAX_CANDIDATES = 6
 # the drawings of the demo set a whole redraw reviews, for its cap
 SET_DRAWINGS = 40
 # one drawing, at the published rate
@@ -142,7 +154,9 @@ across the diagonal, not a television; a credit-card-sized board is not a deskto
 desktop, a sensor module as a phone).
 - missing_part: a part the facts list that the finished build must show and the drawing lacks.
 - invented_part: a main device the facts do not list. Parts under "still to get" are bought \
-for the build and may be drawn.
+for the build and may be drawn; so may the rest of the build its kind of project needs, and \
+what the use itself names or plainly needs (a computer for a second screen, a router for a \
+network link). A second copy of a listed part is invented.
 - wrong_setting: the room or the use differs from the facts.
 - text: legible words, logos or brand names (the request asked for none); a clock or a few \
 glyphs on a display build are fine.
@@ -208,6 +222,10 @@ class Facts(BaseModel):
     still_to_get: list[str] = Field(
         default=[], description="open requirements: bought for the build, may be drawn"
     )
+    build_needs: list[str] = Field(
+        default=[],
+        description="what its kind of project needs besides the parts listed: may be drawn",
+    )
     asked: str = Field(default="", description="the image request as the app writes it")
 
     def text(self) -> str:
@@ -222,6 +240,9 @@ class Facts(BaseModel):
         if self.still_to_get:
             lines.append("Still to get (bought for the build; may appear):")
             lines += [f"- {p}" for p in self.still_to_get]
+        if self.build_needs:
+            lines.append("The rest of the build its kind of project needs (may appear):")
+            lines += [f"- {p}" for p in self.build_needs]
         return "\n".join(lines)
 
 
@@ -348,6 +369,71 @@ def project_facts(project: Project, items: list[Item], view: str, asked: str) ->
     )
 
 
+def build_needs(subject: str, items: list[Item], templates: Templates | None) -> list[str]:
+    """What a kind of project needs besides the items drawn: its template's requirements none
+    of them fills, by label; none when the subject is no template."""
+    if templates is None or not subject:
+        return []
+    try:
+        template = templates.get(subject)
+    except UnknownTemplateError:
+        return []
+    return [
+        _line(r.label, 120)
+        for r in template.requirements
+        if not any(fits(r.item_types, i) for i in items)
+    ]
+
+
+def drawn_as_itself(item: Item, use: str) -> bool:
+    """The item's own picture (cleaned up), as ``prompt_for`` tells it from a use."""
+    what = item.item_type or item.name or "item"
+    return not use or use.lower() == what.lower()
+
+
+def item_facts(
+    item: Item,
+    use: str,
+    asked: str,
+    *,
+    subject: str = "",
+    templates: Templates | None = None,
+    params: DrawingParams | None = None,
+) -> Facts:
+    """An item's picture: the item as built (its present condition and printed marks only when
+    the parameters say its own picture shows them), and, drawn as a use, the rest of the build
+    its kind of project needs."""
+    p = params if params is not None else load_params()
+    own = drawn_as_itself(item, use)
+    return Facts(
+        title=_line(use),
+        setting=_line(use),
+        parts=[describe(item, as_built=not (own and p.facts.condition))],
+        build_needs=[] if own else build_needs(subject, [item], templates),
+        asked=asked,
+    )
+
+
+def card_facts(
+    item: Item,
+    reuse: ReuseScenario,
+    asked: str,
+    *,
+    subject: str = "",
+    templates: Templates | None = None,
+) -> Facts:
+    """A reuse card's picture: the item as built, the other items the card names, its extra
+    parts, and the rest of the build its kind of project needs."""
+    return Facts(
+        title=_line(reuse.title),
+        setting=_line(reuse.what_it_does),
+        parts=[describe(item)] + [f"another item: {_line(w, 120)}" for w in reuse.with_items],
+        still_to_get=[_line(x, 120) for x in reuse.extra_parts],
+        build_needs=build_needs(subject, [item], templates),
+        asked=asked,
+    )
+
+
 @dataclass
 class Services:
     settings: Settings
@@ -415,11 +501,13 @@ def collect(sv: Services) -> list[Drawing]:
                     item_key=sv.keys.get(item.id, ""),
                     subject=subject_of(pic.use, templates, params),
                     kinds=[_kind(item)],
-                    facts=Facts(
-                        title=_line(pic.use),
-                        setting=_line(pic.use),
-                        parts=[describe(item, as_built=False)],
-                        asked=prompt_for(item, pic.use, sv.item_brief(item.id, "picture_brief")),
+                    facts=item_facts(
+                        item,
+                        pic.use,
+                        prompt_for(item, pic.use, sv.item_brief(item.id, "picture_brief")),
+                        subject=subject_of(pic.use, templates, params),
+                        templates=templates,
+                        params=params,
                     ),
                 )
             )
@@ -441,13 +529,10 @@ def collect(sv: Services) -> list[Drawing]:
                             card=card,
                             subject=subject_of(reuse.title, templates, params),
                             kinds=[_kind(item)],
-                            facts=Facts(
-                                title=_line(reuse.title),
-                                setting=_line(reuse.what_it_does),
-                                parts=[describe(item)]
-                                + [f"another item: {_line(w, 120)}" for w in reuse.with_items],
-                                still_to_get=[_line(p, 120) for p in reuse.extra_parts],
-                                asked=card_prompt(
+                            facts=card_facts(
+                                item,
+                                reuse,
+                                card_prompt(
                                     scenarios,
                                     card,
                                     item,
@@ -455,6 +540,8 @@ def collect(sv: Services) -> list[Drawing]:
                                     if card == 0
                                     else "",
                                 ),
+                                subject=subject_of(reuse.title, templates, params),
+                                templates=templates,
                             ),
                         )
                     )
@@ -668,6 +755,29 @@ async def decide_all(
             ]
         )
         jobs.append((f"cards:{name}", f"Decide cards of {item.name}", text))
+    for item in items:
+        ideas = sv.decider.latest_uses(item.id)
+        if ideas is None or not ideas.uses:
+            continue
+        name = sv.keys.get(item.id, str(item.id))
+        text = "\n".join(
+            [
+                f"The item: {describe(item, as_built=False)}",
+                f"Its condition: {_line(item.condition) or '-'};"
+                f" faults: {_line(item.faults) or '-'}",
+                "",
+                "What it is good for:",
+                *(
+                    f"- idea {n}: {u.title}: {u.what_it_does}; needs {', '.join(u.needs) or '-'};"
+                    f" effort {u.effort}; note {u.note or '-'}"
+                    for n, u in enumerate(ideas.uses)
+                ),
+                "",
+                "The owner's other items:",
+                *inventory_lines(items, item.id),
+            ]
+        )
+        jobs.append((f"ideas:{name}", f"Ideas for {item.name}", text))
     for project in sorted(sv.planner.projects().projects, key=lambda p: p.id):
         parts = [
             f"- {a.requirement}: {describe(by_id[a.item_id])}; why: {_line(a.why, 200)}"
@@ -1005,6 +1115,8 @@ class Options:
     prune: bool = False
     eval_dir: Path | None = None
     results: Path | None = None
+    stage: str = ""
+    candidates: int = 0
 
 
 async def run_review(settings: Settings, opts: Options) -> Report:
@@ -1410,16 +1522,21 @@ async def run_evaluate(settings: Settings, opts: Options) -> tuple[tune.Evaluati
     report = await with_subjects(settings, opts, report)
     folder = opts.eval_dir or default_eval_dir()
     folder.mkdir(parents=True, exist_ok=True)
-    ev = tune.evaluation(report, params, settings.model_image)
-    tune.eval_path(folder, params.version).write_text(tune.dumps(ev), encoding="utf-8")
+    ev = tune.evaluation(report, params, settings.model_image, opts.stage)
+    tune.eval_path(folder, params.version, opts.stage).write_text(tune.dumps(ev), encoding="utf-8")
     evals = tune.history(folder)
-    earlier = [e for e in evals if e.params_version < params.version]
+    at = next(
+        n
+        for n, e in enumerate(evals)
+        if (e.params_version, e.stage) == (ev.params_version, ev.stage)
+    )
+    earlier = evals[:at]
     lines = ["# Drawing parameters, version by version", "", tune.table(evals), ""]
     notes: list[str] = []
     if earlier:
         moved = tune.changes(earlier[-1], ev)
         if moved:
-            lines += [f"Moved since version {earlier[-1].params_version}:", ""]
+            lines += [f"Moved since {tune.label(earlier[-1])}:", ""]
             lines += [f"- {m}" for m in moved] + [""]
         unused = tune.unused_recordings(earlier[-1], ev)
         if unused and opts.prune:
@@ -1427,7 +1544,7 @@ async def run_evaluate(settings: Settings, opts: Options) -> tuple[tune.Evaluati
             notes.append(f"removed {len(removed)} file(s) of {len(unused)} unused recording(s)")
         elif unused:
             notes.append(
-                f"{len(unused)} recording(s) of version {earlier[-1].params_version} unused"
+                f"{len(unused)} recording(s) of {tune.label(earlier[-1])} unused"
                 " now (--prune deletes them): " + ", ".join(unused)
             )
     (opts.out / "compare.md").write_text("\n".join(lines), encoding="utf-8")
@@ -1473,6 +1590,8 @@ def parse(argv: list[str]) -> Options | str:
             "--briefs",
             "--eval-dir",
             "--results",
+            "--stage",
+            "--candidates",
         )
         if needs and not args:
             return f"{arg} needs a value"
@@ -1499,6 +1618,17 @@ def parse(argv: list[str]) -> Options | str:
             opts.eval_dir = Path(args.pop(0))
         elif arg == "--results":
             opts.results = Path(args.pop(0))
+        elif arg == "--stage":
+            opts.stage = args.pop(0).strip().lower()
+            if not tune.STAGE.fullmatch(opts.stage):
+                return "--stage is a short word: letters, digits and dashes"
+        elif arg == "--candidates":
+            try:
+                opts.candidates = int(args.pop(0))
+            except ValueError:
+                return "--candidates needs a whole number"
+            if not 1 <= opts.candidates <= MAX_CANDIDATES:
+                return f"--candidates is 1 to {MAX_CANDIDATES}"
         elif arg == "--tune":
             opts.tune = True
         elif arg == "--apply":
@@ -1525,9 +1655,13 @@ def parse(argv: list[str]) -> Options | str:
         return "--brief and --briefs go with --redraw"
     if opts.redraw and opts.dry_run:
         return "--redraw draws; it has no dry run (review with --dry-run first)"
-    modes = [opts.tune, opts.redraw_set, opts.evaluate, bool(opts.redraw)]
+    modes = [opts.tune, opts.redraw_set, opts.evaluate, bool(opts.redraw), bool(opts.candidates)]
     if sum(modes) > 1:
-        return "--tune, --redraw-set, --evaluate and --redraw go one at a time"
+        return "--tune, --redraw-set, --evaluate, --redraw and --candidates go one at a time"
+    if opts.stage and not opts.evaluate:
+        return "--stage goes with --evaluate"
+    if opts.candidates and (opts.data or opts.dry_run):
+        return "--candidates draws on the demo set; it has no dry run and no --data"
     if opts.apply and not opts.tune:
         return "--apply goes with --tune"
     if opts.prune and not opts.evaluate:
@@ -1566,7 +1700,12 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
-        settings = Settings(OPL_FAKE_API=True)
+        try:
+            settings = Settings(OPL_FAKE_API=True)
+        except ValueError as again:
+            # a validation error prints its input; the reasons alone
+            print(f"picture-review: the settings are refused: {refused(again)}", file=sys.stderr)
+            return 1
     if not opts.data and not opts.set_file.is_file():
         print(f"picture-review: no set at {opts.set_file}", file=sys.stderr)
         return 1
@@ -1617,6 +1756,37 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
+    if opts.candidates:
+        if settings.model_api_mode == "fixture":
+            print(
+                "picture-review: --candidates draws and records; it needs MODEL_API_KEY and"
+                " OPL_FAKE_API off",
+                file=sys.stderr,
+            )
+            return 1
+        from app.picture.best import run_candidates
+
+        try:
+            run = asyncio.run(run_candidates(settings, opts))
+        except (ValueError, KeyError, OSError) as exc:
+            print(f"picture-review: {exc}", file=sys.stderr)
+            return 1
+        for line in run.load:
+            print(line)
+        for line in run.skipped:
+            print(f"skipped: {line}")
+        better = [o for o in run.outcomes if o.winner is not None]
+        for o in run.outcomes:
+            got = [c.review.verdict if c.review else "error" for c in o.candidates]
+            was = o.before.verdict if o.before else "-"
+            kept = f"candidate {o.winner + 1}" if o.winner is not None else "as it was"
+            print(f"{o.id}: {was}; candidates {', '.join(got)}; kept {kept}")
+        print(f"wrote {opts.out / 'candidates.md'}")
+        print(
+            f"{len(run.outcomes)} drawing(s), {len(better)} replaced by a better candidate;"
+            f" {run.cost_usd:.4f} USD"
+        )
+        return 0
     try:
         if opts.redraw_set:
             report = asyncio.run(run_redraw_set(settings, opts))

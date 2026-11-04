@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "4f5361cae6f0a5412e63aa45",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Custom NAS from ASUS board and SATA drives built from motherboard, desktop memory (size 4 GB), SSD (size 480 GB, connector sata), hard drive (size 3.5 inch, connector sata), adapter card; Network folders for family photos with a second copy, once CPU and power are added.; shown from above, as it is used; seen straight down from above; every part at its true size against the table or desk; Single full-size ATX motherboard (~30.5x24.4cm) mounted in open cube case as NAS with one full-length desktop memory stick in DIMM slot, 2.5-inch SSD in drive bay with SATA leads, small PCIe adapter with two M.2 drives in PCIe slot, ATX PSU; not two boards, no SSD on board.; Top-down ATX NAS case with full ATX motherboard, single desktop memory stick fitted in DIMM slot, dual-M.2 PCIe adapter card fitted in PCIe slot, 3.5-inch HDD and 2.5-inch SATA SSD mounted and cabled to board, ATX PSU; do not leave RAM and PCIe slots empty.; soft daylight, a clean uncluttered composition, the parts side by side at real scale; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793770169,
+    "data": [
+      {
+        "b64_json": "@4f5361cae6f0a5412e63aa45-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4320,
+      "output_tokens": 1606,
+      "total_tokens": 5926
+    }
+  },
+  "status": 200
+}

@@ -8,6 +8,10 @@ Later the same day the requests themselves were changed: the drawing parameters 
 from these reviews, twice, and every drawing of the set was drawn again
 ([Tuning the parameters, version 1 to 3](#tuning-the-parameters-version-1-to-3)). The drawings
 shown in the first sections are the ones version 1 drew.
+On November 4 the review's facts were fixed, every drawing that still missed was drawn several
+times and the best kept ([Best-of-N](#best-of-n): 17 matches before, 29 of 32 on a fresh review
+after), and the Decide cards were tuned the same way ([Text tuning](#text-tuning): flagged
+cards 16 to 10 of 44).
 
 ## The review
 
@@ -123,34 +127,25 @@ demo set: every drawing drawn with that version and reviewed
 
 *Written by `./dev picture-review --evaluate` from `eval/pictures/`.*
 
-| | params v1 | params v2 | params v3 |
-|---|---|---|---|
-| drawings | 32 | 32 | 32 |
-| matches | 11 | 21 | 21 |
-| partly | 20 | 5 | 6 |
-| wrong | 1 | 6 | 5 |
-| issues: text | 19 | 2 | 2 |
-| issues: scale | 2 | 1 | 2 |
-| issues: wrong_device | 0 | 2 | 3 |
-| issues: missing_part | 2 | 4 | 2 |
-| issues: invented_part | 1 | 5 | 4 |
-| issues: wrong_setting | 0 | 1 | 2 |
-| issues: implausible | 2 | 2 | 4 |
-| spent on the run, USD | 0.21 | 0.51 | 0.52 |
+| | params v1 | params v2 | params v3 | params v3 asbuilt | params v3 best3 | params v3 recheck |
+|---|---|---|---|---|---|---|
+| drawings | 32 | 32 | 32 | 32 | 32 | 32 |
+| matches | 11 | 21 | 21 | 19 | 31 | 29 |
+| partly | 20 | 5 | 6 | 8 | 1 | 2 |
+| wrong | 1 | 6 | 5 | 5 | 0 | 1 |
+| issues: text | 19 | 2 | 2 | 1 | 0 | 0 |
+| issues: scale | 2 | 1 | 2 | 1 | 0 | 0 |
+| issues: wrong_device | 0 | 2 | 3 | 3 | 0 | 1 |
+| issues: missing_part | 2 | 4 | 2 | 4 | 1 | 1 |
+| issues: invented_part | 1 | 5 | 4 | 8 | 0 | 1 |
+| issues: wrong_setting | 0 | 1 | 2 | 1 | 0 | 0 |
+| issues: implausible | 2 | 2 | 4 | 4 | 0 | 1 |
+| spent on the run, USD | 0.21 | 0.51 | 0.52 | 0.73 | 1.23 | 0.15 |
 
-Moved from v2 to v3:
+Moved from params v3 best3 to params v3 recheck:
 
-- `project:10#1`: wrong to matches
-- `project:6#1`: wrong to matches
-- `item:dht11#1`: partly to matches
-- `project:4#2`: wrong to partly
-- `project:4#3`: partly to matches
-- `project:7#2`: partly to matches
-- `item:monitor_1800fp#1`: matches to partly
 - `item:powerline#1`: matches to partly
-- `project:9#1`: matches to partly
-- `item:joystick#1`: matches to wrong
-- `project:8#3`: matches to wrong
+- `item:uno_r3#1`: matches to wrong
 
 <!-- params-history:end -->
 
@@ -232,8 +227,114 @@ recorded and 0 stand-in answers.
 - **No logos is asked and not kept.** A third of the issues are lettering; a brief that says
   *no words, logos or model numbers* removed most of it, the general request did not.
 
-Each of these is now a parameter (version 2 and 3 above). Still open: the review's facts for
-an item drawn as a use, which should be the item as built.
+Each of these is now a parameter (version 2 and 3 above). The review's facts for an item drawn
+as a use are now the item as built ([The reviewer, as built](#the-reviewer-as-built)).
 
 The next steps are in
 [Getting better drawings over time](../guides/picture-review.md#getting-better-drawings-over-time).
+
+## The reviewer, as built
+
+On November 4, 2026, before the last round, the review itself was fixed. An item drawn as a use
+(*the ThinkPad as a home server*) was checked against the item as it lies in the drawer: its
+condition (*disassembled with internal components exposed*) was in the facts though the request
+leaves it out, and the item was the only part listed, so the router and the drive any home
+server has counted as invented. Now the facts are the item as built, and for an item or a reuse
+card drawn as a kind of project, the rest of that build (the template's requirements the item
+does not fill, *A switch or a router with a spare wired port*) is listed as what may appear;
+what the use itself names or plainly needs is no invented part, and a second copy of a listed
+part is. The demo set was scored again with it, nothing redrawn: 19 matches, 8 partly, 5 wrong
+(*params v3 asbuilt* above). The set's numbering had changed since version 3 was first scored
+(the compatibility rules recorded the proposals again), so this is the baseline for what
+follows, not the 21 of version 3.
+
+## Best-of-N
+
+Version 3's requests were kept and each drawing that still missed was drawn again, several
+times, the best kept ([Best of N](../guides/picture-review.md#best-of-n)). After the Decide
+cards were recorded again ([Text tuning](#text-tuning)) the five reuse-card drawings made from
+them were new, so the set was reviewed once more first: 17 matches, 7 partly, 8 wrong.
+
+| Run | Drawings | Candidates | Replaced | USD |
+|---|---|---|---|---|
+| Best of 3: every drawing not matching, and the four selected builds' three views each, matching or not | 20 | 51 (the cap cut the last nine) | 16 | 0.78 |
+| Best of 5 on the three still *partly* | 3 | 15 | 3 | 0.25 |
+
+| | Before (17, 7, 8) | Best kept | A fresh review of the final set |
+|---|---|---|---|
+| matches | 17 | 31 | 29 |
+| partly | 7 | 1 | 2 |
+| wrong | 8 | 0 | 1 |
+
+*Best kept* scores each drawing by the review that chose it; *a fresh review* checked the 32
+final drawings again in one run (*params v3 recheck* above). The two differ by the review's own
+spread: the UNO board drawn for the smart desk calendar was *matches* (0.90) when it was chosen
+and *wrong* on the fresh pass, the powerline adapter *matches* then *partly*. The NAS from above
+stayed *partly* through seven candidates: the desktop memory stick is never visible in its
+slot from that height. Of the 20 drawings tried, the drawing as it stood was kept for four
+(three already matching and the NAS's front view in the first round); every other was
+replaced by a candidate that the review scored better.
+
+| Drawing | Before | After |
+|---|---|---|
+| Hall smart mirror (`project:1#1`) | ![before](../assets/picture-review/best-project-1-1-before.jpg){ width="240" } wrong: the 18 inch monitor drawn as a display filling the whole mirror | ![after](../assets/picture-review/best-project-1-1-after.jpg){ width="240" } matches |
+| Arcade coffee table (`project:7#1`) | ![before](../assets/picture-review/best-project-7-1-before.jpg){ width="240" } wrong: the monitor upright on the table's back edge, two joystick boxes | ![after](../assets/picture-review/best-project-7-1-after.jpg){ width="240" } matches |
+| The joystick as an arcade table (`item:joystick#1`) | ![before](../assets/picture-review/best-item-joystick-1-before.jpg){ width="240" } wrong: the screen upright like a TV | ![after](../assets/picture-review/best-item-joystick-1-after.jpg){ width="240" } matches |
+| Weather station (`project:10#1`) | ![before](../assets/picture-review/best-project-10-1-before.jpg){ width="240" } wrong: the board drawn as a large upright PCB | ![after](../assets/picture-review/best-project-10-1-after.jpg){ width="240" } matches |
+| Garage parking helper (`project:11#1`) | ![before](../assets/picture-review/best-project-11-1-before.jpg){ width="240" } wrong: a mains dome lamp above the circuit | ![after](../assets/picture-review/best-project-11-1-after.jpg){ width="240" } matches |
+
+Each winner's brief is in `demo/set.yaml` and its recording under
+`backend/tests/fixtures/api/images-generations/`; the 19 drawings it replaced were removed
+(`--evaluate --stage best3 --prune`), and the candidates that lost were kept out of the
+repository. The set loads with 0 not recorded and 0 stand-in answers. No version 4 of the
+parameters was made: the fresh review left three drawings off, each for a different reason, so
+no issue recurred for a rule to fix.
+
+## Text tuning
+
+The same review checks the recommendations (`./dev decide-review`, [Tuning the text
+parameters](../guides/picture-review.md#tuning-the-text-parameters)): 44 sets of Decide cards,
+the ideas of 4 items and the allocations of 11 projects, 59 checks. Version 1 of the text
+parameters adds nothing to any request, so it is the demo set as recorded: 23 of 59 flagged,
+16 of them Decide cards, most for desktop builds *with the processor you own* when the only
+processor is a Slot 1 part no board takes.
+
+- **Version 2** (from the check of version 1): the Decide cards' brief opens with the item's
+  compatibility facts and the rules' pairings come before the profile; two constraints (a card
+  rests only on owned items that fit, else lists the part to buy; read the condition first:
+  missing, bare or unpopulated is not working as it is); four corrections phrased by Muse Spark
+  from the flags (assembly state and every needed power supply and cable; memory generation,
+  slot count and a processor present; a controller's connectors; a missing processor said for
+  a desktop use); two banned phrases, *with the processor you own* and *your own processor*.
+  Proposed and dropped: *works as it is* as a banned phrase (true of an item with nothing
+  wrong), *no extra parts needed*, and every edit to the proposals (each would record all 11
+  projects and their 19 drawings again). Cards flagged: 16 to 10; claims of a processor the
+  owner has: 7 to 2.
+- **Version 3** (from the check of version 2): three more corrections (an enclosure's form
+  factor before a pairing, header pins and wire packs counted, no test pass that is not
+  recorded) and one banned phrase; a per-slot memory limit taken from one laptop was dropped.
+  Cards flagged 10 to 11, the new flags for memory and parts the cards now said were missing
+  though the owner has them. Not better: version 2 was kept (`./dev decide-review --keep 2`),
+  and version 3's recordings removed.
+
+The proposals' requests are the same in all three versions; their flags (7, 4, 6 of 11) show
+how far the check itself moves between runs. The ideas had none. Version 2 changed every
+Decide card request and the five reuse-card drawings made from them; every other request
+replays as it was.
+
+<!-- text-history:start -->
+
+*Written by `./dev decide-review --evaluate` from `eval/decide/`.*
+
+| | text v1 | text v2 | text v3 |
+|---|---|---|---|
+| checked | 59 | 59 | 59 |
+| with flags | 23 | 14 | 17 |
+| flags | 33 | 20 | 23 |
+| major | 31 | 17 | 15 |
+| cards with flags | 16/44 | 10/44 | 11/44 |
+| ideas with flags | 0/4 | 0/4 | 0/4 |
+| projects with flags | 7/11 | 4/11 | 6/11 |
+| spent on the run, USD | 0.51 | 0.64 | 1.07 |
+
+<!-- text-history:end -->

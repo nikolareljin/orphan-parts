@@ -1,0 +1,394 @@
+{
+  "params_version": 3,
+  "stage": "best3",
+  "at": "2026-11-04T05:32:06+00:00",
+  "report_at": "2026-11-04T05:20:30+00:00",
+  "reviewer": "muse-spark-1.3",
+  "image_model": "muse-image-1.0",
+  "drawings": 32,
+  "verdicts": {
+    "matches": 31,
+    "partly": 1
+  },
+  "categories": {
+    "missing_part": 1
+  },
+  "by_kind": {
+    "card": {
+      "matches": 4
+    },
+    "item": {
+      "matches": 9
+    },
+    "project": {
+      "matches": 18,
+      "partly": 1
+    }
+  },
+  "review_usd": 1.2284,
+  "scored": [
+    {
+      "id": "item:hcsr04#1",
+      "subject": "parking_sensor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "079f2b125a3d6fc4c6c3155a"
+    },
+    {
+      "id": "item:dht11#1",
+      "subject": "kitchen_dashboard",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "517ed1c001a2c6aabacf693b"
+    },
+    {
+      "id": "item:joystick#1",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "897e174f326eeba5d647d36f"
+    },
+    {
+      "id": "item:uno_r3#1",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "54962e3ba6fbad86d308e1bc"
+    },
+    {
+      "id": "item:ssd_kingston_a400#1",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "7112a1cb9713c37de7e4b66d"
+    },
+    {
+      "id": "item:powerline#1",
+      "subject": "kind:powerline adapter",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "331d3416d3afabdc03d8e41f"
+    },
+    {
+      "id": "card:powerline#1",
+      "subject": "kind:powerline adapter",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "91fd8f720d930d23d5e98e2f"
+    },
+    {
+      "id": "item:laptop_t510#1",
+      "subject": "home_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "2a9bb3db634f32bde23f706b"
+    },
+    {
+      "id": "card:laptop_t510#1",
+      "subject": "kind:laptop",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "a508a8281b81f8d090ecdaf6"
+    },
+    {
+      "id": "item:monitor_1800fp#1",
+      "subject": "smart_mirror",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "0f653eca91daef8e02741d46"
+    },
+    {
+      "id": "card:monitor_1800fp#1",
+      "subject": "kind:monitor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "f2ced94de85891891f2acd21"
+    },
+    {
+      "id": "item:monitor_u2419h#1",
+      "subject": "kind:monitor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "11b5729b9fa71c1a5e8b09bf"
+    },
+    {
+      "id": "card:monitor_u2419h#1",
+      "subject": "kind:monitor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "da93140bcf46223de48d0208"
+    },
+    {
+      "id": "project:1#1",
+      "subject": "smart_mirror",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "913e01c224a73473073aa62f"
+    },
+    {
+      "id": "project:2#1",
+      "subject": "homework_workstation",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "8715779314a05acffafe124b"
+    },
+    {
+      "id": "project:3#1",
+      "subject": "home_automation_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "57146ef63e453f50cb5e5951"
+    },
+    {
+      "id": "project:3#2",
+      "subject": "home_automation_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "bfe98a3f43bfbc2145de7c77"
+    },
+    {
+      "id": "project:3#3",
+      "subject": "home_automation_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "369e2577b972c002b71b5b74"
+    },
+    {
+      "id": "project:4#1",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "69303a501d20de0e98752b14"
+    },
+    {
+      "id": "project:4#2",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "c55763fef297263ceefddc15"
+    },
+    {
+      "id": "project:4#3",
+      "subject": "custom_nas",
+      "verdict": "partly",
+      "categories": [
+        "missing_part"
+      ],
+      "recording": "4f5361cae6f0a5412e63aa45"
+    },
+    {
+      "id": "project:5#1",
+      "subject": "home_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "33dd001a8f8f37755c969a01"
+    },
+    {
+      "id": "project:6#1",
+      "subject": "retro_console",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "e83ec7045f3781a78cea9b61"
+    },
+    {
+      "id": "project:7#1",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "1788249f9b19218bbe4beb97"
+    },
+    {
+      "id": "project:7#2",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "46a28b4a168cef38c44da2dd"
+    },
+    {
+      "id": "project:7#3",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "ece32f62a7239870e85dc33b"
+    },
+    {
+      "id": "project:8#1",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "4d0538efc123fd3faf2e3bb7"
+    },
+    {
+      "id": "project:8#2",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "2d823416198c579b595af0e9"
+    },
+    {
+      "id": "project:8#3",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "6fb5283cad00570176b0a033"
+    },
+    {
+      "id": "project:9#1",
+      "subject": "kitchen_dashboard",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "d3843df4dec10f0f47ce8a6a"
+    },
+    {
+      "id": "project:10#1",
+      "subject": "weather_station",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "5c5a9b3cbc078bf89b411f8a"
+    },
+    {
+      "id": "project:11#1",
+      "subject": "parking_sensor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "487ed3a6375422622a2811fd"
+    }
+  ],
+  "params": {
+    "version": 3,
+    "facts": {
+      "item_values": 8,
+      "part_values": 6,
+      "first": [
+        "size",
+        "diagonal",
+        "aspect",
+        "capacity",
+        "form factor",
+        "count"
+      ],
+      "left_out": [
+        "brand",
+        "model",
+        "part number",
+        "certification",
+        "manufacturer",
+        "condition",
+        "fault",
+        "voltage",
+        "current",
+        "wattage"
+      ],
+      "left_out_as_built": [
+        "condition",
+        "certification"
+      ],
+      "from_name": true,
+      "condition": false
+    },
+    "kinds": {
+      "monitor": {
+        "looks": "a thin flat computer monitor, far smaller than a television, not a bulky CRT TV",
+        "size": "screen size"
+      },
+      "laptop": {
+        "looks": "a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than a bulky CRT TV",
+        "size": "size"
+      },
+      "laptop memory": {
+        "looks": "a tiny memory stick far smaller than laptop keys and body, not a large green board",
+        "size": "size"
+      },
+      "microcontroller board": {
+        "looks": "a tiny credit-card-sized bare board, far smaller than half a laptop width",
+        "size": "size"
+      },
+      "relay module": {
+        "looks": "a tiny module with small cube relay, far smaller than a laptop",
+        "size": "size"
+      },
+      "sound sensor module": {
+        "looks": "a tiny sensor module, far smaller than a laptop",
+        "size": "size"
+      },
+      "temperature and humidity sensor module": {
+        "looks": "a tiny sensor module, far smaller than a laptop",
+        "size": "size"
+      },
+      "ultrasonic distance sensor module": {
+        "looks": "a tiny distance sensor module, far smaller than a laptop",
+        "size": "size"
+      }
+    },
+    "projects": {
+      "home_automation_server": {
+        "match": [
+          "home automation server"
+        ],
+        "correction": "An opened 15-inch laptop about 35 cm wide on a home desk for house lights and schedules, with one small laptop memory stick to true small scale beside it; not a desktop tower, not a TV, no large circuit board."
+      },
+      "home_server": {
+        "match": [
+          "home server and backup",
+          "home server"
+        ],
+        "correction": "An opened laptop about 35 cm wide on a wooden desk wired to a router with antennas and to one bare 2.5-inch hard drive about 10 cm long by a single cable for backup; memory inside laptop not shown; drive plain with no ethernet ports, no second drive, no extra box, not a desktop tower."
+      },
+      "kitchen_dashboard": {
+        "match": [
+          "kitchen home-automation dashboard",
+          "kitchen dashboard"
+        ],
+        "correction": "A 24-inch 16:9 computer monitor about 55 cm wide wall-mounted above kitchen counter as dashboard, with opened laptop on counter wired to tiny credit-card-sized microcontroller board plus four tiny modules nearby including relay with cube; not a TV."
+      },
+      "smart_mirror": {
+        "match": [
+          "smart mirror"
+        ],
+        "correction": "an 18 inch 5:4 computer monitor, about 46 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above a small bench; only a clock and weather icons glow through the glass; a small mirror, not a TV; no words or logos"
+      },
+      "arcade_table": {
+        "match": [
+          "arcade coffee table",
+          "arcade table"
+        ],
+        "correction": "A 24-inch flat monitor (~53x30cm widescreen) laid flat face-up inside the wooden coffee-table box under full-size glass top, joystick modules flush beside it, opened laptop wired below, living-room table use; no upright monitor on top, not a TV stand."
+      },
+      "custom_nas": {
+        "match": [
+          "custom nas from a spare desktop board",
+          "custom nas"
+        ],
+        "correction": "Single full-size ATX motherboard (~30.5x24.4cm) mounted in open cube case as NAS with one full-length desktop memory stick in DIMM slot, 2.5-inch SSD in drive bay with SATA leads, small PCIe adapter with two M.2 drives in PCIe slot, ATX PSU; not two boards, no SSD on board."
+      },
+      "retro_console": {
+        "match": [
+          "retro console on the tv",
+          "retro console"
+        ],
+        "correction": "Opened laptop (~35cm wide) on wooden desk cabled to 24-inch thin flat widescreen monitor (~53x30cm) beside it both showing retro gaming, two wired gamepads in front in use; no cartridge console, no CRT TV, no cartridges or extra boards."
+      },
+      "weather_station": {
+        "match": [
+          "indoor weather station and logger",
+          "weather station"
+        ],
+        "correction": "Large microcontroller board (~7x5cm) with square USB-B and DC barrel jack on breadboard on indoor desk wired to 3-pin temperature-humidity module, coin-cell clock module and breadboard power module with barrel input and USB-A in use; no tiny Nano-size board."
+      }
+    },
+    "views": {
+      "close-up": "a close-up at arm's length; the parts at their real sizes side by side",
+      "from above": "seen straight down from above; every part at its true size against the table or desk"
+    },
+    "negatives": [
+      "no lettering, logos, brand names, model numbers or labels on any part, case or screen",
+      "the sizes are for scale only: no dimension lines, measurements or size labels written in the picture"
+    ],
+    "rules": {
+      "item": "on a plain background, no text, no logos, no people",
+      "use": "finished and in use in a home, no text, no logos, no people",
+      "card": "finished and in use in a home, no text, no logos, no people",
+      "project": "finished and in use in a home, no text, no logos, no people"
+    }
+  }
+}

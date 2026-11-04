@@ -83,6 +83,10 @@ class Settings(BaseSettings):
     # review's brief (PICTURE_REVIEW_GATE); unset: on when the calls are live, off in fixture
     # mode
     picture_review_gate: bool | None = None
+    # how many corrected drawings the gate draws when the first misleads (PICTURE_CANDIDATES):
+    # each its own request and its own check, the best shown; 1 draws one, as before. A
+    # candidate is drawn only while the spend cap leaves room for it and its check
+    picture_candidates: int = Field(default=1, ge=1, le=6)
     retention_hours: int = 24
     cors_origins: str = "http://localhost:5173"
     # the interactive API docs (/docs, /openapi.json): served on a machine of your own; the

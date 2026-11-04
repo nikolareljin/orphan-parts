@@ -56,9 +56,11 @@ items:
     intent: build
     photos: [photos/dell-1800fp-label.jpg]
     picture: a smart mirror on a hall wall, a two-way mirror in a wooden frame, the time, the weather and the day's calendar glowing through the glass
+    picture_brief: "Add a daily calendar list glowing through the mirror glass alongside the clock and weather, driven by a boxy 18-inch 4:3 monitor (~46cm diagonal) behind the two-way mirror in a deep wooden frame on a hall wall; not neon signs, not a TV, no brand text.; seen at eye level from across the room, every part at its true size against the furniture"
     decide: true
     ideas: true
     reuse_picture: true
+    reuse_picture_brief: "Add: small 18-inch 4:3 LCD monitor about 46cm diagonal with thick bezels and chunky stand on workbench showing build diagnostics, cabled to nearby board, not a large thin-bezel modern widescreen TV/monitor."
     decision: keep_build
     expect:
       fields:
@@ -158,6 +160,7 @@ items:
     decide: true
     ideas: true
     reuse_picture: true
+    reuse_picture_brief: "small palm-size powerline adapter box plugged directly into wall AC outlet, short ethernet cable from adapter to laptop ethernet port on desk beside it, laptop open and in use, do not show any cable plugging laptop directly into mains outlet, not a charger, no phone screen"
     decision: keep_build
     expect:
       fields:
@@ -400,6 +403,7 @@ items:
     intent: build
     photos: [photos/elegoo-uno-r3.jpg]
     picture: smart_calendar
+    picture_brief: "Show only ONE credit-card sized microcontroller board with square USB-B and barrel jack beside small desk calendar display, wired as base, with single small screen showing calendar, not two boards, no second USB board.; seen at eye level from across the room, every part at its true size against the furniture"
     decide: true
     decision: keep_build
 
@@ -417,6 +421,7 @@ items:
     intent: build
     photos: [photos/joystick-module.jpg]
     picture: an arcade coffee table in a living room, a game screen under its glass top, joysticks and buttons along its edge
+    picture_brief: "Draw the flat game screen lying horizontal face-up under the glass coffee-table top, joysticks and buttons mounted along the table edge for play from sofas, laptop on lower shelf wired to it, not an upright TV on top of the table."
     decide: true
     decision: keep_build
 
@@ -593,7 +598,17 @@ propose:
     - as a close-up of how the parts fit together
     - from above, as it is used
   corrections:
-    "smart_mirror": "an 18 inch 5:4 computer monitor, about 46 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above a small bench; only a clock and weather icons glow through the glass; a small mirror, not a TV; no words or logos"
-    "custom_nas / from above, as it is used": "seen from above: an open ATX mid-tower case on a desk, the desktop motherboard with a cooler and one full-length memory stick in the slot beside it, one 2.5 inch SSD in a drive bay, a short PCIe card holding two M.2 drives in a slot, an ATX power supply and a network cable; no second drive, no words, logos or model numbers"
+    "smart_mirror": "Add: small 18-inch 4:3 monitor about 46cm diagonal behind center of hall two-way mirror, time/weather/calendar glow only in small central area, mirror much larger than display, not a large full-surface TV display."
+    "custom_nas / from above, as it is used": "Top-down ATX NAS case with full ATX motherboard, single desktop memory stick fitted in DIMM slot, dual-M.2 PCIe adapter card fitted in PCIe slot, 3.5-inch HDD and 2.5-inch SATA SSD mounted and cabled to board, ATX PSU; do not leave RAM and PCIe slots empty.; soft daylight, a clean uncluttered composition, the parts side by side at real scale"
     "home_server": "an opened laptop about 35 cm wide on a wooden desk, wired to a router with antennas and to one bare 2.5 inch hard drive by a single cable; the memory is inside the laptop and not shown; no second drive, no extra box, no words or logos, not a desktop tower"
     "arcade_table / from above, as it is used": "seen from above: a wooden coffee table with a glass top; under the glass a 24 inch widescreen monitor lies flat, about 53 x 30 cm, much wider than the opened laptop that runs it at one end; two joysticks and buttons along the edge; no words or logos"
+    "home_automation_server": "Add: a standard 15-inch laptop on a wooden table as always-on home server with icons-only dashboard, laptop memory module beside it and wired network cable plugged in, with absolutely no legible text, logos or brand names anywhere, not a TV or desktop.; seen at eye level from across the room, every part at its true size against the furniture"
+    "home_automation_server / as a close-up of how the parts fit together": "soft daylight, a clean uncluttered composition, the parts side by side at real scale"
+    "home_automation_server / from above, as it is used": "only the parts listed, nothing extra on the table, every part at its true size"
+    "custom_nas / as a close-up of how the parts fit together": "Add line: close-up inside open ATX tower with full-size ATX motherboard vertical, one desktop memory stick seated in DIMM slot beside CPU cooler, empty dual-M.2 PCIe adapter without M.2 SSDs, one 3.5-inch hard drive and one 2.5-inch SATA SSD cabled below; do not add extra M.2 drives, do not omit memory.; only the parts listed, nothing extra on the table, every part at its true size"
+    "arcade_table": "24-inch monitor laid flat face-up inside wooden coffee table under glass top for top-down play, opened laptop inside table below, one small joystick box with stick and buttons on glass, not an upright monitor on table edge, not two joystick boxes, no legible words on screens"
+    "arcade_table / as a close-up of how the parts fit together": "Show a 24-inch monitor laid face-up inside a wooden coffee-table box under a glass top, an opened laptop tucked alongside connected by cables, only one arcade joystick controller with ball-top and buttons, not two joysticks and not a TV."
+    "smart_calendar / from above, as it is used": "small stacked microcontroller desk clock about 68x53mm viewed from above on wooden desk with prototype shield on top, small display showing time digits plus clock module, buzzer module and red push-button on shield, no legible words, labels or logos except time digits, not a TV; the main part fills the middle of the picture, the smaller parts in front of it"
+    "weather_station": "Show a small credit-card-size microcontroller board lying flat, wired on a breadboard to a tiny 3-pin temperature-humidity sensor module, a small coin-cell clock module, and a breadboard power module with barrel-jack and USB-A on indoor desk; not a large upright green computer board.; seen at eye level from across the room, every part at its true size against the furniture"
+    "parking_sensor": "Draw controller as large microcontroller board ~7x5cm with usb-b and barrel jack on wall breadboard with ultrasonic sensor, buzzer and small LED as the parking light, not a tiny board and not a large mains dome wall lamp above it.; seen at eye level from across the room, every part at its true size against the furniture"
+    "custom_nas": "Show open ATX NAS case with full ATX motherboard vertical, one DDR3 desktop memory stick installed in DIMM slot, PCIe adapter card for two M.2 in PCIe slot, one 2.5-inch SATA SSD and one 3.5-inch SATA HDD only, with CPU cooler, ATX PSU and ethernet; not extra drives, no text logos."

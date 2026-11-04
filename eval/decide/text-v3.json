@@ -1,0 +1,761 @@
+{
+  "params_version": 3,
+  "at": "2026-11-04T05:18:03+00:00",
+  "report_at": "2026-11-04T05:15:28+00:00",
+  "reviewer": "muse-spark-1.3",
+  "checked": 59,
+  "flagged": 17,
+  "flags": 23,
+  "major": 15,
+  "by_section": {
+    "scenarios": {
+      "checked": 44,
+      "flagged": 11,
+      "flags": 16
+    },
+    "uses": {
+      "checked": 4,
+      "flagged": 0,
+      "flags": 0
+    },
+    "propose": {
+      "checked": 11,
+      "flagged": 6,
+      "flags": 7
+    }
+  },
+  "review_usd": 1.0702,
+  "scored": [
+    {
+      "id": "cards:battery_tester",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 0,
+      "claims": [
+        "Lets you press its three buttons side-by-side with your other button controls to feel the difference, without wiring or power"
+      ]
+    },
+    {
+      "id": "cards:solder_practice",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "After soldering headers or wires to large pads, checks joints by wiring to buzzer module for sound using buzzer module + breadboard power module + jumper wires"
+      ]
+    },
+    {
+      "id": "cards:breadboard_power",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ir_receiver",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ir_obstacle",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:led_module",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:push_button",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:buzzer",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:relay",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:sound_sensor",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:hcsr04",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "beeps or lights when something gets close with microcontroller board, joystick module"
+      ]
+    },
+    {
+      "id": "cards:dht11",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:rtc_ds1307",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "uses the clock for timing and the joystick to set hours and minutes."
+      ]
+    },
+    {
+      "id": "cards:joystick",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:proto_shield",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:uno_r3",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_dell",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_ramaxel_4gb",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_adata_ddr3l",
+      "section": "scenarios",
+      "flags": 2,
+      "major": 2,
+      "claims": [
+        "adds 8 GB DDR3L AM1L16BC8R2-B1QS to the ThinkPad T510 laptop as a compatible upgrade",
+        "Recorded as passing with ThinkPad T510 DDR3 SO-DIMM laptop"
+      ]
+    },
+    {
+      "id": "cards:ram_skhynix",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:enclosure_m2_usb",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:adapter_m2_u2",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:adapter_m2_sata",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:adapter_pcie_m2",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:hdd_laptop",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "Second internal drive in ThinkPad T510 with only 2.5 inch bay screws if missing"
+      ]
+    },
+    {
+      "id": "cards:hdd_maxtor",
+      "section": "scenarios",
+      "flags": 2,
+      "major": 2,
+      "claims": [
+        "Power on and check BIOS or system setup to see if the drive is detected on ASUS P8Z77-V LX / compatible board you own.",
+        "Second data drive in desktop alongside existing storage on a compatible desktop board with motherboard, SSD, only needing SATA cable / power lead."
+      ]
+    },
+    {
+      "id": "cards:hdd_toshiba",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ssd_kingston_a400",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_ddr3_dimm",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_gskill_ddr3",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:ram_patriot_ddr4",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:board_asus_z77",
+      "section": "scenarios",
+      "flags": 2,
+      "major": 0,
+      "claims": [
+        "No DDR3 RAM, power supply, cooler, or drive present to run it",
+        "DDR3 DIMM memory still missing and blocks any boot"
+      ]
+    },
+    {
+      "id": "cards:board_gigabyte_z77",
+      "section": "scenarios",
+      "flags": 1,
+      "major": 0,
+      "claims": [
+        "No fitting memory in hand"
+      ]
+    },
+    {
+      "id": "cards:nas_board_asrock",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:frappe_agitator",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:powerline",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:cpu_slot1",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:gpu_9800gt",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_board",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_9461",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:laptop_t510",
+      "section": "scenarios",
+      "flags": 2,
+      "major": 0,
+      "claims": [
+        "replacement keyboard for TYPE4313-CTO",
+        "Lenovo ThinkPad T510 TYPE4313-CTO for parts or rebuild"
+      ]
+    },
+    {
+      "id": "cards:monitor_sun",
+      "section": "scenarios",
+      "flags": 2,
+      "major": 0,
+      "claims": [
+        "computer or other video signal source - no computer recorded as owned (~$50+ used)",
+        "known working computer signal source to verify picture - none recorded (~$50+ used)"
+      ]
+    },
+    {
+      "id": "cards:monitor_1800fp",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "cards:monitor_u2419h",
+      "section": "scenarios",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:powerline",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:laptop_t510",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:monitor_1800fp",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "ideas:monitor_u2419h",
+      "section": "uses",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:1",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:2",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:3",
+      "section": "propose",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "8 GB DDR3L SO-DIMM fits the DDR3 laptop to support automation software."
+      ]
+    },
+    {
+      "id": "project:4",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:5",
+      "section": "propose",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "DDR3L SO-DIMM fits its DDR3 SO-DIMM slot."
+      ]
+    },
+    {
+      "id": "project:6",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:7",
+      "section": "propose",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "joystick module is 'the first control' for the laptop-run retro games"
+      ]
+    },
+    {
+      "id": "project:8",
+      "section": "propose",
+      "flags": 0,
+      "major": 0,
+      "claims": []
+    },
+    {
+      "id": "project:9",
+      "section": "propose",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "Reads sensors and drives the relay"
+      ]
+    },
+    {
+      "id": "project:10",
+      "section": "propose",
+      "flags": 2,
+      "major": 2,
+      "claims": [
+        "Logs readings for a week with time-stamps",
+        "Keeps the station plugged in and powers sensor/clock via breadboard power module"
+      ]
+    },
+    {
+      "id": "project:11",
+      "section": "propose",
+      "flags": 1,
+      "major": 1,
+      "claims": [
+        "Powers the board on garage wall with Still to get: -"
+      ]
+    }
+  ],
+  "used": {
+    "images-generations": [
+      "079f2b125a3d6fc4c6c3155a",
+      "0bf1380261c2e7884ad0d0a8",
+      "11b5729b9fa71c1a5e8b09bf",
+      "2340b93766b81ba631ac2af1",
+      "2a9bb3db634f32bde23f706b",
+      "2d823416198c579b595af0e9",
+      "331d3416d3afabdc03d8e41f",
+      "33dd001a8f8f37755c969a01",
+      "37f7526ae8ad978430087a71",
+      "3bb2a4fe1072a01e3dec40aa",
+      "4abbe1c7b93481ac7b705df9",
+      "4d0538efc123fd3faf2e3bb7",
+      "4d0742798824737db8bb94f6",
+      "517ed1c001a2c6aabacf693b",
+      "58aa373dc14b9ccaf59910f8",
+      "5b3699c5355a09c34a137588",
+      "639e6cccf5cc44763fe53e3b",
+      "6c07de85c4803d9f32eca8f2",
+      "7112a1cb9713c37de7e4b66d",
+      "8715779314a05acffafe124b",
+      "a9dc119b9aeb8f23054b4035",
+      "b03ebd4143121e3270081fdd",
+      "cd7cedd2fe0efde9547d845f",
+      "ce91b74eebd51e11f920a9a0",
+      "d3843df4dec10f0f47ce8a6a",
+      "dbc17622430677cf08bca5c2",
+      "e2107fc34c0ff212951161dd",
+      "e6c8937e544d420f1a60debb",
+      "e83ec7045f3781a78cea9b61",
+      "ece32f62a7239870e85dc33b",
+      "fc497aef1a5c1da57bb1a3f6",
+      "fec7dde5d3c4146515355c9e"
+    ],
+    "responses": [
+      "04c07e24cfae60d63a22e885",
+      "051b3238fea792fc0fcbfd4a",
+      "061eab9774f08aa576ee39ad",
+      "076173b2c5fa347138eb1725",
+      "07a5fbdbb97b0fb71273489d",
+      "08674fbd668001c3c79f9d59",
+      "0870ed102af47d6110d6c404",
+      "087d69770332004d8afe97c5",
+      "091b7948bc9563370f4c7fb5",
+      "0971e06324cafa3e49a44a67",
+      "0b695b94d0c746edc31fcac7",
+      "0bf0f2744db7f3201351b34d",
+      "0cc52f2ac0f7d4530c4a76c7",
+      "0ce8661fc7fe98e8dfd17e31",
+      "0f125f0d235dd1d08b85caba",
+      "0f63f43772ef205af9ec02d9",
+      "0fe619b0ff783ad6c9f40572",
+      "140b60353805011daaf5e0af",
+      "149dfe442c885e8394b2a394",
+      "15337edda9beac54a0793ea5",
+      "15ed103134e673008df21d8f",
+      "177dc222e14d23dd21a13e70",
+      "19ddc6a34d608a62273498ab",
+      "19fa376ed374f1d76b1376a4",
+      "1a4070cc681eb1f5ebfc691e",
+      "1aa2c60a21f905d8cd00ad80",
+      "1ee8b46a696ed7acbf44433c",
+      "1f593d7b473ab383ab15b018",
+      "1f5b0670039542efa6965af9",
+      "206c35b7208b8e55ca059e66",
+      "25fc338f33f146ab0e824eff",
+      "2693eb29fdf2fc43d239c6e8",
+      "2802fb30b6afc48158368523",
+      "2a3cc5a212270b16df2052eb",
+      "2b7907680daf285558007c24",
+      "2ff7e67245016188d041173e",
+      "3085aa05b658ed3bcca8c060",
+      "308656892ad5820bdf37a864",
+      "321ca1a61e945841ad02b68b",
+      "325fe4fa8c5d49858616783d",
+      "3416f430a8207d80539ea88b",
+      "35ea7985d39da49f506dc083",
+      "3616b1ea211ccb6bced57e9f",
+      "36a267cb0cac2e0e5a186979",
+      "3790027cf5dd31d62e266b50",
+      "381be7eb2801a4b4055d4869",
+      "38e6c2d93460094a0a2206aa",
+      "38ebde0441d3ac80ca801c2f",
+      "3937887458dd47d9a93ab0a8",
+      "39f5f1c8a8fffd64c5f34a18",
+      "3ad27abfd90d7121b758e67e",
+      "3b813b5f196e10213282e03f",
+      "3cbf5322dc617535a4a227c8",
+      "3e16ddda97b69e8fbad6e258",
+      "3f721c5e558d5afd793e9c8b",
+      "41b015b63a2f309180f8c517",
+      "44489f44cb2257c5b9237a4a",
+      "45751bc8d4bdcd84eacb9f1c",
+      "465e7dcebe47e835b7dcbbb5",
+      "47589a98d621235e47cf753a",
+      "4a0e6fe6fadae25f12dda9e0",
+      "4ae39e92a2f2ab5610da78a5",
+      "4bcbc0231a4673b8794e0408",
+      "4d23307e2bcd4f796005e1f6",
+      "4dad849eaef8491aabddac11",
+      "4ddac442b3df679f327bda61",
+      "4e8e2d34b01dde4f31825072",
+      "4f89d896cfa3dc46924e7962",
+      "5069015a96958a14b07fdce1",
+      "55163de19d85b266317bf5b6",
+      "55c9df95577104973edab167",
+      "588f8991afc60fb22e300ad7",
+      "598a3e5ef18ff6bd9f221092",
+      "5b038819d65e8411fa23093a",
+      "5b8c9354416e517a5ee536d9",
+      "5c0e1e390f4e89234ce46735",
+      "5c1e739d35fde4a51fd72643",
+      "61eae22015ce0dd97b6e6449",
+      "621621e0c2062acdc7b306b5",
+      "6294da4170b11b42e0820352",
+      "644af026112a404757d531c0",
+      "659a37e3f753d9e36463bc7e",
+      "66b54bf2bb0f483dee8344c7",
+      "686893e0ac31f410c2f93c9e",
+      "68ff50a0c9f0a75e6c1f5fd4",
+      "690bca8fbdeea1a9d465d0ad",
+      "69ec351cd32e08e8b5a38ca8",
+      "6c4b575adc58d11c38dc6651",
+      "6d3a3515a1ac8bfc986fc7b7",
+      "712d931b1313ff1761558299",
+      "713f4fe6fd4b213b13b27257",
+      "720a251cd64151c721766240",
+      "7337cf7d72434ecabb05760b",
+      "75d81afc22be68d65ab165b4",
+      "7657616b1622fbc577223df6",
+      "7717caff2b355eaad6e6f9a0",
+      "7771af5dcfb32d2455832ad3",
+      "7abf22dc3fa5a7d6d8a21f4b",
+      "7b19116ff8d9c1b89a9b6494",
+      "7ba8b14d315b3bbf069dc37a",
+      "7cc406390898dd218d900e0b",
+      "7d503a709a278f88eb81ab5e",
+      "7d7340974cd82ba76e0bab3a",
+      "7ee524c18b3af684ba9d2b41",
+      "80511b3967da768b09c1909e",
+      "8181a9294d7028329ea4e3a9",
+      "81cbf3a0776eb07c41a46f4e",
+      "821553434e25358b509f05dd",
+      "847fc8214a2beaab016f10b0",
+      "8608cc3120a24cc992e95cb0",
+      "873a4ab0ac80db1328083587",
+      "88b04fbd8cda99c85b67cdcf",
+      "894965b411c4a141d104526a",
+      "8a2274d8809fcd8e536be744",
+      "8efab03f99a2ddf2ecb121b5",
+      "906d187c4e1bbcdc5c0c7430",
+      "907a2502ad4eec3a21e45f1b",
+      "908b8f099cd1bba49c7dea62",
+      "91d5487991ad968b91140f65",
+      "95cfa86a1fda54680db65dc2",
+      "965c77c61386821897a92da8",
+      "97db51160aad42d65ff5ffac",
+      "97f0f2413c27b32b3ab0ec8b",
+      "98845c8230cc1865e4bf9970",
+      "996f776d433def57d6b2c370",
+      "9b7bb6bdd33b9f97a5540e71",
+      "9c6e4fa7887a9256d762fc3f",
+      "9d0b9cc6d8ead589ff8659dc",
+      "9d3a80c44fa75f95bfbf9424",
+      "9da6cb1962b1346d62dcce2d",
+      "9ebb1bd384d1ae300e13b924",
+      "9ed2c29b60bd22149d23aaad",
+      "a01b01fba945577bb68f8548",
+      "a0a08d92a2d82b1931b42402",
+      "a0ed2fa198962e7d22cecb1b",
+      "a155ccb88c9a28c3ad129fe4",
+      "a1a30fe6efebc7fb0ce63168",
+      "a30dcae6eb7f942f3ee072ad",
+      "a3c5d874f06b35813cb460a1",
+      "a4f3c5b33133ee23087b6cc6",
+      "a5340d3c6690da31eadfbc11",
+      "a5aff8617ec44a411558ef4e",
+      "a64d8e3b4efeaeaf47efb6b7",
+      "a705dfe6896db036c49a0692",
+      "a73f6a601bb05e2d2f1b6e62",
+      "a7ab1238f81e66c0bec10c94",
+      "aa4e6fd8152ba23755ff0e75",
+      "afa1fdb8da6832bed0f880bd",
+      "b0e24935cf171c5859bc4b80",
+      "b376f20f935cca3509ffe9be",
+      "b3c9c1b6c4d4bbdf7ec5a87c",
+      "b698f214788f09a52f596691",
+      "b6cf0c23203bf86e42fa68fa",
+      "b6e1b556493774f50ca71817",
+      "b83c5883726ab0615bdba838",
+      "b939d95cd499c1e98eb28bf9",
+      "b9d324416208699c1e7d25cc",
+      "bbd4730e03dcb046943ae45e",
+      "be4f80dfdecd456f2e6c58a0",
+      "bf9c6a1faa298151664d77dc",
+      "c670805bd33469d56e5292e7",
+      "c7ca10e14c15804bd2989632",
+      "c8b372d2502c0358f2f7190f",
+      "c956560f647c5dff0a15286e",
+      "c9a7944c1233359069ad6c09",
+      "cc826d231c48f675a2bae721",
+      "ccf728492678a9f5aebfe25c",
+      "cf9c7016278b314a7501e8ee",
+      "d2f50fa3e43859d58a14ba6c",
+      "d4d4c4c1f93829c1eff3fa84",
+      "d5713d060dbc72261864c24b",
+      "d8ef4c608e1b9789a268cb4d",
+      "de9a31d9cb931b58e7cee694",
+      "e00e0693fa0cdb9d1a56d5c2",
+      "e0cb0a04648be22d56343330",
+      "e1f0f0f73cc11acc8336b3f5",
+      "e381af4fea604749f71f1eb7",
+      "e39cb2a346195f86a8c08a23",
+      "e446776cde2d5559c9a55413",
+      "e53e1dce8709db71665bfebf",
+      "e5fe488b2f9432e3c86b98d7",
+      "e740cd62e33da2b8e724f931",
+      "e9889b5ee61a78b56c2904e7",
+      "ecb4370f08665cb52e0493fb",
+      "ee76dccfd86fa764a3c65edc",
+      "eff3f62d3809a53c22489f79",
+      "f0cf9aa5e1a00ee447626cd8",
+      "f18df13aecaae6616ff6e6b2",
+      "f1d42fe836a8891297a65c61",
+      "f4e8349687946ab55639e46a",
+      "f5539c6b80c47a43ccc4f7b3",
+      "f5e30ff140eced93e6e61fef",
+      "f629c86925f0c85bf3bdb05f",
+      "f8f41418ee0119caf1bf15e6",
+      "f9a0b68be2ca5b0eecf89ec4",
+      "fb6b5194e16a54c7564cb6d8",
+      "fbe203f894ea627552a80e4f",
+      "fc2ddea705225f1fd7945dc5",
+      "fd1a1f9a058817e4b2a12eb9",
+      "fd527053ce4d59cc5dfab51b",
+      "fd6f78001daa8a364e22cf6e",
+      "fd750f71ca9fc8174a7e7f40",
+      "fe85a7677e46e146bbcfa6d3",
+      "ff750eb1f01bad935c149ec4"
+    ]
+  },
+  "params": {
+    "version": 3,
+    "scenarios": {
+      "facts_first": true,
+      "constraints": [
+        "A card or a use rests only on items the person owns that fit it; when none fits, it lists the missing part under extra parts with its cost and never calls it one the person owns",
+        "Read the condition first: a part recorded as missing, bare or unpopulated is not working as it is, and a use of it says what must be added"
+      ],
+      "corrections": [
+        "Do not claim a use works without verifying assembly state and listing every required power supply, signal source, cable, and mating part as extra.",
+        "Do not claim memory fits or can be tested without matching memory generation, per-slot limits, slot count, and a populated compatible socket with processor present.",
+        "Do not claim a controller drives a monitor or sensor or input device without matching connectors, video or power interfaces, wiring needs, and intact mechanical parts.",
+        "Do not propose storage, memory, or board use in a desktop without disclosing a missing compatible processor, power supply, or bootable host needed to run or test it.",
+        "Require an enclosure's recorded form factor, interface, and intended drive kind to fit the board before pairing them, and never treat a drive-specific enclosure as general housing.",
+        "Sum mating pins and header gender across every linked module to size wire packs, and check inventory for the same kind of accessory before listing it as still to buy.",
+        "Never cite a test pass, memory form, or compatible host that is absent from condition and item data, and disclose an empty socket with no fitting processor as a missing part blocking boot or test."
+      ],
+      "banned": [
+        "with the processor you own",
+        "your own processor",
+        "with monitor, processor"
+      ]
+    },
+    "uses": {
+      "facts_first": false,
+      "constraints": [],
+      "corrections": [],
+      "banned": []
+    },
+    "propose": {
+      "facts_first": false,
+      "constraints": [],
+      "corrections": [],
+      "banned": []
+    }
+  }
+}

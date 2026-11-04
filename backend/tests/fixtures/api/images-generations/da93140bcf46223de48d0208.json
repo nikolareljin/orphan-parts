@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "da93140bcf46223de48d0208",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Spare desk monitor for laptop built from monitor (screen size 24 inch, about 61 cm across the diagonal; a thin flat computer monitor, far smaller than a television, not a bulky CRT TV); Shows laptop picture on 24 inch screen for work or video.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793766470,
+    "data": [
+      {
+        "b64_json": "@da93140bcf46223de48d0208-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4119,
+      "output_tokens": 1261,
+      "total_tokens": 5380
+    }
+  },
+  "status": 200
+}

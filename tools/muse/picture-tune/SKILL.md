@@ -1,6 +1,6 @@
 ---
 name: picture-tune
-description: Evaluate and improve the drawing parameters of Orphan Parts Lens (backend/app/picture/params.yaml, the data every Muse Image request is built from) so future drawings avoid the issues the reviews keep finding; review the demo set's drawings, score the current version, propose parameter edits from the recurring issues, ask the owner, apply them, redraw and re-review the whole set within a cap, compare the versions and open a pull request with the parameters, the new recordings and the results table. Use when the owner asks to tune, improve or evaluate the drawing parameters or the picture prompts, asks why the drawings keep getting something wrong, or invokes /picture-tune.
+description: Evaluate and improve the drawing parameters of Orphan Parts Lens (backend/app/picture/params.yaml, the data every Muse Image request is built from) so future drawings avoid the issues the reviews keep finding; review the demo set's drawings, score the current version, propose parameter edits from the recurring issues, ask the owner, apply them, redraw and re-review the whole set within a cap, draw several candidates of each drawing that still misses and keep the best, compare the versions and open a pull request with the parameters, the new recordings and the results table. Use when the owner asks to tune, improve or evaluate the drawing parameters or the picture prompts, asks why the drawings keep getting something wrong, or invokes /picture-tune.
 ---
 
 # Tune the drawing parameters
@@ -45,7 +45,8 @@ the next one. Every step is a `./dev picture-review` command; the guide is
 - `backend/app/picture/params.yaml` at version N+1, once the owner approves.
 - New drawing recordings under `backend/tests/fixtures/api/images-generations/`; the ones
   version N used and N+1 does not, removed.
-- `eval/pictures/params-v<N+1>.json`, `picture-review/compare.md`, the history table in
+- `eval/pictures/params-v<N+1>.json` (and `params-v<N>-<stage>.json` for a later score of the
+  same version: the best of N kept), `picture-review/compare.md`, the history table in
   `docs/project/picture-review-results.md`, contact sheets `picture-review/sheet-v<N>.jpg`.
 - A pull request. Never a merge.
 
@@ -59,7 +60,7 @@ the next one. Every step is a `./dev picture-review` command; the guide is
 - Never edit `params.yaml` or anything under `backend/tests/fixtures` by hand; the commands
   write them. Never change a request other than a drawing's.
 - Approval points (wait for the owner each time): before the first paid step, before
-  `--apply`, before `--redraw-set`, before the pull request.
+  `--apply`, before `--redraw-set`, before `--candidates`, before the pull request.
 
 ## Steps
 
@@ -68,7 +69,7 @@ the next one. Every step is a `./dev picture-review` command; the guide is
    in `backend/app/picture/params.yaml` (N) and list `eval/pictures/`. Tell the owner N, the
    number of drawings and the cost ahead: a review is about 0.007 USD a drawing, a drawing
    0.01 USD, so one full round (review, tune, redraw, review) is about 0.75 USD for 32, 0.55
-   when version N is already scored.
+   when version N is already scored; best of three for ten drawings about 0.50 USD.
 2. **Evaluate version N.** If `eval/pictures/params-vN.json` is missing, or the owner wants a
    fresh score: `./dev picture-review --max-usd 1`, then `./dev picture-review --evaluate`.
    Show the verdict counts and the issues by category from the output and
@@ -94,17 +95,29 @@ the next one. Every step is a `./dev picture-review` command; the guide is
    `docs/project/picture-review-results.md`, and the recordings version N used and N+1 does
    not are removed. Show the table from `picture-review/compare.md` and the drawings that
    moved; show `picture-review/sheet-vN.jpg` and `sheet-v<N+1>.jpg` when asked.
-8. **One more round, only if asked.** If some drawings are still `wrong`, offer one more
+8. **Best of N, when some drawings still miss** (ask first; say the cap):
+   `./dev picture-review --candidates 3 --max-usd 1.5` draws each drawing the last review did
+   not find matching three more times, each with its own brief (the review's corrected brief,
+   then another framing or a narrower scene), reviews every candidate and keeps the best by
+   verdict, confidence and fewer issues; the drawing as it stands keeps its place on a tie.
+   Name drawings to try even when they match with `--only project:7,project:8` (the featured
+   builds' views). Only the winner's brief goes into `demo/set.yaml` and only its recording is
+   kept; every candidate is copied under `picture-review/candidates/` with
+   `picture-review/candidates.md` (each candidate's verdict and brief) and
+   `best-before.jpg` / `best-after.jpg`. About 0.017 USD a candidate. Then
+   `./dev picture-review --evaluate --stage best3 --prune` keeps the score beside the version's
+   first one (`eval/pictures/params-v<N>-best3.json`) and removes the recordings replaced.
+9. **One more round, only if asked.** If some drawings are still `wrong`, offer one more
    round from step 3 on the new report (it proposes edits for those subjects only, so only
    their drawings are redrawn). Never more than two rounds in one session without the owner
    raising the cap.
-9. **Check** that nothing else moved: `git status` shows `params.yaml`, `eval/pictures/`, the
+10. **Check** that nothing else moved: `git status` shows `params.yaml`, `eval/pictures/`, the
    results page and files added or deleted under
    `backend/tests/fixtures/api/images-generations/`;
    `git diff --diff-filter=M -- backend/tests/fixtures` is empty; `./dev picture-review --dry-run`
    prints a set load with 0 not recorded and 0 stand-in answers (it loads into a folder of
    its own; `./dev demo` would reset the stack's inventory); `./dev test` passes.
-10. **Pull request**, when the owner says so: a branch `feat/drawing-params-v<N+1>`, one commit
+11. **Pull request**, when the owner says so: a branch `feat/drawing-params-v<N+1>`, one commit
     `feat(picture): drawing parameters v<N+1> from the review of <date>`, push, `gh pr create`
     with the version table and the spend in the body. Stop there; the owner merges.
 
