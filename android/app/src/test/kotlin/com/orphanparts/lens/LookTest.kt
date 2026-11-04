@@ -21,8 +21,10 @@ class LookTest {
         val text = css.readText()
         val dark = text.indexOf("prefers-color-scheme: dark")
         assertTrue(dark > 0)
-        assertEquals(cssTokens(text.substring(0, dark)), Tokens.light.asCss())
-        assertEquals(cssTokens(text.substring(dark)), Tokens.dark.asCss())
+        // the app uses a subset of the web app's tokens; each one it uses has the web app's color
+        val used = Tokens.light.asCss().keys
+        assertEquals(cssTokens(text.substring(0, dark)).filterKeys { it in used }, Tokens.light.asCss())
+        assertEquals(cssTokens(text.substring(dark)).filterKeys { it in used }, Tokens.dark.asCss())
     }
 
     @Test
