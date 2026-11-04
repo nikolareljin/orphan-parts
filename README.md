@@ -4,7 +4,7 @@
 
 **Start here:** the documentation, <https://nikolareljin.github.io/orphan-parts/>, with
 [Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/)
-and the [demo video](https://nikolareljin.github.io/orphan-parts/start/video/); the live demo,
+and the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0); the live demo,
 <https://orphan-parts.pages.dev> (temporary, while the hackathon is judged).
 
 Scan what you already own. Decide what it can become. Find the missing piece on Marketplace, or
@@ -22,7 +22,7 @@ Meta's Muse models.
 |---|---|
 | **Live demo** (temporary, while the hackathon is judged) | <https://orphan-parts.pages.dev>: without a code, the demo set's recorded answers, read-only; with an access code, uploads and the live models. It may be taken down after judging; [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/) works without it. |
 | **Documentation** | <https://nikolareljin.github.io/orphan-parts/>, with [Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/) |
-| **Demo video** | [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/) (2:52) |
+| **Demo video** | [on YouTube](https://www.youtube.com/watch?v=3USMv4zCeD0) (2:52), also on the docs site: [Start > Demo video](https://nikolareljin.github.io/orphan-parts/start/video/) |
 | **Android app** | the APK on the [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest) |
 
 **What the models produced**, from the demo set (recorded answers; the hosted demo shows the
