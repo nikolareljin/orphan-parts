@@ -138,11 +138,12 @@ answers. Commit the set and the new recordings together.
 ## Recommendations (`--decide`)
 
 The same tool checks the advice, one text call each (operation `decide-review`, strict schema
-`DecideAnswer`): each item's latest Decide cards against the item's facts and the owner's other
-items, and each project's allocations against the allocated items' facts. A flag names where,
+`DecideAnswer`): each item's latest Decide cards and its ideas against the item's facts and the
+owner's other items, and each project's allocations against the allocated items' facts. A flag names where,
 the claim, the fact it contradicts and a severity (`major` when following it would fail, such as
 DDR4 memory allocated to a laptop that takes DDR3). Report only: nothing is changed; a flagged
-recommendation is fixed by the owner, or by the rules that pick allocations.
+recommendation is fixed by the owner, by the rules that pick allocations, or by the text
+parameters ([Tuning the text parameters](#tuning-the-text-parameters)).
 
 ## With Muse Code
 
@@ -229,7 +230,47 @@ loop that moves them is six commands:
 
 The first run, version 1 to 3, is in
 [How the drawings were improved](../project/picture-review-results.md#tuning-the-parameters-version-1-to-3):
-text issues 19 to 2, matches 11 to 21, wrong 1 to 5.
+text issues 19 to 2, matches 11 to 21, wrong 1 to 5. With the review reading each part as built
+and the best of three to five candidates kept for every drawing that still missed, a fresh
+review of the final set: 29 matches, 2 partly, 1 wrong
+([Best-of-N](../project/picture-review-results.md#best-of-n)).
+
+### Best of N
+
+Muse Image draws a different picture for every request; one request can miss where the next
+lands. `--candidates N` draws a drawing N more times, each candidate a request of its own,
+reviews every candidate against the drawing's facts and keeps the best:
+
+```bash
+./dev picture-review --candidates 3 --max-usd 1.5                    # every drawing not matching
+./dev picture-review --candidates 3 --only project:4,project:7 --max-usd 1   # these, even matching
+./dev picture-review --evaluate --stage best3 --prune                # score it beside the version
+```
+
+- **The candidates.** The first is drawn with the last review's corrected brief (or, for a
+  drawing that matched, the brief it has); the next ones add a variant: another framing for a
+  drawing with no view of its own (*seen at eye level from across the room*, *a three-quarter
+  view from slightly above*, ...), a narrower scene for a close-up or a view from above (*only
+  the parts listed, nothing extra on the table*, ...). Each brief is at most 400 characters,
+  the variant kept whole. No candidate repeats the request the drawing already has.
+- **The pick.** Better verdict first, then a surer review (confidence), then fewer issues. The
+  drawing as it stands is scored by the last review and keeps its place on a tie, so a run
+  never makes a drawing worse.
+- **What is kept.** Only the winner's brief is written into `demo/set.yaml` (the item's
+  `picture_brief` or `reuse_picture_brief`, the project's `propose.corrections` entry) and only
+  its recording is copied into `backend/tests/fixtures/api/images-generations/`; the set is
+  replayed after (0 not recorded, 0 stand-in answers). Every candidate, winner or not, is
+  copied under `picture-review/candidates/<drawing>/`, with `picture-review/candidates.md`
+  (each candidate's verdict, confidence, issues and brief) and `best-before.jpg` /
+  `best-after.jpg`; none of it goes into the repository. The last review (`report.json`) takes
+  the winners' reviews, so `--evaluate` scores the set as it now replays.
+- **Cost.** A candidate is a drawing and its review, about 0.017 USD; the run stops before a
+  candidate whose drawing and review could pass `--max-usd`, cutting the last candidates of
+  every drawing rather than every candidate of the last drawings.
+- **`--evaluate --stage WORD`** keeps the score as a later stage of the same version of the
+  parameters (`eval/pictures/params-v<N>-<WORD>.json`), next to its first score in the history
+  table; `--prune` then removes the recordings the stage before used and this one does not
+  (the drawings replaced).
 
 ### The review gate
 
@@ -239,6 +280,69 @@ checked or drawn again, and the demo set's loader never goes through the gate. A
 is reviewed once and, when it is wrong or shows the main part at the wrong size or as another
 device, drawn once more with the review's brief and reviewed again. Both are kept and the better one is shown; the caption says what the check
 found. A bad drawing costs two drawings and two checks, about 0.035 USD.
+
+`PICTURE_CANDIDATES` (default 1) is the best of N for the owner's own clicks: when the first
+drawing misleads, the gate draws that many corrected candidates instead of one, each with the
+review's brief and its own framing, checks each, and shows the best (verdict, then confidence,
+then fewer issues; the first drawing stays when no candidate beats it). Every drawing is kept,
+the others marked hidden. A candidate after the first is drawn only while the spend cap
+(`SPEND_CAP_USD`) leaves room for it and its check; at 3, a bad drawing costs at most four
+drawings and four checks, about 0.07 USD.
+
+## Tuning the text parameters
+
+The Decide cards, the ideas and the proposals are written by Muse Spark from a brief and fixed
+instructions. What they are told beyond that is data too: the text parameters,
+`backend/app/textparams/params.yaml`, versioned and read on each request:
+
+| Section | What it changes |
+|---|---|
+| `version` | bumped by each `--tune --apply`; each version's score is `eval/decide/text-v<N>.json` |
+| `scenarios` | the Decide cards (operation `scenarios`) |
+| `uses` | the ideas, what an item is good for (operation `uses`) |
+| `propose` | the proposals (operation `propose`) |
+
+Each section has `facts_first` (the brief opens with the item's compatibility facts as the
+rules read them: memory generation and form, socket, interface, size; the rules' pairings follow
+the item's fields, before the profile), `constraints` (rules every answer respects),
+`corrections` (mistakes the checks found, said as rules) and `banned` (phrases never to write,
+such as *with the processor you own* when no owned processor fits). An empty section adds
+nothing: its requests are word for word what they were, so their recordings still answer.
+
+```bash
+./dev decide-review --max-usd 1           # check every recommendation (picture-review/decide/report.md)
+./dev decide-review --evaluate            # keep the score of this version
+./dev decide-review --tune --max-usd 0.1  # propose edits (tune.md, tune.json)
+./dev decide-review --tune --apply        # write them: version one up
+./dev decide-review --rerecord --max-usd 2.5   # record the changed text again, check again
+./dev decide-review --evaluate --prune    # score it, drop the recordings replaced
+```
+
+- **The check** is the one `picture-review --decide` runs (operation `decide-review`): each
+  item's latest Decide cards, each item's ideas and each project's allocations against the
+  items' facts and the owner's other items; a flag names where, the claim, the fact it
+  contradicts and a severity.
+- **`--tune`** groups the flags by section. Fixed rules: a flag on a part that does not fit
+  (memory generation, socket, slot, interface) turns on `facts_first`; a card resting on what
+  the owner lacks adds the owned-items constraint; a flag on a recorded condition (missing,
+  bare) adds the condition constraint. One Muse Spark call (operation `decide-tune`, about
+  0.01 USD) phrases at most four corrections and four banned phrases per section from the flags,
+  general rules that name kinds of part, never one item.
+- **Approve** by editing `picture-review/decide/tune.json`; drop a banned phrase that can be true
+  (*works as it is* for an item with nothing wrong). An edit to `propose` records every project
+  and its drawings again.
+- **`--rerecord`** loads the set once with the key in a record run where only the Decide cards,
+  the ideas, the proposals and Muse Image are bought; every other request must replay its
+  recording or the run says it is not recorded. A changed Decide card changes its reuse-card
+  drawing, which is drawn and recorded in the same run. Then every recommendation is checked.
+- **`--evaluate`** keeps the score in `eval/decide/text-v<N>.json` (counts by section, each
+  check's flags, the recordings the set's replay answered from, the parameters), writes the
+  history table between the `text-history` markers of
+  [How the drawings were improved](../project/picture-review-results.md#text-tuning), and with
+  `--prune` deletes the recordings the version before used and this one does not.
+
+`/decide-tune` (`tools/muse/decide-tune/SKILL.md`) is the Muse Code skill that walks the owner
+through the same loop, with the same approval points and caps as `/picture-tune`.
 
 ## With Muse Code: the skill that tunes the parameters
 
@@ -420,6 +524,7 @@ through what the app sends and what it does with the answer:
   the privacy check of photos has to clear first.
 - **A review gate.** Built: `PICTURE_REVIEW_GATE` ([The review gate](#the-review-gate)).
 - **An evaluation set.** Built: `eval/pictures/params-v<N>.json`, one per version.
-- **The review's facts for an item drawn as a use.** They still list the item as it lies in the
-  drawer (its condition) and the item alone as its parts; judged as built, with the parts its
-  kind of project brings, two of version 3's five wrong verdicts would not stand.
+- **The review's facts for an item drawn as a use.** Built: the item as built, with the rest of
+  the build its kind of project needs as what may appear.
+- **Best of N.** Built: `--candidates N` for the demo set, `PICTURE_CANDIDATES` for the owner's
+  drawings ([Best of N](#best-of-n)).

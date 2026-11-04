@@ -67,15 +67,22 @@ something that did not hold up once it met real parts, real photos or real rules
       labels), and writes a corrected brief; the owner approves, Muse Image draws again, and the
       new drawing is reviewed once more. The first review of the 32 demo drawings found 8 that
       matched, 22 that partly matched and 2 that were wrong (the mirror, and an adapter drawn in
-      its plastic wrap); both wrong ones match after a corrected brief. The tool is
+      its plastic wrap); both wrong ones match after a corrected brief. Then the requests
+      themselves were tuned (the drawing parameters, three versions), the review was made to
+      read each part as built, and every drawing that still missed was drawn three to five
+      times with the best kept: on a fresh review of the final set, 29 of the 32 drawings
+      match, 2 partly and 1 is wrong, from 17, 7 and 8 just before. The tool is
       `./dev picture-review`, also a Muse Code skill: [Review and redraw the
       drawings](../guides/picture-review.md); the results, before and after: [How the drawings
       were improved](picture-review-results.md).
     - **A check of the recommendations themselves.** The same review read the Decide cards and
       project allocations against the facts and flagged 27 of 55, among them a DDR4 memory stick
       allocated to a DDR3 laptop and desktop builds that assume a processor the boards cannot
-      take. The rules checked an item's kind, not its generation or socket; compatibility rules
-      are the next fix.
+      take. Compatibility rules followed (generation, form, socket, interface), and then the
+      cards' own instructions were tuned from the flags: the item's compatibility facts first,
+      a card resting only on owned parts that fit, *with the processor you own* banned. Of the
+      44 sets of Decide cards, 16 were flagged before and 10 after; a third round did no better
+      and was not kept ([Text tuning](picture-review-results.md#text-tuning)).
 
 The full list, in the order it was learned, is on [Lessons learned](lessons.md); the dated log
 is [Built during the hackathon](hackathon.md).
@@ -92,8 +99,9 @@ is [Built during the hackathon](hackathon.md).
     - **Accounts instead of a shared code,** so each person has their own inventory.
     - **The Android app on Google Play.**
     - **Posting to Marketplace** from the app, once there is a listing API for individuals.
-    - **Better drawings over time:** the review's corrections applied by project kind, and a
-      drawing reviewed before it is shown, redrawn once when it does not match.
+    - **Better drawings over time:** the review gate on by default with best of three for the
+      owner's own drawings (`PICTURE_CANDIDATES`), and the proposals tuned like the Decide
+      cards, once their re-recording (every project and its drawings) fits the budget.
     - **A second model route** through Muse Spark Open for the planning steps.
 
 Each one, with why and what it needs, is on [Next steps](next.md).

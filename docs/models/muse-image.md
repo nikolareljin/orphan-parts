@@ -123,6 +123,13 @@ A click costs one drawing and one check (about 0.017 USD), at most two of each. 
 visitor's drawing is answered from the recordings and never checked or drawn again, and the
 demo loader never goes through the gate, so each of the set's drawings stays one request.
 
+`PICTURE_CANDIDATES` (default 1) makes that one corrected drawing several: the gate draws that
+many candidates, each with the review's brief and its own framing, checks each and shows the
+best (verdict, then confidence, then fewer issues), the rest kept hidden; a candidate after the
+first is drawn only while the spend cap leaves room for it and its check. The demo set's
+drawings were chosen the same way, best of three
+([Best of N](../guides/picture-review.md#best-of-n)).
+
 ## Corrections and review
 
 A drawing can carry a correction: a brief said in the request before its closing words
