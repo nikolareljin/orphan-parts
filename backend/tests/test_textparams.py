@@ -416,3 +416,32 @@ def test_a_check_of_some_kinds_only_is_never_a_versions_score(tmp_path: Path) ->
     assert "search-plan" in tt.TEXT_OPS
     assert tt.text_op("propose-2") and tt.text_op("scenarios")
     assert not tt.text_op("extract") and not tt.text_op("propose-x") and not tt.text_op("price-1")
+
+
+def test_a_new_version_prunes_what_any_earlier_version_used(tmp_path: Path) -> None:
+    now = load().version
+    folder = tmp_path / "eval"
+    folder.mkdir()
+    kept = tt.evaluation(report(*CHECKS, version=now - 2), TextParams(version=now - 2))
+    kept.used = {"responses": ["a" * 24, "b" * 24]}
+    tried = tt.evaluation(report(*CHECKS, version=now - 1), TextParams(version=now - 1))
+    tried.used = {"responses": ["a" * 24, "c" * 24]}
+    for e in (kept, tried):
+        tt.eval_path(folder, e.params_version).write_text(e.model_dump_json(), "utf-8")
+    fixtures = tmp_path / "fixtures" / "responses"
+    fixtures.mkdir(parents=True)
+    for key in ("a", "b", "d"):
+        (fixtures / f"{key * 24}.json").write_text("{}", encoding="utf-8")
+    out = tmp_path / "out"
+    out.mkdir()
+    latest = report(*CHECKS, version=now)
+    latest.used = {"responses": ["a" * 24, "d" * 24]}
+    (out / "report.json").write_text(latest.model_dump_json(), encoding="utf-8")
+    settings = Settings(
+        OPL_FAKE_API=True, fixtures_dir=tmp_path / "fixtures", log_format="text", _env_file=None
+    )
+    opts = tt.Options(set_file=out, out=out, evaluate=True, prune=True, eval_dir=folder)
+    _, notes = tt.run_evaluate(settings, opts)
+    # b was the kept version's, replaced now; c was only the tried one's, already gone
+    assert sorted(p.name for p in fixtures.iterdir()) == [f"{'a' * 24}.json", f"{'d' * 24}.json"]
+    assert any("removed 1 file(s) of 2 unused" in n for n in notes)

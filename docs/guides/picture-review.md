@@ -347,7 +347,8 @@ nothing: its requests are word for word what they were, so their recordings stil
   check's flags, the recordings the set's replay answered from, the parameters), writes the
   history table between the `text-history` markers of
   [How the drawings were improved](../project/picture-review-results.md#text-tuning), and with
-  `--prune` deletes the recordings the version before used and this one does not.
+  `--prune` deletes the recordings any earlier version used and this one does not (a version tried and not kept
+  is earlier too).
 
 `/decide-tune` (`tools/muse/decide-tune/SKILL.md`) is the Muse Code skill that walks the owner
 through the same loop, with the same approval points and caps as `/picture-tune`.

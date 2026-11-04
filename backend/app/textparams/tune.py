@@ -754,15 +754,19 @@ def run_evaluate(settings: Settings, opts: Options) -> tuple[Evaluation, list[st
     notes: list[str] = []
     earlier = [e for e in evals if e.params_version < params.version]
     if earlier:
-        gone = unused(earlier[-1], ev)
+        # against every earlier version, not the last alone: a version tried and not kept
+        # (--keep) is earlier too, and what the kept one used is what this one replaced
+        gone: dict[str, list[str]] = {}
+        for e in earlier:
+            for endpoint, keys in unused(e, ev).items():
+                gone[endpoint] = sorted(set(gone.get(endpoint, [])) | set(keys))
         count = sum(len(v) for v in gone.values())
         if gone and opts.prune:
             removed = prune(settings.fixtures_dir, gone)
             notes.append(f"removed {len(removed)} file(s) of {count} unused recording(s)")
         elif gone:
             notes.append(
-                f"{count} recording(s) of text v{earlier[-1].params_version} unused now"
-                " (--prune deletes them)"
+                f"{count} recording(s) of earlier versions unused now (--prune deletes them)"
             )
     if opts.results is not None:
         if write_history(opts.results, evals):
