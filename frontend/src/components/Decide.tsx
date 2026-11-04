@@ -261,7 +261,7 @@ export default function Decide({
           <dd>
             {view.searches.length === 0 ? (
               <>
-                No open search for a part. Start one on <a href="#find">Find a part</a>.
+                No open search for a part.{!readOnly && <> Start one on <a href="#find">Find a part</a>.</>}
               </>
             ) : (
               <ul className="searches" aria-label="Open searches">
@@ -278,12 +278,18 @@ export default function Decide({
             )}
           </dd>
 
-          <dt>What it could look like</dt>
-          <dd>
-            <button type="button" className="link" onClick={() => document.querySelector('section.picture')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-              Go to the picture section
-            </button>
-          </dd>
+          {/* the visitor has a picture section only where a drawing was kept: the bar above
+              links to it then, and a link here would lead nowhere on every other item */}
+          {!readOnly && (
+            <>
+              <dt>What it could look like</dt>
+              <dd>
+                <button type="button" className="link" onClick={() => document.querySelector('section.picture')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                  Go to the picture section
+                </button>
+              </dd>
+            </>
+          )}
 
           <dt>Decision</dt>
           <dd>

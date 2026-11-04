@@ -39,7 +39,7 @@ function message(err: unknown): string {
 // visitor reads the projects built on public items as the owner left them, without the budget;
 // every button that saves, proposes, commits or draws is the sign-in line.
 export default function Build({ demo = false }: { demo?: boolean }) {
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<Project[] | null>(null)
   const [budget, setBudget] = useState<Budget | null>(null)
   const [openId, setOpenId] = useState<number | null>(null)
   const [error, setError] = useState('')
@@ -78,7 +78,9 @@ export default function Build({ demo = false }: { demo?: boolean }) {
           {budgetText(budget)}
         </p>
       )}
-      {projects.length === 0 ? (
+      {projects === null ? (
+        !error && <p className="muted">Loading…</p>
+      ) : projects.length === 0 ? (
         demo ? (
           <p className="muted">No projects to show yet.</p>
         ) : (

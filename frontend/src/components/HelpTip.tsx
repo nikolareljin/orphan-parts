@@ -37,7 +37,9 @@ export default function HelpTip({ entry, defaultOpen = false }: { entry: HelpEnt
     }
     const el = pop.current
     if (!el) return
-    const bound = el.closest('.modal-body')?.getBoundingClientRect() ?? { left: 0, right: window.innerWidth }
+    // the page's own width, not window.innerWidth: on a phone the note sticking out widens the
+    // visual viewport before it is measured, and the note would be moved too little
+    const bound = el.closest('.modal-body')?.getBoundingClientRect() ?? { left: 0, right: document.documentElement.clientWidth }
     const rect = el.getBoundingClientRect()
     const margin = 8
     const left = rect.left - shift
@@ -77,7 +79,7 @@ export default function HelpTip({ entry, defaultOpen = false }: { entry: HelpEnt
         ?
       </button>
       {open && (
-        <span ref={pop} id={id} className="help-tip-pop" role="group" aria-label={`About: ${entry.topic}`} style={shift ? { transform: `translateX(${shift}px)` } : undefined}>
+        <span ref={pop} id={id} className="help-tip-pop" role="group" aria-label={`About: ${entry.topic}`} style={shift ? { marginLeft: shift } : undefined}>
           <button type="button" className="link help-tip-close" aria-label="Dismiss help" onClick={() => act('close', true)}>
             ×
           </button>
