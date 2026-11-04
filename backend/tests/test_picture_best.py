@@ -245,6 +245,24 @@ async def test_the_gate_stops_drawing_candidates_at_the_spend_cap(
     assert len(asked) == 2 and shown.n == 2
 
 
+async def test_a_judges_code_draws_one_corrected_candidate(
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pictures, item_id, asked = await gated(
+        settings,
+        monkeypatch,
+        [answer("wrong", "scale"), answer("partly", "scale"), answer("matches")],
+        candidates=3,
+    )
+    # the request is a judge's code (its inventory scoping is tested in test_judge)
+    monkeypatch.setattr(gate_module, "sandbox", lambda: 7)
+    shown = await PictureGate(pictures).item(item_id, "a smart mirror")
+    await pictures.client.aclose()
+    # the first drawing and one corrected candidate, whatever PICTURE_CANDIDATES says
+    assert len(asked) == 2 and shown.n == 2
+
+
 # --- the reviewer's facts, as built --------------------------------------------------------
 
 

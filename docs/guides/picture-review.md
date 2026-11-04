@@ -287,7 +287,9 @@ review's brief and its own framing, checks each, and shows the best (verdict, th
 then fewer issues; the first drawing stays when no candidate beats it). Every drawing is kept,
 the others marked hidden. A candidate after the first is drawn only while the spend cap
 (`SPEND_CAP_USD`) leaves room for it and its check; at 3, a bad drawing costs at most four
-drawings and four checks, about 0.07 USD.
+drawings and four checks, about 0.07 USD. A judge's code (its own limits,
+[Demo access](../operations/demo-access.md)) always gets the one corrected drawing, and a
+visitor or a code kept on the recordings none.
 
 ## Tuning the text parameters
 

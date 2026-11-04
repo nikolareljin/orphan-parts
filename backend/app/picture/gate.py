@@ -3,8 +3,8 @@ facts it had to show, as ``./dev picture-review`` checks the demo set's. When it
 kind of device, or the main part at the wrong size, it is drawn once more with the review's
 brief and that drawing is checked too (``PICTURE_CANDIDATES`` above 1: that many corrected
 candidates, each with its own framing, while the spend cap leaves room for one more and its
-check). All are kept; the best is shown, the others are marked ``hidden``. Each check's
-cost is on the picture's record and in the spend ledger.
+check; a judge's code draws one). All are kept; the best is shown, the others are marked
+``hidden``. Each check's cost is on the picture's record and in the spend ledger.
 
 On with ``PICTURE_REVIEW_GATE=1``; unset, it is on when the calls are live and off in fixture
 mode (where a check answers only from a recording). Only the owner's draws go through it: a
@@ -23,7 +23,7 @@ from PIL import UnidentifiedImageError
 from app.decide.schema import Scenarios
 from app.extract.imaging import BadImageError
 from app.model_api import ModelApiError
-from app.ops.door import for_visitor, recorded_request
+from app.ops.door import for_visitor, recorded_request, sandbox
 from app.picture.best import candidate_briefs, score
 from app.picture.params import load as load_params
 from app.picture.review import (
@@ -146,8 +146,10 @@ class PictureGate:
         keep_record(folder, first)
         if not needs_redraw(answer):
             return first
-        # one corrected drawing, or PICTURE_CANDIDATES of them, each with its own brief
-        briefs = candidate_briefs("", answer.brief, self.settings.picture_candidates, view=view)
+        # one corrected drawing, or PICTURE_CANDIDATES of them, each with its own brief; a
+        # judge's code gets the one, so its own limits are not spent several drawings at a time
+        count = 1 if sandbox() else self.settings.picture_candidates
+        briefs = candidate_briefs("", answer.brief, count, view=view)
         drawn: list[tuple[Picture, float]] = []
         for n, brief in enumerate(briefs):
             if n and not self._room():
