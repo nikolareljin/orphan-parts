@@ -21,7 +21,7 @@ from PIL import UnidentifiedImageError
 from app.decide.schema import Scenarios
 from app.extract.imaging import BadImageError
 from app.model_api import ModelApiError
-from app.ops.door import for_visitor
+from app.ops.door import for_visitor, recorded_request
 from app.picture.review import (
     Drawing,
     Facts,
@@ -90,8 +90,9 @@ class PictureGate:
 
     @property
     def on(self) -> bool:
-        # a visitor's calls go to the recordings: a check there would be a stand-in answer
-        return self.settings.picture_gate_on and not for_visitor()
+        # a visitor's calls go to the recordings, and so do a code's kept on them: a check
+        # there would be a stand-in answer
+        return self.settings.picture_gate_on and not for_visitor() and not recorded_request.get()
 
     async def _check(
         self, folder: Path, kind: Kind, picture: Picture, facts: Facts

@@ -56,6 +56,11 @@ def open_keys(settings: Settings) -> Store:
     fresh = not path.exists()
     store = keys_store(path, settings.sqlite_journal_mode)
     if fresh:
+        # the hashes, labels and use are the operator's alone: readable by the service only
+        try:
+            path.chmod(0o600)
+        except OSError as exc:
+            log.warning("the codes' file keeps its permissions: %s", exc)
         adopt(store, settings.inventory_db_path)
     return store
 
