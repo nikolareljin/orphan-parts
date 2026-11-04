@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # Demo video
 
 The demo video (2:52) shows the app as it was built during the hackathon: a worn frappé maker
@@ -9,12 +14,7 @@ Marketplace draft, and the Android app sending photos to the same inventory.
   <iframe src="https://www.youtube-nocookie.com/embed/3USMv4zCeD0" title="Orphan Parts Lens demo video (2:52)" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
 </div>
 
-**Watch it on YouTube, full quality:** <https://www.youtube.com/watch?v=3USMv4zCeD0>. The
-copy below is a smaller one kept with the docs.
-
-<video controls preload="metadata" src="../../assets/video/demo.mp4" poster="../../assets/video/poster.jpg" width="100%"></video>
-
-If the player does not start, [open the video file](../assets/video/demo.mp4).
+Watch it on YouTube: <https://www.youtube.com/watch?v=3USMv4zCeD0>.
 
 - Every answer on screen comes from the app on Meta's models (Muse Spark, SAM 3.1, Muse Voice
   Transcribe, Muse Image) or from their recordings, which the demo replays at no cost.
