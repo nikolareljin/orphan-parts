@@ -263,16 +263,25 @@ phone forget the address, its code and its session; the code itself is revoked o
 The complete path, with the `.env` to fill in, the Model API key, the phone over the Wi-Fi and
 USB debugging step by step, and a troubleshooting table:
 [Run it on your own computer](https://nikolareljin.github.io/orphan-parts/start/local/). In
-short, with Docker Desktop on macOS or Windows (run the commands in WSL there), Docker Engine
-on Linux:
+short, about ten minutes, mostly the first build, with no key and nothing spent.
+
+**You need:** Docker with Compose v2 (Docker Desktop on macOS or Windows, Docker Engine on
+Linux), git and bash, and a few GB of free disk for the images. On Windows, use WSL 2 (Ubuntu)
+with Docker Desktop's WSL integration on, and run every command in the Ubuntu terminal.
 
 ```bash
 git clone https://github.com/nikolareljin/orphan-parts.git
 cd orphan-parts
-cp .env.example .env    # set MODEL_API_KEY; left empty, the stack runs on recorded answers
-./dev up                # the web app on http://localhost:5173, the API on :8000
-./dev demo              # optional: load the demo set (recorded answers, nothing spent)
+cp .env.example .env    # no key needed: without one the stack runs on recorded answers
+./dev up                # first time a few minutes to build; the web app on http://localhost:5173
+./dev demo              # load the demo set: 49 items with everything the models produced
 ```
+
+Then open <http://localhost:5173>. For live models on your own photos, get a key at
+<https://dev.meta.ai> (Billing: a payment method; API keys: create one), set
+`MODEL_API_KEY=<your key>` and `OPL_FAKE_API=0` in `.env`, and run `./dev up` again; each call
+is charged to your key and `SPEND_CAP_USD` in `.env` (25 by default) stops it at that amount.
+`./dev down` stops the stack.
 
 A local stack has no access code, so every page is open. `./dev gate on` turns the gate on and
 prints a code for you and one for the phone; `./dev gate off` turns it off. To pair a phone,

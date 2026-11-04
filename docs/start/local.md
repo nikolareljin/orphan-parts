@@ -81,7 +81,7 @@ is under [For judges](judges.md#costs-and-limits): a label read is under a cent.
 
 ```bash
 ./dev up      # the web app on http://localhost:5173, the API on http://localhost:8000
-./dev demo    # the demo set: ten items, a search, three projects (recorded answers, nothing spent)
+./dev demo    # the demo set: 49 items, 9 searches, 11 projects (recorded answers, nothing spent)
 ```
 
 The first `./dev up` builds the backend image and installs the web app's packages; that takes
