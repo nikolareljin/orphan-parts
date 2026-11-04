@@ -69,6 +69,9 @@ dialog.modal {
   max-height: calc(100dvh - 2rem); /* the visible height on a phone, under its toolbars */
   padding: 0;
   overflow: hidden; /* the body scrolls; the dialog itself has no bar of its own */
+  /* not even scrolled by a script: a section or a form brought into view moved the whole dialog
+     up on a phone, its title bar and close button out of sight */
+  overflow: clip;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--card);
