@@ -6,6 +6,11 @@ Meta's Muse models.
 
 ![How Orphan Parts Lens works](assets/process.svg)
 
+!!! success "Hackathon conclusion"
+    What was built in the nine days, what had to change to get there (a handoff to Marketplace
+    instead of automatic search and posting, private details hidden in photos, a review of every
+    drawing), and what comes next: [Hackathon conclusion](project/conclusion.md).
+
 **Watch the [demo video](start/video.md) (2:52).** **Live demo** (temporary, while the hackathon is judged): <https://orphan-parts.pages.dev>, the demo set read-only without a code; it may be taken down after judging, and [Run it on your own computer](start/local.md) works without it.
 
 **This repository is the entry for the Meta Global AI Developer Hackathon (October 27 to
