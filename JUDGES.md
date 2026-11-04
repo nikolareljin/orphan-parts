@@ -2,7 +2,7 @@
 
 **Start here:** the documentation, <https://nikolareljin.github.io/orphan-parts/>, with
 [Examples: what the models produced](https://nikolareljin.github.io/orphan-parts/start/examples/)
-and the [demo video](https://nikolareljin.github.io/orphan-parts/start/video/); the live demo,
+and the [demo video](https://www.youtube.com/watch?v=3USMv4zCeD0); the live demo,
 <https://orphan-parts.pages.dev> (temporary, while the hackathon is judged).
 
 Orphan Parts Lens turns the things in a drawer into a private inventory with evidence: a photo

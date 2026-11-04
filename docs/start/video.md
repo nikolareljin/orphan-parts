@@ -5,6 +5,9 @@ agitator traced to its drink mixer, the maker's part found on the web and checke
 part's rules, then the unused electronics in a drawer turned into builds, a price and a
 Marketplace draft, and the Android app sending photos to the same inventory.
 
+**Watch it on YouTube, full quality:** <https://www.youtube.com/watch?v=3USMv4zCeD0>. The
+copy below is a smaller one kept with the docs.
+
 <video controls preload="metadata" src="../../assets/video/demo.mp4" poster="../../assets/video/poster.jpg" width="100%"></video>
 
 If the player does not start, [open the video file](../assets/video/demo.mp4).
