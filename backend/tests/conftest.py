@@ -84,3 +84,24 @@ def make_photo(width: int = 640, height: int = 480, fmt: str = "JPEG") -> bytes:
 @pytest.fixture
 def photo() -> bytes:
     return make_photo()
+
+
+# The drawing parameters as version 1 had them: the prompt builder as it was before the
+# parameters were tuned, which the tests of its mechanics were written against.
+V1_TAIL = "on a plain background, no text, no logos, no people"
+V1_PROJECT_TAIL = "finished and in use in a home, no text, no logos, no people"
+
+
+def params_v1_text() -> str:
+    from app.picture.params import ClosingRules, DrawingParams, dump
+
+    rules = ClosingRules(item=V1_TAIL, use=V1_TAIL, card=V1_TAIL, project=V1_PROJECT_TAIL)
+    return dump(DrawingParams(version=1, rules=rules))
+
+
+@pytest.fixture
+def v1_params(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    path = tmp_path / "params-v1.yaml"
+    path.write_text(params_v1_text(), encoding="utf-8")
+    monkeypatch.setattr("app.picture.params.PARAMS_FILE", path)
+    return path

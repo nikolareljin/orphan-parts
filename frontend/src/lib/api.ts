@@ -281,6 +281,14 @@ export interface PhotoCount {
 
 // A picture of what the item could become, drawn by Muse Image on a click and kept beside the
 // photos, never as one of them; at /api/items/{id}/pictures/{n}. Illustrative, not evidence.
+// What the review gate found of a drawing: its verdict, and the picture it was drawn again for.
+export interface PictureCheck {
+  verdict: string
+  issues: string[]
+  cost_usd: number
+  redraw_of: number
+}
+
 export interface Picture {
   n: number
   use: string
@@ -288,6 +296,9 @@ export interface Picture {
   cost_usd: number
   from_fixture: boolean
   created_at: string
+  check?: PictureCheck | null
+  // kept, but a drawing of the same request was judged better and is shown instead
+  hidden?: boolean
 }
 
 export interface PictureList {

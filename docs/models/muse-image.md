@@ -9,7 +9,9 @@ is read from it, and nothing rests on it.
 The dialog's last section, *What it could look like*, has a field *as a...* (empty, with an
 example use as its placeholder; a project template id such as `smart_mirror` names that
 project, anything else is the owner's own words) and the button. The prompt is written by the
-rules from the item as it is known: its type, its accepted values (never one that identifies the item or its owner, such as
+rules from the item as it is known (the example here is of version 1 of the drawing
+parameters; [How the request is built](#how-the-request-is-built) says what version 2 asks):
+its type, its accepted values (never one that identifies the item or its owner, such as
 a serial number, a MAC address or an IMEI; at most eight), its condition and its known faults,
 and the chosen use:
 *a semi-realistic illustration of a smart mirror built from laptop (screen size 14 in);
@@ -76,6 +78,50 @@ writes into the Modal secret ([deployment](../operations/deployment.md)).
   same way, so they go with the item too and a new set of cards starts with none; a project's
   in `DATA_DIR/projects/<id>/`, cleared with the inventory by `./dev demo`. No schema change:
   the files and their records are the storage.
+
+## How the request is built
+
+The rules above are the mechanics; what they say is data, in the drawing parameters
+`backend/app/picture/params.yaml` (versioned, read on each drawing). Since version 2 a request
+says, in this order:
+
+1. **What is drawn and its parts, facts first.** Each part is its kind with its facts: the
+   sizes the owner's name for it states (*18 inch*, *2.5 inch*, *480 GB*; nothing else of the
+   name), a monitor's as *screen size 18 inch, about 46 cm across the diagonal*, then its
+   accepted values with those that set its size first, at most six for a part of a build and
+   eight for an item's own picture. A brand, a model or part
+   number, certifications, a voltage, condition notes and faults are never said: a drawing
+   letters what it is told (*DELL 1800FP* on a bezel) and draws a condition as dust, blots and
+   a plastic wrap. Then how that kind of part looks at its real size (*a tiny credit-card-sized
+   bare board*), when the parameters keep one for it.
+2. **What it does and how it is shown**, a view with its preset when the parameters keep one.
+3. **The correction of its kind of project**: by template for a project, by the words of the
+   use for an item drawn as one (*smart mirror*), by the card's title for a reuse card.
+4. **The drawing's own brief**, from the demo set (a review's correction); said once when it is
+   the correction above.
+5. **The negatives** (*no lettering, logos, brand names, model numbers or labels on any part,
+   case or screen*), then the closing rules: *on a plain background* for an item drawn as
+   itself, *finished and in use in a home* for a use, a reuse card and a project.
+
+Version 1 is the builder as it was before (three values a part, in alphabetical order, the
+condition said, a plain background for a use); its parameters are kept in
+`eval/pictures/params-v1.json` and reproduce its requests word for word. A change to the
+parameters changes the requests, so the demo set's drawings are drawn and recorded again with
+it; `./dev picture-review --tune` proposes the change from the reviews and `--evaluate` scores
+it ([Tuning the drawing parameters](../guides/picture-review.md#tuning-the-drawing-parameters)).
+
+## The review gate
+
+With `PICTURE_REVIEW_GATE` on (unset: on when the calls are live, off in fixture mode), a
+drawing the owner asks for is checked once by Muse Spark against its facts, as the review
+checks the demo set's. When it shows another kind of device, or is wrong, or partly wrong with
+the main part at the wrong size, it is drawn once more with the review's brief and checked
+again. Both are kept; the better one is answered and shown, the other is marked `hidden`; each
+picture's record carries its check (`verdict`, `issues`, `cost_usd`, `redraw_of`), and the
+caption says *Checked against its facts by Muse Spark: matches, drawn again for picture 1*.
+A click costs one drawing and one check (about 0.017 USD), at most two of each. A demo
+visitor's drawing is answered from the recordings and never checked or drawn again, and the
+demo loader never goes through the gate, so each of the set's drawings stays one request.
 
 ## Corrections and review
 

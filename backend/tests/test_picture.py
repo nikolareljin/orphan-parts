@@ -24,7 +24,8 @@ from app.projects import Templates
 from tests.conftest import RECORDED_FIXTURES, make_photo
 from tests.test_gate import CODE, gated_settings
 
-pytestmark = pytest.mark.anyio
+# the prompt builder's mechanics, with the drawing parameters of version 1
+pytestmark = [pytest.mark.anyio, pytest.mark.usefixtures("v1_params")]
 
 
 def create(client: TestClient, **spec: Any) -> int:

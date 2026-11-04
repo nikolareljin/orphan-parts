@@ -42,7 +42,8 @@ from app.picture.review import (
 from app.picture.service import TAIL, Picture
 from tests.conftest import RECORDED_FIXTURES, SAMPLE_VALUE
 
-pytestmark = pytest.mark.anyio
+# the prompt builder's mechanics, with the drawing parameters of version 1
+pytestmark = [pytest.mark.anyio, pytest.mark.usefixtures("v1_params")]
 
 SET_TEXT = """\
 title: a small set

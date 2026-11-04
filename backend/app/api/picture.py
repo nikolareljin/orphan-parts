@@ -8,6 +8,7 @@ from app.api.deps import DeciderDep, PicturesDep, PlannerDep
 from app.api.model_errors import as_http
 from app.ops.door import for_visitor, live_request
 from app.picture import OFF_LINE, Picture, PictureList, Pictures, PicturesOffError
+from app.picture.gate import PictureGate
 
 router = APIRouter(prefix="/api/items", tags=["inventory"])
 projects_router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -47,8 +48,10 @@ def _jpeg(data: bytes) -> Response:
 async def draw_picture(item_id: int, request: PictureRequest, pictures: PicturesDep) -> Picture:
     """Draw what the item could become with Muse Image: one image per call, made only on this
     request, kept beside the item's photos and never counted as one. Illustrative, not
-    evidence. ``503`` while ``PICTURE_ENABLED`` is off."""
-    return await _drawn(pictures.draw(item_id, request.use))
+    evidence. With the review gate on (``PICTURE_REVIEW_GATE``) the drawing is checked once
+    and, when it misleads, drawn once more; the better one is answered, both are kept.
+    ``503`` while ``PICTURE_ENABLED`` is off."""
+    return await _drawn(PictureGate(pictures).item(item_id, request.use))
 
 
 @router.get("/{item_id}/pictures", response_model=PictureList)
@@ -77,7 +80,7 @@ async def draw_card(
     evidence. ``503`` while ``PICTURE_ENABLED`` is off."""
     _on(pictures)
     scenarios = decider.scenarios_by_id(item_id, scenarios_id)
-    return await _drawn(pictures.draw_card(scenarios, card))
+    return await _drawn(PictureGate(pictures).card(scenarios, card))
 
 
 @router.get(f"{CARD}/pictures", response_model=PictureList)
@@ -110,7 +113,7 @@ async def draw_project(project_id: int, pictures: PicturesDep, planner: PlannerD
     notes or a price). Kept with the project. Illustrative, not evidence. ``503`` while
     ``PICTURE_ENABLED`` is off."""
     _on(pictures)
-    return await _drawn(pictures.draw_project(planner.project(project_id)))
+    return await _drawn(PictureGate(pictures).project(planner.project(project_id)))
 
 
 @projects_router.get("/{project_id}/pictures", response_model=PictureList)

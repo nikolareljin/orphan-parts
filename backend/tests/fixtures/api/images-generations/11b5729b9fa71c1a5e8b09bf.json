@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "11b5729b9fa71c1a5e8b09bf",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of a second screen for the kitchen built from monitor (screen size 24 inch, about 61 cm across the diagonal; a thin flat computer monitor, far smaller than a television, not a bulky CRT TV); no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793754951,
+    "data": [
+      {
+        "b64_json": "@11b5729b9fa71c1a5e8b09bf-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4106,
+      "output_tokens": 1107,
+      "total_tokens": 5213
+    }
+  },
+  "status": 200
+}
