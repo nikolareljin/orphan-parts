@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Self
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent
@@ -158,6 +158,18 @@ class Settings(BaseSettings):
         return self.data_dir / self.inventory_db_file
 
 
+class SettingsError(ValueError):
+    """The settings were refused. The message names each field and why, never the value it was
+    given: a validation error prints its input, and the key is one of them."""
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except ValidationError as exc:
+        reasons = "; ".join(
+            f"{'.'.join(str(p) for p in e['loc']) or 'settings'}: {e['msg']}"
+            for e in exc.errors(include_url=False, include_input=False)
+        )
+        raise SettingsError(reasons) from None
