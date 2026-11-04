@@ -6,6 +6,10 @@
   --line: #e2e6eb;
   --accent: #2d6cdf;
   --error: #b42318;
+  /* a warning in text, and the green under white text: both readable on the card */
+  --warn: #a15c00;
+  --ok-strong: #1e7e46;
+  --ok-text: #1e7e46;
   --on-accent: #ffffff;
   /* the form layout: between fields, between groups of fields, the narrowest field */
   --field-gap: 0.75rem;
@@ -25,6 +29,8 @@
     --line: #262c35;
     --accent: #6ea0ff;
     --error: #ff7a6b;
+    --warn: #d89a3a;
+    --ok-text: #27ae60;
     --on-accent: #0f1216; /* the page color: white on this accent is too faint */
   }
 }
