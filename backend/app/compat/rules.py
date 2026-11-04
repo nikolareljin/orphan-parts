@@ -468,7 +468,14 @@ def housing_rule(part: Reading, host: Reading) -> Result:
         if all(a <= b for a, b in zip(inside, outside, strict=True)):
             return Result("pass", "housing", f"{part.item_type} fits inside by its measured size")
         return Result(
-            "fail", "housing", f"{part.item_type} is larger than {host.name}", "", box, "host"
+            # the box's type, not its name: a box refused for a build is not on it, and its
+            # name may be one the demo visitor is not shown
+            "fail",
+            "housing",
+            f"{part.item_type} is larger than {_an(host.item_type)} can hold",
+            "",
+            box,
+            "host",
         )
     return Result("unknown", "housing", _check(f"whether {part.name} fits inside {host.name}"))
 

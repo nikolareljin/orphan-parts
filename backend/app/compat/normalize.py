@@ -29,7 +29,8 @@ PINS = {
     "288": ("DIMM", None),
 }
 
-_LGA = re.compile(r"\bLGA\s?-?(\d{3,4})\b", re.I)
+# FCLGA1155 is how Intel's spec sheets write LGA1155
+_LGA = re.compile(r"\b(?:FC)?LGA\s?-?(\d{3,4})\b", re.I)
 _SOCKET_NUMBER = re.compile(r"\bSOCKET\s?-?(\d{3,4})\b", re.I)
 _AMD = re.compile(r"\b(?:SOCKET\s?)?(AM[2-5]\+?|FM[12]\+?|TR4|sTRX4|sWRX8)(?![A-Z0-9])", re.I)
 _SLOT = re.compile(r"\bSLOT\s?-?(1|2|A)\b", re.I)
@@ -42,6 +43,8 @@ _ITX = re.compile(r"\bMINI[- ]?ITX\b|\bITX\b", re.I)
 _EATX = re.compile(r"\bE-?ATX\b", re.I)
 _ATX = re.compile(r"(?<![A-Z-])ATX\b", re.I)
 
+# a bare 2.5 or 3.5, read only on the drive's side of "2.5 to 3.5 inch"
+_BARE_SIZE = re.compile(r"(?<![\d.])([23]\.5)(?![\d.])")
 _SIZE = re.compile(r"(?<![\d.])([23]\.5)\s*(?:\"|''|”|-?\s*in(?:ch)?(?:es)?\b)", re.I)
 _M2 = re.compile(r"(?<![A-Z0-9])M\.?2(?![0-9])", re.I)
 _MSATA = re.compile(r"\bmSATA\b", re.I)
@@ -52,7 +55,8 @@ _IDE = re.compile(r"\b(?:IDE|PATA)\b", re.I)
 _USB = re.compile(r"\bUSB\b", re.I)
 
 _AGP = re.compile(r"\bAGP\b", re.I)
-_PCIE = re.compile(r"\bPCI-?E(?:XPRESS)?\b|\bPCI\s+EXPRESS\b", re.I)
+# a mini-PCIe card is not a desktop PCIe card: it says no bus here
+_PCIE = re.compile(r"(?<!mini-)(?<!mini )\bPCI-?E(?:XPRESS)?\b|\bPCI\s+EXPRESS\b", re.I)
 _PCI = re.compile(r"\bPCI\b(?!-?E|\s+EXPRESS)", re.I)
 
 _VOLTS = re.compile(r"(?<![\d.])(3\.3|5)\s?V(?:DC)?\b", re.I)
@@ -160,12 +164,23 @@ def drive_form(text: str) -> str | None:
 def holds(text: str) -> list[str]:
     """The drive forms an adapter or an enclosure takes. "M.2 and mSATA to SATA" takes M.2 and
     mSATA drives (SATA is where it goes); "M.2 to U.2" plugs into an M.2 slot and takes a U.2
-    drive; "M.2 SSD to USB" takes an M.2 drive; without a "to", every form named."""
+    drive; "M.2 SSD to USB" takes an M.2 drive; "2.5 to 3.5 inch" takes a 2.5 inch drive into
+    a 3.5 inch bay; without a "to", every form named."""
     parts = _TO.split(text, maxsplit=1)
     if len(parts) == 2:
-        right = forms(parts[1])
-        return right if right else forms(parts[0])
+        left, right = forms(parts[0]), forms(parts[1])
+        if _bay_sizes(right):
+            # "2.5 to 3.5 inch", "M.2 to 2.5 inch SATA": the drive on the left, in the size of
+            # the bay it goes in
+            left = left or [m.group(1) for m in _BARE_SIZE.finditer(parts[0])][:1]
+            return left if left else right
+        return right if right else left
     return forms(text)
+
+
+def _bay_sizes(found: list[str]) -> bool:
+    """Only drive sizes: the bay an adapter or a caddy fills, not a drive it takes."""
+    return bool(found) and all(f in ("2.5", "3.5") for f in found)
 
 
 def plug(text: str) -> str | None:
@@ -174,7 +189,7 @@ def plug(text: str) -> str | None:
     parts = _TO.split(text, maxsplit=1)
     if len(parts) == 2:
         left, right = parts
-        if forms(right):
+        if forms(right) and not _bay_sizes(forms(right)):
             return "M.2" if _M2.search(left) else None
         if _USB.search(right):
             return "USB"

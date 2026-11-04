@@ -75,6 +75,8 @@ def test_memory_form_socket_board_and_drive_readers() -> None:
     assert norm.drive_form("M.2 and mSATA") is None  # two forms: not one drive's
     assert norm.buses("AGP 4x") == ["AGP"] and norm.buses("PCI-E x16") == ["PCIe"]
     assert norm.buses("PCI slot") == ["PCI"] and norm.logic_volts("5V") == "5"
+    assert norm.buses("mini-PCIe Wi-Fi card") == [] and norm.buses("Mini PCIe") == []
+    assert norm.socket("FCLGA1155") == "LGA1155"
 
 
 @pytest.mark.parametrize(
@@ -85,6 +87,9 @@ def test_memory_form_socket_board_and_drive_readers() -> None:
         ("M.2 to U.2 adapter", ["U.2"], "M.2"),
         ("PCIe adapter card for two M.2 drives", ["M.2"], "PCIe"),
         ("2.5 inch SATA to USB enclosure", ["2.5"], "USB"),
+        ("2.5 to 3.5 inch drive bay adapter", ["2.5"], None),
+        ('2.5" to 3.5" caddy', ["2.5"], None),
+        ("M.2 to 2.5 inch SATA adapter", ["M.2"], "SATA"),
         ("enclosure", [], None),
     ],
 )
