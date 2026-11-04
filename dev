@@ -117,6 +117,8 @@ FRONTEND="$ROOT/frontend"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 DOCS_PORT="${DOCS_PORT:-8001}"
+# where a "docker is not running" message points: Docker's install page for every platform
+DOCKER_HELP="start Docker, or install it: https://docs.docker.com/get-started/get-docker/"
 
 parse_common_args "${BASH_SOURCE[0]}" "$@"
 set -- "${ARGS[@]+"${ARGS[@]}"}"
@@ -144,7 +146,7 @@ cmd_setup() {
     log_ok "docker: $(docker --version | sed 's/,.*//')"
     log_ok "compose: $(compose_cmd)"
   else
-    log_warn "docker is not running; install Docker Desktop (macOS, Windows) or Docker Engine (Linux); only the native path (./dev up --native) works without it"
+    log_warn "docker is not running; install Docker Desktop (macOS, Windows) or Docker Engine (Linux), https://docs.docker.com/get-started/get-docker/; only the native path (./dev up --native) works without it"
   fi
   if py_find >/dev/null; then log_ok "python: $(py_find)"; else log_warn "python 3.12 not found (needed for --native only)"; fi
   if has_cmd node; then log_ok "node: $(node --version)"; else log_warn "node not found (needed for --native only; nvm install 24)"; fi
@@ -163,7 +165,7 @@ cmd_setup() {
 cmd_phone() {
   local release=0
   [[ "${1:-}" == "--release" ]] && release=1
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   # the phone talks to the web port, which proxies the API: that is what has to answer
   curl -fsS -m 5 "http://localhost:$FRONTEND_PORT/readyz" >/dev/null 2>&1 || die "the stack is not up (or the web app not answering on :$FRONTEND_PORT): ./dev up first"
   # one device for every step: picked here once, so several phones are asked about once
@@ -240,7 +242,7 @@ cmd_up() {
     up_native
     return
   fi
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   ports_check "$BACKEND_PORT" "$FRONTEND_PORT" || die "free the ports above or set BACKEND_PORT/FRONTEND_PORT"
   local args=(up -d)
   [[ $build -eq 1 ]] && args+=(--build)
@@ -315,7 +317,7 @@ run_in() {
       frontend) node_ensure "$FRONTEND"; node_run "$FRONTEND" "$@" ;;
     esac
   else
-    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker); $DOCKER_HELP"
     compose run --rm --no-deps -e OPL_FAKE_API=1 "$svc" "$@"
   fi
 }
@@ -328,7 +330,7 @@ cmd_check_api() {
     env_load "$ROOT/.env"
     venv_run "$BACKEND" python -m app.model_api check
   else
-    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker); $DOCKER_HELP"
     compose run --rm --no-deps backend python -m app.model_api check
   fi
 }
@@ -382,7 +384,7 @@ cmd_live_check() {
     env_load "$ROOT/.env"
     OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 PYTHONPATH="$ROOT" venv_run "$BACKEND" python -m livecheck "${args[@]+"${args[@]}"}"
   else
-    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker); $DOCKER_HELP"
     compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 -e PYTHONPATH=/opt/livecheck "${pass[@]+"${pass[@]}"}" backend python -m livecheck "${args[@]+"${args[@]}"}"
   fi
 }
@@ -431,7 +433,7 @@ _e2e_judge_code() {
 
 cmd_e2e() {
   need_env_file
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   export OPL_FAKE_API=1
   # the browser checks go through the demo gate, with a code of their own unless the shell sets one
   # (untraced: a code set in the shell is a secret); the allowances are for people, not for six
@@ -470,12 +472,12 @@ cmd_fmt() {
 }
 
 cmd_docs() {
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   compose --profile docs up docs
 }
 
 cmd_docs_build() {
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   compose run --rm --no-deps -e OPL_FAKE_API=1 backend python -m app.openapi_export > "$ROOT/docs/reference/openapi.json"
   compose --profile docs run --rm docs build --strict
   log_ok "site/ is ready"
@@ -537,7 +539,7 @@ stop_backend_for_run() {
 cmd_demo() {
   local reset="--reset"
   [[ "${1:-}" == "--keep" ]] && reset=""
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   stop_backend_for_run
   # shellcheck disable=SC2086
   compose run --rm --no-deps -e OPL_FAKE_API=1 backend python -m app.demo load --set /demo/set.yaml $reset
@@ -606,7 +608,7 @@ _cmd_gate() {
       ;;
     on)
       need_env_file
-      docker_running || die "docker is not running"
+      docker_running || die "docker is not running; $DOCKER_HELP"
       code="$(env_get DEMO_ACCESS_CODE "$ROOT/.env")"
       if [[ -n "$code" ]]; then _gate_shell_check "$code"; else _gate_shell_check; fi
       local work issued line issued_code="" port
@@ -668,7 +670,7 @@ cmd_keys() {
     "${modal_cmd[@]}" run "$ROOT/deploy/modal_app.py::keys" --args "$args"
     return
   fi
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   # the running backend reads the same file; a new code works at once, a revoked one stops,
   # with the sessions it opened; the codes live in a file of their own, which a demo reset keeps
   compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys "$@"
@@ -683,7 +685,7 @@ cmd_eval() {
       *) die "usage: ./dev eval [--keep] [--live]" ;;
     esac
   done
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   if [[ "$fake" == "0" ]]; then
     need_env_file
     grep -Eq '^MODEL_API_KEY=.+' "$ROOT/.env" || die "eval --live needs MODEL_API_KEY in .env"
@@ -698,7 +700,7 @@ cmd_eval() {
 cmd_record_fixtures() {
   local reset="--reset" key_env=()
   [[ "${1:-}" == "--keep" ]] && reset=""
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   if [[ -n "${MODEL_API_KEY:-}" ]]; then
     # a key in the shell reaches the container by name, never as a value on a command line
     key_env=(-e MODEL_API_KEY)
@@ -737,7 +739,7 @@ cmd_picture_review() {
     [[ $fake -eq 1 ]] || env_load "$ROOT/.env"
     OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 venv_run "$BACKEND" python -m app.picture.review --set "$ROOT/demo/set.yaml" --out "$ROOT/picture-review" --eval-dir "$ROOT/eval/pictures" --results "$ROOT/docs/project/picture-review-results.md" "$@"
   else
-    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker); $DOCKER_HELP"
     compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 ${key_env[@]+"${key_env[@]}"} -v "$ROOT/picture-review:/picture-review" -v "$ROOT/docs/project:/docs-project" backend python -m app.picture.review --set /demo/set.yaml --out /picture-review --eval-dir /eval/pictures --results /docs-project/picture-review-results.md "$@"
   fi
 }
@@ -764,7 +766,7 @@ cmd_decide_review() {
     [[ $fake -eq 1 ]] || env_load "$ROOT/.env"
     OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 venv_run "$BACKEND" python -m app.textparams.tune --set "$ROOT/demo/set.yaml" --out "$ROOT/picture-review/decide" --eval-dir "$ROOT/eval/decide" --results "$ROOT/docs/project/picture-review-results.md" "$@"
   else
-    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker); $DOCKER_HELP"
     compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 ${key_env[@]+"${key_env[@]}"} -v "$ROOT/picture-review:/picture-review" -v "$ROOT/docs/project:/docs-project" backend python -m app.textparams.tune --set /demo/set.yaml --out /picture-review/decide --eval-dir /eval/decide --results /docs-project/picture-review-results.md "$@"
   fi
 }
@@ -772,7 +774,7 @@ cmd_decide_review() {
 cmd_demo_scrub() {
   local raw="${1:?usage: ./dev demo-scrub <raw dir>}"
   [[ -d "$raw" ]] || die "demo-scrub: $raw is not a directory"
-  docker_running || die "docker is not running"
+  docker_running || die "docker is not running; $DOCKER_HELP"
   compose run --rm --no-deps -e OPL_FAKE_API=1 -v "$(cd "$raw" && pwd):/raw:ro" backend python -m app.demo scrub /raw --out /demo/photos --notes /demo/notes
   log_ok "scrubbed copies under demo/photos, WAV notes under demo/notes"
 }

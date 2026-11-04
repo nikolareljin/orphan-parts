@@ -7,11 +7,25 @@ repository and spends nothing; with a key it reads your own photos live.
 
 ## 1. What you need
 
-- **Docker** with Compose v2: Docker Desktop on macOS and Windows, Docker Engine on Linux.
-- **bash** and **git**. On Windows, run every command in WSL 2 (Ubuntu from the Microsoft
-  Store), with Docker Desktop's WSL integration on.
+- **Docker** with Compose v2: [Docker Desktop](https://docs.docker.com/desktop/) on
+  [macOS](https://docs.docker.com/desktop/setup/install/mac-install/) and
+  [Windows](https://docs.docker.com/desktop/setup/install/windows-install/),
+  [Docker Engine](https://docs.docker.com/engine/install/) with the
+  [Compose plugin](https://docs.docker.com/compose/install/linux/) on Linux.
+- **bash** and **git**. On Windows, run every command in
+  [WSL 2](https://learn.microsoft.com/windows/wsl/install) (Ubuntu), with Docker Desktop's
+  [WSL integration](https://docs.docker.com/desktop/features/wsl/) on.
 - For the phone: an **Android 8.0 or newer** phone on the same Wi-Fi as the computer, and a USB
   cable that carries data if you install the app over USB.
+
+**Check Docker before starting** (on macOS and Windows, start Docker Desktop first; on Linux,
+your user must be in the `docker` group, or prefix the commands with `sudo`):
+
+```bash
+docker --version              # Docker is installed
+docker compose version        # Compose v2 is there
+docker run --rm hello-world   # the daemon runs and can pull images
+```
 
 Python, Node, a JDK and the Android SDK are not needed: the backend and the web app run in
 containers, and the app comes as a ready APK.

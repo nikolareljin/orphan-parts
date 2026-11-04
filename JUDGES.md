@@ -39,14 +39,27 @@ nothing spent, nothing leaves the computer.
 
 **You need:**
 
-- **Docker with Compose v2**: Docker Desktop on macOS or Windows, Docker Engine with the
-  Compose plugin on Linux (`docker compose version` answers).
+- **Docker with Compose v2**: [Docker Desktop](https://docs.docker.com/desktop/) on
+  [macOS](https://docs.docker.com/desktop/setup/install/mac-install/) or
+  [Windows](https://docs.docker.com/desktop/setup/install/windows-install/);
+  [Docker Engine](https://docs.docker.com/engine/install/) with the
+  [Compose plugin](https://docs.docker.com/compose/install/linux/) on Linux.
 - **git** and **bash**.
-- **On Windows: WSL 2** (Ubuntu from the Microsoft Store) with Docker Desktop's **WSL
-  integration** turned on for it; run every command in the Ubuntu terminal and clone into the
-  WSL home directory, not under `/mnt/c`.
+- **On Windows: [WSL 2](https://learn.microsoft.com/windows/wsl/install)** (Ubuntu) with
+  Docker Desktop's [WSL integration](https://docs.docker.com/desktop/features/wsl/) turned on
+  for it; run every command in the Ubuntu terminal and clone into the WSL home directory, not
+  under `/mnt/c`.
 - About **5 GB of free disk** for the images and the web app's packages, and ports 5173 and
   8000 free (`BACKEND_PORT` and `FRONTEND_PORT` move them).
+
+**Check Docker before starting** (on macOS and Windows, start Docker Desktop first; on Linux,
+your user must be in the `docker` group, or prefix the commands with `sudo`):
+
+```bash
+docker --version              # Docker is installed
+docker compose version        # Compose v2 is there
+docker run --rm hello-world   # the daemon runs and can pull images
+```
 
 **Start it:**
 
