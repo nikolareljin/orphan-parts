@@ -692,7 +692,12 @@ def reset(settings: Settings) -> list[str]:
     """Start over: the inventory file goes, and with it the captures' media, the items'
     photos, the checks of those photos for private details and the pictures drawn for items
     and projects (their rows were in the file; the next inventory counts from 1 again); the
-    spend ledger stays (the cap is cumulative)."""
+    spend ledger stays (the cap is cumulative), and so do the access codes with what each has
+    used, in a file of their own (KEYS_DB_FILE): opened first, so codes an older build kept in
+    the inventory move there before the inventory goes."""
+    from app.keys.store import open_keys
+
+    open_keys(settings)
     gone: list[str] = []
     db = settings.inventory_db_path
     for path in (db, Path(f"{db}-wal"), Path(f"{db}-shm"), Path(f"{db}-journal")):

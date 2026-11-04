@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -268,6 +268,15 @@ CREATE INDEX IF NOT EXISTS marketplace_events_by_item ON marketplace_events (ite
     + _SCHEMA_V13
 )
 
+# version 15: what a judge's code made (app.keys scopes) is tagged with the code's id, a sandbox
+# of its own; the owner's records, the demo set included, carry none
+_SCHEMA_V15 = """
+ALTER TABLE items ADD COLUMN owner_code INTEGER;
+ALTER TABLE captures ADD COLUMN owner_code INTEGER;
+ALTER TABLE searches ADD COLUMN owner_code INTEGER;
+ALTER TABLE projects ADD COLUMN owner_code INTEGER;
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -283,6 +292,7 @@ MIGRATIONS: dict[int, str] = {
     12: _SCHEMA_V12,
     13: _SCHEMA_V13,
     14: _SCHEMA_V14,
+    15: _SCHEMA_V15,
 }
 
 
@@ -311,21 +321,30 @@ class SchemaTooNewError(RuntimeError):
 class Store:
     """One connection per operation under one lock: one owner, one process, no surprises."""
 
-    def __init__(self, path: Path, journal_mode: str = "WAL") -> None:
+    def __init__(
+        self,
+        path: Path,
+        journal_mode: str = "WAL",
+        migrations: dict[int, str] | None = None,
+    ) -> None:
+        """``migrations`` are the steps of another file kept the same way (the access codes'),
+        numbered from 1; the inventory's by default."""
+        steps = MIGRATIONS if migrations is None else migrations
+        latest = max(steps)
         self.path = path
         self.journal_mode = journal_mode
         self._lock = threading.Lock()
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as conn:
             found = int(conn.execute("PRAGMA user_version").fetchone()[0])
-            if found > SCHEMA_VERSION:
+            if found > latest:
                 raise SchemaTooNewError(
-                    f"{path} has schema version {found}; this build knows {SCHEMA_VERSION}"
+                    f"{path} has schema version {found}; this build knows {latest}"
                 )
             # each step is one transaction with its version, so a step that fails leaves the
             # file at the version before it; a file at version N gets steps N+1 onwards
-            for version in range(found + 1, SCHEMA_VERSION + 1):
-                step = _without_added_columns(conn, MIGRATIONS[version])
+            for version in range(found + 1, latest + 1):
+                step = _without_added_columns(conn, steps[version])
                 conn.executescript(f"BEGIN;\n{step}\nPRAGMA user_version = {version};\nCOMMIT;")
 
     @contextmanager

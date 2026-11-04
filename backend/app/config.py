@@ -98,6 +98,8 @@ class Settings(BaseSettings):
     max_clip_mb: int = 60
     max_captures: int = 200
     inventory_db_file: str = "inventory.sqlite3"
+    # the issued access codes and their usage: apart from the inventory, so a reset keeps them
+    keys_db_file: str = "access_keys.sqlite3"
     # measurement captures: what a photo must give before a number is computed from it
     measure_min_sharpness: float = 150.0
     measure_min_reference_px: int = 80
@@ -173,6 +175,10 @@ class Settings(BaseSettings):
     @property
     def inventory_db_path(self) -> Path:
         return self.data_dir / self.inventory_db_file
+
+    @property
+    def keys_db_path(self) -> Path:
+        return self.data_dir / self.keys_db_file
 
 
 class SettingsError(ValueError):

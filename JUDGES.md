@@ -30,6 +30,13 @@ same read-only), more on
 - **The Android app:** the APK from the
   [latest release](https://github.com/nikolareljin/orphan-parts/releases/latest).
 - **The access code** comes with the submission, separately. It is never in this repository.
+  It is a judge's code of its own, not the owner's master code: it signs you in to everything
+  the demo shows, read-only on the demo set (Delete, Save details and the drawing are off on
+  those items, and the server refuses such writes); what you add yourself (a label read from
+  a photo of your own, a search, a project) is yours to change and delete, and no one else sees
+  it. Live model calls are capped per code, per day and in dollars: the foot of the page says
+  *Judge access: N live calls left today, $X left*. A code kept on the recorded answers says so
+  there instead.
 - **The documentation:** <https://nikolareljin.github.io/orphan-parts/>.
 
 ## Fast path
@@ -81,7 +88,8 @@ The line at the foot of the page says *Demo: recorded answers only*.
 4. **Sign in with the code** in the header, type the code (the one that came with the
    submission on the hosted demo; on your own computer, the master code `./dev gate on`
    printed), **Enter**. The header now shows
-   **Sign out**; the foot of the page counts the live calls used today.
+   **Sign out**; the foot of the page counts the live calls used today (with a judge's code,
+   what is left of its own allowance).
 5. **Read a label**: choose up to four photos of a label of your own (JPEG, PNG or WebP),
    **Read the label** (live, on the models, when the server has a key; a local stack without
    one answers from recordings), then **Save privately**. The page moves to

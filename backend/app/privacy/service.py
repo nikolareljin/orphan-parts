@@ -29,6 +29,7 @@ from app.model_api import (
     text_part,
     user_message,
 )
+from app.ops.door import sandbox
 from app.privacy.render import gridded, redacted
 from app.privacy.schema import Area, PhotoCheck, PhotoPrivacy, SensitiveReading
 from app.privacy.text import KIND_LABELS, mask_text
@@ -154,11 +155,19 @@ class Privacy:
         self._sample_digests: dict[str, str] = {}
 
     def _path(self, digest: str) -> Path:
-        return self.root / f"{digest}.json"
+        """Where a check is written. A judge's code writes its own (under ``judge-<id>``): a
+        check is kept by the photo's bytes, and a judge's photo may be the very bytes of the
+        owner's (a demo-set sample uploaded again), whose check and areas stay the owner's."""
+        judge = sandbox()
+        return (self.root / f"judge-{judge}" if judge else self.root) / f"{digest}.json"
 
     def kept(self, data: bytes) -> PhotoCheck | None:
-        """The check kept for these very bytes, or None."""
-        path = self._path(digest_of(data))
+        """The check kept for these very bytes, or None: a judge's code reads its own first,
+        then the owner's."""
+        digest = digest_of(data)
+        path = self._path(digest)
+        if not path.is_file():
+            path = self.root / f"{digest}.json"
         if not path.is_file():
             return None
         try:
@@ -168,11 +177,11 @@ class Privacy:
             return None
 
     def _save(self, check: PhotoCheck) -> PhotoCheck:
-        self.root.mkdir(parents=True, exist_ok=True)
         path = self._path(check.digest)
+        path.parent.mkdir(parents=True, exist_ok=True)
         # a part of its own: an owner's choice (on a worker thread) and a check (on the loop)
         # may save the same photo's check at once
-        fd, part = tempfile.mkstemp(dir=self.root, prefix=f"{check.digest}.", suffix=".part")
+        fd, part = tempfile.mkstemp(dir=path.parent, prefix=f"{check.digest}.", suffix=".part")
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as out:
                 out.write(check.model_dump_json(indent=2) + "\n")
@@ -330,7 +339,7 @@ class Privacy:
             except BadImageError:
                 return []
             digest = self._sample_digests[sample_id] = digest_of(stored)
-        path = self._path(digest)
+        path = self.root / f"{digest}.json"  # the loader's, the owner's: whoever asks
         if not path.is_file():
             return []
         try:

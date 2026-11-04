@@ -1,4 +1,4 @@
-import type { Readiness } from './api'
+import type { ItemSummary, JudgeAccess, Readiness } from './api'
 
 export const ACCESS_REQUIRED = 'opl-access-required'
 
@@ -25,3 +25,22 @@ export const DEMO_REFUSED = 'demo: the code unlocks saving, drafts, prices, proj
 export function accessLost(status: number, detail = ''): boolean {
   return status === 401 || (status === 403 && detail.startsWith('demo:'))
 }
+
+// The footer's line for a judge's code: what it may still spend, or that it is on the recordings.
+export function judgeText(judge: JudgeAccess | null | undefined): string {
+  if (!judge) return ''
+  if (judge.recorded) return 'Judge access: recorded answers only'
+  const parts: string[] = []
+  if (judge.calls_left !== null) parts.push(`${judge.calls_left} live call${judge.calls_left === 1 ? '' : 's'} left today`)
+  if (judge.usd_left !== null) parts.push(`$${judge.usd_left.toFixed(2)} left`)
+  return parts.length ? `Judge access: ${parts.join(', ')}` : 'Judge access'
+}
+
+// Whether a judge's code may change this item: only what it added itself. The owner may change
+// anything (no judge), and the server refuses the rest whatever the page shows.
+export function judgeMayChange(judge: JudgeAccess | null | undefined, item: Pick<ItemSummary, 'owner_code'>): boolean {
+  return !judge || item.owner_code === judge.code_id
+}
+
+// Why a control is off for a judge's code on an item it did not add.
+export const JUDGE_LOCKED = 'Judge access: the demo set is read-only; items you add are yours to edit'

@@ -24,11 +24,18 @@ startup and refuses to open a file written by a newer version.
 | `uses` | v11 | what an item is good for, one row per asking: `version` per item, the `item_version` it was written from, `content` (the templates the rules found it fills, the model's proposals, the model and the cost), `created_at` |
 | `scenarios` | v13 | what to do with an item, one row per asking: `version` per item, the `item_version` it was written from, `content` (the keep and fix, reuse and sell cards, the recommendation and its reason, whether it was written for a profile, the model and the cost), `created_at` |
 | `items.public`, `captures.public` | v10 | `1` when the owner shows the row to the demo visitor (the demo loader marks what it loads); the demo visitor's reads are limited to these rows |
-| `access_keys` | v9 | access codes issued as records: the `hash` (SHA-256), a `label`, when issued, `expires_at`, `revoked_at`; the code itself is shown once and never kept |
+| `access_keys` | v9 | (moved, see below) access codes issued as records: the `hash` (SHA-256), a `label`, when issued, `expires_at`, `revoked_at`; the code itself is shown once and never kept |
 | `access_keys.parent_id`, `access_keys.master` | v12 | for a phone's own code, what paired it: the issued record's id, or a short digest of the master code; the code stands only while that record is unrevoked and unexpired, or while the master code is the same |
+| `items.owner_code`, `captures.owner_code`, `searches.owner_code`, `projects.owner_code` | v15 | the judge's access code (its record id in the codes' file) that made the row, null for the owner's; a judge's code changes only its own rows and never sees another code's ([Judge codes](../operations/demo-access.md#judge-codes)) |
 | `sell_details` | v14 | the listing details per item, one row per save: `version` and `content` (condition in the owner's words, what is included, faults, what was not tested, the data line, handover, area, asking price, and the private lowest price and reason, never sent to a model or a visitor) |
 | `marketplace_events` | v14 | what happened after posting: `kind` (`listed`, `sold`, `given`), `on_date`, `price`, the listing `url` when given |
 | `captures` | v8 | what the phone sent in one go: `status` (received, processed, failed), `content` (the line, the name, the counts, the item it became, the error), times; the media under `DATA_DIR/captures/<id>/` |
+
+The access codes live in a file of their own, `KEYS_DB_FILE` (`access_keys.sqlite3`) under
+`DATA_DIR`, so a demo reset keeps them: `access_keys` as above, with `scope` (`owner` or
+`judge`), `recorded`, `calls_per_day` and `max_usd`, and `key_usage` (`key_id`, the UTC `day`,
+the live `calls` and the `usd` they cost). A codes' file made by this build takes over the rows
+an older build kept in the inventory's `access_keys` table, once.
 
 `content` columns hold JSON validated by the Pydantic models of the owning package; the
 shape of each is the one the [HTTP API](http-api.md) returns.

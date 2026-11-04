@@ -20,6 +20,8 @@ from app.inventory.schema import (
 )
 from app.inventory.store import Store
 from app.measure.schema import Measurement, MeasureResult
+from app.ops.door import live_request, owned_sql, sandbox
+from app.privacy.text import mask_text
 
 OWNER = "owner"
 EDITABLE = (
@@ -48,8 +50,43 @@ class VersionConflictError(ValueError):
     pass
 
 
+# The line a judge's code is refused with when it would change what it did not make. Not a
+# "demo:" line: the browser keeps the session.
+JUDGE_READ_ONLY = (
+    "judge access: the demo set is read-only; what you add yourself is yours to change"
+)
+
+
+class ReadOnlyError(Exception):
+    """A judge's code writing to a record it did not make (the demo set, the owner's)."""
+
+    def __init__(self, message: str = JUDGE_READ_ONLY) -> None:
+        super().__init__(message)
+
+
 class OutcomeConflictError(ValueError):
     """A Marketplace outcome that does not follow the last one (sold twice, listed after sold)."""
+
+
+def _seen(row: sqlite3.Row, *, public: str | None = None) -> bool:
+    """Whether the record is there for who is asking: another judge's code's never is; for a
+    judge, an item or a capture of the owner's only when public; for the demo visitor, never a
+    judge's."""
+    owner = row["owner_code"]
+    judge = sandbox()
+    if judge:
+        if owner is None:
+            return public is None or bool(row[public])
+        return bool(owner == judge)
+    return owner is None or live_request.get()
+
+
+def _owned(row: sqlite3.Row) -> sqlite3.Row:
+    """The record, for a change: refused for a judge's code on what it did not make."""
+    judge = sandbox()
+    if judge and row["owner_code"] != judge:
+        raise ReadOnlyError()
+    return row
 
 
 def now() -> str:
@@ -109,7 +146,7 @@ class Inventory:
         at = now()
         with self.store.connect() as conn:
             if spec.parent_id is not None:
-                self._row(conn, spec.parent_id)
+                self._mine(conn, spec.parent_id)
             item_id = self._insert_item(conn, spec, name=name, item_type=item_type, at=at)
             count = 0
             if ex is not None:
@@ -143,7 +180,7 @@ class Inventory:
         """A part separated from the whole: its own record, and the parent says it is gone."""
         at = now()
         with self.store.connect() as conn:
-            parent = self._row(conn, item_id)
+            parent = self._mine(conn, item_id)
             child_spec = ItemCreate(
                 name=spec.name,
                 item_type=spec.item_type or spec.name,
@@ -169,7 +206,9 @@ class Inventory:
     # reading
 
     def list_items(self, *, public_only: bool = False) -> list[ItemSummary]:
-        """Every item that is not deleted; for the demo visitor, only the public ones."""
+        """Every item that is not deleted; for the demo visitor, only the public ones; for a
+        judge's code, the public ones and its own (never another code's)."""
+        shown, args = self._shown_sql("i.", public_only)
         with self.store.connect() as conn:
             rows = conn.execute(
                 "SELECT i.*, (SELECT COUNT(DISTINCT a.field) FROM assertions a"
@@ -184,9 +223,9 @@ class Inventory:
                 " EXISTS (SELECT 1 FROM price_guidance g WHERE g.item_id = i.id) AS has_price,"
                 " (SELECT e.change FROM events e WHERE e.item_id = i.id AND e.change LIKE ?"
                 " ORDER BY e.id DESC LIMIT 1) AS last_decided"
-                " FROM items i WHERE i.deleted_at IS NULL AND (? = 0 OR i.public = 1)"
+                f" FROM items i WHERE i.deleted_at IS NULL AND {shown}"
                 " ORDER BY i.id DESC",
-                (DECIDED + "%", int(public_only)),
+                (DECIDED + "%", *args),
             ).fetchall()
             return [self._summary(r) for r in rows]
 
@@ -194,14 +233,20 @@ class Inventory:
         """The item; a private one is not there at all for the demo visitor."""
         with self.store.connect() as conn:
             item = self._item(conn, item_id)
-            if public_only and not item.public:
+            # a judge's own item is read whole, public or not
+            mine = sandbox() != 0 and item.owner_code == sandbox()
+            if public_only and not item.public and not mine:
                 raise NotFoundError(f"no item {item_id}")
-            return item
+            # the owner's item, for a judge's code, is what the demo visitor reads of it
+            # wherever it goes: an answer, a prompt, a rule
+            return item.as_shown() if sandbox() and not mine else item
 
     def set_public(self, item_id: int, public: bool) -> Item:
         """Shown to the demo visitor, or not: the owner's choice, item by item."""
+        if sandbox():
+            raise ReadOnlyError("judge access: what a judge adds stays out of the public demo")
         with self.store.connect() as conn:
-            self._row(conn, item_id)
+            self._mine(conn, item_id)
             conn.execute("UPDATE items SET public = ? WHERE id = ?", (int(public), item_id))
             return self._item(conn, item_id)
 
@@ -225,7 +270,7 @@ class Inventory:
         }
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             if patch.version is not None and patch.version != int(row["version"]):
                 raise VersionConflictError(
                     f"item {item_id} is at version {row['version']}, not {patch.version}"
@@ -243,7 +288,7 @@ class Inventory:
         """The owner's value for a field, accepted as stated, beside whatever was observed."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             conn.execute(
                 "INSERT INTO assertions (item_id, field, value, unit, provenance, confidence,"
                 " source, raw, review, at) VALUES (?,?,?,?,?,?,?,?,?,?)",
@@ -272,7 +317,7 @@ class Inventory:
         """A value read off a photo, proposed for the owner to accept like any reading."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             conn.execute(
                 "INSERT INTO assertions (item_id, field, value, unit, provenance, confidence,"
                 " source, raw, review, at) VALUES (?,?,?,?,?,?,?,?,?,?)",
@@ -287,7 +332,7 @@ class Inventory:
         line in the history, so a page showing the item knows to read it again."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             version = self._bump(conn, row, at)
             self._event(conn, item_id, change, version, at)
             return self._item(conn, item_id)
@@ -295,7 +340,7 @@ class Inventory:
     def review(self, item_id: int, assertion_id: int, review: Review) -> Item:
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             found = conn.execute(
                 "SELECT field, review FROM assertions WHERE id = ? AND item_id = ?",
                 (assertion_id, item_id),
@@ -314,7 +359,7 @@ class Inventory:
         item; a refused one is kept too, so the unusable-capture rate is on record."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             assertion_id: int | None = None
             if (
                 result.accepted
@@ -387,7 +432,7 @@ class Inventory:
     def add_draft(self, item_id: int, mode: str, content: str, checklist: str) -> sqlite3.Row:
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             last = conn.execute(
                 "SELECT MAX(version) FROM drafts WHERE item_id = ? AND mode = ?", (item_id, mode)
             ).fetchone()[0]
@@ -416,7 +461,7 @@ class Inventory:
 
     def set_checklist(self, draft_id: int, checklist: str) -> sqlite3.Row:
         with self.store.connect() as conn:
-            self._draft(conn, draft_id)
+            self._mine(conn, int(self._draft(conn, draft_id)["item_id"]))
             conn.execute("UPDATE drafts SET checklist = ? WHERE id = ?", (checklist, draft_id))
             return self._draft(conn, draft_id)
 
@@ -440,7 +485,7 @@ class Inventory:
     def add_guidance(self, item_id: int, content: str) -> sqlite3.Row:
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             last = conn.execute(
                 "SELECT MAX(version) FROM price_guidance WHERE item_id = ?", (item_id,)
             ).fetchone()[0]
@@ -476,7 +521,7 @@ class Inventory:
         """A sale the owner knows of. An event on the item; the item itself is unchanged."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             cur = conn.execute(
                 "INSERT INTO price_reports (item_id, price, currency, sold_on, note, at)"
                 " VALUES (?,?,?,?,?,?)",
@@ -507,7 +552,7 @@ class Inventory:
     def add_sell_details(self, item_id: int, content: str) -> sqlite3.Row:
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             last = conn.execute(
                 "SELECT MAX(version) FROM sell_details WHERE item_id = ?", (item_id,)
             ).fetchone()[0]
@@ -558,7 +603,7 @@ class Inventory:
         ``report`` the price is also a reported sale, and with ``gone`` the item is marked gone."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             last = conn.execute(
                 "SELECT kind FROM marketplace_events WHERE item_id = ? ORDER BY id DESC LIMIT 1",
                 (item_id,),
@@ -617,7 +662,7 @@ class Inventory:
         at = now()
         select = self._WRITTEN_SELECT.format(table=table)
         with self.store.connect() as conn:
-            self._row(conn, item_id)
+            self._mine(conn, item_id)
             last = conn.execute(
                 f"SELECT MAX(version) FROM {table} WHERE item_id = ?", (item_id,)
             ).fetchone()[0]
@@ -681,7 +726,7 @@ class Inventory:
         refused and nothing is written."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             if version is not None and version != int(row["version"]):
                 raise VersionConflictError(
                     f"item {item_id} is at version {row['version']}, not {version}"
@@ -734,14 +779,28 @@ class Inventory:
                 self._event(conn, need_item_id, f"search opened: {title}", int(row["version"]), at)
             cur = conn.execute(
                 "INSERT INTO searches (need_item_id, profile, title, content, status, handoff_url,"
-                " created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
-                (need_item_id, profile, title, content, "open", handoff_url, at, at),
+                " created_at, updated_at, owner_code) VALUES (?,?,?,?,?,?,?,?,?)",
+                (
+                    need_item_id,
+                    profile,
+                    title,
+                    content,
+                    "open",
+                    handoff_url,
+                    at,
+                    at,
+                    sandbox() or None,
+                ),
             )
             return self._search(conn, int(cur.lastrowid or 0))
 
     def searches(self) -> list[sqlite3.Row]:
+        """Every search; another code's never for a judge, a judge's never for the visitor."""
+        shown, args = owned_sql("s.owner_code")
         with self.store.connect() as conn:
-            return conn.execute(self._SEARCH_SELECT + " ORDER BY s.id DESC").fetchall()
+            return conn.execute(
+                self._SEARCH_SELECT + f" WHERE {shown} ORDER BY s.id DESC", args
+            ).fetchall()
 
     def search(self, search_id: int) -> sqlite3.Row:
         with self.store.connect() as conn:
@@ -749,7 +808,7 @@ class Inventory:
 
     def update_search(self, search_id: int, status: str, content: str) -> sqlite3.Row:
         with self.store.connect() as conn:
-            self._search(conn, search_id)
+            _owned(self._search(conn, search_id))
             conn.execute(
                 "UPDATE searches SET status = ?, content = ?, updated_at = ? WHERE id = ?",
                 (status, content, now(), search_id),
@@ -760,7 +819,7 @@ class Inventory:
         row: sqlite3.Row | None = conn.execute(
             self._SEARCH_SELECT + " WHERE s.id = ?", (search_id,)
         ).fetchone()
-        if row is None:
+        if row is None or not _seen(row):
             raise NotFoundError(f"no search {search_id}")
         return row
 
@@ -769,7 +828,7 @@ class Inventory:
     ) -> sqlite3.Row:
         at = now()
         with self.store.connect() as conn:
-            self._search(conn, search_id)
+            _owned(self._search(conn, search_id))
             cur = conn.execute(
                 "INSERT INTO candidates (search_id, source_kind, observed_on, state, content,"
                 " created_at, assessed_at) VALUES (?,?,?,?,?,?,?)",
@@ -791,7 +850,7 @@ class Inventory:
 
     def update_candidate(self, candidate_id: int, state: str, content: str) -> sqlite3.Row:
         with self.store.connect() as conn:
-            self._candidate(conn, candidate_id)
+            _owned(self._search(conn, int(self._candidate(conn, candidate_id)["search_id"])))
             conn.execute(
                 "UPDATE candidates SET state = ?, content = ?, assessed_at = ? WHERE id = ?",
                 (state, content, now(), candidate_id),
@@ -804,6 +863,7 @@ class Inventory:
         ).fetchone()
         if row is None:
             raise NotFoundError(f"no candidate {candidate_id}")
+        self._search(conn, int(row["search_id"]))  # another code's search: not there
         return row
 
     # preferences, projects and allocations
@@ -833,8 +893,8 @@ class Inventory:
         with self.store.connect() as conn:
             cur = conn.execute(
                 "INSERT INTO projects (template, title, status, version, content, created_at,"
-                " updated_at) VALUES (?,?,?,?,?,?,?)",
-                (template, title, "proposed", 1, content, at, at),
+                " updated_at, owner_code) VALUES (?,?,?,?,?,?,?,?)",
+                (template, title, "proposed", 1, content, at, at, sandbox() or None),
             )
             project_id = int(cur.lastrowid or 0)
             for item_id, requirement, why in allocations:
@@ -848,8 +908,12 @@ class Inventory:
             return self._project(conn, project_id)
 
     def projects(self) -> list[sqlite3.Row]:
+        """Every project; another code's never for a judge, a judge's never for the visitor."""
+        shown, args = owned_sql("owner_code")
         with self.store.connect() as conn:
-            return conn.execute("SELECT * FROM projects ORDER BY id DESC").fetchall()
+            return conn.execute(
+                f"SELECT * FROM projects WHERE {shown} ORDER BY id DESC", args
+            ).fetchall()
 
     def project(self, project_id: int) -> sqlite3.Row:
         with self.store.connect() as conn:
@@ -857,7 +921,7 @@ class Inventory:
 
     def update_project(self, project_id: int, status: str, content: str) -> sqlite3.Row:
         with self.store.connect() as conn:
-            row = self._project(conn, project_id)
+            row = _owned(self._project(conn, project_id))
             conn.execute(
                 "UPDATE projects SET status = ?, content = ?, version = ?, updated_at = ?"
                 " WHERE id = ?",
@@ -876,6 +940,7 @@ class Inventory:
 
     def set_committed(self, project_id: int, committed: bool) -> None:
         with self.store.connect() as conn:
+            _owned(self._project(conn, project_id))
             conn.execute(
                 "UPDATE allocations SET committed = ? WHERE project_id = ?",
                 (1 if committed else 0, project_id),
@@ -883,15 +948,18 @@ class Inventory:
 
     def committed_elsewhere(self, item_id: int, project_id: int) -> list[sqlite3.Row]:
         """The other projects an item is committed to: selected, being built or done; a deleted
-        item holds nothing."""
+        item holds nothing. Only the asker's projects count: a judge's code reserves nothing
+        of the owner's, and the owner's projects are not held by a judge's."""
+        judge = sandbox()
         with self.store.connect() as conn:
             return conn.execute(
                 "SELECT a.project_id, p.title FROM allocations a"
                 " JOIN projects p ON p.id = a.project_id"
                 " JOIN items i ON i.id = a.item_id AND i.deleted_at IS NULL"
                 " WHERE a.item_id = ? AND a.committed = 1 AND a.project_id != ?"
-                " AND p.status IN ('selected', 'building', 'done')",
-                (item_id, project_id),
+                " AND p.status IN ('selected', 'building', 'done')"
+                " AND p.owner_code IS ?",
+                (item_id, project_id, judge or None),
             ).fetchall()
 
     def add_allocation(
@@ -899,7 +967,7 @@ class Inventory:
     ) -> None:
         at = now()
         with self.store.connect() as conn:
-            project = self._project(conn, project_id)
+            project = _owned(self._project(conn, project_id))
             row = self._row(conn, item_id)
             conn.execute(
                 "INSERT INTO allocations (project_id, item_id, requirement, why, committed, at)"
@@ -910,6 +978,7 @@ class Inventory:
 
     def release_allocation(self, project_id: int, item_id: int) -> None:
         with self.store.connect() as conn:
+            _owned(self._project(conn, project_id))
             conn.execute(
                 "DELETE FROM allocations WHERE project_id = ? AND item_id = ?",
                 (project_id, item_id),
@@ -917,7 +986,7 @@ class Inventory:
 
     def add_pack(self, project_id: int, digest: str, markdown: str) -> sqlite3.Row:
         with self.store.connect() as conn:
-            self._project(conn, project_id)
+            _owned(self._project(conn, project_id))
             last = conn.execute(
                 "SELECT COALESCE(MAX(version), 0) FROM packs WHERE project_id = ?", (project_id,)
             ).fetchone()[0]
@@ -950,7 +1019,7 @@ class Inventory:
         row: sqlite3.Row | None = conn.execute(
             "SELECT * FROM projects WHERE id = ?", (project_id,)
         ).fetchone()
-        if row is None:
+        if row is None or not _seen(row):
             raise NotFoundError(f"no project {project_id}")
         return row
 
@@ -959,35 +1028,45 @@ class Inventory:
     def add_capture(self, content: str) -> sqlite3.Row:
         with self.store.connect() as conn:
             cur = conn.execute(
-                "INSERT INTO captures (status, content, created_at) VALUES (?,?,?)",
-                ("received", content, now()),
+                "INSERT INTO captures (status, content, created_at, owner_code) VALUES (?,?,?,?)",
+                ("received", content, now(), sandbox() or None),
             )
             return self._capture(conn, int(cur.lastrowid or 0))
 
+    def capture_count(self) -> int:
+        """Every capture kept, whoever made it: what the inbox's cap counts."""
+        with self.store.connect() as conn:
+            return int(
+                conn.execute("SELECT COUNT(*) FROM captures WHERE deleted_at IS NULL").fetchone()[0]
+            )
+
     def captures(self, *, public_only: bool = False) -> list[sqlite3.Row]:
+        shown, args = self._shown_sql("", public_only)
         with self.store.connect() as conn:
             return conn.execute(
-                "SELECT * FROM captures WHERE deleted_at IS NULL AND (? = 0 OR public = 1)"
-                " ORDER BY id DESC",
-                (int(public_only),),
+                f"SELECT * FROM captures WHERE deleted_at IS NULL AND {shown} ORDER BY id DESC",
+                args,
             ).fetchall()
 
     def capture(self, capture_id: int, *, public_only: bool = False) -> sqlite3.Row:
         with self.store.connect() as conn:
             row = self._capture(conn, capture_id)
-            if public_only and not row["public"]:
+            mine = sandbox() != 0 and row["owner_code"] == sandbox()
+            if public_only and not row["public"] and not mine:
                 raise NotFoundError(f"no capture {capture_id}")
             return row
 
     def set_capture_public(self, capture_id: int, public: bool) -> sqlite3.Row:
+        if sandbox():
+            raise ReadOnlyError("judge access: what a judge adds stays out of the public demo")
         with self.store.connect() as conn:
-            self._capture(conn, capture_id)
+            _owned(self._capture(conn, capture_id))
             conn.execute("UPDATE captures SET public = ? WHERE id = ?", (int(public), capture_id))
             return self._capture(conn, capture_id)
 
     def update_capture(self, capture_id: int, status: str, content: str) -> sqlite3.Row:
         with self.store.connect() as conn:
-            self._capture(conn, capture_id)
+            _owned(self._capture(conn, capture_id))
             conn.execute(
                 "UPDATE captures SET status = ?, content = ?, processed_at = ? WHERE id = ?",
                 (status, content, now() if status == "processed" else None, capture_id),
@@ -996,14 +1075,14 @@ class Inventory:
 
     def delete_capture(self, capture_id: int) -> None:
         with self.store.connect() as conn:
-            self._capture(conn, capture_id)
+            _owned(self._capture(conn, capture_id))
             conn.execute("UPDATE captures SET deleted_at = ? WHERE id = ?", (now(), capture_id))
 
     def _capture(self, conn: sqlite3.Connection, capture_id: int) -> sqlite3.Row:
         row: sqlite3.Row | None = conn.execute(
             "SELECT * FROM captures WHERE id = ? AND deleted_at IS NULL", (capture_id,)
         ).fetchone()
-        if row is None:
+        if row is None or not _seen(row, public="public"):
             raise NotFoundError(f"no capture {capture_id}")
         return row
 
@@ -1011,7 +1090,7 @@ class Inventory:
         """Hidden, not erased: the record and its events stay for the audit trail."""
         at = now()
         with self.store.connect() as conn:
-            row = self._row(conn, item_id)
+            row = self._mine(conn, item_id)
             version = int(row["version"]) + 1
             conn.execute(
                 "UPDATE items SET deleted_at = ?, version = ?, updated_at = ? WHERE id = ?",
@@ -1027,7 +1106,7 @@ class Inventory:
         cur = conn.execute(
             "INSERT INTO items (name, item_type, profile, condition, faults, tests_done,"
             " accessories, location, notes, intent, availability, parent_id, version,"
-            " created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1,?,?)",
+            " created_at, updated_at, owner_code) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?)",
             (
                 name,
                 item_type,
@@ -1043,6 +1122,7 @@ class Inventory:
                 spec.parent_id,
                 at,
                 at,
+                sandbox() or None,
             ),
         )
         return int(cur.lastrowid or 0)
@@ -1055,7 +1135,54 @@ class Inventory:
         ).fetchone()
         if row is None or (row["deleted_at"] is not None and not include_deleted):
             raise NotFoundError(f"no item {item_id}")
+        if not _seen(row, public="public"):
+            raise NotFoundError(f"no item {item_id}")
         return row
+
+    def _mine(self, conn: sqlite3.Connection, item_id: int) -> sqlite3.Row:
+        """The item, for a change: a judge's code changes only what it made."""
+        return _owned(self._row(conn, item_id))
+
+    @staticmethod
+    def _shown_sql(prefix: str, public_only: bool) -> tuple[str, tuple[int, ...]]:
+        """Which items (or captures) a list holds: for a judge, the public ones of the owner's
+        and its own; otherwise the public ones with ``public_only``, never a judge's for the
+        demo visitor."""
+        shown, args = owned_sql(f"{prefix}owner_code", f"{prefix}public")
+        if sandbox():
+            return shown, args
+        return f"(? = 0 OR {prefix}public = 1) AND {shown}", (int(public_only), *args)
+
+    def writable(self, item_id: int) -> bool:
+        """Whether this request may change the item: always for the owner, for a judge's code
+        only what it made."""
+        judge = sandbox()
+        if not judge:
+            return True
+        with self.store.connect() as conn:
+            row = conn.execute("SELECT owner_code FROM items WHERE id = ?", (item_id,)).fetchone()
+        return row is not None and row["owner_code"] == judge
+
+    _OWNED_BY = {
+        "item": "SELECT owner_code FROM items WHERE id = ?",
+        "capture": "SELECT owner_code FROM captures WHERE id = ?",
+        "search": "SELECT owner_code FROM searches WHERE id = ?",
+        "project": "SELECT owner_code FROM projects WHERE id = ?",
+        "draft": "SELECT i.owner_code FROM drafts d JOIN items i ON i.id = d.item_id"
+        " WHERE d.id = ?",
+        "candidate": "SELECT s.owner_code FROM candidates c JOIN searches s ON s.id = c.search_id"
+        " WHERE c.id = ?",
+        "pack": "SELECT p.owner_code FROM packs k JOIN projects p ON p.id = k.project_id"
+        " WHERE k.id = ?",
+    }
+
+    def owner_of(self, kind: str, record_id: int) -> int | None:
+        """The judge's code that made the record (an item, a capture, a search, a project, or
+        what hangs off one: a draft, a candidate, a pack), or None for the owner's or one that
+        is not there. What the gate asks before a judge's request is let through."""
+        with self.store.connect() as conn:
+            row = conn.execute(self._OWNED_BY[kind], (record_id,)).fetchone()
+        return int(row[0]) if row is not None and row[0] is not None else None
 
     def _bump(self, conn: sqlite3.Connection, row: sqlite3.Row, at: str) -> int:
         version = int(row["version"]) + 1
@@ -1067,9 +1194,16 @@ class Inventory:
     def _event(
         self, conn: sqlite3.Connection, item_id: int, change: str, version: int, at: str
     ) -> None:
+        judge = sandbox()
+        if judge:
+            # a judge's search or project naming an item of the demo set leaves no line in
+            # that item's history: the history is the owner's
+            row = conn.execute("SELECT owner_code FROM items WHERE id = ?", (item_id,)).fetchone()
+            if row is None or row["owner_code"] != judge:
+                return
         conn.execute(
             "INSERT INTO events (item_id, at, actor, change, version) VALUES (?,?,?,?,?)",
-            (item_id, at, OWNER, change, version),
+            (item_id, at, f"judge:{judge}" if judge else OWNER, change, version),
         )
 
     def _measurement(
@@ -1091,12 +1225,14 @@ class Inventory:
         )
 
     def _summary(self, row: sqlite3.Row) -> ItemSummary:
+        # a judge's code reads the owner's names as the demo visitor does, in a prompt too
+        shown = bool(sandbox()) and row["owner_code"] != sandbox()
         return ItemSummary(
             id=row["id"],
-            name=row["name"],
+            name=mask_text(row["name"]) if shown else row["name"],
             item_type=row["item_type"],
             profile=row["profile"],
-            condition=row["condition"],
+            condition=mask_text(row["condition"]) if shown else row["condition"],
             intent=row["intent"],
             availability=row["availability"],
             parent_id=row["parent_id"],
@@ -1104,6 +1240,7 @@ class Inventory:
             version=row["version"],
             updated_at=row["updated_at"],
             public=bool(row["public"]),
+            owner_code=row["owner_code"],
             saved=[kind for kind in SAVED_KINDS if row[f"has_{kind}"]],
             # the choice alone, never the note said with it
             decided=str(row["last_decided"] or "")[len(DECIDED) :].partition(":")[0],
@@ -1150,5 +1287,6 @@ class Inventory:
             assertions=assertions,
             components=components,
             public=bool(row["public"]),
+            owner_code=row["owner_code"],
             needs_parent=needs_parent(fields, row["parent_id"], profile_of(row["profile"])),
         )

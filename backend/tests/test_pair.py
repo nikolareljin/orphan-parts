@@ -6,8 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.inventory.store import Store
 from app.keys import AccessKeys
+from app.keys.store import keys_store
 from app.main import create_app
 from app.ops.gate import Gate
 from app.pairing import BadOriginError, Pairing, pairing, svg, terminal
@@ -438,7 +438,7 @@ def test_pairing_settings_have_bounds(tmp_path: Path) -> None:
 
 def test_a_phone_code_never_outlives_the_code_that_paired_it(tmp_path: Path) -> None:
     settings = gated(tmp_path, pair_code_days=30)
-    keys = AccessKeys(Store(settings.inventory_db_path))
+    keys = AccessKeys(keys_store(settings.keys_db_path))
     with served(settings) as c:
         judges, record = keys.issue("judges", 3)
         session = c.post("/api/access", json={"code": judges}).json()["token"]
@@ -458,7 +458,7 @@ def test_a_phone_code_never_outlives_the_code_that_paired_it(tmp_path: Path) -> 
         c.cookies.clear()
         token = pair_token(c, session)
         kid = token.split(".")[3]
-        with Store(settings.inventory_db_path).connect() as conn:
+        with keys_store(settings.keys_db_path).connect() as conn:
             conn.execute(
                 "UPDATE access_keys SET expires_at = ? WHERE id = ?",
                 ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(), int(kid)),

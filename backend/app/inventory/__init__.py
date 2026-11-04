@@ -16,14 +16,17 @@ from app.inventory.schema import (
     ReviewChange,
 )
 from app.inventory.service import (
+    JUDGE_READ_ONLY,
     Inventory,
     NotFoundError,
     OutcomeConflictError,
+    ReadOnlyError,
     VersionConflictError,
     current_fields,
 )
 
 __all__ = [
+    "JUDGE_READ_ONLY",
     "Assertion",
     "Availability",
     "ComponentCreate",
@@ -38,6 +41,7 @@ __all__ = [
     "NotFoundError",
     "OutcomeConflictError",
     "Provenance",
+    "ReadOnlyError",
     "Review",
     "ReviewChange",
     "VersionConflictError",

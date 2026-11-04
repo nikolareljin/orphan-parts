@@ -20,7 +20,7 @@ from app.inventory.parent import PARENT_FIELDS
 from app.inventory.schema import Item, ItemPatch
 from app.inventory.service import RESERVED_BY_PROJECT
 from app.model_api import ModelApiClient, text_part, user_message
-from app.ops.door import for_visitor
+from app.ops.door import for_visitor, sandbox
 from app.projects import pack as packs
 from app.projects.schema import (
     Allocation,
@@ -250,11 +250,17 @@ class Planner:
     # --- preferences --------------------------------------------------------
 
     def preferences(self) -> Preferences:
+        """The owner's answers. A judge's code gets them as the profile shows them to the demo
+        visitor: the skills, interests and tools, never the budget or the radius, so neither
+        reaches a proposal, a pack, a search ceiling or a card made for the judge."""
         row = self.inventory.preferences()
         if row is None:
             return Preferences()
         content = json.loads(row["content"])
         content.pop(BY_DEMO, None)
+        if sandbox():
+            content.pop("budget", None)
+            content.pop("radius_km", None)
         return Preferences(**content)
 
     def has_preferences(self) -> bool:
@@ -279,6 +285,10 @@ class Planner:
         out: list[Item] = []
         for summary in self.inventory.list_items(public_only=public_only):
             if summary.availability == "gone" or summary.intent in ("sell", "give"):
+                continue
+            # a judge's code builds from the demo set and its own; the owner from the owner's
+            # own, never from what a judge added
+            if summary.owner_code is not None and summary.owner_code != sandbox():
                 continue
             out.append(self.inventory.get(summary.id))
         return out
@@ -658,10 +668,15 @@ class Planner:
         """Every project; for the demo visitor, only those built on public items alone."""
         rows = self.inventory.projects()
         projects = [self.project_of(r) for r in rows]
+        # what the budget counts is the asker's own selection: the owner's, never a judge's,
+        # and a judge's own alone
+        own = {int(r["id"]) for r in rows if r["owner_code"] == (sandbox() or None)}
         if public_only:
             projects = [p for p in projects if self.shown(p)]
         prefs = self.preferences()
-        selected = [p for p in projects if p.status in ("selected", "building", "done")]
+        selected = [
+            p for p in projects if p.status in ("selected", "building", "done") and p.id in own
+        ]
         spend = round(sum(p.spend_estimate for p in selected), 2)
         return ProjectList(
             projects=projects,
@@ -919,6 +934,8 @@ class Planner:
 
     def reserve(self, item_id: int) -> None:
         """An item is reserved while a selected, building or done project counts on it."""
+        if not self.inventory.writable(item_id):
+            return  # a judge's project holds the demo set's items without reserving them
         wanted = "reserved" if self.inventory.committed_elsewhere(item_id, 0) else "available"
         item = self.inventory.get(item_id)
         if item.availability != "gone" and item.availability != wanted:
@@ -1114,22 +1131,36 @@ class Planner:
         known = [(s.name, s.item_type) for s in self.inventory.list_items()]
         return packs.share_text(project, self.items_on(project), known)
 
+    def _readable(self, item_id: int) -> bool:
+        try:
+            self.inventory.get(item_id)
+        except LookupError:
+            return False
+        return True
+
     def project_of(self, row: Any) -> Project:
         content = json.loads(row["content"])
         content.setdefault("progress", [])
         content.setdefault("outcome", None)
         rows = self.inventory.allocations(int(row["id"]))
+        judge = sandbox()
+        if judge:
+            # an item a judge's code may not read (the owner made it private since) is not on
+            # the project for it, its name included
+            rows = [a for a in rows if self._readable(int(a["item_id"]))]
         # an item deleted from the inventory drops out of the allocations (the join skips it);
-        # the requirement it filled is open again, written back so the next read agrees
+        # the requirement it filled is open again, written back so the next read agrees (a
+        # judge's read of the owner's project changes nothing: it is opened in the answer only)
         held = {int(a["item_id"]) for a in rows}
         lost = [r for r in content["requirements"] if r["item_id"] and r["item_id"] not in held]
         if lost:
             for r in lost:
                 r["item_id"], r["state"] = None, "unknown"
-            row = self.inventory.update_project(
-                int(row["id"]), str(row["status"]), json.dumps(content)
-            )
-            content = json.loads(row["content"])
+            if not judge or row["owner_code"] == judge:
+                row = self.inventory.update_project(
+                    int(row["id"]), str(row["status"]), json.dumps(content)
+                )
+                content = json.loads(row["content"])
         allocations = [
             Allocation(
                 item_id=int(a["item_id"]),

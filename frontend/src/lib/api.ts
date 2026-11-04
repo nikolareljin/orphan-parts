@@ -184,6 +184,8 @@ export interface ItemSummary {
   saved?: SavedKind[]
   // on the list: the last choice made for the item, '' when none
   decided?: DecisionChoice | ''
+  // the judge's code that added the item (its record id); null for the owner's and the demo set's
+  owner_code?: number | null
 }
 
 export type SavedKind = 'cards' | 'ideas' | 'sell_draft' | 'give_draft' | 'price'
@@ -1092,6 +1094,18 @@ export interface Access {
   live: boolean
   token: string
   expires_at: number
+  // set when the session is a judge's code: read-only on the demo set, its own items its own
+  judge?: JudgeAccess | null
+}
+
+export interface JudgeAccess {
+  code_id: number
+  // answered from the recorded answers only, never live
+  recorded: boolean
+  calls_per_day: number | null
+  calls_left: number | null
+  max_usd: number | null
+  usd_left: number | null
 }
 
 // A 401 (the token kept for that session is dropped), or a write refused as the demo visitor,

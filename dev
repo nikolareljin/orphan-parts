@@ -44,10 +44,12 @@
 #                      environment, the same steps the deploy workflow runs
 #   android <build|test|release|install|smoke>
 #                      the app: unit tests, the APKs, an install, a smoke run on a device
-#   keys issue --label <who> [--days N] | keys list | keys revoke <label>
+#   keys issue --label <who> [--days N] [--scope owner|judge] [--calls-per-day N]
+#        [--max-usd X] [--recorded] | keys list | keys revoke <label>
 #                      access codes as records beside DEMO_ACCESS_CODE: issue one (shown once),
-#                      list them, end one; the backend picks them up without a restart;
-#                      `keys --hosted ...` does the same on the Modal deployment's inventory
+#                      list them with scope and use, end one; the backend picks them up without
+#                      a restart; a judge's code is read-only on the demo set and capped;
+#                      `keys --hosted ...` does the same on the Modal deployment
 #   gate on [--label <who>] [--days N] | gate off | gate show
 #                      the access code on this machine: on makes one when .env has none, restarts
 #                      the backend with the gate, issues a code for the phone or a guest and
@@ -410,6 +412,10 @@ _lc_has_value() {
 # in its own image sharing the frontend container's network, as the host user so every file it
 # writes under e2e/ is yours.
 _e2e_access_code() { export DEMO_ACCESS_CODE="${DEMO_ACCESS_CODE:-e2e-demo-access-code}"; }
+_e2e_judge_code() {
+  E2E_JUDGE_CODE="$(compose exec -T backend python -m app.keys issue --label "e2e-judge-$(date +%s)-$$" --days 1 --scope judge 2>/dev/null | sed -n 's/^[^:]*: //p' | tail -n 1 | tr -d '\r\n')" || E2E_JUDGE_CODE=""
+  export E2E_JUDGE_CODE
+}
 
 cmd_e2e() {
   need_env_file
@@ -428,6 +434,8 @@ cmd_e2e() {
   compose up -d backend frontend
   wait_http "http://localhost:$BACKEND_PORT/readyz" 90 || { compose logs backend; die "backend not ready"; }
   wait_http "http://localhost:$FRONTEND_PORT" 180 || { compose logs frontend; die "frontend did not start"; }
+  # a judge's code of the run's own, for tests/judge.spec.ts (untraced: it is a secret)
+  untraced _e2e_judge_code
   local rc=0
   compose --profile e2e run --rm e2e || rc=$?
   [[ "${E2E_KEEP:-0}" == "1" ]] || compose --profile e2e down --remove-orphans
@@ -636,7 +644,7 @@ _cmd_gate() {
 }
 
 cmd_keys() {
-  [[ $# -ge 1 ]] || die "usage: ./dev keys [--hosted] issue --label <who> [--days N] | list | revoke <label>"
+  [[ $# -ge 1 ]] || die "usage: ./dev keys [--hosted] issue --label <who> [--days N] [--scope owner|judge] [--calls-per-day N] [--max-usd X] [--recorded] | list | revoke <label>"
   if [[ "$1" == "--hosted" ]]; then
     # the hosted demo's inventory lives on the Modal volume: the same command runs there
     shift
@@ -650,7 +658,7 @@ cmd_keys() {
   fi
   docker_running || die "docker is not running"
   # the running backend reads the same file; a new code works at once, a revoked one stops,
-  # with the sessions it opened; a demo reset takes the records with the inventory
+  # with the sessions it opened; the codes live in a file of their own, which a demo reset keeps
   compose run --rm --no-deps -T -e OPL_FAKE_API=1 backend python -m app.keys "$@"
 }
 

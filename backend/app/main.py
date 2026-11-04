@@ -34,6 +34,7 @@ from app.extract import Extractor
 from app.find import Finder
 from app.inventory import Inventory
 from app.keys import AccessKeys
+from app.keys.store import open_keys
 from app.listing import Handoff, Lister, VoiceNotes
 from app.match import Assessor
 from app.measure import Measurer
@@ -112,7 +113,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         settings, app.state.samples, app.state.extractor, app.state.segmenter
     )
     app.state.inventory = Inventory(settings)
-    gate.keys = AccessKeys(app.state.inventory.store, gate.master_tag)
+    # the codes in a file of their own, kept through a demo reset; who made a record, for a
+    # judge's code, from the inventory
+    gate.keys = AccessKeys(open_keys(settings), gate.master_tag)
+    gate.owners = app.state.inventory.owner_of
     app.state.photos = ItemPhotos(settings, app.state.inventory)
     app.state.device_photos = DevicePhotos(settings, app.state.inventory)
     app.state.privacy = Privacy(settings, client)

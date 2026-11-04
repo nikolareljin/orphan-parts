@@ -4,6 +4,7 @@ from fastapi import HTTPException
 
 from app.extract.imaging import BadImageError
 from app.model_api import (
+    CodeLimitError,
     FixtureMissingError,
     IncompleteResponseError,
     ModelApiError,
@@ -18,6 +19,8 @@ def as_http(exc: Exception) -> HTTPException:
     """``detail`` is written to be shown to the user; status says whose fault it was."""
     if isinstance(exc, BadImageError):
         return HTTPException(status_code=400, detail=str(exc))
+    if isinstance(exc, CodeLimitError):
+        return HTTPException(status_code=exc.status or 429, detail=str(exc))
     if isinstance(exc, SpendCapError):
         return HTTPException(status_code=503, detail=str(exc))
     if isinstance(exc, NoRecordingError):

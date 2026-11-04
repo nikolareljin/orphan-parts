@@ -1,6 +1,12 @@
 """Access codes as records: issued by a command and shown once, kept only as a hash with a
 label and an expiry, revoked by label. The configured ``DEMO_ACCESS_CODE`` stays the master
-code beside them; a code of either kind opens the live door."""
+code beside them; a code of either kind opens the live door.
+
+An issued code has a scope. ``owner`` (every code issued before scopes, and the default) is
+the master code's full access. ``judge`` reads the demo set as the public demo does, read-only,
+keeps what it makes apart (tagged with its id) and is capped: so many live calls per UTC day
+and so many dollars in all, counted on every call that bills; ``recorded`` keeps it on the
+recorded answers, never a live call."""
 
 from __future__ import annotations
 
@@ -8,16 +14,31 @@ import hashlib
 import hmac
 import secrets
 import sqlite3
+import threading
+import time
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from app.inventory.store import Store
+from app.model_api.errors import CodeLimitError
 
 PREFIX = "opl_"
 LABEL_MAX = 60
 State = Literal["current", "expired", "revoked", "ended"]
+Scope = Literal["owner", "judge"]
+SCOPES: tuple[Scope, ...] = ("owner", "judge")
+# a judge's code when the command names no limits: a day of trying things, a few dollars
+JUDGE_CALLS_PER_DAY = 20
+JUDGE_MAX_USD = 5.0
+# A call under way, sent and not yet charged, counts as one of the day's calls and as this many
+# dollars until its cost is known: two calls at once from one code never both pass the last
+# check. A hold not settled in HOLD_SECONDS (a call whose answer was lost) is let go.
+HOLD_USD = 0.05
+HOLD_SECONDS = 600.0
+DAILY_CALLS_LINE = "this code's daily calls are used; more tomorrow (UTC)"
+BUDGET_LINE = "this code's budget is spent"
 
 
 class AccessKeyError(ValueError):
@@ -35,6 +56,15 @@ class AccessKey(BaseModel):
     master: bool = False
     # a phone's code whose parent was revoked or expired, or whose master code changed
     ended: bool = False
+    scope: Scope = "owner"
+    # answered from the recorded answers only: never a live call
+    recorded: bool = False
+    calls_per_day: int | None = None
+    max_usd: float | None = None
+
+    @property
+    def judge(self) -> bool:
+        return self.scope == "judge"
 
     def state(self, now: datetime | None = None) -> State:
         if self.revoked_at is not None:
@@ -42,6 +72,27 @@ class AccessKey(BaseModel):
         if self.expires_at is not None and self.expires_at <= _text(now or datetime.now(UTC)):
             return "expired"
         return "ended" if self.ended else "current"
+
+
+class Usage(BaseModel):
+    """What a code has used: live calls today (UTC) and dollars in all."""
+
+    calls_today: int = 0
+    usd: float = 0.0
+
+
+def refusal(key: AccessKey, used: Usage) -> CodeLimitError | None:
+    """Why this code may not make another live call, or None. The calls run out for the day
+    (429, again tomorrow); the dollars for good (403, until the owner issues another)."""
+    if key.max_usd is not None and used.usd >= key.max_usd:
+        return CodeLimitError(BUDGET_LINE, status=403)
+    if key.calls_per_day is not None and used.calls_today >= key.calls_per_day:
+        return CodeLimitError(DAILY_CALLS_LINE, status=429)
+    return None
+
+
+def _today() -> str:
+    return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
 def new_code() -> str:
@@ -83,15 +134,52 @@ class AccessKeys:
         # the tag of the configured master code (master_tag), so a phone claimed under an
         # earlier one is refused; empty when there is no master code
         self.master = master
+        # the calls under way per code, by when each was let through (this process's own)
+        self._held: dict[int, list[float]] = {}
+        self._held_lock = threading.Lock()
 
-    def issue(self, label: str, days: int | None = None) -> tuple[str, AccessKey]:
+    def issue(
+        self,
+        label: str,
+        days: int | None = None,
+        *,
+        scope: Scope = "owner",
+        recorded: bool = False,
+        calls_per_day: int | None = None,
+        max_usd: float | None = None,
+    ) -> tuple[str, AccessKey]:
         """A new code for ``label``, shown once; ``days`` from now it stops working, or never
-        when not given. Returns the code and its record."""
+        when not given. A judge's code gets the limits given, or the defaults; an owner's
+        takes none. Returns the code and its record."""
         label = _checked(label, days)
+        if scope not in SCOPES:
+            raise AccessKeyError(f"the scope is one of {', '.join(SCOPES)}")
+        if scope == "owner":
+            if recorded or calls_per_day is not None or max_usd is not None:
+                raise AccessKeyError(
+                    "an owner's code is the master's full access: --recorded, --calls-per-day"
+                    " and --max-usd go with --scope judge"
+                )
+        else:
+            calls_per_day = JUDGE_CALLS_PER_DAY if calls_per_day is None else calls_per_day
+            max_usd = JUDGE_MAX_USD if max_usd is None else max_usd
+            if calls_per_day < 0:
+                raise AccessKeyError("calls per day must be 0 or more")
+            if max_usd < 0:
+                raise AccessKeyError("the dollar cap must be 0 or more")
         now = datetime.now(UTC)
         expires = _text(now + timedelta(days=days)) if days is not None else None
         with self.store.connect() as conn:
-            return _insert(conn, label, now, expires)
+            return _insert(
+                conn,
+                label,
+                now,
+                expires,
+                scope=scope,
+                recorded=recorded,
+                calls_per_day=calls_per_day,
+                max_usd=max_usd,
+            )
 
     def issue_child(
         self, label: str, days: int, *, parent: int = 0, stamp: str = "", most: int = 0
@@ -120,6 +208,8 @@ class AccessKeys:
                         "a phone's own code does not pair another phone; pair from a page"
                         " signed in with the code you were given"
                     )
+                if found.judge:
+                    raise AccessKeyError("a judge's code does not pair a phone")
                 if found.expires_at is not None:
                     until = min(until, datetime.fromisoformat(found.expires_at))
             else:
@@ -171,15 +261,91 @@ class AccessKeys:
         """The record's issue time when it stands unrevoked (and, for a phone's record, its
         parent too), else None (one indexed read; the gate asks on every request carrying the
         record's id, and signs the time into the session so that a record with the same id
-        after a reset is another record)."""
+        in another file is another record)."""
+        found = self.current(kid)
+        return found.created_at if found is not None else None
+
+    def current(self, kid: int) -> AccessKey | None:
+        """The record when it stands unrevoked (and its parent too), else None: what stamp
+        reads, with the scope and limits the gate holds the request to."""
         now = _text(datetime.now(UTC))
         with self.store.connect() as conn:
             row = conn.execute(
-                f"SELECT k.created_at {_WITH_PARENT}"
+                f"SELECT k.* {_WITH_PARENT}"
                 f" WHERE k.id = ? AND k.revoked_at IS NULL AND {_PARENT_STANDS}",
                 (kid, now, self.master),
             ).fetchone()
-        return str(row["created_at"]) if row is not None else None
+        return _key_of(row) if row is not None else None
+
+    # --- what a code has used ------------------------------------------------
+
+    def usage(self, kid: int) -> Usage:
+        with self.store.connect() as conn:
+            row = conn.execute(
+                "SELECT COALESCE(SUM(usd), 0) AS usd,"
+                " COALESCE(SUM(CASE WHEN day = ? THEN calls END), 0) AS today"
+                " FROM key_usage WHERE key_id = ?",
+                (_today(), kid),
+            ).fetchone()
+        return Usage(calls_today=int(row["today"]), usd=round(float(row["usd"]), 6))
+
+    def usages(self) -> dict[int, Usage]:
+        with self.store.connect() as conn:
+            rows = conn.execute(
+                "SELECT key_id, COALESCE(SUM(usd), 0) AS usd,"
+                " COALESCE(SUM(CASE WHEN day = ? THEN calls END), 0) AS today"
+                " FROM key_usage GROUP BY key_id",
+                (_today(),),
+            ).fetchall()
+        return {
+            int(r["key_id"]): Usage(calls_today=int(r["today"]), usd=round(float(r["usd"]), 6))
+            for r in rows
+        }
+
+    def check(self, kid: int) -> None:
+        """Raise CodeLimitError when this code may not make another live call now: read
+        before each call that bills, so a code at its limit sends nothing."""
+        key = self.current(kid)
+        if key is None:
+            raise CodeLimitError("this code has ended", status=403)
+        found = refusal(key, self.usage(kid))
+        if found is not None:
+            raise found
+
+    def hold(self, kid: int) -> None:
+        """``check``, counting the calls still under way: let through, the call is held
+        against the code (one call, HOLD_USD) until ``settle``. Raises CodeLimitError."""
+        with self._held_lock:
+            now = time.monotonic()
+            held = [t for t in self._held.get(kid, []) if now - t < HOLD_SECONDS]
+            key = self.current(kid)
+            if key is None:
+                raise CodeLimitError("this code has ended", status=403)
+            used = self.usage(kid)
+            pending = Usage(
+                calls_today=used.calls_today + len(held), usd=used.usd + HOLD_USD * len(held)
+            )
+            found = refusal(key, pending)
+            if found is not None:
+                raise found
+            held.append(now)
+            self._held[kid] = held
+
+    def settle(self, kid: int) -> None:
+        """One call held for this code is over (charged, or never billed)."""
+        with self._held_lock:
+            held = self._held.get(kid)
+            if held:
+                held.pop(0)
+
+    def charge(self, kid: int, usd: float) -> None:
+        """One live call, at what it cost, on today's line of this code."""
+        with self.store.connect() as conn:
+            conn.execute(
+                "INSERT INTO key_usage (key_id, day, calls, usd) VALUES (?, ?, 1, ?)"
+                " ON CONFLICT (key_id, day) DO UPDATE SET calls = calls + 1, usd = usd + ?",
+                (kid, _today(), usd, usd),
+            )
 
     def match(self, code: str) -> AccessKey | None:
         """The current record this code belongs to, or None. Every record is compared, in
@@ -222,6 +388,11 @@ def _insert(
     expires: str | None,
     parent_id: int | None = None,
     master: str | None = None,
+    *,
+    scope: Scope = "owner",
+    recorded: bool = False,
+    calls_per_day: int | None = None,
+    max_usd: float | None = None,
 ) -> tuple[str, AccessKey]:
     """A new record on this connection, unless a current one has the label."""
     taken = conn.execute(
@@ -233,12 +404,28 @@ def _insert(
         raise AccessKeyError(f"a current code is labeled {label!r}; revoke it first")
     code = new_code()
     cur = conn.execute(
-        "INSERT INTO access_keys (hash, label, created_at, expires_at, parent_id, master)"
-        " VALUES (?,?,?,?,?,?)",
-        (digest(code), label, _text(now), expires, parent_id, master),
+        "INSERT INTO access_keys (hash, label, created_at, expires_at, parent_id, master,"
+        " scope, recorded, calls_per_day, max_usd) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (
+            digest(code),
+            label,
+            _text(now),
+            expires,
+            parent_id,
+            master,
+            scope,
+            int(recorded),
+            calls_per_day,
+            max_usd,
+        ),
     )
     row = conn.execute("SELECT * FROM access_keys WHERE id = ?", (cur.lastrowid,)).fetchone()
     return code, _key_of(row)
+
+
+def _scope(value: object) -> Scope:
+    """A scope this build does not know is held to the narrower one."""
+    return "owner" if value == "owner" else "judge"
 
 
 def _key_of(row: sqlite3.Row) -> AccessKey:
@@ -252,4 +439,8 @@ def _key_of(row: sqlite3.Row) -> AccessKey:
         parent_id=row["parent_id"],
         master=row["master"] is not None,
         ended="ended" in names and bool(row["ended"]),
+        scope=_scope(row["scope"]) if "scope" in names else "owner",
+        recorded="recorded" in names and bool(row["recorded"]),
+        calls_per_day=row["calls_per_day"] if "calls_per_day" in names else None,
+        max_usd=row["max_usd"] if "max_usd" in names else None,
     )

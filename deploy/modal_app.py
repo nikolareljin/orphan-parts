@@ -167,9 +167,9 @@ def load_demo(reset: bool = True, live: bool = False) -> int:  # type: ignore[no
     timeout=120,
 )
 def keys(args: str = "list") -> int:  # type: ignore[no-untyped-def]
-    """The access codes of the hosted demo, on its own inventory: ``modal run
-    deploy/modal_app.py::keys --args 'issue --label judges --days 7'`` (``list``,
-    ``revoke <label>``). The code is printed once; the web container reads the record
+    """The access codes of the hosted demo, in their own file on its volume (kept through
+    ``load_demo``): ``modal run deploy/modal_app.py::keys --args 'issue --label jury --days 10
+    --scope judge --calls-per-day 20 --max-usd 5'`` (``list``, ``revoke <label>``). The code is printed once; the web container reads the record
     before its next write and within half a minute otherwise."""
     os.environ.setdefault("DATA_DIR", "/data")
     os.environ.setdefault("LOG_FORMAT", "text")

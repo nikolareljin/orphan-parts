@@ -135,7 +135,9 @@ class Captures:
             "model": "",
             "cost_usd": 0.0,
         }
-        kept = len(self.inventory.captures())
+        # every capture on the disk counts, a judge's and the owner's alike: the cap bounds
+        # the media kept, not what one caller sees
+        kept = self.inventory.capture_count()
         if kept >= self.settings.max_captures:
             raise CaptureError(
                 f"the inbox holds at most {self.settings.max_captures} captures; delete some first"

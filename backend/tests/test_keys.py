@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from app.inventory.store import Store
 from app.keys import PREFIX, AccessKeyError, AccessKeys, master_tag, new_code
 from app.keys.__main__ import main
+from app.keys.store import keys_store
 
 
 def keys_in(tmp_path: Path) -> AccessKeys:
-    return AccessKeys(Store(tmp_path / "inventory.sqlite3"))
+    return AccessKeys(keys_store(tmp_path / "access_keys.sqlite3"))
 
 
 def test_a_code_is_issued_once_and_kept_as_a_hash(tmp_path: Path) -> None:
@@ -24,7 +24,7 @@ def test_a_code_is_issued_once_and_kept_as_a_hash(tmp_path: Path) -> None:
     assert code.startswith(PREFIX) and len(code) > 30
     assert key.label == "judges" and key.state() == "current"
     assert key.expires_at is not None and key.revoked_at is None
-    with Store(tmp_path / "inventory.sqlite3").connect() as conn:
+    with keys_store(tmp_path / "access_keys.sqlite3").connect() as conn:
         row = conn.execute("SELECT hash FROM access_keys").fetchone()
     assert code not in row["hash"] and len(row["hash"]) == 64
     assert keys.match(code) is not None and keys.match(code).label == "judges"  # type: ignore[union-attr]
@@ -42,7 +42,7 @@ def test_expiry_and_revocation_end_a_code(tmp_path: Path) -> None:
     # a day later the short one is gone, the other stands
     later = datetime.now(UTC) + timedelta(days=2)
     assert soon.state(later) == "expired" and kept.state(later) == "current"
-    with Store(tmp_path / "inventory.sqlite3").connect() as conn:
+    with keys_store(tmp_path / "access_keys.sqlite3").connect() as conn:
         conn.execute(
             "UPDATE access_keys SET expires_at = ? WHERE label = 'visitor'",
             ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(),),
@@ -67,7 +67,7 @@ def test_labels_are_checked_and_unique_among_current_codes(tmp_path: Path) -> No
         keys.issue("judges", 7)
     keys.revoke("judges")
     keys.issue("judges", 7)  # the label is free again once the old one is revoked
-    with Store(tmp_path / "inventory.sqlite3").connect() as conn:
+    with keys_store(tmp_path / "access_keys.sqlite3").connect() as conn:
         conn.execute(
             "UPDATE access_keys SET expires_at = ? WHERE label = 'judges' AND revoked_at IS NULL",
             ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(),),
@@ -94,7 +94,7 @@ def test_the_command_issues_lists_and_revokes(
     assert keys.match(code) is not None
     assert main(["list"], keys) == 0
     out, _ = capsys.readouterr()
-    assert "judges\tcurrent" in out
+    assert "judges\towner\tcurrent" in out
     assert main(["revoke", "judges"], keys) == 0
     assert "revoked at" in capsys.readouterr()[0]
     assert main(["revoke", "judges"], keys) == 2
@@ -115,7 +115,7 @@ def test_a_revoke_on_another_connection_lands_before_the_claim_reads_its_parent(
     tmp_path: Path,
 ) -> None:
     path = tmp_path / "inventory.sqlite3"
-    keys = AccessKeys(Store(path))
+    keys = AccessKeys(keys_store(path))
     _, guest = keys.issue("guest", 2)
     other = sqlite3.connect(path, isolation_level=None)
     other.execute("BEGIN IMMEDIATE")
@@ -141,7 +141,7 @@ def test_a_revoke_on_another_connection_lands_before_the_claim_reads_its_parent(
 
 
 def test_a_phone_code_is_claimed_once_and_stands_with_its_parent(tmp_path: Path) -> None:
-    keys = AccessKeys(Store(tmp_path / "inventory.sqlite3"), master_tag("the-master-code"))
+    keys = AccessKeys(keys_store(tmp_path / "access_keys.sqlite3"), master_tag("the-master-code"))
     _, guest = keys.issue("guest", 2)
     code, phone = keys.issue_child("phone abcd1234", 30, parent=guest.id, stamp=guest.created_at)
     assert phone.expires_at == guest.expires_at and phone.parent_id == guest.id

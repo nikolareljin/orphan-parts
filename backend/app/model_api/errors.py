@@ -53,6 +53,21 @@ class SpendCapError(ModelApiError):
         super().__init__(f"spend cap reached: {spent_usd:.4f} of {cap_usd:.2f} USD")
 
 
+class CodeLimitError(ModelApiError):
+    """An issued code reached its own limit (calls today, or dollars in all): nothing is sent.
+    ``status`` is what the caller is answered: 429 for the day's calls, 403 for the budget."""
+
+    def __init__(self, message: str, *, status: int) -> None:
+        super().__init__(message, status=status)
+
+    @property
+    def retryable(self) -> bool:
+        return False
+
+    def __str__(self) -> str:
+        return str(self.args[0]) if self.args else ""
+
+
 class FixtureMissingError(ModelApiError):
     """Fixture mode is on and no recorded response matches the request."""
 

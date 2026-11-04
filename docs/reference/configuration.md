@@ -41,6 +41,7 @@ stops the service with a clear message instead of failing on the first user requ
 | `MAX_CLIP_MB` | `60` | | size limit for a clip sent with a capture |
 | `MAX_CAPTURES` | `200` | | how many captures the Inbox keeps at once; a send over it is refused until some are deleted |
 | `INVENTORY_DB_FILE` | `inventory.sqlite3` | | the inventory database, inside `DATA_DIR` |
+| `KEYS_DB_FILE` | `access_keys.sqlite3` | | the issued access codes and what each has used, inside `DATA_DIR`; apart from the inventory, so a demo reset keeps them |
 | `SQLITE_JOURNAL_MODE` | `WAL` | | the database's journal mode; `DELETE` on a network filesystem (the Modal volume sets it) |
 | `MEASURE_MIN_SHARPNESS` | `150` | | least edge response (Laplacian variance) around every mark before a capture is measured |
 | `MEASURE_MIN_REFERENCE_PX` | `80` | | least span of the scale reference in pixels |
