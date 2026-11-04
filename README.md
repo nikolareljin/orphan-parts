@@ -30,8 +30,8 @@ same read-only), more on
 [Examples](https://nikolareljin.github.io/orphan-parts/start/examples/):
 
 <p>
-<img src="docs/assets/shots/examples/02-arcade-drawings.png" alt="The arcade coffee table drawn three times by Muse Image" width="49%">
-<img src="docs/assets/shots/examples/02-nas-drawings.png" alt="The custom NAS drawn three times by Muse Image" width="49%">
+<img src="docs/assets/shots/examples/02-arcade-drawings.png" alt="The gaming coffee table drawn three times by Muse Image" width="49%">
+<img src="docs/assets/shots/examples/02-nas-drawings.png" alt="The family photo NAS drawn three times by Muse Image" width="49%">
 <img src="docs/assets/shots/examples/60-visitor-decide-build.png" alt="The Decide cards Muse Spark wrote for the Dell U2419H monitor, the reuse card with its Muse Image picture" width="49%">
 <img src="docs/assets/shots/examples/20-9500gt-value.png" alt="Muse Spark's price guidance for the EVGA 9500 GT, the four figures kept apart" width="49%">
 </p>

@@ -70,8 +70,8 @@ something that did not hold up once it met real parts, real photos or real rules
       its plastic wrap); both wrong ones match after a corrected brief. Then the requests
       themselves were tuned (the drawing parameters, three versions), the review was made to
       read each part as built, and every drawing that still missed was drawn three to five
-      times with the best kept: on a fresh review of the final set, 29 of the 32 drawings
-      match, 2 partly and 1 is wrong, from 17, 7 and 8 just before. The tool is
+      times with the best kept: on a fresh review of the final set, 28 of the 30 drawings
+      match and 2 partly match, none wrong; every project drawing matches. The tool is
       `./dev picture-review`, also a Muse Code skill: [Review and redraw the
       drawings](../guides/picture-review.md); the results, before and after: [How the drawings
       were improved](picture-review-results.md).
@@ -82,7 +82,10 @@ something that did not hold up once it met real parts, real photos or real rules
       cards' own instructions were tuned from the flags: the item's compatibility facts first,
       a card resting only on owned parts that fit, *with the processor you own* banned. Of the
       44 sets of Decide cards, 16 were flagged before and 10 after; a third round did no better
-      and was not kept ([Text tuning](picture-review-results.md#text-tuning)).
+      and was not kept. The proposals got the same treatment (a display build needs what drives
+      it, memory as the compatibility facts say, a joystick module read by a board, wiring
+      listed as still needed): projects flagged went from 5 or 6 of 11 to 3 of 11 over three
+      checks each ([Text tuning](picture-review-results.md#text-tuning)).
 
 The full list, in the order it was learned, is on [Lessons learned](lessons.md); the dated log
 is [Built during the hackathon](hackathon.md).
@@ -100,8 +103,8 @@ is [Built during the hackathon](hackathon.md).
     - **The Android app on Google Play.**
     - **Posting to Marketplace** from the app, once there is a listing API for individuals.
     - **Better drawings over time:** the review gate on by default with best of three for the
-      owner's own drawings (`PICTURE_CANDIDATES`), and the proposals tuned like the Decide
-      cards, once their re-recording (every project and its drawings) fits the budget.
+      owner's own drawings (`PICTURE_CANDIDATES`), and the checks run more than once before a
+      version is kept, since one run of the check moves by two or three flags.
     - **A second model route** through Muse Spark Open for the planning steps.
 
 Each one, with why and what it needs, is on [Next steps](next.md).

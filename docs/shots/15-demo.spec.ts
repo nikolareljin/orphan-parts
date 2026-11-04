@@ -48,7 +48,7 @@ test('the visitor on Build and reuse', async ({ shots, page }) => {
   await table.waitFor({ state: 'visible', timeout: 10_000 }).catch(() => undefined)
   test.skip(!(await table.isVisible()), 'Build and reuse shows the visitor no projects on this version')
   await shots.take('06-visitor-build')
-  await table.getByRole('row').filter({ hasText: /Homework/ }).first().getByRole('button', { name: 'Open' }).click()
+  await table.getByRole('row').filter({ hasText: /homework/i }).first().getByRole('button', { name: 'Open' }).click()
   await expect(page.getByRole('article', { name: /^Project / })).toBeVisible()
   await shots.take('09-visitor-project')
 })

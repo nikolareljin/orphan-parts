@@ -233,7 +233,8 @@ The first run, version 1 to 3, is in
 text issues 19 to 2, matches 11 to 21, wrong 1 to 5. With the review reading each part as built
 and the best of three to five candidates kept for every drawing that still missed, a fresh
 review of the final set: 29 matches, 2 partly, 1 wrong
-([Best-of-N](../project/picture-review-results.md#best-of-n)).
+([Best-of-N](../project/picture-review-results.md#best-of-n)); after the proposals were tuned
+and their 17 drawings drawn again the same way, 28 matches and 2 partly of 30, none wrong.
 
 ### Best of N
 
@@ -337,6 +338,11 @@ nothing: its requests are word for word what they were, so their recordings stil
   the ideas, the proposals and Muse Image are bought; every other request must replay its
   recording or the run says it is not recorded. A changed Decide card changes its reuse-card
   drawing, which is drawn and recorded in the same run. Then every recommendation is checked.
+- **`--only cards,ideas,project`** checks those kinds alone (11 project checks are about
+  0.08 USD): run it two or three times on a version to see past the check's own spread, which
+  is two or three flags a run. A partial check is never kept as a version's score.
+- **Version numbers** go one above the file and above every version evaluated, so a version
+  tried and not kept (`--keep`) keeps its number and its score.
 - **`--evaluate`** keeps the score in `eval/decide/text-v<N>.json` (counts by section, each
   check's flags, the recordings the set's replay answered from, the parameters), writes the
   history table between the `text-history` markers of

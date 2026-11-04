@@ -3,7 +3,7 @@ import type { Locator, Page } from '@playwright/test'
 
 // Build and reuse: proposals from what you own, one selected with its items committed, drawn,
 // what it still needs as a Marketplace search, and the build pack. One project carries the
-// shots: the arcade when the proposals have one, else the first proposed.
+// shots: the arcade (coffee) table when the proposals have one, else the first proposed.
 
 test.describe.configure({ mode: 'serial' })
 
@@ -12,7 +12,7 @@ async function project(page: Page): Promise<Locator> {
   const table = page.getByRole('table', { name: 'Projects' })
   // the rows come with the list: count them only once it is there
   await expect(table.getByRole('button', { name: 'Open' }).first()).toBeVisible()
-  const arcade = table.getByRole('row', { name: /arcade/i })
+  const arcade = table.getByRole('row', { name: /arcade|coffee table/i })
   const row = (await arcade.count()) > 0 ? arcade.first() : table.getByRole('row').filter({ hasText: /proposed|selected/ }).first()
   await row.getByRole('button', { name: 'Open' }).click()
   const panel = page.getByRole('article', { name: /^Project / })

@@ -15,8 +15,8 @@ same read-only), more on
 [Examples](https://nikolareljin.github.io/orphan-parts/start/examples/):
 
 <p>
-<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/02-arcade-drawings.png" alt="The arcade coffee table drawn three times by Muse Image" width="49%">
-<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/02-nas-drawings.png" alt="The custom NAS drawn three times by Muse Image" width="49%">
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/02-arcade-drawings.png" alt="The gaming coffee table drawn three times by Muse Image" width="49%">
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/02-nas-drawings.png" alt="The family photo NAS drawn three times by Muse Image" width="49%">
 <img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/60-visitor-decide-build.png" alt="The Decide cards Muse Spark wrote for the Dell U2419H monitor, the reuse card with its Muse Image picture" width="49%">
 <img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/shots/examples/20-9500gt-value.png" alt="Muse Spark's price guidance for the EVGA 9500 GT, the four figures kept apart" width="49%">
 </p>
@@ -75,12 +75,12 @@ The line at the foot of the page says *Demo: recorded answers only*.
    candidates and the maker's part (OEM 990010200) that **Search the web** found, with its
    link, and the pages it found for the NAS's power supply; the eleven projects proposed from
    the demo shelf, each with its drawing, its items and why they fit, what is still needed and
-   the unknowns: four are selected with their build packs, three drawings each and a search
-   with Marketplace links for every missing part (a custom NAS on the ASRock board, an arcade
-   coffee table with the joystick module, a smart desk calendar on the UNO, a home automation
-   server on the ThinkPad T510), and the rest are a kitchen dashboard, a weather station and a
-   garage parking helper from the UNO's sensor modules, a retro console, a smart mirror, a
-   homework desk and a home server and backup; the skills and their levels. Where the owner would save, plan, search or
+   the unknowns: three are selected with their build packs, three drawings each and a search
+   with Marketplace links for every missing part (a family photo NAS on the ASRock board, a
+   gaming coffee table with the joystick module, a smart desk calendar on the UNO), and the
+   rest are a home automation server on the spare Dell laptop, a kitchen dashboard, a weather
+   station and a garage parking helper from the UNO's sensor modules, retro games with the
+   joystick, a smart mirror, a homework desk and a photo backup server; the skills and their levels. Where the owner would save, plan, search or
    propose, the sign-in line.
 
 ### With the access code (about ten minutes)

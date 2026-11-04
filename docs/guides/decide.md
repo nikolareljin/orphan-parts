@@ -58,7 +58,7 @@ Three items read whole, the item's drawings with them: a sale, a keep, a build.
 
 ![What should I do with the joystick module: Keep and fix recommended, kept for the arcade table, and the drawing of what it could become](../assets/shots/examples/65-visitor-what-to-do-keep.png)
 
-![What should I do with the ThinkPad T510: Sell recommended, Reuse it chosen with the reuse card's Muse Image drawing, kept for the home automation server](../assets/shots/examples/65-visitor-what-to-do-build.png)
+![What should I do with the ThinkPad T510: Sell recommended, Reuse it chosen with the reuse card's Muse Image drawing, kept for a build](../assets/shots/examples/65-visitor-what-to-do-build.png)
 
 ## Built so far
 

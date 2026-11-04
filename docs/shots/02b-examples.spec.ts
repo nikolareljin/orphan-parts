@@ -2,7 +2,7 @@ import { expect, openItem, section, test } from './lib'
 import type { Locator, Page } from '@playwright/test'
 
 // Examples of what the models wrote for the demo set (docs/start/examples.md): the build
-// proposals and the four selected builds with every picture drawn of them, the Decide cards,
+// proposals and the three selected builds with every picture drawn of them, the Decide cards,
 // the price guidance and the drafts, the searches, and the inventory with a reading. Each is
 // one element shot whole (Shots.element), from the recorded answers the hosted demo replays.
 // Runs right after 02-search.spec.ts (02b sorts there): the agitator's device is answered and its
@@ -12,13 +12,13 @@ import type { Locator, Page } from '@playwright/test'
 test.describe.configure({ mode: 'serial' })
 
 const SELECTED = [
-  ['nas', 'Custom NAS'],
-  ['arcade', 'Arcade coffee table'],
+  ['nas', 'photo NAS'],
+  ['arcade', 'coffee table'],
   ['calendar', 'Smart desk calendar'],
-  ['automation', 'Home automation server'],
 ] as const
 const PROPOSED = [
-  ['kitchen', 'Kitchen home-automation dashboard'],
+  ['automation', 'Home automation server'],
+  ['kitchen', 'Kitchen dashboard'],
   ['mirror', 'Smart mirror'],
   ['weather', 'weather station'],
   ['parking', 'Garage parking helper'],
@@ -51,7 +51,7 @@ function close(page: Page): Promise<void> {
 }
 
 test.describe('signed in', () => {
-  test('the proposals and the four selected builds', async ({ shots, page }) => {
+  test('the proposals and the selected builds', async ({ shots, page }) => {
     await page.goto('/#build')
     await shots.element('01-proposals', page.getByRole('table', { name: 'Projects' }))
     for (const [key, title] of SELECTED) {
@@ -80,8 +80,8 @@ test.describe('signed in', () => {
   test('a search plan: the NAS processor the build still needs', async ({ shots, page }) => {
     // the plan written when the build was selected: phrasings as Marketplace links, a pattern
     await page.goto('/#find')
-    await page.getByRole('table', { name: 'Searches' }).getByRole('row', { name: /LGA1155 processor for Custom NAS/ }).first().getByRole('button', { name: 'Open' }).click()
-    const plan = page.getByRole('article', { name: /^Search LGA1155 processor for/ }).getByRole('region', { name: 'Plan the search' })
+    await page.getByRole('table', { name: 'Searches' }).getByRole('row', { name: /processor for .*NAS/i }).first().getByRole('button', { name: 'Open' }).click()
+    const plan = page.getByRole('article', { name: /^Search .*processor for/i }).getByRole('region', { name: 'Plan the search' })
     await expect(plan.getByRole('list', { name: 'Search phrasings' }).getByRole('listitem').first()).toBeVisible()
     await shots.element('30-nas-cpu-plan', plan)
   })
@@ -127,7 +127,7 @@ test.describe('the visitor', () => {
   test('the visitor reads the builds', async ({ shots, page }) => {
     await page.goto('/#build')
     await shots.take('50-visitor-build')
-    let panel = await project(page, 'Custom NAS')
+    let panel = await project(page, 'photo NAS')
     await shots.element('51-visitor-nas', page.getByRole('dialog'), '.project-panel .packs')
     await close(page)
     for (const [key, title] of PROPOSED) {

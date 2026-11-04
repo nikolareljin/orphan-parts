@@ -189,22 +189,22 @@ captioned as drawn. Record the outcome once it works. [Build and reuse](../guide
 
 The second drawer is where **Build and reuse** fills up: three proposal calls, the last two
 steered by the owner's notes, keep eleven projects, each drawn as built, each with its items and
-why they fit, what is still needed, the effort, the spend and the unknowns. Four are selected:
-a custom NAS on the ASUS P8Z77-V LX board with the DDR3-1600 desktop stick, the Kingston SSD,
-the Maxtor drive and the PCIe M.2 card; an arcade coffee table on the Dell laptop and the 24 inch monitor with
-the joystick module put on its controls by the owner; a smart desk calendar on the UNO with
-the DS1307 clock, the buzzer, the button and the prototype shield; and a home automation server
-on the ThinkPad T510 with the ADATA DDR3L stick (the [compatibility
-rules](../concepts/compatibility.md) refuse the SK hynix DDR4 stick for it).
+why they fit, what is still needed, the effort, the spend and the unknowns. Three are selected:
+a family photo NAS on the ASRock AB350 Pro4 board in its case with the Patriot DDR4 desktop
+stick, the Kingston SSD, the Maxtor drive and the PCIe M.2 card (an AM4 processor still needed,
+as the [compatibility rules](../concepts/compatibility.md) name it); a gaming coffee table on
+the Dell laptop and the 18 inch monitor laid flat, with the joystick module on its controls;
+and a smart desk calendar on the UNO with the DS1307 clock, the buzzer, the button and the
+prototype shield. The home automation server, proposed on the same Dell laptop, stays proposed:
+the coffee table holds the laptop.
 Each has its build pack, two more drawings (up
 close, and from above), and every requirement it still needs as a search with its Marketplace
 links (the NAS's processor, power supply and case; the table, its glass and speakers; the
-calendar's screen; the server's network link and its Zigbee or Z-Wave stick); the power supply
-is also searched for on the web, with the pages found and their links. The other proposals are
-a kitchen dashboard (the DHT11, the HC-SR04, the sound sensor, the relay), a weather station, a
-garage parking helper, a retro console, a smart mirror, a homework desk and a home server and
-backup, which stays proposed: its laptop is the coffee table's. Every item meant for a build
-has its Decide cards.
+calendar's screen); the power supply is also searched for on the web, with the pages found
+and their links. The other proposals are the home automation server, a kitchen dashboard (the
+DHT11, the HC-SR04, the sound sensor, the relay), a weather station, a garage parking helper,
+retro games with the joystick, a smart mirror, a homework desk and a photo backup server.
+Every item meant for a build has its Decide cards.
 
 ## 7. Sell the graphics card, give the processor away
 

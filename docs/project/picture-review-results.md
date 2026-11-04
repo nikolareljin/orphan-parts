@@ -127,25 +127,26 @@ demo set: every drawing drawn with that version and reviewed
 
 *Written by `./dev picture-review --evaluate` from `eval/pictures/`.*
 
-| | params v1 | params v2 | params v3 | params v3 asbuilt | params v3 best3 | params v3 recheck |
-|---|---|---|---|---|---|---|
-| drawings | 32 | 32 | 32 | 32 | 32 | 32 |
-| matches | 11 | 21 | 21 | 19 | 31 | 29 |
-| partly | 20 | 5 | 6 | 8 | 1 | 2 |
-| wrong | 1 | 6 | 5 | 5 | 0 | 1 |
-| issues: text | 19 | 2 | 2 | 1 | 0 | 0 |
-| issues: scale | 2 | 1 | 2 | 1 | 0 | 0 |
-| issues: wrong_device | 0 | 2 | 3 | 3 | 0 | 1 |
-| issues: missing_part | 2 | 4 | 2 | 4 | 1 | 1 |
-| issues: invented_part | 1 | 5 | 4 | 8 | 0 | 1 |
-| issues: wrong_setting | 0 | 1 | 2 | 1 | 0 | 0 |
-| issues: implausible | 2 | 2 | 4 | 4 | 0 | 1 |
-| spent on the run, USD | 0.21 | 0.51 | 0.52 | 0.73 | 1.23 | 0.15 |
+| | params v1 | params v2 | params v3 | params v3 asbuilt | params v3 best3 | params v3 recheck | params v3 propose |
+|---|---|---|---|---|---|---|---|
+| drawings | 32 | 32 | 32 | 32 | 32 | 32 | 30 |
+| matches | 11 | 21 | 21 | 19 | 31 | 29 | 28 |
+| partly | 20 | 5 | 6 | 8 | 1 | 2 | 2 |
+| wrong | 1 | 6 | 5 | 5 | 0 | 1 | 0 |
+| issues: text | 19 | 2 | 2 | 1 | 0 | 0 | 0 |
+| issues: scale | 2 | 1 | 2 | 1 | 0 | 0 | 0 |
+| issues: wrong_device | 0 | 2 | 3 | 3 | 0 | 1 | 0 |
+| issues: missing_part | 2 | 4 | 2 | 4 | 1 | 1 | 0 |
+| issues: invented_part | 1 | 5 | 4 | 8 | 0 | 1 | 0 |
+| issues: wrong_setting | 0 | 1 | 2 | 1 | 0 | 0 | 0 |
+| issues: implausible | 2 | 2 | 4 | 4 | 0 | 1 | 2 |
+| spent on the run, USD | 0.21 | 0.51 | 0.52 | 0.73 | 1.23 | 0.15 | 0.17 |
 
-Moved from params v3 best3 to params v3 recheck:
+Moved from params v3 recheck to params v3 propose:
 
-- `item:powerline#1`: matches to partly
-- `item:uno_r3#1`: matches to wrong
+- `item:uno_r3#1`: wrong to matches
+- `project:4#3`: partly to matches
+- `item:laptop_t510#1`: matches to partly
 
 <!-- params-history:end -->
 
@@ -322,19 +323,70 @@ how far the check itself moves between runs. The ideas had none. Version 2 chang
 Decide card request and the five reuse-card drawings made from them; every other request
 replays as it was.
 
+### The proposals (version 4)
+
+Later on November 4 the proposals got their own section, `propose`, from the project flags of
+three checks of version 2 (5, 5 and 6 of the 11 projects flagged): the compatibility facts
+first, the condition rule, and four constraints written from the flags, not phrased by a call:
+
+- a build that shows or works out anything needs what drives it: a display build allocates a
+  computer or a microcontroller board behind the screen, or leaves that requirement missing;
+- a memory pick matches the host's generation and form in the compatibility facts (a DDR3
+  laptop takes a DDR3 or DDR3L SO-DIMM), and a capacity the facts do not confirm for that host
+  goes in the unknowns;
+- a joystick module is an analog part on a pin header, not a USB game controller: it plays
+  games only through a microcontroller board that reads it;
+- jumper wires, a breadboard, cables and a power adapter are still needed unless an owned item
+  is allocated for them, and a build is never called complete without them.
+
+The number is 4, not 3: version 3 was tried and not kept, and keeps its number and its score.
+With these lines the second proposal call (the desktop boards and the games) checked its picks
+more often than the tool loop allowed, so the loop now takes up to four check steps after the
+picks (`CHECK_STEPS`, was two). The three proposal calls, the search plans of the selected
+builds and every project drawing were recorded again; the Decide cards and every other request
+replay as they were.
+
+| Project checks (of 11) | run 1 | run 2 | run 3 |
+|---|---|---|---|
+| version 2 | 5 | 5 | 6 |
+| version 4 | 3 | 3 | 3 |
+
+Version 4 was kept. The three still flagged: the homework desk's cable (the check reads the
+T510 as having no HDMI, so an HDMI, DisplayPort or USB-C cable is a claim too wide), the NAS
+asking for a case although its ASRock board is recorded in one, and the 8 GB DDR3L stick in the
+T510 (the check holds the laptop to 4 GB a slot; the proposal now lists the capacity as an
+unknown to check). The Decide cards' 10 to 7 in the table below is the check's own spread:
+their requests did not change.
+
+What the demo shows changed with it. The eleven projects are the same kinds; the NAS is now
+built on the ASRock board in its case and the smart mirror on the 24 inch monitor. Three of
+the four builds are
+selected (the NAS, the coffee table, the smart desk calendar): the home automation server is
+proposed on the spare Dell laptop, which the coffee table holds, so it was taken out of the
+set's `select` and stays proposed.
+
+The 17 project drawings were drawn again with the new requests (params v3) and reviewed: 20
+of the 30 drawings matched, 2 partly, 8 wrong, all the misses project drawings. Each project
+drawing was then drawn three more times and the best kept (14 replaced), the one still *partly*
+five more times. A fresh review of the final set: 28 matches, 2 partly (the powerline adapter
+and the ThinkPad as a home server, item drawings), 0 wrong; every project drawing matches
+(*params v3 propose* above). The smart mirror's correction in the set still said an 18 inch
+monitor, from when it was built on the 1800FP; it was drawn once more with a 24 inch brief
+(`--redraw`), matching. About 3.1 USD for the round.
+
 <!-- text-history:start -->
 
 *Written by `./dev decide-review --evaluate` from `eval/decide/`.*
 
-| | text v1 | text v2 | text v3 |
-|---|---|---|---|
-| checked | 59 | 59 | 59 |
-| with flags | 23 | 14 | 17 |
-| flags | 33 | 20 | 23 |
-| major | 31 | 17 | 15 |
-| cards with flags | 16/44 | 10/44 | 11/44 |
-| ideas with flags | 0/4 | 0/4 | 0/4 |
-| projects with flags | 7/11 | 4/11 | 6/11 |
-| spent on the run, USD | 0.51 | 0.64 | 1.07 |
+| | text v1 | text v2 | text v3 | text v4 |
+|---|---|---|---|---|
+| checked | 59 | 59 | 59 | 59 |
+| with flags | 23 | 14 | 17 | 10 |
+| flags | 33 | 20 | 23 | 17 |
+| major | 31 | 17 | 15 | 16 |
+| cards with flags | 16/44 | 10/44 | 11/44 | 7/44 |
+| ideas with flags | 0/4 | 0/4 | 0/4 | 0/4 |
+| projects with flags | 7/11 | 4/11 | 6/11 | 3/11 |
+| spent on the run, USD | 0.51 | 0.64 | 1.07 | 0.51 |
 
 <!-- text-history:end -->
