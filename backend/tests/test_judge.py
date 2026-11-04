@@ -446,3 +446,247 @@ def test_codes_an_older_build_kept_in_the_inventory_move_to_their_own_file(
     keys = AccessKeys(open_keys(settings))
     moved = keys.all()
     assert [(k.id, k.label, k.scope) for k in moved] == [(7, "old", "owner")]
+
+
+# --- what a judge's own work reads of the owner's ------------------------------------------
+
+
+def _as_judge(kid: int) -> tuple[object, object]:
+    return judge_code.set(kid), live_request.set(True)
+
+
+def _done(tokens: tuple[object, object]) -> None:
+    judge_code.reset(tokens[0])  # type: ignore[arg-type]
+    live_request.reset(tokens[1])  # type: ignore[arg-type]
+
+
+def test_a_judge_never_reads_the_owners_budget_radius_or_private_item_parts(
+    app_and_keys: tuple[TestClient, AccessKeys],
+) -> None:
+    c, keys = app_and_keys
+    ids = _owner_records(c)
+    _sign_in(c, CODE)
+    assert (
+        c.put(
+            "/api/preferences",
+            json={"budget": 123, "radius_km": 9, "tools": "soldering iron"},
+        ).status_code
+        == 200
+    )
+    _, jury = keys.issue("jury", scope="judge")
+    state = c.app.state  # type: ignore[attr-defined]
+    tokens = _as_judge(jury.id)
+    try:
+        prefs = state.planner.preferences()
+        # what the profile shows the visitor, never what the owner spends or travels
+        assert prefs.budget is None and prefs.radius_km is None and prefs.tools == "soldering iron"
+        # the owner's item, read for a judge's prompt, is the visitor's copy
+        item = state.inventory.get(ids["item"])
+        assert item.location == "" and item.notes == ""
+    finally:
+        _done(tokens)
+    # the owner still reads it whole
+    assert state.planner.preferences().budget == 123
+    assert state.inventory.get(ids["item"]).notes == "owner's own note"
+
+
+def test_a_judge_assesses_its_own_items_by_id_only(
+    app_and_keys: tuple[TestClient, AccessKeys],
+) -> None:
+    c, keys = app_and_keys
+    ids = _owner_records(c)
+    code, _ = keys.issue("jury", scope="judge")
+    _sign_in(c, code)
+    mine = c.post("/api/items", json={"item_type": "vacuum"}).json()["id"]
+    body = {"need": {"item_id": ids["item"]}, "candidate": {"values": {}}}
+    answer = c.post("/api/assess", json=body)
+    assert answer.status_code == 403 and answer.json()["detail"] == JUDGE_LINE
+    body = {"need": {"item_id": mine}, "candidate": {"item_id": ids["item"]}}
+    assert c.post("/api/assess", json=body).status_code == 403
+    body = {"need": {"item_id": mine}, "candidate": {"values": {}}}
+    assert c.post("/api/assess", json=body).status_code != 403
+
+
+def _project_content(item_id: int) -> str:
+    import json
+
+    requirement = {
+        "key": "vacuum",
+        "label": "Vacuum",
+        "kind": "item",
+        "blocking": True,
+        "state": "pass",
+        "item_id": item_id,
+        "search_id": None,
+        "profile": "",
+    }
+    return json.dumps(
+        {
+            "result": "a vacuum",
+            "requirements": [requirement],
+            "effort": "low",
+            "skills": [],
+            "spend_estimate": 0,
+            "currency": "USD",
+            "unknowns": [],
+            "sources": [],
+            "steps": [],
+            "safety": [],
+            "dropped": [],
+            "model": "m",
+            "from_fixture": True,
+            "cost_usd": 0,
+        }
+    )
+
+
+def test_a_judge_changes_allocations_on_its_own_project_only(
+    app_and_keys: tuple[TestClient, AccessKeys],
+) -> None:
+    c, keys = app_and_keys
+    ids = _owner_records(c)
+    code, jury = keys.issue("jury", scope="judge")
+    inventory = c.app.state.inventory  # type: ignore[attr-defined]
+    owners = inventory.add_project(
+        "vacuum_restored", "Owner's", _project_content(ids["item"]), [(ids["item"], "vacuum", "")]
+    )["id"]
+    tokens = _as_judge(jury.id)
+    try:
+        own = inventory.add_project(
+            "vacuum_restored", "Mine", _project_content(ids["item"]), [(ids["item"], "vacuum", "")]
+        )["id"]
+    finally:
+        _done(tokens)
+    _sign_in(c, code)
+    path = f"/api/projects/{{}}/allocations/{ids['item']}"
+    refused = c.delete(path.format(owners))
+    assert refused.status_code == 403 and refused.json()["detail"] == JUDGE_LINE
+    assert c.patch(path.format(owners), json={"item_id": ids["private"]}).status_code == 403
+    # a private item of the owner's is not one it may swap in, on its own project either
+    swapped = c.patch(path.format(own), json={"item_id": ids["private"]})
+    assert swapped.status_code == 422
+    removed = c.delete(path.format(own))
+    assert removed.status_code == 200, removed.text
+    assert removed.json()["allocations"] == []
+    _sign_in(c, CODE)
+    assert [a["item_id"] for a in c.get(f"/api/projects/{owners}").json()["allocations"]] == [
+        ids["item"]
+    ]
+
+
+def test_a_judge_reading_the_owners_project_writes_nothing_and_names_no_private_item(
+    app_and_keys: tuple[TestClient, AccessKeys],
+) -> None:
+    c, keys = app_and_keys
+    ids = _owner_records(c)
+    code, jury = keys.issue("jury", scope="judge")
+    inventory = c.app.state.inventory  # type: ignore[attr-defined]
+    planner = c.app.state.planner  # type: ignore[attr-defined]
+    tokens = _as_judge(jury.id)
+    try:
+        own = inventory.add_project(
+            "vacuum_restored", "Mine", _project_content(ids["item"]), [(ids["item"], "vacuum", "")]
+        )["id"]
+    finally:
+        _done(tokens)
+    # the owner takes the item private: the judge's project no longer shows it, by name either
+    _sign_in(c, CODE)
+    assert c.post(f"/api/items/{ids['item']}/public", json={"public": False}).status_code == 200
+    _sign_in(c, code)
+    answer = c.get(f"/api/projects/{own}")
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["allocations"] == []
+    assert "Demo vacuum" not in answer.text
+    # an owner's project read in a judge's request opens a lost requirement in the answer only
+    owners = inventory.add_project(
+        "vacuum_restored", "Owner's", _project_content(ids["private"]), []
+    )
+    tokens = _as_judge(jury.id)
+    try:
+        shown = planner.project_of(owners)
+    finally:
+        _done(tokens)
+    assert shown.requirements[0].item_id is None
+    assert inventory.project(owners["id"])["content"] == owners["content"]
+
+
+def test_a_judges_photo_check_choice_never_touches_the_owners_copy(
+    app_and_keys: tuple[TestClient, AccessKeys],
+) -> None:
+    from app.privacy.schema import Area, PhotoCheck
+    from app.privacy.service import digest_of
+
+    c, keys = app_and_keys
+    _, jury = keys.issue("jury", scope="judge")
+    privacy = c.app.state.privacy  # type: ignore[attr-defined]
+    data = b"the same bytes on the owner's item and on the judge's"
+    area = Area(id=1, kind="serial_number", label="a serial", x=0.1, y=0.1, w=0.2, h=0.2)
+    privacy._save(PhotoCheck(digest=digest_of(data), status="found", areas=[area]))
+    tokens = _as_judge(jury.id)
+    try:
+        # the judge reads the owner's check, and its choice is kept as its own
+        assert privacy.kept(data).areas[0].hidden is True
+        privacy.choose(data, 1, False)
+        assert privacy.kept(data).areas[0].hidden is False
+    finally:
+        _done(tokens)
+    assert privacy.kept(data).areas[0].hidden is True
+
+
+def test_calls_under_way_count_against_a_codes_limits(tmp_path: Path) -> None:
+    keys = AccessKeys(keys_store(tmp_path / "k.sqlite3"))
+    _, jury = keys.issue("jury", scope="judge", calls_per_day=2, max_usd=0.08)
+    keys.hold(jury.id)
+    # one under way: the dollars left (0.08 - a hold of 0.05) still let one more start
+    keys.hold(jury.id)
+    with pytest.raises(CodeLimitError):
+        keys.hold(jury.id)  # two under way: the day's two calls are taken
+    keys.settle(jury.id)
+    keys.settle(jury.id)
+    keys.hold(jury.id)
+    keys.charge(jury.id, 0.01)
+    keys.settle(jury.id)
+    keys.hold(jury.id)  # one charged, none under way
+    with pytest.raises(CodeLimitError):
+        keys.hold(jury.id)
+
+
+@pytest.mark.anyio
+async def test_a_failed_call_lets_its_hold_go(live_settings: Settings, tmp_path: Path) -> None:
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(400, json={"error": {"message": "bad request"}})
+
+    keys = AccessKeys(keys_store(tmp_path / "k.sqlite3"))
+    _, jury = keys.issue("jury", scope="judge", calls_per_day=1, max_usd=1.0)
+    client = ModelApiClient(live_settings, CostLedger(25.0), transport=httpx.MockTransport(handler))
+    token = code_meter.set(CodeMeter(keys, jury.id))
+    try:
+        for _ in range(2):
+            with pytest.raises(Exception) as failed:
+                await client.respond(model=live_settings.model_spark, input="hi", op="extract")
+            assert not isinstance(failed.value, CodeLimitError)
+    finally:
+        code_meter.reset(token)
+    await client.aclose()
+    assert keys.usage(jury.id).calls_today == 0
+
+
+def test_the_capture_cap_counts_every_capture(
+    app_and_keys: tuple[TestClient, AccessKeys],
+) -> None:
+    c, keys = app_and_keys
+    _owner_records(c)
+    _, jury = keys.issue("jury", scope="judge")
+    inventory = c.app.state.inventory  # type: ignore[attr-defined]
+    tokens = _as_judge(jury.id)
+    try:
+        # the owner's private capture is not the judge's to see, and still counts
+        assert inventory.captures() == [] and inventory.capture_count() == 1
+    finally:
+        _done(tokens)
+
+
+def test_a_new_codes_file_is_the_services_alone(tmp_path: Path) -> None:
+    settings = gated_settings(tmp_path)
+    open_keys(settings)
+    assert settings.keys_db_path.stat().st_mode & 0o077 == 0
