@@ -119,8 +119,9 @@ the main part at the wrong size, it is drawn once more with the review's brief a
 again. Both are kept; the better one is answered and shown, the other is marked `hidden`; each
 picture's record carries its check (`verdict`, `issues`, `cost_usd`, `redraw_of`), and the
 caption says *Checked against its facts by Muse Spark: matches, drawn again for picture 1*.
-A click costs one drawing and one check (about 0.017 USD), at most two of each. The demo
-loader never goes through the gate, so each of the set's drawings stays one request.
+A click costs one drawing and one check (about 0.017 USD), at most two of each. A demo
+visitor's drawing is answered from the recordings and never checked or drawn again, and the
+demo loader never goes through the gate, so each of the set's drawings stays one request.
 
 ## Corrections and review
 

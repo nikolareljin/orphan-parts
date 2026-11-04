@@ -184,7 +184,7 @@ A brief fixes one drawing. What every drawing is asked with is data: the drawing
 | `rules` | the closing words of an item drawn as itself, a use, a reuse card, a project |
 
 Muse Image is not fine-tuned (the Model API has no path for it); these are the levers. The
-loop that moves them is four commands:
+loop that moves them is six commands:
 
 ```bash
 ./dev picture-review --max-usd 1          # review every drawing as it is (report.md)
@@ -234,9 +234,10 @@ text issues 19 to 2, matches 11 to 21, wrong 1 to 5.
 ### The review gate
 
 The same check runs on the owner's own drawings with `PICTURE_REVIEW_GATE` (unset: on with a
-key, off in fixture mode): a new drawing is reviewed once and, when it is wrong or shows the
-main part at the wrong size or as another device, drawn once more with the review's brief and
-reviewed again. Both are kept and the better one is shown; the caption says what the check
+key, off in fixture mode); a demo visitor's drawing is answered from the recordings and never
+checked or drawn again, and the demo set's loader never goes through the gate. A new drawing
+is reviewed once and, when it is wrong or shows the main part at the wrong size or as another
+device, drawn once more with the review's brief and reviewed again. Both are kept and the better one is shown; the caption says what the check
 found. A bad drawing costs two drawings and two checks, about 0.035 USD.
 
 ## With Muse Code: the skill that tunes the parameters
@@ -369,8 +370,9 @@ scores the current version (review and `--evaluate`); proposes edits (`--tune`, 
 USD) and shows them from `picture-review/tune.md`, then **stops for your approval of each
 edit**; applies them; **stops before `--redraw-set`** (about 0.32 USD of drawings and 0.20 USD
 of reviews when every request changes); compares the versions (`--evaluate --prune`), and
-**stops before the pull request**. One round is about 0.55 USD; it offers a second only when
-drawings are still wrong.
+**stops before the pull request**. One round is about 0.55 USD (the proposal, the set drawn
+again and reviewed), 0.75 USD when the current version is scored first; it offers a second
+only when drawings are still wrong.
 
 **8. Where the outputs land.**
 
@@ -394,7 +396,7 @@ git checkout -- demo/set.yaml backend/app/picture/params.yaml eval/pictures \
   docs/project/picture-review-results.md backend/tests/fixtures   # restores pruned recordings too
 git clean -n backend/tests/fixtures/api/images-generations eval/pictures   # list new files
 git clean -f backend/tests/fixtures/api/images-generations eval/pictures   # delete them
-./dev demo     # 0 not recorded, 0 stand-in answers again
+./dev picture-review --dry-run   # set load: 0 not recorded, 0 stand-in answers again
 ```
 
 The money spent is not undone: the spend is in the Model API account's billing.

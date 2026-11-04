@@ -20,9 +20,9 @@ the next one. Every step is a `./dev picture-review` command; the guide is
 2. Start `muse` in the repository root, trust the workspace, then `/picture-tune`.
 3. Free first: `./dev picture-review --dry-run` (no key). Smallest live run: `./dev picture-review --only project:2 --max-usd 0.10`
    then `./dev picture-review --tune --dry-run` (rule edits only, free; never apply a proposal
-   made from one drawing). One full round is about 0.55 USD: review 0.21, proposal 0.01, the
-   set drawn again 0.32 and reviewed. The key (`MODEL_API_KEY`, shell or `.env`) bills the
-   Model API account.
+   made from one drawing). One round is about 0.55 USD: proposal 0.01, the set drawn again
+   0.32 and reviewed 0.20; scoring the current version first adds a review, 0.21. The key
+   (`MODEL_API_KEY`, shell or `.env`) bills the Model API account.
 4. Outputs: `picture-review/report.md`, `tune.md`, `tune.json`, `compare.md`, `sheet-v<N>.jpg`;
    `backend/app/picture/params.yaml`, `eval/pictures/params-v<N>.json`, the table in
    `docs/project/picture-review-results.md`, recordings under
@@ -67,7 +67,8 @@ the next one. Every step is a `./dev picture-review` command; the guide is
    lists the drawings (about 32: items, reuse cards, projects and their views). Read `version`
    in `backend/app/picture/params.yaml` (N) and list `eval/pictures/`. Tell the owner N, the
    number of drawings and the cost ahead: a review is about 0.007 USD a drawing, a drawing
-   0.01 USD, so one full round (review, tune, redraw, review) is about 0.6 USD for 32.
+   0.01 USD, so one full round (review, tune, redraw, review) is about 0.75 USD for 32, 0.55
+   when version N is already scored.
 2. **Evaluate version N.** If `eval/pictures/params-vN.json` is missing, or the owner wants a
    fresh score: `./dev picture-review --max-usd 1`, then `./dev picture-review --evaluate`.
    Show the verdict counts and the issues by category from the output and
@@ -100,8 +101,9 @@ the next one. Every step is a `./dev picture-review` command; the guide is
 9. **Check** that nothing else moved: `git status` shows `params.yaml`, `eval/pictures/`, the
    results page and files added or deleted under
    `backend/tests/fixtures/api/images-generations/`;
-   `git diff --diff-filter=M -- backend/tests/fixtures` is empty; `./dev demo` reports 0 not
-   recorded and 0 stand-in answers; `./dev test` passes.
+   `git diff --diff-filter=M -- backend/tests/fixtures` is empty; `./dev picture-review --dry-run`
+   prints a set load with 0 not recorded and 0 stand-in answers (it loads into a folder of
+   its own; `./dev demo` would reset the stack's inventory); `./dev test` passes.
 10. **Pull request**, when the owner says so: a branch `feat/drawing-params-v<N+1>`, one commit
     `feat(picture): drawing parameters v<N+1> from the review of <date>`, push, `gh pr create`
     with the version table and the spend in the body. Stop there; the owner merges.
