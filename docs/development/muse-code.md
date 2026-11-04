@@ -35,4 +35,21 @@ IDs and check Billing after the first session.
 - Useful commands: `/plan` before a larger change, `/grilling` to pressure-test a design,
   `/taste` for a UI polish pass, `/goal` to pin acceptance checks across turns.
 
+## Skills in this repository
+
+Muse Code reads project skills from `.agents/skills/<id>/SKILL.md` once the workspace is
+trusted; `muse skills list` shows them under `project`, and a slash command starts one.
+`.agents/` stays out of git, so the skills' sources are under `tools/muse/`, each linked in
+once:
+
+```bash
+mkdir -p .agents/skills && ln -s ../../tools/muse/picture-review .agents/skills/picture-review
+```
+
+- `/picture-review`: check the drawings against their facts, show the report, redraw the ones
+  the owner approves with a corrected brief, review them again and open a pull request
+  ([Review and redraw the drawings](../guides/picture-review.md)).
+
+`muse skills validate tools/muse/<id>` checks a skill file.
+
 Configuration and models: https://dev.meta.ai/docs/muse-code/

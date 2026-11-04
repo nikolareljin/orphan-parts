@@ -168,3 +168,15 @@ printed values into comparable ones, see the [evidence model](../concepts/eviden
 python -m app.extract photo.jpg          # prints the extraction as JSON
 ./dev shell backend                      # then the same inside the container
 ```
+
+## Reviewing drawings and recommendations
+
+`./dev picture-review` sends each drawing (at 768 pixels) with the facts it had to show, one
+call each at low effort, strict schema `ReviewAnswer` (verdict `matches`, `partly` or `wrong`,
+a confidence, issues by category, a corrected brief, a one-line summary): operation
+`picture-review`. With `--decide`, each item's Decide cards and each project's allocations
+are checked as text against the items' facts, strict schema `DecideAnswer` (flags with where,
+the claim, the fact it contradicts and a severity): operation `decide-review`. Both are the
+owner's tool, never called by the app on its own; their fixtures are stubs written by hand (a
+wrong drawing of a mirror, a DDR4 stick on a DDR3 laptop). The code path is
+`app/picture/review.py` ([Review and redraw the drawings](../guides/picture-review.md)).
