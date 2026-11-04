@@ -45,6 +45,8 @@ from app.projects.schema import Preferences
 from app.projects.service import Planner, fits
 from app.projects.skills import skills_line
 from app.projects.templates import Templates
+from app.textparams import TextSection, attrs_line
+from app.textparams import load as load_text_params
 from app.value.schema import Strategy
 from app.value.service import Valuer
 
@@ -108,12 +110,17 @@ def scenarios_brief(
     profiled: bool,
     others: list[str],
     fits: list[str] | None = None,
+    facts: str | None = None,
 ) -> str:
     """What the scenarios call is told: the item's confirmed values and details, the owner's
     profile (rated skills, tools, effort, whether they open devices, budget) and the kinds of
     item they own besides. Nothing else: not the location, the notes, a photo, a price or a
-    search; the same rule as the uses brief."""
+    search; the same rule as the uses brief. ``facts`` (the text parameters' ``facts_first``):
+    the item's compatibility facts lead, and the pairings follow the fields, before the
+    profile."""
     lines = [f"name: {item.name}", f"item_type: {item.item_type}"]
+    if facts is not None:
+        lines.append(f"compatibility facts: {facts or '(none read)'}")
     for key in DETAIL_KEYS:
         lines.append(f"{key}: {getattr(item, key) or '(not given)'}")
     lines.append(f"intent so far: {item.intent}")
@@ -121,6 +128,9 @@ def scenarios_brief(
     lines.extend(f"- {k}: {v}" for k, v in known.items())
     if not known:
         lines.append("- (none confirmed yet)")
+    if facts is not None and fits:
+        lines.extend(fit_lines(fits))
+        fits = None
     lines.append("Profile:")
     if profiled:
         rated = skills_line(prefs.skills) or "(none rated)"
@@ -162,17 +172,24 @@ def brief(
     prefs: Preferences,
     fills: list[TemplateFit],
     fits: list[str] | None = None,
+    facts: str | None = None,
 ) -> str:
     """What the model is told: confirmed values, the item's condition, faults, tests and
     accessories, the owner's preferences, and the projects the rules already found it fills.
-    Nothing else: not the location, the notes, a photo or a search."""
+    Nothing else: not the location, the notes, a photo or a search. ``facts``: as in the
+    scenarios brief."""
     lines = [f"name: {item.name}", f"item_type: {item.item_type}"]
+    if facts is not None:
+        lines.append(f"compatibility facts: {facts or '(none read)'}")
     for key in DETAIL_KEYS:
         lines.append(f"{key}: {getattr(item, key) or '(not given)'}")
     lines.append("Confirmed fields (key: value):")
     lines.extend(f"- {k}: {v}" for k, v in known.items())
     if not known:
         lines.append("- (none confirmed yet)")
+    if facts is not None and fits:
+        lines.extend(fit_lines(fits))
+        fits = None
     lines.append(f"interests: {prefs.interests or '(not given)'}")
     lines.append(f"skills: {skills_line(prefs.skills) or '(not given)'}")
     budget = f"{prefs.budget:g} {prefs.currency}" if prefs.budget is not None else "(not given)"
@@ -368,12 +385,13 @@ class Decider:
         known = known_fields(item)
         fills = templates_for(item, self.templates)
         fits = self.fits_for(item) if self.settings.compat_prompts else None
-        text = brief(item, known, self.planner.preferences(), fills, fits)
+        tp = load_text_params().uses
+        text = brief(item, known, self.planner.preferences(), fills, fits, self.facts_of(item, tp))
         result = await self.client.respond_structured(
             UsesWriting,
             model=self.settings.model_spark,
             input=[user_message(text_part(text))],
-            instructions=INSTRUCTIONS,
+            instructions=tp.instructions(INSTRUCTIONS),
             effort="low",
             max_output_tokens=MAX_OUTPUT_TOKENS,
             op="uses",
@@ -468,6 +486,13 @@ class Decider:
         found.sort(key=lambda p: {"fail": 0, "unknown": 1, "pass": 2}[p.state])
         return [pairing_text(p) for p in found[:12]]
 
+    def facts_of(self, item: Item, section: TextSection) -> str | None:
+        """The item's compatibility facts for a brief, when the text parameters lead with
+        them; None (nothing said) otherwise."""
+        if not section.facts_first:
+            return None
+        return attrs_line(self.rules.read(item).attrs)
+
     def others(self, item_id: int) -> list[str]:
         """The other kinds as the brief names them, "kind (count)"; capped, so a large
         inventory does not become the brief."""
@@ -477,6 +502,7 @@ class Decider:
         item = self.inventory.get(item_id)
         known = known_fields(item)
         profiled = self.planner.has_preferences()
+        tp = load_text_params().scenarios
         text = scenarios_brief(
             item,
             known,
@@ -484,12 +510,13 @@ class Decider:
             profiled=profiled,
             others=self.others(item_id),
             fits=self.fits_for(item) if self.settings.compat_prompts else None,
+            facts=self.facts_of(item, tp),
         )
         result = await self.client.respond_structured(
             ScenariosWriting,
             model=self.settings.model_spark,
             input=[user_message(text_part(text))],
-            instructions=SCENARIOS_INSTRUCTIONS,
+            instructions=tp.instructions(SCENARIOS_INSTRUCTIONS),
             effort="low",
             max_output_tokens=SCENARIOS_OUTPUT_TOKENS,
             op="scenarios",

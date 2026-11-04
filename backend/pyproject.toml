@@ -41,7 +41,7 @@ build-backend = "setuptools.build_meta"
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["profiles/data/*.yaml", "projects/data/*.yaml", "listing/*.yaml", "picture/params.yaml"]
+app = ["profiles/data/*.yaml", "projects/data/*.yaml", "listing/*.yaml", "picture/params.yaml", "textparams/params.yaml"]
 
 [tool.ruff]
 line-length = 100

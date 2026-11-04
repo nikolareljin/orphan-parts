@@ -41,6 +41,7 @@ from app.projects.schema import (
     Template,
 )
 from app.projects.templates import Templates
+from app.textparams import load as load_text_params
 
 log = logging.getLogger("app.projects")
 
@@ -66,6 +67,20 @@ CHECK_INSTRUCTIONS = (
     " bay, port or adapter takes. Before answering, call check_allocation with each project's"
     " picks; put another listed item where it refuses one, or leave that requirement missing."
 )
+
+# the text parameters' propose section, facts first: the line said before its own lines
+FACTS_FIRST = (
+    " Read each item's compatibility facts in the inventory (memory generation and form,"
+    " socket, interface, size) before any pick."
+)
+
+
+def propose_instructions(base: str) -> str:
+    """The proposals' instructions with the text parameters' ``propose`` section: word for
+    word ``base`` while that section is empty."""
+    section = load_text_params().propose
+    return section.instructions(base + (FACTS_FIRST if section.facts_first else ""))
+
 
 TOOLS: list[dict[str, Any]] = [
     {
@@ -348,8 +363,9 @@ class Planner:
             input=[user_message(text_part("\n".join(brief)))],
             tools=self.tools(),
             handle=self.tool,
-            instructions=INSTRUCTIONS
-            + (CHECK_INSTRUCTIONS if self.settings.compat_prompts else ""),
+            instructions=propose_instructions(
+                INSTRUCTIONS + (CHECK_INSTRUCTIONS if self.settings.compat_prompts else "")
+            ),
             effort="low",
             max_output_tokens=MAX_OUTPUT_TOKENS,
             # the check is one or two more steps: the picks, then the picks fixed

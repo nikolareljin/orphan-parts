@@ -75,7 +75,8 @@
 #                      key, nothing spent; codes and pairing images blurred, no metadata
 #   picture-review [--dry-run] [--only SEL,...] [--max-usd N] [--decide] [--data]
 #                  [--redraw SEL,...|all-wrong [--brief TEXT | --briefs FILE]]
-#                  [--tune [--apply] | --redraw-set | --evaluate [--prune]]
+#                  [--tune [--apply] | --redraw-set | --candidates N | --evaluate [--prune]
+#                  [--stage WORD]]
 #                      check every drawing of the demo set (loaded in fixture mode in a folder of
 #                      its own; --data: the stack's inventory) against the facts it must show,
 #                      one Muse Spark call each, into picture-review/report.md; --decide also
@@ -86,8 +87,19 @@
 #                      --tune proposes edits to the drawing parameters from the last review
 #                      (picture-review/tune.md), --tune --apply writes them (version one up),
 #                      --redraw-set draws and records the whole set again with them and reviews
-#                      it, --evaluate keeps the score in eval/pictures/ and compares versions
+#                      it, --candidates N draws each drawing that does not match N more times
+#                      and keeps the best (only the winner recorded), --evaluate keeps the
+#                      score in eval/pictures/ and compares versions
 #                      (docs/guides/picture-review.md)
+#   decide-review [--dry-run] [--max-usd N] [--tune [--apply] | --rerecord | --evaluate [--prune]
+#                 | --keep N]
+#                      check the demo set's Decide cards, ideas and project allocations against
+#                      the items' facts, one Muse Spark call each, into
+#                      picture-review/decide/report.md; --tune proposes edits to the text
+#                      parameters (backend/app/textparams/params.yaml), --tune --apply writes
+#                      them (version one up), --rerecord records the cards, ideas, proposals
+#                      and the drawings made from them again (every other answer replays) and
+#                      checks again, --evaluate keeps the score in eval/decide/
 #   demo-scrub <dir>   re-encode raw photos from <dir> into demo/photos/ without metadata,
 #                      WAV notes copied into demo/notes/
 #   shell <service>    open a shell in a running service
@@ -730,6 +742,33 @@ cmd_picture_review() {
   fi
 }
 
+# The recommendations checked against the items' facts, and the text parameters tuned from the
+# checks. The key reaches the container by name, as for picture-review.
+cmd_decide_review() {
+  local fake=0 arg key_env=()
+  for arg in "$@"; do
+    [[ "$arg" == "--dry-run" || "$arg" == "-h" || "$arg" == "--help" ]] && fake=1
+    [[ "$arg" == "--apply" || "$arg" == "--evaluate" || "$arg" == "--keep" ]] && fake=1
+  done
+  if [[ $fake -eq 0 ]]; then
+    if [[ -n "${MODEL_API_KEY:-}" ]]; then
+      key_env=(-e MODEL_API_KEY)
+    else
+      need_env_file
+      _lc_has MODEL_API_KEY || die "decide-review: MODEL_API_KEY is empty in the shell and in .env (--dry-run needs none)"
+    fi
+  fi
+  mkdir -p "$ROOT/picture-review/decide"
+  if [[ "${NATIVE:-0}" == "1" ]]; then
+    venv_ensure "$BACKEND"
+    [[ $fake -eq 1 ]] || env_load "$ROOT/.env"
+    OPL_FAKE_API="$fake" OPL_RECORD_FIXTURES=0 venv_run "$BACKEND" python -m app.textparams.tune --set "$ROOT/demo/set.yaml" --out "$ROOT/picture-review/decide" --eval-dir "$ROOT/eval/decide" --results "$ROOT/docs/project/picture-review-results.md" "$@"
+  else
+    docker_running || die "docker is not running (set NATIVE=1 to run without Docker)"
+    compose run --rm --no-deps -T -e OPL_FAKE_API="$fake" -e OPL_RECORD_FIXTURES=0 ${key_env[@]+"${key_env[@]}"} -v "$ROOT/picture-review:/picture-review" -v "$ROOT/docs/project:/docs-project" backend python -m app.textparams.tune --set /demo/set.yaml --out /picture-review/decide --eval-dir /eval/decide --results /docs-project/picture-review-results.md "$@"
+  fi
+}
+
 cmd_demo_scrub() {
   local raw="${1:?usage: ./dev demo-scrub <raw dir>}"
   [[ -d "$raw" ]] || die "demo-scrub: $raw is not a directory"
@@ -769,6 +808,7 @@ case "$cmd" in
   eval) cmd_eval "$@" ;;
   record-fixtures) cmd_record_fixtures "$@" ;;
   picture-review) cmd_picture_review "$@" ;;
+  decide-review) cmd_decide_review "$@" ;;
   demo-scrub) cmd_demo_scrub "$@" ;;
   video) bash "$ROOT/video/generate.sh" "$@" ;;
   docs-shots) bash "$ROOT/docs/shots/generate.sh" "$@" ;;

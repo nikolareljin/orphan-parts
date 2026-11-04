@@ -1,0 +1,43 @@
+# The text parameters: what the Decide cards (scenarios), the ideas (uses) and the proposals
+# (propose) of Orphan Parts Lens are told beyond their fixed instructions. Read by
+# backend/app/decide/service.py and backend/app/projects/service.py (loaded by backend/app/textparams) on each request and written
+# by `./dev decide-review --tune --apply`, which bumps `version`; the evaluation of each version
+# is kept in eval/decide/text-v<version>.json. The guide is
+# docs/guides/picture-review.md#tuning-the-text-parameters.
+#
+# Per section: `facts_first` opens the brief with the item's compatibility facts (memory
+# generation and form, socket, size); `constraints`, `corrections` and `banned` are said after
+# the instructions. An empty section adds nothing: its requests stay word for word what they
+# were. A change here changes those requests, so the demo set is recorded again for them
+# (`./dev decide-review --rerecord`).
+
+version: 2
+scenarios:
+  facts_first: true
+  constraints:
+  - A card or a use rests only on items the person owns that fit it; when none fits, it lists the missing
+    part under extra parts with its cost and never calls it one the person owns
+  - 'Read the condition first: a part recorded as missing, bare or unpopulated is not working as it is,
+    and a use of it says what must be added'
+  corrections:
+  - Do not claim a use works without verifying assembly state and listing every required power supply,
+    signal source, cable, and mating part as extra.
+  - Do not claim memory fits or can be tested without matching memory generation, per-slot limits, slot
+    count, and a populated compatible socket with processor present.
+  - Do not claim a controller drives a monitor or sensor or input device without matching connectors,
+    video or power interfaces, wiring needs, and intact mechanical parts.
+  - Do not propose storage, memory, or board use in a desktop without disclosing a missing compatible
+    processor, power supply, or bootable host needed to run or test it.
+  banned:
+  - with the processor you own
+  - your own processor
+uses:
+  facts_first: false
+  constraints: []
+  corrections: []
+  banned: []
+propose:
+  facts_first: false
+  constraints: []
+  corrections: []
+  banned: []
