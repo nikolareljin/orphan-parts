@@ -15,6 +15,8 @@ import {
   type ReferenceSpec,
 } from '../lib/measure'
 import SampleGallery from './SampleGallery'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 const CANVAS_MAX_WIDTH = 640
 const COLOURS = { reference: '#2d6cdf', feature: '#eb5757' }
@@ -228,7 +230,10 @@ export default function Measure({ item, onMeasured, demo = false }: { item: Item
 
   return (
     <section className="measure" aria-label="Measure a feature">
-      <h4>Measure a feature</h4>
+      <div className="section-head">
+        <h4>Measure a feature</h4>
+        <HelpTip entry={HELP.measure} />
+      </div>
       {!item.profile && (
         <p className="muted">Set a profile under Facts to list what can be measured, or name the feature yourself.</p>
       )}

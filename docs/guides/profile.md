@@ -9,6 +9,7 @@ What you can do and what you have, kept once for the inventory. The scenarios on
 No step on this page calls a model: the profile is a form, read later by the calls that write
 the scenarios and the proposals. Saving it needs the access code; the demo visitor sees it
 read-only (below).
+Look for the **?** next to **Skills** for a short note on what the levels are used for.
 
 1. Open **Profile** in the header. **Skills** lists ten skills, each with four levels:
    *none*, *some*, *confident*, *pro*. A skill added on top of them has **Remove** beside it

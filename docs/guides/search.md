@@ -10,6 +10,8 @@ Starting, planning, searching and bringing back need the access code; the demo v
 the searches read-only (below). The first pictures follow the agitator's search from the demo set; the
 planning pictures follow a search for a laptop's 65 W charger, made for these pages from the
 values on its old adapter's label. Each step says whether it calls a model.
+Look for the **?** next to **Find a part**, *I need one that fits*, **Plan the search**,
+**Search the web** and **Bring back listings** for a short note on each.
 
 1. **The searches.** **Find a part** lists every search with its status and candidates.
    **Open** one, or start one under **I need one that fits**: **Looking for**, **Needed by** (an

@@ -5,6 +5,8 @@ import { whenText } from '../lib/inventory'
 import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 import { WEB_SIGN_IN, askingPrice, highlightSegments, maxPriceLine, siteOf, splitListings, stateLabel, stateTone, verdictLabel, verdictTone, webLink, webSummary } from '../lib/find'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 const TEST_DELAY_MS = 350
 const MAX_SCREENSHOTS = 6
@@ -107,7 +109,10 @@ export default function SearchPlan({
   return (
     <div className="search-plan">
       <section aria-label="Plan the search">
-        <h4>Plan the search</h4>
+        <div className="section-head">
+          <h4>Plan the search</h4>
+          <HelpTip entry={HELP.plan} />
+        </div>
         <MarketplaceLimit />
         {plan && plan.phrasings.length > 0 && (
           <>
@@ -153,7 +158,10 @@ export default function SearchPlan({
       </section>
 
       <section aria-label="Bring back listings">
-        <h4>Bring back listings</h4>
+        <div className="section-head">
+          <h4>Bring back listings</h4>
+          <HelpTip entry={HELP.bringBack} />
+        </div>
         {demo ? (
           <SignInLine what="Bring back listings" />
         ) : closed ? (
@@ -206,6 +214,7 @@ function WebSearch({ searchId, closed, demo, onListings }: { searchId: number; c
           {busy ? 'Searching…' : 'Search the web'}
         </button>
         <span className="muted">one Muse Spark call with web search; the pages it finds come back as listings with their links</span>
+        <HelpTip entry={HELP.web} />
       </div>
       {line && <p className="meta">{line}</p>}
       {error && (

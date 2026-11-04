@@ -45,7 +45,7 @@ the public items only.
 
 ## 2. Open Pair the phone
 
-At the foot of the page, open **Pair the phone**. A QR code is drawn, with the address under it
+At the foot of the page, open **Pair the phone** (the **?** beside it says what pairing does). A QR code is drawn, with the address under it
 (`Or type http://… into the app.`), and a line that says what the code carries.
 
 **Signed in,** the code carries the address and a pairing good for a few minutes (fifteen on a

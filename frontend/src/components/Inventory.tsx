@@ -13,6 +13,8 @@ import { ItemSearch } from './SearchPlan'
 import Picture from './Picture'
 import SectionNav, { type SectionEntry } from './SectionNav'
 import Value from './Value'
+import HelpTip from './HelpTip'
+import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -78,7 +80,7 @@ export default function Inventory({
       )}
       {items === null && !error && <p className="muted">Loading…</p>}
       {items !== null && items.length === 0 && (
-        <p className="muted">No items yet. Read a label and save it to add one.</p>
+        <p className="muted">No items yet. Read a label and save it, or read a capture in the Inbox, to add one.</p>
       )}
       {items !== null && items.length > 0 && (
         <table className="items" aria-label="Items">
@@ -308,7 +310,10 @@ function ItemPanel({
       <SectionNav entries={SECTIONS} />
 
       <div className="item-section" data-section="facts">
-        <h4>Facts</h4>
+        <div className="section-head">
+          <h4>Facts</h4>
+          <HelpTip entry={HELP.facts} />
+        </div>
         {asksForParent(item) ? (
           <ParentPrompt item={item} readOnly={readOnly} save={(action) => apply(action)} />
         ) : (
@@ -381,7 +386,7 @@ function ItemPanel({
           {toConfirm > 0 && <span className="badge">{toConfirm} to confirm</span>}
         </h4>
         {fields.length === 0 ? (
-          <p className="muted">No fields yet.</p>
+          <p className="muted">No fields yet.{!readOnly && ' Add one below under Add what you know.'}</p>
         ) : (
           <div className="table-wrap">
             <table className="evidence" aria-label="Fields">
@@ -510,18 +515,21 @@ function ItemPanel({
       </div>
 
       <div className="item-footer">
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={item.public}
-            disabled={readOnly}
-            onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
-          />
-          <span>
-            Show in the public demo{' '}
-            <small className="muted">Visitors without the access code can open this item, its photos and drawings. Location and notes stay private.</small>
-          </span>
-        </label>
+        <span className="check-with-help">
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={item.public}
+              disabled={readOnly}
+              onChange={(e) => attempt(() => api.items.setPublic(item.id, e.target.checked))}
+            />
+            <span>
+              Show in the public demo{' '}
+              <small className="muted">Visitors without the access code can open this item, its photos and drawings. Location and notes stay private.</small>
+            </span>
+          </label>
+          <HelpTip entry={HELP.publicDemo} />
+        </span>
         <span className="item-actions">
           <button type="button" className="link" onClick={() => void showEvents()}>
             History
@@ -646,14 +654,17 @@ function ItemPhotos({ id, device = false, owner = false }: { id: number; device?
         ))}
       </div>
       {!device && checks.length > 0 && (
-        <ul className="privacy-notes" aria-label="Private details">
-          {checks.map((c) => (
-            <li key={c.n} className={`privacy-note ${c.status}`}>
-              {count > 1 && <span className="muted">Photo {c.n}: </span>}
-              {c.note}
-            </li>
-          ))}
-        </ul>
+        <div className="privacy-row">
+          <ul className="privacy-notes" aria-label="Private details">
+            {checks.map((c) => (
+              <li key={c.n} className={`privacy-note ${c.status}`}>
+                {count > 1 && <span className="muted">Photo {c.n}: </span>}
+                {c.note}
+              </li>
+            ))}
+          </ul>
+          <HelpTip entry={HELP.photos} />
+        </div>
       )}
       {owner && opened && opened.areas.length > 0 && (
         <div className="privacy-areas" aria-label={`Areas on photo ${opened.n}`}>

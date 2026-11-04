@@ -71,6 +71,10 @@ Without the access code there is no upload anywhere: **Read a label** is a galle
 set's photos, each answered from its recording ([Demo walkthrough](../start/demo.md)), and the
 Inbox shows *Sign in with the access code to use this.*
 
+In the web app, look for the **?** next to **Read a label**, next to **Inbox** and beside *Find
+the label in the photo first*: each opens a short note on what can be done there, with a link to
+this page.
+
 ## On the phone
 
 The **Capture** tab is one session: **Take a photo** as many times as needed (four go in one
