@@ -23,7 +23,7 @@ export default function Find({ demo = false }: { demo?: boolean }) {
 }
 
 function Searches({ demo }: { demo: boolean }) {
-  const [searches, setSearches] = useState<Search[]>([])
+  const [searches, setSearches] = useState<Search[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(null)
   const [error, setError] = useState('')
 
@@ -55,7 +55,9 @@ function Searches({ demo }: { demo: boolean }) {
           }}
         />
       )}
-      {searches.length === 0 ? (
+      {searches === null ? (
+        !error && <p className="muted">Loading…</p>
+      ) : searches.length === 0 ? (
         <p className="muted">{demo ? 'No searches to show yet.' : 'No searches yet. Describe the part you need above; you run the search on Marketplace yourself.'}</p>
       ) : (
         <table className="evidence" aria-label="Searches">
