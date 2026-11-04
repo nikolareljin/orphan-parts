@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "0f653eca91daef8e02741d46",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of a smart mirror on a hall wall, a two-way mirror in a wooden frame, the time, the weather and the day's calendar glowing through the glass built from monitor (screen size 18 inch, about 46 cm across the diagonal; a thin flat computer monitor, far smaller than a television, not a bulky CRT TV); an 18 inch 5:4 computer monitor, about 46 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above a small bench; only a clock and weather icons glow through the glass; a small mirror, not a TV; no words or logos; Add a daily calendar list glowing through the mirror glass alongside the clock and weather, driven by a boxy 18-inch 4:3 monitor (~46cm diagonal) behind the two-way mirror in a deep wooden frame on a hall wall; not neon signs, not a TV, no brand text.; seen at eye level from across the room, every part at its true size against the furniture; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793769825,
+    "data": [
+      {
+        "b64_json": "@0f653eca91daef8e02741d46-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4286,
+      "output_tokens": 1337,
+      "total_tokens": 5623
+    }
+  },
+  "status": 200
+}

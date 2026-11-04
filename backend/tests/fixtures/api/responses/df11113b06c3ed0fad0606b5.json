@@ -1,0 +1,513 @@
+{
+  "endpoint": "/responses",
+  "op": "scenarios",
+  "model": "muse-spark-1.3",
+  "digest": "df11113b06c3ed0fad0606b5",
+  "request": {
+    "input": [
+      {
+        "content": [
+          {
+            "text": "name: Laptop motherboard, no processor\nitem_type: motherboard\ncompatibility facts: memory form SO-DIMM\ncondition: the processor socket is empty\nfaults: (not given)\ntests_done: (not given)\naccessories: (not given)\nintent so far: sell\nConfirmed fields (key: value):\n- condition_notes: used board, CPU missing from socket, dust and tape residue visible\nProfile:\n- No profile was filled in. Answer for an average person with household tools and no particular skill, and say so in the first line of each card.\nOther items the person owns (kind, how many):\n- monitor (3)\n- laptop (2)",
+            "type": "input_text"
+          }
+        ],
+        "role": "user",
+        "type": "message"
+      }
+    ],
+    "instructions": "You help one person decide what to do with one used item: keep it and fix it, reuse it in something, or sell or give it away. Write three cards from the facts given and the person's profile; never assume a part works when the tests do not say so, and never invent a fault the record does not hold. keep_fix: the likely problem or problems behind the recorded condition and faults (one entry 'works as it is' when nothing is wrong), the repair steps written for this person's level, the difficulty for this person (easy, moderate or hard) with a why that names the rated skill it rests on, the parts with a rough cost each, the total cost and the time; when the repair is not worth it for this person, say so with worth_fixing false and the why. reuse: two or three things to make of it that fit the person's skills and tools, each naming the other items they own that it would use (with_items; empty when none applies), the difficulty for this person and why, the extra parts with cost, and the time. sell: what makes it sellable as it stands, what listing and handing it over takes, and one note; give no price, the price guidance is a separate step. recommended: one of keep_fix, reuse, sell or give, with a one-line reason tied to the profile. Plain words, no hype; each list entry one line. Also: A card or a use rests only on items the person owns that fit it; when none fits, it lists the missing part under extra parts with its cost and never calls it one the person owns. Read the condition first: a part recorded as missing, bare or unpopulated is not working as it is, and a use of it says what must be added. Mistakes to avoid, found in earlier answers: Do not claim a use works without verifying assembly state and listing every required power supply, signal source, cable, and mating part as extra. Do not claim memory fits or can be tested without matching memory generation, per-slot limits, slot count, and a populated compatible socket with processor present. Do not claim a controller drives a monitor or sensor or input device without matching connectors, video or power interfaces, wiring needs, and intact mechanical parts. Do not propose storage, memory, or board use in a desktop without disclosing a missing compatible processor, power supply, or bootable host needed to run or test it. Never write these phrases or their like: \"with the processor you own\"; \"your own processor\".",
+    "max_output_tokens": 1200,
+    "model": "muse-spark-1.3",
+    "prompt_cache_key": "orphan-parts",
+    "reasoning": {
+      "effort": "low"
+    },
+    "store": false,
+    "text": {
+      "format": {
+        "name": "ScenariosWriting",
+        "schema": {
+          "$defs": {
+            "KeepFix": {
+              "additionalProperties": false,
+              "description": "The first card: what is likely wrong, how this owner would fix it, and whether to.",
+              "properties": {
+                "cost": {
+                  "title": "Cost",
+                  "type": "string"
+                },
+                "difficulty": {
+                  "enum": [
+                    "easy",
+                    "moderate",
+                    "hard"
+                  ],
+                  "title": "Difficulty",
+                  "type": "string"
+                },
+                "parts": {
+                  "description": "each part with its rough cost",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Parts",
+                  "type": "array"
+                },
+                "problems": {
+                  "description": "the likely faults, from what is recorded",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Problems",
+                  "type": "array"
+                },
+                "steps": {
+                  "description": "the repair, at the owner's level",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Steps",
+                  "type": "array"
+                },
+                "time": {
+                  "title": "Time",
+                  "type": "string"
+                },
+                "why": {
+                  "description": "the difficulty for this owner, naming their rated skill",
+                  "title": "Why",
+                  "type": "string"
+                },
+                "worth_fixing": {
+                  "title": "Worth Fixing",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "worth_fixing",
+                "problems",
+                "steps",
+                "difficulty",
+                "why",
+                "parts",
+                "cost",
+                "time"
+              ],
+              "title": "KeepFix",
+              "type": "object"
+            },
+            "ReuseScenario": {
+              "additionalProperties": false,
+              "description": "One thing to make of it, with what else the owner already has.",
+              "properties": {
+                "cost": {
+                  "title": "Cost",
+                  "type": "string"
+                },
+                "difficulty": {
+                  "enum": [
+                    "easy",
+                    "moderate",
+                    "hard"
+                  ],
+                  "title": "Difficulty",
+                  "type": "string"
+                },
+                "extra_parts": {
+                  "description": "each part with its rough cost",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Extra Parts",
+                  "type": "array"
+                },
+                "time": {
+                  "title": "Time",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "what_it_does": {
+                  "title": "What It Does",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                },
+                "with_items": {
+                  "description": "other items of the owner's it would use",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "With Items",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "title",
+                "what_it_does",
+                "with_items",
+                "difficulty",
+                "why",
+                "extra_parts",
+                "cost",
+                "time"
+              ],
+              "title": "ReuseScenario",
+              "type": "object"
+            },
+            "SellCard": {
+              "additionalProperties": false,
+              "description": "The third card: what makes it sellable and what selling it takes.",
+              "properties": {
+                "effort": {
+                  "description": "what listing and handing it over takes, in a line",
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "note": {
+                  "title": "Note",
+                  "type": "string"
+                },
+                "selling_points": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Selling Points",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "selling_points",
+                "effort",
+                "note"
+              ],
+              "title": "SellCard",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Strict output schema of a scenarios call: every property required, no extras.",
+          "properties": {
+            "keep_fix": {
+              "$ref": "#/$defs/KeepFix"
+            },
+            "reason": {
+              "description": "one line, tied to the owner's profile",
+              "title": "Reason",
+              "type": "string"
+            },
+            "recommended": {
+              "enum": [
+                "keep_fix",
+                "reuse",
+                "sell",
+                "give"
+              ],
+              "title": "Recommended",
+              "type": "string"
+            },
+            "reuse": {
+              "items": {
+                "$ref": "#/$defs/ReuseScenario"
+              },
+              "title": "Reuse",
+              "type": "array"
+            },
+            "sell": {
+              "$ref": "#/$defs/SellCard"
+            }
+          },
+          "required": [
+            "keep_fix",
+            "reuse",
+            "sell",
+            "recommended",
+            "reason"
+          ],
+          "title": "ScenariosWriting",
+          "type": "object"
+        },
+        "strict": true,
+        "type": "json_schema"
+      }
+    }
+  },
+  "response": {
+    "top_logprobs": 0,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "prompt_cache_key": "orphan-parts",
+    "service_tier": "auto",
+    "model": "muse-spark-1.3",
+    "reasoning": {
+      "effort": "low"
+    },
+    "background": false,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "name": "ScenariosWriting",
+        "schema": {
+          "required": [
+            "keep_fix",
+            "reuse",
+            "sell",
+            "recommended",
+            "reason"
+          ],
+          "title": "ScenariosWriting",
+          "properties": {
+            "keep_fix": {
+              "$ref": "#/$defs/KeepFix"
+            },
+            "reason": {
+              "description": "one line, tied to the owner's profile",
+              "title": "Reason",
+              "type": "string"
+            },
+            "recommended": {
+              "enum": [
+                "keep_fix",
+                "reuse",
+                "sell",
+                "give"
+              ],
+              "title": "Recommended",
+              "type": "string"
+            },
+            "reuse": {
+              "items": {
+                "$ref": "#/$defs/ReuseScenario"
+              },
+              "title": "Reuse",
+              "type": "array"
+            },
+            "sell": {
+              "$ref": "#/$defs/SellCard"
+            }
+          },
+          "type": "object",
+          "$defs": {
+            "KeepFix": {
+              "additionalProperties": false,
+              "description": "The first card: what is likely wrong, how this owner would fix it, and whether to.",
+              "properties": {
+                "cost": {
+                  "title": "Cost",
+                  "type": "string"
+                },
+                "difficulty": {
+                  "enum": [
+                    "easy",
+                    "moderate",
+                    "hard"
+                  ],
+                  "title": "Difficulty",
+                  "type": "string"
+                },
+                "parts": {
+                  "description": "each part with its rough cost",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Parts",
+                  "type": "array"
+                },
+                "problems": {
+                  "description": "the likely faults, from what is recorded",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Problems",
+                  "type": "array"
+                },
+                "steps": {
+                  "description": "the repair, at the owner's level",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Steps",
+                  "type": "array"
+                },
+                "time": {
+                  "title": "Time",
+                  "type": "string"
+                },
+                "why": {
+                  "description": "the difficulty for this owner, naming their rated skill",
+                  "title": "Why",
+                  "type": "string"
+                },
+                "worth_fixing": {
+                  "title": "Worth Fixing",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "worth_fixing",
+                "problems",
+                "steps",
+                "difficulty",
+                "why",
+                "parts",
+                "cost",
+                "time"
+              ],
+              "title": "KeepFix",
+              "type": "object"
+            },
+            "ReuseScenario": {
+              "additionalProperties": false,
+              "description": "One thing to make of it, with what else the owner already has.",
+              "properties": {
+                "cost": {
+                  "title": "Cost",
+                  "type": "string"
+                },
+                "difficulty": {
+                  "enum": [
+                    "easy",
+                    "moderate",
+                    "hard"
+                  ],
+                  "title": "Difficulty",
+                  "type": "string"
+                },
+                "extra_parts": {
+                  "description": "each part with its rough cost",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Extra Parts",
+                  "type": "array"
+                },
+                "time": {
+                  "title": "Time",
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "type": "string"
+                },
+                "what_it_does": {
+                  "title": "What It Does",
+                  "type": "string"
+                },
+                "why": {
+                  "title": "Why",
+                  "type": "string"
+                },
+                "with_items": {
+                  "description": "other items of the owner's it would use",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "With Items",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "title",
+                "what_it_does",
+                "with_items",
+                "difficulty",
+                "why",
+                "extra_parts",
+                "cost",
+                "time"
+              ],
+              "title": "ReuseScenario",
+              "type": "object"
+            },
+            "SellCard": {
+              "additionalProperties": false,
+              "description": "The third card: what makes it sellable and what selling it takes.",
+              "properties": {
+                "effort": {
+                  "description": "what listing and handing it over takes, in a line",
+                  "title": "Effort",
+                  "type": "string"
+                },
+                "note": {
+                  "title": "Note",
+                  "type": "string"
+                },
+                "selling_points": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Selling Points",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "selling_points",
+                "effort",
+                "note"
+              ],
+              "title": "SellCard",
+              "type": "object"
+            }
+          },
+          "description": "Strict output schema of a scenarios call: every property required, no extras.",
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    },
+    "tools": [],
+    "tool_choice": "auto",
+    "truncation": "disabled",
+    "id": "resp_6aeab4eeaf511020c5c74e2f",
+    "object": "response",
+    "status": "completed",
+    "created_at": 1793766637.0,
+    "completed_at": 1793766638.0,
+    "error": null,
+    "incomplete_details": null,
+    "output": [
+      {
+        "type": "reasoning",
+        "id": "rs_6aeab4eeaf511020c5c74e2f:rs_136bd6b0-50ed-43d7-aa8d-9b9c9cc35bb8",
+        "encrypted_content": "",
+        "summary": [],
+        "status": "completed"
+      },
+      {
+        "type": "message",
+        "id": "msg_3f15ea18-5a61-4b58-aa6c-b1f407c14597",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\"keep_fix\": {\"cost\": \"$50+ and up, model-dependent\", \"difficulty\": \"hard\", \"parts\": [\"Compatible laptop processor for this exact board model ($30-$100+ used)\", \"Matching SO-DIMM memory to test with ($10-$30 used)\", \"Thermal paste and cleaning supplies ($5-$10)\"], \"problems\": [\"For an average person with household tools and no particular skill: processor socket is empty so board cannot run as it is\", \"Working condition is unknown - no faults or tests were given, so it cannot be assumed working\", \"Used condition with dust and tape residue visible\"], \"steps\": [\"Do not power or plug in the bare board while the processor socket is empty\", \"Photograph model numbers and empty socket to identify what processor and power adapter it needs\", \"Gently brush off dust and remove tape residue without scrubbing parts\", \"Take the board and photos to a repair shop to source a matching processor and test it\"], \"time\": \"2-4 hours plus shop time if outsourced\", \"why\": \"For an average person with household tools and no particular skill, this is hard because it rests on no particular skill for finding a matching laptop processor, fitting it, and testing an unpopulated bare board.\", \"worth_fixing\": false}, \"reason\": \"For an average person with no particular skill, sourcing a missing laptop processor and testing a bare board is too hard to be worth it, so passing it on makes more sense.\", \"recommended\": \"sell\", \"reuse\": [{\"cost\": \"~$15-$20\", \"difficulty\": \"easy\", \"extra_parts\": [\"Deep picture frame (~$10-$15)\", \"Backing card and mounting tabs (~$5)\"], \"time\": \"~30-60 minutes\", \"title\": \"Framed tech wall art\", \"what_it_does\": \"Stays unpowered in a frame as decoration, no power or startup attempted\", \"why\": \"For an average person with household tools and no particular skill, this is easy because it needs only mounting, with no wiring, power supply, or testing.\", \"with_items\": []}, {\"cost\": \"~$5-$8\", \"difficulty\": \"easy\", \"extra_parts\": [\"Soft brush for dust (~$5)\", \"Isopropyl alcohol and cloth for residue (~$5-$8 if needed)\"], \"time\": \"~30 minutes\", \"title\": \"Unpowered learning board for laptop parts\", \"what_it_does\": \"Stays unpowered for looking at and comparing with a working laptop, no electrical connection\", \"why\": \"For an average person with household tools and no particular skill, this is easy because it needs only looking, cleaning, and photos, with no repair skill.\", \"with_items\": [\"laptop\"]}], \"sell\": {\"effort\": \"List as for-parts with close photos of empty socket and residue, state CPU missing and untested, pack in anti-static bag plus bubble wrap for handover or shipping\", \"note\": \"For an average person with household tools and no particular skill: list only as untested for parts or repair because the processor is missing and nothing was tested; give it away if there is no buyer.\", \"selling_points\": [\"For an average person with household tools and no particular skill: sellable only as-is for parts or repair, not as working\", \"SO-DIMM memory-form laptop board with empty processor socket for a buyer with a matching processor\", \"Used board with dust and tape residue to show honestly in photos\"]}}",
+            "annotations": [],
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "instructions": "You help one person decide what to do with one used item: keep it and fix it, reuse it in something, or sell or give it away. Write three cards from the facts given and the person's profile; never assume a part works when the tests do not say so, and never invent a fault the record does not hold. keep_fix: the likely problem or problems behind the recorded condition and faults (one entry 'works as it is' when nothing is wrong), the repair steps written for this person's level, the difficulty for this person (easy, moderate or hard) with a why that names the rated skill it rests on, the parts with a rough cost each, the total cost and the time; when the repair is not worth it for this person, say so with worth_fixing false and the why. reuse: two or three things to make of it that fit the person's skills and tools, each naming the other items they own that it would use (with_items; empty when none applies), the difficulty for this person and why, the extra parts with cost, and the time. sell: what makes it sellable as it stands, what listing and handing it over takes, and one note; give no price, the price guidance is a separate step. recommended: one of keep_fix, reuse, sell or give, with a one-line reason tied to the profile. Plain words, no hype; each list entry one line. Also: A card or a use rests only on items the person owns that fit it; when none fits, it lists the missing part under extra parts with its cost and never calls it one the person owns. Read the condition first: a part recorded as missing, bare or unpopulated is not working as it is, and a use of it says what must be added. Mistakes to avoid, found in earlier answers: Do not claim a use works without verifying assembly state and listing every required power supply, signal source, cable, and mating part as extra. Do not claim memory fits or can be tested without matching memory generation, per-slot limits, slot count, and a populated compatible socket with processor present. Do not claim a controller drives a monitor or sensor or input device without matching connectors, video or power interfaces, wiring needs, and intact mechanical parts. Do not propose storage, memory, or board use in a desktop without disclosing a missing compatible processor, power supply, or bootable host needed to run or test it. Never write these phrases or their like: \"with the processor you own\"; \"your own processor\".",
+    "usage": {
+      "input_tokens": 1292,
+      "input_tokens_details": {
+        "cached_tokens": 1137
+      },
+      "output_tokens": 3109,
+      "output_tokens_details": {
+        "reasoning_tokens": 2377
+      },
+      "total_tokens": 4401
+    },
+    "parallel_tool_calls": true,
+    "store": false,
+    "max_output_tokens": 5296
+  },
+  "status": 200
+}

@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "57146ef63e453f50cb5e5951",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of ThinkPad home automation server built from laptop (a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than a bulky CRT TV), laptop memory (size 8 GB; a tiny memory stick far smaller than laptop keys and body, not a large green board); Always-on laptop server to run lights, sensors and schedules.; An opened 15-inch laptop about 35 cm wide on a home desk for house lights and schedules, with one small laptop memory stick to true small scale beside it; not a desktop tower, not a TV, no large circuit board.; Add: a standard 15-inch laptop on a wooden table as always-on home server with icons-only dashboard, laptop memory module beside it and wired network cable plugged in, with absolutely no legible text, logos or brand names anywhere, not a TV or desktop.; seen at eye level from across the room, every part at its true size against the furniture; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793769830,
+    "data": [
+      {
+        "b64_json": "@57146ef63e453f50cb5e5951-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4253,
+      "output_tokens": 1572,
+      "total_tokens": 5825
+    }
+  },
+  "status": 200
+}
