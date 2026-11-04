@@ -114,8 +114,8 @@ access code (the master, for you):     <24 letters and digits>
 issued code (for phone, 7 days):    opl_<…>
 ```
 
-`./dev gate show` prints the master again; `./dev gate off` turns the sign-in off. (Without it
-the phone pairs too, with the address alone, as a guest of the open server.)
+`./dev gate show` prints the master again; `./dev gate off` turns the sign-in off. (You can skip
+this step: on an open server the phone pairs with the address alone, no code.)
 
 **Find the computer's address on the Wi-Fi**; on the phone, `localhost` is the phone itself:
 
@@ -189,8 +189,8 @@ Either way the app opens on its **Backend** tab.
 2. In the app, **Backend** tab, tap **Scan to pair** and point the camera at the QR code. The
    phone gets an access code of its own from it (never yours); the QR code is good for fifteen
    minutes, so keep it off screen shares.
-3. Tap **Check**. You should see *Backend ok, Model API fixture, demo gated.* followed by a line
-   saying the phone's own code opens it.
+3. Tap **Check**. You should see *Backend ok, Model API fixture, demo gated. The phone's own
+   code (…) opens it.* (typed by hand: *… The code opens it.*)
 
 **No camera scanner (no Google Play services) or no second screen:** on the **Backend** tab,
 type the address from under the QR code into **Backend URL** and the phone code `./dev gate on`
