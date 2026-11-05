@@ -1,6 +1,6 @@
 """The one place that talks to the Model API.
 
-Responsibilities: bearer auth from settings, timeouts, retries with backoff for 429/500/503
+Responsibilities: bearer auth from settings, timeouts, retries with backoff for 408/429/5xx
 (honouring Retry-After), the spend cap, the cost ledger, structured output, and fixture mode
 for tests and the offline demo.
 """
@@ -14,6 +14,8 @@ import random
 import time
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
@@ -340,7 +342,9 @@ class ModelApiClient:
         self._http = httpx.AsyncClient(
             base_url=settings.model_api_base_url.rstrip("/"),
             headers=headers,
-            timeout=httpx.Timeout(settings.model_api_timeout_s, connect=10.0),
+            timeout=httpx.Timeout(
+                settings.model_api_timeout_s, connect=settings.model_api_connect_timeout_s
+            ),
             transport=transport,
         )
         # the fixture twin answers the demo visitor: same fixtures, its own ledger, nothing
@@ -379,6 +383,9 @@ class ModelApiClient:
         search_queries: int = 0,
         audio_seconds: float = 0.0,
     ) -> ModelResponse:
+        # the caller's counts are refused before anything is sent (and before the spend
+        # hold is taken), not when the answer comes back
+        counts = Usage(search_queries=search_queries, audio_seconds=audio_seconds)
         if (twin := self._for_request()) is not None:
             return await twin.respond(
                 model=model,
@@ -421,6 +428,8 @@ class ModelApiClient:
             body["include"] = include
         if metadata:
             body["metadata"] = metadata
+        # the cache key stays in the fixture key with the rest of the body: renaming it
+        # invalidates every recording, so a rename means a full re-record, not a fix here
         if self.settings.prompt_cache_name:
             body["prompt_cache_key"] = self.settings.prompt_cache_name
         # the fixture is keyed on the answer budget, not on the cap sent, so a recording outlives
@@ -440,8 +449,8 @@ class ModelApiClient:
         # so the bill is read off the output unless the caller already knows the count.
         usage = Usage.from_response(
             data.get("usage"),
-            search_queries=search_queries or searches(output),
-            audio_seconds=audio_seconds,
+            search_queries=counts.search_queries or searches(output),
+            audio_seconds=counts.audio_seconds,
         )
         usd = 0.0 if from_fixture else cost_usd(model, usage)
         self._record(op, model, RESPONSES, usage, usd, from_fixture, attempts, ms)
@@ -565,7 +574,12 @@ class ModelApiClient:
         data, from_fixture, attempts, ms = await self._post(
             TRANSCRIBE, body, op, files=files, key=key
         )
-        seconds = float(data.get("audioDurationMs") or 0) / 1000.0
+        try:
+            seconds = float(data.get("audioDurationMs") or 0) / 1000.0
+        except (TypeError, ValueError):
+            # a duration it cannot read counts as nothing: the call is still recorded, and
+            # its spend hold still settles
+            seconds = 0.0
         usage = Usage.from_response(None, audio_seconds=seconds)
         usd = 0.0 if from_fixture else cost_usd(model, usage)
         self._record(op, model, TRANSCRIBE, usage, usd, from_fixture, attempts, ms)
@@ -686,12 +700,20 @@ class ModelApiClient:
         meter = code_meter.get()
         if meter is not None:
             meter.check()
+        # the spend cap holds while calls overlap: each live call reserves its ceiling
+        # before it is sent and settles once recorded, so calls passing the gate together
+        # cannot all spend past it
+        ceiling = self.settings.model_api_call_reserve_usd
+        reserved = False
         try:
-            self.ledger.require_budget()
+            self.ledger.reserve(ceiling)
+            reserved = True
             data, tried, ms = await self._request(
                 "POST", endpoint, body, op, files=files, max_attempts=attempts
             )
         except BaseException:
+            if reserved:
+                self.ledger.settle(ceiling)
             if meter is not None:
                 meter.release()  # nothing to charge: the hold goes
             raise
@@ -761,7 +783,8 @@ class ModelApiClient:
             try:
                 retry_after = float(header)
             except ValueError:
-                retry_after = None
+                # the seconds form did not parse: the header also allows an HTTP date
+                retry_after = _http_date_delay(header)
         return ModelApiError(
             self._redact(message),
             status=response.status_code,
@@ -788,19 +811,24 @@ class ModelApiClient:
         meter = code_meter.get()
         if meter is not None and not fixture:
             meter.charge(usd)
-        self.ledger.record(
-            LedgerEntry(
-                request_id=request_id_var.get(),
-                op=op,
-                model=model,
-                endpoint=endpoint,
-                usage=usage,
-                usd=usd,
-                fixture=fixture,
-                attempts=attempts,
-                ms=ms,
+        try:
+            self.ledger.record(
+                LedgerEntry(
+                    request_id=request_id_var.get(),
+                    op=op,
+                    model=model,
+                    endpoint=endpoint,
+                    usage=usage,
+                    usd=usd,
+                    fixture=fixture,
+                    attempts=attempts,
+                    ms=ms,
+                )
             )
-        )
+        finally:
+            if not fixture:
+                # the call is on the ledger: its reservation goes, whatever recording did
+                self.ledger.settle(self.settings.model_api_call_reserve_usd)
         log.info(
             "model api %s %s",
             op,
@@ -862,8 +890,6 @@ def strict_schema(model_cls: type[BaseModel]) -> dict[str, Any]:
     """JSON Schema in the strict subset: every object closed, every property required."""
     schema = model_cls.model_json_schema()
     _close(schema)
-    for definition in (schema.get("$defs") or {}).values():
-        _close(definition)
     return schema
 
 
@@ -875,11 +901,31 @@ def _close(node: dict[str, Any]) -> None:
         for prop in props.values():
             if isinstance(prop, dict):
                 _close(prop)
-    if isinstance(node.get("items"), dict):
-        _close(node["items"])
-    for alt in node.get("anyOf") or []:
-        if isinstance(alt, dict):
-            _close(alt)
+    for key in ("items", "not"):
+        child = node.get(key)
+        if isinstance(child, dict):
+            _close(child)
+    for key in ("anyOf", "oneOf", "allOf", "prefixItems"):
+        for alt in node.get(key) or []:
+            if isinstance(alt, dict):
+                _close(alt)
+    for key in ("$defs", "patternProperties"):
+        for definition in (node.get(key) or {}).values():
+            if isinstance(definition, dict):
+                _close(definition)
+
+
+def _http_date_delay(header: str) -> float | None:
+    """Seconds until an HTTP-date Retry-After, or None when it is past or no date: the
+    retry then falls back to the backoff, as a header it cannot read."""
+    try:
+        at = parsedate_to_datetime(header)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if at.tzinfo is None:
+        at = at.replace(tzinfo=UTC)
+    delay = (at - datetime.now(UTC)).total_seconds()
+    return delay if delay > 0 else None
 
 
 def _json_body(response: httpx.Response) -> dict[str, Any]:

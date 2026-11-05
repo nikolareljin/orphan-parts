@@ -279,7 +279,7 @@ async def test_a_rerecord_buys_only_the_text_and_the_drawings(tmp_path: Path) ->
         log_format="text",
         _env_file=None,
     )
-    client = tt.TextOnlyClient(settings, CostLedger(1.0), FixtureStore(tmp_path / "fixtures"))
+    client = tt.TextOnlyClient(settings, CostLedger(25.0), FixtureStore(tmp_path / "fixtures"))
     try:
         with pytest.raises(NoRecordingError):
             await client._post("/responses", {"model": "m"}, "extract")

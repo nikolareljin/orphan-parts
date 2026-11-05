@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, type Candidate, type ItemSummary, type ProfileRule, type ProfileSummary, type Search, type SourceKind } from '../lib/api'
-import { usd } from '../lib/format'
+import { modelName, usd } from '../lib/format'
 import { SOURCES, candidateRequest, seenText, sourceLabel, stateLabel, stateTone, statusLabel } from '../lib/find'
 import { inputLabel, ruleHint } from '../lib/match'
+import { copyText } from '../lib/listing'
 import { Result } from './Assess'
 import Modal from './Modal'
 import SearchPlan from './SearchPlan'
@@ -67,7 +68,7 @@ function Searches({ demo }: { demo: boolean }) {
               <th scope="col">Profile</th>
               <th scope="col">Status</th>
               <th scope="col">Candidates</th>
-              <th scope="col"></th>
+              <th scope="col" aria-label="Open" />
             </tr>
           </thead>
           <tbody>
@@ -361,7 +362,7 @@ function SearchPanel({ id, demo, onChanged, onClosed }: { id: number; demo: bool
               <th scope="col">Price</th>
               <th scope="col">Seen</th>
               <th scope="col">Source</th>
-              <th scope="col"></th>
+              <th scope="col" aria-label="Open" />
             </tr>
           </thead>
           <tbody>
@@ -572,7 +573,7 @@ function CandidatePanel({ id, demo, onChanged }: { id: number; demo: boolean; on
   async function copy() {
     if (!note) return
     try {
-      await navigator.clipboard.writeText(`${note.subject}\n\n${note.message}`)
+      await copyText(`${note.subject}\n\n${note.message}`)
       setCopied(true)
     } catch (err: unknown) {
       setError(message(err))
@@ -591,7 +592,7 @@ function CandidatePanel({ id, demo, onChanged }: { id: number; demo: boolean; on
         {candidate.asking_price && ` · ${candidate.asking_price} ${candidate.currency}`}
         {candidate.location && ` · ${candidate.location}`}
         {candidate.included_parts && ` · includes ${candidate.included_parts}`}
-        {candidate.model && ` · ${candidate.model} · ${usd(candidate.cost_usd)}`}
+        {candidate.model && ` · ${modelName(candidate.model)} · ${usd(candidate.cost_usd)}`}
         {candidate.from_fixture && <span className="badge">recorded answer</span>}
       </p>
       {candidate.url && (

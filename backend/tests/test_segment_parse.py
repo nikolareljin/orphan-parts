@@ -44,6 +44,18 @@ def test_a_malformed_record_is_reported_not_raised() -> None:
     assert warnings and "malformed_record" in warnings[0]
 
 
+def test_a_recoverable_record_warns_and_still_matches() -> None:
+    text = (
+        "<0f>0<|box;x1=200;y1=300;x2=439;y2=379;w=640;h=480;c=1.5|>"
+        "<|mask;x=0;y=0;c=1.5;data=80,240,!!!!!)y9{(&K$+Z|>"
+    )
+    matches, warnings = parse_matches(text)
+    assert len(matches) == 1
+    assert warnings == [
+        "ignored_confidence: Ignored a confidence value that is not a number from 0 through 1."
+    ]
+
+
 def test_shift_path_moves_and_scales_every_point() -> None:
     assert shift_path("M 0 0 L 10 0 L 10 5 Z", 100, 50) == "M 100 50 L 110 50 L 110 55 Z"
     assert shift_path("M 1 1 Z", 0, 0, 2, 3) == "M 2 3 Z"

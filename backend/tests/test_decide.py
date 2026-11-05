@@ -22,6 +22,7 @@ from app.decide import (
     suggested,
     templates_for,
 )
+from app.decide.policy import MAINS_NOTE
 from app.decide.schema import MAX_REUSE, Scenarios
 from app.decide.service import (
     MORE,
@@ -723,6 +724,72 @@ def _kept(inventory: Inventory, item_id: int, written: ScenariosWriting) -> None
     }
     item = inventory.get(item_id)
     inventory.add_scenarios(item_id, json.dumps(content), item_version=item.version)
+
+
+def _uses_kept(inventory: Inventory, item_id: int, uses: list[Use]) -> None:
+    content = {
+        "templates": [],
+        "uses": [u.model_dump() for u in uses],
+        "model": "muse-spark",
+        "from_fixture": True,
+        "cost_usd": 0.0,
+    }
+    item = inventory.get(item_id)
+    inventory.add_uses(item_id, json.dumps(content), item_version=item.version)
+
+
+def test_uses_of_a_mains_item_carry_the_safety_note(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory)
+    inventory.add_field(item_id, FieldCreate(field="input_voltage", value="100-240 V"))
+    _uses_kept(
+        inventory,
+        item_id,
+        [Use(title="Lamp", what_it_does="lights the desk", needs=[], effort="low", note="")],
+    )
+    read = _decider(settings, inventory).latest_uses(item_id)
+    assert read is not None
+    assert read.uses[0].safety == [MAINS_NOTE]
+
+
+def test_a_use_for_circumvention_is_not_shown_but_stays_stored(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory)
+    _uses_kept(
+        inventory,
+        item_id,
+        [
+            Use(title="Lamp", what_it_does="lights the desk", needs=[], effort="low", note=""),
+            Use(
+                title="Bypass the meter to run it free",
+                what_it_does="saves money",
+                needs=[],
+                effort="low",
+                note="",
+            ),
+        ],
+    )
+    read = _decider(settings, inventory).latest_uses(item_id)
+    assert read is not None
+    assert [u.title for u in read.uses] == ["Lamp"]
+    stored = json.loads(inventory.uses(item_id)[-1]["content"])
+    assert len(stored["uses"]) == 2
+
+
+def test_scenarios_of_a_mains_item_carry_the_safety_note(settings: Settings) -> None:
+    inventory = Inventory(settings)
+    item_id = laptop(inventory)
+    inventory.add_field(item_id, FieldCreate(field="input_voltage", value="230 V"))
+    written = _written()
+    written.reuse.append(_card("Jailbreak the tablet for emulators"))
+    _kept(inventory, item_id, written)
+    read = _decider(settings, inventory).latest_scenarios(item_id)
+    assert read is not None
+    assert read.keep_fix.safety == [MAINS_NOTE]
+    assert [c.title for c in read.reuse] == ["desk"]
+    assert read.reuse[0].safety == [MAINS_NOTE]
+    stored = json.loads(inventory.scenarios(item_id)[-1]["content"])
+    assert len(stored["reuse"]) == 2
 
 
 def test_a_stored_row_with_counts_reads_as_owned_kinds(settings: Settings) -> None:

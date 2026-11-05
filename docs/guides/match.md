@@ -44,8 +44,8 @@ Needed values are written in the candidate's terms: for a vacuum tool, the neede
 `opening_inner_diameter` is the wand's outer diameter; for an agitator, the needed `tab_span`
 is the worn rod's own span, the one the drive takes. A side can be an item and values at
 once; a written value replaces the item's for that key. Numbers are compared in the rule's
-unit: a value on either side recorded or written in another unit (`3300 mA` against a rule in
-amps) stays unknown and asks for the right one.
+unit: milli and centi units convert (`3300 mA` reads as 3.3 A against a rule in amps), a unit
+that does not convert stays unknown and asks for the right one.
 
 ## Rules
 

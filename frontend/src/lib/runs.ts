@@ -1,4 +1,4 @@
-import { usd } from './format'
+import { modelName, usd } from './format'
 import { whenText } from './inventory'
 
 // The steps that ask a model, and what each says before it was ever asked: what it does, what
@@ -53,7 +53,7 @@ export const STEPS: Record<Step, { what: string; gives: string; cost: string }> 
 // One saved answer in the list of earlier ones: its number, when, and the model that wrote it.
 export function earlierLabel(r: { version: number; at: string; model: string; from_fixture?: boolean }): string {
   const recorded = r.from_fixture ? ' · recorded answer' : ''
-  return `Version ${r.version} · ${whenText(r.at)} · ${r.model}${recorded}`
+  return `Version ${r.version} · ${whenText(r.at)} · ${modelName(r.model)}${recorded}`
 }
 
 // The cost line of a saved answer: what it cost when it was asked.

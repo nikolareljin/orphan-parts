@@ -1,4 +1,5 @@
 import type { Capture, CaptureStatus } from './api'
+import { modelName } from './format'
 
 export function statusLabel(status: CaptureStatus): string {
   switch (status) {
@@ -25,6 +26,6 @@ export function captureSummary(c: Pick<Capture, 'photos' | 'clip' | 'clip_bytes'
   if (c.audio) parts.push(`a voice note of ${c.audio_seconds.toFixed(0)} s`)
   let text = parts.join(', ')
   if (c.name) text += ` · named ${c.name}`
-  if (c.model) text += ` · read by ${c.model}`
+  if (c.model) text += ` · read by ${modelName(c.model)}`
   return text
 }

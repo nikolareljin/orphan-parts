@@ -23,7 +23,7 @@ def _is_heif(data: bytes) -> bool:
 def prepare(data: bytes, *, max_px: int, max_bytes: int) -> bytes:
     """Re-encode one photo: EXIF orientation applied, longest side at most ``max_px``,
     RGB JPEG without any metadata. Raises ``BadImageError`` for anything else."""
-    return _encode(_decode(data, max_px=max_px, max_bytes=max_bytes))
+    return encode_jpeg(_decode(data, max_px=max_px, max_bytes=max_bytes))
 
 
 def _decode(data: bytes, *, max_px: int, max_bytes: int) -> Image.Image:
@@ -57,7 +57,8 @@ def _decode(data: bytes, *, max_px: int, max_bytes: int) -> Image.Image:
     return rgb
 
 
-def _encode(img: Image.Image) -> bytes:
+def encode_jpeg(img: Image.Image) -> bytes:
+    """An image as a metadata-free JPEG, at the quality every photo taken in is kept."""
     out = BytesIO()
     # EXIF, ICC and XMP are written only when passed; a JPEG comment is carried over from the
     # source unless one is passed, so an empty one goes in, and an empty comment writes nothing
@@ -71,7 +72,7 @@ def read_copy(data: bytes, *, max_px: int, max_bytes: int, enhance: bool) -> tup
     service encoded (what came in is as it came in)."""
     img = _decode(data, max_px=max_px, max_bytes=max_bytes)
     score = sharpness_of(img)
-    return _encode(_enhanced(img) if enhance else img), score
+    return encode_jpeg(_enhanced(img) if enhance else img), score
 
 
 def dimensions(data: bytes) -> tuple[int, int]:
@@ -119,6 +120,7 @@ def sharpness_of(img: Image.Image) -> float:
 
 
 def sharpness(data: bytes) -> float:
+    """``sharpness_of`` on an encoded photo, for a caller that holds bytes."""
     with Image.open(BytesIO(data)) as img:
         return sharpness_of(img)
 
@@ -134,4 +136,4 @@ def _enhanced(img: Image.Image) -> Image.Image:
 def enhance(data: bytes) -> bytes:
     """``_enhanced`` on an encoded photo, for a caller that holds bytes."""
     with Image.open(BytesIO(data)) as img:
-        return _encode(_enhanced(img))
+        return encode_jpeg(_enhanced(img))

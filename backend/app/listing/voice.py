@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from app.config import Settings
 from app.inventory import Inventory
 from app.inventory.schema import TEXT_MAX, FieldCreate, Item
-from app.model_api import ModelApiClient
+from app.model_api import ModelApiClient, Transcript
 
 log = logging.getLogger("app.voice")
 
@@ -53,17 +53,23 @@ class VoiceNotes:
         self.client = client
         self.inventory = inventory
 
-    async def note(self, item_id: int, audio: bytes) -> VoiceNote:
-        self.inventory.get(item_id)
+    async def transcribe(self, audio: bytes) -> Transcript:
+        """What was said, from the Model API; the length checked before it is sent."""
         seconds = wav_seconds(audio)
         if seconds > self.settings.voice_max_seconds:
             raise BadAudioError(
                 f"the recording is {seconds:.0f} s; at most {self.settings.voice_max_seconds} s"
             )
         transcript = await self.client.transcribe(audio)
-        text = transcript.text
-        if not text:
+        if not transcript.text:
             raise BadAudioError("nothing was heard in the recording")
+        return transcript
+
+    def keep(self, item_id: int, audio: bytes, transcript: Transcript) -> VoiceNote:
+        """A transcript kept on the item as the owner's words."""
+        self.inventory.get(item_id)
+        seconds = wav_seconds(audio)
+        text = transcript.text
         cut = len(text) > TEXT_MAX
         if cut:
             # kept whole words only; the owner can say the rest in another note
@@ -85,3 +91,7 @@ class VoiceNotes:
             cost_usd=transcript.cost_usd,
             item=item,
         )
+
+    async def note(self, item_id: int, audio: bytes) -> VoiceNote:
+        self.inventory.get(item_id)
+        return self.keep(item_id, audio, await self.transcribe(audio))

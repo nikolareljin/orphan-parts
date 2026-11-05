@@ -6,8 +6,9 @@ guesses: a value that cannot be parsed is returned trimmed, with the default uni
 
 import re
 
-_NUMBER = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
-_RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:-|~|to)\s*(\d+(?:[.,]\d+)?)", re.I)
+_NUMBER = re.compile(r"[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?|[-+]?\d+(?:[.,]\d+)?")
+# the range dash may be a hyphen, a tilde, an en dash or an em dash (escaped: alike)
+_RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:[-~\u2013\u2014]|to)\s*(\d+(?:[.,]\d+)?)", re.I)
 _MILLI = re.compile(r"(\d+(?:[.,]\d+)?)\s*m[aA]\b")
 # the separator may be x, an asterisk or the multiplication sign
 _TIMES = "x*" + chr(0xD7)
@@ -16,6 +17,13 @@ _CODE_PREFIX = re.compile(
     r"^(?:P/?N|PART(?: NO\.?| NUMBER)?|MODEL(?: NO\.?)?|MOD\.?)\s*[:#]?\s*", re.I
 )
 _LIST_SPLIT = re.compile(r"[,;/|]+|\s{2,}")
+# grouping, not a decimal mark: "1,000" reads as thousands, "19,5" still as 19.5
+_THOUSANDS = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?")
+
+
+def strip_thousands(text: str) -> str:
+    """A label's thousands grouping removed; a decimal comma is not grouping and stays."""
+    return _THOUSANDS.sub(lambda m: m.group(0).replace(",", ""), text)
 
 
 def _clean(text: str) -> str:
@@ -24,7 +32,7 @@ def _clean(text: str) -> str:
 
 def _num(text: str) -> str:
     """Format a number as printed: no trailing zeros, dot as the decimal mark."""
-    value = float(text.replace(",", "."))
+    value = float(strip_thousands(text).replace(",", "."))
     return f"{value:.3f}".rstrip("0").rstrip(".")
 
 
@@ -48,7 +56,8 @@ def _volts_range(text: str) -> tuple[str, str]:
 def _amps(text: str) -> tuple[str, str]:
     m = _MILLI.search(text)
     if m:
-        return _num(str(float(m.group(1).replace(",", ".")) / 1000)), "A"
+        milli = float(strip_thousands(m.group(1)).replace(",", "."))
+        return _num(str(milli / 1000)), "A"
     n = _first_number(text)
     return (n, "A") if n else (_clean(text), "A")
 
@@ -73,11 +82,19 @@ def _connector(text: str) -> tuple[str, str]:
     return t, ""
 
 
+_POLARITY_NEGATIVE = re.compile(
+    r"cent(?:re|er)\s+negative|-\s*cent(?:re|er)|cent(?:re|er)\s*-|\bnegative\b|\bneg\b"
+)
+_POLARITY_POSITIVE = re.compile(
+    r"cent(?:re|er)\s+positive|\+\s*cent(?:re|er)|cent(?:re|er)\s*\+|\bpositive\b|\bpos\b"
+)
+
+
 def _polarity(text: str) -> tuple[str, str]:
     t = _clean(text).lower()
-    if "neg" in t or "centre -" in t or "center -" in t:
+    if _POLARITY_NEGATIVE.search(t):
         return "center negative", ""
-    if "pos" in t or "centre +" in t or "center +" in t:
+    if _POLARITY_POSITIVE.search(t):
         return "center positive", ""
     return t, ""
 

@@ -8,6 +8,9 @@ from __future__ import annotations
 import logging
 import re
 import shutil
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 from app.config import Settings
@@ -27,6 +30,17 @@ class ItemPhotos:
         self.settings = settings
         self.inventory = inventory
         self.root = settings.data_dir / "items"
+        # one lock per item around every read-modify-write of its photos, so two adds at
+        # once neither overwrite each other nor miscount
+        self._locks: dict[int, threading.RLock] = {}
+        self._locks_guard = threading.Lock()
+
+    @contextmanager
+    def held(self, item_id: int) -> Iterator[None]:
+        with self._locks_guard:
+            lock = self._locks.setdefault(item_id, threading.RLock())
+        with lock:
+            yield
 
     def folder(self, item_id: int) -> Path:
         return self.root / str(item_id)
@@ -53,12 +67,11 @@ class ItemPhotos:
         self.inventory.get(item_id)
         if not photos:
             raise PhotoError("no photo sent")
-        kept = self._paths(item_id)
-        have = len(kept)
-        limit = self.settings.max_photos
-        if have + len(photos) > limit:
-            raise PhotoError(f"an item keeps at most {limit} photos; this one has {have}")
         s = self.settings
+        # refused before anything is encoded; checked again under the lock, where it counts
+        have = len(self._paths(item_id))
+        if have + len(photos) > s.max_photos:
+            raise PhotoError(f"an item keeps at most {s.max_photos} photos; this one has {have}")
         ready = (
             photos
             if prepared
@@ -67,15 +80,26 @@ class ItemPhotos:
                 for p in photos
             ]
         )
-        folder = self.folder(item_id)
-        folder.mkdir(parents=True, exist_ok=True)
-        # numbered past the highest there is, so a gap left by hand never makes an overwrite
-        n = max((int(PHOTO_NAME.fullmatch(p.name).group(1)) for p in kept), default=0)  # type: ignore[union-attr]
-        for data in ready:
-            n += 1
-            (folder / f"photo-{n}.jpg").write_bytes(data)
-        log.info("item photos", extra={"item_id": item_id, "photos": have + len(ready)})
-        return have + len(ready)
+        with self.held(item_id):
+            kept = self._paths(item_id)
+            have = len(kept)
+            limit = self.settings.max_photos
+            if have + len(ready) > limit:
+                raise PhotoError(f"an item keeps at most {limit} photos; this one has {have}")
+            folder = self.folder(item_id)
+            folder.mkdir(parents=True, exist_ok=True)
+            # numbered past the highest there is, so a gap left by hand never makes an overwrite
+            numbers = []
+            for path in kept:
+                match = PHOTO_NAME.fullmatch(path.name)
+                if match:
+                    numbers.append(int(match.group(1)))
+            n = max(numbers, default=0)
+            for data in ready:
+                n += 1
+                (folder / f"photo-{n}.jpg").write_bytes(data)
+            log.info("item photos", extra={"item_id": item_id, "photos": have + len(ready)})
+            return have + len(ready)
 
     def read(self, item_id: int, n: int) -> bytes:
         self.inventory.get(item_id)

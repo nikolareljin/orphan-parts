@@ -56,6 +56,9 @@ class UseCard(Use):
     compatibility: list[Pairing] = Field(
         default=[], description="the item with what you own that the use names, checked"
     )
+    safety: list[str] = Field(
+        default=[], description="the policy's safety notes for the item's facts"
+    )
 
 
 class UsesWriting(BaseModel):
@@ -75,6 +78,15 @@ class KeepFix(BaseModel):
     parts: list[str] = Field(description="each part with its rough cost")
     cost: str
     time: str
+
+
+class FixCard(KeepFix):
+    """The first card as shown: the repair, with the policy's safety notes for a
+    mains-powered item, whose repair opens it."""
+
+    safety: list[str] = Field(
+        default=[], description="the policy's safety notes for the item's facts"
+    )
 
 
 class ReuseScenario(BaseModel):
@@ -98,6 +110,9 @@ class ReuseCard(ReuseScenario):
     compatibility: list[Pairing] = Field(default=[])
     without: list[str] = Field(
         default=[], description="kinds the card named that do not work with the rest"
+    )
+    safety: list[str] = Field(
+        default=[], description="the policy's safety notes for the item's facts"
     )
 
 
@@ -133,7 +148,7 @@ class Scenarios(BaseModel):
         default=False, description="the keep and fix steps of these cards are in the item's notes"
     )
     profiled: bool = Field(description="written for the owner's profile, not an average person")
-    keep_fix: KeepFix
+    keep_fix: FixCard
     reuse: list[ReuseCard]
     sell: SellCard
     recommended: Recommendation
@@ -150,6 +165,12 @@ class Scenarios(BaseModel):
         if isinstance(value, list):
             return [v.model_dump() if isinstance(v, BaseModel) else v for v in value]
         return value
+
+    @field_validator("keep_fix", mode="before")
+    @classmethod
+    def _fix(cls, value: object) -> object:
+        # the repair as kept reads as a card with no safety note yet
+        return value.model_dump() if isinstance(value, BaseModel) else value
 
     # for the demo visitor, a private value written into any of its text is masked
     @model_serializer(mode="wrap")

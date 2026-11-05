@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Evidence } from './api'
-import { fieldLabel, orderedFields, percent, printedDiffers, usd, withUnit } from './format'
+import { fieldLabel, modelName, orderedFields, percent, printedDiffers, usd, withUnit } from './format'
 
 const ev = (value: string, unit = '', confidence = 0.9): Evidence => ({
   value,
@@ -42,6 +42,16 @@ describe('formatting', () => {
   it('renders cost with four decimals, zero as a plain amount', () => {
     expect(usd(0)).toBe('$0.00')
     expect(usd(0.00412)).toBe('$0.0041')
+  })
+
+  it('says model IDs as product names, unknown ones as the model', () => {
+    expect(modelName('muse-spark-1.3')).toBe('Muse Spark')
+    expect(modelName('muse-wonder-2.0')).toBe('Muse Wonder')
+    expect(modelName('muse-image-1.0')).toBe('Muse Image')
+    expect(modelName('muse-voice-transcribe-1.0')).toBe('Muse Voice Transcribe')
+    expect(modelName('sam-3.1')).toBe('SAM 3.1')
+    expect(modelName('something-else')).toBe('the model')
+    expect(modelName('')).toBe('the model')
   })
 })
 

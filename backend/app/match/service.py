@@ -118,10 +118,13 @@ def questions_for(rules: list[Rule], checks: list[Check], cand: dict[str, Readin
             continue  # the need's own value is at fault; the seller cannot answer that
         rule = by_key[c.key]
         if c.key in cand and "not precise enough" in c.basis:
-            out.append(
-                f"{rule.label}: a caliper or ruler reading, the photo gives"
-                f" ±{cand[c.key].uncertainty:g} {rule.unit}".rstrip()
+            precise = cand[c.key].uncertainty
+            gives = (
+                f"±{precise:g} {rule.unit}".rstrip()
+                if precise is not None
+                else "no stated precision"
             )
+            out.append(f"{rule.label}: a caliper or ruler reading, the photo gives {gives}")
         elif rule.question:
             out.append(rule.question)
     return out

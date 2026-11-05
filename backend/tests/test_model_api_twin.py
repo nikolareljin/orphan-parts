@@ -7,6 +7,7 @@ import httpx
 import pytest
 
 from app.config import Settings
+from app.main import twin_settings
 from app.model_api import CostLedger, FixtureMissingError, ModelApiClient
 from app.ops.door import live_request
 
@@ -74,3 +75,11 @@ async def test_the_door_picks_the_client(live_settings: Settings, tmp_path: Path
         live_request.reset(token)
     assert len(calls) == 2
     await client.aclose()
+
+
+def test_the_twin_keeps_no_key(live_settings: Settings) -> None:
+    assert live_settings.model_api_key is not None
+    twin = twin_settings(live_settings)
+    assert twin.fake_api is True
+    assert twin.model_api_key is None
+    assert twin.model_spark == live_settings.model_spark

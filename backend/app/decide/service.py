@@ -11,6 +11,7 @@ from typing import Any
 from app.compat import Pairing, Reading, card_check, shared
 from app.compat.rules import best_hosts, missing_line
 from app.config import Settings
+from app.decide.policy import refused_use, safety_for
 from app.decide.schema import (
     CHOICES,
     INTENT_FOR,
@@ -574,8 +575,12 @@ class Decider:
         anchor = next((o for o in owned if o.id == item_id), None)
         if anchor is None:
             anchor = self.rules.read(self.inventory.get(item_id))
+        safety = safety_for(known_fields(self.inventory.get(item_id)))
         reuse = []
         for card in content["reuse"]:
+            if refused_use(card["title"], card["what_it_does"]):
+                log.info("refused use", extra={"item_id": item_id, "title": card["title"]})
+                continue
             # "with what you have" holds only what works together: a kind whose items do not
             # is taken out, with its fix
             checked = card_check(anchor, owned_items(card["with_items"], kinds), owned)
@@ -585,9 +590,11 @@ class Decider:
                     "with_items": checked.kept,
                     "without": checked.dropped,
                     "compatibility": [p.model_dump() for p in checked.pairings],
+                    "safety": safety,
                 }
             )
         content["reuse"] = reuse
+        content["keep_fix"] = {**content["keep_fix"], "safety": safety}
         return Scenarios(
             id=int(row["id"]),
             item_id=int(row["item_id"]),
@@ -606,14 +613,21 @@ class Decider:
         anchor = next((o for o in owned if o.id == item_id), None)
         if anchor is None:
             anchor = self.rules.read(self.inventory.get(item_id))
+        safety = safety_for(known_fields(self.inventory.get(item_id)))
         kinds = sorted({o.item_type for o in owned if o.id != item_id}, key=len, reverse=True)
-        content["uses"] = [
-            UseCard(
-                **use,
-                compatibility=card_check(anchor, named_kinds(use, kinds), owned).pairings,
+        shown = []
+        for use in content["uses"]:
+            if refused_use(use["title"], use["what_it_does"]):
+                log.info("refused use", extra={"item_id": item_id, "title": use["title"]})
+                continue
+            shown.append(
+                UseCard(
+                    **use,
+                    compatibility=card_check(anchor, named_kinds(use, kinds), owned).pairings,
+                    safety=safety,
+                )
             )
-            for use in content["uses"]
-        ]
+        content["uses"] = shown
         return Uses(
             id=int(row["id"]),
             item_id=int(row["item_id"]),

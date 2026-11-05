@@ -6,7 +6,7 @@ from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFont
 
-from app.extract.imaging import _encode
+from app.extract.imaging import encode_jpeg
 from app.privacy.schema import Area
 
 
@@ -30,7 +30,7 @@ def redacted(data: bytes, areas: list[Area]) -> bytes:
             left, top, right, bottom = pixel_box(area, *img.size)
             if right > left and bottom > top:
                 draw.rectangle((left, top, right - 1, bottom - 1), fill=(0, 0, 0))
-    return _encode(img)
+    return encode_jpeg(img)
 
 
 GRID_STEPS = 10
@@ -60,4 +60,4 @@ def gridded(img: Image.Image) -> bytes:
                 stroke_width=2,
                 stroke_fill=(255, 255, 255, 255),
             )
-    return _encode(Image.alpha_composite(img.convert("RGBA"), layer).convert("RGB"))
+    return encode_jpeg(Image.alpha_composite(img.convert("RGBA"), layer).convert("RGB"))

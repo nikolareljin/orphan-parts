@@ -2,6 +2,7 @@
 as they are), processed on request into an item with the reading, the transcript and the
 owner's line, kept until the owner deletes them."""
 
+import asyncio
 import json
 import logging
 import shutil
@@ -107,7 +108,8 @@ class Captures:
                     prepare(data, max_px=s.image_max_px, max_bytes=s.max_upload_mb * 1024 * 1024)
                 )
             except BadImageError as exc:
-                raise CaptureError(f"photo {n}: {exc}") from exc
+                # not a CaptureError: bad bytes are answered 400 everywhere else
+                raise BadImageError(f"photo {n}: {exc}") from exc
         if clip is not None:
             if len(clip) > s.max_clip_mb * 1024 * 1024:
                 raise CaptureError(f"the clip is larger than {s.max_clip_mb} MB")
@@ -178,8 +180,16 @@ class Captures:
             raise NotFoundError(f"capture {capture_id} has no photo {n}")
         return (self.folder(capture_id) / f"photo-{n}.jpg").read_bytes()
 
+    def _media_name(self, capture_id: int, name: str) -> str:
+        """The name a capture keeps media under: only the two fixed names, so a crafted
+        name can never walk out of the capture's folder."""
+        if name not in ("clip.mp4", "note.wav"):
+            raise NotFoundError(f"capture {capture_id} keeps no file {name!r}")
+        return name
+
     def media(self, capture_id: int, name: str) -> bytes:
         found = self.capture(capture_id)
+        name = self._media_name(capture_id, name)
         if name == "clip.mp4" and not found.clip:
             raise NotFoundError(f"capture {capture_id} has no clip")
         if name == "note.wav" and not found.audio:
@@ -189,6 +199,7 @@ class Captures:
     def media_path(self, capture_id: int, name: str) -> Path:
         """Where a clip or a note is, for a route that streams it (and takes a byte range)."""
         found = self.capture(capture_id)
+        name = self._media_name(capture_id, name)
         if name == "clip.mp4" and not found.clip:
             raise NotFoundError(f"capture {capture_id} has no clip")
         if name == "note.wav" and not found.audio:
@@ -233,6 +244,15 @@ class Captures:
             if (folder / f"photo-{n}.jpg").is_file()
         ]
         model, cost = "", 0.0
+        # the note transcribes while the photos are read: it needs only the recording, and
+        # is kept on the item once there is one
+        note_path = folder / "note.wav"
+        note_audio = note_path.read_bytes() if content["audio"] and note_path.is_file() else None
+        note_task = (
+            asyncio.create_task(self.voice.transcribe(note_audio))
+            if note_audio is not None
+            else None
+        )
         try:
             missing = int(content["photos"]) - len(photos)
             if missing:
@@ -271,6 +291,8 @@ class Captures:
                         "item photos not kept", extra={"item_id": item.id, "error": str(exc)}
                     )
         except (ModelApiError, BadImageError, ValueError) as exc:
+            if note_task is not None:
+                note_task.cancel()
             content["error"] = str(exc)[:500]
             self.inventory.update_capture(capture_id, "failed", json.dumps(content))
             raise
@@ -281,8 +303,8 @@ class Captures:
         )
         self.inventory.update_capture(capture_id, "processed", json.dumps(content))
         try:
-            if content["audio"] and (folder / "note.wav").is_file():
-                note = await self.voice.note(item.id, (folder / "note.wav").read_bytes())
+            if note_task is not None and note_audio is not None:
+                note = self.voice.keep(item.id, note_audio, await note_task)
                 cost += note.cost_usd
                 model = model or note.model
             if content["clip"]:

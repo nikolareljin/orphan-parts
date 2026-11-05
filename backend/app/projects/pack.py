@@ -167,8 +167,11 @@ def render(
     for n, step in enumerate(project.steps, 1):
         tick = "x" if n - 1 < len(project.progress) and project.progress[n - 1] else " "
         lines.append(f"{n}. [{tick}] {step}")
-    if project.safety:
-        lines += ["", "## Safety", ""] + [f"- {s}" for s in project.safety]
+    # every pack carries a safety note: the template's, or the default when it has none
+    safety = project.safety or [
+        "Unplug everything before you open it, and stop when something is hot or smells."
+    ]
+    lines += ["", "## Safety", ""] + [f"- {s}" for s in safety]
     lines += ["", "## Check before starting", ""]
     if not project.unknowns:
         lines.append("Nothing recorded as unknown.")

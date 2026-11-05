@@ -40,6 +40,17 @@ export function usd(amount: number): string {
   return amount === 0 ? '$0.00' : `$${amount.toFixed(4)}`
 }
 
+// A model ID as the product name the UI may say; anything unknown reads as "the model",
+// never as a raw ID.
+export function modelName(id: string): string {
+  if (id.startsWith('muse-spark')) return 'Muse Spark'
+  if (id.startsWith('muse-wonder')) return 'Muse Wonder'
+  if (id.startsWith('muse-image')) return 'Muse Image'
+  if (id.startsWith('muse-voice')) return 'Muse Voice Transcribe'
+  if (id.startsWith('sam')) return 'SAM 3.1'
+  return 'the model'
+}
+
 /** Whether the label's own text says more than the value shown: a difference in letter case,
  * spacing or punctuation alone ("cULus" read as "CULUS") is not worth a second line. */
 export function printedDiffers(value: string, raw: string | undefined | null): boolean {

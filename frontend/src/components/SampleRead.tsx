@@ -24,6 +24,7 @@ function messageOf(err: unknown): string {
 export default function SampleRead({ liveModels = false }: { liveModels?: boolean }) {
   const [catalog, setCatalog] = useState<SampleCatalog | null>(null)
   const [loadError, setLoadError] = useState('')
+  const [round, setRound] = useState(0)
   const [selected, setSelected] = useState<string[]>([])
   const [findFirst, setFindFirst] = useState(true)
   const [state, setState] = useState<State>({ kind: 'idle' })
@@ -41,7 +42,7 @@ export default function SampleRead({ liveModels = false }: { liveModels?: boolea
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [round])
 
   const busy = state.kind === 'reading'
 
@@ -59,9 +60,20 @@ export default function SampleRead({ liveModels = false }: { liveModels?: boolea
 
   if (loadError) {
     return (
-      <p className="error" role="alert">
-        {loadError}
-      </p>
+      <div>
+        <p className="error" role="alert">
+          {loadError}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setLoadError('')
+            setRound((n) => n + 1)
+          }}
+        >
+          Try again
+        </button>
+      </div>
     )
   }
   if (catalog === null) return <p className="muted">Loading the sample photos…</p>

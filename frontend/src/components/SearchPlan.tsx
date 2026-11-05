@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError, api, type BroughtListing, type Candidate, type Item, type ListingScore, type PatternResult, type Search } from '../lib/api'
-import { usd } from '../lib/format'
+import { modelName, usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
+import { copyText } from '../lib/listing'
 import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 import { WEB_SIGN_IN, askingPrice, highlightSegments, maxPriceLine, siteOf, splitListings, stateLabel, stateTone, verdictLabel, verdictTone, webLink, webSummary } from '../lib/find'
@@ -47,6 +48,17 @@ function ListingText({ text, score }: { text: string; score: ListingScore }) {
 
 function Verdict({ score }: { score: ListingScore }) {
   return <span className={`badge state ${verdictTone(score.verdict)}`}>{verdictLabel(score.verdict)}</span>
+}
+
+// A brought listing's source, linked only when it is a web page.
+function SourceLink({ url }: { url: string | undefined }) {
+  const link = webLink(url)
+  if (!link) return null
+  return (
+    <a className="source-link" href={link} target="_blank" rel="noopener noreferrer">
+      {siteOf(link)}
+    </a>
+  )
 }
 
 // Plan the search, keep the pattern, bring listings back and rank them, check the fit of one.
@@ -97,7 +109,7 @@ export default function SearchPlan({
 
   async function copy(i: number, text: string) {
     try {
-      await navigator.clipboard.writeText(text)
+      await copyText(text)
       setCopied(i)
     } catch (err: unknown) {
       setError(message(err))
@@ -132,7 +144,7 @@ export default function SearchPlan({
             <p className="meta">
               {maxPriceLine(plan.max_price)}
               {plan.radius_km !== null && ` Within ${plan.radius_km} km: set the distance in Marketplace's location filter, the links do not carry it.`}
-              {plan.model && ` · ${whenText(plan.planned_at)} · ${plan.model} · ${usd(plan.cost_usd)}`}
+              {plan.model && ` · ${whenText(plan.planned_at)} · ${modelName(plan.model)} · ${usd(plan.cost_usd)}`}
               {plan.from_fixture && plan.model && <span className="badge">recorded answer</span>}
             </p>
           </>
@@ -535,11 +547,7 @@ function Ranked({
                 <span className="muted">
                   · {b.source_kind === 'web' ? 'found on the web' : b.source_kind === 'screenshot' ? 'screenshot' : 'pasted'}, seen {b.observed_on}
                 </span>
-                {webLink(b.source_url) && (
-                  <a className="source-link" href={webLink(b.source_url)} target="_blank" rel="noopener noreferrer">
-                    {siteOf(webLink(b.source_url))}
-                  </a>
-                )}
+                <SourceLink url={b.source_url} />
               </div>
               <ListingText text={b.text} score={b.score} />
               {demo ? (

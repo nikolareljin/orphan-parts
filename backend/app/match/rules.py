@@ -4,11 +4,11 @@ import re
 from dataclasses import dataclass
 
 from app.extract.fields import FIELD_BY_NAME
-from app.extract.normalize import normalize
+from app.extract.normalize import normalize, strip_thousands
 from app.match.schema import Backing, Check, Status
 from app.profiles import Rule
 
-_NUMBER = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
+_NUMBER = re.compile(r"[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?|[-+]?\d+(?:[.,]\d+)?")
 # the unit written right after the first number: "19.5 V", "3300mA", "4.5 mm (caliper)"
 _UNIT_AFTER = re.compile(r"[-+]?\d+(?:[.,]\d+)?\s*([A-Za-zµΩ°%]+)")
 
@@ -26,7 +26,12 @@ class Reading:
 def number(text: str) -> float | None:
     """The first number in the text, or None."""
     m = _NUMBER.search(text)
-    return float(m.group(0).replace(",", ".")) if m else None
+    if not m:
+        return None
+    try:
+        return float(strip_thousands(m.group(0)).replace(",", "."))
+    except ValueError:
+        return None
 
 
 def unit_of(reading: Reading) -> str:
@@ -91,22 +96,57 @@ def _equal(rule: Rule, need: Reading, cand: Reading) -> dict[str, str]:
     return {"status": "fail", "basis": f"{b!r} is not {a!r}"}
 
 
+# milli and centi units convert to the rule's unit; anything else is not compared
+_SI_BASE: dict[str, tuple[str, float]] = {
+    "a": ("current", 1.0),
+    "ma": ("current", 0.001),
+    "v": ("voltage", 1.0),
+    "mv": ("voltage", 0.001),
+    "w": ("power", 1.0),
+    "mw": ("power", 0.001),
+    "mm": ("length", 1.0),
+    "cm": ("length", 10.0),
+}
+
+
+def _scale(unit: str, rule_unit: str) -> float | None:
+    """Milli/centi pairs convert to the rule's unit; anything else stays unknown, as for any
+    unit the rule does not know."""
+    if unit.lower() == rule_unit.lower():
+        return 1.0
+    have = _SI_BASE.get(unit.lower())
+    want = _SI_BASE.get(rule_unit.lower())
+    if have is None or want is None or have[0] != want[0]:
+        return None
+    return have[1] / want[1]
+
+
 def _numeric(rule: Rule, need: Reading, cand: Reading) -> dict[str, str]:
-    # a number in another unit is not compared: 19500 mV is not 19500 V
-    for side, reading in (("required", need), ("candidate's", cand)):
-        unit = unit_of(reading)
-        if rule.unit and unit and unit.lower() != rule.unit.lower():
-            return {
-                "status": "unknown",
-                "basis": f"the {side} value is in {unit}, the rule compares {rule.unit};"
-                f" enter it in {rule.unit}",
-            }
     n, c = number(need.value), number(cand.value)
     if n is None:
         return {"status": "unknown", "basis": f"no number in the required value {need.value!r}"}
     if c is None:
         return {"status": "unknown", "basis": f"no number in the candidate's {cand.value!r}"}
     u = cand.uncertainty or 0.0
+    if rule.unit:
+        # a number in another unit converts or is not compared: 3300 mA reads as 3.3 A,
+        # 19500 mV would not read as 19500 V
+        for side, reading in (("required", need), ("candidate's", cand)):
+            unit = unit_of(reading)
+            if not unit:
+                continue  # a bare value reads as the rule's unit
+            scale = _scale(unit, rule.unit)
+            if scale is None:
+                return {
+                    "status": "unknown",
+                    "basis": f"the {side} value is in {unit}, the rule compares {rule.unit};"
+                    f" enter it in {rule.unit}",
+                }
+            if side == "required":
+                n *= scale
+            else:
+                c *= scale
+                u *= scale
     unit = f" {rule.unit}".rstrip()
     about = f"±{_fmt(u)}{unit}" if u else "as stated"
     if rule.kind == "within":

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api, type Capture, type Limits } from '../lib/api'
 import { captureSummary, captureTone, statusLabel } from '../lib/captures'
 import GatedImage from './GatedImage'
+import { useGatedUrl } from '../lib/useGatedUrl'
 import SendCapture from './SendCapture'
 
 function message(err: unknown): string {
@@ -12,23 +13,25 @@ function message(err: unknown): string {
 // or the file did not arrive) and offers the file instead of a blank player.
 function Clip({ id }: { id: number }) {
   const [unplayable, setUnplayable] = useState<'' | 'codec' | 'load'>('')
-  const url = api.captures.clipUrl(id)
-  if (unplayable) {
+  const { shown, failed } = useGatedUrl(api.captures.clipUrl(id))
+  const reason = failed ? 'load' : unplayable
+  if (reason) {
     return (
       <p className="muted">
-        This browser cannot play the video of capture #{id} ({unplayable === 'codec' ? 'its format is not supported' : 'it failed to load'}).{' '}
-        <a href={url} download={`capture-${id}.mp4`}>
+        This browser cannot play the video of capture #{id} ({reason === 'codec' ? 'its format is not supported' : 'it failed to load'}).{' '}
+        <a href={shown || api.captures.clipUrl(id)} download={`capture-${id}.mp4`}>
           Download it
         </a>
         .
       </p>
     )
   }
+  if (!shown) return <p className="muted">Loading the video…</p>
   return (
     <video
       controls
       preload="metadata"
-      src={url}
+      src={shown}
       aria-label={`Capture ${id} clip`}
       onError={(e) => {
         // 3 is a decode failure (a codec it lacks); 4 is unsupported or, in most browsers, a
@@ -38,6 +41,14 @@ function Clip({ id }: { id: number }) {
       }}
     />
   )
+}
+
+// The voice note as sent, behind the gate like the clip.
+function Note({ id }: { id: number }) {
+  const { shown, failed } = useGatedUrl(api.captures.noteUrl(id))
+  if (failed) return <p className="muted">The voice note is not available.</p>
+  if (!shown) return <p className="muted">Loading the voice note…</p>
+  return <audio controls preload="metadata" src={shown} aria-label={`Capture ${id} note`} />
 }
 
 // What the phone sent: photos, a clip, a spoken note, a line. Read into an item on request.
@@ -67,7 +78,9 @@ export default function Inbox({
   // shows up without a click; Refresh is there for the impatient
   useEffect(() => {
     void load()
-    const timer = window.setInterval(() => void load(), 15_000)
+    const timer = window.setInterval(() => {
+      if (!document.hidden) void load()
+    }, 15_000)
     return () => window.clearInterval(timer)
   }, [load])
 
@@ -122,7 +135,7 @@ export default function Inbox({
                 <p className="meta">{captureSummary(c)}</p>
                 {c.note && <p>“{c.note}”</p>}
                 {c.clip && <Clip id={c.id} />}
-                {c.audio && <audio controls preload="metadata" src={api.captures.noteUrl(c.id)} aria-label={`Capture ${c.id} note`} />}
+                {c.audio && <Note id={c.id} />}
                 {c.error && (
                   <p className={c.status === 'failed' ? 'error' : 'muted'} role={c.status === 'failed' ? 'alert' : undefined}>
                     {c.error}

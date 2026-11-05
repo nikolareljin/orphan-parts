@@ -1,7 +1,9 @@
+import asyncio
 import json
 import wave
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -10,9 +12,10 @@ from fastapi.testclient import TestClient
 from app.captures import CaptureError, Captures, looks_like_video
 from app.config import Settings
 from app.extract import Extractor
+from app.extract.imaging import BadImageError
 from app.inventory import Inventory
 from app.listing import VoiceNotes
-from app.model_api import CostLedger, FixtureMissingError, ModelApiClient
+from app.model_api import CostLedger, FixtureMissingError, ModelApiClient, Transcript
 from app.photos import ItemPhotos
 from app.segment import Segmenter
 from tests.conftest import RECORDED_FIXTURES, make_photo
@@ -133,7 +136,7 @@ def test_bundles_are_checked_before_anything_is_kept(recorded_settings: Settings
         captures.create(CaptureCreate(note="   "), [], None, None)
     with pytest.raises(CaptureError, match="at most 4 photos"):
         captures.create(CaptureCreate(), [make_photo()] * 5, None, None)
-    with pytest.raises(CaptureError, match="photo 2:"):
+    with pytest.raises(BadImageError, match="photo 2:"):
         captures.create(CaptureCreate(), [make_photo(), b"not a photo"], None, None)
     with pytest.raises(CaptureError, match="not an MP4"):
         captures.create(CaptureCreate(), [], b"x" * 100, None)
@@ -143,6 +146,78 @@ def test_bundles_are_checked_before_anything_is_kept(recorded_settings: Settings
     with pytest.raises(CaptureError, match="larger than 0 MB"):
         service(small).create(CaptureCreate(), [], mp4_bytes(), None)
     assert not (recorded_settings.data_dir / "captures").exists()
+
+
+def test_media_names_outside_the_two_kept_are_not_found(recorded_settings: Settings) -> None:
+    from app.captures import CaptureCreate
+
+    captures = service(recorded_settings)
+    kept = captures.create(CaptureCreate(), [make_photo()], mp4_bytes(), wav_bytes())
+    for name in ("../capture", "photo-1.jpg", "clip.mp3", ""):
+        with pytest.raises(LookupError):
+            captures.media(kept.id, name)
+        with pytest.raises(LookupError):
+            captures.media_path(kept.id, name)
+
+
+def test_bad_photo_bytes_are_answered_400(client: TestClient) -> None:
+    r = client.post("/api/captures", files={"photos": ("label.jpg", b"not a photo", "image/jpeg")})
+    assert r.status_code == 400
+    assert "photo 1:" in r.text
+
+
+async def test_the_note_transcribes_while_the_photos_are_read(
+    recorded_settings: Settings,
+) -> None:
+    from app.captures import CaptureCreate
+
+    captures = service(recorded_settings)
+    kept = captures.create(CaptureCreate(), [make_photo()], None, wav_bytes())
+    transcribing = asyncio.Event()
+    real_transcribe = captures.voice.transcribe
+    real_extract = captures.extractor.extract
+
+    async def transcribe(audio: bytes) -> Transcript:
+        transcribing.set()
+        return await real_transcribe(audio)
+
+    async def extract(photos: list[bytes], crops: list[bytes]) -> Any:
+        # the note is already under way while the photos are still read
+        await asyncio.wait_for(transcribing.wait(), 10)
+        return await real_extract(photos, crops)
+
+    captures.voice.transcribe = transcribe  # type: ignore[method-assign]
+    captures.extractor.extract = extract  # type: ignore[method-assign]
+    done = await captures.process(kept.id)
+    assert done.status == "processed"
+
+
+async def test_a_failed_read_cancels_the_note(recorded_settings: Settings) -> None:
+    from app.captures import CaptureCreate
+
+    captures = service(recorded_settings)
+    kept = captures.create(CaptureCreate(), [make_photo()], None, wav_bytes())
+    entered = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def transcribe(audio: bytes) -> Transcript:
+        entered.set()
+        try:
+            await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+        raise AssertionError("the note must not outlive a failed read")
+
+    async def extract(photos: list[bytes], crops: list[bytes]) -> Any:
+        await asyncio.wait_for(entered.wait(), 10)
+        raise BadImageError("broken test double")
+
+    captures.voice.transcribe = transcribe  # type: ignore[method-assign]
+    captures.extractor.extract = extract  # type: ignore[method-assign]
+    with pytest.raises(BadImageError, match="broken test double"):
+        await captures.process(kept.id)
+    await asyncio.wait_for(cancelled.wait(), 10)
 
 
 async def test_a_failed_processing_is_recorded_and_the_media_stays(settings: Settings) -> None:

@@ -59,6 +59,12 @@ log = logging.getLogger("app")
 KEY_FAILURES = frozenset({401, 402, 403, 404})
 
 
+def twin_settings(settings: Settings) -> Settings:
+    """The fixture twin's settings: fixture mode, and no key to send with. The twin never
+    sends, so the key must not travel with it: one misconfiguration would spend it."""
+    return settings.model_copy(update={"fake_api": True, "model_api_key": None})
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings: Settings = app.state.settings
@@ -101,9 +107,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if gate.enabled and gate.live_models:
         # the demo visitor is answered by the fixture twin: the same recordings, its own
         # ledger that goes nowhere, nothing spent; the key answers only the code's door
-        client.twin = ModelApiClient(
-            settings.model_copy(update={"fake_api": True}), CostLedger(settings.spend_cap_usd)
-        )
+        client.twin = ModelApiClient(twin_settings(settings), CostLedger(settings.spend_cap_usd))
     app.state.ledger = ledger
     app.state.model_api = client
     app.state.extractor = Extractor(settings, client)

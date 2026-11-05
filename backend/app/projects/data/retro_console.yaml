@@ -32,6 +32,7 @@ steps:
   - Connect the device to the TV; on a phone or tablet, a USB-C to HDMI adapter, or cast if the TV takes it.
   - Pair the gamepads and map the buttons in the front end.
   - Set the TV to game mode if it has one, and play from the couch.
-safety: []
+safety:
+  - Unplug the device before you re-cable it, and leave it room to breathe behind the TV.
 sources:
   - the emulator front end's setup guide

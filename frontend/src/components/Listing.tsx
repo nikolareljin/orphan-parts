@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, mediaUrl, type Draft, type DraftMode, type Included, type Item, type MarketplaceData, type MarketplaceStatus, type SellDetails } from '../lib/api'
-import { usd } from '../lib/format'
+import { modelName, usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 import {
   DATA_STATES,
@@ -528,7 +528,7 @@ function Handoff({
     <section className="draft handoff" aria-label="Marketplace handoff">
       <h5>Marketplace handoff</h5>
       <p className="meta" role="status">
-        {draft.mode === 'sell' ? 'For sale' : 'Free'} · draft {draft.version} · {whenText(draft.at)} · {draft.model} · {usd(draft.cost_usd)}
+        {draft.mode === 'sell' ? 'For sale' : 'Free'} · draft {draft.version} · {whenText(draft.at)} · {modelName(draft.model)} · {usd(draft.cost_usd)}
         {draft.from_fixture && <span className="badge">recorded answer</span>}
         {draft.stale && <span className="badge">item changed since</span>}
         {detailsChanged && <span className="badge">details changed since this draft</span>}

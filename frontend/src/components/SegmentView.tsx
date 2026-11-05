@@ -1,11 +1,11 @@
 import type { Segmentation } from '../lib/api'
-import { percent, usd } from '../lib/format'
+import { modelName, percent, usd } from '../lib/format'
 
 export default function SegmentView({ result }: { result: Segmentation }) {
   return (
     <section className="segments">
       <p className="meta">
-        {result.model} · {result.regions.length} {result.regions.length === 1 ? 'region' : 'regions'} ·{' '}
+        {modelName(result.model)} · {result.regions.length} {result.regions.length === 1 ? 'region' : 'regions'} ·{' '}
         {usd(result.cost_usd)}
         {result.from_fixture && <span className="badge">recorded answer</span>}
       </p>

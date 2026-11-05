@@ -41,6 +41,31 @@ def test_zero_cap_pauses_immediately() -> None:
         CostLedger(cap_usd=0.0).require_budget()
 
 
+def test_a_hold_counts_against_the_cap_until_settled() -> None:
+    ledger = CostLedger(cap_usd=1.5)
+    ledger.reserve(1.0)
+    with pytest.raises(SpendCapError, match="spend cap reached"):
+        ledger.reserve(1.0)
+    ledger.settle(1.0)
+    ledger.reserve(1.0)
+    ledger.settle(1.0)
+
+
+def test_spent_and_held_add_up() -> None:
+    ledger = CostLedger(cap_usd=1.5)
+    ledger.record(entry(1.0))
+    with pytest.raises(SpendCapError):
+        ledger.reserve(1.0)
+    ledger.reserve(0.5)
+    ledger.settle(0.5)
+
+
+def test_settle_never_drops_below_zero() -> None:
+    ledger = CostLedger(cap_usd=1.5)
+    ledger.settle(1.0)
+    ledger.reserve(1.5)
+
+
 def test_entries_persist_and_reload(tmp_path: Path) -> None:
     path = tmp_path / "spend" / "ledger.jsonl"
     first = CostLedger(cap_usd=5.0, path=path)

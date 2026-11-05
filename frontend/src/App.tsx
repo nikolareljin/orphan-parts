@@ -405,6 +405,7 @@ function AccessGate({ onGranted }: { onGranted: (access: Access) => void }) {
 // alone. While it is shown it is drawn again before the pairing in it ends.
 function PairImage({ door }: { door: string }) {
   const [src, setSrc] = useState('')
+  const [failed, setFailed] = useState(false)
   const [round, setRound] = useState(0)
   useEffect(() => {
     let cancelled = false
@@ -413,15 +414,21 @@ function PairImage({ door }: { door: string }) {
       .svg(window.location.origin, door)
       .then(({ svg, expiresAt, expiresIn }) => {
         if (cancelled) return
+        setFailed(false)
         setSrc(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`)
         timer = setTimeout(() => setRound((n) => n + 1), redrawAfterMs(expiresAt, Date.now(), expiresIn))
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (cancelled) return
+        setFailed(true)
+        timer = setTimeout(() => setRound((n) => n + 1), 30_000)
+      })
     return () => {
       cancelled = true
       if (timer !== undefined) clearTimeout(timer)
     }
   }, [door, round])
+  if (failed && !src) return <p className="muted">The pairing code is not available right now; trying again.</p>
   if (!src) return null // on its way
   return <img src={src} alt="Pairing code for the phone" width="220" height="220" />
 }
