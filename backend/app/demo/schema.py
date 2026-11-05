@@ -3,7 +3,7 @@ records every model answer the set needs and the same run replays them at no cos
 
 import re
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -93,6 +93,12 @@ class DemoItem(BaseModel):
         max_length=400,
         description="a correction said with the item's picture (from a review of an earlier"
         " drawing: what to show and what not); a new request, so its own recording",
+    )
+    more_pictures: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        default_factory=list,
+        max_length=4,
+        description="further drawings of the item, each as its own use and drawn after"
+        " `picture`, with no correction; each its own request and recording",
     )
     decide: bool = Field(
         default=False,

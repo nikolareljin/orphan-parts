@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- Three more item drawings in the demo set, each a use that builds the device in rather than setting it on the table: the opened Dell laptop and the Dell 1800FP monitor as a gaming coffee table, the ThinkPad T510 as a hall smart mirror. An item in `demo/set.yaml` takes `more_pictures:` (a list of uses, each drawn after `picture:` with no correction and recorded on its own); the existing recordings are unchanged. Three new Muse Image recordings, 0.05 USD with two extra draws of the mirror; shown in *Examples*, *Laptops built in, not laptops on the table*.
+
 ### Changed
 - The web app's forms have more room and are easier to edit: one vertical rhythm from design tokens in `index.css` (0.4rem between a label and its field, 1rem between fields, 1.5rem between groups); text fields and selects at least 42 px tall (44 px on a phone, where their text is 16 px so the page does not zoom in on focus) with more padding inside, a border that reads at 3:1 against the card and a clear focus ring; text areas taller to start with and resizable by height; buttons in a row of fields as tall as the fields; larger checkboxes and radios with the whole label to click, the skills table's choices among them; an error close under its form. **Find a part**'s new search, the search panel (the search plan, the listings brought back) and **Bring a listing back** now use the same field layout as the item dialog, the label above each field, where they had the browser's bare inputs. Labels and texts are unchanged; the docs' screenshots are not taken again here.
 

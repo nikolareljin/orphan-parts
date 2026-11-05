@@ -8,7 +8,8 @@
 # they were scrubbed; the recordings under backend/tests/fixtures/api are of these files.
 # An item's `picture:` asks Muse Image for a drawing of it as that use (a template id or a few
 # words) once its drafts are written; fixture mode shows the drawing only once a record run
-# has kept it, and says "not recorded yet" until then.
+# has kept it, and says "not recorded yet" until then; `more_pictures:` lists further uses,
+# each drawn after it (no correction) with a recording of its own.
 # A part's `parent_photos:` are photos of the device it came from, read once as a label (only a
 # recording of them answers in fixture mode); `parent_device:` is the owner's words about it and
 # `parent_device_model:` the model as its label states, saved as typed until that read is recorded.
@@ -57,6 +58,8 @@ items:
     photos: [photos/dell-1800fp-label.jpg]
     picture: a smart mirror on a hall wall, a two-way mirror in a wooden frame, the time, the weather and the day's calendar glowing through the glass
     picture_brief: "Add a daily calendar list glowing through the mirror glass alongside the clock and weather, driven by a boxy 18-inch 4:3 monitor (~46cm diagonal) behind the two-way mirror in a deep wooden frame on a hall wall; not neon signs, not a TV, no brand text.; seen at eye level from across the room, every part at its true size against the furniture"
+    more_pictures:
+      - "gaming coffee table: this 18 inch monitor without its stand laid flat under the glass top, a stripped laptop board hidden inside; arcade joysticks on the near edge; no laptop visible"
     decide: true
     ideas: true
     reuse_picture: true
@@ -89,6 +92,8 @@ items:
     photos: [photos/thinkpad-t510-inside.jpg, photos/thinkpad-t510-label.jpg]
     condition: opened; the keyboard and the palm rest are off
     picture: home_server
+    more_pictures:
+      - "hall smart mirror: laptop taken apart, its bare screen panel behind a two-way mirror in a slim wooden frame, board hidden inside; clock and calendar; no laptop case or keyboard"
     decide: true
     ideas: true
     reuse_picture: true
@@ -394,6 +399,7 @@ items:
     intent: build
     photos: [photos/dell-laptop-inside.jpg]
     condition: opened; the bottom cover is off
+    picture: "gaming coffee table: laptop taken apart, its bare screen panel flat under the glass top, board hidden inside; no laptop case, lid or keyboard; arcade joysticks on the near edge"
     decide: true
     decision: keep_build
 

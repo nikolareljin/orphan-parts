@@ -298,6 +298,25 @@ async def test_rounds_selection_project_pictures_and_decide_cards(
     assert "monitor: Decide cards (one ./dev record-fixtures run makes it)" in outcome.unrecorded
 
 
+async def test_an_item_is_drawn_once_per_use(recorded_settings: Settings) -> None:
+    text = SET_TEXT.replace(
+        "    item_type: monitor\n    intent: build\n",
+        "    item_type: monitor\n    intent: build\n    picture: a second screen\n"
+        "    more_pictures: [a smart mirror, a coffee table screen]\n",
+    )
+    path = write_set(recorded_settings.data_dir.parent / "demo", text)
+    found = load_set(path)
+    assert found.items[2].more_pictures == ["a smart mirror", "a coffee table screen"]
+    loader, client = build_loader(recorded_settings)
+    try:
+        outcome = await loader.run(found, path.parent)
+    finally:
+        await client.aclose()
+    # the first use and each further one is its own drawing: none recorded here, each listed
+    drawn = [u for u in outcome.unrecorded if u.startswith("monitor: picture")]
+    assert len(drawn) == 3 and outcome.pictures == 0
+
+
 def test_a_selection_names_a_template(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="not a template"):
         load_set(

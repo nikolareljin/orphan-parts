@@ -97,6 +97,29 @@ UNO board, with a second stick, buttons or a USB encoder still to get.
 The other two packs: [coffee table](../assets/shots/examples/04-arcade-pack.png),
 [calendar](../assets/shots/examples/04-calendar-pack.png).
 
+### Laptops built in, not laptops on the table
+
+Three more drawings of items, each asked with a use that says how the laptop or the monitor is
+built in: taken apart, its bare panel under glass or behind a mirror, the board hidden inside.
+
+![Muse Image drawing of the opened Dell laptop as a gaming coffee table, for the use "gaming coffee table: laptop taken apart, its bare screen panel flat under the glass top, board hidden inside; no laptop case, lid or keyboard; arcade joysticks on the near edge"](../assets/shots/examples/05-dell-laptop-coffee-table.jpg)
+
+*Muse Image, the opened Dell laptop: "gaming coffee table: laptop taken apart, its bare screen
+panel flat under the glass top, board hidden inside; no laptop case, lid or keyboard; arcade
+joysticks on the near edge".*
+
+![Muse Image drawing of the ThinkPad T510 as a hall smart mirror, for the use "hall smart mirror: laptop taken apart, its bare screen panel behind a two-way mirror in a slim wooden frame, board hidden inside; clock and calendar; no laptop case or keyboard"](../assets/shots/examples/05-t510-hall-mirror.jpg)
+
+*Muse Image, the ThinkPad T510: "hall smart mirror: laptop taken apart, its bare screen panel
+behind a two-way mirror in a slim wooden frame, board hidden inside; clock and calendar; no
+laptop case or keyboard".*
+
+![Muse Image drawing of the Dell 1800FP monitor as a gaming coffee table, for the use "gaming coffee table: this 18 inch monitor without its stand laid flat under the glass top, a stripped laptop board hidden inside; arcade joysticks on the near edge; no laptop visible"](../assets/shots/examples/05-1800fp-coffee-table.jpg)
+
+*Muse Image, the Dell 1800FP monitor: "gaming coffee table: this 18 inch monitor without its
+stand laid flat under the glass top, a stripped laptop board hidden inside; arcade joysticks on
+the near edge; no laptop visible".*
+
 ### Proposed, not selected (visitor)
 
 Each proposal is drawn once by Muse Image; the visitor reads the steps open.
