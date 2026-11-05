@@ -5,6 +5,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from app.api.deps import SamplesDep, SegmenterDep
 from app.api.model_errors import as_http
 from app.api.samples import sample_photos, visitor_files
+from app.api.uploads import read_bounded
 from app.model_api import exact_replay
 from app.segment import Segmentation
 
@@ -32,12 +33,15 @@ async def segment(
     if (photo is None) == (sample_id is None):
         raise HTTPException(status_code=422, detail="send photo or sample_id, one of the two")
     max_mb = segmenter.settings.max_upload_mb
-    if photo is not None and photo.size is not None and photo.size > max_mb * 1024 * 1024:
+    cap = max_mb * 1024 * 1024
+    if photo is not None and photo.size is not None and photo.size > cap:
         raise HTTPException(status_code=400, detail=f"the photo is larger than {max_mb} MB")
     if sample_id is not None:
         data = sample_photos(samples, [sample_id])[0]
+    elif photo is not None:
+        data = await read_bounded(photo, cap, f"the photo is larger than {max_mb} MB")
     else:
-        data = await photo.read() if photo is not None else b""
+        data = b""
     token = exact_replay.set(sample_id is not None)
     try:
         return await segmenter.segment(data, concepts)

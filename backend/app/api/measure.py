@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from app.api.deps import InventoryDep, MeasurerDep, SamplesDep
 from app.api.model_errors import as_http
 from app.api.samples import sample_photos, visitor_files
+from app.api.uploads import read_bounded
 from app.measure import MeasureRequest, MeasureResult
 from app.measure.schema import Measurement
 from app.profiles import UnknownProfileError
@@ -22,7 +23,8 @@ async def _read(
     photo: UploadFile | None, request: str, measurer: MeasurerDep, sample: bytes | None = None
 ) -> tuple[bytes, MeasureRequest]:
     max_mb = measurer.settings.max_upload_mb
-    if photo is not None and photo.size is not None and photo.size > max_mb * 1024 * 1024:
+    cap = max_mb * 1024 * 1024
+    if photo is not None and photo.size is not None and photo.size > cap:
         raise HTTPException(status_code=400, detail=f"the photo is larger than {max_mb} MB")
     try:
         spec = MeasureRequest.model_validate_json(request)
@@ -40,7 +42,9 @@ async def _read(
             ) from exc
     if sample is not None:
         return sample, spec
-    return (await photo.read() if photo is not None else b""), spec
+    if photo is None:
+        return b"", spec
+    return await read_bounded(photo, cap, f"the photo is larger than {max_mb} MB"), spec
 
 
 @router.post("/measure", response_model=MeasureResult)

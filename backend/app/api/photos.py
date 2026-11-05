@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.api.deps import DevicePhotosDep, ExtractorDep, GateDep, PhotosDep, PrivacyDep
 from app.api.model_errors import as_http
+from app.api.uploads import read_bounded
 from app.extract import Extraction
 from app.extract.imaging import BadImageError
 from app.inventory import Item, NotFoundError
@@ -96,16 +97,8 @@ async def add_item_photos(
             detail=f"an item keeps at most {limit} photos; {len(uploads)} were sent",
         )
     cap = photos.settings.max_upload_mb * 1024 * 1024
-    data = []
-    for upload in uploads:
-        # one byte past the cap says the part is too large, whatever the client declared
-        part = await upload.read(cap + 1)
-        if len(part) > cap:
-            raise HTTPException(
-                status_code=400,
-                detail=f"a photo is larger than {photos.settings.max_upload_mb} MB",
-            )
-        data.append(part)
+    too_big = f"a photo is larger than {photos.settings.max_upload_mb} MB"
+    data = [await read_bounded(upload, cap, too_big) for upload in uploads]
     try:
         count = photos.add(item_id, data)
     except PhotoError as exc:
@@ -193,13 +186,15 @@ async def add_parent_photo(
             detail=f"an item keeps at most {photos.settings.max_photos} photos of the device;"
             f" this one has {have}",
         )
-    data = await photo.read(cap + 1)
-    if not data or len(data) > cap:
+    empty_or_big = f"the photo is empty or larger than {photos.settings.max_upload_mb} MB"
+    try:
+        data = await read_bounded(photo, cap, empty_or_big)
+    except HTTPException:
+        give_back_request(gate)  # refused before any model call
+        raise
+    if not data:
         give_back_request(gate)
-        raise HTTPException(
-            status_code=400,
-            detail=f"the photo is empty or larger than {photos.settings.max_upload_mb} MB",
-        )
+        raise HTTPException(status_code=400, detail=empty_or_big)
     try:
         reading = await extractor.extract([data])
     except Exception as exc:

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.api.deps import CapturesDep, PrivacyDep
 from app.api.model_errors import as_http
+from app.api.uploads import read_bounded
 from app.captures import Capture, CaptureCreate, CaptureError, CaptureList
 from app.extract.imaging import BadImageError
 from app.listing import BadAudioError
@@ -61,9 +62,20 @@ async def create_capture(
         raise HTTPException(
             status_code=400, detail=f"the note is longer than {s.voice_max_seconds} s"
         )
-    photo_data = [await p.read() for p in photos or []]
-    clip_data = await clip.read() if clip is not None else None
-    audio_data = await audio.read() if audio is not None else None
+    photo_data = [
+        await read_bounded(p, photo_cap, f"a photo is larger than {s.max_upload_mb} MB")
+        for p in photos or []
+    ]
+    clip_data = (
+        await read_bounded(clip, clip_cap, f"the clip is larger than {s.max_clip_mb} MB")
+        if clip is not None
+        else None
+    )
+    audio_data = (
+        await read_bounded(audio, audio_cap, f"the note is longer than {s.voice_max_seconds} s")
+        if audio is not None
+        else None
+    )
     try:
         return captures.create(spec, photo_data, clip_data, audio_data)
     except CaptureError as exc:

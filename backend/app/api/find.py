@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.api.deps import FinderDep, GateDep
 from app.api.model_errors import as_http
+from app.api.uploads import read_bounded
 from app.find import (
     BroughtListing,
     BusyError,
@@ -185,14 +186,15 @@ async def add_listing_screenshots(
     if search.status == "closed":
         raise refuse(422, "the search is closed; reopen it to bring listings back")
     most = finder.settings.max_upload_mb * 1024 * 1024
+    too_big = f"a screenshot is empty or larger than {finder.settings.max_upload_mb} MB"
     shots: list[bytes] = []
     for shot in screenshots:
-        data = b"" if shot.size is not None and shot.size > most else await shot.read()
-        if not data or len(data) > most:
-            raise refuse(
-                400,
-                f"a screenshot is empty or larger than {finder.settings.max_upload_mb} MB",
-            )
+        try:
+            data = await read_bounded(shot, most, too_big)
+        except HTTPException as exc:
+            raise refuse(exc.status_code, str(exc.detail)) from exc
+        if not data:
+            raise refuse(400, too_big)
         shots.append(data)
     # the gate counted the request as one call; each further screenshot is one more reading
     refused = charge_more(gate, len(shots) - 1)
@@ -252,11 +254,12 @@ async def add_candidate(
     data: bytes | None = None
     if screenshot is not None:
         max_mb = finder.settings.max_upload_mb
-        if screenshot.size is not None and screenshot.size > max_mb * 1024 * 1024:
+        cap = max_mb * 1024 * 1024
+        if screenshot.size is not None and screenshot.size > cap:
             raise HTTPException(
                 status_code=400, detail=f"the screenshot is larger than {max_mb} MB"
             )
-        data = await screenshot.read()
+        data = await read_bounded(screenshot, cap, f"the screenshot is larger than {max_mb} MB")
     try:
         return await finder.add_candidate(search_id, spec, data)
     except FindError as exc:
