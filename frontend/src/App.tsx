@@ -309,9 +309,12 @@ export default function App() {
               <div className="steps">
                 <section className="step install">
                   <h4>
-                    <span className="step-num">
-                      1<span className="visually-hidden">. </span>
+                    {/* the badge is the number to see; the hidden text is the number to hear, "1. ",
+                        read as one with the heading rather than as a separate "1" and "." (so in step 2) */}
+                    <span className="step-num" aria-hidden="true">
+                      1
                     </span>
+                    <span className="visually-hidden">1. </span>
                     <InstallIcon />
                     Install the app on the phone
                   </h4>
@@ -331,9 +334,10 @@ export default function App() {
                 </section>
                 <section className="step connect">
                   <h4>
-                    <span className="step-num">
-                      2<span className="visually-hidden">. </span>
+                    <span className="step-num" aria-hidden="true">
+                      2
                     </span>
+                    <span className="visually-hidden">2. </span>
                     <ConnectIcon />
                     Connect it to this web app
                   </h4>
