@@ -6,12 +6,12 @@ backend does the work; the app talks to it and nothing else.
 
 ## Step by step
 
-Install the app first ([on the phone's browser or over USB](../start/local.md#7-put-the-app-on-the-phone)).
+Install the app first ([over USB with one command, or on the phone's browser](../start/local.md#7-put-the-app-on-the-phone)).
 
-1. **Backend** tab: **Scan to pair** reads the QR code under **Pair the phone** at the foot of
-   the web app; or type the address under it into **Backend URL** and the access code into the
-   field below, then **Save**. **Check** says whether the backend answers and in which mode.
-   Every screen of it: [Pair the phone with the web app](../start/pairing.md).
+1. **Backend** tab: **Scan to pair** reads the QR code under **Phone app: install and pair** at
+   the foot of the web app (step **2. Connect it to this web app**); or type the address under
+   it into **Backend URL** and the access code into the field below, then **Save**. **Check**
+   says whether the backend answers and in which mode. Every screen of it: [Pair the phone with the web app](../start/pairing.md).
 
     ![The Backend tab: Scan to pair, Backend URL, the access code field, Save and Check](../assets/pairing/android-backend.png){ width=300 }
 
@@ -34,9 +34,9 @@ Install the app first ([on the phone's browser or over USB](../start/local.md#7-
 ## Built so far
 
 **Backend.** The first page is where the backend is. **Scan to pair** reads the code the web
-app shows under *Pair the phone* (at the foot of every page) or the one `./dev phone` prints:
-it carries the web app's address (the web app proxies the API, so one address serves both) and,
-when the demo is gated and the page is signed in, a pairing good for `PAIR_TOKEN_MINUTES` (15),
+app shows under *Phone app: install and pair* (at the foot of every page) or the one
+`./dev phone` prints: it carries the web app's address (the web app proxies the API, so one
+address serves both) and, when the demo is gated and the page is signed in, a pairing good for `PAIR_TOKEN_MINUTES` (15),
 so the access code never leaves the server. On that first scan the app claims an access code of
 its own with the pairing (`POST /api/pair/code`): a record like any issued code, labeled
 `phone` and the first eight characters of the pairing's id, good for `PAIR_CODE_DAYS` (30) and

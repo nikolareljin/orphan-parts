@@ -294,8 +294,8 @@ export const HELP = {
   pair: {
     topic: 'phone pairing',
     text:
-      'Pairing points the Android app at this server: open the code, then on the app’s Backend tab tap Scan to pair. ' +
-      'Signed in, the code also gives the phone an access code of its own.',
+      'Install the Android app first (the install code), then pair it: open the connect code, then on the app’s Backend tab tap Scan to pair. ' +
+      'Signed in, the connect code also gives the phone an access code of its own.',
     doc: 'start/pairing/',
   },
   feedback: {

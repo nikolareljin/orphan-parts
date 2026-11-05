@@ -136,38 +136,61 @@ The phone must be on the **same Wi-Fi**. If the phone cannot reach the address l
 
 ### 2.2 Install the app
 
-**Option A: over USB from the computer (most likely).** Once per phone (names are Samsung's;
-other makers differ a little):
+<img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/usb-install-flow.svg" alt="Installing over USB: on the phone, Developer options, USB debugging, plug in and tap Allow; on the computer, phone-install.sh; the app is installed; then pair it" width="100%">
 
-1. **Settings**, **About phone**, **Software information** (on Pixel and most others, **About
-   phone** directly), tap **Build number** seven times. The phone asks for its PIN, then says
-   *Developer mode has been turned on*.
-2. **Settings**, **Developer options** (at the bottom; on Pixel under **System**), turn on
-   **USB debugging**.
-3. Samsung with One UI 6 or newer: **Settings**, **Security and privacy**, **Auto Blocker**
-   off. While it is on, it blocks installs over USB.
-4. Plug in a cable that carries data; choose **File transfer** if asked. On **Allow USB
-   debugging?** (the computer's RSA key fingerprint), tick **Always allow from this computer**
-   and tap **Allow**.
+**Option A (recommended): over USB, one command.** No QR code needed. One action per step;
+under each, what you should see. Steps 1 to 3 are once per phone (the names are Samsung's;
+other makers differ a little).
 
-Then, in the `orphan-parts` folder:
+1. **Turn on Developer options.** <kbd>Settings</kbd> → <kbd>About phone</kbd> →
+   <kbd>Software information</kbd> → tap <kbd>Build number</kbd> 7 times. On Pixel:
+   <kbd>Settings</kbd> → <kbd>About phone</kbd> → <kbd>Build number</kbd>.<br>
+   *You should see:* the phone asks for its PIN, then *Developer mode has been turned on*.
+2. **Turn on USB debugging.** <kbd>Settings</kbd> → <kbd>Developer options</kbd> (at the bottom
+   of the list; on Pixel under <kbd>System</kbd>) → <kbd>USB debugging</kbd> on. On a Samsung
+   phone with One UI 6 or newer, also <kbd>Settings</kbd> → <kbd>Security and privacy</kbd> →
+   <kbd>Auto Blocker</kbd> off: while it is on, it blocks installs over USB.<br>
+   *You should see:* the **USB debugging** switch on.
+3. **Plug in and allow this computer.** Use a cable that carries data; if the phone asks what
+   the USB connection is for, choose <kbd>File transfer</kbd>. Unlock the phone; on **Allow USB
+   debugging?** (the computer's RSA key fingerprint) tick **Always allow from this computer**
+   and tap <kbd>Allow</kbd>.<br>
+   *You should see:* the prompt close.
+4. **Run one command** in the `orphan-parts` folder:
 
-```bash
-bash scripts/phone-install.sh                                        # macOS, Linux, WSL
-```
+    ```bash
+    bash scripts/phone-install.sh                                        # macOS, Linux, WSL
+    ```
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1   # Windows, in PowerShell
-```
+    ```powershell
+    powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1   # Windows, in PowerShell
+    ```
 
-It uses `adb` if you have it, or downloads Google's platform-tools (about 10 MB, into
-`~/.orphan-parts`); downloads the latest release's APK; installs it on the phone and opens the
-app. No Java, Android SDK or Docker needed. You should see it end with *done. In the app, open
-the Backend tab and tap 'Scan to pair'*. On Windows, if no phone is found, install the maker's
-USB driver (Samsung Smart Switch, Google USB Driver) and run it again.
+    It uses `adb` if you have it, or downloads Google's platform-tools (about 10 MB, into
+    `~/.orphan-parts`, on Windows `%USERPROFILE%\.orphan-parts`); downloads the latest
+    release's APK; installs it on the phone and opens the app. No Java, Android SDK or Docker
+    needed.<br>
+    *You should see* it end with:
 
-**Option B: on the phone only.** Open this link in the phone's browser, or scan the QR code with
-its camera:
+    ```text
+    phone-install: done. In the app, open the Backend tab and tap 'Scan to pair' (JUDGES.md, 2.3 Pair the phone).
+    ```
+
+5. **Check, if anything went wrong:** `adb devices` lists the phone as `device`, not
+   `unauthorized`. The script prints the `adb` it uses (`phone-install: adb: …`); when it
+   downloaded one, that is `~/.orphan-parts/platform-tools/adb devices` (Windows:
+   `& "$env:USERPROFILE\.orphan-parts\platform-tools\adb.exe" devices`).
+
+| What you see | What to do |
+|---|---|
+| `unauthorized` (in `adb devices`, or the script says the phone has not allowed this computer) | Unplug, plug in again, unlock the phone and tap <kbd>Allow</kbd> on **Allow USB debugging?**. No prompt: <kbd>Developer options</kbd> → <kbd>Revoke USB debugging authorizations</kbd>, then plug in again |
+| `no phone found` (nothing in `adb devices`) | A cable that carries data (some only charge); USB mode <kbd>File transfer</kbd>; **USB debugging** on. On Windows, install the maker's USB driver (Samsung Smart Switch, Google USB Driver) |
+| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | An older copy signed with another key is on the phone: `adb uninstall com.orphanparts.lens`, then run the command again |
+| The install fails on a Samsung phone | <kbd>Settings</kbd> → <kbd>Security and privacy</kbd> → <kbd>Auto Blocker</kbd> off |
+
+**Option B: without a computer.** Open this link in the phone's browser, or scan the QR code
+with its camera (the web app's footer shows the same code under **Phone app: install and pair**,
+step **1. Install the app on the phone**):
 <https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk>
 
 <img src="https://raw.githubusercontent.com/nikolareljin/orphan-parts/main/docs/assets/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140">
@@ -185,8 +208,9 @@ Either way the app opens on its **Backend** tab.
 
 ### 2.3 Pair the phone
 
-1. On the computer, on the signed-in web app at the network address, open **Pair the phone** at
-   the foot of the page. A QR code appears, with *Or type http://…:5173 into the app.* under it.
+1. On the computer, on the signed-in web app at the network address, open **Phone app: install
+   and pair** at the foot of the page. Under **2. Connect it to this web app** a QR code appears,
+   with *Or type http://…:5173 into the app.* under it.
 2. In the app, **Backend** tab, tap **Scan to pair** and point the camera at the QR code. The
    phone gets an access code of its own from it (never yours); the QR code is good for fifteen
    minutes, so keep it off screen shares.

@@ -43,10 +43,16 @@ the public items only.
 
 ![The web app signed in: Sign out in the header, the upload form, the footer counting calls](../assets/pairing/web-signed-in.png){ width=480 }
 
-## 2. Open Pair the phone
+## 2. Open Phone app: install and pair
 
-At the foot of the page, open **Pair the phone** (the **?** beside it says what pairing does). A QR code is drawn, with the address under it
-(`Or type http://… into the app.`), and a line that says what the code carries.
+At the foot of the page, open **Phone app: install and pair** (the **?** beside it says what
+installing and pairing involve). It holds two numbered steps, side by side on a wide screen and
+one under the other on a phone. **1. Install the app on the phone** has the install code: scanned
+with the phone's camera, it downloads the newest release's APK (the same code as in
+[Put the app on the phone](local.md#7-put-the-app-on-the-phone)). Skip it when the app is
+already installed. **2. Connect it to this web app** has the pairing code: a QR code is drawn,
+with the address under it (`Or type http://… into the app.`), and a line that says what the
+code carries. That one is scanned from inside the app, not with the camera app.
 
 **Signed in,** the code carries the address and a pairing good for a few minutes (fifteen on a
 default server). With it the phone claims an access code of its own; that code stays on the

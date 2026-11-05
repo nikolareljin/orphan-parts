@@ -128,3 +128,30 @@ test('the footer links to the documentation and the source', async ({ page }) =>
     'https://github.com/nikolareljin/orphan-parts',
   )
 })
+
+test('the footer separates installing the phone app from pairing it', async ({ page }) => {
+  await page.goto('/')
+  const footer = page.getByRole('contentinfo', { name: 'Service' })
+  const phone = footer.locator('details.pair')
+  await phone.getByText('Phone app: install and pair').click()
+  await expect(phone.getByRole('heading', { name: '1. Install the app on the phone' })).toBeVisible()
+  const qr = phone.getByRole('img', { name: "QR code that opens the newest release's APK" })
+  await expect(qr).toHaveAttribute('src', '/apk-qr.svg')
+  await expect(phone.getByText("Scan with the phone's camera to download the app")).toBeVisible()
+  await expect(phone.getByRole('link', { name: 'orphan-parts.apk' })).toHaveAttribute(
+    'href',
+    'https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk',
+  )
+  await expect(phone.getByRole('link', { name: 'Put the app on the phone' })).toHaveAttribute(
+    'href',
+    'https://nikolareljin.github.io/orphan-parts/start/local/#7-put-the-app-on-the-phone',
+  )
+  const file = await page.request.get('/apk-qr.svg')
+  expect(file.status()).toBe(200)
+  expect(file.headers()['content-type']).toContain('image/svg+xml')
+  await expect(phone.getByRole('heading', { name: '2. Connect it to this web app' })).toBeVisible()
+  await expect(phone.getByText('Scan to pair', { exact: true }).first()).toBeVisible()
+  // the marks beside the steps are decoration: the headings carry the meaning
+  await expect(phone.locator('svg.step-icon')).toHaveCount(2)
+  for (const icon of await phone.locator('svg.step-icon').all()) await expect(icon).toHaveAttribute('aria-hidden', 'true')
+})
