@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- Three more item drawings in the demo set, each a use that builds the device in rather than setting it on the table: the opened Dell laptop and the Dell 1800FP monitor as a gaming coffee table, the ThinkPad T510 as a hall smart mirror. An item in `demo/set.yaml` takes `more_pictures:` (a list of uses, each drawn after `picture:` with no correction and recorded on its own); the existing recordings are unchanged. Three new Muse Image recordings, 0.05 USD with two extra draws of the mirror; shown in *Examples*, *Laptops built in, not laptops on the table*.
+
 ### Fixed
 - Fixture mode no longer answers a person's request that has no recording of its own with the operation's stand-in (cards about a laptop battery after **Ask again** on the Dell monitor, a 65 W charger from **Check fit**, an *Orbital Power* label from a photo of your own), saved and badged *recorded answer*. The API refuses it (409, *No recorded answer for this request: the demo answers only what was recorded. Add a Meta Model API key in .env (MODEL_API_KEY, OPL_FAKE_API=0) to run it live.*), nothing is saved, and the page shows the line where the result would be. `FIXTURE_STUBS=1` keeps the stand-ins (the tests, `./dev e2e`, the screenshot and video stacks); the demo loader, the eval and the tools run outside the API and keep them as before; the sample photos keep exact replay.
 
