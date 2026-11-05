@@ -133,7 +133,7 @@ Documentation: https://nikolareljin.github.io/orphan-parts/
 3. **Sign in, if there is a door**: a local stack has none until `./dev gate on`, which prints
    a code for you and one for the phone; then **Sign in with the code** in the header with
    yours (**Sign out**, in the same place, ends it). Without the gate, go on to step 4.
-4. **Pair the phone**: at the foot of the page, open **Pair the phone** for the QR code. In the
+4. **Pair the phone**: at the foot of the page, open **Phone app: install and pair**, then step **2. Connect it to this web app** for the QR code. In the
    app, on the **Backend** tab, tap **Scan to pair** and point the camera at the code on a
    second screen, then **Check**. Signed in, the phone gets an access code of its own on
    that scan; from a page that is not signed in, the phone joins as the demo. Without Google

@@ -184,7 +184,7 @@ fun SettingsScreen(
             Text("Where the inventory lives", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(6.dp))
             Text(
-                "The same backend as the web app. Scan the code the web app shows under Pair the phone, or type the address. Photos, clips and notes go there and nowhere else.",
+                "The same backend as the web app. Scan the code the web app shows under Phone app: install and pair (step 2, Connect), or type the address. Photos, clips and notes go there and nowhere else.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = muted,
             )
