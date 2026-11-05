@@ -517,8 +517,8 @@ The money spent is not undone: the spend is in the Model API account's billing.
 ## Getting better drawings over time
 
 Muse Image is a hosted model. The Model API documents image generation and image edits for
-it, and post-training only for the open-weight models (Muse Spark Open, Muse Glimmer); no
-fine-tuning path for Muse Image was found as of November 3, 2026. The drawings get better
+it, and post-training for the open-weight models (Muse Spark Open, Muse Glimmer); the hosted
+image API has no tuning route yet. The drawings get better
 through what the app sends and what it does with the answer:
 
 - **Facts first.** Built: the parameters' `facts` section (sizes from the name, size facts
