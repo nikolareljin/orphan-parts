@@ -1,0 +1,436 @@
+{
+  "params_version": 5,
+  "stage": "",
+  "at": "2026-11-05T04:54:14+00:00",
+  "report_at": "2026-11-05T04:52:53+00:00",
+  "reviewer": "muse-spark-1.3",
+  "image_model": "muse-image-1.0",
+  "drawings": 33,
+  "verdicts": {
+    "matches": 32,
+    "partly": 1
+  },
+  "categories": {
+    "implausible": 1
+  },
+  "by_kind": {
+    "card": {
+      "matches": 4
+    },
+    "item": {
+      "matches": 11,
+      "partly": 1
+    },
+    "project": {
+      "matches": 17
+    }
+  },
+  "review_usd": 0.1721,
+  "scored": [
+    {
+      "id": "item:hcsr04#1",
+      "subject": "parking_sensor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "079f2b125a3d6fc4c6c3155a"
+    },
+    {
+      "id": "item:dht11#1",
+      "subject": "kitchen_dashboard",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "7f449f0d0a043572a77741e1"
+    },
+    {
+      "id": "item:joystick#1",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "23e0d9ef0b05762f536681cd"
+    },
+    {
+      "id": "item:uno_r3#1",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "e8e7b2de4e3dcdecb12e688d"
+    },
+    {
+      "id": "item:laptop_dell#1",
+      "subject": "kind:laptop",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "65fb33545751b1dfe7e8e126"
+    },
+    {
+      "id": "item:ssd_kingston_a400#1",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "7112a1cb9713c37de7e4b66d"
+    },
+    {
+      "id": "item:powerline#1",
+      "subject": "kind:powerline adapter",
+      "verdict": "partly",
+      "categories": [
+        "implausible"
+      ],
+      "recording": "331d3416d3afabdc03d8e41f"
+    },
+    {
+      "id": "card:powerline#1",
+      "subject": "kind:powerline adapter",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "91fd8f720d930d23d5e98e2f"
+    },
+    {
+      "id": "item:laptop_t510#1",
+      "subject": "home_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "2a9bb3db634f32bde23f706b"
+    },
+    {
+      "id": "item:laptop_t510#2",
+      "subject": "smart_mirror",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "a5a974b0e82aee2d7c970a12"
+    },
+    {
+      "id": "card:laptop_t510#1",
+      "subject": "kind:laptop",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "41f43fa23613a76bb170b061"
+    },
+    {
+      "id": "item:monitor_1800fp#1",
+      "subject": "smart_mirror",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "0f653eca91daef8e02741d46"
+    },
+    {
+      "id": "item:monitor_1800fp#2",
+      "subject": "kind:monitor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "dc08ae84f557b00f7d511d6f"
+    },
+    {
+      "id": "card:monitor_1800fp#1",
+      "subject": "kind:monitor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "f2ced94de85891891f2acd21"
+    },
+    {
+      "id": "item:monitor_u2419h#1",
+      "subject": "kind:monitor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "11b5729b9fa71c1a5e8b09bf"
+    },
+    {
+      "id": "card:monitor_u2419h#1",
+      "subject": "kind:monitor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "da93140bcf46223de48d0208"
+    },
+    {
+      "id": "project:1#1",
+      "subject": "smart_mirror",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "9b1f0ba71f65bd02cd1d2f68"
+    },
+    {
+      "id": "project:2#1",
+      "subject": "homework_workstation",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "9eb75189ae724dbb6b9e0420"
+    },
+    {
+      "id": "project:3#1",
+      "subject": "home_automation_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "7139cc526eb7faf2d623b391"
+    },
+    {
+      "id": "project:4#1",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "47f2bc8297c1ca6fe4277ede"
+    },
+    {
+      "id": "project:4#2",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "3fe97a125d16f78efc14ad3a"
+    },
+    {
+      "id": "project:4#3",
+      "subject": "custom_nas",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "936edbb7694f8aedf93694b4"
+    },
+    {
+      "id": "project:5#1",
+      "subject": "home_server",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "3d972f0e8dbcabb24ec6bf39"
+    },
+    {
+      "id": "project:6#1",
+      "subject": "retro_console",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "4d2db2f00158b8a5cf5e2c9b"
+    },
+    {
+      "id": "project:7#1",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "84673e72d1fe0e27ff6f0a0a"
+    },
+    {
+      "id": "project:7#2",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "625ccf82d3279f0dbea87c4b"
+    },
+    {
+      "id": "project:7#3",
+      "subject": "arcade_table",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "786c27000969e14093320c85"
+    },
+    {
+      "id": "project:8#1",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "2021f9bbcf56f21f05db7bc6"
+    },
+    {
+      "id": "project:8#2",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "b314be9c8e82204471224774"
+    },
+    {
+      "id": "project:8#3",
+      "subject": "smart_calendar",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "a67a7a77cfd8cc7da2577582"
+    },
+    {
+      "id": "project:9#1",
+      "subject": "kitchen_dashboard",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "722a31855c78804bafb57cff"
+    },
+    {
+      "id": "project:10#1",
+      "subject": "weather_station",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "c0675b82142e1b573b4fc515"
+    },
+    {
+      "id": "project:11#1",
+      "subject": "parking_sensor",
+      "verdict": "matches",
+      "categories": [],
+      "recording": "dd2a3e8e5481968a2e022ba0"
+    }
+  ],
+  "params": {
+    "version": 5,
+    "facts": {
+      "item_values": 8,
+      "part_values": 6,
+      "first": [
+        "size",
+        "diagonal",
+        "aspect",
+        "capacity",
+        "form factor",
+        "count"
+      ],
+      "left_out": [
+        "brand",
+        "model",
+        "part number",
+        "certification",
+        "manufacturer",
+        "condition",
+        "fault",
+        "voltage",
+        "current",
+        "wattage"
+      ],
+      "left_out_as_built": [
+        "condition",
+        "certification"
+      ],
+      "from_name": true,
+      "condition": false
+    },
+    "kinds": {
+      "monitor": {
+        "looks": "a thin flat computer monitor, far smaller than a television, not a bulky CRT TV",
+        "size": "screen size",
+        "built": "taken out of its stand and case, its bare thin screen panel built into the project as its display, far smaller than a television; no monitor stand, no TV"
+      },
+      "motherboard": {
+        "looks": "",
+        "size": "size",
+        "built": "a bare board mounted inside the build's case, its memory and drives fitted in; never an intact desktop PC standing in the scene"
+      },
+      "laptop": {
+        "looks": "a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than a bulky CRT TV",
+        "size": "size",
+        "built": "taken apart and built in, its bare thin screen panel used as the display and its board hidden inside the build; never an open laptop, laptop case, lid or keyboard in sight"
+      },
+      "laptop memory": {
+        "looks": "a tiny memory stick far smaller than laptop keys and body, not a large green board",
+        "size": "size",
+        "built": ""
+      },
+      "microcontroller board": {
+        "looks": "a tiny credit-card-sized bare board, far smaller than half a laptop width",
+        "size": "size",
+        "built": ""
+      },
+      "relay module": {
+        "looks": "a tiny module with small cube relay, far smaller than a laptop",
+        "size": "size",
+        "built": ""
+      },
+      "sound sensor module": {
+        "looks": "a tiny sensor module, far smaller than a laptop",
+        "size": "size",
+        "built": ""
+      },
+      "temperature and humidity sensor module": {
+        "looks": "a tiny sensor module, far smaller than a laptop",
+        "size": "size",
+        "built": ""
+      },
+      "ultrasonic distance sensor module": {
+        "looks": "a tiny distance sensor module, far smaller than a laptop",
+        "size": "size",
+        "built": ""
+      }
+    },
+    "projects": {
+      "home_automation_server": {
+        "match": [
+          "home automation server"
+        ],
+        "correction": "An opened 15-inch laptop about 35 cm wide on a home desk for house lights and schedules, with one small laptop memory stick to true small scale beside it; not a desktop tower, not a TV, no large circuit board.",
+        "built": "A small wall-mounted wooden box about 35 cm wide in a home hallway, the laptop taken apart inside it: its bare screen panel framed in the front showing house light and schedule icons, its board and memory hidden inside; no open laptop, laptop case, lid or keyboard; not a desktop tower, not a TV.",
+        "as_before": false
+      },
+      "home_server": {
+        "match": [
+          "home server and backup",
+          "home server"
+        ],
+        "correction": "An opened laptop about 35 cm wide on a wooden desk wired to a router with antennas and to one bare 2.5-inch hard drive about 10 cm long by a single cable for backup; memory inside laptop not shown; drive plain with no ethernet ports, no second drive, no extra box, not a desktop tower.",
+        "built": "A small closed wooden box about 35 cm wide on a shelf beside a router with antennas, the laptop taken apart inside it: board and memory hidden inside, one bare 2.5-inch hard drive fitted in the box; no open laptop, laptop case, lid or keyboard; no second drive, not a desktop tower.",
+        "as_before": false
+      },
+      "kitchen_dashboard": {
+        "match": [
+          "kitchen home-automation dashboard",
+          "kitchen dashboard"
+        ],
+        "correction": "A 24-inch 16:9 computer screen about 55 cm wide wall-mounted above kitchen counter as dashboard, the laptop that drives it taken apart and hidden behind it, a tiny credit-card-sized microcontroller board and four tiny modules including a relay with its cube on a small panel beside it; no open laptop; not a TV.",
+        "built": "A bare thin 24-inch screen panel about 55 cm wide set flush into a slim wooden wall frame above the kitchen counter showing climate and switch icons, the laptop taken apart, its board hidden in the frame; a tiny credit-card-sized board, three tiny sensor modules and one small cube relay module on a small panel beside it; no open laptop, laptop case, lid or keyboard; not a TV.",
+        "as_before": false
+      },
+      "smart_mirror": {
+        "match": [
+          "smart mirror"
+        ],
+        "correction": "an 18 inch 5:4 computer monitor, about 46 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above a small bench; only a clock and weather icons glow through the glass; a small mirror, not a TV; no words or logos",
+        "built": "a bare thin screen panel hidden behind a two-way mirror in a slim wooden frame, the laptop's board hidden inside the frame, hung at eye level on a hall wall above a small bench; only a clock and weather icons glow through the glass; no open laptop, laptop case, lid or keyboard; not a TV; no words or logos",
+        "as_before": false
+      },
+      "arcade_table": {
+        "match": [
+          "arcade coffee table",
+          "arcade table"
+        ],
+        "correction": "A 24-inch flat monitor (~53x30cm widescreen) laid flat face-up inside the wooden coffee-table box under full-size glass top, joystick modules flush beside it, opened laptop wired below, living-room table use; no upright monitor on top, not a TV stand.",
+        "built": "A wooden coffee table with a bare thin screen panel about 53 cm wide laid flat face-up under its full-size glass top, joystick modules flush beside it, the laptop's board hidden inside the table box; no open laptop, laptop case, lid or keyboard; no upright monitor, not a TV stand.",
+        "as_before": false
+      },
+      "custom_nas": {
+        "match": [
+          "custom nas from a spare desktop board",
+          "custom nas"
+        ],
+        "correction": "Single full-size ATX motherboard (~30.5x24.4cm) mounted in open cube case as NAS with one full-length desktop memory stick in DIMM slot, 2.5-inch SSD in drive bay with SATA leads, small PCIe adapter with two M.2 drives in PCIe slot, ATX PSU; not two boards, no SSD on board.",
+        "built": "",
+        "as_before": true
+      },
+      "retro_console": {
+        "match": [
+          "retro console on the tv",
+          "retro console"
+        ],
+        "correction": "Opened laptop (~35cm wide) on wooden desk cabled to 24-inch thin flat widescreen monitor (~53x30cm) beside it both showing retro gaming, two wired gamepads in front in use; no cartridge console, no CRT TV, no cartridges or extra boards.",
+        "built": "A slim wooden box under the TV holding the laptop's board, cabled to a thin flat 24-inch screen showing retro games, two wired gamepads in front in use; no open laptop, laptop case, lid or keyboard; no cartridge console, no CRT TV.",
+        "as_before": false
+      },
+      "weather_station": {
+        "match": [
+          "indoor weather station and logger",
+          "weather station"
+        ],
+        "correction": "Large microcontroller board (~7x5cm) with square USB-B and DC barrel jack on breadboard on indoor desk wired to 3-pin temperature-humidity module, coin-cell clock module and breadboard power module with barrel input and USB-A in use; no tiny Nano-size board.",
+        "built": "",
+        "as_before": false
+      },
+      "homework_workstation": {
+        "match": [],
+        "correction": "",
+        "built": "",
+        "as_before": true
+      }
+    },
+    "views": {
+      "close-up": "a close-up at arm's length; the parts at their real sizes side by side",
+      "from above": "seen straight down from above; every part at its true size against the table or desk"
+    },
+    "negatives": [
+      "no lettering, logos, brand names, model numbers or labels on any part, case or screen",
+      "the sizes are for scale only: no dimension lines, measurements or size labels written in the picture"
+    ],
+    "rules": {
+      "item": "on a plain background, no text, no logos, no people",
+      "use": "finished and in use in a home, no text, no logos, no people",
+      "card": "finished and in use in a home, no text, no logos, no people",
+      "project": "finished and in use in a home, no text, no logos, no people"
+    }
+  }
+}

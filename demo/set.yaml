@@ -97,6 +97,7 @@ items:
     decide: true
     ideas: true
     reuse_picture: true
+    reuse_picture_brief: "Show a 15-inch laptop with lid closed flat on a wooden desk, connected by video cable to a large external desk monitor it drives as the only display; not an open laptop with its screen on in dual-screen use."
     decision: keep_build
     expect:
       fields:
@@ -409,7 +410,7 @@ items:
     intent: build
     photos: [photos/elegoo-uno-r3.jpg]
     picture: smart_calendar
-    picture_brief: "Show only ONE credit-card sized microcontroller board with square USB-B and barrel jack beside small desk calendar display, wired as base, with single small screen showing calendar, not two boards, no second USB board.; seen at eye level from across the room, every part at its true size against the furniture"
+    picture_brief: "a small flat blue board the size of a credit card, no wider than the coffee mug beside it, a square silver USB-B socket and a round barrel jack on one short edge, pin headers along the long edges; jumper wires to a tiny two-line LCD about 8 cm wide on a little wooden stand, a coin-cell clock module, a tiny buzzer and one small push button for snooze; no tablet, no second board"
     decide: true
     decision: keep_build
 
@@ -427,7 +428,7 @@ items:
     intent: build
     photos: [photos/joystick-module.jpg]
     picture: an arcade coffee table in a living room, a game screen under its glass top, joysticks and buttons along its edge
-    picture_brief: "Draw the flat game screen lying horizontal face-up under the glass coffee-table top, joysticks and buttons mounted along the table edge for play from sofas, laptop on lower shelf wired to it, not an upright TV on top of the table."
+    picture_brief: "Draw the flat game screen lying horizontal face-up under the glass coffee-table top, joysticks and buttons mounted along the table edge for play from sofas, the laptop taken apart and its board hidden inside the table box, no laptop in sight, not an upright TV on top of the table."
     decide: true
     decision: keep_build
 
@@ -606,7 +607,7 @@ propose:
   corrections:
     "smart_mirror": "a 24 inch 16:9 computer monitor, about 61 cm across the diagonal, hidden behind a two-way mirror in a slim wooden frame a little larger than the screen, hung at eye level on a hall wall above a small bench; only a clock, weather icons and the day's calendar glow through the glass; a mirror, not a TV; no word; seen at eye level from across the room, every part at its true size against the furniture"
     "custom_nas / from above, as it is used": "Top-down inside black ATX case: full ATX motherboard with empty CPU socket, one desktop DDR4 memory stick fitted in vertical slot beside socket, PCIe adapter card with two M.2 drives fitted in PCIe slot, 3.5-inch hard drive and 2.5-inch SSD mounted low and cabled, ATX power supply on side; not empty RAM slots, not empt; only the parts listed, nothing extra on the table, every part at its true size"
-    "home_server": "a small closed wooden box on a shelf holding the laptop's bare board and one bare 2.5 inch hard drive, wired to a router with antennas; no open laptop, no laptop lid or keyboard, no second drive, no words or logos, not a desktop tower; seen at eye level from across the room, every part at its true size again; a three-quarter view from slightly above, the main part centered and its real size clear"
+    "home_server": "Keep wooden shelf box with bare thin laptop screen panel as front display and laptop board hidden inside, show small 2.5-inch laptop hard drive (~7x10cm) beside board, connected to router by wire, no laptop case/keyboard/lid, not a large 3.5-inch desktop drive; a calm daylight scene with only the parts listed and the furniture they stand on"
     "arcade_table / from above, as it is used": "Top-down coffee-table arcade shell: one bare thin 18-inch 4:3 screen panel (~46cm diagonal) laid flat centered in the wooden table box under the glass top, one small joystick control point at the edge, the laptop's board hidden inside; no open laptop, no laptop lid or keyboard, not a large widescreen TV; the main part fills the middle of the picture, the smaller parts in front of it"
     "home_automation_server": "a small wall-mounted wooden box with the laptop's bare screen panel framed in front showing icons only, its board and memory hidden inside, one network cable; no open laptop, no laptop lid or keyboard, no legible text, logos or brand names, not a TV or desktop; seen at eye level from across the room, every p; seen at eye level from across the room, every part at its true size against the furniture"
     "custom_nas / as a close-up of how the parts fit together": "Add line: close-up inside open ATX tower with full-size ATX motherboard vertical, one desktop memory stick seated in DIMM slot beside CPU cooler, empty dual-M.2 PCIe adapter without M.2 SSDs, one 3.5-inch hard drive and one 2.5-inch SATA SSD cabled below; do not add extra M.2 drives, do not omit memory.; only the parts; only the parts listed, nothing extra on the table, every part at its true size"
@@ -615,8 +616,8 @@ propose:
     "smart_calendar / from above, as it is used": "small stacked microcontroller desk clock about 68x53mm viewed from above on wooden desk with prototype shield on top, small display showing time digits plus clock module, buzzer module and red push-button on shield, no legible words, labels or logos except time digits, not a TV; the main part fills the middle of the p; the main part fills the middle of the picture, the smaller parts in front of it"
     "weather_station": "Draw a large UNO-size microcontroller board about 68x53mm with square USB-B port and barrel jack on one end, mounted on breadboard and wired to small clock module with coin cell, 3-pin temp-humidity sensor, and breadboard power module, not a tiny Nano-size board without barrel jack."
     "parking_sensor": "Draw the controller as a full UNO-size microcontroller board about credit-card size sitting left on the breadboard with USB-B socket and barrel jack, wired to sensor and buzzer, not a tiny USB-stick board with USB-A plug; a three-quarter view from slightly above, the main part centered and its real size clear"
-    "custom_nas": "Show open ATX NAS case with full ATX motherboard vertical, one DDR3 desktop memory stick installed in DIMM slot, PCIe adapter card for two M.2 in PCIe slot, one 2.5-inch SATA SSD and one 3.5-inch SATA HDD only, with CPU cooler, ATX PSU and ethernet; not extra drives, no text logos."
+    "custom_nas": "Show open ATX NAS case with full ATX motherboard vertical, one DDR3 desktop memory stick installed in DIMM slot, PCIe adapter card for two M.2 in PCIe slot, one 2.5-inch SATA SSD and one 3.5-inch SATA HDD only, with CPU cooler, ATX PSU and ethernet; not extra drives, no text logos; a calm daylight scene with only the parts listed and the furniture they stand on"
     "homework_workstation": "Add: small 18-inch 4:3 monitor about 46cm diagonal with thick bezels and near-square screen on desk next to laptop, only slightly larger than laptop screen, connected by cable for homework, not a large modern thin-bezel widescreen TV; seen at eye level from across the room, every part at its true size against the furniture"
     "retro_console": "a slim wooden box under a 24-inch flat screen holding the laptop's bare board, tiny joystick module wired to it as the only controller, retro game on the screen; no open laptop, no laptop lid or keyboard, no gamepads, logos or text; a three-quarter view from slightly above, the main part centered and its rea; seen at eye level from across the room, every part at its true size against the furniture"
     "smart_calendar / as a close-up of how the parts fit together": "Close-up on desk of UNO-size microcontroller board ~68x53mm with USB-B and barrel jack with prototype shield on top, wired to coin-cell RTC module, one buzzer module, one push-button module and small OLED/LCD showing time; not multiple microcontrollers, not stacked controller boards, not extra modules."
-    "kitchen_dashboard": "Kitchen wall-mounted 24-inch computer monitor about 54cm wide showing icon dashboard with no text, numbers or logos, laptop on counter below wired to credit-card microcontroller board with small climate, ultrasonic, sound and single relay modules, monitor as computer display not a TV."
+    "kitchen_dashboard": "seen at eye level across the kitchen: the bare 24-inch screen panel in a slim wooden frame on the wall above the counter showing temperature, humidity and light-switch icons; beside it a small wooden panel with one tiny bare microcontroller board, three tiny sensor modules and one small relay module with its blue cube, wired neatly; no laptop anywhere, no words"

@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "3d972f0e8dbcabb24ec6bf39",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of ThinkPad photo backup server built from laptop (taken apart and built in, its bare thin screen panel used as the display and its board hidden inside the build; never an open laptop, laptop case, lid or keyboard in sight), hard drive (size 2.5 inch, connector sata), laptop memory (size 8 GB; a tiny memory stick far smaller than laptop keys and body, not a large green board); Shelf backup server for photos and documents that still needs a wired network link.; A small closed wooden box about 35 cm wide on a shelf beside a router with antennas, the laptop taken apart inside it: board and memory hidden inside, one bare 2.5-inch hard drive fitted in the box; no open laptop, laptop case, lid or keyboard; no second drive, not a desktop tower.; Keep wooden shelf box with bare thin laptop screen panel as front display and laptop board hidden inside, show small 2.5-inch laptop hard drive (~7x10cm) beside board, connected to router by wire, no laptop case/keyboard/lid, not a large 3.5-inch desktop drive; a calm daylight scene with only the parts listed and the furniture they stand on; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793853168,
+    "data": [
+      {
+        "b64_json": "@3d972f0e8dbcabb24ec6bf39-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4310,
+      "output_tokens": 1688,
+      "total_tokens": 5998
+    }
+  },
+  "status": 200
+}

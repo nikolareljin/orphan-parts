@@ -97,7 +97,8 @@ goes on the stack's spend ledger under `SPEND_CAP_USD`. A redraw is one Muse Ima
 single drawing, or `--briefs`, a YAML map of id to brief, for briefs the owner edited), then:
 
 1. writes each brief into `demo/set.yaml`, beside what it corrects, comments and order kept:
-   an item's `picture_brief`, its first reuse card's `reuse_picture_brief`, a project's under
+   an item's `picture_brief` (its first drawing alone: one of its `more_pictures` has no brief
+   of its own and is refused), its first reuse card's `reuse_picture_brief`, a project's under
    `propose: corrections:` by its template id (or its title when two kept projects share a
    template), a view's as `<template> / <view>`:
 
@@ -315,7 +316,10 @@ reviews every candidate against the drawing's facts and keeps the best:
 - **What is kept.** Only the winner's brief is written into `demo/set.yaml` (the item's
   `picture_brief` or `reuse_picture_brief`, the project's `propose.corrections` entry) and only
   its recording is copied into `backend/tests/fixtures/api/images-generations/`; the set is
-  replayed after (0 not recorded, 0 stand-in answers). Every candidate, winner or not, is
+  replayed after (0 not recorded, 0 stand-in answers). A drawing with no brief of its own in
+  the set (an item's `more_pictures`, a reuse card after the first) is skipped. The pick goes by
+  the review alone: a *wrong* candidate the review is surer of replaces a *wrong* drawing, so
+  look at `best-after.jpg` before committing. Every candidate, winner or not, is
   copied under `picture-review/candidates/<drawing>/`, with `picture-review/candidates.md`
   (each candidate's verdict, confidence, issues and brief) and `best-before.jpg` /
   `best-after.jpg`; none of it goes into the repository. The last review (`report.json`) takes

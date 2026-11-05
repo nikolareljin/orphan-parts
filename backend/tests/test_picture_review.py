@@ -428,6 +428,26 @@ def test_set_briefs_name_the_project_by_template_and_view() -> None:
     assert [b.correction for b in out] == ["smart_mirror", "smart_mirror / from above"]
 
 
+def test_set_briefs_give_an_item_brief_to_its_first_drawing_alone() -> None:
+    def item(n: int) -> Drawing:
+        return Drawing(
+            id=f"item:t510#{n}",
+            kind="item",
+            n=n,
+            file="",
+            use="",
+            item_key="t510",
+            facts=Facts(title="t"),
+        )
+
+    drawings = [item(1), item(2)]
+    out = set_briefs(drawings, {"item:t510#1": "a"})
+    assert [(b.item, b.field) for b in out] == [("t510", "picture_brief")]
+    # the second is one of its more_pictures, drawn without a brief: never written over the first's
+    with pytest.raises(ValueError, match="first drawing alone"):
+        set_briefs(drawings, {"item:t510#2": "b"})
+
+
 def test_the_command_line_is_checked(capsys: pytest.CaptureFixture[str]) -> None:
     assert isinstance(parse(["--max-usd", "x"]), str)
     assert isinstance(parse(["--brief", "x"]), str)

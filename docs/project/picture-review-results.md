@@ -127,29 +127,28 @@ demo set: every drawing drawn with that version and reviewed
 
 *Written by `./dev picture-review --evaluate` from `eval/pictures/`.*
 
-| | params v1 | params v2 | params v3 | params v3 asbuilt | params v3 best3 | params v3 recheck | params v3 propose | params v4 |
-|---|---|---|---|---|---|---|---|---|
-| drawings | 32 | 32 | 32 | 32 | 32 | 32 | 30 | 30 |
-| matches | 11 | 21 | 21 | 19 | 31 | 29 | 28 | 26 |
-| partly | 20 | 5 | 6 | 8 | 1 | 2 | 2 | 1 |
-| wrong | 1 | 6 | 5 | 5 | 0 | 1 | 0 | 3 |
-| issues: text | 19 | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
-| issues: scale | 2 | 1 | 2 | 1 | 0 | 0 | 0 | 1 |
-| issues: wrong_device | 0 | 2 | 3 | 3 | 0 | 1 | 0 | 4 |
-| issues: missing_part | 2 | 4 | 2 | 4 | 1 | 1 | 0 | 0 |
-| issues: invented_part | 1 | 5 | 4 | 8 | 0 | 1 | 0 | 0 |
-| issues: wrong_setting | 0 | 1 | 2 | 1 | 0 | 0 | 0 | 0 |
-| issues: implausible | 2 | 2 | 4 | 4 | 0 | 1 | 2 | 1 |
-| spent on the run, USD | 0.21 | 0.51 | 0.52 | 0.73 | 1.23 | 0.15 | 0.17 | 0.17 |
+| | params v1 | params v2 | params v3 | params v3 asbuilt | params v3 best3 | params v3 recheck | params v3 propose | params v4 | params v5 |
+|---|---|---|---|---|---|---|---|---|---|
+| drawings | 32 | 32 | 32 | 32 | 32 | 32 | 30 | 30 | 33 |
+| matches | 11 | 21 | 21 | 19 | 31 | 29 | 28 | 26 | 32 |
+| partly | 20 | 5 | 6 | 8 | 1 | 2 | 2 | 1 | 1 |
+| wrong | 1 | 6 | 5 | 5 | 0 | 1 | 0 | 3 | 0 |
+| issues: text | 19 | 2 | 2 | 1 | 0 | 0 | 0 | 0 | 0 |
+| issues: scale | 2 | 1 | 2 | 1 | 0 | 0 | 0 | 1 | 0 |
+| issues: wrong_device | 0 | 2 | 3 | 3 | 0 | 1 | 0 | 4 | 0 |
+| issues: missing_part | 2 | 4 | 2 | 4 | 1 | 1 | 0 | 0 | 0 |
+| issues: invented_part | 1 | 5 | 4 | 8 | 0 | 1 | 0 | 0 | 0 |
+| issues: wrong_setting | 0 | 1 | 2 | 1 | 0 | 0 | 0 | 0 | 0 |
+| issues: implausible | 2 | 2 | 4 | 4 | 0 | 1 | 2 | 1 | 1 |
+| spent on the run, USD | 0.21 | 0.51 | 0.52 | 0.73 | 1.23 | 0.15 | 0.17 | 0.17 | 0.17 |
 
-Moved from params v3 propose to params v4:
+Moved from params v4 to params v5:
 
-- `item:laptop_t510#1`: partly to matches
-- `item:powerline#1`: partly to matches
-- `project:4#3`: matches to partly
-- `item:uno_r3#1`: matches to wrong
-- `project:2#1`: matches to wrong
-- `project:9#1`: matches to wrong
+- `item:uno_r3#1`: wrong to matches
+- `project:2#1`: wrong to matches
+- `project:9#1`: wrong to matches
+- `project:4#3`: partly to matches
+- `item:powerline#1`: matches to partly
 
 <!-- params-history:end -->
 
@@ -326,6 +325,50 @@ their v3 recordings replay; *params v4* in the table scored the v4 drawings of a
 | NAS (`project:4`, three views) | matches | matches, matches, partly | v3 |
 
 The v3 verdicts were given by a reviewer that still expected an open laptop.
+
+## No laptop left in sight (version 5)
+
+On November 5, 2026, the drawings still showing an intact laptop where the build takes it apart,
+and the ones the last review left short, were drawn again. A fresh review of the set as it was
+first: 26 matches, 7 partly, 0 wrong (the UNO board's drawing went *matches*, *wrong*, *wrong*,
+*matches* over four reviews of the same picture: the review's own spread).
+
+Version 5 changes two templates. The kitchen dashboard drops `as_before` and gets a `built`
+correction: the 24 inch screen's bare panel in a slim wooden frame on the wall, the laptop's board
+hidden in it, the board and the modules on a small panel beside it. Its `correction`, which an
+item drawn as a kitchen dashboard still carries, no longer asks for an opened laptop on the
+counter. The homework desk was given the same treatment and taken back (below).
+
+| Drawing | Before | After | Kept |
+|---|---|---|---|
+| Kitchen dashboard (`project:9#1`) | matches, open laptop on the counter | matches, panel framed on the wall, no laptop | new |
+| Kitchen dashboard, the DHT11 drawn as it (`item:dht11#1`) | matches, open laptop on the counter | matches, no laptop | new |
+| Coffee table, the joystick drawn as it (`item:joystick#1`) | matches, open laptop on the lower shelf | matches, the laptop's board inside the table | new |
+| Smart desk calendar, the UNO drawn as it (`item:uno_r3#1`) | wrong or matches (a tiny generic board, a tablet-size screen) | matches (the UNO's layout, a two-line LCD, the snooze button) | new |
+| NAS (`project:4#1`) | partly (memory not in its slot) | matches (best of 5) | new |
+| NAS from above (`project:4#3`) | matches, then partly | best of 5, all four candidates partly | as it was |
+| Photo backup server (`project:5#1`) | partly (the 2.5 inch drive drawn desktop size) | matches (best of 4) | new |
+| Second screen for a computer, the T510's card (`card:laptop_t510#1`) | partly (the laptop's own screen on) | matches, the laptop closed and driving the monitor (best of 4) | new |
+| Homework desk (`project:2#1`) | matches, open laptop beside the monitor | wrong in 2 of 3 reviews: the 18 inch panel drawn larger than the keyboard | as it was |
+| Coffee table close-up (`project:7#2`) | wrong once in four reviews | best of 4: the one *matches* has two joysticks | as it was |
+
+The homework desk took seven briefs and three rounds of candidates: the screens framed on the
+desk, hung on the wall, set into a hutch. Every one dropped the laptop; none kept the 18 inch
+5:4 panel smaller than a keyboard, and the review read each as a television. Two rounds of
+candidates also kept a *wrong* drawing over another *wrong* one on confidence alone, once with
+an open laptop and once with a closed one on a shelf; both were taken back by hand. The template
+keeps `as_before: true` and its version 3 drawing.
+
+A fix came out of it: a drawing from an item's `more_pictures` (`item:laptop_t510#2`, the T510
+behind the mirror) has no brief of its own in the set, and best-of-N wrote its winner's brief
+into the item's `picture_brief`, which is the first drawing's (the T510 as a home server).
+`--redraw` and `--candidates` now give a brief to an item's first drawing alone and skip the
+others, as for a reuse card after the first.
+
+A fresh review of the final set: 32 matches, 1 partly (the powerline adapter, unchanged), 0
+wrong (*params v5* above). Seven recordings were added and seven removed; every other recording
+is unchanged and the set loads with 0 not recorded and 0 stand-in answers. About 2.0 USD for
+the round, reviews included.
 
 ## Text tuning
 

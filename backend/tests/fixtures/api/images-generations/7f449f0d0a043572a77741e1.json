@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "7f449f0d0a043572a77741e1",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Kitchen home-automation dashboard built from temperature and humidity sensor module (connector 3-pin male header; a tiny sensor module, far smaller than a laptop); A 24-inch 16:9 computer screen about 55 cm wide wall-mounted above kitchen counter as dashboard, the laptop that drives it taken apart and hidden behind it, a tiny credit-card-sized microcontroller board and four tiny modules including a relay with its cube on a small panel beside it; no open laptop; not a TV.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793852940,
+    "data": [
+      {
+        "b64_json": "@7f449f0d0a043572a77741e1-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4162,
+      "output_tokens": 1552,
+      "total_tokens": 5714
+    }
+  },
+  "status": 200
+}
