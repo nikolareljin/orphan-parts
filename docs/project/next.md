@@ -136,19 +136,18 @@ owner.
 ## Planned improvements
 
 **What.** A read-only review of the whole tree (backend, frontend, e2e, scripts,
-docs) left 91 findings, none high: 12 medium, 79 low. The mediums are the plan:
-bounded reads on every upload route (one shared helper, the `photos.py`
-`read(cap+1)` pattern); fixtures and the demo set in the prod image, or a loud
-failure when gated-live has none; wider circumvention phrasings in
-`refused_use` (unlock phone/iPhone, iCloud unlock/removal); a domain error for
-an unknown measure profile instead of the uncaught `LookupError`; one PNG
-builder shared by the e2e specs; one session-lost rule with 401 coverage; load
-errors with retry in Value and Listing instead of empty states; the nginx body
-size raised to the advertised 60 MB clip limit; keyboard marking on the measure
-canvas; portable `sort`/`awk` in `release-notes.sh`; checksums on the
-`phone-install.sh` downloads. The lows are deduplication (one-line collapse,
-past-date checks, money and clock helpers shared), stricter configs, and small
-UI guards.
+docs) left 91 findings, none high: 12 medium, 79 low. Still the plan: fixtures
+and the demo set in the prod image, or a loud failure when gated-live has none;
+one PNG builder shared by the e2e specs; one session-lost rule with 401
+coverage; load errors with retry in Value and Listing instead of empty states;
+the nginx body size raised to the advertised 60 MB clip limit; keyboard marking
+on the measure canvas; portable `sort`/`awk` in `release-notes.sh`; checksums
+on the `phone-install.sh` downloads. The lows are deduplication (one-line
+collapse, past-date checks, money and clock helpers shared), stricter configs,
+and small UI guards. Done in #158: bounded reads on every upload route (one
+shared helper) and wider circumvention phrasings in `refused_use`; the measure
+`LookupError` was re-checked and needs no change (unknown profiles already
+answer 422).
 **Why.** Nothing here is on fire; each item is a known sharp edge with its fix
 already sketched, so they are good first issues after the hackathon.
 **What it needs.** One pass per area with its tests (`./dev test`), the drawings
