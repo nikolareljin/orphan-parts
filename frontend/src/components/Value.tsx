@@ -6,6 +6,7 @@ import { evidenceText, kindLabel, money, rangeText, searchesText } from '../lib/
 import { Earlier, NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 import HelpTip from './HelpTip'
+import Feedback from './Feedback'
 import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
@@ -248,6 +249,7 @@ function GuidanceView({ guide }: { guide: Guidance }) {
         </ul>
       )}
       {guide.parts && <p className="meta">Whole or parts: {guide.parts.note}.</p>}
+      <Feedback target={{ kind: 'price_guidance', id: guide.item_id, ref: String(guide.id) }} what="price guidance" />
     </div>
   )
 }

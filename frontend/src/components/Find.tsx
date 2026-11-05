@@ -9,6 +9,7 @@ import Modal from './Modal'
 import SearchPlan from './SearchPlan'
 import SignInLine from './SignInLine'
 import HelpTip from './HelpTip'
+import Feedback from './Feedback'
 import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
@@ -608,6 +609,7 @@ function CandidatePanel({ id, demo, onChanged }: { id: number; demo: boolean; on
         </ul>
       )}
       {candidate.assessment && <Result result={candidate.assessment} />}
+      <Feedback target={{ kind: 'candidate', id: candidate.id }} what="candidate" />
       {error && (
         <p className="error" role="alert">
           {error}

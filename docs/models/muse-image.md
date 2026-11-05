@@ -99,7 +99,14 @@ says, in this order:
    use for an item drawn as one (*smart mirror*), by the card's title for a reuse card.
 4. **The drawing's own brief**, from the demo set (a review's correction); said once when it is
    the correction above.
-5. **The negatives** (*no lettering, logos, brand names, model numbers or labels on any part,
+5. **What people's votes say**, only when someone voted: *Avoid:* with the reasons of the
+   dislikes of earlier drawings of the same item, reuse card or project (at most three, each
+   once, private values masked; *a different composition than the disliked one* for a dislike
+   without a reason; up to two more from other projects of the same template), then *Keep:*
+   with a liked drawing's brief. The voter's own votes steer only the voter's own drawings
+   ([People's votes](../guides/picture-review.md#peoples-votes)); the caption says *Drawn again
+   avoiding: ...*. With no votes nothing is added.
+6. **The negatives** (*no lettering, logos, brand names, model numbers or labels on any part,
    case or screen*), then the closing rules: *on a plain background* for an item drawn as
    itself, *finished and in use in a home* for a use, a reuse card and a project.
 

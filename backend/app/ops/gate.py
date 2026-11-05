@@ -146,7 +146,12 @@ JUDGE_CREATE = [
     ("POST", re.compile(r"^/api/assess$")),
     ("POST", re.compile(r"^/api/measure$")),
     ("POST", re.compile(r"^/api/find/pattern$")),
+    # its own like or dislike: the route checks the target is one the code may see
+    ("POST", re.compile(r"^/api/feedback$")),
+    ("DELETE", re.compile(r"^/api/feedback$")),
 ]
+# the reads a judge's code makes as itself, not as the demo visitor: its own votes
+JUDGE_OWN_READS = frozenset({"/api/feedback"})
 # the records a path names: its kind and the segment after it. An id is plain digits for a
 # judge (the router also takes `+1` or `01`; such a path is refused rather than looked up)
 _RECORD = re.compile(r"^/api/(items|drafts|captures|searches|candidates|projects|packs)/([^/]+)")
@@ -481,6 +486,8 @@ class Gate:
             if demo_allowed(method, path) and method == "GET":
                 return "visitor", 0, ""
             return "refuse", 403, JUDGE_LINE
+        if method == "GET" and path in JUDGE_OWN_READS:
+            return "live", 0, ""
         if method == "GET":
             return ("visitor", 0, "") if demo_allowed(method, path) else ("refuse", 403, JUDGE_LINE)
         if any(m == method and p.fullmatch(path) for m, p in JUDGE_CREATE):

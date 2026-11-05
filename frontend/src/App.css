@@ -2590,3 +2590,62 @@ button.link.help-tip-close {
 .compat .badge {
   margin-left: 0;
 }
+
+/* a like or a dislike under something generated: two small outlined buttons, pressed for the
+   person's own vote, and an optional line on what is wrong */
+.feedback {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 0.85rem;
+}
+.feedback-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+button.link.feedback-vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.75rem;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+button.link.feedback-vote:hover {
+  border-color: var(--accent);
+}
+button.link.feedback-vote.pressed {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+}
+button.link.feedback-vote:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.feedback-count {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.feedback-reason {
+  color: var(--muted);
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+.feedback-why {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+.feedback-why input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 28rem;
+}

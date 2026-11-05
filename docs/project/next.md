@@ -193,6 +193,7 @@ The shorter items, in rough order.
 | The demo visitor's photos answered by some other recording | The sample gallery on the web: the set's photos picked, each answered by its own recording ([Demo access](../operations/demo-access.md)) |
 | Leaving the session and the phone | **Sign out** in the header; **Unpair** on the app's Backend tab ([Pair the phone](../start/pairing.md)) |
 | The first demo set, a vacuum and its crevice tool | A drawer of the owner's own things, photographed with serials and MAC addresses masked ([Demo walkthrough](../start/demo.md)) |
+| No way to say a drawing or an answer came out wrong | **Like** and **dislike** under every drawing and generated answer, with an optional reason; a dislike steers the next drawing of the same thing (it is drawn avoiding the reason), and the review tools read the dislikes as flagged by a person ([People's votes](../guides/picture-review.md#peoples-votes)) |
 
 ## Out of scope, stated as such
 

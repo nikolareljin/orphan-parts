@@ -271,7 +271,7 @@ def test_a_version_twelve_file_gets_scenarios_then_the_listing_tables(settings: 
     Store(path)
     Store(path)  # opening again changes nothing
     with sqlite3.connect(path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 15
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 16
         names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master")}
         assert {"scenarios", "sell_details", "marketplace_events"} <= names
 
@@ -290,7 +290,7 @@ def test_a_version_thirteen_file_from_main_gets_the_listing_tables(settings: Set
     Store(path)
     Store(path)
     with sqlite3.connect(path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 15
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 16
         names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master")}
         assert {"sell_details", "marketplace_events"} <= names
         # the scenarios already written are kept

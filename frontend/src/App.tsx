@@ -13,6 +13,7 @@ import { APK_DOC_URL, APK_URL, pairingText, reachableFromAPhone, redrawAfterMs }
 import { DEFAULT_LIMITS } from './lib/photos'
 import { HELP } from './lib/help'
 import { demoText, judgeText } from './lib/access'
+import { VoteContext } from './lib/feedback'
 import { SIGNED_IN, SIGNED_OUT, doorOf, isDemo, retryDelayMs, uploadsAllowed, type AccessState, type KnownAccess } from './lib/door'
 import { VIEWS, hashFor, viewFromHash, type View } from './lib/nav'
 import './App.css'
@@ -165,7 +166,7 @@ export default function App() {
     setSaved((n) => n + 1)
   }
 
-  return (
+  const shell = (
     <main className="shell">
       <header className="top">
         <div className="brand">
@@ -381,6 +382,8 @@ export default function App() {
       </footer>
     </main>
   )
+  // the like and dislike buttons: the owner's and a judge's, never the demo visitor's
+  return <VoteContext.Provider value={!samplesOnly}>{shell}</VoteContext.Provider>
 }
 
 // The code's door. A session is a cookie the browser keeps; nothing is stored here.

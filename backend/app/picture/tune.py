@@ -91,6 +91,9 @@ class SubjectStats(BaseModel):
     kinds: list[str] = []
     issues: list[str] = []
     briefs: list[str] = []
+    people: list[str] = Field(
+        default=[], description="dislikes cast in the app, each with who and the reason"
+    )
 
 
 class Aggregate(BaseModel):
@@ -116,6 +119,12 @@ class Aggregate(BaseModel):
     view_issues: dict[str, list[str]] = {}
     setting_issues: list[str] = Field(
         default=[], description="items drawn as a use, and reuse cards, with a setting issue"
+    )
+    disliked: dict[str, list[str]] = Field(
+        default={}, description="drawings a person disliked in the app, with the reasons"
+    )
+    liked: list[str] = Field(
+        default=[], description="drawings a person liked and nobody disliked: kept as they are"
     )
 
 
@@ -195,6 +204,15 @@ def aggregate(report: Any, params_version: int) -> Aggregate:
             if k not in s.kinds:
                 s.kinds.append(k)
         s.issues += [f"{i.category}: {i.detail}" for i in r.issues if i.category != "text"]
+        people = getattr(r, "people", None)
+        if people is not None and people.dislikes:
+            # a person flagged it: counted like an issue the reviewer found, ahead of them
+            flagged = [f"flagged by a person: {reason}" for reason in people.reasons]
+            s.people += flagged
+            s.issues = flagged + s.issues
+            out.disliked[r.id] = list(people.reasons)
+        elif people is not None and people.likes:
+            out.liked.append(r.id)
         if r.brief and (r.verdict == "wrong" or BUILD & set(cats)):
             s.briefs.append(r.brief)
         asked = r.facts.asked or ""
@@ -229,7 +247,7 @@ def _missing(values: list[str], have: list[str]) -> list[str]:
 def needs_correction(s: SubjectStats) -> bool:
     if s.subject.startswith(("kind:", "item:", "card:")):
         return False
-    return s.verdicts.get("wrong", 0) > 0 or bool(BUILD & set(s.categories))
+    return s.verdicts.get("wrong", 0) > 0 or bool(BUILD & set(s.categories)) or bool(s.people)
 
 
 def rule_edits(agg: Aggregate, params: DrawingParams) -> list[Edit]:
@@ -477,7 +495,8 @@ def correction_edits(
                 action="set",
                 value=value,
                 why=f"{len(s.drawings)} drawing(s), {s.verdicts.get('wrong', 0)} wrong;"
-                f" issues: {cats}",
+                f" issues: {cats}"
+                + (f"; {len(s.people)} disliked by a person" if s.people else ""),
                 evidence=s.drawings,
             )
         )
@@ -588,6 +607,10 @@ def proposal_markdown(p: Proposal, old: DrawingParams) -> str:
         v = ", ".join(f"{n} {k}" for k, n in s.verdicts.items())
         c = ", ".join(f"{k} {n}" for k, n in s.categories.items()) or "-"
         lines.append(f"| `{s.subject}` | {len(s.drawings)} | {v} | {c} |")
+    if a.disliked or a.liked:
+        lines += ["", "## People's votes", ""]
+        lines += [f"- `{d}` disliked: {'; '.join(r)}" for d, r in a.disliked.items()]
+        lines += [f"- `{d}` liked: kept as it is" for d in a.liked]
     lines += ["", "## The change", "", "```diff", diff(old, new).rstrip(), "```", ""]
     return "\n".join(lines)
 

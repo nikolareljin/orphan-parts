@@ -78,7 +78,8 @@
 #                  [--tune [--apply] | --redraw-set | --candidates N | --evaluate [--prune]
 #                  [--stage WORD]]
 #                      check every drawing of the demo set (loaded in fixture mode in a folder of
-#                      its own; --data: the stack's inventory) against the facts it must show,
+#                      its own; --data: the stack's inventory) against the facts it must show
+#                      (--only disliked or liked: the drawings people voted on in the app),
 #                      one Muse Spark call each, into picture-review/report.md; --decide also
 #                      checks the Decide cards and the projects' allocations; --redraw draws the
 #                      named ones again with the corrected brief (written into demo/set.yaml,
