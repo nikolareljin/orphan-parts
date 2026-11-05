@@ -11,10 +11,20 @@
   --ok-strong: #1e7e46;
   --ok-text: #1e7e46;
   --on-accent: #ffffff;
-  /* the form layout: between fields, between groups of fields, the narrowest field */
-  --field-gap: 0.75rem;
-  --group-gap: 1.25rem;
+  /* the form layout: between a label and its control, between fields, between groups of
+     fields, the narrowest field */
+  --label-gap: 0.4rem;
+  --field-gap: 1rem;
+  --group-gap: 1.5rem;
   --field-min: 14rem;
+  /* a text field, a select and a button beside them: one height, room inside, a border that
+     reads at 3:1 against the card, and a ring when focused */
+  --control-height: 2.625rem;
+  --control-pad-y: 0.5rem;
+  --control-pad-x: 0.75rem;
+  --control-radius: 8px;
+  --control-border: #848e9b;
+  --textarea-min: 4.5rem;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--fg);
   background: var(--bg);
@@ -32,6 +42,15 @@
     --warn: #d89a3a;
     --ok-text: #27ae60;
     --on-accent: #0f1216; /* the page color: white on this accent is too faint */
+    --control-border: #66727f;
+  }
+}
+
+/* a phone: a 44 px touch target, and the field text at 16 px so the page does not zoom in on focus */
+@media (max-width: 600px) {
+  :root {
+    --control-height: 2.75rem;
+    --control-font: 1rem;
   }
 }
 
