@@ -133,7 +133,7 @@ measured and what was tested, and when.
 consent per item, revocation that works at once, and a link that carries nothing about the
 owner.
 
-## From the November code review
+## Planned improvements
 
 **What.** A read-only review of the whole tree (backend, frontend, e2e, scripts,
 docs) left 91 findings, none high: 12 medium, 79 low. The mediums are the plan:
