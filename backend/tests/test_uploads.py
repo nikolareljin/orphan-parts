@@ -45,3 +45,10 @@ async def test_an_unknown_size_is_still_bounded() -> None:
 
 async def test_an_empty_part_passes_for_the_route_to_judge() -> None:
     assert await read_bounded(upload(b"", 0), 16, LINE) == b""
+
+
+async def test_no_more_than_one_byte_past_the_cap_is_pulled_into_memory() -> None:
+    body = BytesIO(b"x" * 1024)
+    with pytest.raises(HTTPException):
+        await read_bounded(UploadFile(body, size=None), 16, LINE)
+    assert body.tell() == 17

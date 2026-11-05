@@ -145,9 +145,11 @@ on the measure canvas; portable `sort`/`awk` in `release-notes.sh`; checksums
 on the `phone-install.sh` downloads. The lows are deduplication (one-line
 collapse, past-date checks, money and clock helpers shared), stricter configs,
 and small UI guards. Done in #158: bounded reads on every upload route (one
-shared helper) and wider circumvention phrasings in `refused_use`; the measure
-`LookupError` was re-checked and needs no change (unknown profiles already
-answer 422).
+shared helper) and wider circumvention phrasings in `refused_use` (SIM, carrier
+and network unlocks, iCloud unlock or bypass, carrier, activation and FRP lock
+removal; a bare "unlock the phone" stays allowed, it also wakes a screen); the
+measure `LookupError` was re-checked and needs no change (unknown profiles
+already answer 422).
 **Why.** Nothing here is on fire; each item is a known sharp edge with its fix
 already sketched, so they are good first issues after the hackathon.
 **What it needs.** One pass per area with its tests (`./dev test`), the drawings
