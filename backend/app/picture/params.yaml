@@ -91,7 +91,8 @@ kinds:
 
 # by project template id: the correction every drawing of that kind of project carries;
 # `match`: words in an item's use or a reuse card's title that mean it; `built`: the
-# correction of a finished project of the template instead (items and cards keep theirs)
+# correction of a finished project of the template instead (items, cards keep theirs);
+# `as_before`: its parts said by their looks, the kinds' `built` left out
 projects:
   home_automation_server:
     match:
@@ -103,6 +104,7 @@ projects:
       inside it: its bare screen panel framed in the front showing house light and schedule icons,
       its board and memory hidden inside; no open laptop, laptop case, lid or keyboard; not a desktop
       tower, not a TV.'
+    as_before: false
   home_server:
     match:
     - home server and backup
@@ -114,6 +116,7 @@ projects:
     built: 'A small closed wooden box about 35 cm wide on a shelf beside a router with antennas, the
       laptop taken apart inside it: board and memory hidden inside, one bare 2.5-inch hard drive fitted
       in the box; no open laptop, laptop case, lid or keyboard; no second drive, not a desktop tower.'
+    as_before: false
   kitchen_dashboard:
     match:
     - kitchen home-automation dashboard
@@ -121,9 +124,8 @@ projects:
     correction: A 24-inch 16:9 computer monitor about 55 cm wide wall-mounted above kitchen counter
       as dashboard, with opened laptop on counter wired to tiny credit-card-sized microcontroller
       board plus four tiny modules nearby including relay with cube; not a TV.
-    built: A bare thin screen panel about 55 cm wide framed and wall-mounted above the kitchen counter
-      as an icon dashboard, the laptop's board hidden in a slim box behind it wired to a credit-card-sized
-      board and four tiny modules; no open laptop, laptop case, lid or keyboard; not a TV.
+    built: ''
+    as_before: true
   smart_mirror:
     match:
     - smart mirror
@@ -135,6 +137,7 @@ projects:
       board hidden inside the frame, hung at eye level on a hall wall above a small bench; only a
       clock and weather icons glow through the glass; no open laptop, laptop case, lid or keyboard;
       not a TV; no words or logos
+    as_before: false
   arcade_table:
     match:
     - arcade coffee table
@@ -145,6 +148,7 @@ projects:
     built: A wooden coffee table with a bare thin screen panel about 53 cm wide laid flat face-up
       under its full-size glass top, joystick modules flush beside it, the laptop's board hidden inside
       the table box; no open laptop, laptop case, lid or keyboard; no upright monitor, not a TV stand.
+    as_before: false
   custom_nas:
     match:
     - custom nas from a spare desktop board
@@ -153,6 +157,7 @@ projects:
       one full-length desktop memory stick in DIMM slot, 2.5-inch SSD in drive bay with SATA leads,
       small PCIe adapter with two M.2 drives in PCIe slot, ATX PSU; not two boards, no SSD on board.
     built: ''
+    as_before: true
   retro_console:
     match:
     - retro console on the tv
@@ -163,6 +168,7 @@ projects:
     built: A slim wooden box under the TV holding the laptop's board, cabled to a thin flat 24-inch
       screen showing retro games, two wired gamepads in front in use; no open laptop, laptop case,
       lid or keyboard; no cartridge console, no CRT TV.
+    as_before: false
   weather_station:
     match:
     - indoor weather station and logger
@@ -171,12 +177,12 @@ projects:
       on indoor desk wired to 3-pin temperature-humidity module, coin-cell clock module and breadboard
       power module with barrel input and USB-A in use; no tiny Nano-size board.
     built: ''
+    as_before: false
   homework_workstation:
     match: []
     correction: ''
-    built: A quiet desk with a bare thin screen panel framed upright on the desk as the display, the
-      laptop's board hidden in a slim box under the desk, a plain keyboard and mouse in front; no
-      open laptop, laptop case or lid; not a TV.
+    built: ''
+    as_before: true
 
 # words in a view (as the demo set or the app asks it) and what it adds
 views:

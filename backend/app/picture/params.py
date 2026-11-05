@@ -83,6 +83,10 @@ class ProjectCorrection(_Strict):
         max_length=TEXT_MAX,
         description="the correction of a finished project of this template, instead of correction",
     )
+    as_before: bool = Field(
+        default=False,
+        description="its parts said by their looks, as in version 3 (the kinds' built not said)",
+    )
 
     @field_validator("match")
     @classmethod
@@ -151,6 +155,11 @@ class DrawingParams(_Strict):
             if p.correction and any(word in said for word in p.match):
                 return p.correction
         return ""
+
+    def parts_built(self, template: str) -> bool:
+        """Whether a finished project of the template says its parts as built."""
+        found = self.projects.get(template.lower()) if template else None
+        return found is None or not found.as_before
 
     def view_preset(self, view: str) -> str:
         said = " ".join(view.split()).lower()
@@ -243,7 +252,8 @@ SECTIONS = {
     "projects": (
         "# by project template id: the correction every drawing of that kind of project carries;\n"
         "# `match`: words in an item's use or a reuse card's title that mean it; `built`: the\n"
-        "# correction of a finished project of the template instead (items and cards keep theirs)"
+        "# correction of a finished project of the template instead (items, cards keep theirs);\n"
+        "# `as_before`: its parts said by their looks, the kinds' `built` left out"
     ),
     "views": "# words in a view (as the demo set or the app asks it) and what it adds",
     "negatives": "# said after the brief in every request",

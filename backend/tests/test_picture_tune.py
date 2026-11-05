@@ -209,6 +209,14 @@ def test_a_part_built_in_is_said_as_built_only_in_a_finished_project(settings: S
         item, "a smart mirror", params=v2
     )
     assert params.correction_for(text="a smart mirror") == v2.correction_for(text="a smart mirror")
+    # a template kept as before says its parts by their looks
+    before = parse(
+        built.replace(
+            "    match: [smart mirror]\n", "    match: [smart mirror]\n    as_before: true\n"
+        )
+    )
+    assert not before.parts_built("smart_mirror")
+    assert params.parts_built("smart_mirror")
 
 
 def test_a_view_adds_its_preset_and_a_brief_said_twice_is_said_once() -> None:
