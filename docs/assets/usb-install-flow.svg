@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 350" width="100%" role="img" aria-labelledby="ui-title ui-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <title id="ui-title">Installing the app over USB, step by step</title>
+  <desc id="ui-desc">On the phone: turn on Developer options by tapping Build number seven times, turn on USB debugging, plug in and tap Allow on the Allow USB debugging prompt. On the computer: run scripts/phone-install.sh from the repository's folder. The app is installed and opens on its Backend tab; then pair it with the web app.</desc>
+  <style>
+    .ui-bg { fill: #f6f7f9; }
+    .ui-box { fill: #ffffff; stroke: #5b6470; stroke-width: 1.5; }
+    .ui-cmd { fill: #e8effc; stroke: #2d6cdf; stroke-width: 1.8; }
+    .ui-done { fill: #ffffff; stroke: #1e7e46; stroke-width: 1.8; }
+    .ui-num { fill: #2d6cdf; }
+    .ui-num-done { fill: #1e7e46; }
+    .ui-n { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .ui-t { fill: #1b1f24; font-size: 17px; font-weight: 600; }
+    .ui-c { fill: #1b1f24; font-size: 16px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .ui-s { fill: #5b6470; font-size: 14px; }
+    .ui-h { fill: #5b6470; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; }
+    .ui-arrow { fill: none; stroke: #5b6470; stroke-width: 1.6; }
+  </style>
+  <defs>
+    <marker id="ui-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6470"/>
+    </marker>
+  </defs>
+  <rect class="ui-bg" x="0" y="0" width="960" height="350" rx="12"/>
+
+  <text class="ui-h" x="40" y="38">ON THE PHONE (ONCE)</text>
+  <text class="ui-h" x="40" y="214">ON THE COMPUTER</text>
+
+  <g class="ui-arrow" marker-end="url(#ui-head)">
+    <path d="M 300 102 L 346 102"/>
+    <path d="M 610 102 L 656 102"/>
+    <path d="M 790 148 L 790 176 L 250 176 L 250 226"/>
+    <path d="M 300 274 L 346 274"/>
+    <path d="M 610 274 L 656 274"/>
+  </g>
+
+  <!-- 1 -->
+  <rect class="ui-box" x="40" y="56" width="260" height="92" rx="10"/>
+  <circle class="ui-num" cx="66" cy="82" r="13"/>
+  <text class="ui-n" x="66" y="87" text-anchor="middle">1</text>
+  <text class="ui-t" x="88" y="88">Developer options</text>
+  <text class="ui-s" x="62" y="124">tap Build number 7 times</text>
+
+  <!-- 2 -->
+  <rect class="ui-box" x="350" y="56" width="260" height="92" rx="10"/>
+  <circle class="ui-num" cx="376" cy="82" r="13"/>
+  <text class="ui-n" x="376" y="87" text-anchor="middle">2</text>
+  <text class="ui-t" x="398" y="88">USB debugging</text>
+  <text class="ui-s" x="372" y="124">on, in Developer options</text>
+
+  <!-- 3 -->
+  <rect class="ui-box" x="660" y="56" width="260" height="92" rx="10"/>
+  <circle class="ui-num" cx="686" cy="82" r="13"/>
+  <text class="ui-n" x="686" y="87" text-anchor="middle">3</text>
+  <text class="ui-t" x="708" y="88">Plug in, tap Allow</text>
+  <text class="ui-s" x="682" y="124">on "Allow USB debugging?"</text>
+
+  <!-- 4 -->
+  <rect class="ui-cmd" x="40" y="228" width="260" height="92" rx="10"/>
+  <circle class="ui-num" cx="66" cy="254" r="13"/>
+  <text class="ui-n" x="66" y="259" text-anchor="middle">4</text>
+  <text class="ui-c" x="88" y="260">phone-install.sh</text>
+  <text class="ui-s" x="62" y="296">one command, repository folder</text>
+
+  <!-- 5 -->
+  <rect class="ui-done" x="350" y="228" width="260" height="92" rx="10"/>
+  <circle class="ui-num-done" cx="376" cy="254" r="13"/>
+  <text class="ui-n" x="376" y="259" text-anchor="middle">5</text>
+  <text class="ui-t" x="398" y="260">App installed</text>
+  <text class="ui-s" x="372" y="296">it opens on its Backend tab</text>
+
+  <!-- 6 -->
+  <rect class="ui-done" x="660" y="228" width="260" height="92" rx="10"/>
+  <circle class="ui-num-done" cx="686" cy="254" r="13"/>
+  <text class="ui-n" x="686" y="259" text-anchor="middle">6</text>
+  <text class="ui-t" x="708" y="260">Pair it</text>
+  <text class="ui-s" x="682" y="296">Scan to pair, web app footer</text>
+</svg>
