@@ -10,7 +10,7 @@
 # A change here changes the requests, so every drawing of the demo set is drawn and recorded
 # again (`./dev picture-review --redraw-set`).
 
-version: 4
+version: 5
 
 # which accepted values of a part are said: those whose name has a `first` word go
 # first, none whose name has a `left_out` word (prices never), at most `item_values`
@@ -121,11 +121,16 @@ projects:
     match:
     - kitchen home-automation dashboard
     - kitchen dashboard
-    correction: A 24-inch 16:9 computer monitor about 55 cm wide wall-mounted above kitchen counter
-      as dashboard, with opened laptop on counter wired to tiny credit-card-sized microcontroller
-      board plus four tiny modules nearby including relay with cube; not a TV.
-    built: ''
-    as_before: true
+    correction: A 24-inch 16:9 computer screen about 55 cm wide wall-mounted above kitchen counter
+      as dashboard, the laptop that drives it taken apart and hidden behind it, a tiny credit-card-sized
+      microcontroller board and four tiny modules including a relay with its cube on a small panel
+      beside it; no open laptop; not a TV.
+    built: A bare thin 24-inch screen panel about 55 cm wide set flush into a slim wooden wall frame
+      above the kitchen counter showing climate and switch icons, the laptop taken apart, its board
+      hidden in the frame; a tiny credit-card-sized board, three tiny sensor modules and one small
+      cube relay module on a small panel beside it; no open laptop, laptop case, lid or keyboard;
+      not a TV.
+    as_before: false
   smart_mirror:
     match:
     - smart mirror
