@@ -9,7 +9,7 @@ import Modal from './components/Modal'
 import Profile from './components/Profile'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type Version } from './lib/api'
 
-import { pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
+import { APK_DOC_URL, APK_URL, pairingText, reachableFromAPhone, redrawAfterMs } from './lib/pairing'
 import { DEFAULT_LIMITS } from './lib/photos'
 import { HELP } from './lib/help'
 import { demoText, judgeText } from './lib/access'
@@ -305,29 +305,66 @@ export default function App() {
             {demoText(status.ready, !demo) && <span>{demoText(status.ready, !demo)}</span>}
             {judgeText(judge) && <span className="judge-line">{judgeText(judge)}</span>}
             <details className="pair" onToggle={(e) => setPairOpened(e.currentTarget.open ? (n) => n + 1 : 0)}>
-              <summary>Pair the phone</summary>
-              <p>
-                In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code.{' '}
-                {pairingText(status.ready.demo.gated, !demo)}
-              </p>
-              {reachableFromAPhone(pairOrigin) ? (
-                <>
-                  {/* drawn only while open, anew on each opening, once the door is known and again when
-                      it changes: a pairing is in it once signed in, and a pairing is a live session */}
-                  {pairOpened > 0 && access !== null && (
-                    <PairImage key={`${demo ? 'demo' : 'in'}-${pairOpened}`} door={demo ? 'demo' : 'in'} />
-                  )}
-                  <p className="muted">
-                    Or type <code>{pairOrigin}</code> into the app.
+              <summary>Phone app: install and pair</summary>
+              <div className="steps">
+                <section className="step install">
+                  <h4>
+                    {/* the badge is the number to see; the hidden text is the number to hear, "1. ",
+                        read as one with the heading rather than as a separate "1" and "." (so in step 2) */}
+                    <span className="step-num" aria-hidden="true">
+                      1
+                    </span>
+                    <span className="visually-hidden">1. </span>
+                    <InstallIcon />
+                    Install the app on the phone
+                  </h4>
+                  <figure>
+                    <img src="/apk-qr.svg" alt="QR code that opens the newest release's APK" width="140" height="140" />
+                    <figcaption>Scan with the phone's camera to download the app</figcaption>
+                  </figure>
+                  <p>
+                    On the phone, scan the code or open <a href={APK_URL}>orphan-parts.apk</a>, the newest release. The
+                    app is not on Google Play: allow the browser to install unknown apps when asked. Over a USB cable
+                    instead, see{' '}
+                    <a href={APK_DOC_URL} target="_blank" rel="noreferrer">
+                      Put the app on the phone
+                    </a>{' '}
+                    in the docs.
                   </p>
-                </>
-              ) : (
-                <p className="muted">
-                  This code would contain <code>{pairOrigin}</code>, which the phone cannot reach (on the phone, localhost
-                  means the phone itself). Open the web app at the computer's network address and pair from there, or run{' '}
-                  <code>./dev phone</code>, which prints a code with that address.
-                </p>
-              )}
+                </section>
+                <section className="step connect">
+                  <h4>
+                    <span className="step-num" aria-hidden="true">
+                      2
+                    </span>
+                    <span className="visually-hidden">2. </span>
+                    <ConnectIcon />
+                    Connect it to this web app
+                  </h4>
+                  <p>
+                    In the app, on the Backend tab, tap <strong>Scan to pair</strong> and point it at this code.{' '}
+                    {pairingText(status.ready.demo.gated, !demo)}
+                  </p>
+                  {reachableFromAPhone(pairOrigin) ? (
+                    <>
+                      {/* drawn only while open, anew on each opening, once the door is known and again when
+                          it changes: a pairing is in it once signed in, and a pairing is a live session */}
+                      {pairOpened > 0 && access !== null && (
+                        <PairImage key={`${demo ? 'demo' : 'in'}-${pairOpened}`} door={demo ? 'demo' : 'in'} />
+                      )}
+                      <p className="muted">
+                        Or type <code>{pairOrigin}</code> into the app.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="muted">
+                      This code would contain <code>{pairOrigin}</code>, which the phone cannot reach (on the phone, localhost
+                      means the phone itself). Open the web app at the computer's network address and pair from there, or run{' '}
+                      <code>./dev phone</code>, which prints a code with that address.
+                    </p>
+                  )}
+                </section>
+              </div>
             </details>
             <HelpTip entry={HELP.pair} />
           </>
@@ -430,5 +467,35 @@ function PairImage({ door }: { door: string }) {
   }, [door, round])
   if (failed && !src) return <p className="muted">The pairing code is not available right now; trying again.</p>
   if (!src) return null // on its way
-  return <img src={src} alt="Pairing code for the phone" width="220" height="220" />
+  return (
+    <figure>
+      <img src={src} alt="Pairing code for the phone" width="220" height="220" />
+      <figcaption>Scan from inside the app: Backend tab → Scan to pair</figcaption>
+    </figure>
+  )
+}
+
+// The footer's two phone steps, marked so they read apart at a glance: an arrow down onto a
+// phone for getting the app, two links of a chain for pairing it. The heading says the same in
+// words, so the marks are hidden from screen readers.
+function InstallIcon() {
+  return (
+    <svg className="step-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="6" y="2" width="12" height="20" rx="2" />
+        <path d="M12 7v7M9 11l3 3 3-3M10 18h4" />
+      </g>
+    </svg>
+  )
+}
+
+function ConnectIcon() {
+  return (
+    <svg className="step-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+        <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+      </g>
+    </svg>
+  )
 }

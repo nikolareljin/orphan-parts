@@ -53,7 +53,7 @@ To install the released app without a development setup, see
 ```
 
 The phone must have USB debugging on and have accepted this computer (the prompt on the
-phone the first time; [step by step](local.md#over-a-usb-cable)). In the app, **Scan to pair** reads the code: it carries this machine's
+phone the first time; [step by step](local.md#option-a-recommended-over-usb-one-command)). In the app, **Scan to pair** reads the code: it carries this machine's
 address on the network and, when the demo is gated, a pairing good for fifteen minutes, with
 which the app claims an access code of its own on that first scan; the phone and the laptop
 have to be on the same network. [Android app](../guides/android.md).

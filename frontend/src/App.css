@@ -1767,6 +1767,76 @@ footer.service .pair img {
   padding: 0.5rem;
 }
 
+/* the two phone steps: side by side where there is room, one under the other on a phone; each
+   with its number, its mark and a line on the left in the accent, so installing the app and
+   pairing it read as two things to do, in order */
+footer.service .pair .steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem 1.5rem;
+  margin-top: 0.5rem;
+}
+
+footer.service .pair .step {
+  min-width: 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--accent);
+}
+
+footer.service .pair .step.connect {
+  border-left-color: var(--ok-text);
+}
+
+footer.service .pair h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.25rem;
+  color: var(--fg);
+  font-size: 0.9rem;
+}
+
+footer.service .pair .step-num {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.8rem;
+}
+
+footer.service .pair .step.connect .step-num {
+  background: var(--ok-text);
+}
+
+footer.service .pair .step-icon {
+  flex: none;
+  color: var(--accent);
+}
+
+footer.service .pair .step.connect .step-icon {
+  color: var(--ok-text);
+}
+
+footer.service .pair figure {
+  margin: 0.5rem 0;
+}
+
+footer.service .pair figure img {
+  margin: 0 0 0.25rem;
+}
+
+footer.service .pair figcaption {
+  font-size: 0.8rem;
+}
+
+footer.service .pair .step p {
+  margin: 0.5rem 0;
+}
+
 /* the item dialog: the name, a bar of section links that stays while the body scrolls, one
    card per section (facts, decide, value, sell or give away, measure and fit, picture), then a
    footer with the demo switch, the history and the delete */

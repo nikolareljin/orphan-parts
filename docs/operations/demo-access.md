@@ -232,7 +232,8 @@ its own when reached.
 
 ## The phone
 
-*Pair the phone* at the foot of every page shows a QR code with this web origin (`GET
+*Phone app: install and pair* at the foot of every page shows, under its second step, a QR
+code with this web origin (`GET
 /api/pair.svg`), drawn when the section is opened and redrawn while it stays open. The origin
 must be one this server is reached at, so the QR never points elsewhere: the `Host` the request
 carries (either scheme), the host and port in `X-Forwarded-Host` with the scheme in
@@ -262,7 +263,7 @@ releases the phone from its side (`DELETE /api/access`, then the address, code a
 forgotten on the phone) and revokes nothing: the record stands until it is revoked here or runs
 out. `./dev keys list` shows the phone codes beside the rest, each with what paired it, and
 `ended` for one whose parent has ended. A phone's own code does not pair another phone. Two
-phones need two scans of a fresh page: reopening *Pair the phone*, or a reload, draws a new
+phones need two scans of a fresh page: reopening *Phone app: install and pair*, or a reload, draws a new
 pairing. One code pairs at most
 `PAIR_CODE_MAX` (10) phones with current codes; past that the claim answers 403 until
 `./dev keys revoke "phone …"` ends one or one runs out. For the demo visitor the QR carries the address
