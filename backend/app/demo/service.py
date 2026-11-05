@@ -343,6 +343,8 @@ class Loader:
                 out.cost_usd += draft.cost_usd
         if item.picture:
             await self.draw(item, created.id, out)
+        for use in item.more_pictures:
+            await self.draw(item, created.id, out, use, "")
         await self.decide(item, created.id, out)
         return created.id
 
@@ -657,7 +659,14 @@ class Loader:
         finally:
             exact_replay.reset(token)
 
-    async def draw(self, item: DemoItem, item_id: int, out: Outcome) -> None:
+    async def draw(
+        self,
+        item: DemoItem,
+        item_id: int,
+        out: Outcome,
+        use: str | None = None,
+        brief: str | None = None,
+    ) -> None:
         """The item's picture, after its drafts. With a key it is drawn (and kept, in record
         mode); in fixture mode only the recording of this very drawing answers: without one
         the picture is left out and listed as not recorded yet, never the stub image passed
@@ -665,9 +674,11 @@ class Loader:
         if self.pictures is None:
             out.skipped.append(f"{item.key}: picture: no pictures service in this run")
             return
+        use = item.picture if use is None else use
+        brief = item.picture_brief if brief is None else brief
         token = exact_replay.set(True)
         try:
-            picture = await self.pictures.draw(item_id, item.picture, item.picture_brief)
+            picture = await self.pictures.draw(item_id, use, brief)
         except NoRecordingError:
             out.unrecorded.append(f"{item.key}: picture (one ./dev record-fixtures run draws it)")
         except PicturesOffError:

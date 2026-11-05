@@ -170,7 +170,7 @@ function NewSearch({ onCreated }: { onCreated: (s: Search) => void }) {
   }
 
   return (
-    <form className="new-search" onSubmit={(e) => void create(e)} aria-label="New search">
+    <form className="new-search fields" onSubmit={(e) => void create(e)} aria-label="New search">
       <div className="section-head">
         <h3>I need one that fits</h3>
         <HelpTip entry={HELP.newSearch} />
@@ -296,7 +296,7 @@ function SearchPanel({ id, demo, onChanged, onClosed }: { id: number; demo: bool
   if (!search) return <p className="muted">Loading…</p>
 
   return (
-    <article className="search-panel" aria-label={`Search ${search.title}`}>
+    <article className="search-panel fields" aria-label={`Search ${search.title}`}>
       <div className="row">
         <h3>{search.title}</h3>
         <span className="badge">{statusLabel(search.status)}</span>
@@ -461,7 +461,7 @@ function AddCandidate({ searchId, rules, onAdded }: { searchId: number; rules: P
   const ready = source === 'text' ? text.trim().length > 0 : source === 'screenshot' ? screenshot !== null : Object.values(values).some((v) => v.trim())
 
   return (
-    <form className="add-candidate" onSubmit={(e) => void add(e)} aria-label="Bring a listing back">
+    <form className="add-candidate fields" onSubmit={(e) => void add(e)} aria-label="Bring a listing back">
       <h4>Bring a listing back</h4>
       <fieldset className="kind">
         <legend>Add from</legend>
