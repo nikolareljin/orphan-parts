@@ -186,6 +186,31 @@ def test_a_part_carries_every_size_fact_not_three_alphabetical(settings: Setting
     assert "DELL" not in said
 
 
+def test_a_part_built_in_is_said_as_built_only_in_a_finished_project(settings: Settings) -> None:
+    item = monitor(settings)
+    built = V2.replace(
+        "    size: screen size\n",
+        "    size: screen size\n    built: its bare screen panel built in as the display\n",
+    ).replace(
+        "    correction: a framed",
+        "    built: a bare panel behind the glass, no monitor stand\n    correction: a framed",
+    )
+    params = parse(built)
+    # a finished project says the part as built and its template's correction as built
+    assert part_of(item, as_built=True, params=params).endswith(
+        "; its bare screen panel built in as the display)"
+    )
+    said = params.correction_for("smart_mirror")
+    assert said == "a bare panel behind the glass, no monitor stand"
+    # an item's own drawing, its use and a reuse card are asked exactly as before
+    v2 = parse(V2)
+    assert part_of(item, params=params) == part_of(item, params=v2)
+    assert prompt_for(item, "a smart mirror", params=params) == prompt_for(
+        item, "a smart mirror", params=v2
+    )
+    assert params.correction_for(text="a smart mirror") == v2.correction_for(text="a smart mirror")
+
+
 def test_a_view_adds_its_preset_and_a_brief_said_twice_is_said_once() -> None:
     params = parse(V2)
     prompt = finished_prompt(

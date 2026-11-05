@@ -66,6 +66,11 @@ class KindLook(_Strict):
 
     looks: str = Field(default="", max_length=LOOKS_MAX)
     size: str = Field(default="size", max_length=40, description="what its name's size is called")
+    built: str = Field(
+        default="",
+        max_length=LOOKS_MAX,
+        description="how it is said as a part of a finished project, instead of looks",
+    )
 
 
 class ProjectCorrection(_Strict):
@@ -73,6 +78,11 @@ class ProjectCorrection(_Strict):
 
     match: list[str] = Field(default=[], description="words in a use or a card title meaning it")
     correction: str = Field(default="", max_length=TEXT_MAX)
+    built: str = Field(
+        default="",
+        max_length=TEXT_MAX,
+        description="the correction of a finished project of this template, instead of correction",
+    )
 
     @field_validator("match")
     @classmethod
@@ -133,7 +143,7 @@ class DrawingParams(_Strict):
         words the use or the title says."""
         found = self.projects.get(template.lower()) if template else None
         if found is not None:
-            return found.correction
+            return found.built or found.correction
         said = " ".join(text.split()).lower()
         if not said:
             return ""
@@ -227,11 +237,13 @@ SECTIONS = {
     ),
     "kinds": (
         "# by item type: how the part looks at its real size, and what a size in its name is\n"
-        "# called (a monitor's is its screen size)"
+        "# called (a monitor's is its screen size); `built`: how it is said as a part of a\n"
+        "# finished project instead (any computer may be taken apart and its parts built in)"
     ),
     "projects": (
         "# by project template id: the correction every drawing of that kind of project carries;\n"
-        "# `match`: words in an item's use or a reuse card's title that mean it"
+        "# `match`: words in an item's use or a reuse card's title that mean it; `built`: the\n"
+        "# correction of a finished project of the template instead (items and cards keep theirs)"
     ),
     "views": "# words in a view (as the demo set or the app asks it) and what it adds",
     "negatives": "# said after the brief in every request",

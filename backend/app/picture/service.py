@@ -191,7 +191,10 @@ def part_of(item: Item, *, as_built: bool = False, params: DrawingParams | None 
     what = _line(item.item_type, VALUE_MAX) or "item"
     kind = p.kind(item.item_type)
     facts = facts_of(item, p.facts.part_values, p, as_built=as_built)
-    return _about(what, facts, kind.looks if kind else "")
+    looks = ""
+    if kind is not None:
+        looks = kind.built if as_built and kind.built else kind.looks
+    return _about(what, facts, looks)
 
 
 def finished_prompt(
