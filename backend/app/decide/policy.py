@@ -32,6 +32,26 @@ _CIRCUMVENTION = (
     ),
     ("root", re.compile(r"\broot\w*\b.{0,24}\b(phone|tablet|device)\b", re.IGNORECASE)),
     ("unlock", re.compile(r"\bunlock\w*\b.{0,24}\b(carrier|bootloader)\b", re.IGNORECASE)),
+    # the verb, not the state: "unlock the phone" is asked, "an unlocked phone" is used
+    (
+        "unlock_phone",
+        re.compile(r"\bunlock(ing)?\b.{0,12}\b(phones?|iphones?)\b", re.IGNORECASE),
+    ),
+    (
+        "carrier_unlock",
+        re.compile(r"\bcarrier\b.{0,24}\bunlock(ing)?\b", re.IGNORECASE),
+    ),
+    # an iCloud lock asked off, not an account signed out: removals name the lock
+    (
+        "icloud",
+        re.compile(
+            r"\bicloud\b.{0,24}\b(unlock\w*|bypass\w*)\b"
+            r"|\b(unlock\w*|bypass\w*)\b.{0,24}\bicloud\b"
+            r"|\bremov\w*\b.{0,24}\bicloud\b.{0,12}\block\b"
+            r"|\bicloud\b.{0,12}\block\b.{0,24}\bremov\w*\b",
+            re.IGNORECASE,
+        ),
+    ),
     ("piracy", re.compile(r"\bpirat(ed|ing)\b|\bpiracy\b", re.IGNORECASE)),
 )
 
