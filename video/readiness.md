@@ -10,7 +10,7 @@ recorded answers and sample data; what is not built is not shown.
 |---|---|---|
 | Capture on the phone: photos, a short clip, a spoken note, Send; Captures, **Read it now** | built (Android app) | working (S19 shows photos only) |
 | The phone asks which device a part came from, under a read capture | built (Android app) | named in the notes, not on screen unless the phone take shows it |
-| Pairing the phone by QR code from the web app (**Pair the phone**) | built | not shown (a QR code carries a pairing token) |
+| Pairing the phone by QR code from the web app (**Phone app: install and pair**, step 2) | built | not shown (a QR code carries a pairing token) |
 | Sign in with the access code, **Sign out** | built | working (S21 signs out) |
 | Sample gallery for visitors: signed out, Read a label offers the demo set's photos, each answer a recording | built | working |
 | Upload a capture from a laptop (**Inbox**, *Send a capture from this computer*) | built | not shown |
