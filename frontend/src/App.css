@@ -314,6 +314,45 @@ form button[type='button']:not(.link):not(.modal-close):not(.danger),
   color: var(--accent);
 }
 
+/* every text field, select and text area, wherever it is: one height, room inside, a border
+   that reads against the card and a clear ring when focused; :where() keeps this at no
+   specificity, so a form's own rules still win */
+:where(input:not([type='checkbox'], [type='radio'], [type='file'], [type='range'], [type='color'], [type='hidden']), select, textarea) {
+  font: inherit;
+  font-size: var(--control-font, inherit);
+  line-height: 1.4;
+  min-height: var(--control-height);
+  padding: var(--control-pad-y) var(--control-pad-x);
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  background: var(--card);
+  color: var(--fg);
+}
+
+/* a text area: a few lines to start with, taller by its corner, never wider than its column */
+:where(textarea) {
+  min-height: var(--textarea-min);
+  resize: vertical;
+}
+
+:where(input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+:where(input:not([type='checkbox'], [type='radio'], [type='file']), select, textarea):disabled,
+:where(input:not([type='checkbox'], [type='radio'], [type='file']), textarea):read-only {
+  background: var(--bg);
+}
+
+:where(input[type='checkbox'], input[type='radio']) {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* tables: a quiet head that stays, zebra rows, a hover */
 table.evidence,
 table.items {
@@ -594,20 +633,8 @@ table.evidence tbody th {
 .details label,
 .item .row label {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--label-gap);
   font-size: 0.9rem;
-}
-
-.inline input,
-.inline select,
-.details textarea,
-.item .row select {
-  font: inherit;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  color: var(--fg);
 }
 
 /* inventory */
@@ -732,34 +759,34 @@ button.link {
   font-size: 0.9rem;
 }
 
-.measure .kind {
+/* a group of choices in a box with its legend: how a photo is measured, where a listing came from */
+:is(.measure, .fields) fieldset.kind {
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 0.4rem 0.75rem;
-  display: grid;
-  gap: 0.25rem;
+  border-radius: var(--control-radius);
+  padding: 0.6rem 0.9rem 0.75rem;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  min-width: 0;
   font-size: 0.9rem;
 }
 
-.measure .kind legend {
-  padding: 0 0.25rem;
+:is(.measure, .fields) fieldset.kind legend {
+  padding: 0 0.35rem;
   color: var(--muted);
 }
 
-.measure .kind label {
+:is(.measure, .fields) fieldset.kind label {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   align-items: center;
+  min-height: 2.25rem;
+  cursor: pointer;
 }
 
 .measure input[type='number'] {
   width: 7rem;
-  font: inherit;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  color: var(--fg);
 }
 
 .marking canvas {
@@ -1043,10 +1070,7 @@ button.link {
 .listing .draft-text {
   width: 100%;
   min-height: 11rem;
-  font: inherit;
-  font-size: 0.9rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  font-size: var(--control-font, 0.9rem);
 }
 
 .listing .facts li small,
@@ -1082,7 +1106,7 @@ button.link {
 }
 
 .listing fieldset.included {
-  margin-top: 0.75rem;
+  margin-top: var(--field-gap);
 }
 
 .listing .row.actions {
@@ -1244,16 +1268,17 @@ button.link {
   margin: 0.5rem 0 1rem;
 }
 
+.find .add-candidate {
+  margin-top: var(--group-gap);
+}
+
 .find .wide {
   display: block;
 }
 
 .find .wide textarea {
   width: 100%;
-  font: inherit;
-  font-size: 0.9rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  font-size: var(--control-font, 0.9rem);
 }
 
 .find .search-panel {
@@ -1329,7 +1354,10 @@ button.link {
 }
 
 .search-plan .chip-add input {
-  width: 9rem;
+  width: 11rem;
+  max-width: 11rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.6rem;
   font-size: 0.85rem;
 }
 
@@ -1424,12 +1452,9 @@ button.link {
 .find .seller-note textarea {
   width: 100%;
   min-height: 7rem;
-  font: inherit;
-  font-size: 0.9rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  font-size: var(--control-font, 0.9rem);
   display: block;
-  margin: 0.25rem 0 0.5rem;
+  margin: var(--label-gap) 0 0.5rem;
 }
 
 /* the profile: rated skills as a grid of choices, then tools and how the owner works; rows of
@@ -1441,7 +1466,7 @@ button.link {
 
 .profile table.skills th,
 .profile table.skills td {
-  padding: 0.35rem 0.4rem;
+  padding: 0.5rem 0.4rem;
 }
 
 .profile table.skills td {
@@ -1454,15 +1479,18 @@ button.link {
 }
 
 .profile table.skills input[type='radio'] {
-  accent-color: var(--accent);
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  vertical-align: middle;
 }
 
 .profile .row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.6rem 0.75rem;
+  gap: var(--field-gap);
   align-items: end;
-  margin-top: 0.75rem;
+  margin-top: var(--field-gap);
 }
 
 .profile .row > button,
@@ -1470,9 +1498,13 @@ button.link {
   justify-self: start;
 }
 
+.profile .row > button:not(.link):not(.danger) {
+  min-height: var(--control-height);
+}
+
 .profile .row > label:not(.check) {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--label-gap);
   min-width: 0;
   font-size: 0.9rem;
 }
@@ -1490,24 +1522,20 @@ button.link {
 .profile select {
   width: 100%;
   min-width: 0;
-  font: inherit;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  color: var(--fg);
 }
 
 .profile .check {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
+  min-height: var(--control-height);
   font-size: 0.92rem;
-  align-self: center;
+  align-self: end;
+  cursor: pointer;
 }
 
 .profile .check input {
-  accent-color: var(--accent);
+  margin: 0;
 }
 
 @media (max-width: 600px) {
@@ -1543,10 +1571,7 @@ button.link {
 
 .build .wide textarea {
   width: 100%;
-  font: inherit;
-  font-size: 0.9rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  font-size: var(--control-font, 0.9rem);
 }
 
 .build .check {
@@ -1585,10 +1610,7 @@ button.link {
 
 .build .share textarea {
   width: 100%;
-  font: inherit;
-  font-size: 0.9rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  font-size: var(--control-font, 0.9rem);
 }
 
 /* Inbox */
@@ -1888,9 +1910,9 @@ footer.service .pair img {
 :is(.item, .fields) .field > label,
 .item form.inline > label,
 .item .details > label,
-.item .needed > label {
+:is(.item, .fields) .needed > label {
   display: grid;
-  gap: 0.3rem;
+  gap: var(--label-gap);
   min-width: 0;
   font-size: 0.9rem;
 }
@@ -1901,11 +1923,12 @@ footer.service .pair img {
 }
 
 :is(.item, .fields) .row > label:not(.check) > span,
+:is(.item, .fields) label.wide > span,
 :is(.item, .fields) .field > span,
 :is(.item, .fields) .field > label > span,
 .item form.inline > label > span,
 .item .details > label > span,
-.item .needed > label > span {
+:is(.item, .fields) .needed > label > span {
   color: var(--muted);
   font-size: 0.85rem;
 }
@@ -1919,10 +1942,31 @@ footer.service .pair img {
   margin: 0;
   color: var(--muted);
   font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 :is(.item, .fields) .row .wide {
   grid-column: 1 / -1;
+}
+
+/* a wide field on its own (a text area to paste into): the label above, room above it */
+:is(.item, .fields) label.wide {
+  display: grid;
+  gap: var(--label-gap);
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+:is(.item, .fields) label.wide:not(.row > label) {
+  margin-top: var(--field-gap);
+}
+
+/* fields named by the profile's rules: a grid like a row of fields */
+.fields .needed {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--field-min), 100%), 1fr));
+  gap: var(--field-gap);
+  margin-top: var(--field-gap);
 }
 
 /* one field alone on its row keeps a readable width */
@@ -1946,8 +1990,9 @@ footer.service .pair img {
   margin-top: 0;
 }
 
+/* a form's error: close under what it is about */
 .fields .error {
-  margin: var(--field-gap) 0 0;
+  margin: 0.5rem 0 0;
 }
 
 .item .details {
@@ -1970,12 +2015,13 @@ footer.service .pair img {
 :is(.item, .fields) textarea {
   width: 100%;
   min-width: 0;
-  font: inherit;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  color: var(--fg);
+}
+
+/* a button in a row of fields: as tall as the fields beside it */
+:is(.item, .fields) .row > button:not(.link):not(.danger),
+.item form.inline > button:not(.link):not(.danger),
+.item .details > button:not(.link):not(.danger) {
+  min-height: var(--control-height);
 }
 
 :is(.item, .fields) input[type='file'] {
@@ -1991,10 +2037,11 @@ footer.service .pair img {
 
 :is(.item, .fields) input[type='file']::file-selector-button {
   font: inherit;
-  margin-right: 0.6rem;
-  padding: 0.35rem 0.8rem;
+  margin-right: 0.75rem;
+  min-height: var(--control-height);
+  padding: 0.35rem 0.9rem;
   border: 1px solid var(--accent);
-  border-radius: 6px;
+  border-radius: var(--control-radius);
   background: var(--card);
   color: var(--accent);
   cursor: pointer;
@@ -2013,22 +2060,27 @@ footer.service .pair img {
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-start;
-  gap: 0.45rem;
+  gap: 0.5rem;
   min-width: 0;
+  padding: 0.3rem 0;
   font-size: 0.92rem;
+  cursor: pointer;
 }
 
 /* in a grid of fields, a checkbox lines up with the inputs beside it */
 :is(.item, .fields) .row:has(> label:not(.check), > .field) > .check {
   align-self: end;
-  padding-bottom: 0.55rem;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0;
 }
 
 :is(.item, .fields) input[type='checkbox'],
 :is(.item, .fields) input[type='radio'] {
   flex: none;
-  width: auto;
-  margin: 0.2rem 0 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0.1rem 0 0;
   accent-color: var(--accent);
 }
 
@@ -2037,7 +2089,7 @@ footer.service .pair img {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem 1rem;
+  gap: 0.25rem 1.25rem;
   min-width: 0;
   margin: 0;
   padding: 0;
