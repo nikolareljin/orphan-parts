@@ -250,7 +250,7 @@ async def test_retry_after_http_date_is_honoured(live: Settings) -> None:
     assert h.sleeps == [pytest.approx(5.0, abs=1.0)]
 
 
-@pytest.mark.parametrize("header", ["not a date", formatdate(time.time() - 60, usegmt=True)])
+@pytest.mark.parametrize("header", ["not a date", "Thu, 01 Jan 2026 00:00:00 GMT"])
 async def test_retry_after_unreadable_falls_back_to_backoff(live: Settings, header: str) -> None:
     answers = iter(
         [
