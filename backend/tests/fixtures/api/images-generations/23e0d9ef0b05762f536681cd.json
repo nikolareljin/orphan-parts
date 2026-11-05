@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "23e0d9ef0b05762f536681cd",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of an arcade coffee table in a living room, a game screen under its glass top, joysticks and buttons along its edge built from joystick module (connector 5-pin male header); A 24-inch flat monitor (~53x30cm widescreen) laid flat face-up inside the wooden coffee-table box under full-size glass top, joystick modules flush beside it, opened laptop wired below, living-room table use; no upright monitor on top, not a TV stand.; Draw the flat game screen lying horizontal face-up under the glass coffee-table top, joysticks and buttons mounted along the table edge for play from sofas, the laptop taken apart and its board hidden inside the table box, no laptop in sight, not an upright TV on top of the table.; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793852549,
+    "data": [
+      {
+        "b64_json": "@23e0d9ef0b05762f536681cd-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4219,
+      "output_tokens": 1358,
+      "total_tokens": 5577
+    }
+  },
+  "status": 200
+}

@@ -1118,6 +1118,12 @@ def reviewer(settings: Settings, max_usd: float) -> ModelApiClient:
     )
 
 
+def first_of_item(drawings: list[Drawing], d: Drawing) -> bool:
+    """Whether an item drawing is its item's first, the set's ``picture``: the one its
+    ``picture_brief`` is said in (the ``more_pictures`` after it are drawn without one)."""
+    return d.n == min(x.n for x in drawings if x.kind == "item" and x.item_key == d.item_key)
+
+
 def set_briefs(drawings: list[Drawing], briefs: dict[str, str]) -> list[SetBrief]:
     """Where each brief goes in the set file."""
     by_template: dict[str, int] = {}
@@ -1132,6 +1138,8 @@ def set_briefs(drawings: list[Drawing], briefs: dict[str, str]) -> list[SetBrief
         if not brief:
             continue
         if d.kind == "item":
+            if not first_of_item(drawings, d):
+                raise ValueError(f"{d.id}: the set gives a brief to an item's first drawing alone")
             out.append(SetBrief(brief, item=d.item_key, field="picture_brief"))
         elif d.kind == "card":
             if d.card != 0:

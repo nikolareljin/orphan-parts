@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "e8e7b2de4e3dcdecb12e688d",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Smart desk calendar and alarm built from microcontroller board (connector usb-b, dc barrel jack; a tiny credit-card-sized bare board, far smaller than half a laptop width); a small flat blue board the size of a credit card, no wider than the coffee mug beside it, a square silver USB-B socket and a round barrel jack on one short edge, pin headers along the long edges; jumper wires to a tiny two-line LCD about 8 cm wide on a little wooden stand, a coin-cell clock module, a tiny buzzer and one small push button for snooze; no tablet, no second board; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793852322,
+    "data": [
+      {
+        "b64_json": "@e8e7b2de4e3dcdecb12e688d-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4187,
+      "output_tokens": 1435,
+      "total_tokens": 5622
+    }
+  },
+  "status": 200
+}

@@ -233,6 +233,9 @@ async def run_candidates(settings: Settings, opts: Options) -> Run:
             if d.kind == "card" and d.card != 0:
                 run.skipped.append(f"{d.id}: the set draws the first reuse card alone")
                 continue
+            if d.kind == "item" and not rv.first_of_item(drawings, d):
+                run.skipped.append(f"{d.id}: the set gives a brief to an item's first drawing")
+                continue
             r = before.get(d.id)
             proposed = r.brief if r is not None and r.verdict != "matches" else ""
             briefs = candidate_briefs(current_brief(sv, d), proposed, n, view=bool(d.view))
