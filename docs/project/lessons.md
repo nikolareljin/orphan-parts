@@ -81,3 +81,27 @@ for two plain reasons. The day count did not allow a second device target beside
 testing it needs the glasses in hand with the developer toolkit, which could not be arranged in
 the window. The phone flow does the job on its own; the glasses are under
 [Next steps](next.md) with what they would plug into.
+
+**From a repair exchange to one drawer's inventory.** The first idea connected
+owners, donors and helpers around a repair; nine days were enough to make one
+person's inventory trustworthy, not a network. What shipped reads the owner's
+own parts, decides with them what each becomes, and hands off to Marketplace
+both ways, every answer with its evidence. The exchange narrowed to a handoff,
+the glasses to the phone, open uploads to the sample gallery; each cut bought
+the trust the remaining parts needed.
+
+**Ideal build drawings would need training, not only better prompts.** The goal
+was ideal visualizations of reuse cards and finished builds. Prompt parameters
+(version 3), a corrections library, Muse Spark's review gate and best-of-N got
+the demo set to 28 of 30 matching, every project drawing matching; still, the
+model invents proportions it was never shown, and each new kind of build needs
+its brief written by hand. Realistic training would require, first, a path the
+platform does not offer yet: fine-tuning today covers the open-weight models,
+while the hosted Muse Image API covers generation and edits. So training waits
+on either that API growing a tuning route or starting from an open-weights base. Then a
+curated set: the owner's part photos paired with photos of finished builds,
+captioned with the same facts the prompts carry, consented per item; the review
+gate as the scorer plus human approval on every round; the negative and safety
+constraints carried into training, not only the prompt; and a budget, since
+each iteration redraws and re-reviews the set. More instructions, more tests,
+more trainings, in that order, each one earning the next.
