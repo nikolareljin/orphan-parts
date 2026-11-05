@@ -18,12 +18,14 @@ import re
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Protocol
 
 from pydantic import BaseModel, Field, field_serializer
 
 from app.config import Settings
 from app.decide.schema import Scenarios
 from app.extract.imaging import BadImageError, prepare
+from app.feedback.steer import Steer, assemble, clean
 from app.inventory.schema import Item
 from app.inventory.service import Inventory, NotFoundError
 from app.model_api import IncompleteResponseError, ModelApiClient
@@ -86,12 +88,26 @@ class Picture(BaseModel):
     hidden: bool = Field(
         default=False, description="kept, but a drawing of the same request was judged better"
     )
+    brief: str = Field(default="", description="the correction it was drawn with, if any")
+    avoided: list[str] = Field(
+        default=[], description="what it was drawn avoiding: the reasons of disliked drawings"
+    )
+    kept: str = Field(default="", description="what it kept: a liked drawing's correction")
 
     # the owner's own words: a product key or a password typed into them is masked for the
     # demo visitor, as an item's name is
     @field_serializer("use")
     def _shown_use(self, value: str) -> str:
         return mask_text(value) if for_visitor() else value
+
+    # a vote's reason is its author's: the demo visitor reads none of them, nor the brief
+    @field_serializer("brief", "kept")
+    def _shown_text(self, value: str) -> str:
+        return "" if for_visitor() else value
+
+    @field_serializer("avoided")
+    def _shown_avoided(self, value: list[str]) -> list[str]:
+        return [] if for_visitor() else value
 
 
 class PictureList(BaseModel):
@@ -152,12 +168,19 @@ def _about(what: str, facts: list[str], looks: str) -> str:
     return f"{what} ({inner})" if inner else what
 
 
-def prompt_for(item: Item, use: str, brief: str = "", params: DrawingParams | None = None) -> str:
+def prompt_for(
+    item: Item,
+    use: str,
+    brief: str = "",
+    params: DrawingParams | None = None,
+    steer: Sequence[str] = (),
+) -> str:
     """What Muse Image is asked for: the chosen use built from the item as it is known, from
     its type and accepted values (and its condition and faults, when the parameters say so); a
     proposed value is not yet known, and a value that identifies the item or its owner (a
     serial, a MAC, an IMEI) never goes out. Then the correction of the kind of project the use
-    names, ``brief`` (a correction from a review), the negatives and the closing rules."""
+    names, ``brief`` (a correction from a review), ``steer`` (what people's votes say: what to
+    avoid, what to keep), the negatives and the closing rules."""
     p = _params(params)
     what = item.item_type or item.name or "item"
     kind = p.kind(item.item_type)
@@ -177,7 +200,7 @@ def prompt_for(item: Item, use: str, brief: str = "", params: DrawingParams | No
             detail.append(f"known faults: {_line(item.faults)}")
     correction = "" if own else p.correction_for(text=use)
     return said(
-        [head, *detail, correction, _line(brief, BRIEF_MAX), *p.negatives],
+        [head, *detail, correction, _line(brief, BRIEF_MAX), *steer, *p.negatives],
         p.rules.item if own else p.rules.use,
     )
 
@@ -204,6 +227,7 @@ def finished_prompt(
     *,
     correction: str = "",
     params: DrawingParams | None = None,
+    steer: Sequence[str] = (),
 ) -> str:
     """What Muse Image is asked for a finished project: what it is, built from the parts the
     card uses (each once, at most six), and one line on it, and how it is shown when a view is
@@ -227,7 +251,8 @@ def finished_prompt(
         if preset:
             line = f"{line}; {_line(preset, BRIEF_MAX)}"
     return said(
-        [head, line, _line(correction, BRIEF_MAX), _line(brief, BRIEF_MAX), *p.negatives], tail
+        [head, line, _line(correction, BRIEF_MAX), _line(brief, BRIEF_MAX), *steer, *p.negatives],
+        tail,
     )
 
 
@@ -260,6 +285,7 @@ def project_prompt(
     view: str = "",
     brief: str = "",
     params: DrawingParams | None = None,
+    steer: Sequence[str] = (),
 ) -> str:
     """A project as built, where it is used: its title, the items allocated to it (as built,
     not as they lie in the drawer), and what it results in, shown as ``view`` asks when given;
@@ -276,6 +302,7 @@ def project_prompt(
         brief,
         correction=p.correction_for(project.template),
         params=p,
+        steer=steer,
     )
 
 
@@ -285,6 +312,7 @@ def card_prompt(
     item: Item,
     brief: str = "",
     params: DrawingParams | None = None,
+    steer: Sequence[str] = (),
 ) -> str:
     """A reuse card as built: its title, the item it is about and the kinds of item it names
     from the rest of the inventory (a kind alone: the card does not say which one), and what
@@ -301,6 +329,7 @@ def card_prompt(
         brief=brief,
         correction=p.correction_for(text=title),
         params=p,
+        steer=steer,
     )
 
 
@@ -353,6 +382,16 @@ def _read(folder: Path, n: int, what: str) -> bytes:
     raise NotFoundError(f"{what} has no picture {n}")
 
 
+class Votes(Protocol):
+    """Where people's votes on drawings are read (app.feedback.Feedback)."""
+
+    def drawing_votes(
+        self, kind: str, target_id: int, ref_prefix: str = ""
+    ) -> list[tuple[str, str, str]]: ...
+
+    def kind_reasons(self, template: str, project_id: int) -> list[str]: ...
+
+
 class Pictures:
     def __init__(
         self,
@@ -360,11 +399,16 @@ class Pictures:
         client: ModelApiClient,
         inventory: Inventory,
         templates: Templates,
+        votes: Votes | None = None,
     ) -> None:
+        """``votes``: people's likes and dislikes, read so the next drawing of what they voted
+        on avoids what a dislike's reason names; None (the commands, the demo loader, the
+        review tools) draws without them."""
         self.settings = settings
         self.client = client
         self.inventory = inventory
         self.templates = templates
+        self.votes = votes
         self.root = settings.data_dir / "items"
         self.projects_root = settings.data_dir / "projects"
 
@@ -388,8 +432,33 @@ class Pictures:
         except UnknownTemplateError:
             return text
 
+    def _steer(
+        self, kind: str, target_id: int, folder: Path, prefix: str = "", template: str = ""
+    ) -> Steer:
+        """What the caller's own votes on this target's drawings say to the next one: the
+        reasons of the dislikes to avoid, a liked drawing's correction to keep, and for a
+        project the reasons given on others of its kind. Nothing without votes."""
+        if self.votes is None:
+            return Steer()
+        cast = self.votes.drawing_votes(kind, target_id, prefix)
+        own = [reason for _, vote, reason in cast if vote == "dislike"]
+        records = {str(p.n): p for p in _kept(folder)}
+        liked = [
+            records[ref[len(prefix) :]].brief
+            for ref, vote, _ in cast
+            if vote == "like" and ref[len(prefix) :] in records
+        ]
+        kind_of = self.votes.kind_reasons(template, target_id) if template else []
+        return assemble(own, kind_of, liked)
+
     async def _draw(
-        self, folder: Path, prompt: str, drawn_as: str, still_there: Callable[[], object]
+        self,
+        folder: Path,
+        prompt: str,
+        drawn_as: str,
+        still_there: Callable[[], object],
+        brief: str = "",
+        steer: Steer | None = None,
     ) -> Picture:
         """One call, one picture, kept in the folder after those it has. ``still_there``
         raises when what it was drawn for went while it was drawn: nothing is kept then."""
@@ -410,6 +479,9 @@ class Pictures:
             cost_usd=result.cost_usd,
             from_fixture=result.from_fixture,
             created_at=datetime.now(tz=UTC).isoformat(timespec="seconds"),
+            brief=clean(brief, BRIEF_MAX),
+            avoided=steer.avoid if steer else [],
+            kept=steer.keep if steer else "",
         )
         with os.fdopen(fd, "wb") as out:
             out.write(pixels)
@@ -433,12 +505,16 @@ class Pictures:
             raise PicturesOffError(OFF_LINE)
         item = self.inventory.get(item_id)
         drawn_as = self._use(use) or item.item_type or item.name or "item"
+        folder = self.folder(item_id)
+        steer = self._steer("item_picture", item_id, folder)
         # the item may have been deleted while the picture was drawn: its folder stays gone
         return await self._draw(
-            self.folder(item_id),
-            prompt_for(item, drawn_as, brief),
+            folder,
+            prompt_for(item, drawn_as, brief, steer=steer.segments()),
             drawn_as,
             lambda: self.inventory.get(item_id),
+            brief,
+            steer,
         )
 
     async def draw_card(self, scenarios: Scenarios, card: int, brief: str = "") -> Picture:
@@ -448,11 +524,15 @@ class Pictures:
         item_id = scenarios.item_id
         self._card(scenarios, card)
         item = self.inventory.get(item_id)
+        folder = self.card_folder(item_id, scenarios.id, card)
+        steer = self._steer("card_picture", item_id, folder, f"{scenarios.id}/{card}/")
         return await self._draw(
-            self.card_folder(item_id, scenarios.id, card),
-            card_prompt(scenarios, card, item, brief),
+            folder,
+            card_prompt(scenarios, card, item, brief, steer=steer.segments()),
             _line(scenarios.reuse[card].title, TITLE_MAX),
             lambda: self.inventory.get(item_id),
+            brief,
+            steer,
         )
 
     async def draw_project(self, project: Project, view: str = "", brief: str = "") -> Picture:
@@ -460,15 +540,19 @@ class Pictures:
         ``view`` (in its room, a close-up of the parts) asks for another picture of it."""
         if not self.settings.picture_enabled:
             raise PicturesOffError(OFF_LINE)
+        folder = self.project_folder(project.id)
+        steer = self._steer("project_picture", project.id, folder, template=project.template)
         return await self._draw(
-            self.project_folder(project.id),
-            self.project_prompt(project, view, brief),
+            folder,
+            self.project_prompt(project, view, brief, steer.segments()),
             _line(
                 f"{project.title}, {_line(view, VIEW_MAX)}" if view.strip() else project.title,
                 TITLE_MAX + VIEW_MAX,
             )
             or "project",
             lambda: None,
+            brief,
+            steer,
         )
 
     def allocated(self, project: Project) -> list[Item]:
@@ -481,10 +565,12 @@ class Pictures:
                 continue
         return items
 
-    def project_prompt(self, project: Project, view: str = "", brief: str = "") -> str:
+    def project_prompt(
+        self, project: Project, view: str = "", brief: str = "", steer: Sequence[str] = ()
+    ) -> str:
         """What a drawing of the project asks for, as ``draw_project`` sends it."""
         others = [(i.name, i.item_type) for i in self.inventory.list_items()]
-        return project_prompt(project, self.allocated(project), others, view, brief)
+        return project_prompt(project, self.allocated(project), others, view, brief, steer=steer)
 
     @staticmethod
     def _card(scenarios: Scenarios, card: int) -> None:

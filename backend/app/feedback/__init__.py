@@ -1,5 +1,5 @@
-"""Likes and dislikes of what the app generated: a person's signal, kept for the review tools,
-never sent to a model."""
+"""Likes and dislikes of what the app generated: a person's signal, kept for the review tools;
+a dislike of a drawing steers the next drawing of the same thing (app.feedback.steer)."""
 
 from app.feedback.schema import (
     PICTURE_KINDS,

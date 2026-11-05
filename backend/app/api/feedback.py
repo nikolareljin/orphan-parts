@@ -1,8 +1,9 @@
 """Like or dislike what the app generated: a drawing, a set of Decide cards, the ideas, a draft,
 price guidance, a search plan, a web find, a candidate, a project proposal, a build pack. The
 owner and a judge's code vote on what they can see; the demo visitor is refused at the gate.
-Nothing is sent to a model: the votes are read by the review tools (./dev picture-review,
-./dev decide-review) as a person's signal."""
+No vote calls a model: the votes are read by the review tools (./dev picture-review,
+./dev decide-review) as a person's signal, and a dislike's reason steers the voter's own next
+drawing of the same thing (app.feedback.steer)."""
 
 import hashlib
 from typing import Annotated
@@ -146,7 +147,8 @@ def tally(target: TargetDep, feedback: FeedbackDep, sv: ServicesDep) -> Tally:
 def vote(spec: VoteCreate, feedback: FeedbackDep, sv: ServicesDep) -> Tally:
     """Like or dislike a target, with an optional one-line reason (at most 200 characters): the
     caller's vote, in place of the one they cast before. A judge's code votes on what it can
-    see, its vote tagged with the code. Never sent to a model; refused for the demo visitor."""
+    see, its vote tagged with the code. Calls no model; a dislike of a drawing steers the
+    voter's next drawing of the same thing. Refused for the demo visitor."""
     digest = _resolve(spec, sv)
     if spec.target_kind not in PICTURE_KINDS:
         digest = ""

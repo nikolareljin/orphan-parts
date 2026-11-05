@@ -64,6 +64,66 @@ test('the owner likes a drawing and dislikes a set of cards with a reason; both 
   await expect(liked).toContainText('0')
 })
 
+test('a slow vote shows pressed at once, is sent once, and the late first read does not undo it', async ({ page, request }) => {
+  test.slow()
+  const name = `Slow voted laptop ${stamp}`
+  const id = await createLaptop(request, name)
+  expect((await request.post(`/api/items/${id}/picture`, { data: { use: 'a bedside lamp' } })).status()).toBe(201)
+  const mine = (url: URL) => url.pathname === '/api/feedback' && url.searchParams.get('target_id') === String(id)
+  // the first read of the tally answers late, after the vote is saved; the vote itself is slow
+  let reads = 0
+  await page.route(mine, async (route) => {
+    reads += 1
+    if (reads === 1) await new Promise((r) => setTimeout(r, 4000))
+    await route.continue()
+  })
+  let posts = 0
+  let release: () => void = () => {}
+  const held = new Promise<void>((r) => (release = r))
+  await page.route('**/api/feedback', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    posts += 1
+    await held
+    await route.continue()
+  })
+  const firstRead = page.waitForResponse((r) => mine(new URL(r.url())) && r.request().method() === 'GET')
+  const { drawn } = await openItem(page, name)
+  const group = drawn.getByRole('group', { name: 'Your vote on this drawing' })
+  const like = group.getByRole('button', { name: 'Like this drawing', exact: true })
+  await like.click()
+  // pressed at once, while the request is on its way; nothing can be sent twice
+  await expect(like).toHaveAttribute('aria-pressed', 'true')
+  await expect(group).toHaveAttribute('aria-busy', 'true')
+  await expect(like).toBeDisabled()
+  await like.click({ force: true })
+  const saved = page.waitForResponse((r) => r.url().includes('/api/feedback') && r.request().method() === 'POST')
+  release()
+  expect((await saved).status()).toBe(200)
+  await firstRead
+  await expect(group).toHaveAttribute('aria-busy', 'false')
+  await expect(like).toHaveAttribute('aria-pressed', 'true')
+  await expect(like).toContainText('1')
+  expect(posts).toBe(1)
+  // and the server has it
+  const target = new URLSearchParams({ target_kind: 'item_picture', target_id: String(id), target_ref: '1' })
+  expect(((await (await request.get(`/api/feedback?${target.toString()}`)).json()) as { mine: string | null }).mine).toBe('like')
+})
+
+test('a vote the server never answers is put back as the server has it, with the error shown', async ({ page, request }) => {
+  const name = `Failed vote laptop ${stamp}`
+  const id = await createLaptop(request, name)
+  expect((await request.post(`/api/items/${id}/picture`, { data: { use: 'a bedside lamp' } })).status()).toBe(201)
+  await page.route('**/api/feedback', (route) => (route.request().method() === 'POST' ? route.abort('failed') : route.fallback()))
+  const { drawn } = await openItem(page, name)
+  const group = drawn.getByRole('group', { name: 'Your vote on this drawing' })
+  const dislike = group.getByRole('button', { name: 'Dislike this drawing', exact: true })
+  await dislike.click()
+  await expect(group.getByRole('alert')).toBeVisible()
+  await expect(dislike).toHaveAttribute('aria-pressed', 'false')
+  await expect(dislike).toContainText('0')
+  await expect(dislike).toBeEnabled()
+})
+
 test.describe('the demo visitor', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 

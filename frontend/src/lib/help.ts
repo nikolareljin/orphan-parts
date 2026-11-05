@@ -301,8 +301,9 @@ export const HELP = {
   feedback: {
     topic: 'like and dislike',
     text:
-      'Like what came out right, dislike what came out wrong, and say what is wrong in one line if you like. A second click takes the vote back. ' +
-      'Nothing is sent to a model: the picture and recommendation reviews read the dislikes as flagged by a person and keep the liked ones as they are.',
+      'Like what came out right, dislike what came out wrong, and say what is wrong in one line if you like; a second click takes the vote back. ' +
+      'Your dislike of a drawing steers your next drawing of the same thing, which avoids what you said is wrong (another composition, with no reason) and says so in its caption. ' +
+      'The picture and recommendation reviews also read the dislikes as flagged by a person and keep the liked ones as they are.',
     doc: 'guides/picture-review/#peoples-votes',
   },
 } satisfies Record<string, HelpEntry>

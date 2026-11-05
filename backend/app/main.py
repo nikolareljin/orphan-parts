@@ -156,7 +156,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.planner = Planner(
         settings, client, app.state.inventory, app.state.templates, app.state.finder
     )
-    app.state.pictures = Pictures(settings, client, app.state.inventory, app.state.templates)
+    # the likes and dislikes, in the inventory's file: they go with what they are about, and a
+    # dislike's reason steers the next drawing of the same thing
+    app.state.feedback = Feedback(app.state.inventory)
+    app.state.pictures = Pictures(
+        settings, client, app.state.inventory, app.state.templates, app.state.feedback
+    )
 
     app.state.decider = Decider(
         settings,
@@ -167,8 +172,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.valuer,
         app.state.finder,
     )
-    # the likes and dislikes, in the inventory's file: they go with what they are about
-    app.state.feedback = Feedback(app.state.inventory)
     log.info(
         "starting",
         extra={

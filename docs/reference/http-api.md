@@ -170,7 +170,10 @@ The owner counts every vote; a judge's code votes on what it can see (the public
 demo set and what it made), its vote tagged with its code, and counts its own alone. The demo
 visitor is refused (`403`, like every write) and reads no vote. `404` for a target that is not
 there for the caller, `422` for a `target_ref` of the wrong shape or a reason over 200
-characters. Nothing here calls a model or counts against the allowances that spend.
+characters. Nothing here calls a model or counts against the allowances that spend. A dislike
+of a drawing steers the voter's own next drawing of the same item, reuse card or project: it
+is drawn avoiding the reasons, and the picture's record answers `avoided` and `kept` (empty for
+the demo visitor); see [People's votes](../guides/picture-review.md#peoples-votes).
 
 ## Operational endpoints
 

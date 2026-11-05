@@ -175,9 +175,23 @@ of Decide cards, the ideas, a draft, price guidance, a search plan, a web find, 
 project proposal and a build pack there is a small 👍 / 👎 pair. The owner and a judge's code
 vote; the demo visitor sees neither button. A dislike asks, in one optional line of at most 200
 characters, what is wrong (*drawn as a TV, not an 18 inch monitor*). A second click on the
-pressed button takes the vote back. Nothing is sent to a model: the votes are kept in the
+pressed button takes the vote back. A vote calls no model: the votes are kept in the
 inventory (the `feedback` table, [Data model](../reference/data-model.md)) and read by these
 tools as a person's signal beside the reviewer's.
+
+A dislike of a drawing also steers the next drawing of the same thing, in the app (**Draw it**
+again on that item, reuse card or project): the request gets an *Avoid:* segment with the
+reasons of the dislikes of its earlier drawings (*Avoid: drawn as a TV, not an 18 inch
+monitor*), newest first, each said once, at most three, each one plain line of at most 200
+characters with any private value masked; a dislike without a reason says *a different
+composition than the disliked one*. Up to two more come from dislikes of drawings of other
+projects of the same kind (template, such as *arcade table*). A liked drawing's own correction
+(its brief), when it had one, adds *Keep:* with it. The caption then says *Drawn again
+avoiding: ...* (and *Keeping: ...*), and the picture's record keeps `avoided` and `kept`. Your
+votes steer your own drawings alone: the owner's the owner's, a judge's code's that code's;
+the demo visitor's drawings never. With no votes the request is word for word what it was, so
+every recording still answers; the demo loader and these review tools draw without the votes
+([How the request is built](../models/muse-image.md#how-the-request-is-built)).
 
 - Every review reads them from the stack's inventory (`DATA_DIR`) and keeps them in the report:
   each drawing's likes, dislikes and the reasons, with who gave them (*owner*, *judge code 3*),

@@ -1,6 +1,7 @@
 """The votes, kept in the inventory's file: one per person per target, changed or taken back
 at will. A judge's code votes under its own id and counts its own vote alone; the owner
-counts every vote. Nothing here is sent to a model."""
+counts every vote. Nothing here calls a model; the reasons a person gave with dislikes of a
+drawing are read for that person's next drawing of the same thing (``drawing_votes``)."""
 
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ from pathlib import Path
 from app.feedback.schema import Cast, Tally, Target, VoteCreate
 from app.inventory import Inventory
 from app.inventory.service import now
-from app.ops.door import sandbox
+from app.ops.door import for_visitor, sandbox
 
 log = logging.getLogger("app.feedback")
 
@@ -76,6 +77,42 @@ class Feedback:
         with self.store.connect() as conn:
             conn.execute(f"DELETE FROM feedback WHERE {where} AND {voter}", (*args, *who))
         return self.tally(t)
+
+    def drawing_votes(
+        self, kind: str, target_id: int, ref_prefix: str = ""
+    ) -> list[tuple[str, str, str]]:
+        """The caller's own votes on the drawings of one target, newest first, as (ref, vote,
+        reason): what steers the next drawing of it. ``ref_prefix`` narrows a card's drawings
+        to the card ("<scenarios id>/<card>/"). A judge's code reads its own votes, the owner
+        the owner's alone (a judge's vote never steers the owner's drawings); the demo visitor
+        none."""
+        if for_visitor():
+            return []
+        voter, who = self._voter()
+        with self.store.connect() as conn:
+            rows = conn.execute(
+                "SELECT target_ref, vote, reason FROM feedback WHERE target_kind = ?"
+                f" AND target_id = ? AND substr(target_ref, 1, ?) = ? AND {voter}"
+                " ORDER BY id DESC",
+                (kind, target_id, len(ref_prefix), ref_prefix, *who),
+            ).fetchall()
+        return [(r["target_ref"], r["vote"], r["reason"]) for r in rows]
+
+    def kind_reasons(self, template: str, project_id: int) -> list[str]:
+        """The reasons the caller gave with dislikes of drawings of other projects of the same
+        kind (template), newest first; the same voter rule as ``drawing_votes``."""
+        if for_visitor() or not template:
+            return []
+        voter, who = self._voter()
+        with self.store.connect() as conn:
+            rows = conn.execute(
+                "SELECT f.reason FROM feedback f JOIN projects p ON p.id = f.target_id"
+                " WHERE f.target_kind = 'project_picture' AND f.vote = 'dislike'"
+                f" AND f.reason != '' AND p.template = ? AND p.id != ? AND f.{voter}"
+                " ORDER BY f.id DESC LIMIT 20",
+                (template, project_id, *who),
+            ).fetchall()
+        return [r["reason"] for r in rows]
 
 
 def read_votes(db: Path) -> list[Cast]:

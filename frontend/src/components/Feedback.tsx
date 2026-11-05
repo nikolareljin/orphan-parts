@@ -1,4 +1,4 @@
-import { useContext, useEffect, useId, useState, type FormEvent } from 'react'
+import { useContext, useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { api, type FeedbackTally, type FeedbackTarget, type FeedbackVote } from '../lib/api'
 import { HELP } from '../lib/help'
 import { REASON_MAX, VoteContext, oneLine, optimistic, voteAction, voteLabel, type FeedbackWhat } from '../lib/feedback'
@@ -9,7 +9,11 @@ const EMPTY = { likes: 0, dislikes: 0, mine: null, reason: '' }
 // A like or a dislike of something the app generated, under it: two small buttons with their
 // counts, pressed for the person's own vote; a click on the pressed one takes it back. A
 // dislike asks, in one optional line, what is wrong. The votes go to the review tools, never
-// to a model. The owner and a judge's code vote; the demo visitor sees nothing.
+// to a model as such: a dislike's reason steers the next drawing of the same thing, and the
+// review tools read them. The owner and a judge's code vote; the demo visitor sees nothing.
+// While a vote is on its way the button shows it pressed at once (aria-busy, both buttons
+// disabled, so it is never sent twice); the server's answer then stands, and when the request
+// fails the tally is read again from the server (or put back as it was) with the error shown.
 export default function Feedback({ target, what }: { target: FeedbackTarget; what: FeedbackWhat }) {
   const canVote = useContext(VoteContext)
   if (!canVote) return null
@@ -25,13 +29,18 @@ function Votes({ target, what }: { target: FeedbackTarget; what: FeedbackWhat })
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
   const inputId = useId()
+  // a request is on its way (a ref: two clicks in one frame both read it before a render)
+  const sending = useRef(false)
+  // bumped by every vote: the first read's answer arriving after a vote is stale and dropped
+  const votes = useRef(0)
 
   useEffect(() => {
     let cancelled = false
+    const at = votes.current
     api.feedback
       .get({ kind, id, ref })
       .then((found) => {
-        if (!cancelled) setTally(found)
+        if (!cancelled && votes.current === at) setTally(found)
       })
       .catch(() => {
         // a target the server does not know (or will not count for this session): no buttons
@@ -42,8 +51,19 @@ function Votes({ target, what }: { target: FeedbackTarget; what: FeedbackWhat })
     }
   }, [kind, id, ref])
 
+  // after a failed request: what the server has, or what was shown before when it cannot say
+  async function reconcile(before: FeedbackTally) {
+    try {
+      setTally(await api.feedback.get({ kind, id, ref }))
+    } catch {
+      setTally(before)
+    }
+  }
+
   async function cast(clicked: FeedbackVote) {
-    if (busy) return
+    if (sending.current) return
+    sending.current = true
+    votes.current += 1
     const before = tally
     const action = voteAction(tally.mine, clicked)
     setBusy(true)
@@ -56,16 +76,20 @@ function Votes({ target, what }: { target: FeedbackTarget; what: FeedbackWhat })
       setAsking(ask)
       if (ask) setReason(answer.reason)
     } catch (err: unknown) {
-      setTally(before)
       setError(err instanceof Error ? err.message : String(err))
+      await reconcile(before)
     } finally {
+      sending.current = false
       setBusy(false)
     }
   }
 
   async function sayWhy(event: FormEvent) {
     event.preventDefault()
-    if (busy) return
+    if (sending.current) return
+    sending.current = true
+    votes.current += 1
+    const before = tally
     setBusy(true)
     setError('')
     try {
@@ -73,14 +97,16 @@ function Votes({ target, what }: { target: FeedbackTarget; what: FeedbackWhat })
       setAsking(false)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err))
+      await reconcile(before)
     } finally {
+      sending.current = false
       setBusy(false)
     }
   }
 
   if (failed) return null
   return (
-    <div className="feedback" role="group" aria-label={`Your vote on this ${what}`}>
+    <div className="feedback" role="group" aria-label={`Your vote on this ${what}`} aria-busy={busy}>
       <div className="feedback-row">
         {(['like', 'dislike'] as const).map((vote) => (
           <button
@@ -103,6 +129,7 @@ function Votes({ target, what }: { target: FeedbackTarget; what: FeedbackWhat })
       {asking && (
         <form className="feedback-why" onSubmit={(e) => void sayWhy(e)}>
           <label htmlFor={inputId}>What's wrong?</label>
+          {what === 'drawing' && <span className="feedback-reason">the next drawing of it avoids it</span>}
           <input
             id={inputId}
             value={reason}

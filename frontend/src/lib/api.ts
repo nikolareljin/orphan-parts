@@ -302,6 +302,10 @@ export interface Picture {
   check?: PictureCheck | null
   // kept, but a drawing of the same request was judged better and is shown instead
   hidden?: boolean
+  // what it was drawn avoiding (the reasons given with dislikes of earlier drawings) and
+  // keeping (a liked drawing's correction); empty for the demo visitor
+  avoided?: string[]
+  kept?: string
 }
 
 export interface PictureList {
@@ -1464,7 +1468,7 @@ export const api = {
     cardPictureUrl: (itemId: number, scenariosId: number, card: number, n: number) =>
       apiUrl(`/api/items/${itemId}/scenarios/${scenariosId}/reuse/${card}/pictures/${n}`),
   },
-  // likes and dislikes: never sent to a model; read by the review tools
+  // likes and dislikes: read by the review tools; a dislike's reason steers the next drawing
   feedback: {
     get: (t: FeedbackTarget) => getJson<FeedbackTally>(`/api/feedback?${feedbackQuery(t)}`),
     vote: (t: FeedbackTarget, vote: FeedbackVote, reason = '') =>

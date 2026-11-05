@@ -11,7 +11,17 @@ export const DRAW_OFF_LINE = 'Pictures are off on this server.'
 // The line under a picture: what it was drawn as, the label, and what the call cost.
 export function pictureCaption(p: Picture, label: string = PICTURE_LABEL): string {
   const cost = p.from_fixture ? 'recorded answer, nothing spent' : usd(p.cost_usd)
-  return `Drawn as: ${p.use}. ${label}. ${cost}${checkLine(p)}`
+  return `Drawn as: ${p.use}. ${label}. ${cost}${checkLine(p)}${steerLine(p)}`
+}
+
+// What people's votes changed in it: the reasons of earlier dislikes it was drawn avoiding,
+// and a liked drawing's correction it kept.
+export function steerLine(p: Picture): string {
+  const avoided = (p.avoided ?? []).filter(Boolean)
+  const parts = []
+  if (avoided.length) parts.push(`Drawn again avoiding: ${avoided.join('; ')}`)
+  if (p.kept) parts.push(`Keeping: ${p.kept}`)
+  return parts.length ? `. ${parts.join('. ')}` : ''
 }
 
 // The review gate's line: the verdict, and that it was drawn again when it was.
