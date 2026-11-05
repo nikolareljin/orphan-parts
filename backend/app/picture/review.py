@@ -8,15 +8,17 @@ wrong ones drawn again with a corrected brief.
                        pictures and their views, reuse-card pictures, item pictures
   --set FILE           the set to load (default demo/set.yaml)
   --data               review the inventory in DATA_DIR as it stands instead (your own stack's)
-  --only SEL,...       only these drawings: project:2, card:monitor_1800fp, item:uno_r3#1 ...
+  --only SEL,...       only these drawings: project:2, card:monitor_1800fp, item:uno_r3#1 ...;
+                       disliked (or liked): the drawings a person disliked (liked) in the app
   --max-usd N          stop before a call that could take the run past N USD (default 1.00)
   --dry-run            list the drawings and the facts each must show; no call, no key
   --decide             also check each Decide card set, each item's ideas and each project's
                        allocations against the items' facts (one text call each); report only
   --out DIR            where the report goes (default picture-review/)
-  --redraw SEL,...|all-wrong
+  --redraw SEL,...|all-wrong|disliked
                        draw these again with the brief proposed in the last report (or
-                       --brief / --briefs), then review the new drawing; with the demo set the
+                       --brief / --briefs), then review the new drawing; all-wrong leaves out a
+                       drawing a person liked and nobody disliked; with the demo set the
                        briefs are written into the set file and only the new drawings are
                        recorded (every other answer replays); with --data a new picture is
                        added after the old ones
@@ -49,6 +51,11 @@ Tuning the drawing parameters (backend/app/picture/params.yaml):
   --eval-dir DIR       where the evaluations are kept (default eval/pictures)
   --results FILE       the page the history table is written into, between its markers
 
+People's votes: the likes and dislikes cast in the app (the inventory in DATA_DIR) are read
+with every review and kept in the report beside the reviewer's verdict. A dislike is a person
+flagging the drawing, with their reason: --tune counts it with the reviewer's issues; a like
+keeps the drawing as it is. Nothing of them is sent with a review call.
+
 The key is MODEL_API_KEY from the environment, never printed or written.
 """
 
@@ -76,6 +83,8 @@ from app.decide.schema import ReuseScenario
 from app.decide.service import Decider
 from app.demo.schema import DemoSet
 from app.extract.imaging import BadImageError, prepare
+from app.feedback import Cast, read_votes
+from app.feedback.signals import People, expand, tally
 from app.inventory import Inventory
 from app.inventory.schema import Item
 from app.model_api import (
@@ -282,6 +291,7 @@ class Review(BaseModel):
     summary: str = ""
     cost_usd: float = 0.0
     error: str = ""
+    people: People = Field(default_factory=People, description="likes and dislikes in the app")
 
 
 class DecideReview(BaseModel):
@@ -291,6 +301,7 @@ class DecideReview(BaseModel):
     flags: list[Flag] = []
     cost_usd: float = 0.0
     error: str = ""
+    people: People = Field(default_factory=People, description="likes and dislikes in the app")
 
 
 class Redrawn(BaseModel):
@@ -581,6 +592,31 @@ def selected(drawing_id: str, selectors: Iterable[str]) -> bool:
     return any(drawing_id == s or drawing_id.startswith(s + "#") or s == kind for s in selectors)
 
 
+def people_of(drawings: list[Drawing], votes: list[Cast]) -> dict[str, People]:
+    """Each drawing's likes and dislikes, as cast in the app: by the item, the set of cards and
+    the card, or the project, and the picture's number; a vote on other bytes under the same
+    number (a drawing redrawn since) is stale and not counted."""
+    out: dict[str, People] = {}
+    for d in drawings:
+        if d.kind == "item":
+            target = ("item_picture", d.item_id, str(d.n))
+        elif d.kind == "card":
+            target = ("card_picture", d.item_id, f"{d.scenarios_id}/{d.card}/{d.n}")
+        else:
+            target = ("project_picture", d.project_id, str(d.n))
+        out[d.id] = tally(votes, *target, file=Path(d.file))
+    return out
+
+
+def pick(drawings: list[Drawing], only: list[str], people: dict[str, People]) -> list[Drawing]:
+    """The drawings ``--only`` names (all without it); ``disliked`` and ``liked`` stand for the
+    drawings people voted on, and name none when nobody did."""
+    if not only:
+        return drawings
+    ids = expand(only, people)
+    return [d for d in drawings if selected(d.id, ids)]
+
+
 # --- calls ---------------------------------------------------------------------------------
 
 
@@ -726,14 +762,18 @@ async def decide_all(
     budget: Budget,
     skipped: list[str],
     only: Iterable[str] = (),
+    votes: list[Cast] | None = None,
 ) -> list[DecideReview]:
     """Each item's latest Decide cards and each project's allocations, checked against the
     items' facts: one text call each, reported only; ``only`` keeps the checks of these kinds
-    (``cards``, ``ideas``, ``project``) or ids."""
+    (``cards``, ``ideas``, ``project``) or ids. ``votes``: the likes and dislikes cast in the
+    app, kept beside each check (never sent with it)."""
     items = [sv.inventory.get(s.id) for s in sv.inventory.list_items()]
     by_id = {i.id: i for i in items}
     ceiling = ceiling_usd(sv.settings.model_spark, DECIDE_INPUT_ALLOWANCE, DECIDE_OUTPUT_TOKENS)
     jobs: list[tuple[str, str, str]] = []
+    # what each check is about, as a vote names it
+    targets: dict[str, tuple[str, int, str]] = {}
     for item in items:
         cards = sv.decider.latest_scenarios(item.id)
         if cards is None:
@@ -762,6 +802,7 @@ async def decide_all(
             ]
         )
         jobs.append((f"cards:{name}", f"Decide cards of {item.name}", text))
+        targets[f"cards:{name}"] = ("scenarios", item.id, str(cards.id))
     for item in items:
         ideas = sv.decider.latest_uses(item.id)
         if ideas is None or not ideas.uses:
@@ -785,6 +826,7 @@ async def decide_all(
             ]
         )
         jobs.append((f"ideas:{name}", f"Ideas for {item.name}", text))
+        targets[f"ideas:{name}"] = ("uses", item.id, str(ideas.id))
     for project in sorted(sv.planner.projects().projects, key=lambda p: p.id):
         parts = [
             f"- {a.requirement}: {describe(by_id[a.item_id])}; why: {_line(a.why, 200)}"
@@ -803,9 +845,12 @@ async def decide_all(
             ]
         )
         jobs.append((f"project:{project.id}", project.title, text))
+        targets[f"project:{project.id}"] = ("project", project.id, "")
 
     async def check(job_id: str, title: str, text: str) -> DecideReview:
         review = DecideReview(id=job_id, title=_line(title, 200))
+        if votes and job_id in targets:
+            review.people = tally(votes, *targets[job_id])
         if not budget.reserve(ceiling):
             skipped.append(f"{job_id}: not checked, the next call could pass --max-usd")
             return review
@@ -863,6 +908,10 @@ def _review_md(r: Review, heading: str = "##") -> list[str]:
         lines += ["", "Issues:", ""] + [f"- **{i.category}**: {i.detail}" for i in r.issues]
     if r.brief:
         lines += ["", "Proposed brief:", "", f"> {r.brief}"]
+    if r.people.likes or r.people.dislikes or r.people.stale:
+        lines += ["", f"People's votes: {r.people.line()}."]
+        if r.people.reasons:
+            lines += ["", *[f"- {reason}" for reason in r.people.reasons]]
     return [*lines, ""]
 
 
@@ -898,6 +947,22 @@ def markdown(report: Report) -> str:
         for r in report.reviews:
             first = f"{r.issues[0].category}: {r.issues[0].detail}" if r.issues else ""
             lines.append(f"| `{r.id}` | {_cell(r.title)} | {r.verdict} | {_cell(first)[:160]} |")
+        lines.append("")
+    voted = [r for r in report.reviews if r.people.likes or r.people.dislikes]
+    if voted:
+        lines += [
+            "## People's votes",
+            "",
+            "Cast in the app. A dislike flags the drawing for --tune; a like keeps it as it is.",
+            "",
+            "| drawing | likes | dislikes | reasons |",
+            "|---|---|---|---|",
+        ]
+        for r in voted:
+            said = "; ".join(r.people.reasons)
+            lines.append(
+                f"| `{r.id}` | {r.people.likes} | {r.people.dislikes} | {_cell(said)[:200]} |"
+            )
         lines.append("")
     if report.decide:
         flagged = [d for d in report.decide if d.flags]
@@ -1088,7 +1153,12 @@ def chosen_briefs(
         given = {str(k): _line(str(v), BRIEF_MAX) for k, v in loaded.items() if str(v).strip()}
     reviews = report.reviews if report is not None else []
     if selectors == ["all-wrong"]:
-        selectors = [r.id for r in reviews if r.verdict == "wrong"]
+        # a drawing a person liked (and nobody disliked) is kept as it is
+        selectors = [r.id for r in reviews if r.verdict == "wrong" and not r.people.liked]
+    else:
+        selectors = expand(selectors, {r.id: r.people for r in reviews})
+        if not selectors:
+            raise ValueError("no drawing in the last review has that vote")
     out: dict[str, str] = {}
     for r in reviews:
         if selected(r.id, selectors):
@@ -1139,7 +1209,11 @@ async def run_review(settings: Settings, opts: Options) -> Report:
             replay = _scratch(settings, work / "data", fake_api=True, record_fixtures=False)
             sv, notes = await load_set(replay, opts.set_file)
             report = Report(at=_now(), source=str(opts.set_file), mode="demo set", load=notes)
-        drawings = [d for d in collect(sv) if not opts.only or selected(d.id, opts.only)]
+        # the votes cast in the app, from the stack's inventory: read, never sent
+        votes = read_votes(settings.inventory_db_path)
+        found = collect(sv)
+        people = people_of(found, votes)
+        drawings = pick(found, opts.only, people)
         report.model = settings.model_spark
         report.params_version = load_params().version
         if opts.dry_run:
@@ -1157,6 +1231,7 @@ async def run_review(settings: Settings, opts: Options) -> Report:
                         subject=d.subject,
                         kinds=d.kinds,
                         facts=d.facts,
+                        people=people[d.id],
                     )
                 )
                 print(f"{d.id}: {title_of(d)}")
@@ -1167,8 +1242,10 @@ async def run_review(settings: Settings, opts: Options) -> Report:
             report.reviews = await review_all(
                 client, settings, drawings, opts.out, budget, skipped=report.skipped
             )
+            for r in report.reviews:
+                r.people = people[r.id]
             if opts.decide:
-                report.decide = await decide_all(client, sv, budget, report.skipped)
+                report.decide = await decide_all(client, sv, budget, report.skipped, votes=votes)
         finally:
             await client.aclose()
         report.cost_usd = budget.spent
@@ -1508,7 +1585,9 @@ async def run_redraw_set(settings: Settings, opts: Options) -> Report:
         replay = _scratch(settings, work / "after", fake_api=True, record_fixtures=False)
         sv, notes = await load_set(replay, opts.set_file)
         report.load += [f"replay: {n}" for n in notes]
-        drawings = [d for d in collect(sv) if not opts.only or selected(d.id, opts.only)]
+        found = collect(sv)
+        people = people_of(found, read_votes(settings.inventory_db_path))
+        drawings = pick(found, opts.only, people)
         review_client = reviewer(_scratch(settings, work / "review"), opts.max_usd)
         try:
             report.reviews = await review_all(
@@ -1516,6 +1595,8 @@ async def run_redraw_set(settings: Settings, opts: Options) -> Report:
             )
         finally:
             await review_client.aclose()
+        for r in report.reviews:
+            r.people = people[r.id]
         report.cost_usd = budget.spent
         return report
     finally:

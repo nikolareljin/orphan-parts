@@ -30,6 +30,7 @@ import GatedImage from './GatedImage'
 import { Earlier, NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 import HelpTip from './HelpTip'
+import Feedback from './Feedback'
 import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
@@ -533,6 +534,7 @@ function Handoff({
         {draft.stale && <span className="badge">item changed since</span>}
         {detailsChanged && <span className="badge">details changed since this draft</span>}
       </p>
+      <Feedback target={{ kind: 'draft', id: draft.id }} what="draft" />
       {draft.warnings.length > 0 && (
         <ul className="warnings" aria-label="Before posting">
           {draft.warnings.map((w, i) => (

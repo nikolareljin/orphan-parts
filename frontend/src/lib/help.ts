@@ -298,4 +298,11 @@ export const HELP = {
       'Signed in, the code also gives the phone an access code of its own.',
     doc: 'start/pairing/',
   },
+  feedback: {
+    topic: 'like and dislike',
+    text:
+      'Like what came out right, dislike what came out wrong, and say what is wrong in one line if you like. A second click takes the vote back. ' +
+      'Nothing is sent to a model: the picture and recommendation reviews read the dislikes as flagged by a person and keep the liked ones as they are.',
+    doc: 'guides/picture-review/#peoples-votes',
+  },
 } satisfies Record<string, HelpEntry>

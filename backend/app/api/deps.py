@@ -6,6 +6,7 @@ from app.captures.service import Captures
 from app.config import Settings
 from app.decide.service import Decider
 from app.extract.service import Extractor
+from app.feedback import Feedback
 from app.find.service import Finder
 from app.inventory.service import Inventory
 from app.listing.handoff import Handoff
@@ -205,3 +206,11 @@ def app_sample_reader(request: Request) -> SampleReader:
 
 
 SampleReaderDep = Annotated[SampleReader, Depends(app_sample_reader)]
+
+
+def app_feedback(request: Request) -> Feedback:
+    feedback: Feedback = request.app.state.feedback
+    return feedback
+
+
+FeedbackDep = Annotated[Feedback, Depends(app_feedback)]

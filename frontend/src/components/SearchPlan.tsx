@@ -7,6 +7,7 @@ import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 import { WEB_SIGN_IN, askingPrice, highlightSegments, maxPriceLine, siteOf, splitListings, stateLabel, stateTone, verdictLabel, verdictTone, webLink, webSummary } from '../lib/find'
 import HelpTip from './HelpTip'
+import Feedback from './Feedback'
 import { HELP } from '../lib/help'
 
 const TEST_DELAY_MS = 350
@@ -147,6 +148,7 @@ export default function SearchPlan({
               {plan.model && ` · ${whenText(plan.planned_at)} · ${modelName(plan.model)} · ${usd(plan.cost_usd)}`}
               {plan.from_fixture && plan.model && <span className="badge">recorded answer</span>}
             </p>
+            {plan.model && <Feedback target={{ kind: 'search_plan', id: search.id }} what="search plan" />}
           </>
         )}
         {!plan?.model && (demo ? <p className="muted">No plan was written for this search.</p> : <NeverRun step="plan" />)}
@@ -550,6 +552,7 @@ function Ranked({
                 <SourceLink url={b.source_url} />
               </div>
               <ListingText text={b.text} score={b.score} />
+              {b.source_kind === 'web' && <Feedback target={{ kind: 'web_find', id: searchId, ref: String(b.id) }} what="web find" />}
               {demo ? (
                 b.candidate_id !== null && (
                   <div className="row">

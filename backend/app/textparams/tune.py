@@ -29,6 +29,10 @@ parameters (backend/app/textparams/params.yaml) tuned from what the checks flag.
   --eval-dir DIR       where the evaluations are kept (default eval/decide)
   --results FILE       the page the history table is written into, between its markers
 
+People's votes: the likes and dislikes cast in the app (the inventory in DATA_DIR) on the
+cards, the ideas and the proposals checked are kept beside each check; --tune counts a dislike
+as a flag a person raised, with their reason. Nothing of them is sent with a check.
+
 The key is MODEL_API_KEY from the environment, never printed or written.
 """
 
@@ -47,6 +51,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from app.config import Settings, get_settings
+from app.feedback import read_votes
 from app.model_api import (
     CostLedger,
     ModelApiClient,
@@ -257,7 +262,14 @@ async def check(settings: Settings, sv: rv.Services, report: Report, max_usd: fl
     work = Path(tempfile.mkdtemp(prefix="decide-check-"))
     client = rv.reviewer(rv._scratch(settings, work), max_usd)
     try:
-        report.decide = await rv.decide_all(client, sv, budget, report.skipped, report.only)
+        report.decide = await rv.decide_all(
+            client,
+            sv,
+            budget,
+            report.skipped,
+            report.only,
+            votes=read_votes(settings.inventory_db_path),
+        )
     finally:
         await client.aclose()
         shutil.rmtree(work, ignore_errors=True)
@@ -359,6 +371,13 @@ def markdown(report: Report) -> str:
         lines.append("")
     errors = [d for d in report.decide if d.error]
     lines += [f"- `{d.id}`: {d.error}" for d in errors]
+    voted = [d for d in report.decide if d.people.likes or d.people.dislikes]
+    if voted:
+        lines += ["", "## People's votes", ""]
+        for d in voted:
+            lines.append(f"- `{d.id}`: {d.people.line()}")
+            lines += [f"  - {reason}" for reason in d.people.reasons]
+        lines.append("")
     if report.load or report.skipped:
         lines += ["## Notes", ""] + [f"- {s}" for s in report.load + report.skipped]
     return "\n".join(lines).rstrip() + "\n"
@@ -386,11 +405,22 @@ def last_report(out: Path) -> Report:
 
 
 def flags_by_section(report: Report) -> dict[str, list[rv.Flag]]:
+    """The reviewer's flags by section, and each dislike cast in the app as a flag a person
+    raised, with their reason."""
     out: dict[str, list[rv.Flag]] = {}
     for d in report.decide:
         sec = section_of(d.id)
         if sec:
             out.setdefault(sec, []).extend(d.flags)
+            out[sec] += [
+                rv.Flag(
+                    where=f"{d.id} (flagged by a person)",
+                    claim=reason.split(": ", 1)[-1],
+                    fact="a person disliked this answer in the app",
+                    severity="minor",
+                )
+                for reason in d.people.reasons
+            ]
     return out
 
 

@@ -1133,6 +1133,45 @@ export class ApiError extends Error {
   }
 }
 
+// A like or a dislike of something generated (a drawing, a set of cards, a draft...): the
+// owner's and a judge's, never the demo visitor's. The ref names what inside the target is
+// meant (a picture's number, a set of cards' id), as the API documents it.
+export type FeedbackKind =
+  | 'item_picture'
+  | 'card_picture'
+  | 'project_picture'
+  | 'scenarios'
+  | 'uses'
+  | 'draft'
+  | 'price_guidance'
+  | 'search_plan'
+  | 'web_find'
+  | 'candidate'
+  | 'project'
+  | 'pack'
+
+export type FeedbackVote = 'like' | 'dislike'
+
+export interface FeedbackTarget {
+  kind: FeedbackKind
+  id: number
+  ref?: string
+}
+
+export interface FeedbackTally {
+  target_kind: FeedbackKind
+  target_id: number
+  target_ref: string
+  likes: number
+  dislikes: number
+  mine: FeedbackVote | null
+  reason: string
+}
+
+function feedbackQuery(t: FeedbackTarget): string {
+  return new URLSearchParams({ target_kind: t.kind, target_id: String(t.id), target_ref: t.ref ?? '' }).toString()
+}
+
 export const apiBase = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
 
 export function apiUrl(path: string): string {
@@ -1424,6 +1463,13 @@ export const api = {
       sendJson<Picture>('POST', `/api/items/${itemId}/scenarios/${scenariosId}/reuse/${card}/picture`),
     cardPictureUrl: (itemId: number, scenariosId: number, card: number, n: number) =>
       apiUrl(`/api/items/${itemId}/scenarios/${scenariosId}/reuse/${card}/pictures/${n}`),
+  },
+  // likes and dislikes: never sent to a model; read by the review tools
+  feedback: {
+    get: (t: FeedbackTarget) => getJson<FeedbackTally>(`/api/feedback?${feedbackQuery(t)}`),
+    vote: (t: FeedbackTarget, vote: FeedbackVote, reason = '') =>
+      sendJson<FeedbackTally>('POST', '/api/feedback', { target_kind: t.kind, target_id: t.id, target_ref: t.ref ?? '', vote, reason }),
+    withdraw: (t: FeedbackTarget) => sendJson<FeedbackTally>('DELETE', `/api/feedback?${feedbackQuery(t)}`),
   },
   pair: {
     // the phone talks to the API's own origin when the web app is served elsewhere; the door

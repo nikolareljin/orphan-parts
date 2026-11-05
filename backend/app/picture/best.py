@@ -133,12 +133,19 @@ class Run:
 
 
 def targets(drawings: list[Drawing], last: Report | None, only: list[str]) -> list[Drawing]:
-    """The drawings ``--only`` names, else every drawing the last review did not find
-    matching."""
+    """The drawings ``--only`` names (``disliked`` and ``liked`` by the votes the last review
+    kept), else every drawing the last review did not find matching and no person liked."""
+    reviews = last.reviews if last else []
     if only:
-        return [d for d in drawings if rv.selected(d.id, only)]
-    verdicts = {r.id: r.verdict for r in (last.reviews if last else [])}
-    return [d for d in drawings if verdicts.get(d.id) in ("partly", "wrong")]
+        return rv.pick(drawings, only, {r.id: r.people for r in reviews})
+    shown = {r.id: r for r in reviews}
+    return [
+        d
+        for d in drawings
+        if d.id in shown
+        and shown[d.id].verdict in ("partly", "wrong")
+        and not shown[d.id].people.liked
+    ]
 
 
 def current_brief(sv: Services, d: Drawing) -> str:

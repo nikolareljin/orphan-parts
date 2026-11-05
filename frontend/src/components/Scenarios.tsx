@@ -14,6 +14,7 @@ import { modelName, usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 import Compatibility from './Compatibility'
 import DrawIt from './DrawIt'
+import Feedback from './Feedback'
 import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 
@@ -121,6 +122,7 @@ export default function Scenarios({
           <p className="recommendation" role="status" aria-label="Recommendation">
             <strong>Recommended: {recommendationLabel(scenarios.recommended)}.</strong> {scenarios.reason}
           </p>
+          <Feedback target={{ kind: 'scenarios', id: scenarios.item_id, ref: String(scenarios.id) }} what="set of cards" />
           <div className="scenario-cards">
             {card(
               'keep_fix',
@@ -239,6 +241,7 @@ function ReuseBody({ set, demo }: { set: ScenarioSet; demo: boolean }) {
             list={() => api.decide.cardPictures(set.item_id, set.id, i)}
             draw={() => api.decide.drawCard(set.item_id, set.id, i)}
             url={(n) => api.decide.cardPictureUrl(set.item_id, set.id, i, n)}
+            feedback={(n) => ({ kind: 'card_picture', id: set.item_id, ref: `${set.id}/${i}/${n}` })}
           />
         </li>
       ))}

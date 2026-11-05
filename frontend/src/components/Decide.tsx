@@ -5,6 +5,7 @@ import { modelName, usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 import Compatibility from './Compatibility'
 import { Earlier, NeverRun } from './Saved'
+import Feedback from './Feedback'
 import Scenarios from './Scenarios'
 import SignInLine from './SignInLine'
 import HelpTip from './HelpTip'
@@ -361,6 +362,7 @@ function UsesView({ uses }: { uses: Uses }) {
           ))}
         </ul>
       )}
+      <Feedback target={{ kind: 'uses', id: uses.item_id, ref: String(uses.id) }} what="ideas" />
     </div>
   )
 }

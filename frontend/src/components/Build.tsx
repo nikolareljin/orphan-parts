@@ -28,6 +28,7 @@ import Markdown from './Markdown'
 import { NeverRun } from './Saved'
 import SignInLine from './SignInLine'
 import HelpTip from './HelpTip'
+import Feedback from './Feedback'
 import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
@@ -502,6 +503,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         {' · '}
         {project.from_fixture ? 'recorded answer' : `${modelName(project.model)}, ${usd(project.cost_usd)}`}
       </p>
+      <Feedback target={{ kind: 'project', id: project.id }} what="proposal" />
       <DrawIt
         key={project.id}
         name={project.title}
@@ -510,6 +512,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         list={() => api.build.pictures(id)}
         draw={() => api.build.drawPicture(id)}
         url={(n) => api.build.pictureUrl(id, n)}
+        feedback={(n) => ({ kind: 'project_picture', id, ref: String(n) })}
       />
 
       <h4>From your inventory</h4>
@@ -973,6 +976,7 @@ function PackShown({ packs }: { packs: Pack[] }) {
         </p>
       )}
       <Markdown text={pack.markdown} label={`Build pack ${pack.version}`} />
+      <Feedback target={{ kind: 'pack', id: pack.id }} what="build pack" />
     </>
   )
 }
