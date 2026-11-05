@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { ApiError, type Picture, type PictureList } from '../lib/api'
+import { ApiError, type FeedbackTarget, type Picture, type PictureList } from '../lib/api'
 import { DRAW_AGAIN_HINT, DRAW_DEMO_LINE, DRAW_HINT, DRAW_OFF_LINE, PROJECT_PICTURE_LABEL, drawState, pictureCaption, shownPictures } from '../lib/picture'
 import GatedImage from './GatedImage'
+import Feedback from './Feedback'
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -21,6 +22,7 @@ export default function DrawIt({
   list,
   draw,
   url,
+  feedback,
 }: {
   // what is drawn, for the button's accessible name
   name: string
@@ -30,6 +32,8 @@ export default function DrawIt({
   list: () => Promise<PictureList>
   draw: () => Promise<Picture>
   url: (n: number) => string
+  // what a like or a dislike of picture n is about
+  feedback?: (n: number) => FeedbackTarget
 }) {
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [pictures, setPictures] = useState<Picture[]>([])
@@ -108,6 +112,7 @@ export default function DrawIt({
         <figure key={p.n} className="drawn">
           <GatedImage src={url(p.n)} alt={`Illustrative picture ${p.n}: ${p.use}`} loading="lazy" />
           <figcaption>{pictureCaption(p, PROJECT_PICTURE_LABEL)}</figcaption>
+          {feedback && <Feedback target={feedback(p.n)} what="drawing" />}
         </figure>
       ))}
     </div>

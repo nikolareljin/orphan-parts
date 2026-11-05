@@ -12,6 +12,7 @@ from app.api.captures import router as captures_router
 from app.api.decide import router as decide_router
 from app.api.drafts import router as drafts_router
 from app.api.extract import router as extract_router
+from app.api.feedback import router as feedback_router
 from app.api.find import router as find_router
 from app.api.items import error_handlers as inventory_handlers
 from app.api.items import router as items_router
@@ -31,6 +32,7 @@ from app.captures import Captures
 from app.config import Settings, get_settings
 from app.decide import Decider
 from app.extract import Extractor
+from app.feedback import Feedback
 from app.find import Finder
 from app.inventory import Inventory
 from app.keys import AccessKeys
@@ -154,7 +156,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.planner = Planner(
         settings, client, app.state.inventory, app.state.templates, app.state.finder
     )
-    app.state.pictures = Pictures(settings, client, app.state.inventory, app.state.templates)
+    # the likes and dislikes, in the inventory's file: they go with what they are about, and a
+    # dislike's reason steers the next drawing of the same thing
+    app.state.feedback = Feedback(app.state.inventory)
+    app.state.pictures = Pictures(
+        settings, client, app.state.inventory, app.state.templates, app.state.feedback
+    )
 
     app.state.decider = Decider(
         settings,
@@ -229,6 +236,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(projects_router)
     app.include_router(captures_router)
     app.include_router(decide_router)
+    app.include_router(feedback_router)
     for exc_type, handler in inventory_handlers.items():
         app.add_exception_handler(exc_type, handler)
     return app

@@ -21,6 +21,12 @@ describe('the line under a picture', () => {
     const unchecked = { ...drawn, check: { verdict: 'not checked', issues: [], cost_usd: 0, redraw_of: 1 } }
     expect(pictureCaption(unchecked)).not.toContain('Checked')
   })
+  it('says what a dislike made it avoid and what a like made it keep', () => {
+    expect(pictureCaption(drawn)).not.toContain('avoiding')
+    expect(pictureCaption({ ...drawn, avoided: [], kept: '' })).not.toContain('avoiding')
+    const steered = { ...drawn, avoided: ['too dark', 'no shade'], kept: 'show the hinge' }
+    expect(pictureCaption(steered)).toContain('Drawn again avoiding: too dark; no shade. Keeping: show the hinge')
+  })
   it('shows the better of a drawing and its redraw, keeping both', () => {
     const list = [{ ...drawn, hidden: true }, { ...drawn, n: 2 }]
     expect(shownPictures(list).map((p) => p.n)).toEqual([2])

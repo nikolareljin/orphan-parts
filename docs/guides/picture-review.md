@@ -168,6 +168,61 @@ cap, shows the summary and the briefs, asks which to redraw, redraws only those,
 again, checks that no other recording moved, and opens a pull request when asked. The owner
 merges. `muse skills validate tools/muse/picture-review` checks the file.
 
+## People's votes
+
+Under every drawing in the web app (an item's, a reuse card's, a project's) and under each set
+of Decide cards, the ideas, a draft, price guidance, a search plan, a web find, a candidate, a
+project proposal and a build pack there is a small 👍 / 👎 pair. The owner and a judge's code
+vote; the demo visitor sees neither button. A dislike asks, in one optional line of at most 200
+characters, what is wrong (*drawn as a TV, not an 18 inch monitor*). A second click on the
+pressed button takes the vote back. A vote calls no model: the votes are kept in the
+inventory (the `feedback` table, [Data model](../reference/data-model.md)) and read by these
+tools as a person's signal beside the reviewer's.
+
+A dislike of a drawing also steers the next drawing of the same thing, in the app (**Draw it**
+again on that item, reuse card or project): the request gets an *Avoid:* segment with the
+reasons of the dislikes of its earlier drawings (*Avoid: drawn as a TV, not an 18 inch
+monitor*), newest first, each said once, at most three, each one plain line of at most 200
+characters with any private value masked; a dislike without a reason says *a different
+composition than the disliked one*. Up to two more come from dislikes of drawings of other
+projects of the same kind (template, such as *arcade table*). A liked drawing's own correction
+(its brief), when it had one, adds *Keep:* with it. The caption then says *Drawn again
+avoiding: ...* (and *Keeping: ...*), and the picture's record keeps `avoided` and `kept`. Your
+votes steer your own drawings alone: the owner's the owner's, a judge's code's that code's;
+the demo visitor's drawings never. With no votes the request is word for word what it was, so
+every recording still answers; the demo loader and these review tools draw without the votes
+([How the request is built](../models/muse-image.md#how-the-request-is-built)).
+
+- Every review reads them from the stack's inventory (`DATA_DIR`) and keeps them in the report:
+  each drawing's likes, dislikes and the reasons, with who gave them (*owner*, *judge code 3*),
+  and a *People's votes* table in `report.md`. With the demo set the drawings are matched by
+  the item, card or project and the picture's number, as `./dev demo` loads them; a vote cast
+  on a drawing redrawn since under the same number is counted as stale, not as a vote on the
+  new one. Nothing of them goes into a review call.
+- `--only disliked` (or `liked`) reviews just the drawings people voted on:
+
+    ```bash
+    ./dev picture-review --only disliked --max-usd 0.5
+    ./dev picture-review --redraw disliked --briefs picture-review/briefs.yaml
+    ```
+
+- `--tune` counts a dislike as an issue a person flagged, with its reason, ahead of the
+  reviewer's: the drawing's kind of project is up for a correction even when the reviewer
+  found it matching, the phrasing call reads the reasons, and `tune.md` lists the votes. A
+  reviewer's brief or the phrasing call writes the correction; a reason alone is a complaint,
+  not a brief.
+- A drawing a person liked and nobody disliked is kept as it is: `--redraw all-wrong` and
+  `--candidates` (without `--only`) leave it out.
+- `./dev decide-review` does the same for the recommendations: a dislike of a set of Decide
+  cards, of the ideas or of a project proposal is kept beside the check of that answer, and
+  `--tune` takes it as a flag a person raised (*flagged by a person*) with the reason as the
+  claim. Only the latest set of cards and ideas is checked, so a vote on an earlier one is not
+  counted.
+
+A judge's code votes on what it can see (the demo set's public items and what it made itself);
+its vote is tagged with its code and counted for it alone; the owner counts every vote. The
+review tools read the owner's and the judges' votes alike and say whose each is.
+
 ## Tuning the drawing parameters
 
 A brief fixes one drawing. What every drawing is asked with is data: the drawing parameters,
@@ -537,3 +592,6 @@ through what the app sends and what it does with the answer:
   the build its kind of project needs as what may appear.
 - **Best of N.** Built: `--candidates N` for the demo set, `PICTURE_CANDIDATES` for the owner's
   drawings ([Best of N](#best-of-n)).
+- **People's votes on each drawing.** Built: a dislike's reason steers the voter's next drawing
+  of the same item, reuse card or project (*Avoid: ...*), and a few reach other projects of the
+  same kind ([People's votes](#peoples-votes)).

@@ -117,7 +117,8 @@ with a key. What to click first:
 [Part 1 in For judges](judges.md#part-1-start-it-and-see-results).
 
 The foot of every page also links the **Documentation** (this site) and the **Source on
-GitHub**, and opens **Pair the phone**.
+GitHub**, and opens **Phone app: install and pair**: the code that downloads the app, then
+the code that pairs it.
 
 ![The foot of every page: the version, recorded answers only (nothing spent), the models, storage writable, the Documentation and Source on GitHub links, Pair the phone](../assets/shots/pairing/01-footer.png)
 
@@ -159,7 +160,79 @@ footer counts the day's live calls.
 
 ## 7. Put the app on the phone
 
-### From the phone's browser
+The recommended way is one command over a USB cable: no QR code, no browser download, no
+Android SDK. Without a computer at hand, use [Option B](#option-b-without-a-computer) on the
+phone alone.
+
+![Installing over USB: on the phone, Developer options, USB debugging, plug in and tap Allow; on the computer, phone-install.sh; the app is installed; then pair it](../assets/usb-install-flow.svg)
+
+### Option A (recommended): over USB, one command
+
+One action per step; under each, what you should see. Steps 1 to 3 are once per phone. The
+names are Samsung's; other makers differ a little.
+
+1. **Turn on Developer options.** <kbd>Settings</kbd> → <kbd>About phone</kbd> →
+   <kbd>Software information</kbd> → tap <kbd>Build number</kbd> 7 times. On Pixel:
+   <kbd>Settings</kbd> → <kbd>About phone</kbd> → <kbd>Build number</kbd>.<br>
+   *You should see:* the phone asks for its PIN, then *Developer mode has been turned on*.
+2. **Turn on USB debugging.** <kbd>Settings</kbd> → <kbd>Developer options</kbd> (at the bottom
+   of the list; on Pixel under <kbd>System</kbd>) → <kbd>USB debugging</kbd> on. On a Samsung
+   phone with One UI 6 or newer, also <kbd>Settings</kbd> → <kbd>Security and privacy</kbd> →
+   <kbd>Auto Blocker</kbd> off: while it is on, it blocks installs over USB.<br>
+   *You should see:* the **USB debugging** switch on.
+3. **Plug in and allow this computer.** Use a cable that carries data; if the phone asks what
+   the USB connection is for, choose <kbd>File transfer</kbd>. Unlock the phone; on **Allow USB
+   debugging?** (the computer's RSA key fingerprint) tick **Always allow from this computer**
+   and tap <kbd>Allow</kbd>.<br>
+   *You should see:* the prompt close. Without that answer the computer sees the phone as
+   *unauthorized*.
+4. **Run one command** from the repository's folder:
+
+    ```bash
+    bash scripts/phone-install.sh            # macOS, Linux, WSL
+    ```
+
+    ```powershell
+    powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1   # Windows
+    ```
+
+    It uses `adb` if you have it, or downloads Google's platform-tools (about 10 MB, into
+    `~/.orphan-parts`, on Windows `%USERPROFILE%\.orphan-parts`); downloads the latest
+    release's APK; installs it on the phone over any older copy and opens the app.<br>
+    *You should see* it end with:
+
+    ```text
+    phone-install: done. In the app, open the Backend tab and tap 'Scan to pair' (JUDGES.md, 2.3 Pair the phone).
+    ```
+
+5. **Check, if anything went wrong:** `adb devices` lists the phone as `device`, not
+   `unauthorized`. The script prints the `adb` it uses on its first line
+   (`phone-install: adb: …`); when it downloaded one, that is `~/.orphan-parts/platform-tools/adb devices` (Windows:
+   `& "$env:USERPROFILE\.orphan-parts\platform-tools\adb.exe" devices`).
+
+    ```text
+    List of devices attached
+    R5CT1234ABC	device
+    ```
+
+| What you see | What to do |
+| --- | --- |
+| `unauthorized` (in `adb devices`, or the script says the phone has not allowed this computer) | Unplug, plug in again, unlock the phone and tap <kbd>Allow</kbd> on **Allow USB debugging?**. No prompt: <kbd>Developer options</kbd> → <kbd>Revoke USB debugging authorizations</kbd>, then plug in again. |
+| `no phone found` (nothing in `adb devices`) | A cable that carries data (some only charge); USB mode <kbd>File transfer</kbd>; **USB debugging** on. On Windows, install the maker's USB driver (Samsung Smart Switch, Google USB Driver). |
+| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | An older copy signed with another key (a build of your own) is on the phone: `adb uninstall com.orphanparts.lens`, then run the command again. |
+| The install fails on a Samsung phone | <kbd>Settings</kbd> → <kbd>Security and privacy</kbd> → <kbd>Auto Blocker</kbd> off. On other makers, turn on <kbd>Install via USB</kbd> in Developer options where there is one. |
+
+`--apk file.apk` (on Windows `-Apk file.apk`) installs a file you already have. To build the
+app from this checkout instead, with the stack up:
+
+```bash
+./dev setup --android    # a JDK and the Android command-line tools, once
+./dev phone              # builds the app, installs it over USB, opens it, prints the pairing code
+```
+
+### Option B: without a computer
+
+On the phone alone, from its browser:
 
 1. On the phone, open
    `https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk`,
@@ -170,50 +243,9 @@ footer counts the day's live calls.
    If Play Protect warns about an unknown developer: **More details**, **Install anyway**.
 3. **Open**. The app starts on its **Backend** tab.
 
-Every prompt on the way, and the Play Protect scan afterwards:
-[For judges](judges.md#22-install-the-app).
-
-### Over a USB cable
-
-Use this when the phone's browser refuses the download, or to install a build of your own.
-
-**Turn on Developer options and USB debugging** (once per phone; the names are Samsung's,
-other makers differ a little):
-
-1. **Settings**, **About phone**, **Software information** (on Pixel and most others, **About
-   phone** directly).
-2. Tap **Build number** seven times. The phone asks for its PIN, then says *Developer mode has
-   been turned on*.
-3. Back in **Settings**, open **Developer options** (at the bottom of the list; on Pixel under
-   **System**) and turn on **USB debugging**.
-4. On a Samsung phone with One UI 6 or newer: **Settings**, **Security and privacy**, **Auto
-   Blocker** must be off. While it is on, it blocks commands over USB and the install fails.
-5. Connect the cable. If the phone asks what the USB connection is for, choose **File
-   transfer**.
-6. The phone shows **Allow USB debugging?** with the computer's RSA key fingerprint: tick
-   **Always allow from this computer** and tap **Allow**. Without that answer the computer
-   sees the phone as *unauthorized*.
-
-**Install from the computer**, from the repository's folder:
-
-```bash
-bash scripts/phone-install.sh            # macOS, Linux, WSL
-```
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\phone-install.ps1   # Windows
-```
-
-The script finds `adb` (or downloads Google's platform-tools, about 10 MB), downloads the
-latest release's APK, installs it and opens the app. `--apk file.apk` installs a file you
-already have.
-
-To build the app from this checkout instead, with the stack up:
-
-```bash
-./dev setup --android    # a JDK and the Android command-line tools, once
-./dev phone              # builds the app, installs it over USB, opens it, prints the pairing code
-```
+The web app's footer shows the same code under **Phone app: install and pair**, step
+**1. Install the app on the phone**. Every prompt on the way, and the Play Protect scan
+afterwards: [For judges](judges.md#22-install-the-app).
 
 ## 8. Pair the phone
 
@@ -226,7 +258,8 @@ The phone reaches the computer over the Wi-Fi, never at `localhost` (on the phon
    If the wrong one is picked, set `LAN_ADDRESS` in `.env`.
 3. On the computer, open the web app at that address, for example `http://192.168.1.20:5173`,
    and sign in there (the session is per address).
-4. At the foot of the page, open **Pair the phone**. A QR code appears, and under it
+4. At the foot of the page, open **Phone app: install and pair**. Under
+   **2. Connect it to this web app** a QR code appears, and under it
    *Or type http://…:5173 into the app.*
 
     ![Pair the phone open in the footer, signed in: the pairing code (blurred here) and the address to type](../assets/shots/pairing/02-pair-signed-in.png)

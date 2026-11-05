@@ -139,6 +139,42 @@ Errors: `400` for a bad photo, `404` for an unknown item, measurement or profile
 `request` that does not parse, a profile that does not exist, or a feature key that is not
 `snake_case`.
 
+## Feedback endpoints
+
+A like or a dislike of something the app generated, never sent to a model; read by the review
+tools ([People's votes](../guides/picture-review.md#peoples-votes)). A target is
+`target_kind`, `target_id` and `target_ref`:
+
+| `target_kind` | `target_id` | `target_ref` |
+|---|---|---|
+| `item_picture` | the item | the picture's number |
+| `card_picture` | the item | `<scenarios id>/<card from 0>/<picture number>` |
+| `project_picture` | the project | the picture's number |
+| `scenarios` | the item | the set of Decide cards' id |
+| `uses` | the item | the ideas' id |
+| `price_guidance` | the item | the guidance's id |
+| `draft` | the draft | empty |
+| `search_plan` | the search | empty |
+| `web_find` | the search | the listing's id |
+| `candidate` | the candidate | empty |
+| `project` | the project (its proposal) | empty |
+| `pack` | the build pack | empty |
+
+| Path | Purpose |
+|---|---|
+| `GET /api/feedback?target_kind=&target_id=&target_ref=` | the target's `likes` and `dislikes` and the caller's own vote (`mine`: `like`, `dislike` or null) with its `reason` |
+| `POST /api/feedback` | JSON `target_kind`, `target_id`, `target_ref`, `vote` (`like` or `dislike`) and an optional `reason` (one line, at most 200 characters): the caller's vote, in place of the one they cast before; answers the tally |
+| `DELETE /api/feedback?target_kind=&target_id=&target_ref=` | the caller's own vote taken back; answers the tally |
+
+The owner counts every vote; a judge's code votes on what it can see (the public items of the
+demo set and what it made), its vote tagged with its code, and counts its own alone. The demo
+visitor is refused (`403`, like every write) and reads no vote. `404` for a target that is not
+there for the caller, `422` for a `target_ref` of the wrong shape or a reason over 200
+characters. Nothing here calls a model or counts against the allowances that spend. A dislike
+of a drawing steers the voter's own next drawing of the same item, reuse card or project: it
+is drawn avoiding the reasons, and the picture's record answers `avoided` and `kept` (empty for
+the demo visitor); see [People's votes](../guides/picture-review.md#peoples-votes).
+
 ## Operational endpoints
 
 | Path | Purpose |

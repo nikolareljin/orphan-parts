@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 15
+SCHEMA_VERSION = 16
 
 _SCHEMA = """
 CREATE TABLE items (
@@ -277,6 +277,25 @@ ALTER TABLE searches ADD COLUMN owner_code INTEGER;
 ALTER TABLE projects ADD COLUMN owner_code INTEGER;
 """
 
+# version 16: a person's like or dislike of something generated (a drawing, a set of cards, a
+# draft, a plan...), with an optional reason; owner_code is the judge's code that voted, NULL
+# for the owner. digest is the drawing's bytes when the vote was cast, so a drawing redrawn
+# under the same number is not judged by a vote on the one before it
+_SCHEMA_V16 = """
+CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY,
+    target_kind TEXT NOT NULL,
+    target_id INTEGER NOT NULL,
+    target_ref TEXT NOT NULL DEFAULT '',
+    vote TEXT NOT NULL CHECK (vote IN ('like', 'dislike')),
+    reason TEXT NOT NULL DEFAULT '',
+    digest TEXT NOT NULL DEFAULT '',
+    owner_code INTEGER,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS feedback_by_target ON feedback (target_kind, target_id, target_ref);
+"""
+
 MIGRATIONS: dict[int, str] = {
     1: _SCHEMA,
     2: _SCHEMA_V2,
@@ -293,6 +312,7 @@ MIGRATIONS: dict[int, str] = {
     13: _SCHEMA_V13,
     14: _SCHEMA_V14,
     15: _SCHEMA_V15,
+    16: _SCHEMA_V16,
 }
 
 

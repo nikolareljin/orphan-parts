@@ -4,6 +4,7 @@ import { pictureCaption, shownPictures } from '../lib/picture'
 import GatedImage from './GatedImage'
 import { NeverRun } from './Saved'
 import HelpTip from './HelpTip'
+import Feedback from './Feedback'
 import { HELP } from '../lib/help'
 
 function message(err: unknown): string {
@@ -93,6 +94,7 @@ export default function Picture({ item, demo = false }: { item: Item; demo?: boo
         <figure key={p.n}>
           <GatedImage src={api.items.pictureUrl(item.id, p.n)} alt={`Illustrative picture ${p.n}: ${p.use}`} loading="lazy" />
           <figcaption>{pictureCaption(p)}</figcaption>
+          <Feedback target={{ kind: 'item_picture', id: item.id, ref: String(p.n) }} what="drawing" />
         </figure>
       ))}
     </section>

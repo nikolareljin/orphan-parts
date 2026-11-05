@@ -294,8 +294,16 @@ export const HELP = {
   pair: {
     topic: 'phone pairing',
     text:
-      'Pairing points the Android app at this server: open the code, then on the app’s Backend tab tap Scan to pair. ' +
-      'Signed in, the code also gives the phone an access code of its own.',
+      'Install the Android app first (the install code), then pair it: open the connect code, then on the app’s Backend tab tap Scan to pair. ' +
+      'Signed in, the connect code also gives the phone an access code of its own.',
     doc: 'start/pairing/',
+  },
+  feedback: {
+    topic: 'like and dislike',
+    text:
+      'Like what came out right, dislike what came out wrong, and say what is wrong in one line if you like; a second click takes the vote back. ' +
+      'Your dislike of a drawing steers your next drawing of the same thing, which avoids what you said is wrong (another composition, with no reason) and says so in its caption. ' +
+      'The picture and recommendation reviews also read the dislikes as flagged by a person and keep the liked ones as they are.',
+    doc: 'guides/picture-review/#peoples-votes',
   },
 } satisfies Record<string, HelpEntry>

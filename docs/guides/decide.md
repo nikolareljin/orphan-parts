@@ -184,6 +184,15 @@ as typed; nothing scrolls, because nothing was decided. The choice carries the i
 panel showed: if the item changed in another tab since, the choice is refused, the item is
 reloaded, and you choose again from what it is now.
 
+### Like or dislike
+
+Under the recommendation, the ideas and each drawing of a reuse card, 👍 and 👎 say whether the
+answer came out right. A dislike asks *What's wrong?* in one optional line; a second click
+takes the vote back. The vote is never sent to a model: `./dev decide-review --tune` and `./dev
+picture-review --tune` read the dislikes as flagged by a person, with the reason, and keep a
+liked drawing as it is ([People's votes](picture-review.md#peoples-votes)). The demo visitor sees
+no buttons.
+
 ### Without the access code
 
 The demo visitor reads the panel as the owner left it, for a public item: the cards with the
