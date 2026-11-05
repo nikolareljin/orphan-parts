@@ -182,7 +182,13 @@ def prompt_for(item: Item, use: str, brief: str = "", params: DrawingParams | No
     )
 
 
-def part_of(item: Item, *, as_built: bool = False, params: DrawingParams | None = None) -> str:
+def part_of(
+    item: Item,
+    *,
+    as_built: bool = False,
+    params: DrawingParams | None = None,
+    built_in: bool = True,
+) -> str:
     """One part of a finished project as the prompt names it: the kind of item and its facts,
     never one that identifies it or its owner, never its name, location, notes or a price;
     ``as_built`` also leaves out what the parameters say a finished build does not show (its
@@ -191,7 +197,10 @@ def part_of(item: Item, *, as_built: bool = False, params: DrawingParams | None 
     what = _line(item.item_type, VALUE_MAX) or "item"
     kind = p.kind(item.item_type)
     facts = facts_of(item, p.facts.part_values, p, as_built=as_built)
-    return _about(what, facts, kind.looks if kind else "")
+    looks = ""
+    if kind is not None:
+        looks = kind.built if as_built and built_in and kind.built else kind.looks
+    return _about(what, facts, looks)
 
 
 def finished_prompt(
@@ -269,7 +278,10 @@ def project_prompt(
     names = named(items, [*others, *((a.item_name, "item") for a in project.allocations)])
     return finished_prompt(
         without_names(project.title, names),
-        [part_of(i, as_built=True, params=p) for i in items],
+        [
+            part_of(i, as_built=True, params=p, built_in=p.parts_built(project.template))
+            for i in items
+        ],
         without_names(project.result, names),
         view,
         p.rules.project,

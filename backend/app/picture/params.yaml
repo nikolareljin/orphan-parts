@@ -10,7 +10,7 @@
 # A change here changes the requests, so every drawing of the demo set is drawn and recorded
 # again (`./dev picture-review --redraw-set`).
 
-version: 3
+version: 4
 
 # which accepted values of a part are said: those whose name has a `first` word go
 # first, none whose name has a `left_out` word (prices never), at most `item_values`
@@ -45,36 +45,54 @@ facts:
   condition: false
 
 # by item type: how the part looks at its real size, and what a size in its name is
-# called (a monitor's is its screen size)
+# called (a monitor's is its screen size); `built`: how it is said as a part of a
+# finished project instead (any computer may be taken apart and its parts built in)
 kinds:
   monitor:
     looks: a thin flat computer monitor, far smaller than a television, not a bulky CRT TV
     size: screen size
+    built: taken out of its stand and case, its bare thin screen panel built into the project as its
+      display, far smaller than a television; no monitor stand, no TV
+  motherboard:
+    looks: ''
+    size: size
+    built: a bare board mounted inside the build's case, its memory and drives fitted in; never an
+      intact desktop PC standing in the scene
   laptop:
     looks: a thin opened laptop computer with flat screen hinged to keyboard base, far smaller than
       a bulky CRT TV
     size: size
+    built: taken apart and built in, its bare thin screen panel used as the display and its board
+      hidden inside the build; never an open laptop, laptop case, lid or keyboard in sight
   laptop memory:
     looks: a tiny memory stick far smaller than laptop keys and body, not a large green board
     size: size
+    built: ''
   microcontroller board:
     looks: a tiny credit-card-sized bare board, far smaller than half a laptop width
     size: size
+    built: ''
   relay module:
     looks: a tiny module with small cube relay, far smaller than a laptop
     size: size
+    built: ''
   sound sensor module:
     looks: a tiny sensor module, far smaller than a laptop
     size: size
+    built: ''
   temperature and humidity sensor module:
     looks: a tiny sensor module, far smaller than a laptop
     size: size
+    built: ''
   ultrasonic distance sensor module:
     looks: a tiny distance sensor module, far smaller than a laptop
     size: size
+    built: ''
 
 # by project template id: the correction every drawing of that kind of project carries;
-# `match`: words in an item's use or a reuse card's title that mean it
+# `match`: words in an item's use or a reuse card's title that mean it; `built`: the
+# correction of a finished project of the template instead (items, cards keep theirs);
+# `as_before`: its parts said by their looks, the kinds' `built` left out
 projects:
   home_automation_server:
     match:
@@ -82,6 +100,11 @@ projects:
     correction: An opened 15-inch laptop about 35 cm wide on a home desk for house lights and schedules,
       with one small laptop memory stick to true small scale beside it; not a desktop tower, not a
       TV, no large circuit board.
+    built: 'A small wall-mounted wooden box about 35 cm wide in a home hallway, the laptop taken apart
+      inside it: its bare screen panel framed in the front showing house light and schedule icons,
+      its board and memory hidden inside; no open laptop, laptop case, lid or keyboard; not a desktop
+      tower, not a TV.'
+    as_before: false
   home_server:
     match:
     - home server and backup
@@ -90,6 +113,10 @@ projects:
       and to one bare 2.5-inch hard drive about 10 cm long by a single cable for backup; memory inside
       laptop not shown; drive plain with no ethernet ports, no second drive, no extra box, not a desktop
       tower.
+    built: 'A small closed wooden box about 35 cm wide on a shelf beside a router with antennas, the
+      laptop taken apart inside it: board and memory hidden inside, one bare 2.5-inch hard drive fitted
+      in the box; no open laptop, laptop case, lid or keyboard; no second drive, not a desktop tower.'
+    as_before: false
   kitchen_dashboard:
     match:
     - kitchen home-automation dashboard
@@ -97,6 +124,8 @@ projects:
     correction: A 24-inch 16:9 computer monitor about 55 cm wide wall-mounted above kitchen counter
       as dashboard, with opened laptop on counter wired to tiny credit-card-sized microcontroller
       board plus four tiny modules nearby including relay with cube; not a TV.
+    built: ''
+    as_before: true
   smart_mirror:
     match:
     - smart mirror
@@ -104,6 +133,11 @@ projects:
       two-way mirror in a slim wooden frame about 45 x 40 cm, hung at eye level on a hall wall above
       a small bench; only a clock and weather icons glow through the glass; a small mirror, not a
       TV; no words or logos
+    built: a bare thin screen panel hidden behind a two-way mirror in a slim wooden frame, the laptop's
+      board hidden inside the frame, hung at eye level on a hall wall above a small bench; only a
+      clock and weather icons glow through the glass; no open laptop, laptop case, lid or keyboard;
+      not a TV; no words or logos
+    as_before: false
   arcade_table:
     match:
     - arcade coffee table
@@ -111,6 +145,10 @@ projects:
     correction: A 24-inch flat monitor (~53x30cm widescreen) laid flat face-up inside the wooden coffee-table
       box under full-size glass top, joystick modules flush beside it, opened laptop wired below,
       living-room table use; no upright monitor on top, not a TV stand.
+    built: A wooden coffee table with a bare thin screen panel about 53 cm wide laid flat face-up
+      under its full-size glass top, joystick modules flush beside it, the laptop's board hidden inside
+      the table box; no open laptop, laptop case, lid or keyboard; no upright monitor, not a TV stand.
+    as_before: false
   custom_nas:
     match:
     - custom nas from a spare desktop board
@@ -118,6 +156,8 @@ projects:
     correction: Single full-size ATX motherboard (~30.5x24.4cm) mounted in open cube case as NAS with
       one full-length desktop memory stick in DIMM slot, 2.5-inch SSD in drive bay with SATA leads,
       small PCIe adapter with two M.2 drives in PCIe slot, ATX PSU; not two boards, no SSD on board.
+    built: ''
+    as_before: true
   retro_console:
     match:
     - retro console on the tv
@@ -125,6 +165,10 @@ projects:
     correction: Opened laptop (~35cm wide) on wooden desk cabled to 24-inch thin flat widescreen monitor
       (~53x30cm) beside it both showing retro gaming, two wired gamepads in front in use; no cartridge
       console, no CRT TV, no cartridges or extra boards.
+    built: A slim wooden box under the TV holding the laptop's board, cabled to a thin flat 24-inch
+      screen showing retro games, two wired gamepads in front in use; no open laptop, laptop case,
+      lid or keyboard; no cartridge console, no CRT TV.
+    as_before: false
   weather_station:
     match:
     - indoor weather station and logger
@@ -132,6 +176,13 @@ projects:
     correction: Large microcontroller board (~7x5cm) with square USB-B and DC barrel jack on breadboard
       on indoor desk wired to 3-pin temperature-humidity module, coin-cell clock module and breadboard
       power module with barrel input and USB-A in use; no tiny Nano-size board.
+    built: ''
+    as_before: false
+  homework_workstation:
+    match: []
+    correction: ''
+    built: ''
+    as_before: true
 
 # words in a view (as the demo set or the app asks it) and what it adds
 views:

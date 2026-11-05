@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "38d47f91c9c791822e2a1c56",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of ThinkPad photo backup server built from laptop (taken apart and built in, its bare thin screen panel used as the display and its board hidden inside the build; never an open laptop, laptop case, lid or keyboard in sight), hard drive (size 2.5 inch, connector sata), laptop memory (size 8 GB; a tiny memory stick far smaller than laptop keys and body, not a large green board); Shelf backup server for photos and documents that still needs a wired network link.; A small closed wooden box about 35 cm wide on a shelf beside a router with antennas, the laptop taken apart inside it: board and memory hidden inside, one bare 2.5-inch hard drive fitted in the box; no open laptop, laptop case, lid or keyboard; no second drive, not a desktop tower.; a small closed wooden box on a shelf holding the laptop's bare board and one bare 2.5 inch hard drive, wired to a router with antennas; no open laptop, no laptop lid or keyboard, no second drive, no words or logos, not a desktop tower; seen at eye level from across the room, every part at its true size again; a three-quarter view from slightly above, the main part centered and its real size clear; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793843072,
+    "data": [
+      {
+        "b64_json": "@38d47f91c9c791822e2a1c56-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4322,
+      "output_tokens": 1778,
+      "total_tokens": 6100
+    }
+  },
+  "status": 200
+}

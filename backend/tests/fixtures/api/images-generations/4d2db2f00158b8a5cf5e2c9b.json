@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "4d2db2f00158b8a5cf5e2c9b",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Retro games on the monitor with joystick control built from laptop (taken apart and built in, its bare thin screen panel used as the display and its board hidden inside the build; never an open laptop, laptop case, lid or keyboard in sight), monitor (screen size 24 inch, about 61 cm across the diagonal; taken out of its stand and case, its bare thin screen panel built into the project as its display, far smaller than a television; no monitor stand, no TV), joystick module (connector 5-pin male header); TV-style retro station that plays through the UNO-read joystick once video cabling is added.; A slim wooden box under the TV holding the laptop's board, cabled to a thin flat 24-inch screen showing retro games, two wired gamepads in front in use; no open laptop, laptop case, lid or keyboard; no cartridge console, no CRT TV.; a slim wooden box under a 24-inch flat screen holding the laptop's bare board, tiny joystick module wired to it as the only controller, retro game on the screen; no open laptop, no laptop lid or keyboard, no gamepads, logos or text; a three-quarter view from slightly above, the main part centered and its rea; seen at eye level from across the room, every part at its true size against the furniture; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793843071,
+    "data": [
+      {
+        "b64_json": "@4d2db2f00158b8a5cf5e2c9b-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4334,
+      "output_tokens": 1747,
+      "total_tokens": 6081
+    }
+  },
+  "status": 200
+}

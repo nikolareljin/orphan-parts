@@ -1,0 +1,31 @@
+{
+  "endpoint": "/images/generations",
+  "op": "picture",
+  "model": "muse-image-1.0",
+  "digest": "786c27000969e14093320c85",
+  "request": {
+    "model": "muse-image-1.0",
+    "n": 1,
+    "output_format": "jpeg",
+    "prompt": "a semi-realistic illustration of Gaming coffee table shell built from laptop (taken apart and built in, its bare thin screen panel used as the display and its board hidden inside the build; never an open laptop, laptop case, lid or keyboard in sight), monitor (screen size 18 inch, about 46 cm across the diagonal; taken out of its stand and case, its bare thin screen panel built into the project as its display, far smaller than a television; no monitor stand, no TV), joystick module (connector 5-pin male header); Coffee-table arcade shell idea that still needs a table box, top glass and real game controls.; shown from above, as it is used; seen straight down from above; every part at its true size against the table or desk; A wooden coffee table with a bare thin screen panel about 53 cm wide laid flat face-up under its full-size glass top, joystick modules flush beside it, the laptop's board hidden inside the table box; no open laptop, laptop case, lid or keyboard; no upright monitor, not a TV stand.; Top-down coffee-table arcade shell: one bare thin 18-inch 4:3 screen panel (~46cm diagonal) laid flat centered in the wooden table box under the glass top, one small joystick control point at the edge, the laptop's board hidden inside; no open laptop, no laptop lid or keyboard, not a large widescreen TV; the main part fills the middle of the picture, the smaller parts in front of it; no lettering, logos, brand names, model numbers or labels on any part, case or screen; the sizes are for scale only: no dimension lines, measurements or size labels written in the picture, finished and in use in a home, no text, no logos, no people",
+    "reasoning_strength": "low",
+    "response_format": "b64_json",
+    "size": "1024x1024"
+  },
+  "response": {
+    "created": 1793842773,
+    "data": [
+      {
+        "b64_json": "@786c27000969e14093320c85-1.jpg"
+      }
+    ],
+    "output_format": "jpeg",
+    "background": "opaque",
+    "usage": {
+      "input_tokens": 4366,
+      "output_tokens": 1438,
+      "total_tokens": 5804
+    }
+  },
+  "status": 200
+}
