@@ -127,26 +127,29 @@ demo set: every drawing drawn with that version and reviewed
 
 *Written by `./dev picture-review --evaluate` from `eval/pictures/`.*
 
-| | params v1 | params v2 | params v3 | params v3 asbuilt | params v3 best3 | params v3 recheck | params v3 propose |
-|---|---|---|---|---|---|---|---|
-| drawings | 32 | 32 | 32 | 32 | 32 | 32 | 30 |
-| matches | 11 | 21 | 21 | 19 | 31 | 29 | 28 |
-| partly | 20 | 5 | 6 | 8 | 1 | 2 | 2 |
-| wrong | 1 | 6 | 5 | 5 | 0 | 1 | 0 |
-| issues: text | 19 | 2 | 2 | 1 | 0 | 0 | 0 |
-| issues: scale | 2 | 1 | 2 | 1 | 0 | 0 | 0 |
-| issues: wrong_device | 0 | 2 | 3 | 3 | 0 | 1 | 0 |
-| issues: missing_part | 2 | 4 | 2 | 4 | 1 | 1 | 0 |
-| issues: invented_part | 1 | 5 | 4 | 8 | 0 | 1 | 0 |
-| issues: wrong_setting | 0 | 1 | 2 | 1 | 0 | 0 | 0 |
-| issues: implausible | 2 | 2 | 4 | 4 | 0 | 1 | 2 |
-| spent on the run, USD | 0.21 | 0.51 | 0.52 | 0.73 | 1.23 | 0.15 | 0.17 |
+| | params v1 | params v2 | params v3 | params v3 asbuilt | params v3 best3 | params v3 recheck | params v3 propose | params v4 |
+|---|---|---|---|---|---|---|---|---|
+| drawings | 32 | 32 | 32 | 32 | 32 | 32 | 30 | 30 |
+| matches | 11 | 21 | 21 | 19 | 31 | 29 | 28 | 26 |
+| partly | 20 | 5 | 6 | 8 | 1 | 2 | 2 | 1 |
+| wrong | 1 | 6 | 5 | 5 | 0 | 1 | 0 | 3 |
+| issues: text | 19 | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
+| issues: scale | 2 | 1 | 2 | 1 | 0 | 0 | 0 | 1 |
+| issues: wrong_device | 0 | 2 | 3 | 3 | 0 | 1 | 0 | 4 |
+| issues: missing_part | 2 | 4 | 2 | 4 | 1 | 1 | 0 | 0 |
+| issues: invented_part | 1 | 5 | 4 | 8 | 0 | 1 | 0 | 0 |
+| issues: wrong_setting | 0 | 1 | 2 | 1 | 0 | 0 | 0 | 0 |
+| issues: implausible | 2 | 2 | 4 | 4 | 0 | 1 | 2 | 1 |
+| spent on the run, USD | 0.21 | 0.51 | 0.52 | 0.73 | 1.23 | 0.15 | 0.17 | 0.17 |
 
-Moved from params v3 recheck to params v3 propose:
+Moved from params v3 propose to params v4:
 
-- `item:uno_r3#1`: wrong to matches
-- `project:4#3`: partly to matches
-- `item:laptop_t510#1`: matches to partly
+- `item:laptop_t510#1`: partly to matches
+- `item:powerline#1`: partly to matches
+- `project:4#3`: matches to partly
+- `item:uno_r3#1`: matches to wrong
+- `project:2#1`: matches to wrong
+- `project:9#1`: matches to wrong
 
 <!-- params-history:end -->
 
@@ -290,6 +293,36 @@ Each winner's brief is in `demo/set.yaml` and its recording under
 repository. The set loads with 0 not recorded and 0 stand-in answers. No version 4 of the
 parameters was made: the fresh review left three drawings off, each for a different reason, so
 no issue recurred for a rule to fix.
+
+## Computers built in (version 4)
+
+The project drawings that use a laptop still showed it open on the desk or beside the build
+(the coffee table, the smart mirror, the home servers, the homework desk, the kitchen
+dashboard, the retro console). In version 4 any computer may be taken apart and its parts
+built in where needed: `kinds` gained `built`, said of a part only in a finished project's
+drawing (a laptop: its bare screen panel as the display, its board hidden inside, never an
+open laptop, case, lid or keyboard; a monitor: its bare panel without stand or case; a
+desktop board: mounted in the build's case), and `projects` gained `built`, the correction a
+project of that template carries instead (flat under the glass in the coffee table, behind
+the two-way mirror, framed on the wall). An item's own drawing, its use and a reuse card are
+asked exactly as before, so their recordings still replay. The reviewer reads the same
+`built` line beside each part.
+
+The 12 project drawings whose request changed were drawn again, then the best of 3 kept
+(two rounds), and the set reviewed again: 26 matches, 1 partly, 3 wrong of 30. No drawing
+shows a laptop. The homework desk and the kitchen dashboard are *wrong* because the reviewer
+wants a bare panel and sees a cased screen; the third is the UNO item drawing, unchanged.
+About 1.15 USD.
+
+| Drawing | v3 | v4 |
+|---|---|---|
+| Gaming coffee table, its three views (`project:7`) | matches (laptop open beside the screen) | matches |
+| Hall smart mirror (`project:1#1`) | matches | matches |
+| Home automation server (`project:3#1`), photo backup server (`project:5#1`), retro games (`project:6#1`) | matches (open laptop) | matches |
+| Homework desk (`project:2#1`), kitchen dashboard (`project:9#1`) | matches (open laptop) | wrong (cased screen) |
+| NAS (`project:4`) | matches | matches, matches, partly |
+
+The v3 verdicts were given by a reviewer that still expected an open laptop.
 
 ## Text tuning
 

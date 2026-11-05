@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Changed
+- Drawing parameters version 4: any computer may be taken apart and built in. `kinds.<type>.built` is said of a part only in a finished project's drawing (a laptop's bare screen panel as the display, its board hidden inside, never an open laptop, case, lid or keyboard; a monitor's bare panel; a desktop board in the build's case) and `projects.<template>.built` replaces that template's correction for its project drawings (the coffee table, the smart mirror, the home servers, the homework desk, the kitchen dashboard, the retro console); item, use and reuse-card requests are unchanged. The reviewer reads the same line. The 12 project drawings whose request changed were drawn again with the best of 3 kept: 26 matches, 1 partly, 3 wrong of 30, no laptop in sight; 12 recordings added, the 12 they replace removed, none changed; about 1.15 USD.
+
 ### Fixed
 - Fixture mode no longer answers a person's request that has no recording of its own with the operation's stand-in (cards about a laptop battery after **Ask again** on the Dell monitor, a 65 W charger from **Check fit**, an *Orbital Power* label from a photo of your own), saved and badged *recorded answer*. The API refuses it (409, *No recorded answer for this request: the demo answers only what was recorded. Add a Meta Model API key in .env (MODEL_API_KEY, OPL_FAKE_API=0) to run it live.*), nothing is saved, and the page shows the line where the result would be. `FIXTURE_STUBS=1` keeps the stand-ins (the tests, `./dev e2e`, the screenshot and video stacks); the demo loader, the eval and the tools run outside the API and keep them as before; the sample photos keep exact replay.
 
