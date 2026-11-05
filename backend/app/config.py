@@ -34,8 +34,12 @@ class Settings(BaseSettings):
     spend_cap_usd: float = 25.0
     spend_ledger_file: str = "model_api_spend.jsonl"
     model_api_timeout_s: float = 60.0
+    model_api_connect_timeout_s: float = 10.0
     model_api_max_attempts: int = 4
     model_api_retry_after_max_s: float = 30.0
+    # held against the spend cap by each live call until it is recorded, so calls that
+    # overlap cannot all spend past it; a rough ceiling on one call, in dollars
+    model_api_call_reserve_usd: float = 1.0
     prompt_cache_name: str = "orphan-parts"
     extract_reasoning_effort: str = "low"
     # a ceiling on max_output_tokens as sent (the answer budget plus the reasoning headroom);
@@ -125,6 +129,8 @@ class Settings(BaseSettings):
             raise ValueError("MODEL_API_MAX_ATTEMPTS must be at least 1")
         if self.spend_cap_usd < 0:
             raise ValueError("SPEND_CAP_USD must not be negative")
+        if self.model_api_call_reserve_usd < 0:
+            raise ValueError("MODEL_API_CALL_RESERVE_USD must not be negative")
         if self.model_max_output_tokens < 0:
             raise ValueError("MODEL_MAX_OUTPUT_TOKENS must not be negative (0 = no ceiling)")
         if self.price_country and not re.fullmatch(r"[A-Z]{2}", self.price_country):

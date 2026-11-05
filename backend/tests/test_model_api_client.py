@@ -1,7 +1,10 @@
+import asyncio
 import base64
 import json
 import random
+import time
 from collections.abc import Callable
+from email.utils import formatdate
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +30,7 @@ from app.model_api.client import (
     DEFAULT_REASONING_HEADROOM,
     REASONING_HEADROOM,
     RESPONSES,
+    _close,
     last_json_object,
     output_cap,
 )
@@ -233,6 +237,41 @@ async def test_retry_after_is_capped(live: Settings) -> None:
     assert h.sleeps == [live.model_api_retry_after_max_s]
 
 
+async def test_retry_after_http_date_is_honoured(live: Settings) -> None:
+    stamp = formatdate(time.time() + 5, usegmt=True)
+    answers = iter(
+        [
+            httpx.Response(429, headers={"Retry-After": stamp}, json={}),
+            httpx.Response(200, json=completed("ok")),
+        ]
+    )
+    h = Harness(live, lambda _: next(answers))
+    await h.client.respond(model="muse-spark-1.3", input="x")
+    assert h.sleeps == [pytest.approx(5.0, abs=1.0)]
+
+
+@pytest.mark.parametrize("header", ["not a date", formatdate(time.time() - 60, usegmt=True)])
+async def test_retry_after_unreadable_falls_back_to_backoff(live: Settings, header: str) -> None:
+    answers = iter(
+        [
+            httpx.Response(429, headers={"Retry-After": header}, json={}),
+            httpx.Response(200, json=completed("ok")),
+        ]
+    )
+    h = Harness(live, lambda _: next(answers))
+    await h.client.respond(model="muse-spark-1.3", input="x")
+    assert len(h.sleeps) == 1 and 0.5 <= h.sleeps[0] < 1.5
+
+
+@pytest.mark.parametrize("status", [408, 502, 504])
+async def test_gateway_statuses_are_retried(live: Settings, status: int) -> None:
+    answers = iter([httpx.Response(status, json={}), httpx.Response(200, json=completed("ok"))])
+    h = Harness(live, lambda _: next(answers))
+    result = await h.client.respond(model="muse-spark-1.3", input="x")
+    assert result.attempts == 2
+    assert len(h.requests) == 2
+
+
 async def test_server_errors_back_off_and_give_up_after_max_attempts(live: Settings) -> None:
     h = Harness(live, lambda _: error_body(500, "server_error", None, "boom"))
     with pytest.raises(ModelApiError) as info:
@@ -290,6 +329,57 @@ async def test_spend_cap_blocks_before_the_request(live: Settings) -> None:
     with pytest.raises(SpendCapError):
         await h.client.respond(model="muse-spark-1.3", input="x")
     assert h.requests == []
+
+
+async def test_overlapping_calls_share_the_cap(live: Settings) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json=completed("ok")), cap=1.5)
+    started = asyncio.Event()
+    release = asyncio.Event()
+    real_request = h.client._request
+
+    async def gated(*args: Any, **kwargs: Any) -> tuple[dict[str, Any], int, float]:
+        if not started.is_set():
+            started.set()
+            await release.wait()
+        return await real_request(*args, **kwargs)
+
+    h.client._request = gated  # type: ignore[method-assign]
+    first = asyncio.create_task(h.client.respond(model="muse-spark-1.3", input="a"))
+    await started.wait()
+    # the first call holds 1.0 of 1.5: the second does not fit beside it
+    with pytest.raises(SpendCapError):
+        await h.client.respond(model="muse-spark-1.3", input="b")
+    release.set()
+    assert (await first).attempts == 1
+    assert h.ledger.summary().calls == 1
+    assert len(h.requests) == 1
+
+
+async def test_a_failed_call_releases_its_hold(live: Settings) -> None:
+    calls = 0
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls <= 3:
+            return httpx.Response(500, json={})
+        return httpx.Response(200, json=completed("ok"))
+
+    h = Harness(live, handler, cap=1.5)
+    with pytest.raises(ModelApiError) as info:
+        await h.client.respond(model="muse-spark-1.3", input="a")
+    assert info.value.status == 500
+    # the failed call settled its hold: the next one fits again
+    await h.client.respond(model="muse-spark-1.3", input="b")
+    assert h.ledger.summary().calls == 1
+
+
+def test_connect_timeout_comes_from_settings(live: Settings) -> None:
+    h = Harness(live, lambda _: httpx.Response(200, json=completed("ok")))
+    assert h.client._http.timeout == httpx.Timeout(60.0, connect=10.0)
+    custom = live.model_copy(update={"model_api_connect_timeout_s": 3.0})
+    h2 = Harness(custom, lambda _: httpx.Response(200, json=completed("ok")))
+    assert h2.client._http.timeout == httpx.Timeout(60.0, connect=3.0)
 
 
 async def test_voice_call_prices_the_audio_it_transcribed(live: Settings) -> None:
@@ -355,6 +445,33 @@ def test_strict_schema_closes_every_object() -> None:
     schema = strict_schema(Label)
     assert schema["additionalProperties"] is False
     assert schema["required"] == ["part_number", "capacity_gb", "tags"]
+
+
+def test_close_seals_unions_negations_and_nested_definitions() -> None:
+    node: dict[str, Any] = {
+        "type": "object",
+        "properties": {
+            "choice": {"oneOf": [{"type": "object", "properties": {"a": {"type": "string"}}}]},
+            "every": {"allOf": [{"type": "object", "properties": {"b": {"type": "integer"}}}]},
+            "neg": {"not": {"type": "object", "properties": {"c": {"type": "boolean"}}}},
+            "pair": {"prefixItems": [{"type": "object", "properties": {"d": {"type": "string"}}}]},
+            "wild": {
+                "patternProperties": {
+                    "^x-": {"type": "object", "properties": {"e": {"type": "string"}}}
+                }
+            },
+        },
+        "$defs": {"thing": {"type": "object", "properties": {"f": {"type": "string"}}}},
+    }
+    _close(node)
+    assert node["additionalProperties"] is False
+    assert node["required"] == ["choice", "every", "neg", "pair", "wild"]
+    assert node["properties"]["choice"]["oneOf"][0]["required"] == ["a"]
+    assert node["properties"]["every"]["allOf"][0]["required"] == ["b"]
+    assert node["properties"]["neg"]["not"]["required"] == ["c"]
+    assert node["properties"]["pair"]["prefixItems"][0]["required"] == ["d"]
+    assert node["properties"]["wild"]["patternProperties"]["^x-"]["required"] == ["e"]
+    assert node["$defs"]["thing"]["required"] == ["f"]
 
 
 async def test_structured_output_sends_schema_and_parses(live: Settings) -> None:
@@ -478,6 +595,25 @@ async def test_fixture_mode_replays_without_network(fixture_mode: Settings) -> N
     assert h.ledger.total_usd == 0.0
 
 
+async def test_a_recorded_failure_replays_without_sending(fixture_mode: Settings) -> None:
+    store = FixtureStore(fixture_mode.fixtures_dir)
+    body = {"model": "muse-spark-1.3", "input": "x"}
+    store.save(
+        RESPONSES,
+        body,
+        "extract",
+        {"error": {"message": "busy", "type": "server_error"}},
+        status=503,
+    )
+    h = Harness(fixture_mode, never)
+    with pytest.raises(ModelApiError) as info:
+        await h.client._post(RESPONSES, body, "extract")
+    assert info.value.status == 503
+    assert info.value.error_type == "server_error"
+    assert "busy" in str(info.value)
+    assert h.requests == []
+
+
 async def test_fixture_mode_reports_a_missing_fixture(fixture_mode: Settings) -> None:
     h = Harness(fixture_mode, never)
     with pytest.raises(FixtureMissingError, match="op=extract"):
@@ -574,6 +710,17 @@ async def test_each_recording_gets_its_own_transcribe_fixture(tmp_path: Path) ->
     assert len(list((tmp_path / "fixtures").rglob("*.json"))) == 2
     # the key names the recording; the request on the wire carries the bytes, not the digest
     assert b"audio_sha256" not in h.requests[-1].content
+
+
+async def test_unreadable_transcribe_duration_still_records(live: Settings) -> None:
+    heard = {"transcript": "one", "audioDurationMs": "long"}
+    h = Harness(live, lambda _: httpx.Response(200, json=heard), cap=1.0)
+    said = await h.client.transcribe(b"RIFF one")
+    assert said.seconds == 0.0
+    assert h.ledger.summary().calls == 1
+    # the call is on the ledger, so its hold is settled: the whole cap fits again
+    h.ledger.reserve(1.0)
+    h.ledger.settle(1.0)
 
 
 # --- pictures ----------------------------------------------------------------

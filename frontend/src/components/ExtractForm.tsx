@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { api, ApiError, dataUrlToFile, type Extraction, type Item, type Limits, type Segmentation } from '../lib/api'
 import { asksForParent, cameFrom, photoReadLine } from '../lib/inventory'
 import { DEFAULT_LIMITS, oversized, takePhotos } from '../lib/photos'
@@ -88,10 +88,10 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
 
   // The reading becomes a private record: observed fields, each still to confirm.
   // A failed save keeps the reading on the page: it was paid for, and can be saved again.
-  const saving = useRef(false)
+  const [saving, setSaving] = useState(false)
   async function save() {
-    if (state.kind !== 'done' || state.saved || saving.current) return
-    saving.current = true // one item per click, however long the save and the upload take
+    if (state.kind !== 'done' || state.saved || saving) return
+    setSaving(true) // one item per click, however long the save and the upload take
     try {
       const saved = await api.items.create({ extraction: state.result, name: name.trim() })
       // the photos the reading was made from stay with the item, beside the values to confirm;
@@ -102,12 +102,12 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
       } catch (err: unknown) {
         photoNote = `The item is saved; its photos were not kept: ${messageOf(err)}`
       }
-      setState({ ...state, saved, saveError: photoNote })
+      setState((s) => (s.kind === 'done' ? { ...s, saved, saveError: photoNote } : s))
       onSaved?.(saved)
     } catch (err: unknown) {
-      setState({ ...state, saveError: messageOf(err) })
+      setState((s) => (s.kind === 'done' ? { ...s, saveError: messageOf(err) } : s))
     } finally {
-      saving.current = false
+      setSaving(false)
     }
   }
 
@@ -139,8 +139,8 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
       </div>
       {files.length > 0 && (
         <ul className="files">
-          {files.map((f, i) => (
-            <li key={`${i}-${f.name}`}>{f.name}</li>
+          {files.map((f) => (
+            <li key={`${f.name}-${f.size}-${f.lastModified}`}>{f.name}</li>
           ))}
         </ul>
       )}
@@ -200,8 +200,8 @@ function UploadForm({ limits = DEFAULT_LIMITS, onSaved }: FormProps) {
                     </label>
                   </div>
                   <div className="row actions">
-                    <button type="button" onClick={() => void save()}>
-                      Save privately
+                    <button type="button" onClick={() => void save()} disabled={saving}>
+                      {saving ? 'Saving…' : 'Save privately'}
                     </button>
                   </div>
                   {state.saveError && (

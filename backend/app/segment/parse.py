@@ -58,6 +58,7 @@ def parse_matches(text: str) -> tuple[list[Match], list[str]]:
     for object_id, box in boxes.items():
         mask = masks.get(object_id)
         if mask is None:
+            # unreachable through the parser, which reports an incomplete record itself
             continue
         matches.append(
             Match(
@@ -75,5 +76,7 @@ def parse_matches(text: str) -> tuple[list[Match], list[str]]:
                 svg_path=decode_mask_to_svg_path(mask.mask),
             )
         )
-    warnings = [f"{d.code}: {d.message}" for d in result.diagnostics if d.severity == "error"]
+    warnings = [
+        f"{d.code}: {d.message}" for d in result.diagnostics if d.severity in ("error", "warning")
+    ]
     return matches, warnings

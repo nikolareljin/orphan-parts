@@ -10,7 +10,7 @@ import {
   worthLine,
   type ScenarioCard,
 } from '../lib/decide'
-import { usd } from '../lib/format'
+import { modelName, usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 import Compatibility from './Compatibility'
 import DrawIt from './DrawIt'
@@ -108,7 +108,7 @@ export default function Scenarios({
       {scenarios && (
         <>
           <p className="meta">
-            The model's scenarios · version {scenarios.version} · {whenText(scenarios.at)} · {scenarios.model} · {usd(scenarios.cost_usd)}
+            The model's scenarios · version {scenarios.version} · {whenText(scenarios.at)} · {modelName(scenarios.model)} · {usd(scenarios.cost_usd)}
             {scenarios.from_fixture && <span className="badge">recorded answer</span>}
             {scenarios.stale && <span className="badge">item changed since</span>}
           </p>
@@ -183,6 +183,7 @@ function KeepFixBody({ card }: { card: KeepFix }) {
   return (
     <>
       <Lines label="Likely problem" lines={card.problems} />
+      <Lines label="Safety" lines={card.safety ?? []} />
       {card.worth_fixing ? (
         <>
           {card.steps.length > 0 && (
@@ -221,6 +222,7 @@ function ReuseBody({ set, demo }: { set: ScenarioSet; demo: boolean }) {
         <li key={`${i}:${r.title}`}>
           <strong>{r.title}</strong>
           <p>{r.what_it_does}</p>
+          <Lines label="Safety" lines={r.safety ?? []} />
           {r.with_items.length > 0 && <p className="muted">With what you have: {r.with_items.join(', ')}</p>}
           {(r.without ?? []).length > 0 && <p className="muted">Not with what you have: {(r.without ?? []).join(', ')} (does not fit)</p>}
           <Compatibility pairings={r.compatibility ?? []} label={`Compatibility of ${r.title}`} />

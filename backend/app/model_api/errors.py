@@ -1,6 +1,6 @@
 """Errors raised by the Model API client."""
 
-RETRYABLE_STATUSES = frozenset({429, 500, 503})
+RETRYABLE_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
 
 
 class ModelApiError(Exception):

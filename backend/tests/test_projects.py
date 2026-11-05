@@ -67,6 +67,51 @@ def test_the_shipped_templates_load_and_say_what_they_need() -> None:
         templates.get("castle")
 
 
+def test_every_shipped_template_carries_a_safety_note() -> None:
+    templates = Templates()
+    bare = [i for i in templates.ids() if not templates.get(i).safety]
+    assert bare == []
+
+
+def test_a_pack_without_template_safety_still_warns() -> None:
+    from app.projects.schema import Budget, Project
+
+    project = Project(
+        id=1,
+        template="shed",
+        title="Shed",
+        status="selected",
+        version=1,
+        result="a shed",
+        requirements=[],
+        allocations=[],
+        effort="low",
+        skills=[],
+        spend_estimate=0.0,
+        currency="USD",
+        unknowns=[],
+        sources=[],
+        steps=["Raise the walls."],
+        safety=[],
+        dropped=[],
+        model="muse-spark",
+        from_fixture=True,
+        cost_usd=0.0,
+        created_at="t",
+        updated_at="t",
+    )
+    text = packs.render(
+        project,
+        [],
+        Preferences(),
+        Budget(budget=None, currency="USD", committed_spend=0.0, remaining=None, selected=1),
+        {},
+        1,
+        "digest",
+    )
+    assert "## Safety" in text and "Unplug everything" in text
+
+
 def test_template_files_are_checked(tmp_path: Path) -> None:
     def write(text: str) -> None:
         (tmp_path / "shed.yaml").write_text(text)

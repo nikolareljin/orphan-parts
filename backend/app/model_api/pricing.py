@@ -13,7 +13,9 @@ log = logging.getLogger("app.model_api.pricing")
 
 PER_MILLION = 1_000_000
 
-# (cached input, input, output) per million tokens, matched by model-id prefix
+# (cached input, input, output) per million tokens, matched by model-id prefix on
+# purpose: a version bump keeps its price, and what matches nothing is charged the
+# highest rate with a warning, so the ledger never under-counts
 TOKEN_RATES: dict[str, tuple[float, float, float]] = {
     "muse-wonder": (0.20, 4.00, 20.00),
     "muse-spark": (0.15, 1.25, 4.25),
@@ -70,7 +72,8 @@ class Usage(BaseModel):
 
 
 def _as_int(value: object) -> int:
-    return value if isinstance(value, int) else 0
+    """An int as the API sent it; anything else, and a negative, counts as nothing."""
+    return max(value, 0) if isinstance(value, int) else 0
 
 
 def token_rates(model: str) -> tuple[float, float, float]:

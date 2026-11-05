@@ -56,6 +56,7 @@ class CostLedger:
         self._lock = threading.Lock()
         self._entries: list[LedgerEntry] = []
         self._total = 0.0
+        self._reserved = 0.0
         if path is not None:
             self._load(path)
 
@@ -91,6 +92,19 @@ class CostLedger:
     def require_budget(self) -> None:
         if self.paused:
             raise SpendCapError(self.total_usd, self.cap_usd)
+
+    def reserve(self, ceiling: float) -> None:
+        """Hold ``ceiling`` against the cap for one call now under way; raises SpendCapError
+        when even the hold would not fit. Released by settle() once recorded."""
+        with self._lock:
+            if self._total + self._reserved + ceiling > self.cap_usd + 1e-9:
+                raise SpendCapError(self.total_usd, self.cap_usd)
+            self._reserved = round(self._reserved + ceiling, 6)
+
+    def settle(self, ceiling: float) -> None:
+        """Release a hold taken by reserve(); the call's own line is recorded beside it."""
+        with self._lock:
+            self._reserved = round(max(self._reserved - ceiling, 0.0), 6)
 
     # without a file, the entries live in memory only (the demo's twin): the last so many
     MEMORY_ENTRIES = 1000

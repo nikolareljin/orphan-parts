@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from app import __version__
-from app.api.deps import GateDep, LedgerDep, SettingsDep
+from app.api.deps import GateDep, LedgerDep, ModelApiDep, SettingsDep
 from app.config import Settings
 from app.model_api import LedgerSummary
 
@@ -35,6 +35,10 @@ class Readiness(BaseModel):
     spend_usd: float
     spend_cap_usd: float
     paused: bool
+    fixture_fallbacks: int = Field(
+        default=0,
+        description="answers served from an operation's stand-in, not its recording",
+    )
     demo: Demo
 
 
@@ -70,8 +74,15 @@ def _model_api_label(request: Request, settings: SettingsDep, gate: GateDep) -> 
 
 
 @router.get("/readyz", response_model=Readiness, tags=["ops"])
-def readyz(request: Request, settings: SettingsDep, ledger: LedgerDep, gate: GateDep) -> Readiness:
+def readyz(
+    request: Request,
+    settings: SettingsDep,
+    ledger: LedgerDep,
+    gate: GateDep,
+    client: ModelApiDep,
+) -> Readiness:
     writable = _writable(settings)
+    twin = client.twin.fixture_fallbacks if client.twin is not None else 0
     return Readiness(
         status="ok" if writable else "degraded",
         model_api=_model_api_label(request, settings, gate),
@@ -79,6 +90,7 @@ def readyz(request: Request, settings: SettingsDep, ledger: LedgerDep, gate: Gat
         spend_usd=ledger.total_usd,
         spend_cap_usd=ledger.cap_usd,
         paused=ledger.paused,
+        fixture_fallbacks=client.fixture_fallbacks + twin,
         demo=Demo(
             gated=gate.enabled,
             live_models=gate.live_models,

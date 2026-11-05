@@ -17,6 +17,13 @@ def test_number_reads_the_first_number_with_either_decimal_mark() -> None:
     assert number("centre positive") is None
 
 
+def test_number_reads_thousands_grouping_as_thousands() -> None:
+    assert number("1,000 mA") == 1000.0
+    assert number("3,300") == 3300.0
+    assert number("1,000,000") == 1000000.0
+    assert number("19,5 V") == 19.5
+
+
 def test_unit_of_reads_the_recorded_unit_or_the_one_written_after_the_number() -> None:
     assert unit_of(Reading("19.5", unit="V")) == "V"
     assert unit_of(Reading("19.5 V")) == "V"
@@ -26,22 +33,35 @@ def test_unit_of_reads_the_recorded_unit_or_the_one_written_after_the_number() -
     assert unit_of(Reading("35 (about)")) == ""
 
 
-def test_a_value_in_another_unit_on_either_side_is_not_compared() -> None:
+def test_milli_and_centi_units_convert_before_comparing() -> None:
     amps = rule("at_least", key="output_current", label="Output current", unit="A")
-    # 3300 mA would pass as 3300 A; it must not
-    written = evaluate(amps, Reading("3.33 A"), Reading("3300 mA"))
-    assert written.status == "unknown"
-    assert "in mA" in written.basis and "enter it in A" in written.basis
+    # 3300 mA reads as 3.3 A, and fails honestly against 3.33 A instead of staying unknown
+    converted = evaluate(amps, Reading("3.33 A"), Reading("3300 mA"))
+    assert converted.status == "fail"
+    assert "3.3 A" in converted.basis
     recorded = evaluate(amps, Reading("3.33"), Reading("3300", unit="mA"))
-    assert recorded.status == "unknown"
+    assert recorded.status == "fail"
     needed = evaluate(amps, Reading("3330 mA"), Reading("4.62"))
-    assert needed.status == "unknown" and "required value is in mA" in needed.basis
+    assert needed.status == "pass"
+    volts = rule("within", tolerance=1, unit="V")
+    assert evaluate(volts, Reading("19.5 V"), Reading("19500 mV")).status == "pass"
+    width = rule("at_most", key="width", label="Width", unit="mm")
+    assert evaluate(width, Reading("10 cm"), Reading("99 mm")).status == "pass"
     # the rule's own unit, in any case, is fine; so is no unit at all
     assert evaluate(amps, Reading("3.33 a"), Reading("4.62A")).status == "pass"
     assert evaluate(amps, Reading("3.33"), Reading("4.62")).status == "pass"
     # a rule without a unit compares bare numbers whatever is written after them
     bare = rule("at_least", key="count", label="Count", unit="")
     assert evaluate(bare, Reading("2 pcs"), Reading("3 pcs")).status == "pass"
+
+
+def test_a_unit_that_does_not_convert_is_not_compared() -> None:
+    amps = rule("at_least", key="output_current", label="Output current", unit="A")
+    written = evaluate(amps, Reading("3.33 A"), Reading("3300 kW"))
+    assert written.status == "unknown"
+    assert "in kW" in written.basis and "enter it in A" in written.basis
+    needed = evaluate(amps, Reading("3.33 kW"), Reading("4.62"))
+    assert needed.status == "unknown" and "required value is in kW" in needed.basis
 
 
 def test_normal_uses_the_field_normaliser_and_lower_case() -> None:

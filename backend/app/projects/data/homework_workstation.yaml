@@ -38,6 +38,7 @@ steps:
   - Put the laptop on a stand or a few books so the monitor and the laptop screen sit at eye height.
   - Connect the monitor; set the display to extend, not mirror, and match the monitor's native resolution.
   - Plug in the keyboard and the mouse; set the laptop lid to stay awake when closed if you close it.
-safety: []
+safety:
+  - Set the screens at eye height, and run everything from one surge-protected strip.
 sources:
   - the laptop maker's page on external displays, for the ports and resolutions it supports

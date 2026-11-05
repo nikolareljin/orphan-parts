@@ -157,3 +157,22 @@ test('a reuse card is drawn only on a click, and the picture is labeled as drawn
   // one click, one picture; the other card has none
   await expect(reuse.getByRole('img')).toHaveCount(1)
 })
+
+test('ideas and scenarios for a mains-powered item carry the safety note', async ({ page, request }) => {
+  const name = `Mains laptop ${stamp}`
+  const res = await request.post('/api/items', {
+    data: { item_type: 'laptop', name },
+  })
+  expect(res.status()).toBe(201)
+  const id = ((await res.json()) as { id: number }).id
+  const field = await request.post(`/api/items/${id}/fields`, { data: { field: 'input_voltage', value: '100-240 V' } })
+  expect(field.status()).toBe(200)
+  const { decide } = await openItem(page, name)
+  await decide.getByRole('button', { name: 'Ask for ideas' }).click()
+  const ideas = decide.getByRole('status', { name: /Ideas/ })
+  await expect(ideas).toContainText('Mains-powered: unplug it')
+  await decide.getByRole('button', { name: 'What should I do with it?' }).click()
+  const cards = decide.getByRole('region', { name: 'What to do with it' })
+  await expect(cards.getByRole('article', { name: 'Keep and fix' })).toContainText('Mains-powered: unplug it')
+  await expect(cards.getByRole('article', { name: 'Reuse it' })).toContainText('Mains-powered: unplug it')
+})

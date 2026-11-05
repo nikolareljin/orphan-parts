@@ -25,6 +25,12 @@ def test_output_token_ceiling_is_checked() -> None:
     assert Settings(OPL_FAKE_API=True, _env_file=None).model_max_output_tokens == 0
 
 
+def test_call_reserve_is_checked() -> None:
+    with pytest.raises(ValueError, match="MODEL_API_CALL_RESERVE_USD"):
+        Settings(OPL_FAKE_API=True, model_api_call_reserve_usd=-1, _env_file=None)
+    assert Settings(OPL_FAKE_API=True, _env_file=None).model_api_call_reserve_usd == 1.0
+
+
 def test_cors_origins_split_and_trimmed() -> None:
     s = Settings(OPL_FAKE_API=True, cors_origins="http://a, http://b ,", _env_file=None)
     assert s.cors_origin_list == ["http://a", "http://b"]

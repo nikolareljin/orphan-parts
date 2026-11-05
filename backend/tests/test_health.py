@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -6,6 +7,7 @@ from app import __version__
 from app.api.routes import _writable
 from app.config import Settings
 from app.main import create_app
+from tests.conftest import RECORDED_FIXTURES
 
 
 def test_healthz_answers_ok(client: TestClient) -> None:
@@ -19,6 +21,24 @@ def test_readyz_reports_fixture_mode_and_writable_data_dir(client: TestClient) -
     assert body["status"] == "ok"
     assert body["model_api"] == "fixture"
     assert body["data_dir_writable"] is True
+
+
+def test_readyz_counts_answers_served_from_stubs(tmp_path: Path) -> None:
+    settings = Settings(
+        OPL_FAKE_API=True,
+        FIXTURE_STUBS=True,
+        data_dir=tmp_path / "data",
+        fixtures_dir=RECORDED_FIXTURES,
+        log_format="text",
+    )
+    with TestClient(create_app(settings)) as c:
+        assert c.get("/readyz").json()["fixture_fallbacks"] == 0
+        item_id = c.post("/api/items", json={"item_type": "laptop", "name": "Old laptop"}).json()[
+            "id"
+        ]
+        asked = c.post(f"/api/items/{item_id}/uses")
+        assert asked.status_code == 201, asked.text
+        assert c.get("/readyz").json()["fixture_fallbacks"] == 1
 
 
 def test_version_lists_the_models_the_app_calls(client: TestClient) -> None:

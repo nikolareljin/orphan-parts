@@ -1,6 +1,7 @@
 """The photos kept beside an item: from the web form after a save, from a capture when it is
 read; served one by one; gone with the item."""
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import pytest
@@ -135,3 +136,25 @@ def test_the_count_keeps_going_across_sends(settings: Settings) -> None:
         "photo-2.jpg",
         "photo-3.jpg",
     ]
+
+
+def test_concurrent_adds_neither_overwrite_nor_miscount(settings: Settings) -> None:
+    from app.inventory import ItemCreate
+
+    roomy = settings.model_copy(update={"max_photos": 32})
+    inventory = Inventory(roomy)
+    item = inventory.create(ItemCreate(item_type="charger"))
+    photos = ItemPhotos(roomy, inventory)
+
+    def add_two(_: int) -> int:
+        return photos.add(item.id, [make_photo(), make_photo()])
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        counts = list(pool.map(add_two, range(8)))
+    assert sorted(counts) == [2, 4, 6, 8, 10, 12, 14, 16]
+    assert photos.count(item.id) == 16
+    names = sorted(
+        (p.name for p in (roomy.data_dir / "items" / str(item.id)).iterdir()),
+        key=lambda name: int(name.removeprefix("photo-").removesuffix(".jpg")),
+    )
+    assert names == [f"photo-{n}.jpg" for n in range(1, 17)]

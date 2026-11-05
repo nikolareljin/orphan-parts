@@ -3,27 +3,57 @@ import pytest
 from app.config import Settings
 from app.inventory import Inventory
 from app.inventory.schema import FieldCreate, ItemCreate
-from app.match import AssessError, Assessor, AssessRequest, Check, Side, verdict_for
+from app.match import (
+    AssessError,
+    Assessor,
+    AssessRequest,
+    Check,
+    Reading,
+    Side,
+    Status,
+    verdict_for,
+)
+from app.match.service import questions_for
 from app.measure import Measurer
-from app.profiles import Profiles
+from app.profiles import Profiles, Rule
 from tests.measure_images import OPENING_A, OPENING_B, RULER_A, RULER_B, RULER_MM, ruler_photo
 
 pytestmark = pytest.mark.anyio
 
 
-def check(key: str, status: str, *, hard: bool = True, identity: bool = False) -> Check:
+def check(key: str, status: Status, *, hard: bool = True, identity: bool = False) -> Check:
     return Check(
         key=key,
         label=key.replace("_", " ").capitalize(),
         kind="equal",
         hard=hard,
         identity=identity,
-        status=status,  # type: ignore[arg-type]
+        status=status,
         needed="x",
         observed="y",
         unit="",
         basis="",
     )
+
+
+def test_a_question_without_uncertainty_still_renders() -> None:
+    rules = [
+        Rule.model_validate(
+            {
+                "key": "plug_outer_diameter",
+                "label": "Plug outer diameter",
+                "kind": "within",
+                "unit": "mm",
+            }
+        )
+    ]
+    asked = check("plug_outer_diameter", "unknown").model_copy(
+        update={"basis": "the capture is not precise enough to decide"}
+    )
+    questions = questions_for(rules, [asked], {"plug_outer_diameter": Reading("4.5")})
+    assert questions == [
+        "Plug outer diameter: a caliper or ruler reading, the photo gives no stated precision"
+    ]
 
 
 def test_the_ladder_from_the_checks_alone() -> None:
@@ -231,7 +261,7 @@ def test_a_fault_in_the_needed_value_asks_the_seller_nothing(assessor: Assessor)
         )
     )
     by_key = {c.key: c for c in result.checks}
-    assert by_key["output_current"].status == "unknown"
+    assert by_key["output_current"].status == "pass"  # 3330 mA reads as 3.33 A
     assert by_key["output_voltage"].status == "unknown"
     assert result.questions == []
 
@@ -240,12 +270,12 @@ def test_a_value_in_another_unit_stays_unknown(assessor: Assessor) -> None:
     need = laptop(assessor.inventory)
     inv = assessor.inventory
     adapter = inv.create(ItemCreate(item_type="power adapter"))
-    inv.add_field(adapter.id, FieldCreate(field="output_voltage", value="19500", unit="mV"))
+    inv.add_field(adapter.id, FieldCreate(field="output_voltage", value="19.5", unit="kV"))
     result = assessor.assess(
         AssessRequest(need=Side(item_id=need), candidate=Side(item_id=adapter.id))
     )
     volts = {c.key: c for c in result.checks}["output_voltage"]
-    assert volts.status == "unknown" and "in mV" in volts.basis
+    assert volts.status == "unknown" and "in kV" in volts.basis
 
 
 def test_values_written_in_are_bounded() -> None:

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { ApiError, api, type Budget, type Conflict, type ItemSummary, type Pack, type Preferences, type Project, type TemplateSummary } from '../lib/api'
-import { usd } from '../lib/format'
+import { ApiError, api, crossOrigin, mediaUrl, type Budget, type Conflict, type ItemSummary, type Pack, type Preferences, type Project, type TemplateSummary } from '../lib/api'
+import { modelName, usd } from '../lib/format'
 import {
   EFFORTS,
   EMPTY_PREFERENCES,
@@ -105,7 +105,7 @@ export default function Build({ demo = false }: { demo?: boolean }) {
               <th scope="col">Items</th>
               <th scope="col">Missing</th>
               <th scope="col">Est. cost</th>
-              <th scope="col"></th>
+              <th scope="col" aria-label="Open" />
             </tr>
           </thead>
           <tbody>
@@ -500,7 +500,7 @@ function ProjectPanel({ id, demo, onChanged, onClosed }: { id: number; demo: boo
         Estimated cost {money(project.spend_estimate, project.currency)}
         {project.skills.length > 0 && ` · skills: ${project.skills.join(', ')}`}
         {' · '}
-        {project.from_fixture ? 'recorded answer' : `${project.model}, ${usd(project.cost_usd)}`}
+        {project.from_fixture ? 'recorded answer' : `${modelName(project.model)}, ${usd(project.cost_usd)}`}
       </p>
       <DrawIt
         key={project.id}
@@ -929,15 +929,33 @@ function OutcomeSection({ project, busy, onAct }: { project: Project; busy: bool
 // listed with the Markdown file to download.
 function PackShown({ packs }: { packs: Pack[] }) {
   const [shown, setShown] = useState<number | null>(null)
+  const [failed, setFailed] = useState('')
   const pack = packs.find((p) => p.id === shown) ?? packs[packs.length - 1]
+  // a plain link crosses origins without the session, and lands the redacted
+  // visitor's pack; the blob carries the session, under the server's own name
+  async function download(p: Pack) {
+    setFailed('')
+    try {
+      const href = crossOrigin ? await mediaUrl(api.build.packUrl(p.id)) : api.build.packUrl(p.id)
+      const a = document.createElement('a')
+      a.href = href
+      a.download = `build-pack-${p.project_id}-v${p.version}.md`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      if (crossOrigin) URL.revokeObjectURL(href)
+    } catch (err: unknown) {
+      setFailed(message(err))
+    }
+  }
   return (
     <>
       <ul aria-label="Packs">
         {[...packs].reverse().map((p) => (
           <li key={p.id}>
-            <a href={api.build.packUrl(p.id)} download>
+            <button type="button" className="link" onClick={() => void download(p)}>
               Download
-            </a>{' '}
+            </button>{' '}
             {packLabel(p)}{' '}
             {p.id === pack.id ? (
               <span className="badge">shown below</span>
@@ -949,6 +967,11 @@ function PackShown({ packs }: { packs: Pack[] }) {
           </li>
         ))}
       </ul>
+      {failed && (
+        <p className="error" role="alert">
+          {failed}
+        </p>
+      )}
       <Markdown text={pack.markdown} label={`Build pack ${pack.version}`} />
     </>
   )

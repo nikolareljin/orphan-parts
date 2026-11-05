@@ -8,6 +8,7 @@ export interface Readiness {
   spend_usd: number
   spend_cap_usd: number
   paused: boolean
+  fixture_fallbacks: number
   demo: {
     gated: boolean
     live_models: boolean
@@ -756,7 +757,7 @@ export interface MeasureRequest {
   straight_on: boolean
 }
 
-export interface Check {
+export interface MeasureCheck {
   name: string
   passed: boolean
   detail: string
@@ -772,7 +773,7 @@ export interface MeasureResult {
   value_mm: number | null
   uncertainty_mm: number | null
   basis: string
-  checks: Check[]
+  checks: MeasureCheck[]
   redo: string | null
   px_per_mm: number | null
   image: { width: number; height: number }
@@ -944,6 +945,7 @@ export interface Use {
   effort: Effort
   note: string
   compatibility?: Pairing[]
+  safety?: string[]
 }
 
 export interface TemplateFit {
@@ -980,6 +982,7 @@ export interface KeepFix {
   parts: string[]
   cost: string
   time: string
+  safety?: string[]
 }
 
 export interface ReuseScenario {
@@ -994,6 +997,7 @@ export interface ReuseScenario {
   // "with what you have" checked by the rules: the kinds taken out and why
   compatibility?: Pairing[]
   without?: string[]
+  safety?: string[]
 }
 
 export interface SellCard {

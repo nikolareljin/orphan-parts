@@ -7,6 +7,7 @@ from pydantic import BaseModel, ValidationError
 from app.api.deps import CapturesDep, PrivacyDep
 from app.api.model_errors import as_http
 from app.captures import Capture, CaptureCreate, CaptureError, CaptureList
+from app.extract.imaging import BadImageError
 from app.listing import BadAudioError
 from app.ops.door import for_visitor, live_request
 from app.privacy import NotCheckedError
@@ -67,6 +68,8 @@ async def create_capture(
         return captures.create(spec, photo_data, clip_data, audio_data)
     except CaptureError as exc:
         raise _refused(exc) from exc
+    except BadImageError as exc:
+        raise as_http(exc) from exc
 
 
 @router.get("/captures", response_model=CaptureList)

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Guidance, type Item, type PriceReport } from '../lib/api'
-import { usd } from '../lib/format'
+import { modelName, usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 import { evidenceText, kindLabel, money, rangeText, searchesText } from '../lib/value'
 import { Earlier, NeverRun } from './Saved'
@@ -185,7 +185,7 @@ function GuidanceView({ guide }: { guide: Guidance }) {
   return (
     <div className="guidance" role="status" aria-label={`Guidance ${guide.version}`}>
       <p className="meta">
-        Version {guide.version} · {whenText(guide.at)} · {guide.model} · {usd(guide.cost_usd)} · {searchesText(guide.searches)} · {evidenceText(guide)}
+        Version {guide.version} · {whenText(guide.at)} · {modelName(guide.model)} · {usd(guide.cost_usd)} · {searchesText(guide.searches)} · {evidenceText(guide)}
         {guide.from_fixture && <span className="badge">recorded answer</span>}
         {guide.stale && <span className="badge">item changed since</span>}
       </p>

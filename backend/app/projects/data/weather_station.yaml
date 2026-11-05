@@ -31,6 +31,7 @@ steps:
   - Wire the sensor to a digital pin and the clock to the I2C pins; print one reading a minute with its time over USB.
   - Log the readings to a file on the computer and chart a day of them.
   - Move it to the room you want to watch; leave it a week.
-safety: []
+safety:
+  - Power the board from USB only; never wire it to mains.
 sources:
   - the sensor module's library and example sketch

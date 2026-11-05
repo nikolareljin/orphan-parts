@@ -27,6 +27,7 @@ steps:
   - Mount the camera above the desk pointing down; a shelf, a stack of books or a cheap arm works.
   - For a phone, open its camera as a webcam in the call app, or use the maker's continuity feature if both devices support it.
   - Check the picture in the call before it starts; add a desk lamp if the page is dark.
-safety: []
+safety:
+  - Clamp the stand before the call, so the camera cannot fall on the laptop.
 sources:
   - the call app's help on choosing a camera

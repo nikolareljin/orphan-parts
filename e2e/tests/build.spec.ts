@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test'
 
 // The project tests build on items with the names the recorded proposal uses, and the profile
@@ -82,11 +83,14 @@ test('preferences are kept, proposals come from the inventory, and selection com
   await again.getByRole('button', { name: 'Write the build pack' }).click()
   const packs = again.getByRole('list', { name: 'Packs' })
   await expect(packs).toContainText('version 1')
-  await expect(packs.getByRole('link', { name: 'Download' })).toHaveAttribute('href', /\/api\/packs\/\d+\.md$/)
-  const packUrl = await packs.getByRole('link', { name: 'Download' }).getAttribute('href')
-  const file = await request.get(packUrl ?? '')
-  expect(file.status()).toBe(200)
-  expect(await file.text()).toContain('# Homework desk from the old laptop and the spare monitor')
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    packs.getByRole('button', { name: 'Download' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^build-pack-\d+-v\d+\.md$/)
+  const saved = await download.path()
+  expect(saved).toBeTruthy()
+  expect(readFileSync(saved as string, 'utf8')).toContain('# Homework desk from the old laptop and the spare monitor')
   await again.getByRole('list', { name: 'Progress' }).getByRole('checkbox').first().check()
   await expect(again).toContainText('1 of 3 steps done')
   await expect(packs).toContainText('out of date')

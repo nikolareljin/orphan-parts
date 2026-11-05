@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, type Decision, type DecisionChoice, type Item, type Scenarios as ScenarioSet, type Uses } from '../lib/api'
 import { CHOICES, LEADS_TO, candidatesText, choiceLabel, effortLabel, fillsLine, reservedLine, worthLine } from '../lib/decide'
-import { usd } from '../lib/format'
+import { modelName, usd } from '../lib/format'
 import { whenText } from '../lib/inventory'
 import Compatibility from './Compatibility'
 import { Earlier, NeverRun } from './Saved'
@@ -340,7 +340,7 @@ function UsesView({ uses }: { uses: Uses }) {
   return (
     <div className="uses" role="status" aria-label={`Ideas ${uses.version}`}>
       <p className="meta">
-        Ideas from the model · {uses.model} · {usd(uses.cost_usd)}
+        Ideas from the model · {modelName(uses.model)} · {usd(uses.cost_usd)}
         {uses.from_fixture && <span className="badge">recorded answer</span>}
         {uses.stale && <span className="badge">item changed since</span>}
       </p>
@@ -355,6 +355,7 @@ function UsesView({ uses }: { uses: Uses }) {
               {u.what_it_does}
               {u.needs.length > 0 && <span className="raw">Needs: {u.needs.join('; ')}</span>}
               {u.note && <span className="raw">Check first: {u.note}</span>}
+              {(u.safety ?? []).length > 0 && <span className="raw">Safety: {(u.safety ?? []).join('; ')}</span>}
               <Compatibility pairings={u.compatibility ?? []} label={`Compatibility of ${u.title}`} />
             </li>
           ))}

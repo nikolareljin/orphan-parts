@@ -12,6 +12,7 @@ const ready = (demo: Demo): Readiness => ({
   spend_cap_usd: 25,
   paused: false,
   demo: { live_models: false, ...demo },
+  fixture_fallbacks: 0,
 })
 
 describe('demoText', () => {
