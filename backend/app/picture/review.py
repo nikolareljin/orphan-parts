@@ -369,7 +369,11 @@ def project_facts(project: Project, items: list[Item], view: str, asked: str) ->
     for a in project.allocations:
         item = by_id.get(a.item_id)
         if item is not None:
-            parts.append(f"{a.requirement}: {describe(item)}")
+            params = load_params()
+            kind = params.kind(item.item_type)
+            shown = kind is not None and kind.built and params.parts_built(project.template)
+            built = f"; drawn as built: {kind.built}" if shown and kind is not None else ""
+            parts.append(f"{a.requirement}: {describe(item)}{built}")
     return Facts(
         title=_line(project.title),
         setting=_line(project.result),
