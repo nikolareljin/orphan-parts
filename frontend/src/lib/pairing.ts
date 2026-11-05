@@ -43,3 +43,8 @@ export function redrawAfterMs(expiresAt: number, nowMs: number, expiresIn: numbe
   if (!expiresAt) return 10 * 60_000
   return Math.max(15_000, expiresAt * 1000 - nowMs - 60_000)
 }
+
+// The newest release's APK, downloaded straight onto the phone.
+export const APK_URL = 'https://github.com/nikolareljin/orphan-parts/releases/latest/download/orphan-parts.apk'
+// The USB-install section of the docs, for installing over a cable instead.
+export const APK_DOC_URL = 'https://nikolareljin.github.io/orphan-parts/start/local/#7-put-the-app-on-the-phone'
