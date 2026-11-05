@@ -32,7 +32,7 @@ test('the owner likes a drawing and dislikes a set of cards with a reason; both 
   await drawn.getByLabel('Draw it as').fill('a bedside lamp')
   await drawn.getByRole('button', { name: 'Draw it' }).click()
   await expect(drawn.getByRole('img', { name: 'Illustrative picture 1: a bedside lamp' })).toBeVisible()
-  const like = drawn.getByRole('button', { name: 'Like this drawing' })
+  const like = drawn.getByRole('button', { name: 'Like this drawing', exact: true })
   await expect(like).toHaveAttribute('aria-pressed', 'false')
   await like.click()
   await expect(like).toHaveAttribute('aria-pressed', 'true')
@@ -40,7 +40,7 @@ test('the owner likes a drawing and dislikes a set of cards with a reason; both 
 
   await cards.getByRole('button', { name: 'What should I do with it?' }).click()
   const vote = cards.getByRole('group', { name: 'Your vote on this set of cards' })
-  const dislike = vote.getByRole('button', { name: 'Dislike this set of cards' })
+  const dislike = vote.getByRole('button', { name: 'Dislike this set of cards', exact: true })
   await dislike.click()
   await expect(dislike).toHaveAttribute('aria-pressed', 'true')
   // a dislike asks what is wrong, in one optional line
@@ -51,11 +51,11 @@ test('the owner likes a drawing and dislikes a set of cards with a reason; both 
 
   await page.reload()
   const again = await openItem(page, name)
-  const liked = again.drawn.getByRole('button', { name: 'Like this drawing' })
+  const liked = again.drawn.getByRole('button', { name: 'Like this drawing', exact: true })
   await expect(liked).toHaveAttribute('aria-pressed', 'true')
   await expect(liked).toContainText('1')
   const kept = again.cards.getByRole('group', { name: 'Your vote on this set of cards' })
-  await expect(kept.getByRole('button', { name: 'Dislike this set of cards' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(kept.getByRole('button', { name: 'Dislike this set of cards', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await expect(kept).toContainText('the reuse card needs a monitor I do not own')
 
   // a second click takes the like back
@@ -110,7 +110,7 @@ test('a judge votes on the demo set under its own code; the owner counts it', as
   try {
     expect((await page.request.post('/api/access', { data: { code: judgeCode } })).ok()).toBe(true)
     const { drawn } = await openItem(page, name)
-    const like = drawn.getByRole('button', { name: 'Like this drawing' })
+    const like = drawn.getByRole('button', { name: 'Like this drawing', exact: true })
     await like.click()
     await expect(like).toHaveAttribute('aria-pressed', 'true')
     await expect(like).toContainText('1')
