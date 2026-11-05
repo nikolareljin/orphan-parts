@@ -309,18 +309,21 @@ asked exactly as before, so their recordings still replay. The reviewer reads th
 `built` line beside each part.
 
 The 12 project drawings whose request changed were drawn again, then the best of 3 kept
-(two rounds), and the set reviewed again: 26 matches, 1 partly, 3 wrong of 30. No drawing
-shows a laptop. The homework desk and the kitchen dashboard are *wrong* because the reviewer
-wants a bare panel and sees a cased screen; the third is the UNO item drawing, unchanged.
-About 1.15 USD.
+(two rounds), and the set reviewed again (*params v4* above): 26 matches, 1 partly, 3 wrong of
+30. Where version 4 scored worse, the version 3 drawing was kept: the homework desk and the
+kitchen dashboard (*wrong*: the reviewer wanted a bare panel and saw a cased screen) and the
+NAS, whose view from above went from *matches* to *partly*. Their templates carry
+`as_before: true` (parts said by their looks, no `built` correction) and their v3 briefs, so
+their v3 recordings replay; *params v4* in the table scored the v4 drawings of all three. About
+1.15 USD.
 
-| Drawing | v3 | v4 |
-|---|---|---|
-| Gaming coffee table, its three views (`project:7`) | matches (laptop open beside the screen) | matches |
-| Hall smart mirror (`project:1#1`) | matches | matches |
-| Home automation server (`project:3#1`), photo backup server (`project:5#1`), retro games (`project:6#1`) | matches (open laptop) | matches |
-| Homework desk (`project:2#1`), kitchen dashboard (`project:9#1`) | matches (open laptop) | wrong (cased screen) |
-| NAS (`project:4`) | matches | matches, matches, partly |
+| Drawing | v3 | v4 | Kept |
+|---|---|---|---|
+| Gaming coffee table, its three views (`project:7`) | matches (laptop open beside the screen) | matches | v4 |
+| Hall smart mirror (`project:1#1`) | matches | matches | v4 |
+| Home automation server (`project:3#1`), photo backup server (`project:5#1`), retro games (`project:6#1`) | matches (open laptop) | matches | v4 |
+| Homework desk (`project:2#1`), kitchen dashboard (`project:9#1`) | matches (open laptop) | wrong (cased screen) | v3 |
+| NAS (`project:4`, three views) | matches | matches, matches, partly | v3 |
 
 The v3 verdicts were given by a reviewer that still expected an open laptop.
 
