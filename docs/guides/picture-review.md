@@ -592,3 +592,6 @@ through what the app sends and what it does with the answer:
   the build its kind of project needs as what may appear.
 - **Best of N.** Built: `--candidates N` for the demo set, `PICTURE_CANDIDATES` for the owner's
   drawings ([Best of N](#best-of-n)).
+- **People's votes on each drawing.** Built: a dislike's reason steers the voter's next drawing
+  of the same item, reuse card or project (*Avoid: ...*), and a few reach other projects of the
+  same kind ([People's votes](#peoples-votes)).
