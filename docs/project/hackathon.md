@@ -1,9 +1,10 @@
 # Built during the hackathon
 
 **This repository is the entry for the Meta Global AI Developer Hackathon**, Indie track, created
-by Nik Reljin and built between October 27 and November 4, 2026. Everything in it was written in that window, with the
-Meta Model API for the models and Muse Code in the development. This log grows with each feature
-and links to the commits.
+by Nik Reljin and built between October 27 and November 4, 2026 (the submission deadline was 9 PM ET on November 4). Everything in the
+log below was written in that window, with the Meta Model API for the models and Muse Code in the development. This log grows with each feature
+and links to the commits. Changes merged after the deadline are listed apart, at the end, under
+*After the submission deadline*.
 
 | Date | What landed |
 |---|---|
@@ -44,3 +45,18 @@ and links to the commits.
 | Oct 31 | **Draw it** for a finished project on each *Reuse it* card and Build project; the header always shows its sign-in or sign-out; the hosted deploy restarts its containers so a changed secret applies. |
 | Oct 31 | Facebook Marketplace (US) listings: listing details with the private fields kept private, a draft in Marketplace's fields with its category and condition from a data file, each field to copy, the photos as a zip in order, the create page by handoff, and listed, sold or given recorded after. |
 | Oct 31 | The sample gallery: without the access code a visitor clicks the demo set's own photos instead of uploading, each answered by the recording of that exact photo; uploads only through the code's door. |
+| Oct 31 | **Search the web** for a part: Muse Spark with web search, each find kept only when a page the search returned backs it; when a part has no model number of its own, the app asks which device it came from and reads that device's label. Release 0.3.1. |
+| Nov 2 | The Android app asks the same device question under a read capture; web finds matched by host and path when the model trims a URL; Pillow 13 with the recordings re-keyed; release 0.3.2. The video kit: draft cuts of both demo videos in one command, a synthetic narrator, and the phone scene recorded on a real phone. |
+| Nov 3 | **Private details hidden in photos**: serials, product keys, MAC addresses and passwords found by Muse Spark and blacked out on every shared copy. Visitors read Find a part, Build and reuse and Profile, and every saved result (Decide cards, drafts, price guidance, drawings, search plans, packs), never asked again on view; Delete and the public-demo box off in the demo. Every guide step by step with screenshots, running it on your own computer, examples of what the models produced, pictures that open enlarged, the demo video on the docs site. A second drawer of the owner's parts: 39 items, 11 projects, several drawings each. The video re-cut to show only what was built. |
+| Nov 3 | **Muse Spark reviews Muse Image**: every drawing checked against the facts it must show and redrawn when wrong (`./dev picture-review`, a Muse Code skill); the drawing parameters tuned from the reviews (`picture-tune`). Small help notes beside every heading and control. A refused setting names the field, never its value. Compatibility rules (memory generation, CPU socket, form factor, drive interface) for allocations, Decide cards and build packs. Judge-scoped access codes with per-code limits. A QA pass of every page on desktop and phone. |
+| Nov 4 | Best-of-N drawings and text parameters for the Decide cards (`decide-tune`), proposals tuned from the project checks; release 1.0.0. Judges review it on their own computer on recorded answers: a quick start, the YouTube video on the docs home, and a clear refusal instead of a stand-in when a request has no recording. A review pass on the Model API client, the matcher, the reuse policy and the web UI; more room around form fields. |
+
+## After the submission deadline
+
+Merged after 9 PM ET on November 4, so not part of what was submitted for judging; listed here so
+the line between the two stays clear. The `main` branch and the hosted demo include them; the
+submitted state is the release tag [1.0.0](https://github.com/nikolareljin/orphan-parts/releases/tag/1.0.0).
+
+| Date | What landed |
+|---|---|
+| Nov 4, after 9 PM ET | The laptops and the 18 inch monitor drawn built into a coffee table and a hall mirror ([#152](https://github.com/nikolareljin/orphan-parts/pull/152)); computers drawn taken apart and built in for project drawings, drawing parameters version 4 ([#153](https://github.com/nikolareljin/orphan-parts/pull/153)); an improvement plan from the code review ([#155](https://github.com/nikolareljin/orphan-parts/pull/155)); installing the phone app shown apart from pairing it, with USB install steps ([#156](https://github.com/nikolareljin/orphan-parts/pull/156), [#157](https://github.com/nikolareljin/orphan-parts/pull/157)); like and dislike on generated content, a dislike steering the next drawing ([#154](https://github.com/nikolareljin/orphan-parts/pull/154)). |
