@@ -1,6 +1,8 @@
 import ast
 import json
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import httpx
@@ -113,31 +115,30 @@ def test_the_modal_app_file_says_what_the_deployment_page_says() -> None:
     assert "data.commit()" in source
 
 
-def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
-    tmp_path: Path, monkeypatch: object
-) -> None:
-    """deploy/modal_app.py imported with a stand-in for the modal package: the middleware
-    reloads the Volume before a write and commits after it, reloads before a read at most
-    every RELOAD_EVERY_S, and answers 503 to a write when the reload is refused."""
+class _Volume:
+    """The stand-in for modal.Volume: what was called, in order; ``refuse`` makes a reload
+    fail as the real one does while a file is open."""
+
+    calls: list[str]
+    refuse = False
+
+    def reload(self) -> None:
+        self.calls.append("reload")
+        if self.refuse:
+            raise RuntimeError("open files")
+
+    def commit(self) -> None:
+        self.calls.append("commit")
+
+
+@contextmanager
+def _modal_app(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, volume: _Volume
+) -> Iterator[object]:
+    """deploy/modal_app.py imported with a stand-in for the modal package."""
     import importlib.util
     import sys
     import types
-
-    calls: list[str] = []
-    refuse = {"reload": False}
-
-    class Volume:
-        @staticmethod
-        def from_name(name: str, create_if_missing: bool = False) -> "Volume":
-            return Volume()
-
-        def reload(self) -> None:
-            calls.append("reload")
-            if refuse["reload"]:
-                raise RuntimeError("open files")
-
-        def commit(self) -> None:
-            calls.append("commit")
 
     class Image:
         @staticmethod
@@ -160,15 +161,17 @@ def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
     modal = types.ModuleType("modal")
     modal.App = App  # type: ignore[attr-defined]
     modal.Image = Image  # type: ignore[attr-defined]
-    modal.Volume = Volume  # type: ignore[attr-defined]
+    modal.Volume = types.SimpleNamespace(  # type: ignore[attr-defined]
+        from_name=lambda name, create_if_missing=False: volume
+    )
     modal.Secret = types.SimpleNamespace(from_name=lambda name: None)  # type: ignore[attr-defined]
     modal.concurrent = lambda **kw: lambda f: f  # type: ignore[attr-defined]
     modal.asgi_app = lambda **kw: lambda f: f  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "modal", modal)  # type: ignore[attr-defined]
-    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))  # type: ignore[attr-defined]
-    monkeypatch.setenv("OPL_FAKE_API", "1")  # type: ignore[attr-defined]
-    monkeypatch.delenv("DEMO_ACCESS_CODE", raising=False)  # type: ignore[attr-defined]
-    monkeypatch.delenv("SQLITE_JOURNAL_MODE", raising=False)  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "modal", modal)
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("OPL_FAKE_API", "1")
+    monkeypatch.delenv("DEMO_ACCESS_CODE", raising=False)
+    monkeypatch.delenv("SQLITE_JOURNAL_MODE", raising=False)
     # web() sets defaults into the process environment: every key is put back afterwards
     environment = dict(os.environ)
     from app import config as config_module
@@ -181,16 +184,88 @@ def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
     spec.loader.exec_module(module)
     module.RELOAD_EVERY_S = 3600.0
     module.RELOAD_RETRY_S = 0.0
-
     try:
-        _drive_the_volume(module, calls, refuse)
+        yield module
     finally:
         config_module.get_settings.cache_clear()
         os.environ.clear()
         os.environ.update(environment)
 
 
-def _drive_the_volume(module: object, calls: list[str], refuse: dict[str, bool]) -> None:
+def test_the_modal_volume_is_read_back_before_writes_and_committed_after(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The middleware reloads the Volume before a write and commits after it, reloads
+    before a read at most every RELOAD_EVERY_S, and answers 503 to a write when the reload
+    is refused."""
+    calls: list[str] = []
+    volume = _Volume()
+    volume.calls = calls
+    with _modal_app(tmp_path, monkeypatch, volume) as module:
+        _drive_the_volume(module, calls, volume)
+
+
+def test_the_modal_volume_is_never_reloaded_under_a_running_request(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A reload remounts the Volume: a request opening the database meanwhile failed with
+    "unable to open database file" (a page load's parallel reads after the first request of
+    a fresh container). Reads overlapping a stale view skip the reload; a write waits for
+    them; nothing opens the database while one runs."""
+    import sqlite3
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    remounting = threading.Event()
+    opened_during_reload: list[str] = []
+    calls: list[str] = []
+
+    class Remounting(_Volume):
+        def reload(self) -> None:
+            remounting.set()
+            time.sleep(0.05)  # long enough for an unguarded request to open the file
+            remounting.clear()
+            calls.append("reload")
+
+    volume = Remounting()
+    volume.calls = calls
+    connect = sqlite3.connect
+
+    def guarded(*a: object, **kw: object) -> sqlite3.Connection:
+        if remounting.is_set():
+            opened_during_reload.append(str(a[0]))
+            raise sqlite3.OperationalError("unable to open database file")
+        return connect(*a, **kw)  # type: ignore[arg-type]
+
+    with _modal_app(tmp_path, monkeypatch, volume) as module:
+        module.RELOAD_EVERY_S = 0.0  # every read finds the view stale
+        with TestClient(module.web()) as c:  # type: ignore[attr-defined]
+            monkeypatch.setattr(sqlite3, "connect", guarded)
+            assert c.post("/api/items", json={"item_type": "kettle"}).status_code == 201
+
+            def one(i: int) -> int:
+                if i % 4 == 0:
+                    return c.post("/api/items", json={"item_type": "kettle"}).status_code
+                return c.get("/api/items").status_code
+
+            with ThreadPoolExecutor(12) as pool:
+                codes = list(pool.map(one, range(48)))
+            assert opened_during_reload == []
+            assert set(codes) <= {200, 201}
+            assert calls.count("reload") >= 13  # every write on a stale view read back first
+
+            # a fresh view: a write running beside others goes on without waiting for them
+            module.RELOAD_EVERY_S = 3600.0
+            calls.clear()
+            with ThreadPoolExecutor(12) as pool:
+                codes = list(pool.map(one, range(48)))
+            assert opened_during_reload == []
+            assert set(codes) <= {200, 201}
+            assert calls.count("reload") <= 12  # only the writes that found the app quiet
+
+
+def _drive_the_volume(module: object, calls: list[str], volume: _Volume) -> None:
     origin = {"Origin": "http://localhost:5173"}  # the default CORS origin
     with TestClient(module.web()) as c:  # type: ignore[attr-defined]
         assert c.get("/healthz").status_code == 200
@@ -202,7 +277,7 @@ def _drive_the_volume(module: object, calls: list[str], refuse: dict[str, bool])
         assert made.status_code == 201 and calls == ["reload", "commit"]
         assert c.app.state.settings.sqlite_journal_mode == "DELETE"
         calls.clear()
-        refuse["reload"] = True
+        volume.refuse = True
         refused = c.post("/api/items", json={"item_type": "kettle"}, headers=origin)
         assert refused.status_code == 503 and refused.headers["retry-after"] == "2"
         # inside the CORS layer: a browser on the web app's origin can read the answer

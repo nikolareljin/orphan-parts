@@ -49,7 +49,9 @@ image = (
     .pip_install_from_pyproject(str(BACKEND / "pyproject.toml"))
     .add_local_dir(str(BACKEND / "app"), remote_path="/root/app", ignore=NEVER_SHIPPED)
     .add_local_dir(
-        str(BACKEND / "tests" / "fixtures"), remote_path="/root/tests/fixtures", ignore=NEVER_SHIPPED
+        str(BACKEND / "tests" / "fixtures"),
+        remote_path="/root/tests/fixtures",
+        ignore=NEVER_SHIPPED,
     )
     .add_local_dir(str(ROOT / "demo"), remote_path=DEMO_DIR, ignore=NEVER_SHIPPED)
 )
@@ -57,6 +59,9 @@ image = (
 data = modal.Volume.from_name("orphan-parts-data", create_if_missing=True)
 RELOAD_EVERY_S = 30.0  # how stale the web container's view of the Volume may be
 RELOAD_RETRY_S = 0.5  # the pause before a refused reload is tried once more
+RELOAD_DRAIN_S = (
+    5.0  # how long a write waits for the requests in flight before a reload
+)
 
 
 @app.function(
@@ -64,7 +69,9 @@ RELOAD_RETRY_S = 0.5  # the pause before a refused reload is tried once more
     volumes={"/data": data},
     secrets=[modal.Secret.from_name("orphan-parts")],
     max_containers=1,  # one writer for SQLite, one counter for the demo gate
-    min_containers=int(os.environ.get("OPL_MIN_CONTAINERS") or "1"),  # no cold start while judging
+    min_containers=int(
+        os.environ.get("OPL_MIN_CONTAINERS") or "1"
+    ),  # no cold start while judging
     scaledown_window=900,
     timeout=120,
 )
@@ -79,7 +86,6 @@ def web():  # type: ignore[no-untyped-def]
     if not os.environ.get("MODEL_API_KEY"):
         os.environ["OPL_FAKE_API"] = "1"
     from starlette.middleware import Middleware
-    from starlette.middleware.base import BaseHTTPMiddleware
     from starlette.responses import JSONResponse
 
     from app.main import create_app
@@ -87,42 +93,86 @@ def web():  # type: ignore[no-untyped-def]
     fastapi_app = create_app()
     log = logging.getLogger("app.modal")
     last_reload = float("-inf")  # the first request reads back whatever the clock says
+    busy = 0  # requests inside the app, bodies still streaming included
+    syncing = False  # a reload is waiting for the app to go quiet, or running
+    gate = asyncio.Condition()
 
-    class VolumeSync(BaseHTTPMiddleware):  # type: ignore[misc]
+    async def reload() -> bool:
+        try:  # blocking I/O, off the loop; one more try after a moment
+            try:
+                await asyncio.to_thread(data.reload)
+            except Exception:  # noqa: BLE001 - the Volume's own error types
+                await asyncio.sleep(RELOAD_RETRY_S)
+                await asyncio.to_thread(data.reload)
+        except Exception as exc:  # noqa: BLE001
+            log.info("volume reload refused: %s", exc)
+            return False
+        return True
+
+    class VolumeSync:
         """What another container committed (``load_demo``) is read back before any write
         of this container's and within RELOAD_EVERY_S otherwise; what this container wrote
-        reaches the Volume after every write request, not only on shutdown. The Volume
-        refuses a reload while a file on it is open in another request: a write then
-        answers 503 with Retry-After (shown to the user, who tries again) rather than commit
-        a stale copy of the inventory over a set loaded meanwhile."""
+        reaches the Volume after every write request, not only on shutdown. A reload
+        remounts the Volume: a request opening the database meanwhile fails with "unable to
+        open database file", so a reload runs only while no other request is inside the app
+        and holds new ones back until it is done. A request that finds others inside skips
+        it, unless it is a write whose view is older than RELOAD_EVERY_S: that one waits up
+        to RELOAD_DRAIN_S for them, then answers 503 with Retry-After rather than commit a
+        stale copy of the inventory over a set loaded meanwhile."""
 
-        async def dispatch(self, request, call_next):  # type: ignore[no-untyped-def]
-            nonlocal last_reload
-            writes = request.method in ("POST", "PUT", "PATCH", "DELETE")
-            if writes or time.monotonic() - last_reload > RELOAD_EVERY_S:
-                try:  # blocking I/O, off the loop; one more try after a moment, since a
-                    # refusal usually means a file streaming in another request
+        def __init__(self, app):  # type: ignore[no-untyped-def]
+            self.app = app
+
+        async def __call__(self, scope, receive, send):  # type: ignore[no-untyped-def]
+            nonlocal last_reload, busy, syncing
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+            writes = scope["method"] in ("POST", "PUT", "PATCH", "DELETE")
+            ok = True
+            async with gate:
+                await gate.wait_for(lambda: not syncing)
+                stale = time.monotonic() - last_reload > RELOAD_EVERY_S
+                quiet = busy == 0 and (writes or stale)
+                drain = busy > 0 and writes and stale
+                if quiet or drain:
+                    syncing = True
                     try:
-                        await asyncio.to_thread(data.reload)
-                    except Exception:  # noqa: BLE001 - the Volume's own error types
-                        await asyncio.sleep(RELOAD_RETRY_S)
-                        await asyncio.to_thread(data.reload)
-                    last_reload = time.monotonic()
-                except Exception as exc:  # noqa: BLE001
-                    if writes:
-                        log.info("volume reload refused before a write: %s", exc)
-                        return JSONResponse(
-                            {"detail": "the host is syncing its data; try again in a moment"},
-                            status_code=503,
-                            headers={"Retry-After": "2"},
+                        if drain:
+                            await asyncio.wait_for(
+                                gate.wait_for(lambda: busy == 0), RELOAD_DRAIN_S
+                            )
+                        ok = await reload()
+                    except TimeoutError:
+                        log.info(
+                            "volume reload skipped: %d requests still running", busy
                         )
-                    log.info("volume reload skipped: %s", exc)
-            response = await call_next(request)
-            if writes:
-                # whatever the outcome: a reload may commit what is on disk anyway, so the
-                # Volume is told now rather than by accident later
-                await asyncio.to_thread(data.commit)
-            return response
+                        ok = False
+                    finally:
+                        syncing = False
+                        gate.notify_all()
+                    if ok:
+                        last_reload = time.monotonic()
+                if ok or not writes:
+                    busy += 1
+            if writes and not ok:
+                refused = JSONResponse(
+                    {"detail": "the host is syncing its data; try again in a moment"},
+                    status_code=503,
+                    headers={"Retry-After": "2"},
+                )
+                await refused(scope, receive, send)
+                return
+            try:
+                await self.app(scope, receive, send)
+            finally:
+                if writes:
+                    # whatever the outcome: a reload may commit what is on disk anyway, so
+                    # the Volume is told now rather than by accident later
+                    await asyncio.to_thread(data.commit)
+                async with gate:
+                    busy -= 1
+                    gate.notify_all()
 
     # innermost, so the 503 still carries the CORS and request headers the outer layers add
     fastapi_app.user_middleware.append(Middleware(VolumeSync))
