@@ -76,10 +76,16 @@ The first time a browser opens the web app, a card above the pages plays four pa
 demo set turning into what Muse Image drew them as: the joystick module into an arcade coffee
 table, the DHT11 into a kitchen climate dashboard, the ultrasonic sensor into a garage parking
 helper and the UNO board into a desk calendar. It plays once on its own and stays on the last
-drawing; nothing needs a click. The
+drawing; nothing needs a click. **<** and **>** step through the parts by hand (it goes on by
+itself from the part chosen), and *See the ... in the demo* opens that part's item in the
+inventory, found by its name in the demo set. The
 images are static files of the web app (`frontend/public/showcase/`), so it asks nothing of the
 backend and spends nothing. The browser remembers the visit (`opl.showcase.seen` in its local
-storage): a reload does not show it again, and **×** puts it away at once. With
+storage): a reload does not show it again, and **×** puts it away at once. The page opened at
+`#welcome` plays it again whatever the browser remembers, over the page that is open: a link to
+share, such as `https://orphan-parts.pages.dev/#welcome`. The footer's *Play the welcome* does
+the same. **<** and **>** say the part they step to for a screen reader, and a part this
+server's inventory has no item for says so instead of opening it. With
 reduced motion asked for, it stands still on the joystick module and the coffee table.
 
 ## Without the code

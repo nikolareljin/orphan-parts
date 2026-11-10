@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 
 // a browser that has never opened the web app: no session, nothing remembered
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -68,4 +69,90 @@ test('with reduced motion asked for, the showcase stands still on the first part
   await page.clock.runFor(PHASE_MS * 4)
   await expect(showcase.getByText('A spare joystick module')).toBeVisible()
   await expect(showcase.getByText('A DHT11 sensor')).toHaveCount(0)
+})
+
+test('< and > step through the parts by hand, wrapping round, and each goes on from there', async ({ page }) => {
+  await page.clock.install({ time: 0 })
+  await page.clock.pauseAt(1000)
+  await page.goto('/')
+  const showcase = page.getByRole('region', { name: 'What a spare part can become' })
+  const caption = showcase.locator('.showcase-caption strong')
+  await expect(caption).toHaveText('A spare joystick module')
+  await showcase.getByRole('button', { name: 'Next part' }).click()
+  await expect(caption).toHaveText('A DHT11 sensor')
+  // said aloud: the stage is pictures only
+  await expect(showcase.locator('[aria-live="polite"]')).toHaveText('A DHT11 sensor: a kitchen climate dashboard')
+  // from the part chosen, it goes on by itself to what it became
+  await page.clock.runFor(PHASE_MS)
+  await expect(showcase.locator('.showcase-arrow')).toHaveAttribute('aria-hidden', 'false')
+  await showcase.getByRole('button', { name: 'Previous part' }).click()
+  await expect(caption).toHaveText('A spare joystick module')
+  await showcase.getByRole('button', { name: 'Previous part' }).click()
+  await expect(caption).toHaveText('A spare UNO board') // round to the last
+  await showcase.getByRole('button', { name: 'Next part' }).click()
+  await expect(caption).toHaveText('A spare joystick module') // and round to the first
+})
+
+test.describe('seen before', () => {
+  test.use({ storageState: SIGNED_OUT })
+
+  test('#welcome plays it again, and the footer link does the same', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('button', { name: 'My inventory' })).toBeVisible()
+    const showcase = page.getByRole('region', { name: 'What a spare part can become' })
+    await expect(showcase).toHaveCount(0)
+    // from another page: it plays over that page, which stays open
+    await page.getByRole('button', { name: 'My inventory' }).click()
+    await page.getByRole('button', { name: 'Play the welcome' }).click()
+    await expect(showcase).toBeVisible()
+    await expect(showcase.locator('.showcase-caption strong')).toHaveText('A spare joystick module')
+    await expect(page.getByRole('button', { name: 'My inventory' })).toHaveAttribute('aria-current', 'page')
+    await showcase.getByRole('button', { name: 'Close the welcome' }).click()
+    await expect(showcase).toHaveCount(0)
+    await page.getByRole('button', { name: 'Play the welcome' }).click()
+    await expect(showcase).toBeVisible()
+    await showcase.getByRole('button', { name: 'Close the welcome' }).click()
+    // opened at the address itself, as a shared link is; closed, the address is the page's
+    await page.goto('/#welcome')
+    await page.reload()
+    await expect(showcase).toBeVisible()
+    await showcase.getByRole('button', { name: 'Close the welcome' }).click()
+    expect(new URL(page.url()).hash).toBe('')
+  })
+})
+
+test('a part opens its item in the demo', async ({ page, playwright, baseURL }) => {
+  const code = process.env.E2E_ACCESS_CODE ?? ''
+  test.skip(!code, 'the stack runs without a gate')
+  // the owner puts the joystick module on the public shelf, as the demo set does
+  const owner = await playwright.request.newContext({ baseURL })
+  expect((await owner.post('/api/access', { data: { code } })).ok()).toBe(true)
+  const listed = (await (await owner.get('/api/items')).json()) as { id: number; name: string; public: boolean }[]
+  const found = listed.find((i) => i.name === 'Joystick module')
+  let id = found?.id
+  if (id === undefined) {
+    const made = await owner.post('/api/items', { data: { name: 'Joystick module', item_type: 'joystick module' } })
+    expect(made.status()).toBe(201)
+    id = ((await made.json()) as { id: number }).id
+  }
+  expect((await owner.post(`/api/items/${id}/public`, { data: { public: true } })).ok()).toBe(true)
+  try {
+    await page.goto('/')
+    const showcase = page.getByRole('region', { name: 'What a spare part can become' })
+    await showcase.getByRole('button', { name: 'See the Joystick module in the demo' }).click()
+    await expect(page.getByRole('button', { name: 'My inventory' })).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByRole('article', { name: 'Item Joystick module' })).toBeVisible()
+    // a part this host has no item for says so, and the page stays where it is
+    await page.keyboard.press('Escape') // the item's dialog closed first
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Play the welcome' }).click()
+    await showcase.getByRole('button', { name: 'Next part' }).click()
+    await showcase.getByRole('button', { name: 'See the DHT11 temperature and humidity module in the demo' }).click()
+    await expect(showcase.getByRole('status')).toHaveText(/has no DHT11 temperature and humidity module to show/)
+  } finally {
+    // the shelf as it was: made private again, or gone if this test made it
+    if (found === undefined) await owner.delete(`/api/items/${id}`)
+    else if (!found.public) await owner.post(`/api/items/${id}/public`, { data: { public: false } })
+    await owner.dispose()
+  }
 })
