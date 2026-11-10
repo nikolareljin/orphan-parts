@@ -565,9 +565,12 @@ def _hard_coded_credentials(source: str) -> list[str]:
             for default in defaults:
                 if not (isinstance(default, ast.Constant) and default.value == ""):
                     found.append(f"line {node.lineno}: {ast.unparse(node)}")
-        elif isinstance(node, ast.BoolOp) and any(_is_env_read(v) for v in node.values):
-            if _fallbacks(node):
-                found.append(f"line {node.lineno}: {ast.unparse(node)}")
+        elif (
+            isinstance(node, ast.BoolOp)
+            and any(_is_env_read(v) for v in node.values)
+            and _fallbacks(node)
+        ):
+            found.append(f"line {node.lineno}: {ast.unparse(node)}")
         if isinstance(node, ast.Assign):
             pairs += [(_target_name(t), node.value) for t in node.targets]
         elif isinstance(node, ast.AnnAssign | ast.AugAssign):
