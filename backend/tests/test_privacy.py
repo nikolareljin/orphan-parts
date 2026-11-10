@@ -379,23 +379,21 @@ def test_an_uploaded_photo_is_checked_and_its_shared_copy_blacked_out(
     served = c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"})
     shared = served.content
     assert not is_black(original, key) and is_black(shared, key)
-    # the shared copy is kept by the browser and asked again: unchanged, a 304 with no body
-    tag = served.headers["etag"]
-    assert served.headers["cache-control"] == "private, no-cache"
-    again = c.get(
-        f"/api/items/{item}/photos/1", params={"copy": "shared"}, headers={"If-None-Match": tag}
-    )
-    assert again.status_code == 304 and again.content == b"" and again.headers["etag"] == tag
+    assert served.headers["cache-control"] == "no-store"  # the owner's view is never kept
     # shown by the owner: that area is no longer black on the shared copy
     chosen = c.patch(f"/api/items/{item}/photos/1/areas/{key['id']}", json={"hidden": False})
     assert (
         chosen.status_code == 200 and "1 shown by the owner: product key" in chosen.json()["note"]
     )
-    changed = c.get(
-        f"/api/items/{item}/photos/1", params={"copy": "shared"}, headers={"If-None-Match": tag}
+    assert not is_black(
+        c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).content, key
     )
-    assert changed.status_code == 200 and changed.headers["etag"] != tag
-    assert not is_black(changed.content, key)
+    # hidden again: black again (the copy drawn before is the right one again)
+    assert (
+        c.patch(f"/api/items/{item}/photos/1/areas/{key['id']}", json={"hidden": True}).status_code
+        == 200
+    )
+    assert is_black(c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).content, key)
     assert c.patch(f"/api/items/{item}/photos/1/areas/99", json={"hidden": True}).status_code == 404
     # the zip carries the shared copy
     draft = c.post(f"/api/items/{item}/drafts", json={"mode": "sell"})
@@ -462,12 +460,24 @@ def test_the_visitor_gets_shared_copies_masked_values_and_no_unchecked_photo(
             assert got.status_code == 200 and got.content != original
             assert is_black(got.content, photo["areas"][0])
         assert c.get(f"/api/items/{item}/photos/2").status_code == 404
+        # the visitor's browser keeps the shared copy and asks again: unchanged, a 304
+        first = c.get(f"/api/items/{item}/photos/1")
+        tag = first.headers["etag"]
+        assert first.headers["cache-control"] == "private, no-cache"
+        again = c.get(f"/api/items/{item}/photos/1", headers={"If-None-Match": tag})
+        assert again.status_code == 304 and again.content == b""
         # the live calls and the owner's choices are refused
         assert c.post(f"/api/items/{item}/photos/check").status_code == 403
         assert (
             c.patch(f"/api/items/{item}/photos/1/areas/1", json={"hidden": False}).status_code
             == 403
         )
+        # made private again: the tag the visitor kept opens nothing
+        c.post("/api/access", json={"code": CODE})
+        c.post(f"/api/items/{item}/public", json={"public": False})
+        c.cookies.clear()
+        gone = c.get(f"/api/items/{item}/photos/1", headers={"If-None-Match": tag})
+        assert gone.status_code == 404
 
 
 def test_the_routes_that_check_spend_and_the_visitor_has_neither() -> None:
