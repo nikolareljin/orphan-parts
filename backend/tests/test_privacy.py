@@ -119,7 +119,7 @@ def test_masking_keeps_the_last_four_of_an_identifier_and_nothing_of_a_password(
     assert FAKE_KEY not in masked and "hunter2" not in masked
 
 
-def test_private_field_names() -> None:
+def test_field_names_kept_private() -> None:
     assert private_field("serial_number") and private_field("product_key")
     assert private_field("mac") and private_field("wifi_password")
     assert not private_field("machine_type") and not private_field("model_number")
