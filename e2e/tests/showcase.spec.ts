@@ -24,8 +24,14 @@ test('the first visit plays the showcase once on its own; × puts it away and a 
   await expect(arrow).toHaveAttribute('aria-hidden', 'true') // what it becomes is not said yet
   // the pair before stays as drawn under the one fading in
   await expect(showcase.locator('.showcase-pair.is-before.is-built')).toHaveCount(1)
-  // one cycle, then it stays on the last drawing
-  await page.clock.runFor(PHASE_MS * 20)
+  // one cycle, a phase at a time (each next timer is set once React has drawn the step):
+  // the part, then what it becomes, for the last two pairs
+  for (let step = 3; step <= 7; step++) {
+    await page.clock.runFor(PHASE_MS)
+    await expect(arrow).toHaveAttribute('aria-hidden', step % 2 ? 'false' : 'true')
+  }
+  // then it stays on the last drawing
+  await page.clock.runFor(PHASE_MS * 4)
   await expect(showcase.getByText('A spare UNO board')).toBeVisible()
   await expect(arrow).toHaveAttribute('aria-hidden', 'false')
   await expect(arrow).toContainText('a desk calendar and alarm')
