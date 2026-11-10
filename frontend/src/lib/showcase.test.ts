@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { LAST_STEP, PAIRS, SHOWCASE_SEEN, builtSrc, partSrc, remember, seen, stepAfter } from './showcase'
+import { LAST_STEP, PAIRS, SHOWCASE_SEEN, WELCOME_HASH, askedFor, itemNamed, pairStep, builtSrc, partSrc, remember, seen, stepAfter } from './showcase'
 import Showcase from '../components/Showcase'
 
 function memory(): Storage {
@@ -49,12 +49,42 @@ describe('Showcase', () => {
     expect(stepAfter(LAST_STEP)).toBe(LAST_STEP)
   })
 
+  it('steps to a part by hand, wrapping round; with reduced motion, to what it became', () => {
+    expect(pairStep(1, false)).toBe(2)
+    expect(pairStep(PAIRS.length, false)).toBe(0) // > after the last: the first again
+    expect(pairStep(-1, false)).toBe(2 * (PAIRS.length - 1)) // < before the first: the last
+    expect(pairStep(2, true)).toBe(5)
+  })
+
+  it('plays again at #welcome, whatever this browser remembers', () => {
+    expect(WELCOME_HASH).toBe('#welcome')
+    expect(askedFor('#welcome')).toBe(true)
+    expect(askedFor('')).toBe(false)
+    expect(askedFor('#inventory')).toBe(false)
+  })
+
+  it('finds the demo item of a part by its name, and says when this host has none', () => {
+    const items = [
+      { id: 7, name: 'Elegoo UNO R3 board' },
+      { id: 9, name: ' Joystick module ' },
+    ]
+    expect(itemNamed(items, 'Joystick module')).toBe(9)
+    expect(itemNamed(items, 'elegoo uno r3 board')).toBe(7)
+    expect(itemNamed(items, 'HC-SR04 ultrasonic distance module')).toBeNull()
+    for (const pair of PAIRS) expect(pair.item.length).toBeGreaterThan(0)
+  })
+
   it('serves every image from the web host, none from the backend', () => {
     const files = Object.keys(import.meta.glob('../../public/showcase/*.webp')).map((f) => f.replace('../../public', ''))
     for (const p of PAIRS) {
       expect(files).toContain(partSrc(p))
       expect(files).toContain(builtSrc(p))
     }
+  })
+
+  it('links the shown part to its demo item', () => {
+    const html = renderToStaticMarkup(createElement(Showcase, { open: true, onOpenItem: () => {} }))
+    expect(html).toContain('See the Joystick module in the demo</button>')
   })
 
   it('keeps the pair before as drawn under the one fading in', () => {
@@ -67,6 +97,10 @@ describe('Showcase', () => {
   it('opens on the first pair with a close button, and loads only the next pair ahead', () => {
     const html = renderToStaticMarkup(createElement(Showcase, { open: true }))
     expect(html).toContain('aria-label="Close the welcome"')
+    expect(html).toContain('aria-label="Previous part"')
+    expect(html).toContain('aria-label="Next part"')
+    // no way to the demo item unless the page can open one
+    expect(html).not.toContain('in the demo</button>')
     expect(html).toContain('class="showcase-stage" aria-hidden="true"')
     expect(html).not.toContain('aria-live')
     expect(html).toContain('A spare joystick module')

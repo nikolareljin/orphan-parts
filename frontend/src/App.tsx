@@ -6,6 +6,7 @@ import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
 import Showcase from './components/Showcase'
+import { WELCOME_HASH, itemNamed } from './lib/showcase'
 import Modal from './components/Modal'
 import Profile from './components/Profile'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type Version } from './lib/api'
@@ -152,6 +153,20 @@ export default function App() {
     checkAccess.current()
   }
 
+  // the welcome's link to a part: its item in the inventory, found by its name (ids differ
+  // between hosts); the inventory alone when this host has no such item
+  async function openDemoItem(name: string) {
+    let id: number | null = null
+    try {
+      id = itemNamed(await api.items.list(), name)
+    } catch {
+      // the inventory says why when it loads
+    }
+    if (id !== null) setOpenItem(id)
+    setSaved((n) => n + 1)
+    setView('inventory')
+  }
+
   // the way out: the server clears the cookie, the tab drops its token, and the header turns
   // at once; the page loads again as whatever the browser is now
   async function signOut() {
@@ -202,7 +217,7 @@ export default function App() {
         </div>
       </header>
 
-      <Showcase />
+      <Showcase onOpenItem={(name) => void openDemoItem(name)} />
 
       {signIn && door === 'sign-in' && (
         <Modal title="Access code" onClose={() => setSignIn(false)}>
@@ -375,6 +390,7 @@ export default function App() {
         )}
         {/* shown whatever the server says: the way to the docs and the code even when it is down */}
         <span className="links">
+          <a href={WELCOME_HASH}>Play the welcome</a>
           <a href="https://nikolareljin.github.io/orphan-parts/" target="_blank" rel="noreferrer">
             Documentation
           </a>
