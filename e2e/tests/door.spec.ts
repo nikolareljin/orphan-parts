@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 
 // The header's door: on a gated server there is always exactly one of Sign in with the code
 // and Sign out, whatever else on the page is slow or failing, and on any width.
@@ -10,7 +11,7 @@ const signInLink = (page: Page) => header(page).getByRole('button', { name: 'Sig
 const signOutLink = (page: Page) => header(page).getByRole('button', { name: 'Sign out' })
 
 test.describe('signed out', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  test.use({ storageState: SIGNED_OUT })
 
   test('the header offers Sign in, then Sign out once in, then Sign in again', async ({ page }) => {
     test.skip(!code, 'the stack runs without a gate')

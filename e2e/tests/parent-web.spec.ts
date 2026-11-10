@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 import { grayPng } from './png'
 
 // A part the app cannot tie to its device asks for the device; a search can look on the web.
@@ -79,7 +80,7 @@ test('Search the web brings back pages as listings with their links', async ({ p
 })
 
 test.describe('the demo visitor', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  test.use({ storageState: SIGNED_OUT })
   const code = process.env.E2E_ACCESS_CODE ?? ''
 
   test('reads the question about the device and gets nothing to fill in', async ({ page, playwright, baseURL }) => {

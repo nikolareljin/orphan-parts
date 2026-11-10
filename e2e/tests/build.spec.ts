@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { SIGNED_OUT } from '../global-setup'
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test'
 
 // The project tests build on items with the names the recorded proposal uses, and the profile
@@ -238,7 +239,7 @@ test('a project is drawn only on a click, and the picture is labeled as drawn', 
 })
 
 test.describe('the demo visitor', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  test.use({ storageState: SIGNED_OUT })
   const code = process.env.E2E_ACCESS_CODE ?? ''
 
   test('reads the homework desk and the profile, with nothing to propose, commit or save', async ({ page, playwright, baseURL }) => {
