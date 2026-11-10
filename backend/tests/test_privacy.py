@@ -255,6 +255,32 @@ async def test_the_recorded_check_of_the_fake_sticker_finds_every_kind(
 
 
 @pytest.mark.anyio
+async def test_a_shared_copy_is_drawn_once_until_its_areas_change(
+    recorded_settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.privacy import service as service_module
+
+    client = ModelApiClient(recorded_settings, CostLedger(1.0))
+    privacy = Privacy(recorded_settings, client)
+    photo = sticker_stored(recorded_settings)
+    try:
+        check = await privacy.check(photo)
+    finally:
+        await client.aclose()
+    drawn: list[int] = []
+
+    def counted(data: bytes, areas: list[Area]) -> bytes:
+        drawn.append(len(areas))
+        return redacted(data, areas)
+
+    monkeypatch.setattr(service_module, "redacted", counted)
+    first = privacy.shared_copy(photo)
+    assert privacy.shared_copy(photo) is first and len(drawn) == 1
+    privacy.choose(photo, check.areas[0].id, hidden=False)
+    assert privacy.shared_copy(photo) != first and len(drawn) == 2
+
+
+@pytest.mark.anyio
 async def test_a_failed_check_is_kept_and_the_photo_is_not_shared(settings: Settings) -> None:
     client = ModelApiClient(settings, CostLedger(1.0))
     privacy = Privacy(settings, client)
@@ -347,9 +373,13 @@ def test_an_uploaded_photo_is_checked_and_its_shared_copy_blacked_out(
         " QR code."
     )
     key = photo["areas"][0]
-    original = c.get(f"/api/items/{item}/photos/1").content
-    shared = c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).content
+    first = c.get(f"/api/items/{item}/photos/1")
+    original = first.content
+    assert first.headers["cache-control"] == "no-store"  # the owner's original is never kept
+    served = c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"})
+    shared = served.content
     assert not is_black(original, key) and is_black(shared, key)
+    assert served.headers["cache-control"] == "no-store"  # the owner's view is never kept
     # shown by the owner: that area is no longer black on the shared copy
     chosen = c.patch(f"/api/items/{item}/photos/1/areas/{key['id']}", json={"hidden": False})
     assert (
@@ -358,6 +388,12 @@ def test_an_uploaded_photo_is_checked_and_its_shared_copy_blacked_out(
     assert not is_black(
         c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).content, key
     )
+    # hidden again: black again (the copy drawn before is the right one again)
+    assert (
+        c.patch(f"/api/items/{item}/photos/1/areas/{key['id']}", json={"hidden": True}).status_code
+        == 200
+    )
+    assert is_black(c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).content, key)
     assert c.patch(f"/api/items/{item}/photos/1/areas/99", json={"hidden": True}).status_code == 404
     # the zip carries the shared copy
     draft = c.post(f"/api/items/{item}/drafts", json={"mode": "sell"})
@@ -424,12 +460,24 @@ def test_the_visitor_gets_shared_copies_masked_values_and_no_unchecked_photo(
             assert got.status_code == 200 and got.content != original
             assert is_black(got.content, photo["areas"][0])
         assert c.get(f"/api/items/{item}/photos/2").status_code == 404
+        # the visitor's browser keeps the shared copy and asks again: unchanged, a 304
+        first = c.get(f"/api/items/{item}/photos/1")
+        tag = first.headers["etag"]
+        assert first.headers["cache-control"] == "private, no-cache"
+        again = c.get(f"/api/items/{item}/photos/1", headers={"If-None-Match": tag})
+        assert again.status_code == 304 and again.content == b""
         # the live calls and the owner's choices are refused
         assert c.post(f"/api/items/{item}/photos/check").status_code == 403
         assert (
             c.patch(f"/api/items/{item}/photos/1/areas/1", json={"hidden": False}).status_code
             == 403
         )
+        # made private again: the tag the visitor kept opens nothing
+        c.post("/api/access", json={"code": CODE})
+        c.post(f"/api/items/{item}/public", json={"public": False})
+        c.cookies.clear()
+        gone = c.get(f"/api/items/{item}/photos/1", headers={"If-None-Match": tag})
+        assert gone.status_code == 404
 
 
 def test_the_routes_that_check_spend_and_the_visitor_has_neither() -> None:

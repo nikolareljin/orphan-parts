@@ -80,13 +80,13 @@ def test_a_picture_is_drawn_kept_served_and_charged(
     assert picture["model"] == drawing_settings.model_image
     assert picture["from_fixture"] is True and picture["cost_usd"] == 0.0
     assert picture["created_at"].endswith("+00:00")
-    # listed, served as a JPEG that is never cached, and not a photo of the item
+    # listed, served as a JPEG that is never cached for the owner, and not a photo of the item
     listed = drawing.get(f"/api/items/{item_id}/pictures").json()
     assert listed["enabled"] is True and [p["n"] for p in listed["pictures"]] == [1]
     served = drawing.get(f"/api/items/{item_id}/pictures/1")
     assert served.status_code == 200
     assert served.headers["content-type"] == "image/jpeg"
-    assert served.headers["cache-control"] == "no-store"
+    assert served.headers["cache-control"] == "no-store"  # the owner's: never kept
     assert served.content[:2] == b"\xff\xd8"
     assert drawing.get(f"/api/items/{item_id}/pictures/2").status_code == 404
     assert drawing.get(f"/api/items/{item_id}/photos").json()["count"] == 1

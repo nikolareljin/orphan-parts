@@ -257,7 +257,7 @@ def test_a_reuse_card_is_drawn_once_per_click_and_kept_with_the_card(
     assert [p["n"] for p in drawing.get(f"{base}/pictures").json()["pictures"]] == [1]
     served = drawing.get(f"{base}/pictures/1")
     assert served.status_code == 200 and served.content[:3] == b"\xff\xd8\xff"
-    assert served.headers["cache-control"] == "no-store"
+    assert served.headers["cache-control"] == "no-store"  # the owner's: never kept
     assert drawing.get(f"{base}/pictures/2").status_code == 404
     # the other cards have none, and the item's own pictures and photos are untouched
     assert (

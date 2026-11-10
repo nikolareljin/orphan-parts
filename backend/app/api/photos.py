@@ -1,10 +1,11 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.api.deps import DevicePhotosDep, ExtractorDep, GateDep, PhotosDep, PrivacyDep
+from app.api.images import revalidated_jpeg
 from app.api.model_errors import as_http
 from app.api.uploads import read_bounded
 from app.extract import Extraction
@@ -55,6 +56,7 @@ def item_photos(item_id: int, photos: PhotosDep, privacy: PrivacyDep) -> PhotoCo
 
 @router.get("/{item_id}/photos/{n}", response_class=Response)
 def item_photo(
+    request: Request,
     item_id: int,
     n: int,
     photos: PhotosDep,
@@ -70,13 +72,13 @@ def item_photo(
     data = photos.read(item_id, n)
     if for_visitor() or copy == "shared":
         try:
-            data = privacy.shared_copy(data)
+            return revalidated_jpeg(request, privacy.shared_copy(data))
         except NotCheckedError as exc:
             raise HTTPException(status_code=404 if for_visitor() else 409, detail=str(exc)) from exc
     return Response(
         data,
         media_type="image/jpeg",
-        headers={"Cache-Control": "no-store"},  # private, and the number is reused after a reset
+        headers={"Cache-Control": "no-store"},  # the owner's original stays out of the cache
     )
 
 

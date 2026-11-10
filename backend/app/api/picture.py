@@ -1,10 +1,11 @@
 from collections.abc import Awaitable
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.api.deps import DeciderDep, PicturesDep, PlannerDep
+from app.api.images import revalidated_jpeg
 from app.api.model_errors import as_http
 from app.ops.door import for_visitor, live_request
 from app.picture import OFF_LINE, Picture, PictureList, Pictures, PicturesOffError
@@ -40,10 +41,6 @@ def _on(pictures: Pictures) -> None:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=OFF_LINE)
 
 
-def _jpeg(data: bytes) -> Response:
-    return Response(data, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
-
-
 @router.post("/{item_id}/picture", response_model=Picture, status_code=status.HTTP_201_CREATED)
 async def draw_picture(item_id: int, request: PictureRequest, pictures: PicturesDep) -> Picture:
     """Draw what the item could become with Muse Image: one image per call, made only on this
@@ -61,9 +58,9 @@ def item_pictures(item_id: int, pictures: PicturesDep) -> PictureList:
 
 
 @router.get("/{item_id}/pictures/{n}", response_class=Response)
-def item_picture(item_id: int, n: int, pictures: PicturesDep) -> Response:
+def item_picture(request: Request, item_id: int, n: int, pictures: PicturesDep) -> Response:
     """One picture as JPEG, ``1`` first; ``404`` for a number that was never drawn."""
-    return _jpeg(pictures.read(item_id, n, public_only=not live_request.get()))
+    return revalidated_jpeg(request, pictures.read(item_id, n, public_only=not live_request.get()))
 
 
 CARD = "/{item_id}/scenarios/{scenarios_id}/reuse/{card}"
@@ -95,12 +92,20 @@ def card_pictures(
 
 @router.get(f"{CARD}/pictures/{{n}}", response_class=Response)
 def card_picture(
-    item_id: int, scenarios_id: int, card: int, n: int, pictures: PicturesDep, decider: DeciderDep
+    request: Request,
+    item_id: int,
+    scenarios_id: int,
+    card: int,
+    n: int,
+    pictures: PicturesDep,
+    decider: DeciderDep,
 ) -> Response:
     """One picture of a reuse card as JPEG, ``1`` first; for the demo visitor, a public
     item's (404 otherwise)."""
     decider.inventory.get(item_id, public_only=for_visitor())
-    return _jpeg(pictures.card_read(decider.scenarios_by_id(item_id, scenarios_id), card, n))
+    return revalidated_jpeg(
+        request, pictures.card_read(decider.scenarios_by_id(item_id, scenarios_id), card, n)
+    )
 
 
 @projects_router.post(
@@ -125,8 +130,8 @@ def project_pictures(project_id: int, pictures: PicturesDep, planner: PlannerDep
 
 @projects_router.get("/{project_id}/pictures/{n}", response_class=Response)
 def project_picture(
-    project_id: int, n: int, pictures: PicturesDep, planner: PlannerDep
+    request: Request, project_id: int, n: int, pictures: PicturesDep, planner: PlannerDep
 ) -> Response:
     """One picture of the project as JPEG, ``1`` first."""
     planner.project(project_id, public_only=not live_request.get())
-    return _jpeg(pictures.project_read(project_id, n))
+    return revalidated_jpeg(request, pictures.project_read(project_id, n))
