@@ -1,7 +1,6 @@
 """Missing items: a search request the owner runs on Marketplace by handoff, candidates brought
 back as text, a screenshot or typed values, each assessed by the profile's rules and dated."""
 
-import asyncio
 import json
 import logging
 import re
@@ -11,6 +10,8 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
+
+import anyio.to_thread
 
 from app.config import Settings
 from app.extract.schema import Evidence, Extraction, LabelReading
@@ -637,7 +638,7 @@ class Finder:
             extra={"search_id": search_id, "usd": response.cost_usd, "refused": bool(error)},
         )
         # scoring every listing again, and the lock, stay off the event loop
-        return await asyncio.to_thread(self._keep_plan, search_id, plan)
+        return await anyio.to_thread.run_sync(self._keep_plan, search_id, plan)
 
     def web_brief(self, search: Search) -> str:
         """The plan's brief, led by what to search for: the device the part came from when it
@@ -698,7 +699,7 @@ class Finder:
         )
         response = result.response
         kept, dropped, notes = backed_finds(result.parsed.candidates, response.output)
-        listings, added = await asyncio.to_thread(
+        listings, added = await anyio.to_thread.run_sync(
             self._add,
             search_id,
             [("web", web_text(f)) for f in kept],
@@ -873,7 +874,7 @@ class Finder:
                 text = "; ".join(values)
             if text:
                 # scoring, and the lock, stay off the event loop
-                kept = await asyncio.to_thread(
+                kept = await anyio.to_thread.run_sync(
                     self._add_listings, search_id, [("screenshot", text)], observed_on
                 )
         if kept is None:
@@ -901,7 +902,7 @@ class Finder:
     async def check_listing(self, search_id: int, listing_id: int) -> Candidate:
         """Check fit: the listing becomes a candidate, read by Muse Spark and assessed by the
         profile's rules, with the seller questions; the listing remembers which candidate."""
-        found = await asyncio.to_thread(self._start_check, search_id, listing_id)
+        found = await anyio.to_thread.run_sync(self._start_check, search_id, listing_id)
         if found.candidate_id is not None:
             return self.candidate(found.candidate_id)
         try:
@@ -912,9 +913,11 @@ class Finder:
                 ),
             )
         except BaseException:
-            await asyncio.to_thread(self._remember_candidate, search_id, listing_id, None)
+            await anyio.to_thread.run_sync(self._remember_candidate, search_id, listing_id, None)
             raise
-        await asyncio.to_thread(self._remember_candidate, search_id, listing_id, candidate.id)
+        await anyio.to_thread.run_sync(
+            self._remember_candidate, search_id, listing_id, candidate.id
+        )
         return candidate
 
     def _start_check(self, search_id: int, listing_id: int) -> BroughtListing:
