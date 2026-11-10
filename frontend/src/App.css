@@ -2518,20 +2518,28 @@ button.link.help-tip-toggle[aria-expanded='true'] {
   width: max-content;
   max-width: min(21rem, calc(100vw - 2rem));
   padding: 0.6rem 2rem 0.65rem 0.8rem;
-  border: 1px solid var(--line);
+  /* the note sits on a card of the same color: a firm edge and a shadow lift it off. On a
+     light page the shadow is dark and close in; on a dark page a dark shadow does not show,
+     so the note is a shade lighter than the card, with a light edge and a soft glow */
+  border: 1px solid var(--control-border);
   border-radius: 8px;
   background: var(--card);
   color: var(--fg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 2px 6px rgb(15 23 42 / 0.22),
+    0 12px 32px rgb(15 23 42 / 0.32);
   text-align: left;
   white-space: normal;
 }
 
 @media (prefers-color-scheme: dark) {
   .help-tip-pop {
+    border-color: #5a6575;
+    background: #222833;
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.08),
-      0 8px 24px rgba(0, 0, 0, 0.55);
+      0 0 0 1px rgb(110 160 255 / 0.28),
+      0 0 22px rgb(110 160 255 / 0.22),
+      0 12px 32px rgb(0 0 0 / 0.75);
   }
 }
 
