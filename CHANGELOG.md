@@ -4,6 +4,8 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+## 1.1.0 - 2026-11-10
+
 ### Added
 - The welcome steps through its parts by hand: **<** and **>** at the sides of the picture (round, wrapping; it goes on by itself from the part chosen), and *See the ... in the demo* under the caption opens that part's item in the inventory, found by its demo-set name. The page opened at `#welcome`, or the footer's new *Play the welcome*, plays it again even after it was seen: a link to share. Demo walkthrough, *The first visit*.
 - A first-visit welcome on the web app: four parts from the demo set (the joystick module, the DHT11, the ultrasonic sensor, the UNO board) turn, one after another, into what Muse Image drew them as, once, with no click needed, and it stays on the last drawing. Static images from the web host (about 390 kB in all), no backend request and nothing spent; shown once per browser, put away with ×, standing still on the first part and its drawing when reduced motion is asked for. Demo walkthrough, *The first visit*.
