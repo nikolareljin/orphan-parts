@@ -93,11 +93,19 @@ def web():  # type: ignore[no-untyped-def]
     fastapi_app = create_app()
     log = logging.getLogger("app.modal")
     last_reload = float("-inf")  # the first request reads back whatever the clock says
-    busy = 0  # requests inside the app, bodies still streaming included
-    syncing = False  # a reload is waiting for the app to go quiet, or running
-    gate = asyncio.Condition()
+    # the counts and flags change only in plain code between awaits, or in a task's done
+    # callback: a request cancelled at any await (a client gone, the function's timeout)
+    # can neither leave the count up nor let others in while the Volume is remounted
+    busy = (
+        0  # requests inside, from the gate's first read to the last byte and the commit
+    )
+    idle = asyncio.Event()  # set while busy == 0
+    idle.set()
+    open_ = asyncio.Event()  # cleared while a reload runs: requests wait at the door
+    open_.set()
 
     async def reload() -> bool:
+        nonlocal last_reload
         try:  # blocking I/O, off the loop; one more try after a moment
             try:
                 await asyncio.to_thread(data.reload)
@@ -107,55 +115,78 @@ def web():  # type: ignore[no-untyped-def]
         except Exception as exc:  # noqa: BLE001
             log.info("volume reload refused: %s", exc)
             return False
+        last_reload = time.monotonic()
         return True
+
+    def leave() -> None:
+        nonlocal busy
+        busy -= 1
+        if busy == 0:
+            idle.set()
+
+    def enter() -> None:
+        nonlocal busy
+        busy += 1
+        idle.clear()
+
+    async def come_in(writes: bool) -> bool:
+        """Counts the request in, reading the Volume back first when that is due; False for a
+        write that may not go on. A write whose view is stale waits up to RELOAD_DRAIN_S for
+        the others to finish, without holding anyone up meanwhile; refused if they did not,
+        or if the Volume refused the reload."""
+        deadline = time.monotonic() + RELOAD_DRAIN_S
+        while True:
+            while not open_.is_set():
+                await open_.wait()
+            stale = time.monotonic() - last_reload > RELOAD_EVERY_S
+            if busy == 0 and (writes or stale):
+                open_.clear()
+                # a task of its own, shielded: cancelled with this request, the reload still
+                # finishes, and only then does the door open again
+                task = asyncio.ensure_future(reload())
+                try:
+                    ok = await asyncio.shield(task)
+                except BaseException:
+                    task.add_done_callback(lambda _: open_.set())
+                    raise
+                # counted in before the door opens: nobody can start another reload under it
+                if ok or not writes:
+                    enter()
+                open_.set()
+                return ok or not writes
+            if not (writes and stale):
+                enter()  # a read, or a write on a fresh view: on with what is mounted
+                return True
+            left = deadline - time.monotonic()
+            try:
+                if left <= 0:
+                    raise TimeoutError
+                await asyncio.wait_for(idle.wait(), left)
+            except TimeoutError:
+                log.info("volume reload skipped: %d requests still running", busy)
+                return False
 
     class VolumeSync:
         """What another container committed (``load_demo``) is read back before any write
         of this container's and within RELOAD_EVERY_S otherwise; what this container wrote
         reaches the Volume after every write request, not only on shutdown. A reload
-        remounts the Volume: a request opening the database meanwhile fails with "unable to
-        open database file", so a reload runs only while no other request is inside the app
-        and holds new ones back until it is done. A request that finds others inside skips
-        it, unless it is a write whose view is older than RELOAD_EVERY_S: that one waits up
-        to RELOAD_DRAIN_S for them, then answers 503 with Retry-After rather than commit a
-        stale copy of the inventory over a set loaded meanwhile."""
+        remounts the Volume: a request opening a database file meanwhile fails with "unable
+        to open database file", so a reload runs only while no other request is inside and
+        holds new ones at the door until it is done. Outside the demo gate, which reads the
+        access codes' file. A read that finds others inside skips the reload; a write whose
+        view is older than RELOAD_EVERY_S waits up to RELOAD_DRAIN_S for them, then answers
+        503 with Retry-After rather than commit a stale copy of the inventory over a set
+        loaded meanwhile."""
 
         def __init__(self, app):  # type: ignore[no-untyped-def]
             self.app = app
 
         async def __call__(self, scope, receive, send):  # type: ignore[no-untyped-def]
-            nonlocal last_reload, busy, syncing
             if scope["type"] != "http":
                 await self.app(scope, receive, send)
                 return
             writes = scope["method"] in ("POST", "PUT", "PATCH", "DELETE")
-            ok = True
-            async with gate:
-                await gate.wait_for(lambda: not syncing)
-                stale = time.monotonic() - last_reload > RELOAD_EVERY_S
-                quiet = busy == 0 and (writes or stale)
-                drain = busy > 0 and writes and stale
-                if quiet or drain:
-                    syncing = True
-                    try:
-                        if drain:
-                            await asyncio.wait_for(
-                                gate.wait_for(lambda: busy == 0), RELOAD_DRAIN_S
-                            )
-                        ok = await reload()
-                    except TimeoutError:
-                        log.info(
-                            "volume reload skipped: %d requests still running", busy
-                        )
-                        ok = False
-                    finally:
-                        syncing = False
-                        gate.notify_all()
-                    if ok:
-                        last_reload = time.monotonic()
-                if ok or not writes:
-                    busy += 1
-            if writes and not ok:
+            if not await come_in(writes):
                 refused = JSONResponse(
                     {"detail": "the host is syncing its data; try again in a moment"},
                     status_code=503,
@@ -168,14 +199,26 @@ def web():  # type: ignore[no-untyped-def]
             finally:
                 if writes:
                     # whatever the outcome: a reload may commit what is on disk anyway, so
-                    # the Volume is told now rather than by accident later
-                    await asyncio.to_thread(data.commit)
-                async with gate:
-                    busy -= 1
-                    gate.notify_all()
+                    # the Volume is told now rather than by accident later; the request
+                    # counts as inside until the commit is done, even if it is cancelled
+                    commit = asyncio.ensure_future(asyncio.to_thread(data.commit))
+                    commit.add_done_callback(lambda _: leave())
+                    await asyncio.shield(commit)
+                else:
+                    leave()
 
-    # innermost, so the 503 still carries the CORS and request headers the outer layers add
-    fastapi_app.user_middleware.append(Middleware(VolumeSync))
+    # inside CORS, so the 503 still carries its headers; outside the demo gate, which opens
+    # the access codes' file and the inventory before the route does
+    stack = fastapi_app.user_middleware
+    at = next(
+        (
+            i
+            for i, m in enumerate(stack)
+            if getattr(m.cls, "__name__", "") == "GateMiddleware"
+        ),
+        len(stack),
+    )
+    stack.insert(at, Middleware(VolumeSync))
     return fastapi_app
 
 

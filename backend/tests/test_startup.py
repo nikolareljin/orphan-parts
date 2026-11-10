@@ -1,9 +1,11 @@
 import ast
+import contextlib
 import json
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -12,6 +14,8 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.main import create_app
 from tests.conftest import RECORDED_FIXTURES, SAMPLE_VALUE, make_photo
+
+GATE_CODE = "a-gate-code-for-the-modal-tests"
 
 
 def live(tmp_path: Path, **over: object) -> Settings:
@@ -133,9 +137,10 @@ class _Volume:
 
 @contextmanager
 def _modal_app(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, volume: _Volume
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, volume: _Volume, gate_code: str = ""
 ) -> Iterator[object]:
-    """deploy/modal_app.py imported with a stand-in for the modal package."""
+    """deploy/modal_app.py imported with a stand-in for the modal package; behind the demo
+    gate when ``gate_code`` is given."""
     import importlib.util
     import sys
     import types
@@ -170,7 +175,11 @@ def _modal_app(
     monkeypatch.setitem(sys.modules, "modal", modal)
     monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("OPL_FAKE_API", "1")
-    monkeypatch.delenv("DEMO_ACCESS_CODE", raising=False)
+    if gate_code:
+        monkeypatch.setenv("DEMO_ACCESS_CODE", gate_code)
+        monkeypatch.setenv("DEMO_REQUESTS_PER_MINUTE", "100000")
+    else:
+        monkeypatch.delenv("DEMO_ACCESS_CODE", raising=False)
     monkeypatch.delenv("SQLITE_JOURNAL_MODE", raising=False)
     # web() sets defaults into the process environment: every key is put back afterwards
     environment = dict(os.environ)
@@ -211,7 +220,8 @@ def test_the_modal_volume_is_never_reloaded_under_a_running_request(
     """A reload remounts the Volume: a request opening the database meanwhile failed with
     "unable to open database file" (a page load's parallel reads after the first request of
     a fresh container). Reads overlapping a stale view skip the reload; a write waits for
-    them; nothing opens the database while one runs."""
+    them; nothing opens a database file while one runs: not the routes, and not the demo
+    gate, which reads an issued code's record on every request."""
     import sqlite3
     import threading
     import time
@@ -238,9 +248,15 @@ def test_the_modal_volume_is_never_reloaded_under_a_running_request(
             raise sqlite3.OperationalError("unable to open database file")
         return connect(*a, **kw)  # type: ignore[arg-type]
 
-    with _modal_app(tmp_path, monkeypatch, volume) as module:
+    with _modal_app(tmp_path, monkeypatch, volume, gate_code=GATE_CODE) as module:
         module.RELOAD_EVERY_S = 0.0  # every read finds the view stale
-        with TestClient(module.web()) as c:  # type: ignore[attr-defined]
+        app = module.web()  # type: ignore[attr-defined]
+        order = [getattr(m.cls, "__name__", "") for m in app.user_middleware]
+        assert order.index("VolumeSync") < order.index("GateMiddleware")
+        assert order.index("CORSMiddleware") < order.index("VolumeSync")
+        with TestClient(app) as c:
+            code, _ = c.app.state.gate.keys.issue("judges", 7)
+            assert c.post("/api/access", json={"code": code}).json()["granted"] is True
             monkeypatch.setattr(sqlite3, "connect", guarded)
             assert c.post("/api/items", json={"item_type": "kettle"}).status_code == 201
 
@@ -263,6 +279,133 @@ def test_the_modal_volume_is_never_reloaded_under_a_running_request(
             assert opened_during_reload == []
             assert set(codes) <= {200, 201}
             assert calls.count("reload") <= 12  # only the writes that found the app quiet
+
+
+def _volume_sync(app: object) -> type:
+    stack = app.user_middleware  # type: ignore[attr-defined]
+    found: type = next(m.cls for m in stack if m.cls.__name__ == "VolumeSync")
+    return found
+
+
+async def _answer(scope: object, receive: object, send: Any) -> None:
+    await send({"type": "http.response.start", "status": 200, "headers": []})
+    await send({"type": "http.response.body", "body": b""})
+
+
+async def _nothing() -> dict[str, object]:
+    return {"type": "http.request", "body": b"", "more_body": False}
+
+
+def _scope(method: str) -> dict[str, object]:
+    return {"type": "http", "method": method, "path": "/x", "headers": []}
+
+
+def test_a_cancelled_request_does_not_keep_the_volume_from_being_read_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A request cancelled while inside (the client gone, the function's timeout) is counted
+    out: the next write reads back at once instead of waiting for it and answering 503."""
+    import asyncio
+    import time
+
+    calls: list[str] = []
+
+    class SlowCommit(_Volume):
+        def commit(self) -> None:
+            time.sleep(0.1)
+            calls.append("commit")
+
+    volume = SlowCommit()
+    volume.calls = calls
+    with _modal_app(tmp_path, monkeypatch, volume) as module:
+        module.RELOAD_DRAIN_S = 0.2  # type: ignore[attr-defined]
+        sync = _volume_sync(module.web())  # type: ignore[attr-defined]
+
+        async def run() -> list[int]:
+            inside = asyncio.Event()
+
+            async def hangs(scope: object, receive: object, send: object) -> None:
+                inside.set()
+                await asyncio.sleep(3600)
+
+            for method in ("GET", "POST"):  # cancelled in the app, or in the commit after it
+                task = asyncio.ensure_future(sync(hangs)(_scope(method), _nothing, _ignore))
+                await inside.wait()
+                inside.clear()
+                task.cancel()
+                # cancelled again where it waits next (a write: in its commit)
+                await asyncio.sleep(0.02)
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+            await asyncio.sleep(0.2)  # the commit, shielded, finishes
+            sent: list[int] = []
+
+            async def keep(message: dict[str, object]) -> None:
+                if message["type"] == "http.response.start":
+                    sent.append(int(message["status"]))  # type: ignore[call-overload]
+
+            module.RELOAD_EVERY_S = 0.0  # type: ignore[attr-defined]
+            await sync(_answer)(_scope("POST"), _nothing, keep)
+            return sent
+
+        calls.clear()
+        assert asyncio.run(run()) == [200]
+        assert "reload" in calls
+
+
+def test_a_reload_cancelled_with_its_request_still_holds_the_door_until_it_is_done(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The request that started a reload is cancelled: the reload goes on, and nothing gets
+    in until the Volume is mounted again."""
+    import asyncio
+    import threading
+    import time
+
+    remounting = threading.Event()
+    calls: list[str] = []
+
+    running = [0]
+    overlapped: list[int] = []
+
+    class Slow(_Volume):
+        def reload(self) -> None:
+            running[0] += 1
+            if running[0] > 1:
+                overlapped.append(running[0])
+            remounting.set()
+            time.sleep(0.2)
+            remounting.clear()
+            running[0] -= 1
+            calls.append("reload")
+
+    volume = Slow()
+    volume.calls = calls
+    with _modal_app(tmp_path, monkeypatch, volume) as module:
+        sync = _volume_sync(module.web())  # type: ignore[attr-defined]
+        seen: list[bool] = []
+
+        async def looks(scope: object, receive: object, send: Any) -> None:
+            seen.append(remounting.is_set())
+            await _answer(scope, receive, send)
+
+        async def run() -> None:
+            starter = asyncio.ensure_future(sync(_answer)(_scope("POST"), _nothing, _ignore))
+            while not remounting.is_set():
+                await asyncio.sleep(0.005)
+            starter.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await starter
+            await sync(looks)(_scope("GET"), _nothing, _ignore)
+
+        asyncio.run(run())
+        assert seen == [False]  # it got in only once the reload was over
+        assert overlapped == []  # and did not start another under it
+
+
+async def _ignore(message: object) -> None:
+    pass
 
 
 def _drive_the_volume(module: object, calls: list[str], volume: _Volume) -> None:
