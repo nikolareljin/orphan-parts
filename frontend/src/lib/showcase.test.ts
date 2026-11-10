@@ -83,7 +83,7 @@ describe('Showcase', () => {
   })
 
   it('links the shown part to its demo item', () => {
-    const html = renderToStaticMarkup(createElement(Showcase, { open: true, onOpenItem: () => {} }))
+    const html = renderToStaticMarkup(createElement(Showcase, { open: true, onOpenItem: async () => true }))
     expect(html).toContain('See the Joystick module in the demo</button>')
   })
 
@@ -102,7 +102,8 @@ describe('Showcase', () => {
     // no way to the demo item unless the page can open one
     expect(html).not.toContain('in the demo</button>')
     expect(html).toContain('class="showcase-stage" aria-hidden="true"')
-    expect(html).not.toContain('aria-live')
+    // the live region is there and quiet: only < and > put words in it
+    expect(html).toContain('aria-live="polite"></p>')
     expect(html).toContain('A spare joystick module')
     expect(html).toContain(partSrc(PAIRS[1]))
     expect(html).not.toContain(partSrc(PAIRS[2]))

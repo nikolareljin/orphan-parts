@@ -82,8 +82,10 @@ inventory, found by its name in the demo set. The
 images are static files of the web app (`frontend/public/showcase/`), so it asks nothing of the
 backend and spends nothing. The browser remembers the visit (`opl.showcase.seen` in its local
 storage): a reload does not show it again, and **×** puts it away at once. The page opened at
-`#welcome` (the footer's *Play the welcome*) plays it again whatever the browser remembers: a
-link to share, such as `https://orphan-parts.pages.dev/#welcome`. With
+`#welcome` plays it again whatever the browser remembers, over the page that is open: a link to
+share, such as `https://orphan-parts.pages.dev/#welcome`. The footer's *Play the welcome* does
+the same. **<** and **>** say the part they step to for a screen reader, and a part this
+server's inventory has no item for says so instead of opening it. With
 reduced motion asked for, it stands still on the joystick module and the coffee table.
 
 ## Without the code

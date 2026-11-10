@@ -16,7 +16,10 @@ import {
 
 interface Props {
   open?: boolean // shown or not, whatever this browser remembers (the tests)
-  onOpenItem?: (name: string) => void // the part's item in the demo, by its name
+  // the part's item in the demo, by its name: false when this host has no such item to show
+  onOpenItem?: (name: string) => Promise<boolean>
+  replay?: number // counts up to play it again from the start (the footer's Play the welcome)
+  onClose?: () => void
 }
 
 // after the close button, where the keyboard goes on: the page that is open
@@ -32,28 +35,37 @@ function hashNow(): string {
   }
 }
 
-export default function Showcase({ open: openAtFirst, onOpenItem }: Props) {
+export default function Showcase({ open: openAtFirst, onOpenItem, replay = 0, onClose }: Props) {
   // read once: the visit is remembered as soon as it shows, so a reload does not show it again;
   // #welcome shows it whatever was remembered
   const [open, setOpen] = useState(() => openAtFirst ?? (askedFor(hashNow()) || !seen(local())))
   const [still] = useState(stillMotion)
   const [step, setStep] = useState(() => pairStep(0, still))
+  // said aloud after < or > only: the playing on its own stays quiet
+  const [said, setSaid] = useState('')
+  const [missing, setMissing] = useState('')
 
   useEffect(() => {
     if (open) remember(local())
   }, [open])
 
-  // the link to #welcome followed on the page: from the start again, in view
+  // played again from the start, in view: a link to #welcome followed on the page, or the
+  // footer's Play the welcome
   useEffect(() => {
-    const asked = () => {
-      if (!askedFor(window.location.hash)) return
+    const again = () => {
       setStep(pairStep(0, still))
+      setSaid('')
+      setMissing('')
       setOpen(true)
       window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' })
     }
+    const asked = () => {
+      if (askedFor(window.location.hash)) again()
+    }
+    if (replay > 0) again()
     window.addEventListener('hashchange', asked)
     return () => window.removeEventListener('hashchange', asked)
-  }, [still])
+  }, [still, replay])
 
   // on its own, a phase at a time up to the last drawing; a step chosen by hand goes on from there
   useEffect(() => {
@@ -66,6 +78,19 @@ export default function Showcase({ open: openAtFirst, onOpenItem }: Props) {
   const current = Math.floor(step / 2)
   const built = step % 2 === 1
   const pair = PAIRS[current]
+
+  function stepTo(pairAt: number) {
+    const next = pairStep(pairAt, still)
+    const shown = PAIRS[Math.floor(next / 2)]
+    setStep(next)
+    setMissing('')
+    setSaid(`${shown.from}: ${shown.to}`)
+  }
+
+  async function openItem(name: string) {
+    if (!onOpenItem) return
+    setMissing((await onOpenItem(name)) ? '' : name)
+  }
   return (
     <section className="card showcase" aria-label="What a spare part can become">
       <button
@@ -74,8 +99,7 @@ export default function Showcase({ open: openAtFirst, onOpenItem }: Props) {
         aria-label="Close the welcome"
         onClick={() => {
           setOpen(false)
-          // the address drops #welcome, so the link plays it again next time it is followed
-          if (askedFor(window.location.hash)) window.history.replaceState(null, '', window.location.pathname + window.location.search)
+          onClose?.()
           focusThePage()
         }}
       >
@@ -97,10 +121,10 @@ export default function Showcase({ open: openAtFirst, onOpenItem }: Props) {
             ) : null,
           )}
         </div>
-        <button type="button" className="modal-close showcase-step showcase-prev" aria-label="Previous part" onClick={() => setStep(pairStep(current - 1, still))}>
+        <button type="button" className="modal-close showcase-step showcase-prev" aria-label="Previous part" onClick={() => stepTo(current - 1)}>
           &lt;
         </button>
-        <button type="button" className="modal-close showcase-step showcase-next" aria-label="Next part" onClick={() => setStep(pairStep(current + 1, still))}>
+        <button type="button" className="modal-close showcase-step showcase-next" aria-label="Next part" onClick={() => stepTo(current + 1)}>
           &gt;
         </button>
       </div>
@@ -118,11 +142,20 @@ export default function Showcase({ open: openAtFirst, onOpenItem }: Props) {
             <li key={p.name} className={i === current ? 'is-current' : undefined} />
           ))}
         </ol>
+        <p className="visually-hidden" aria-live="polite">
+          {said}
+        </p>
         {onOpenItem && (
           <p className="showcase-open">
-            <button type="button" className="link" onClick={() => onOpenItem(pair.item)}>
+            <button type="button" className="link" onClick={() => void openItem(pair.item)}>
               See the {pair.item} in the demo
             </button>
+            {missing === pair.item && (
+              <span className="muted showcase-missing" role="status">
+                {' '}
+                This server's inventory has no {pair.item} to show.
+              </span>
+            )}
           </p>
         )}
         <p className="muted showcase-note">

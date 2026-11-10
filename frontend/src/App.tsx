@@ -6,7 +6,7 @@ import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
 import Showcase from './components/Showcase'
-import { WELCOME_HASH, itemNamed } from './lib/showcase'
+import { askedFor, itemNamed } from './lib/showcase'
 import Modal from './components/Modal'
 import Profile from './components/Profile'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type Version } from './lib/api'
@@ -30,6 +30,7 @@ export default function App() {
   const [view, setViewState] = useState<View>(() => viewFromHash(window.location.hash))
   const [saved, setSaved] = useState(0)
   const [openItem, setOpenItem] = useState<number | null>(null)
+  const [replays, setReplays] = useState(0) // the footer's Play the welcome
   // what the server said about the code, asked on its own; null until it answers
   const [access, setAccess] = useState<KnownAccess>(null)
   // how many times the footer's pairing code has been opened; 0 while it is closed
@@ -62,7 +63,10 @@ export default function App() {
     if (window.location.hash !== wanted) window.history.pushState(null, '', wanted || window.location.pathname)
   }
   useEffect(() => {
-    const changed = () => setViewState(viewFromHash(window.location.hash))
+    // #welcome plays the welcome over whatever page is open: it is not a page of its own
+    const changed = () => {
+      if (!askedFor(window.location.hash)) setViewState(viewFromHash(window.location.hash))
+    }
     window.addEventListener('hashchange', changed)
     window.addEventListener('popstate', changed)
     return () => {
@@ -155,16 +159,23 @@ export default function App() {
 
   // the welcome's link to a part: its item in the inventory, found by its name (ids differ
   // between hosts); the inventory alone when this host has no such item
-  async function openDemoItem(name: string) {
+  async function openDemoItem(name: string): Promise<boolean> {
     let id: number | null = null
     try {
       id = itemNamed(await api.items.list(), name)
     } catch {
-      // the inventory says why when it loads
+      return false
     }
-    if (id !== null) setOpenItem(id)
+    if (id === null) return false
+    setOpenItem(id)
     setSaved((n) => n + 1)
     setView('inventory')
+    return true
+  }
+
+  // the welcome closed: an address of #welcome goes back to the page that is open
+  function welcomeClosed() {
+    if (askedFor(window.location.hash)) window.history.replaceState(null, '', hashFor(view) || window.location.pathname + window.location.search)
   }
 
   // the way out: the server clears the cookie, the tab drops its token, and the header turns
@@ -217,7 +228,7 @@ export default function App() {
         </div>
       </header>
 
-      <Showcase onOpenItem={(name) => void openDemoItem(name)} />
+      <Showcase onOpenItem={openDemoItem} replay={replays} onClose={welcomeClosed} />
 
       {signIn && door === 'sign-in' && (
         <Modal title="Access code" onClose={() => setSignIn(false)}>
@@ -390,7 +401,9 @@ export default function App() {
         )}
         {/* shown whatever the server says: the way to the docs and the code even when it is down */}
         <span className="links">
-          <a href={WELCOME_HASH}>Play the welcome</a>
+          <button type="button" className="link" onClick={() => setReplays((n) => n + 1)}>
+            Play the welcome
+          </button>
           <a href="https://nikolareljin.github.io/orphan-parts/" target="_blank" rel="noreferrer">
             Documentation
           </a>
