@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 import { grayPng } from './png'
 
 // A judge's code (./dev keys issue --scope judge): issued by ./dev e2e before the run. It reads
@@ -16,7 +17,7 @@ test('a judge reads the demo set read-only and edits what it adds', async ({ bro
   expect((await request.post(`/api/items/${demoId}/public`, { data: { public: true } })).status()).toBe(200)
 
   // the judge signs in with its own code, in a browser of its own
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const context = await browser.newContext({ storageState: SIGNED_OUT })
   const page = await context.newPage()
   await page.goto('/')
   await page.getByRole('button', { name: 'Sign in with the code' }).click()
@@ -57,7 +58,7 @@ test('a judge reads the demo set read-only and edits what it adds', async ({ bro
   await context.close()
 
   // the owner's other browsers never see the judge's item on the public shelf
-  const visitor = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const visitor = await browser.newContext({ storageState: SIGNED_OUT })
   const listed = (await (await visitor.request.get('/api/items')).json()) as { name: string }[]
   expect(listed.map((i) => i.name)).not.toContain(own)
   await visitor.close()

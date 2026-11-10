@@ -6,8 +6,8 @@ import { request, type FullConfig } from '@playwright/test'
 // gate itself is checked by tests/access.spec.ts, which starts without one.
 export const STATE_FILE = '.auth/state.json'
 
-// the first-visit showcase is checked by tests/showcase.spec.ts; every other test starts with
-// it already seen, so it does not load four images ahead of what the test is about
+// the first-visit showcase is checked by tests/showcase.spec.ts (and is in the page that
+// tests/smoke.spec.ts measures on a phone); every other test starts with it already seen, so it does not load four images ahead of what the test is about
 const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:5173'
 export const SHOWCASE_SEEN = { origin: new URL(BASE_URL).origin, localStorage: [{ name: 'opl.showcase.seen', value: '1' }] }
 // no session, the showcase seen: the demo visitor's browser in every signed-out test

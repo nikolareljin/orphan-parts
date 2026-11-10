@@ -75,11 +75,12 @@ recorded yet* for it and shows none, never the stub image as a drawing.
 The first time a browser opens the web app, a card above the pages plays four parts from the
 demo set turning into what Muse Image drew them as: the joystick module into an arcade coffee
 table, the DHT11 into a kitchen climate dashboard, the ultrasonic sensor into a garage parking
-helper and the UNO board into a desk calendar. It plays on its own; nothing needs a click. The
+helper and the UNO board into a desk calendar. It plays once on its own and stays on the last
+drawing; nothing needs a click. The
 images are static files of the web app (`frontend/public/showcase/`), so it asks nothing of the
 backend and spends nothing. The browser remembers the visit (`opl.showcase.seen` in its local
 storage): a reload does not show it again, and **×** puts it away at once. With
-reduced motion asked for, the pairs change in place without fading or zooming.
+reduced motion asked for, it stands still on the joystick module and the coffee table.
 
 ## Without the code
 

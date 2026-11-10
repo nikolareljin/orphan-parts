@@ -2703,7 +2703,14 @@ button.link.feedback-vote:disabled {
 }
 
 .showcase-pair.is-current {
+  z-index: 1;
   opacity: 1;
+}
+
+/* the pair before stays shown under the one fading in: a crossfade, no flash of the stage */
+.showcase-pair.is-before {
+  opacity: 1;
+  transition: none;
 }
 
 .showcase-pair img {
@@ -2727,19 +2734,26 @@ button.link.feedback-vote:disabled {
   transform: scale(1);
 }
 
-.showcase-part {
+/* the part's photo, shrunk to a framed corner: the frame is drawn at the size it ends up,
+   since everything on the inset is scaled with it */
+.showcase-inset {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
   transform-origin: 0.75rem calc(100% - 0.75rem);
   transition:
     transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1),
     border-radius 1.1s ease,
-    box-shadow 1.1s ease;
+    box-shadow 1.1s ease,
+    outline-width 1.1s ease;
+  outline: 0 solid #fff;
 }
 
-.showcase-pair.is-built .showcase-part {
+.showcase-pair.is-built .showcase-inset {
   transform: scale(0.28);
-  border-radius: 24px;
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.45);
-  outline: 6px solid #fff;
+  border-radius: 86px; /* about 24 px once scaled */
+  box-shadow: 0 20px 80px rgb(0 0 0 / 0.45);
+  outline-width: 21px; /* about 6 px once scaled */
 }
 
 .showcase-text h2 {
@@ -2798,7 +2812,7 @@ button.link.feedback-vote:disabled {
 @media (prefers-reduced-motion: reduce) {
   .showcase-pair,
   .showcase-built,
-  .showcase-part,
+  .showcase-inset,
   .showcase-arrow,
   .showcase-dots li {
     transition: none;

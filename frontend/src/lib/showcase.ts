@@ -1,5 +1,5 @@
 // the first visit's welcome: a spare part from the demo set turning into what it was drawn as,
-// four times over, with no click needed. Static files on the web host: no request to the
+// four times over, once, with no click needed; it stays on the last drawing. Static files on the web host: no request to the
 // backend and no model call. Shown once per browser; the close button puts it away at once.
 
 export const SHOWCASE_SEEN = 'opl.showcase.seen'
@@ -48,7 +48,18 @@ export function remember(storage: Writes | undefined): void {
   }
 }
 
-// step 2i is pair i's part, 2i + 1 what it becomes
+// step 2i is pair i's part, 2i + 1 what it becomes; one cycle, then it stays on the last
+export const LAST_STEP = PAIRS.length * 2 - 1
+
 export function stepAfter(step: number): number {
-  return (step + 1) % (PAIRS.length * 2)
+  return Math.min(step + 1, LAST_STEP)
+}
+
+// reduced motion asked for: no turning on its own, the first part shown as what it became
+export function stillMotion(): boolean {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
 }

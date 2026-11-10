@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { PAIRS, SHOWCASE_SEEN, builtSrc, partSrc, remember, seen, stepAfter } from './showcase'
+import { LAST_STEP, PAIRS, SHOWCASE_SEEN, builtSrc, partSrc, remember, seen, stepAfter } from './showcase'
 import Showcase from '../components/Showcase'
 
 function memory(): Storage {
@@ -36,16 +36,17 @@ describe('Showcase', () => {
     expect(seen(undefined)).toBe(false)
   })
 
-  it('goes through every part and what it becomes, then starts again', () => {
+  it('goes through every part and what it becomes once, then stays on the last drawing', () => {
     let step = 0
     const shown: string[] = []
     for (let i = 0; i < PAIRS.length * 2; i++) {
       shown.push(`${PAIRS[Math.floor(step / 2)].name}:${step % 2 ? 'built' : 'part'}`)
       step = stepAfter(step)
     }
-    expect(step).toBe(0)
     expect(shown.slice(0, 2)).toEqual(['joystick:part', 'joystick:built'])
     expect(new Set(shown).size).toBe(PAIRS.length * 2)
+    expect(step).toBe(LAST_STEP)
+    expect(stepAfter(LAST_STEP)).toBe(LAST_STEP)
   })
 
   it('serves every image from the web host, none from the backend', () => {
@@ -58,10 +59,14 @@ describe('Showcase', () => {
 
   it('opens on the first pair with a close button, and loads only the next pair ahead', () => {
     const html = renderToStaticMarkup(createElement(Showcase, { open: true }))
-    expect(html).toContain('aria-label="Close"')
+    expect(html).toContain('aria-label="Close the welcome"')
+    expect(html).toContain('class="showcase-stage" aria-hidden="true"')
+    expect(html).not.toContain('aria-live')
     expect(html).toContain('A spare joystick module')
     expect(html).toContain(partSrc(PAIRS[1]))
     expect(html).not.toContain(partSrc(PAIRS[2]))
+    // what the part becomes is not said before its turn
+    expect(html).toContain('<span class="showcase-arrow" aria-hidden="true">')
     expect(renderToStaticMarkup(createElement(Showcase, { open: false }))).toBe('')
   })
 })

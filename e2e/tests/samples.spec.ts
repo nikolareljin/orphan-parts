@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 
 // The demo visitor reads the demo set's photos: no file input anywhere, a gallery to pick
 // from, and each reading the answer recorded for that very photo. Signed in, uploads are back.
-test.use({ storageState: { cookies: [], origins: [] } })
+test.use({ storageState: SIGNED_OUT })
 
 const code = process.env.E2E_ACCESS_CODE ?? ''
 const sampleLine = 'Recorded answer for this sample.'
