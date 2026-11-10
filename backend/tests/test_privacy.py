@@ -255,6 +255,32 @@ async def test_the_recorded_check_of_the_fake_sticker_finds_every_kind(
 
 
 @pytest.mark.anyio
+async def test_a_shared_copy_is_drawn_once_until_its_areas_change(
+    recorded_settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.privacy import service as service_module
+
+    client = ModelApiClient(recorded_settings, CostLedger(1.0))
+    privacy = Privacy(recorded_settings, client)
+    photo = sticker_stored(recorded_settings)
+    try:
+        check = await privacy.check(photo)
+    finally:
+        await client.aclose()
+    drawn: list[int] = []
+
+    def counted(data: bytes, areas: list[Area]) -> bytes:
+        drawn.append(len(areas))
+        return redacted(data, areas)
+
+    monkeypatch.setattr(service_module, "redacted", counted)
+    first = privacy.shared_copy(photo)
+    assert privacy.shared_copy(photo) is first and len(drawn) == 1
+    privacy.choose(photo, check.areas[0].id, hidden=False)
+    assert privacy.shared_copy(photo) != first and len(drawn) == 2
+
+
+@pytest.mark.anyio
 async def test_a_failed_check_is_kept_and_the_photo_is_not_shared(settings: Settings) -> None:
     client = ModelApiClient(settings, CostLedger(1.0))
     privacy = Privacy(settings, client)
@@ -347,17 +373,29 @@ def test_an_uploaded_photo_is_checked_and_its_shared_copy_blacked_out(
         " QR code."
     )
     key = photo["areas"][0]
-    original = c.get(f"/api/items/{item}/photos/1").content
-    shared = c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).content
+    first = c.get(f"/api/items/{item}/photos/1")
+    original = first.content
+    assert first.headers["cache-control"] == "no-store"  # the owner's original is never kept
+    served = c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"})
+    shared = served.content
     assert not is_black(original, key) and is_black(shared, key)
+    # the shared copy is kept by the browser and asked again: unchanged, a 304 with no body
+    tag = served.headers["etag"]
+    assert served.headers["cache-control"] == "private, no-cache"
+    again = c.get(
+        f"/api/items/{item}/photos/1", params={"copy": "shared"}, headers={"If-None-Match": tag}
+    )
+    assert again.status_code == 304 and again.content == b"" and again.headers["etag"] == tag
     # shown by the owner: that area is no longer black on the shared copy
     chosen = c.patch(f"/api/items/{item}/photos/1/areas/{key['id']}", json={"hidden": False})
     assert (
         chosen.status_code == 200 and "1 shown by the owner: product key" in chosen.json()["note"]
     )
-    assert not is_black(
-        c.get(f"/api/items/{item}/photos/1", params={"copy": "shared"}).content, key
+    changed = c.get(
+        f"/api/items/{item}/photos/1", params={"copy": "shared"}, headers={"If-None-Match": tag}
     )
+    assert changed.status_code == 200 and changed.headers["etag"] != tag
+    assert not is_black(changed.content, key)
     assert c.patch(f"/api/items/{item}/photos/1/areas/99", json={"hidden": True}).status_code == 404
     # the zip carries the shared copy
     draft = c.post(f"/api/items/{item}/drafts", json={"mode": "sell"})

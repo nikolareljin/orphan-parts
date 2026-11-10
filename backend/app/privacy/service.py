@@ -9,6 +9,8 @@ import hashlib
 import logging
 import os
 import tempfile
+import threading
+from collections import OrderedDict
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
@@ -72,6 +74,9 @@ PROMPT = "Find the private details in this photo."
 
 class NotCheckedError(LookupError):
     """A photo with no finished check is about to leave the owner's view; the message says so."""
+
+
+SHARED_KEPT = 48  # shared copies kept drawn, a few hundred kB each
 
 
 def digest_of(data: bytes) -> str:
@@ -153,6 +158,10 @@ class Privacy:
         # a demo-set sample's digest as the loader keeps it (the file re-encoded as an upload
         # is), by sample id: the files do not change while the process runs
         self._sample_digests: dict[str, str] = {}
+        # shared copies already drawn, by photo and hidden areas: a page of demo items asks
+        # for the same few again and again, and each takes a decode and a re-encode
+        self._shared: OrderedDict[str, bytes] = OrderedDict()
+        self._shared_lock = threading.Lock()
 
     def _path(self, digest: str) -> Path:
         """Where a check is written. A judge's code writes its own (under ``judge-<id>``): a
@@ -319,7 +328,18 @@ class Privacy:
             if not unchecked:
                 raise NotCheckedError(note_for(check))
             return redacted(data, [])
-        return redacted(data, check.areas)
+        areas = "|".join(a.model_dump_json() for a in check.areas)
+        key = f"{digest_of(data)}:{digest_of(areas.encode())}"
+        with self._shared_lock:
+            if (hit := self._shared.get(key)) is not None:
+                self._shared.move_to_end(key)
+                return hit
+        made = redacted(data, check.areas)
+        with self._shared_lock:
+            self._shared[key] = made
+            while len(self._shared) > SHARED_KEPT:
+                self._shared.popitem(last=False)
+        return made
 
     def shared_or_none(self, data: bytes) -> bytes | None:
         try:
