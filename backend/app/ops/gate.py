@@ -5,7 +5,6 @@ on recorded answers and what is public, every write refused with one line. Allow
 costs money, a limit on everything else, and a switch the operator throws. One process keeps
 the counts; the spend ledger on disk is the floor under all of it."""
 
-import asyncio
 import hashlib
 import hmac
 import logging
@@ -18,6 +17,7 @@ from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from datetime import UTC, datetime
 
+import anyio.to_thread
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -590,10 +590,12 @@ class GateMiddleware(BaseHTTPMiddleware):
         visitor, live = ip, True
         judge: AccessKey | None = None
         if gate.enabled:
-            # a token from an issued code is checked against its record: a read, off the loop
+            # a token from an issued code is checked against its record: a read, off the loop;
+            # anyio's thread is waited for even when the request is cancelled, so the read
+            # never outlives the request (the hosted volume is remounted between requests)
             given = gate.token_of(request)
             if gate.needs_record(given):
-                session = await asyncio.to_thread(gate.verify, given)
+                session = await anyio.to_thread.run_sync(gate.verify, given)
             else:
                 session = gate.verify(given)
             if session is None:
@@ -604,7 +606,9 @@ class GateMiddleware(BaseHTTPMiddleware):
         if judge is not None:
             # a judge's code: its own records live, the owner's read as the demo visitor reads
             # them, everything else refused before the route runs
-            how, status, line = await asyncio.to_thread(gate.judge_door, method, path, judge.id)
+            how, status, line = await anyio.to_thread.run_sync(
+                gate.judge_door, method, path, judge.id
+            )
             if how == "refuse":
                 log.info("judge: refused", extra={"path": path, "status": status})
                 return _refused(status, line)
@@ -631,7 +635,7 @@ class GateMiddleware(BaseHTTPMiddleware):
                 return _refused(503, "paused by the operator; nothing is sent to the models")
             if judge is not None and gate.keys is not None:
                 # the code's own limits, read before anything is counted or sent
-                used = await asyncio.to_thread(gate.keys.usage, judge.id)
+                used = await anyio.to_thread.run_sync(gate.keys.usage, judge.id)
                 over = refusal(judge, used)
                 if over is not None:
                     log.info("limit: judge code", extra={"path": path, "status": over.status})

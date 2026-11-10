@@ -296,6 +296,12 @@ class Captures:
             content["error"] = str(exc)[:500]
             self.inventory.update_capture(capture_id, "failed", json.dumps(content))
             raise
+        except BaseException:
+            # any other way out (a capture with photos missing, the request cancelled): the
+            # transcription does not go on, and spend, after the request is over
+            if note_task is not None:
+                note_task.cancel()
+            raise
         # the item is linked first: a recording that cannot be kept is said on the capture,
         # the item stays, and the reading is not paid for twice
         content.update(

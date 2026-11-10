@@ -250,6 +250,8 @@ def test_the_modal_volume_is_never_reloaded_under_a_running_request(
 
     with _modal_app(tmp_path, monkeypatch, volume, gate_code=GATE_CODE) as module:
         module.RELOAD_EVERY_S = 0.0  # every read finds the view stale
+        # each quiet read reloads too (50 ms each): a slow runner's chain stays in the drain
+        module.RELOAD_DRAIN_S = 60.0  # type: ignore[attr-defined]
         app = module.web()  # type: ignore[attr-defined]
         order = [getattr(m.cls, "__name__", "") for m in app.user_middleware]
         assert order.index("VolumeSync") < order.index("GateMiddleware")

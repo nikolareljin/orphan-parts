@@ -220,6 +220,47 @@ async def test_a_failed_read_cancels_the_note(recorded_settings: Settings) -> No
     await asyncio.wait_for(cancelled.wait(), 10)
 
 
+@pytest.mark.parametrize("ending", ["missing", "cancelled"])
+async def test_the_note_never_outlives_its_read(recorded_settings: Settings, ending: str) -> None:
+    """A read that ends any other way (photos missing on disk, the request cancelled) stops
+    the transcription too: it would spend, and write the ledger, after the request."""
+    from app.captures import CaptureCreate
+
+    captures = service(recorded_settings)
+    kept = captures.create(CaptureCreate(find_label=False), [make_photo()], None, wav_bytes())
+    entered = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def transcribe(audio: bytes) -> Transcript:
+        entered.set()
+        try:
+            await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+        raise AssertionError("the note must not outlive its read")
+
+    async def extract(photos: list[bytes], crops: list[bytes]) -> Any:
+        await asyncio.sleep(30)
+        raise AssertionError("cancelled before this")
+
+    captures.voice.transcribe = transcribe  # type: ignore[method-assign]
+    captures.extractor.extract = extract  # type: ignore[method-assign]
+    if ending == "missing":
+        (recorded_settings.data_dir / "captures" / str(kept.id) / "photo-1.jpg").unlink()
+        with pytest.raises(CaptureError, match="missing on disk"):
+            await captures.process(kept.id)
+    else:
+        task = asyncio.ensure_future(captures.process(kept.id))
+        await asyncio.wait_for(entered.wait(), 10)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    await asyncio.sleep(0.1)  # a note left running has started by now
+    # never started, or stopped: not running on after the read
+    assert not entered.is_set() or cancelled.is_set()
+
+
 async def test_a_failed_processing_is_recorded_and_the_media_stays(settings: Settings) -> None:
     from app.captures import CaptureCreate
 

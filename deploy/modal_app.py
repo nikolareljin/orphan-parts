@@ -9,6 +9,7 @@ spent); with a key that does not answer, the startup probe does the same and say
 """
 
 import asyncio
+import contextlib
 import logging
 import os
 import shlex
@@ -59,9 +60,7 @@ image = (
 data = modal.Volume.from_name("orphan-parts-data", create_if_missing=True)
 RELOAD_EVERY_S = 30.0  # how stale the web container's view of the Volume may be
 RELOAD_RETRY_S = 0.5  # the pause before a refused reload is tried once more
-RELOAD_DRAIN_S = (
-    5.0  # how long a write waits for the requests in flight before a reload
-)
+RELOAD_DRAIN_S = 5.0  # how long a write waits for the requests in flight before a reload
 
 
 @app.function(
@@ -69,9 +68,7 @@ RELOAD_DRAIN_S = (
     volumes={"/data": data},
     secrets=[modal.Secret.from_name("orphan-parts")],
     max_containers=1,  # one writer for SQLite, one counter for the demo gate
-    min_containers=int(
-        os.environ.get("OPL_MIN_CONTAINERS") or "1"
-    ),  # no cold start while judging
+    min_containers=int(os.environ.get("OPL_MIN_CONTAINERS") or "1"),  # no cold start while judging
     scaledown_window=900,
     timeout=120,
 )
@@ -96,9 +93,7 @@ def web():  # type: ignore[no-untyped-def]
     # the counts and flags change only in plain code between awaits, or in a task's done
     # callback: a request cancelled at any await (a client gone, the function's timeout)
     # can neither leave the count up nor let others in while the Volume is remounted
-    busy = (
-        0  # requests inside, from the gate's first read to the last byte and the commit
-    )
+    busy = 0  # requests inside, from the gate's first read to the last byte and the commit
     idle = asyncio.Event()  # set while busy == 0
     idle.set()
     open_ = asyncio.Event()  # cleared while a reload runs: requests wait at the door
@@ -109,10 +104,10 @@ def web():  # type: ignore[no-untyped-def]
         try:  # blocking I/O, off the loop; one more try after a moment
             try:
                 await asyncio.to_thread(data.reload)
-            except Exception:  # noqa: BLE001 - the Volume's own error types
+            except Exception:
                 await asyncio.sleep(RELOAD_RETRY_S)
                 await asyncio.to_thread(data.reload)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.info("volume reload refused: %s", exc)
             return False
         last_reload = time.monotonic()
@@ -123,6 +118,13 @@ def web():  # type: ignore[no-untyped-def]
         busy -= 1
         if busy == 0:
             idle.set()
+
+    def committed(task: asyncio.Future[None]) -> None:
+        # the response has gone out: a commit that failed is said in the log, and the next
+        # write's commit carries what this one did not
+        if not task.cancelled() and (exc := task.exception()) is not None:
+            log.warning("volume commit failed: %s", exc)
+        leave()
 
     def enter() -> None:
         nonlocal busy
@@ -202,8 +204,9 @@ def web():  # type: ignore[no-untyped-def]
                     # the Volume is told now rather than by accident later; the request
                     # counts as inside until the commit is done, even if it is cancelled
                     commit = asyncio.ensure_future(asyncio.to_thread(data.commit))
-                    commit.add_done_callback(lambda _: leave())
-                    await asyncio.shield(commit)
+                    commit.add_done_callback(committed)
+                    with contextlib.suppress(Exception):
+                        await asyncio.shield(commit)
                 else:
                     leave()
 
@@ -211,11 +214,7 @@ def web():  # type: ignore[no-untyped-def]
     # the access codes' file and the inventory before the route does
     stack = fastapi_app.user_middleware
     at = next(
-        (
-            i
-            for i, m in enumerate(stack)
-            if getattr(m.cls, "__name__", "") == "GateMiddleware"
-        ),
+        (i for i, m in enumerate(stack) if getattr(m.cls, "__name__", "") == "GateMiddleware"),
         len(stack),
     )
     stack.insert(at, Middleware(VolumeSync))
