@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 
 const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 const code = process.env.E2E_ACCESS_CODE ?? ''
@@ -125,7 +126,7 @@ test('a vote the server never answers is put back as the server has it, with the
 })
 
 test.describe('the demo visitor', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  test.use({ storageState: SIGNED_OUT })
 
   test('sees the drawing but no vote buttons, and cannot read or cast a vote', async ({ page, playwright, baseURL }) => {
     test.skip(!code, 'the stack runs without a gate')
@@ -165,7 +166,7 @@ test('a judge votes on the demo set under its own code; the owner counts it', as
   expect((await request.post(`/api/items/${id}/public`, { data: { public: true } })).ok()).toBe(true)
   const target = { target_kind: 'item_picture', target_id: String(id), target_ref: '1' }
 
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const context = await browser.newContext({ storageState: SIGNED_OUT })
   const page = await context.newPage()
   try {
     expect((await page.request.post('/api/access', { data: { code: judgeCode } })).ok()).toBe(true)

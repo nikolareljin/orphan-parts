@@ -2649,3 +2649,177 @@ button.link.feedback-vote:disabled {
   min-width: 0;
   max-width: 28rem;
 }
+
+/* the first visit's welcome: the part, then what it becomes, the part shrinking to a corner */
+.showcase {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* a round button on the card's own color: readable over the drawing on a phone */
+.showcase-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+
+.showcase-close:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.showcase-stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.showcase-pair {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.showcase-pair.is-current {
+  z-index: 1;
+  opacity: 1;
+}
+
+/* the pair before stays shown under the one fading in: a crossfade, no flash of the stage */
+.showcase-pair.is-before {
+  opacity: 1;
+  transition: none;
+}
+
+.showcase-pair img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.showcase-built {
+  opacity: 0;
+  transform: scale(1.08);
+  transition:
+    opacity 1.1s ease,
+    transform 6s ease-out;
+}
+
+.showcase-pair.is-built .showcase-built {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* the part's photo, shrunk to a framed corner: the frame is drawn at the size it ends up,
+   since everything on the inset is scaled with it */
+.showcase-inset {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform-origin: 0.75rem calc(100% - 0.75rem);
+  transition:
+    transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-radius 1.1s ease,
+    box-shadow 1.1s ease,
+    outline-width 1.1s ease;
+  outline: 0 solid #fff;
+}
+
+.showcase-pair.is-built .showcase-inset {
+  transform: scale(0.28);
+  border-radius: 86px; /* about 24 px once scaled */
+  box-shadow: 0 20px 80px rgb(0 0 0 / 0.45);
+  outline-width: 21px; /* about 6 px once scaled */
+}
+
+.showcase-text h2 {
+  margin: 0 2rem 0.5rem 0;
+  font-size: 1.35rem;
+}
+
+.showcase-caption {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  min-height: 3em;
+}
+
+.showcase-arrow {
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.8s ease 0.3s;
+}
+
+.showcase-arrow.is-built {
+  opacity: 1;
+}
+
+.showcase-note {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.showcase-dots {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.showcase-dots li {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background 0.4s ease;
+}
+
+.showcase-dots li.is-current {
+  background: var(--accent);
+}
+
+@media (max-width: 700px) {
+  .showcase {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* no motion asked for: the pairs change in place, no fade, no zoom */
+@media (prefers-reduced-motion: reduce) {
+  .showcase-pair,
+  .showcase-built,
+  .showcase-inset,
+  .showcase-arrow,
+  .showcase-dots li {
+    transition: none;
+  }
+
+  .showcase-built,
+  .showcase-pair.is-built .showcase-built {
+    transform: none;
+  }
+}

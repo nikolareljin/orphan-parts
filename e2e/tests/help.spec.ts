@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 
 // The "?" beside a heading: a tap opens a short note with a link to the docs; Escape, a click
 // elsewhere or the close button end it. In the item dialog, Escape closes the note, not the dialog.
@@ -65,7 +66,7 @@ test.describe('signed in', () => {
 })
 
 test.describe('signed out', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  test.use({ storageState: SIGNED_OUT })
 
   test('the visitor gets the notes that say what is read-only', async ({ page, playwright, baseURL }) => {
     test.skip(!code, 'the stack runs without a gate')

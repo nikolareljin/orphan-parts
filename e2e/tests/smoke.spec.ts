@@ -39,6 +39,7 @@ for (const [name, viewport] of [
     const id = ((await created.json()) as { id: number }).id
     expect((await request.post(`/api/items/${id}/public`, { data: { public: true } })).ok()).toBe(true)
 
+    // a first visit on purpose: the welcome card is in the page whose width is checked
     const context = await browser.newContext({ viewport, storageState: { cookies: [], origins: [] } })
     const page = await context.newPage()
     const problems = watch(page)

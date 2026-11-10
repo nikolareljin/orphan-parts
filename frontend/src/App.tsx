@@ -5,6 +5,7 @@ import HelpTip from './components/HelpTip'
 import Find from './components/Find'
 import Inbox from './components/Inbox'
 import Inventory from './components/Inventory'
+import Showcase from './components/Showcase'
 import Modal from './components/Modal'
 import Profile from './components/Profile'
 import { ACCESS_REQUIRED_EVENT, api, apiBase, type Access, type Readiness, type Version } from './lib/api'
@@ -200,6 +201,8 @@ export default function App() {
           {door !== 'open' && <HelpTip entry={HELP.signIn} />}
         </div>
       </header>
+
+      <Showcase />
 
       {signIn && door === 'sign-in' && (
         <Modal title="Access code" onClose={() => setSignIn(false)}>

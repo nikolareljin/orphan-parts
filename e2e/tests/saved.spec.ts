@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { SIGNED_OUT } from '../global-setup'
 
 // What was asked for an item is shown as it was kept: the Decide cards with a reuse card's
 // picture, the sell draft in Marketplace's fields, the give-away with how to post it, the price
@@ -57,7 +58,7 @@ async function openItem(page: Page, name: string) {
 }
 
 test.describe('the demo visitor', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  test.use({ storageState: SIGNED_OUT })
 
   test('reads every saved result: the draft, the give-away, the cards with their picture and the plan', async ({ page, playwright, baseURL }) => {
     test.skip(!code, 'the stack runs without a gate')
