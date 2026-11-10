@@ -57,6 +57,13 @@ describe('Showcase', () => {
     }
   })
 
+  it('keeps the pair before as drawn under the one fading in', () => {
+    const html = renderToStaticMarkup(createElement(Showcase, { open: true }))
+    // the first pair is current; nothing before it, and nothing drawn yet
+    expect(html).not.toContain('is-before')
+    expect(html).toContain('class="showcase-pair is-current"')
+  })
+
   it('opens on the first pair with a close button, and loads only the next pair ahead', () => {
     const html = renderToStaticMarkup(createElement(Showcase, { open: true }))
     expect(html).toContain('aria-label="Close the welcome"')

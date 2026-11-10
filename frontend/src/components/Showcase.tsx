@@ -45,10 +45,11 @@ export default function Showcase({ open: openAtFirst }: Props) {
       </button>
       {/* pictures only: the caption says what they show */}
       <div className="showcase-stage" aria-hidden="true">
-        {/* the pair before stays under the shown one while it fades in; the next is loaded ahead */}
+        {/* the pair before stays under the shown one, as drawn, while it fades in (a drawing
+            covers the stage, so the one before it can go); the next is loaded ahead */}
         {PAIRS.map((p, i) =>
           Math.abs(i - current) <= 1 ? (
-            <figure key={p.name} className={`showcase-pair${i === current ? ' is-current' : ''}${i === current && built ? ' is-built' : ''}${i < current ? ' is-before' : ''}`}>
+            <figure key={p.name} className={`showcase-pair${i === current ? ' is-current' : ''}${i < current || (i === current && built) ? ' is-built' : ''}${i < current ? ' is-before' : ''}`}>
               <img className="showcase-built" src={builtSrc(p)} alt="" width="960" height="720" />
               <span className="showcase-inset">
                 <img className="showcase-part" src={partSrc(p)} alt="" width="960" height="720" />
