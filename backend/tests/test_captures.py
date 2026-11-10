@@ -220,10 +220,10 @@ async def test_a_failed_read_cancels_the_note(recorded_settings: Settings) -> No
     await asyncio.wait_for(cancelled.wait(), 10)
 
 
-@pytest.mark.parametrize("ending", ["missing", "cancelled"])
+@pytest.mark.parametrize("ending", ["unexpected", "cancelled"])
 async def test_the_note_never_outlives_its_read(recorded_settings: Settings, ending: str) -> None:
-    """A read that ends any other way (photos missing on disk, the request cancelled) stops
-    the transcription too: it would spend, and write the ledger, after the request."""
+    """A read that ends any other way (an error nobody expected, the request cancelled)
+    stops the transcription too: it would spend, and write the ledger, after the request."""
     from app.captures import CaptureCreate
 
     captures = service(recorded_settings)
@@ -241,14 +241,16 @@ async def test_the_note_never_outlives_its_read(recorded_settings: Settings, end
         raise AssertionError("the note must not outlive its read")
 
     async def extract(photos: list[bytes], crops: list[bytes]) -> Any:
+        await asyncio.wait_for(entered.wait(), 10)
+        if ending == "unexpected":
+            raise RuntimeError("a fault nobody planned for")
         await asyncio.sleep(30)
         raise AssertionError("cancelled before this")
 
     captures.voice.transcribe = transcribe  # type: ignore[method-assign]
     captures.extractor.extract = extract  # type: ignore[method-assign]
-    if ending == "missing":
-        (recorded_settings.data_dir / "captures" / str(kept.id) / "photo-1.jpg").unlink()
-        with pytest.raises(CaptureError, match="missing on disk"):
+    if ending == "unexpected":
+        with pytest.raises(RuntimeError, match="nobody planned"):
             await captures.process(kept.id)
     else:
         task = asyncio.ensure_future(captures.process(kept.id))

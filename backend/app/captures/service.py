@@ -297,7 +297,7 @@ class Captures:
             self.inventory.update_capture(capture_id, "failed", json.dumps(content))
             raise
         except BaseException:
-            # any other way out (a capture with photos missing, the request cancelled): the
+            # any other way out (an unexpected error, the request cancelled): the
             # transcription does not go on, and spend, after the request is over
             if note_task is not None:
                 note_task.cancel()
