@@ -4,6 +4,9 @@ All notable changes to Orphan Parts Lens. Versions follow SemVer.
 
 ## Unreleased
 
+### Added
+- Google Search Console's ownership file, `docs/googlefb1695ee9a07673e.html`, published at the docs site root so the site can be verified.
+
 ## 1.1.0 - 2026-11-10
 
 ### Added
